@@ -1,51 +1,81 @@
 'use client'
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 
-export default function Login() {
+import { useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [success, setSuccess] = useState('')
 
-  async function handleLogin(e: any) {
-    e.preventDefault()
+  async function handleSubmit() {
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
+    setSuccess('')
+
+    if (mode === 'login') {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        setError(error.message)
+      } else {
+        window.location.href = '/dashboard'
+      }
     } else {
-      window.location.href = '/'
+      const { error } = await supabase.auth.signUp({ email, password })
+      if (error) {
+        setError(error.message)
+      } else {
+        setSuccess('Check your email to confirm your account!')
+      }
     }
+    setLoading(false)
   }
 
   return (
-    <main style={{minHeight:'100vh',background:'#F9FAFB',display:'flex',alignItems:'center',justifyContent:'center'}}>
-      <div style={{background:'#fff',border:'1px solid #E5E7EB',borderRadius:'16px',padding:'40px',width:'100%',maxWidth:'400px'}}>
-        <h1 style={{fontSize:'1.5rem',fontWeight:'800',color:'#0A4FB3',marginBottom:'8px'}}>Opero</h1>
-        <p style={{color:'#6B7280',marginBottom:'32px'}}>Sign in to your account</p>
-        <form onSubmit={handleLogin}>
-          <div style={{marginBottom:'16px'}}>
-            <label style={{display:'block',fontSize:'0.875rem',fontWeight:'500',color:'#374151',marginBottom:'6px'}}>Email</label>
-            <input type='email' value={email} onChange={e => setEmail(e.target.value)} required
-              style={{width:'100%',padding:'10px 14px',border:'1px solid #E5E7EB',borderRadius:'8px',fontSize:'0.95rem',outline:'none'}}
-              placeholder='you@example.com'/>
+    <div style={{ minHeight: '100vh', background: '#F8F9FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E5E7EB', padding: 40, width: '100%', maxWidth: 400, margin: '0 16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <img src="/logo.png" alt="Opero" style={{ width: 64, height: 64, objectFit: 'contain', marginBottom: 8 }} />
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>Opero</div>
+          <div style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
+            {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
           </div>
-          <div style={{marginBottom:'24px'}}>
-            <label style={{display:'block',fontSize:'0.875rem',fontWeight:'500',color:'#374151',marginBottom:'6px'}}>Password</label>
-            <input type='password' value={password} onChange={e => setPassword(e.target.value)} required
-              style={{width:'100%',padding:'10px 14px',border:'1px solid #E5E7EB',borderRadius:'8px',fontSize:'0.95rem',outline:'none'}}
-              placeholder='••••••••'/>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
-          {error && <p style={{color:'#EF4444',fontSize:'0.875rem',marginBottom:'16px'}}>{error}</p>}
-          <button type='submit' disabled={loading}
-            style={{width:'100%',padding:'12px',background:'#0A4FB3',color:'#fff',border:'none',borderRadius:'8px',fontSize:'0.95rem',fontWeight:'600',cursor:'pointer'}}>
-            {loading ? 'Signing in...' : 'Sign in'}
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+          </div>
+          {error && <div style={{ fontSize: 13, color: '#EF4444', background: '#FEE2E2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
+          {success && <div style={{ fontSize: 13, color: '#10B981', background: '#D1FAE5', padding: '10px 12px', borderRadius: 8 }}>{success}</div>}
+          <button onClick={handleSubmit} disabled={loading || !email || !password} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1, marginTop: 4 }}>
+            {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
-        </form>
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#6B7280' }}>
+          {mode === 'login' ? (
+            <>Don't have an account? <button onClick={() => setMode('signup')} style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign up</button></>
+          ) : (
+            <>Already have an account? <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign in</button></>
+          )}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <a href="/" style={{ fontSize: 13, color: '#9CA3AF', textDecoration: 'none' }}>← Back to homepage</a>
+        </div>
       </div>
-    </main>
+    </div>
   )
 }
