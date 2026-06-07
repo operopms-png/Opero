@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
+    console.error('Stripe error:', err.message, 'priceId:', finalPriceId)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
