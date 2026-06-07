@@ -1238,3 +1238,15 @@ async function checkout(e, btn) {
   }
 }
 </script>
+<script>
+document.querySelectorAll('.nav-dropdown-li').forEach(function(li) {
+  li.addEventListener('mouseenter', function() {
+    var box = li.querySelector('.nav-dropdown-box');
+    if (box) box.style.display = 'grid';
+  });
+  li.addEventListener('mouseleave', function() {
+    var box = li.querySelector('.nav-dropdown-box');
+    if (box) box.style.display = 'none';
+  });
+});
+</script>
