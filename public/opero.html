@@ -1213,3 +1213,22 @@
 </script>
 </body>
 </html>
+<script>
+async function checkout(e, btn) {
+  e.preventDefault();
+  var plan = btn.getAttribute("data-plan");
+  btn.textContent = "Loading...";
+  try {
+    var res = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({plan: plan})
+    });
+    var data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else btn.textContent = "Try again";
+  } catch(err) {
+    btn.textContent = "Try again";
+  }
+}
+</script>
