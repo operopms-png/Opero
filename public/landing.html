@@ -419,6 +419,17 @@
 .nav-dd-head{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px}
 .nav-dd-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;text-decoration:none;color:#333;font-size:0.85rem}
 .nav-dd-item:hover{background:#f5f7ff;color:var(--blue)}
+
+  .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0 0; }
+  .toggle-label { font-size: 0.875rem; font-weight: 500; color: var(--text-3); }
+  .toggle-label.active { color: var(--text); }
+  .toggle-switch { position: relative; width: 48px; height: 26px; background: var(--blue); border-radius: 100px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+  .toggle-switch.monthly { background: var(--border); }
+  .toggle-switch.monthly::after { left: 3px; }
+  .toggle-switch.yearly::after { left: 25px; }
+  .save-badge { background: #DCFCE7; color: #166534; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+
   /* FAQ */
   .faq-section { background: #fff; }
   .faq-wrap { max-width: 720px; margin: 56px auto 0; }
@@ -975,6 +986,12 @@
       <div class="section-label" style="display:inline-block">Pricing</div>
       <h2 class="section-h2">Find the right plan for you</h2>
       <p class="section-sub center">Start free for 14 days. No credit card required. Cancel anytime.</p>
+      <div class="billing-toggle">
+        <span class="toggle-label active" id="label-monthly">Monthly</span>
+        <div class="toggle-switch yearly" id="billing-toggle" onclick="toggleBilling()"></div>
+        <span class="toggle-label" id="label-yearly">Yearly <span class="save-badge" id="save-badge">Save 10%</span></span>
+      </div>
+
     </div>
     <div class="pricing-grid">
 
@@ -1221,7 +1238,31 @@
 </body>
 </html>
 <script>
-async function checkout(e, btn) {
+
+  var isYearly = false;
+  var prices = { starter: 29, growth: 79, professional: 199 };
+  var yearlyPrices = { starter: 29, growth: 71, professional: 179 };
+  var yearlyPlans = { starter: 'price_1TfeoYGVqeDYuzWEDnDdfTS8', growth: 'price_1TfepHGVqeDYuzWEH6Ugvb8Q', professional: 'price_1TfeplGVqeDYuzWEAcUuLdCB' };
+
+  function toggleBilling() {
+    isYearly = !isYearly;
+    var tog = document.getElementById('billing-toggle');
+    var lm = document.getElementById('label-monthly');
+    var ly = document.getElementById('label-yearly');
+    tog.className = 'toggle-switch ' + (isYearly ? 'yearly' : 'monthly');
+    lm.className = 'toggle-label ' + (isYearly ? '' : 'active');
+    ly.className = 'toggle-label ' + (isYearly ? 'active' : '');
+    document.querySelectorAll('.price-amt').forEach(function(el) {
+      var plan = el.closest('.price-card').querySelector('[data-plan]').getAttribute('data-plan');
+      var p = isYearly ? yearlyPrices[plan] : prices[plan];
+      el.textContent = '£' + p;
+    });
+    document.querySelectorAll('.price-per').forEach(function(el) {
+      el.textContent = isYearly ? '/ month, billed yearly' : '/ month';
+    });
+  }
+
+  async function checkout(e, btn) {
   e.preventDefault();
   var plan = btn.getAttribute("data-plan");
   btn.textContent = "Loading...";
