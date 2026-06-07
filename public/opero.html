@@ -1264,19 +1264,23 @@
 
   async function checkout(e, btn) {
   e.preventDefault();
+  var orig = btn.textContent;
   var plan = btn.getAttribute("data-plan");
+  var priceId = isYearly ? yearlyPlans[plan] : null;
   btn.textContent = "Loading...";
+  btn.disabled = true;
   try {
+    var body = priceId ? {plan: plan, priceId: priceId} : {plan: plan};
     var res = await fetch("/api/create-checkout", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(isYearly ? {plan: plan, priceId: priceId} : {plan: plan})
+      body: JSON.stringify(body)
     });
     var data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else btn.textContent = "Try again";
+    if (data.url) { window.location.href = data.url; }
+    else { alert("Error: " + (data.error || "Unknown")); btn.textContent = orig; btn.disabled = false; }
   } catch(err) {
-    btn.textContent = "Try again";
+    alert("Error: " + err.message); btn.textContent = orig; btn.disabled = false;
   }
 }
 </script>
