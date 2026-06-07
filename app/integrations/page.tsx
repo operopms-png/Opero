@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -8,213 +8,242 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-type Feed = {
-  id: string
-  property_id: string
-  platform: string
-  ical_url: string
-  last_synced: string | null
-  properties?: { name: string }
-}
-
-const PLATFORMS = [
-  { value: 'Airbnb', label: 'Airbnb', color: '#FF5A5F', bg: '#FFF0F0' },
-  { value: 'VRBO', label: 'VRBO', color: '#1C5BD9', bg: '#EEF2FF' },
-  { value: 'Booking.com', label: 'Booking.com', color: '#003580', bg: '#EEF4FF' },
-  { value: 'Other', label: 'Other', color: '#6B7280', bg: '#F3F4F6' },
+const integrations = [
+  {
+    id: 'pricelabs',
+    name: 'PriceLabs',
+    description: 'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.',
+    logo: '📊',
+    color: '#1a56db',
+    bg: '#eff6ff',
+    type: 'api_key',
+    placeholder: 'Enter your PriceLabs API key',
+    docsUrl: 'https://pricelabs.co/users/api_keys',
+    docsLabel: 'Get your API key →',
+  },
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    description: 'Process payments and subscriptions. Already configured for your Opero subscription.',
+    logo: '💳',
+    color: '#635bff',
+    bg: '#f5f3ff',
+    type: 'built_in',
+  },
+  {
+    id: 'paypal',
+    name: 'PayPal',
+    description: 'Accept PayPal and PayPal.me payments from guests and owners.',
+    logo: '🅿️',
+    color: '#003087',
+    bg: '#eff6ff',
+    type: 'api_key',
+    placeholder: 'Enter your PayPal Client ID',
+    docsUrl: 'https://developer.paypal.com/dashboard/',
+    docsLabel: 'Get your Client ID →',
+  },
+  {
+    id: 'airbnb',
+    name: 'Airbnb iCal',
+    description: 'Sync your Airbnb bookings automatically via iCal URL.',
+    logo: '🏠',
+    color: '#ff5a5f',
+    bg: '#fff1f2',
+    type: 'url',
+    placeholder: 'Paste your Airbnb iCal URL',
+  },
+  {
+    id: 'vrbo',
+    name: 'VRBO iCal',
+    description: 'Sync your VRBO bookings automatically via iCal URL.',
+    logo: '🏡',
+    color: '#1e6ef4',
+    bg: '#eff6ff',
+    type: 'url',
+    placeholder: 'Paste your VRBO iCal URL',
+  },
+  {
+    id: 'booking',
+    name: 'Booking.com iCal',
+    description: 'Sync your Booking.com reservations automatically.',
+    logo: '🌐',
+    color: '#003580',
+    bg: '#eff6ff',
+    type: 'url',
+    placeholder: 'Paste your Booking.com iCal URL',
+  },
 ]
 
 export default function IntegrationsPage() {
-  const [feeds, setFeeds] = useState<Feed[]>([])
-  const [properties, setProperties] = useState<{ id: string; name: string }[]>([])
-  const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({ property_id: '', platform: 'Airbnb', ical_url: '' })
-  const [saving, setSaving] = useState(false)
-  const [syncing, setSyncing] = useState<string | null>(null)
-  const [syncResult, setSyncResult] = useState<{ id: string; imported: number; skipped: number } | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [connected, setConnected] = useState<Record<string, boolean>>({})
+  const [inputs, setInputs] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState<Record<string, boolean>>({})
+  const [messages, setMessages] = useState<Record<string, { type: 'success' | 'error'; text: string }>>({})
+  const [pricelabsData, setPricelabsData] = useState<any[]>([])
 
-  useEffect(() => { fetchFeeds(); fetchProperties() }, [])
-
-  async function fetchFeeds() {
-    const { data } = await supabase
-      .from('ical_feeds')
-      .select('*, properties(name)')
-      .order('created_at', { ascending: false })
-    if (data) setFeeds(data as Feed[])
-  }
-
-  async function fetchProperties() {
-    const { data } = await supabase.from('properties').select('id, name')
-    if (data) setProperties(data)
-  }
-
-  async function handleSave() {
-    if (!form.property_id || !form.ical_url) return
-    setSaving(true)
-    await supabase.from('ical_feeds').insert([form])
-    setSaving(false)
-    setShowModal(false)
-    setForm({ property_id: '', platform: 'Airbnb', ical_url: '' })
-    fetchFeeds()
-  }
-
-  async function syncFeed(feed: Feed) {
-    setSyncing(feed.id)
-    setSyncResult(null)
-    try {
-      const res = await fetch('/api/sync-ical', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ical_url: feed.ical_url,
-          property_id: feed.property_id,
-          platform: feed.platform,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        await supabase.from('ical_feeds').update({ last_synced: new Date().toISOString() }).eq('id', feed.id)
-        setSyncResult({ id: feed.id, imported: data.imported, skipped: data.skipped })
-        fetchFeeds()
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUserId(data.user.id)
+        loadIntegrations(data.user.id)
       }
-    } catch (err) {
-      console.error(err)
+    })
+  }, [])
+
+  async function loadIntegrations(uid: string) {
+    const { data } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('user_id', uid)
+      .single()
+
+    if (data) {
+      const c: Record<string, boolean> = {}
+      if (data.pricelabs_api_key) c.pricelabs = true
+      if (data.paypal_client_id) c.paypal = true
+      if (data.airbnb_ical_url) c.airbnb = true
+      if (data.vrbo_ical_url) c.vrbo = true
+      if (data.booking_ical_url) c.booking = true
+      setConnected(c)
+      if (data.pricelabs_api_key) fetchPricelabs(uid)
     }
-    setSyncing(null)
+    setConnected(prev => ({ ...prev, stripe: true }))
   }
 
-  async function deleteFeed(id: string) {
-    if (!confirm('Remove this integration?')) return
-    await supabase.from('ical_feeds').delete().eq('id', id)
-    setFeeds(prev => prev.filter(f => f.id !== id))
+  async function fetchPricelabs(uid: string) {
+    const res = await fetch(`/api/pricelabs?userId=${uid}`)
+    if (res.ok) {
+      const data = await res.json()
+      setPricelabsData(data?.listings || data || [])
+    }
+  }
+
+  async function handleConnect(id: string) {
+    if (!userId || !inputs[id]) return
+    setLoading(prev => ({ ...prev, [id]: true }))
+
+    try {
+      if (id === 'pricelabs') {
+        const res = await fetch('/api/pricelabs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, apiKey: inputs[id] }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+        setConnected(prev => ({ ...prev, pricelabs: true }))
+        setMessages(prev => ({ ...prev, pricelabs: { type: 'success', text: 'PriceLabs connected!' } }))
+        fetchPricelabs(userId)
+      } else {
+        const col = id === 'paypal' ? 'paypal_client_id'
+          : id === 'airbnb' ? 'airbnb_ical_url'
+          : id === 'vrbo' ? 'vrbo_ical_url'
+          : 'booking_ical_url'
+
+        const { error } = await supabase
+          .from('integrations')
+          .upsert({ user_id: userId, [col]: inputs[id] }, { onConflict: 'user_id' })
+
+        if (error) throw new Error(error.message)
+        setConnected(prev => ({ ...prev, [id]: true }))
+        setMessages(prev => ({ ...prev, [id]: { type: 'success', text: 'Connected!' } }))
+      }
+    } catch (err: any) {
+      setMessages(prev => ({ ...prev, [id]: { type: 'error', text: err.message } }))
+    }
+    setLoading(prev => ({ ...prev, [id]: false }))
+  }
+
+  async function handleDisconnect(id: string) {
+    if (!userId) return
+    const col = id === 'pricelabs' ? 'pricelabs_api_key'
+      : id === 'paypal' ? 'paypal_client_id'
+      : id === 'airbnb' ? 'airbnb_ical_url'
+      : id === 'vrbo' ? 'vrbo_ical_url'
+      : 'booking_ical_url'
+
+    await supabase
+      .from('integrations')
+      .upsert({ user_id: userId, [col]: null }, { onConflict: 'user_id' })
+
+    setConnected(prev => ({ ...prev, [id]: false }))
+    if (id === 'pricelabs') setPricelabsData([])
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto', fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');`}</style>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111', marginBottom: 4 }}>Integrations</h1>
+      <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Connect your tools to get the most out of Opero.</p>
 
-      <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>🔗</span>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Integrations</h1>
-          </div>
-          <button onClick={() => setShowModal(true)} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
-            + Add Integration
-          </button>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px' }}>
-        {/* Platform logos */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 32 }}>
-          {PLATFORMS.map(p => (
-            <div key={p.value} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>
-                {p.value === 'Airbnb' ? '🏠' : p.value === 'VRBO' ? '🏡' : p.value === 'Booking.com' ? '🌐' : '📅'}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: p.color }}>{p.label}</div>
-              <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>
-                {feeds.filter(f => f.platform === p.value).length} connected
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Connected feeds */}
-        <h2 style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 16 }}>Connected Calendars</h2>
-
-        {feeds.length === 0 ? (
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: 48, textAlign: 'center', color: '#9CA3AF' }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🔗</div>
-            <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 4 }}>No integrations yet</div>
-            <div style={{ fontSize: 14 }}>Add an iCal link from Airbnb, VRBO or Booking.com</div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {feeds.map(feed => {
-              const plt = PLATFORMS.find(p => p.value === feed.platform) ?? PLATFORMS[3]
-              const result = syncResult?.id === feed.id ? syncResult : null
-              return (
-                <div key={feed.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '16px 20px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: 16 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 10px', borderRadius: 20, color: plt.color, background: plt.bg }}>{plt.label}</span>
-                        <span style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{feed.properties?.name ?? '—'}</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: '#9CA3AF', fontFamily: 'monospace' }}>{feed.ical_url.slice(0, 50)}…</div>
-                      {feed.last_synced && (
-                        <div style={{ fontSize: 11, color: '#10B981', marginTop: 4 }}>
-                          ✓ Last synced {new Date(feed.last_synced).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      )}
-                      {result && (
-                        <div style={{ fontSize: 11, color: '#2563EB', marginTop: 4 }}>
-                          ✓ Imported {result.imported} bookings, skipped {result.skipped}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => syncFeed(feed)}
-                      disabled={syncing === feed.id}
-                      style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: syncing === feed.id ? 0.6 : 1 }}
-                    >
-                      {syncing === feed.id ? 'Syncing…' : '↻ Sync'}
-                    </button>
-                    <button onClick={() => deleteFeed(feed.id)} style={{ background: 'none', border: 'none', color: '#D1D5DB', cursor: 'pointer', fontSize: 18, padding: 4 }}>×</button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
-          onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 500, margin: '0 16px' }}>
-            <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600 }}>Add iCal Integration</h2>
-            <p style={{ margin: '0 0 24px', fontSize: 13, color: '#6B7280' }}>Paste your iCal link from Airbnb, VRBO or Booking.com to sync bookings automatically.</p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={lbl}>Property *</label>
-                <select value={form.property_id} onChange={e => setForm({ ...form, property_id: e.target.value })} style={inp}>
-                  <option value="">Select property…</option>
-                  {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={lbl}>Platform *</label>
-                <select value={form.platform} onChange={e => setForm({ ...form, platform: e.target.value })} style={inp}>
-                  {PLATFORMS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={lbl}>iCal URL *</label>
-                <input type="url" value={form.ical_url} onChange={e => setForm({ ...form, ical_url: e.target.value })} style={inp} placeholder="https://www.airbnb.com/calendar/ical/..." />
-                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
-                  Airbnb: Listing → Availability → Export Calendar<br />
-                  VRBO: Listing → Calendar → Import/Export<br />
-                  Booking.com: Property → Calendar → iCal Export
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+        {integrations.map(int => (
+          <div key={int.id} style={{ background: '#fff', border: `1px solid ${connected[int.id] ? '#22c55e' : '#e5e7eb'}`, borderRadius: 12, padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 40, height: 40, background: int.bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{int.logo}</div>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: '#111' }}>{int.name}</div>
+                  {connected[int.id] && <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 500 }}>● Connected</div>}
                 </div>
               </div>
+              {connected[int.id] && int.type !== 'built_in' && (
+                <button onClick={() => handleDisconnect(int.id)} style={{ fontSize: 11, color: '#ef4444', background: 'none', border: '1px solid #fca5a5', borderRadius: 6, padding: '3px 10px', cursor: 'pointer' }}>Disconnect</button>
+              )}
             </div>
+            <p style={{ fontSize: 12, color: '#666', lineHeight: 1.6 }}>{int.description}</p>
+            {int.type !== 'built_in' && !connected[int.id] && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {int.docsUrl && (
+                  <a href={int.docsUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: int.color, textDecoration: 'none' }}>{int.docsLabel}</a>
+                )}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    type="text"
+                    placeholder={int.placeholder}
+                    value={inputs[int.id] || ''}
+                    onChange={e => setInputs(prev => ({ ...prev, [int.id]: e.target.value }))}
+                    style={{ flex: 1, padding: '7px 10px', borderRadius: 7, border: '1px solid #e5e7eb', fontSize: 12, fontFamily: 'inherit' }}
+                  />
+                  <button
+                    onClick={() => handleConnect(int.id)}
+                    disabled={loading[int.id] || !inputs[int.id]}
+                    style={{ padding: '7px 14px', background: int.color, color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, cursor: 'pointer', fontWeight: 500, opacity: loading[int.id] ? 0.7 : 1 }}
+                  >
+                    {loading[int.id] ? '...' : 'Connect'}
+                  </button>
+                </div>
+                {messages[int.id] && (
+                  <div style={{ fontSize: 11, color: messages[int.id].type === 'success' ? '#16a34a' : '#ef4444' }}>{messages[int.id].text}</div>
+                )}
+              </div>
+            )}
+            {int.type === 'built_in' && (
+              <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 500 }}>✓ Active on your account</div>
+            )}
+          </div>
+        ))}
+      </div>
 
-            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.property_id || !form.ical_url} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
-                {saving ? 'Saving…' : 'Add Integration'}
-              </button>
+      {pricelabsData.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111', marginBottom: 16 }}>PriceLabs — Live Pricing</h2>
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px', background: '#f8f9fa', padding: '10px 16px', fontSize: 12, fontWeight: 600, color: '#666' }}>
+              <span>Property</span><span>Min Price</span><span>Max Price</span><span>Base Price</span>
             </div>
+            {pricelabsData.slice(0, 10).map((listing: any, i: number) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 120px 120px', padding: '10px 16px', borderTop: '1px solid #f0f0f0', fontSize: 13, color: '#333', alignItems: 'center' }}>
+                <span style={{ fontWeight: 500 }}>{listing.name || listing.listing_name || 'Property ' + (i + 1)}</span>
+                <span style={{ color: '#16a34a' }}>£{listing.min_price || '--'}</span>
+                <span style={{ color: '#ef4444' }}>£{listing.max_price || '--'}</span>
+                <span style={{ fontWeight: 600 }}>£{listing.base_price || '--'}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
     </div>
   )
 }
-
-const lbl: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }
-const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }
