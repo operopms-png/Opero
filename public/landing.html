@@ -1242,7 +1242,7 @@
   var isYearly = false;
   var prices = { starter: 29, growth: 79, professional: 199 };
   var yearlyPrices = { starter: 29, growth: 71, professional: 179 };
-  var yearlyPlans = { starter: 'price_1TfeoYGVqeDYuzWEDnDdfTS8', growth: 'price_1TfepHGVqeDYuzWEH6Ugvb8Q', professional: 'price_1TfeplGVqeDYuzWEAcUuLdCB' };
+  var yearlyPlans = { starter: 'price_1Tfl0kGVqeDYuzWElsWlZLyf', growth: 'price_1Tfl1qGVqeDYuzWEb1htih5S', professional: 'price_1Tfl2AGVqeDYuzWEjAuZlyCI' };
 
   function toggleBilling() {
     isYearly = !isYearly;
@@ -1270,7 +1270,7 @@
     var res = await fetch("/api/create-checkout", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({plan: plan})
+      body: JSON.stringify({plan: plan, priceId: priceId})
     });
     var data = await res.json();
     if (data.url) window.location.href = data.url;

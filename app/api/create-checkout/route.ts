@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-05-27.dahlia',
+  apiVersion: '2025-05-28.basil',
 })
 
 const PRICE_IDS = {
@@ -13,17 +13,17 @@ const PRICE_IDS = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { plan } = await request.json()
-    const priceId = PRICE_IDS[plan as keyof typeof PRICE_IDS]
+    const { plan, priceId } = await request.json()
+    const finalPriceId = priceId || PRICE_IDS[plan as keyof typeof PRICE_IDS]
 
-    if (!priceId) {
+    if (!finalPriceId) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: finalPriceId, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/login?plan=${plan}&success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing.html#pricing`,
       allow_promotion_codes: true,
