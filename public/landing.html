@@ -467,7 +467,7 @@
           <li><span class="pcheck">✓</span>iCal sync (Airbnb, VRBO)</li>
           <li><span class="pcheck">✓</span>2 team members</li>
         </ul>
-        <a href="/login" class="btn-price btn-price-outline">Start free trial</a>
+        <a href="#" onclick="checkout('starter', this)" class="btn-price btn-price-outline">Start free trial</a>
       </div>
       <div class="price-card featured">
         <div class="price-popular">Most popular</div>
@@ -484,7 +484,7 @@
           <li><span class="pcheck">✓</span>ROI per property</li>
           <li><span class="pcheck">✓</span>10 team members</li>
         </ul>
-        <a href="/login" class="btn-price btn-price-fill">Start free trial</a>
+        <a href="#" onclick="checkout('growth', this)" class="btn-price btn-price-fill">Start free trial</a>
       </div>
       <div class="price-card">
         <div class="price-plan">Professional</div>
@@ -500,7 +500,7 @@
           <li><span class="pcheck">✓</span>Priority support</li>
           <li><span class="pcheck">✓</span>Custom branding</li>
         </ul>
-        <a href="/login" class="btn-price btn-price-outline">Start free trial</a>
+        <a href="#" onclick="checkout('professional', this)" class="btn-price btn-price-outline">Start free trial</a>
       </div>
     </div>
   </div>
@@ -662,6 +662,31 @@
       if (!isOpen) item.classList.add('open');
     });
   });
+</script>
+
+<script>
+async function checkout(plan, btn) {
+  const original = btn.textContent;
+  btn.textContent = 'Loading...';
+  btn.style.opacity = '0.7';
+  try {
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ plan })
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      btn.textContent = original;
+      btn.style.opacity = '1';
+    }
+  } catch(e) {
+    btn.textContent = original;
+    btn.style.opacity = '1';
+  }
+}
 </script>
 </body>
 </html>
