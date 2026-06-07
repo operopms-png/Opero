@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-05-27.dahlia',
 })
 
-const PRICE_IDS = {
+const PRICE_IDS: Record<string, string> = {
   starter: 'price_1TfeoYGVqeDYuzWEDnDdfTS8',
   growth: 'price_1TfepHGVqeDYuzWEH6Ugvb8Q',
   professional: 'price_1TfeplGVqeDYuzWEAcUuLdCB',
@@ -13,8 +13,9 @@ const PRICE_IDS = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { plan, priceId } = await request.json()
-    const finalPriceId = priceId || PRICE_IDS[plan as keyof typeof PRICE_IDS]
+    const body = await request.json()
+    const { plan, priceId } = body
+    const finalPriceId = priceId || PRICE_IDS[plan]
 
     if (!finalPriceId) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
@@ -30,8 +31,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (err: any) {
-    console.error("Stripe error:", err.message)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
