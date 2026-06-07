@@ -1270,7 +1270,7 @@
     var res = await fetch("/api/create-checkout", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({plan: plan, priceId: priceId})
+      body: JSON.stringify(isYearly ? {plan: plan, priceId: priceId} : {plan: plan})
     });
     var data = await res.json();
     if (data.url) window.location.href = data.url;
