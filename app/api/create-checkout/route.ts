@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
       allow_promotion_codes: true,
     })
 
-    return NextResponse.json({ url: session.url })
+    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['line_items'],
+    })
+    return NextResponse.json({ url: fullSession.url })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
