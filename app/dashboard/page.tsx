@@ -10,11 +10,17 @@ const supabase = createClient(
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ properties: 0, cleaning: 0, maintenance: 0, revenue: 0 })
+  const [subscription, setSubscription] = useState<any>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: sub } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single()
+        setSubscription(sub)
+      }
       const [{ data: props }, { data: cleaning }, { data: tickets }, { data: bookings }] = await Promise.all([
         supabase.from('properties').select('*'),
         supabase.from('cleaning_tasks').select('*').eq('status', 'pending'),
@@ -45,6 +51,25 @@ export default function DashboardPage() {
         </div>
       </div>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px' }}>
+        {subscription && (
+          <div style={{background: subscription.status === 'active' ? '#f0fdf4' : '#fffbeb', border: `1px solid ${subscription.status === 'active' ? '#bbf7d0' : '#fde68a'}`, borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+              <div style={{width: 36, height: 36, borderRadius: 8, background: subscription.plan === 'professional' ? '#1a1a2e' : subscription.plan === 'growth' ? '#5B7BF8' : '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700}}>
+                {subscription.plan === 'professional' ? 'P' : subscription.plan === 'growth' ? 'G' : 'S'}
+              </div>
+              <div>
+                <div style={{fontSize: 14, fontWeight: 700, color: '#111827', textTransform: 'capitalize'}}>{subscription.plan} Plan</div>
+                <div style={{fontSize: 12, color: '#6b7280'}}>{subscription.billing_period === 'yearly' ? 'Billed yearly' : 'Billed monthly'} · {subscription.status === 'active' ? 'Active' : 'Trial'}</div>
+              </div>
+            </div>
+            <div style={{display: 'flex', gap: 8}}>
+              {subscription.plan !== 'professional' && (
+                <a href="/landing.html#pricing" style={{padding: '8px 16px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none'}}>Upgrade plan</a>
+              )}
+              <a href="/landing.html#pricing" style={{padding: '8px 16px', border: '1px solid #e5e7eb', color: '#374151', borderRadius: 8, fontSize: 13, fontWeight: 500, textDecoration: 'none'}}>Manage billing</a>
+            </div>
+          </div>
+        )}
         <div style={{ marginBottom: 32 }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: '#111827', margin: '0 0 4px' }}>{greeting}! 👋</h2>
           <p style={{ fontSize: 14, color: '#6B7280', margin: 0 }}>Here is what is happening today.</p>
