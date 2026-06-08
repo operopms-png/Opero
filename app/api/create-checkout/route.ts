@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: finalPriceId, quantity: 1 }],
+      subscription_data: { trial_period_days: 14 },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/login?plan=${plan}&success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing.html#pricing`,
       allow_promotion_codes: true,
