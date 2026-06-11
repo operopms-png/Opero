@@ -15,6 +15,7 @@ const NAV = [
   { href: '/owners',       icon: '👤', label: 'Owner Reports',   key: 'owners',       minPlan: 'growth' },
   { href: '/analytics',    icon: '📊', label: 'Analytics',       key: 'analytics',    minPlan: 'growth' },
   { href: '/integrations', icon: '🔌', label: 'Integrations',    key: 'integrations', minPlan: 'growth' },
+  { href: '/team',         icon: '👥', label: 'Team',            key: 'team' },
   { href: '/reports',      icon: '📈', label: 'Advanced Reports',key: 'reports',      minPlan: 'professional' },
   { href: '/documents',    icon: '🗂️', label: 'Documents',       key: 'documents',    minPlan: 'professional' },
   { href: '/statements',   icon: '💷', label: 'Statements',      key: 'statements',   minPlan: 'professional' },
@@ -24,9 +25,9 @@ const NAV = [
 ]
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  starter:      ['dashboard', 'properties', 'cleaning', 'maintenance', 'turnovers'],
-  growth:       ['dashboard', 'properties', 'cleaning', 'maintenance', 'turnovers', 'bookings', 'owners', 'analytics', 'integrations'],
-  professional: ['dashboard', 'properties', 'cleaning', 'maintenance', 'turnovers', 'bookings', 'owners', 'analytics', 'integrations', 'reports', 'documents', 'statements', 'guest-comms', 'portfolio', 'audit'],
+  starter:      ['dashboard', 'properties', 'cleaning', 'maintenance', 'turnovers', 'team'],
+  growth:       ['dashboard', 'properties', 'cleaning', 'maintenance', 'turnovers', 'bookings', 'owners', 'analytics', 'integrations', 'team'],
+  professional: ['dashboard', 'properties', 'cleaning', 'maintenance', 'turnovers', 'bookings', 'owners', 'analytics', 'integrations', 'reports', 'documents', 'statements', 'guest-comms', 'portfolio', 'audit', 'team'],
 }
 
 export default function Sidebar() {
