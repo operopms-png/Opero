@@ -279,15 +279,15 @@ export default function PropertiesPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
                   <label style={lbl}>🏠 Airbnb iCal URL</label>
-                  <input type="url" placeholder="https://www.airbnb.com/calendar/ical/..." value={form.airbnb_ical_url} onChange={e => setForm({ ...form, airbnb_ical_url: e.target.value })} style={inp} />
+                  <input type="url" placeholder="https://www.airbnb.com/calendar/ical/..." value={form.airbnb_ical_url} onChange={e => setForm({ ...form, airbnb_ical_url: e.target.value })} onBlur={e => { if(e.target.value) { setForm(f => ({...f, airbnb_ical_url: e.target.value})); setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }}} style={inp} />
                 </div>
                 <div>
                   <label style={lbl}>🏡 VRBO iCal URL</label>
-                  <input type="url" placeholder="https://www.vrbo.com/icalendar/..." value={form.vrbo_ical_url} onChange={e => setForm({ ...form, vrbo_ical_url: e.target.value })} style={inp} />
+                  <input type="url" placeholder="https://www.vrbo.com/icalendar/..." value={form.vrbo_ical_url} onChange={e => setForm({ ...form, vrbo_ical_url: e.target.value })} onBlur={e => { if(e.target.value) { setForm(f => ({...f, vrbo_ical_url: e.target.value})); setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }}} style={inp} />
                 </div>
                 <div>
                   <label style={lbl}>🌐 Booking.com iCal URL</label>
-                  <input type="url" placeholder="https://ical.booking.com/..." value={form.booking_ical_url} onChange={e => setForm({ ...form, booking_ical_url: e.target.value })} style={inp} />
+                  <input type="url" placeholder="https://ical.booking.com/..." value={form.booking_ical_url} onChange={e => setForm({ ...form, booking_ical_url: e.target.value })} onBlur={e => { if(e.target.value) { setForm(f => ({...f, booking_ical_url: e.target.value})); setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }}} style={inp} />
                 </div>
               </div>
             </div>
