@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabase } from '@/lib/supabase'
 
 type Property = {
   id: string
@@ -45,10 +45,7 @@ const INITIAL_FORM = {
 }
 
 export default function PropertiesPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getSupabase()
 
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
