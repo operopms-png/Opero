@@ -117,7 +117,9 @@ export default function PropertiesPage() {
     }
     setSaving(false)
     setShowModal(false)
-    fetchData()
+    setShowModal(false)
+    await fetchData()
+    fetch('/api/sync-ical').then(() => fetchData())
   }
 
   async function deleteProperty(id: string) {
