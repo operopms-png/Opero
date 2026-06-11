@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     if (email) {
       const { data: users } = await supabase.auth.admin.listUsers()
-      const user = users?.users?.find((u: { email: string }) => u.email === email)
+      const user = users?.users?.find((u) => u.email === email)
 
       if (user) {
         await supabase.from('subscriptions').upsert({
