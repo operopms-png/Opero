@@ -226,6 +226,31 @@ export default function PMPage() {
                 </svg>
               </div>
             </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Rent Collection Trends</div>
+                <div style={{display:'flex',gap:16,fontSize:11,color:'#667085',marginBottom:12}}>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:12,height:2,background:'#10B981',display:'inline-block',borderRadius:2}}></span>Collected</span>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:12,height:2,background:'#E4E7EC',display:'inline-block',borderRadius:2}}></span>Due</span>
+                </div>
+                <svg viewBox="0 0 300 80" style={{width:'100%'}}>
+                  <polyline points="10,70 60,55 110,60 160,35 210,40 260,20 290,15" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="10,75 60,72 110,74 160,65 210,68 260,58 290,55" fill="none" stroke="#E4E7EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
+                </svg>
+              </div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Occupancy Trends</div>
+                <div style={{display:'flex',gap:16,fontSize:11,color:'#667085',marginBottom:12}}>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#EEF0FF',display:'inline-block',borderRadius:2}}></span>Previous</span>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#3B4AFF',display:'inline-block',borderRadius:2}}></span>Current</span>
+                </div>
+                <svg viewBox="0 0 300 80" style={{width:'100%'}}>
+                  {([{x:10,h:40,p:true},{x:55,h:45,p:true},{x:100,h:35,p:true},{x:145,h:55,p:false},{x:190,h:58,p:false},{x:235,h:62,p:false}] as any[]).map((b,i)=>(<rect key={i} x={b.x} y={75-b.h} width={30} height={b.h} rx="3" fill={b.p?'#EEF0FF':'#3B4AFF'}/>))}
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={15+(i*45)} y={79} fontSize="8" fill="#98A2B3">{m}</text>))}
+                </svg>
+              </div>
+            </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
                 <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:14}}>Upcoming Lease Expiries</div>
