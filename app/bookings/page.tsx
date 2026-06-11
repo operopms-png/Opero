@@ -148,7 +148,7 @@ export default function BookingsPage() {
                     <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{b.properties?.name ?? '—'}</div>
                   </div>
                   <div style={{ fontSize: 13, color: '#374151' }}>
-                    <div>📅 {new Date(b.check_in).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(b.check_out).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                    <div>{new Date(b.check_in).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(b.check_out).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     <div style={{ color: '#9CA3AF', marginTop: 2 }}>{nights(b.check_in, b.check_out)} nights{b.platform ? ` · ${b.platform}` : ''}</div>
                   </div>
                   <div style={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>

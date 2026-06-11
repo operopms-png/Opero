@@ -114,7 +114,7 @@ export default function TurnoversPage() {
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>Loading turnovers…</div>
         ) : turnovers.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔄</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
             <div style={{ fontSize: 16, fontWeight: 500 }}>No turnovers scheduled</div>
           </div>
         ) : (
@@ -186,10 +186,10 @@ function TurnoverRow({ t, onStatus, onDelete }: { t: Turnover; onStatus: (id: st
       <div>
         <div style={{ fontWeight: 600, fontSize: 15, color: '#111827', marginBottom: 4 }}>{t.properties?.name ?? '—'}</div>
         <div style={{ fontSize: 13, color: '#6B7280', display: 'flex', gap: 12 }}>
-          <span>📅 {new Date(t.turnover_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+          <span>{new Date(t.turnover_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
           {t.check_out_time && <span>🚪 Out {t.check_out_time}</span>}
           {t.check_in_time && <span>🔑 In {t.check_in_time}</span>}
-          {t.assigned_to && <span>👤 {t.assigned_to}</span>}
+          {t.assigned_to && <span>{t.assigned_to}</span>}
         </div>
       </div>
       <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: cfg.color, background: cfg.bg, whiteSpace: 'nowrap' }}>{cfg.label}</span>

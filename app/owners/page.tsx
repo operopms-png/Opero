@@ -270,7 +270,7 @@ export default function OwnersPage() {
             {/* STATEMENTS / FINANCE / CALENDAR — placeholder tabs */}
             {(tab === 'statements' || tab === 'finance' || tab === 'calendar') && (
               <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>🚧</div>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <div style={{ fontSize: 16, fontWeight: 500 }}>Coming soon</div>
                 <div style={{ fontSize: 14, marginTop: 4 }}>This section is being built</div>
               </div>

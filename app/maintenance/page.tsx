@@ -142,7 +142,7 @@ export default function MaintenancePage() {
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: pri.color, background: pri.bg, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{pri.label}</span>
                     </div>
                     <div style={{ fontSize: 13, color: '#6B7280' }}>
-                      {t.properties?.name ?? '—'}{t.assigned_to ? ` · 👤 ${t.assigned_to}` : ''}{t.description ? ` · ${t.description}` : ''}
+                      {t.properties?.name ?? '—'}{t.assigned_to ? ` · ${t.assigned_to}` : ''}{t.description ? ` · ${t.description}` : ''}
                     </div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: sta.color, background: sta.bg, whiteSpace: 'nowrap' }}>{sta.label}</span>

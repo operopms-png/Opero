@@ -182,9 +182,9 @@ export default function CleaningTasksPage() {
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6B7280' }}>
-                      <span>📅 {new Date(task.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                      {task.assigned_to && <span>👤 {task.assigned_to}</span>}
-                      {task.notes && <span>📝 {task.notes}</span>}
+                      <span>{new Date(task.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                      {task.assigned_to && <span>{task.assigned_to}</span>}
+                      {task.notes && <span>{task.notes}</span>}
                     </div>
                   </div>
 

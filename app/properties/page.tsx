@@ -149,7 +149,7 @@ export default function PropertiesPage() {
       const res = await fetch('/api/sync-ical')
       const data = await res.json()
       setSyncMsg(`✅ Synced ${data.synced?.length ?? 0} properties`)
-    } catch { setSyncMsg('❌ Sync failed') }
+    } catch { setSyncMsg('Sync failed') }
     setSyncing(false)
     setTimeout(() => setSyncMsg(''), 4000)
   }
@@ -229,7 +229,7 @@ export default function PropertiesPage() {
               return (
                 <div key={p.id} style={{ background: '#fff', borderRadius: 14, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
                   <div style={{ height: 160, background: p.image_url ? 'none' : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                    {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 48, opacity: 0.3 }}>🏠</span>}
+                    {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.3}}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
                   </div>
                   <div style={{ padding: '16px 18px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
@@ -309,8 +309,8 @@ export default function PropertiesPage() {
             {/* iCal */}
             <div style={{ fontSize: 13, fontWeight: 600, color: '#6B7280', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Calendar Sync (iCal)</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-              <div><label style={lbl}>🏠 Airbnb iCal URL</label><input type="url" placeholder="https://www.airbnb.com/calendar/ical/..." value={form.airbnb_ical_url} onChange={e => setForm({ ...form, airbnb_ical_url: e.target.value })} onBlur={e => { if (e.target.value) setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }} style={inp} /></div>
-              <div><label style={lbl}>🏡 VRBO iCal URL</label><input type="url" placeholder="https://www.vrbo.com/icalendar/..." value={form.vrbo_ical_url} onChange={e => setForm({ ...form, vrbo_ical_url: e.target.value })} onBlur={e => { if (e.target.value) setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }} style={inp} /></div>
+              <div><label style={lbl}>Airbnb iCal URL</label><input type="url" placeholder="https://www.airbnb.com/calendar/ical/..." value={form.airbnb_ical_url} onChange={e => setForm({ ...form, airbnb_ical_url: e.target.value })} onBlur={e => { if (e.target.value) setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }} style={inp} /></div>
+              <div><label style={lbl}>VRBO iCal URL</label><input type="url" placeholder="https://www.vrbo.com/icalendar/..." value={form.vrbo_ical_url} onChange={e => setForm({ ...form, vrbo_ical_url: e.target.value })} onBlur={e => { if (e.target.value) setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }} style={inp} /></div>
               <div><label style={lbl}>🌐 Booking.com iCal URL</label><input type="url" placeholder="https://ical.booking.com/..." value={form.booking_ical_url} onChange={e => setForm({ ...form, booking_ical_url: e.target.value })} onBlur={e => { if (e.target.value) setTimeout(() => fetch('/api/sync-ical').then(() => fetchData()), 500) }} style={inp} /></div>
             </div>
 

@@ -256,7 +256,7 @@ export default function DashboardPage() {
                       {p.airbnb_ical_url && (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 16 }}>🏠</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                             <span style={{ fontSize: 13, fontWeight: 500, color: '#0F172A' }}>Airbnb</span>
                             <span style={{ fontSize: 11, color: '#94A3B8' }}>{p.name}</span>
                           </div>
@@ -266,7 +266,7 @@ export default function DashboardPage() {
                       {p.vrbo_ical_url && (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 16 }}>🏡</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                             <span style={{ fontSize: 13, fontWeight: 500, color: '#0F172A' }}>VRBO</span>
                             <span style={{ fontSize: 11, color: '#94A3B8' }}>{p.name}</span>
                           </div>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
             )}
             {plan === 'growth' && (
               <div className="card" style={{ padding: 24, background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', border: 'none' }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>⚡ Unlock Professional</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Unlock Professional</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 16, lineHeight: 1.6 }}>Advanced reports, document storage, custom branding and API access.</div>
                 <a href="/landing.html#pricing" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Upgrade to Professional →</a>
               </div>

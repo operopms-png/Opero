@@ -92,7 +92,7 @@ export default function TeamPage() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 44, height: 44, borderRadius: 12, background: ROLE_COLOR[m.role ?? 'cleaner'] + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                      {m.role === 'cleaner' ? '🧹' : m.role === 'maintenance' ? '🔧' : m.role === 'manager' ? '👤' : m.role === 'inspector' ? '🔍' : '⚡'}
+                      {m.role === 'cleaner' ? 'C' : m.role === 'maintenance' ? 'M' : m.role === 'manager' ? 'Mg' : m.role === 'inspector' ? 'I' : 'A'}
                     </div>
                     <div>
                       <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A' }}>{m.name}</div>
