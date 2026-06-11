@@ -1,18 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
-import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-05-27.dahlia',
-})
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
+    const Stripe = (await import('stripe')).default
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2026-05-27.dahlia',
+    })
     const sessionId = request.nextUrl.searchParams.get('session_id')
     if (!sessionId) return NextResponse.json({ error: 'No session' }, { status: 400 })
-
     const session = await stripe.checkout.sessions.retrieve(sessionId)
-
     return NextResponse.json({
       propertyName: session.metadata?.propertyName || '',
       checkIn: session.metadata?.checkIn || '',
