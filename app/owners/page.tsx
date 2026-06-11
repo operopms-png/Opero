@@ -75,7 +75,7 @@ export default function OwnersPage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>👥</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Owner Reports</h1>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>

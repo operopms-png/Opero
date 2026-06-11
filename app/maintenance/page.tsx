@@ -99,7 +99,7 @@ export default function MaintenancePage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>🔧</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Maintenance</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{tickets.filter(t => t.status === 'open').length} open</span>
           </div>

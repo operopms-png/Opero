@@ -105,7 +105,7 @@ export default function CleaningTasksPage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>🧹</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l9-9M12.5 6.5l5 5-9 9H3v-5.5l9-9z"/><path d="M15 3l3 3-9 9-3-3z"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Cleaning Tasks</h1>
           </div>
           <button
