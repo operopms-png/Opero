@@ -184,4 +184,90 @@ export default function Sidebar() {
       </aside>
     </>
   )
+}      <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
+        {NAV_GROUPS.map((group: any, gi: number) => {
+          const hasModule = !group.module || (modules as string[]).includes(group.module)
+          return (
+            <div key={group.label}>
+              {gi > 0 && <div style={{ height:1, background:'#F2F4F7', margin:'6px 0' }} />}
+              <div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'6px 10px 4px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                {group.label}
+                {!hasModule && group.modulePrice && <span style={{ fontSize:9, fontWeight:700, background:'#F2F4F7', color:'#667085', padding:'2px 6px', borderRadius:4 }}>{group.modulePrice}</span>}
+              </div>
+              {group.items.map(({ href, icon, label, key, minPlan }: any) => {
+                const hasAccess = hasModule && features.includes(key)
+                const active = pathname === href.split('?')[0]
+                return (
+                  <Link key={href} href={hasModule ? href : '#'}
+                    onClick={(e: any) => { if (!hasModule || !hasAccess) e.preventDefault(); else setOpen(false) }}
+                    style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 10px', borderRadius:7, marginBottom:1, textDecoration:'none', fontSize:13.5, fontWeight:active?600:400, background:active?'#EEF0FF':'transparent', color:!hasModule?'#C1C9D2':!hasAccess?'#C1C9D2':active?'#3B4AFF':'#344054', cursor:hasModule&&hasAccess?'pointer':'not-allowed', opacity:!hasModule?0.5:1 }}>
+                    <Icon name={icon} size={16} color={!hasModule?'#C1C9D2':!hasAccess?'#C1C9D2':active?'#3B4AFF':'#667085'} />
+                    <span style={{ flex:1, lineHeight:1 }}>{label}</span>
+                    {!hasModule && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C1C9D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
+                    {hasModule && !hasAccess && minPlan && <span style={{ fontSize:9, fontWeight:700, padding:'2px 5px', borderRadius:4, background:minPlan==='professional'?'#1D2939':'#EEF0FF', color:minPlan==='professional'?'#fff':'#3B4AFF', textTransform:'uppercase', letterSpacing:'0.04em' }}>{minPlan==='professional'?'Pro':'Growth'}</span>}
+                  </Link>
+                )
+              })}
+              {!hasModule && <a href="/modules" style={{ display:'block', textAlign:'center', fontSize:11, fontWeight:600, color:group.module==='dev'?'#8B5CF6':'#3B4AFF', background:group.module==='dev'?'#EDE9FE':'#EEF0FF', borderRadius:6, padding:'5px 8px', textDecoration:'none', margin:'4px 0 8px' }}>Unlock — {group.modulePrice}</a>}
+            </div>
+          )
+        })}
+      </nav>
+
+      {/* Bottom */}
+      <div style={{ padding: '10px', borderTop: '1px solid #F2F4F7' }}>
+        {plan !== 'professional' && (
+          <a href="/landing.html#pricing" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '8px', borderRadius: 7, background: '#3B4AFF',
+            color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none',
+            marginBottom: 6, gap: 6,
+          }}>
+            ⚡ Upgrade plan
+          </a>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, marginBottom: 4 }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#3B4AFF', flexShrink: 0 }}>
+            {userEmail.charAt(0).toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 500, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail.split('@')[0]}</div>
+            <div style={{ fontSize: 11, color: '#98A2B3', textTransform: 'capitalize' }}>{plan}</div>
+          </div>
+          <button onClick={handleSignOut} title="Sign out" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#98A2B3', display: 'flex' }}>
+            <Icon name="logout" size={14} color="#98A2B3" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        .sidebar-nav a:hover { background: #F9FAFB !important; }
+      `}</style>
+
+      {/* Mobile top bar */}
+      <div className="mobile-menu-btn" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 52, background: '#fff', borderBottom: '1px solid #F2F4F7', display: 'none', alignItems: 'center', padding: '0 16px', zIndex: 50, gap: 12 }}>
+        <button onClick={() => setOpen(true)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#344054' }}>☰</button>
+        <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+        <span style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>Opero</span>
+      </div>
+
+      {/* Mobile overlay */}
+      {open && <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />}
+
+      {/* Mobile sidebar */}
+      <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#fff', zIndex: 50, borderRight: '1px solid #F2F4F7', fontFamily: "'Inter', sans-serif" }}>
+        {sidebarContent}
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside className="sidebar-nav" style={{ width: 220, minHeight: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif" }}>
+        {sidebarContent}
+      </aside>
+    </>
+  )
 }
