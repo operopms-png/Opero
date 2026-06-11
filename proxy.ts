@@ -8,7 +8,13 @@ export async function proxy(request: NextRequest) {
   if (!isProtected) return NextResponse.next()
 
   const cookies = request.cookies.getAll()
-  const hasSession = cookies.some(c => c.name.startsWith('sb-') && c.name.includes('auth-token'))
+  
+  // Check for any Supabase auth cookie
+  const hasSession = cookies.some(c => 
+    c.name.startsWith('sb-') || 
+    c.name.includes('supabase') ||
+    c.name.includes('auth')
+  )
 
   if (!hasSession) {
     const loginUrl = new URL('/login', request.url)
