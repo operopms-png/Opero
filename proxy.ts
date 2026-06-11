@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PROTECTED = ['/dashboard', '/properties', '/bookings', '/cleaning', '/maintenance', '/turnovers', '/owners', '/analytics', '/integrations', '/team', '/reports', '/documents', '/guest-comms', '/audit', '/portfolio', '/branding', '/api-access', '/statements']
+const PROTECTED = ['/dashboard', '/properties', '/bookings', '/cleaning', '/maintenance', '/turnovers', '/owners', '/analytics', '/integrations', '/team', '/reports', '/documents', '/guest-comms', '/audit']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -8,13 +8,20 @@ export async function proxy(request: NextRequest) {
   if (!isProtected) return NextResponse.next()
 
   const cookies = request.cookies.getAll()
+  const cookieNames = cookies.map(c => c.name)
   
-  // Check for any Supabase auth cookie
-  const hasSession = cookies.some(c => 
-    c.name.startsWith('sb-') || 
-    c.name.includes('supabase') ||
-    c.name.includes('auth')
+  // Allow through if ANY cookie exists that looks like a session
+  const hasSession = cookieNames.some(name => 
+    name.includes('sb-') ||
+    name.includes('supabase') ||
+    name.includes('session') ||
+    name.includes('token') ||
+    name.includes('auth')
   )
+
+  // Add cookie debug header
+  const response = NextResponse.next()
+  response.headers.set('x-cookies', cookieNames.join(',').slice(0, 200))
 
   if (!hasSession) {
     const loginUrl = new URL('/login', request.url)
@@ -22,7 +29,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
