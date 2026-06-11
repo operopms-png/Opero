@@ -191,7 +191,49 @@ export default function STRPage() {
             </div>
           </div>
         )}
-        {tab==='Owner Reports' && <div style={{ textAlign:'center', padding:40 }}><div style={{ fontSize:14, color:'#667085', marginBottom:16 }}>Full owner reporting with revenue splits and ROI</div><a href="/owners" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Open Owner Reports</a></div>}
+        {tab==='Owner Reports' && (
+          <div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:24 }}>
+              {[
+                { label:'Gross Revenue', value:`£${stats.revenue.toLocaleString()}` },
+                { label:'Management Fee (20%)', value:`£${Math.round(stats.revenue*0.2).toLocaleString()}` },
+                { label:'Owner Share (80%)', value:`£${Math.round(stats.revenue*0.8).toLocaleString()}`, green:true },
+                { label:'Total Bookings', value:bookings.filter((b:any)=>b.status!=='cancelled').length },
+              ].map((c:any)=>(
+                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:24, fontWeight:800, color:c.green?'#10B981':'#101828' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
+              <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:12, padding:'20px 24px', textAlign:'center' }}>
+                <div style={{ fontSize:11, fontWeight:600, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Owner Share (80%)</div>
+                <div style={{ fontSize:32, fontWeight:800, color:'#10B981' }}>£{Math.round(stats.revenue*0.8).toLocaleString()}</div>
+              </div>
+              <div style={{ background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:12, padding:'20px 24px', textAlign:'center' }}>
+                <div style={{ fontSize:11, fontWeight:600, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Management Take (20%)</div>
+                <div style={{ fontSize:32, fontWeight:800, color:'#2563EB' }}>£{Math.round(stats.revenue*0.2).toLocaleString()}</div>
+              </div>
+            </div>
+            <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
+              <div style={{ padding:'14px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:13, fontWeight:600, color:'#101828' }}>Booking Revenue</div>
+              {bookings.filter((b:any)=>b.status!=='cancelled').slice(0,10).map((b:any)=>(
+                <div key={b.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13 }}>
+                  <div>
+                    <div style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'Guest'}</div>
+                    <div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name} · {b.check_in}</div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontWeight:600, color:'#10B981' }}>+£{(b.total_amount??0).toLocaleString()}</div>
+                    <div style={{ fontSize:11, color:'#98A2B3' }}>Owner: £{Math.round((b.total_amount??0)*0.8).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+              {bookings.filter((b:any)=>b.status!=='cancelled').length===0 && <div style={{ textAlign:'center', padding:40, color:'#98A2B3', fontSize:13 }}>No bookings yet</div>}
+            </div>
+          </div>
+        )}
         {tab==='Analytics' && (
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
@@ -244,7 +286,32 @@ export default function STRPage() {
             </div>
           </div>
         )}
-        {tab==='Integrations' && <div style={{ textAlign:'center', padding:40 }}><div style={{ fontSize:14, color:'#667085', marginBottom:16 }}>Connect Airbnb, VRBO, Booking.com and PriceLabs</div><a href="/integrations" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Open Integrations</a></div>}
+        {tab==='Integrations' && (
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+            {[
+              { name:'Airbnb iCal', desc:'Sync bookings via iCal URL', color:'#FF5A5F', connected:false },
+              { name:'VRBO iCal', desc:'Sync VRBO bookings automatically', color:'#3D67FF', connected:false },
+              { name:'Booking.com iCal', desc:'Sync Booking.com reservations', color:'#003580', connected:false },
+              { name:'PriceLabs', desc:'Dynamic pricing recommendations', color:'#5B4EFF', connected:false },
+              { name:'Stripe', desc:'Process direct booking payments', color:'#635BFF', connected:true },
+              { name:'PayPal', desc:'Accept PayPal payments from guests', color:'#009CDE', connected:false },
+            ].map(i=>(
+              <div key={i.name} style={{ background:'#fff', borderRadius:12, border:`1px solid ${i.connected?'#BBF7D0':'#E4E7EC'}`, padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                  <div style={{ width:40, height:40, borderRadius:10, background:i.color+'18', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:13, color:i.color }}>{i.name.charAt(0)}</div>
+                  <div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{i.name}</div>
+                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{i.desc}</div>
+                  </div>
+                </div>
+                {i.connected ?
+                  <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>Connected</span> :
+                  <a href="/integrations" style={{ fontSize:12, fontWeight:600, padding:'6px 14px', borderRadius:8, background:'#101828', color:'#fff', textDecoration:'none' }}>Connect</a>
+                }
+              </div>
+            ))}
+          </div>
+        )}
         {tab==='Team' && (
           <div>
             <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:16 }}><a href="/team" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Manage Team</a></div>
@@ -254,8 +321,64 @@ export default function STRPage() {
             </div>
           </div>
         )}
-        {tab==='Reports' && <div style={{ textAlign:'center', padding:40 }}><div style={{ fontSize:14, color:'#667085', marginBottom:16 }}>Revenue reports and CSV exports</div><a href="/reports" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Open Reports</a></div>}
-        {tab==='Guest Comms' && <div style={{ textAlign:'center', padding:40 }}><div style={{ fontSize:14, color:'#667085', marginBottom:16 }}>Message templates for check-in, checkout and reviews</div><a href="/guest-comms" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Open Guest Comms</a></div>}
+        {tab==='Reports' && (
+          <div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
+              {[
+                { label:'Total Revenue', value:`£${stats.revenue.toLocaleString()}` },
+                { label:'Total Bookings', value:bookings.filter((b:any)=>b.status!=='cancelled').length },
+                { label:'Properties', value:properties.length },
+              ].map((c:any)=>(
+                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:28, fontWeight:800, color:'#101828' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase' }}>
+                <span>Guest</span><span>Property</span><span>Check In</span><span>Check Out</span><span>Amount</span>
+              </div>
+              {bookings.filter((b:any)=>b.status!=='cancelled').length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No bookings yet</div> :
+              bookings.filter((b:any)=>b.status!=='cancelled').map((b:any)=>(
+                <div key={b.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
+                  <span style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'—'}</span>
+                  <span>{b.properties?.name??'—'}</span>
+                  <span>{b.check_in??'—'}</span>
+                  <span>{b.check_out??'—'}</span>
+                  <span style={{ fontWeight:600 }}>£{(b.total_amount??0).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {tab==='Guest Comms' && (
+          <div style={{ display:'grid', gridTemplateColumns:'260px 1fr', gap:24 }}>
+            <div>
+              <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:12 }}>Templates</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {['Welcome Message','Check-in Instructions','Check-out Reminder','Review Request'].map(t=>(
+                  <div key={t} style={{ padding:'12px 14px', borderRadius:10, border:'1px solid #E4E7EC', background:'#fff', cursor:'pointer', fontSize:13, color:'#344054' }}>{t}</div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E4E7EC', padding:28 }}>
+              <div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:4 }}>Welcome Message</div>
+              <div style={{ fontSize:13, color:'#667085', marginBottom:16 }}>Subject: Welcome to your stay!</div>
+              <textarea defaultValue={`Hi {guest_name},
+
+Welcome! We're excited to host you.
+
+Check-in: {check_in}
+Check-out: {check_out}
+
+Please don't hesitate to reach out if you need anything.
+
+Best regards`} style={{ width:'100%', minHeight:200, padding:14, borderRadius:10, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', resize:'vertical', boxSizing:'border-box', lineHeight:1.6 }} />
+              <button onClick={()=>alert('Copied!')} style={{ marginTop:12, padding:'10px 20px', borderRadius:8, border:'1px solid #D0D5DD', background:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>Copy to clipboard</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
