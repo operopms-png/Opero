@@ -67,7 +67,7 @@ export default function PropertiesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
       const { data: sub } = await supabase.from('subscriptions').select('plan').eq('user_id', user.id).single()
-      if (sub?.plan) setPlan(sub.plan)
+      if (sub && (sub as any).plan) setPlan((sub as any).plan)
     }
     const { data } = await supabase.from('properties').select('*').order('created_at', { ascending: false })
     if (data) setProperties(data as Property[])
