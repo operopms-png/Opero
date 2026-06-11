@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-
-
 type Property = {
   id: string
   name: string
@@ -15,6 +13,9 @@ type Property = {
   bathrooms: number | null
   max_guests: number | null
   status: 'active' | 'inactive' | 'maintenance' | null
+  airbnb_ical_url: string | null
+  vrbo_ical_url: string | null
+  booking_ical_url: string | null
   created_at: string
 }
 
@@ -33,6 +34,7 @@ const PLAN_LIMITS: Record<string, number> = {
 const INITIAL_FORM = {
   name: '', address: '', city: '', country: '',
   bedrooms: '', bathrooms: '', max_guests: '', status: 'active',
+  airbnb_ical_url: '', vrbo_ical_url: '', booking_ical_url: '',
 }
 
 export default function PropertiesPage() {
@@ -40,6 +42,7 @@ export default function PropertiesPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -49,6 +52,8 @@ export default function PropertiesPage() {
   const [editId, setEditId] = useState<string | null>(null)
   const [plan, setPlan] = useState<string>('starter')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
 
   useEffect(() => { fetchData() }, [])
 
@@ -74,13 +79,20 @@ export default function PropertiesPage() {
 
   function openEdit(p: Property) {
     setEditId(p.id)
-    setForm({ name: p.name ?? '', address: p.address ?? '', city: p.city ?? '', country: p.country ?? '', bedrooms: p.bedrooms?.toString() ?? '', bathrooms: p.bathrooms?.toString() ?? '', max_guests: p.max_guests?.toString() ?? '', status: p.status ?? 'active' })
+    setForm({
+      name: p.name ?? '', address: p.address ?? '', city: p.city ?? '',
+      country: p.country ?? '', bedrooms: p.bedrooms?.toString() ?? '',
+      bathrooms: p.bathrooms?.toString() ?? '', max_guests: p.max_guests?.toString() ?? '',
+      status: p.status ?? 'active',
+      airbnb_ical_url: p.airbnb_ical_url ?? '',
+      vrbo_ical_url: p.vrbo_ical_url ?? '',
+      booking_ical_url: p.booking_ical_url ?? '',
+    })
     setShowModal(true)
   }
 
   async function handleSave() {
     if (!form.name) return
-    // Safety check — block if at limit and creating new
     if (!editId && atLimit) { setShowModal(false); setShowUpgradeModal(true); return }
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -94,6 +106,9 @@ export default function PropertiesPage() {
       bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
       max_guests: form.max_guests ? parseInt(form.max_guests) : null,
       status: form.status,
+      airbnb_ical_url: form.airbnb_ical_url || null,
+      vrbo_ical_url: form.vrbo_ical_url || null,
+      booking_ical_url: form.booking_ical_url || null,
     }
     if (editId) {
       await supabase.from('properties').update(payload).eq('id', editId)
@@ -111,6 +126,20 @@ export default function PropertiesPage() {
     setProperties(prev => prev.filter(p => p.id !== id))
   }
 
+  async function syncAllIcal() {
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/sync-ical')
+      const data = await res.json()
+      setSyncMsg(`✅ Synced ${data.synced?.length ?? 0} properties`)
+    } catch {
+      setSyncMsg('❌ Sync failed')
+    }
+    setSyncing(false)
+    setTimeout(() => setSyncMsg(''), 4000)
+  }
+
   const filtered = properties.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.city?.toLowerCase().includes(search.toLowerCase()) ||
@@ -125,7 +154,6 @@ export default function PropertiesPage() {
     <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
 
-      {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -136,21 +164,14 @@ export default function PropertiesPage() {
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {syncMsg && <span style={{ fontSize: 13, color: '#6B7280' }}>{syncMsg}</span>}
+            <button onClick={syncAllIcal} disabled={syncing} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#374151' }}>
+              {syncing ? 'Syncing…' : '🔄 Sync iCal'}
+            </button>
             {atLimit && plan !== 'professional' && (
-              <a href="/landing.html#pricing" style={{ fontSize: 13, color: '#5B7BF8', fontWeight: 500, textDecoration: 'none' }}>
-                ⚡ Upgrade for more
-              </a>
+              <a href="/landing.html#pricing" style={{ fontSize: 13, color: '#5B7BF8', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
             )}
-            <button
-              onClick={openCreate}
-              style={{
-                background: atLimit ? '#E5E7EB' : '#111827',
-                color: atLimit ? '#9CA3AF' : '#fff',
-                border: 'none', borderRadius: 8, padding: '9px 18px',
-                fontSize: 14, fontWeight: 500,
-                cursor: atLimit ? 'not-allowed' : 'pointer',
-              }}
-            >
+            <button onClick={openCreate} style={{ background: atLimit ? '#E5E7EB' : '#111827', color: atLimit ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: atLimit ? 'not-allowed' : 'pointer' }}>
               + Add Property
             </button>
           </div>
@@ -158,25 +179,16 @@ export default function PropertiesPage() {
       </div>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px' }}>
-
-        {/* Limit warning banner */}
         {atLimit && plan !== 'professional' && (
           <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#92400E' }}>
-                🚫 You've reached your {planLabel} plan limit of {propertyLimit} {propertyLimit === 1 ? 'property' : 'properties'}
-              </div>
-              <div style={{ fontSize: 13, color: '#92400E', marginTop: 2, opacity: 0.8 }}>
-                Upgrade to {nextPlan} to add more properties.
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#92400E' }}>🚫 You've reached your {planLabel} plan limit of {propertyLimit} properties</div>
+              <div style={{ fontSize: 13, color: '#92400E', marginTop: 2, opacity: 0.8 }}>Upgrade to {nextPlan} to add more.</div>
             </div>
-            <a href="/landing.html#pricing" style={{ padding: '9px 18px', background: '#F59E0B', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              Upgrade to {nextPlan} →
-            </a>
+            <a href="/landing.html#pricing" style={{ padding: '9px 18px', background: '#F59E0B', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Upgrade to {nextPlan} →</a>
           </div>
         )}
 
-        {/* Near limit warning */}
         {!atLimit && propertyLimit !== Infinity && properties.length === propertyLimit - 1 && (
           <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 20px', marginBottom: 24, fontSize: 13, color: '#92400E' }}>
             ⚠️ You have <strong>1 property slot remaining</strong> on your {planLabel} plan. <a href="/landing.html#pricing" style={{ color: '#5B7BF8', fontWeight: 500 }}>Upgrade</a> to add more.
@@ -198,6 +210,7 @@ export default function PropertiesPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
             {filtered.map(p => {
               const cfg = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG['inactive']
+              const icalCount = [p.airbnb_ical_url, p.vrbo_ical_url, p.booking_ical_url].filter(Boolean).length
               return (
                 <div key={p.id} style={{ background: '#fff', borderRadius: 14, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
                   <div style={{ height: 140, background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -212,10 +225,16 @@ export default function PropertiesPage() {
                       <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: cfg.color, background: cfg.bg, whiteSpace: 'nowrap' }}>{cfg.label}</span>
                     </div>
                     {p.address && <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 12 }}>{p.address}</div>}
-                    <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6B7280', paddingTop: 12, borderTop: '1px solid #F3F4F6' }}>
-                      {p.bedrooms != null && <span>🛏 {p.bedrooms} bed</span>}
-                      {p.bathrooms != null && <span>🚿 {p.bathrooms} bath</span>}
-                      {p.max_guests != null && <span>👥 {p.max_guests} guests</span>}
+                    <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6B7280', paddingTop: 12, borderTop: '1px solid #F3F4F6', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        {p.bedrooms != null && <span>🛏 {p.bedrooms} bed</span>}
+                        {p.bathrooms != null && <span>🚿 {p.bathrooms} bath</span>}
+                      </div>
+                      {icalCount > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: '#10B981', background: '#D1FAE5' }}>
+                          🔗 {icalCount} iCal{icalCount > 1 ? 's' : ''}
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                       <button onClick={() => openEdit(p)} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
@@ -232,7 +251,7 @@ export default function PropertiesPage() {
       {/* Add/Edit modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 520, margin: '0 16px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 560, margin: '0 16px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2 style={{ margin: '0 0 24px', fontSize: 18, fontWeight: 600 }}>{editId ? 'Edit Property' : 'Add Property'}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Property Name *</label><input type="text" placeholder="e.g. Villa Rosso" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inp} /></div>
@@ -250,6 +269,27 @@ export default function PropertiesPage() {
                 </select>
               </div>
             </div>
+
+            {/* iCal section */}
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #F3F4F6' }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 4 }}>📅 Calendar Sync (iCal)</div>
+              <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>Paste iCal URLs to automatically sync bookings from each platform.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={lbl}>🏠 Airbnb iCal URL</label>
+                  <input type="url" placeholder="https://www.airbnb.com/calendar/ical/..." value={form.airbnb_ical_url} onChange={e => setForm({ ...form, airbnb_ical_url: e.target.value })} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>🏡 VRBO iCal URL</label>
+                  <input type="url" placeholder="https://www.vrbo.com/icalendar/..." value={form.vrbo_ical_url} onChange={e => setForm({ ...form, vrbo_ical_url: e.target.value })} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>🌐 Booking.com iCal URL</label>
+                  <input type="url" placeholder="https://ical.booking.com/..." value={form.booking_ical_url} onChange={e => setForm({ ...form, booking_ical_url: e.target.value })} style={inp} />
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
               <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
@@ -266,17 +306,11 @@ export default function PropertiesPage() {
           <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 420, margin: '0 16px', textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Property limit reached</h2>
-            <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 8px' }}>
-              Your <strong>{planLabel} plan</strong> allows up to <strong>{propertyLimit} {propertyLimit === 1 ? 'property' : 'properties'}</strong>.
-            </p>
-            <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px' }}>
-              Upgrade to <strong>{nextPlan} ({nextPrice}/mo)</strong> to add more.
-            </p>
+            <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 8px' }}>Your <strong>{planLabel} plan</strong> allows up to <strong>{propertyLimit} properties</strong>.</p>
+            <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px' }}>Upgrade to <strong>{nextPlan} ({nextPrice}/mo)</strong> to add more.</p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowUpgradeModal(false)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <a href="/landing.html#pricing" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#5B7BF8', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>
-                Upgrade to {nextPlan} →
-              </a>
+              <a href="/landing.html#pricing" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#5B7BF8', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>Upgrade to {nextPlan} →</a>
             </div>
           </div>
         </div>
