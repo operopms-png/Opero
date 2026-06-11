@@ -5,10 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 type Turnover = {
   id: string
@@ -32,6 +29,10 @@ const STATUS_CONFIG = {
 const INITIAL_FORM = { property_id: '', turnover_date: '', check_out_time: '', check_in_time: '', assigned_to: '', status: 'scheduled', notes: '' }
 
 export default function TurnoversPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [turnovers, setTurnovers] = useState<Turnover[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)

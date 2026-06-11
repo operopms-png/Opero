@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 const PLAN_FEATURES: Record<string, string[]> = {
   starter: ['properties', 'cleaning', 'maintenance', 'turnovers'],
@@ -63,6 +60,10 @@ const PRO_LOCKED = [
 ]
 
 export default function DashboardPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [stats, setStats] = useState({ properties: 0, cleaning: 0, maintenance: 0, revenue: 0 })
   const [subscription, setSubscription] = useState<any>(null)
   const [properties, setProperties] = useState<any[]>([])

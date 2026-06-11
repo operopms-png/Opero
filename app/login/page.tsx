@@ -4,10 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 const PLAN_DETAILS: Record<string, { label: string; price: string; color: string }> = {
   starter:      { label: 'Starter',      price: '£29/mo', color: '#6B7280' },
@@ -133,6 +130,10 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   return (
     <Suspense>
       <LoginForm />
