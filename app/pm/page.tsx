@@ -4,6 +4,41 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Inspections','Documents','Statements']
+
+async function uploadFile(file: File, folder: string): Promise<string | null> {
+  const ext = file.name.split('.').pop()
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('pm-files').upload(path, file)
+  if (error) { console.error(error); return null }
+  const { data } = supabase.storage.from('pm-files').getPublicUrl(path)
+  return data.publicUrl
+}
+
+function FileUpload({ label, value, onChange, folder }: { label: string; value: string; onChange: (url: string) => void; folder: string }) {
+  const [uploading, setUploading] = useState(false)
+  async function handle(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const url = await uploadFile(file, folder)
+    if (url) onChange(url)
+    setUploading(false)
+  }
+  return (
+    <div>
+      <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }}>{label}</label>
+      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+        <label style={{ flex:1, padding:'10px 12px', borderRadius:8, border:'2px dashed #D0D5DD', fontSize:13, color:'#667085', cursor:'pointer', display:'flex', alignItems:'center', gap:8, background:'#F9FAFB' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          {uploading ? 'Uploading…' : value ? 'Replace file' : 'Upload file (PDF, JPG, PNG)'}
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handle} style={{ display:'none' }} />
+        </label>
+        {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#3B4AFF', fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
+      </div>
+      {value && <div style={{ fontSize:11, color:'#10B981', marginTop:4 }}>✓ File uploaded</div>}
+    </div>
+  )
+}
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
@@ -165,6 +200,31 @@ export default function PMPage() {
                   <div style={{fontSize:12,color:c.dark?'#6B7280':'#98A2B3',marginTop:4}}>{c.sub}</div>
                 </div>
               ))}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Rent Collection Trends</div>
+                <div style={{display:'flex',gap:16,fontSize:11,color:'#667085',marginBottom:12}}>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:12,height:2,background:'#10B981',display:'inline-block',borderRadius:2}}></span>Collected</span>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:12,height:2,background:'#E4E7EC',display:'inline-block',borderRadius:2}}></span>Due</span>
+                </div>
+                <svg viewBox="0 0 300 80" style={{width:'100%'}}>
+                  <polyline points="10,70 60,55 110,60 160,35 210,40 260,20 290,15" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="10,75 60,72 110,74 160,65 210,68 260,58 290,55" fill="none" stroke="#E4E7EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
+                </svg>
+              </div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Occupancy Trends</div>
+                <div style={{display:'flex',gap:16,fontSize:11,color:'#667085',marginBottom:12}}>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#EEF0FF',display:'inline-block',borderRadius:2}}></span>Previous</span>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#3B4AFF',display:'inline-block',borderRadius:2}}></span>Current</span>
+                </div>
+                <svg viewBox="0 0 300 80" style={{width:'100%'}}>
+                  {([{x:10,h:40,p:true},{x:55,h:45,p:true},{x:100,h:35,p:true},{x:145,h:55,p:false},{x:190,h:58,p:false},{x:235,h:62,p:false}] as any[]).map((b,i)=>(<rect key={i} x={b.x} y={75-b.h} width={30} height={b.h} rx="3" fill={b.p?'#EEF0FF':'#3B4AFF'}/>))}
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={15+(i*45)} y={79} fontSize="8" fill="#98A2B3">{m}</text>))}
+                </svg>
+              </div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
@@ -436,6 +496,15 @@ export default function PMPage() {
             <div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+44 7700 000000"/></div>
             <div><label style={lbl}>Address</label><input style={inp} value={form.address??''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="123 Main Street, London"/></div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <div><label style={lbl}>ID Type</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.id_type??''} onChange={e=>setForm({...form,id_type:e.target.value})}>
+                <option value="">Select…</option>
+                <option value="passport">Passport</option>
+                <option value="driving_licence">Driving Licence</option>
+                <option value="national_id">National ID</option>
+              </select>
+            </div>
+            <FileUpload label="ID Document" value={form.id_url??''} onChange={url=>setForm({...form,id_url:url})} folder="landlord-ids" />
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
@@ -462,6 +531,15 @@ export default function PMPage() {
                 {units.filter(u=>!form.property_id||u.property_id===form.property_id).map(u=><option key={u.id} value={u.id}>{u.unit_number}</option>)}
               </select>
             </div>
+            <div><label style={lbl}>ID Type</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.id_type??''} onChange={e=>setForm({...form,id_type:e.target.value})}>
+                <option value="">Select…</option>
+                <option value="passport">Passport</option>
+                <option value="driving_licence">Driving Licence</option>
+                <option value="national_id">National ID</option>
+              </select>
+            </div>
+            <FileUpload label="ID Document" value={form.id_url??''} onChange={url=>setForm({...form,id_url:url})} folder="tenant-ids" />
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
@@ -598,6 +676,7 @@ export default function PMPage() {
               </div>
               <div><label style={lbl}>Assigned To</label><input style={inp} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})} placeholder="Contractor name"/></div>
             </div>
+            <FileUpload label="Photo / Document" value={form.photo??''} onChange={url=>setForm({...form,photos:[url]})} folder="maintenance-photos" />
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
@@ -630,6 +709,7 @@ export default function PMPage() {
               <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.scheduled_date??''} onChange={e=>setForm({...form,scheduled_date:e.target.value})}/></div>
             </div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <FileUpload label="Photos / Report" value={form.photo??''} onChange={url=>setForm({...form,photos:[url]})} folder="inspection-photos" />
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
@@ -642,7 +722,7 @@ export default function PMPage() {
         <Modal title="Add Document" onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Document Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Tenancy Agreement"/></div>
-            <div><label style={lbl}>URL *</label><input type="url" style={inp} value={form.url??''} onChange={e=>setForm({...form,url:e.target.value})} placeholder="https://..."/></div>
+            <FileUpload label="Upload File (PDF, Image) *" value={form.url??''} onChange={url=>setForm({...form,url:url})} folder="pm-documents" />
             <div><label style={lbl}>Type</label>
               <select style={{...inp,cursor:'pointer'}} value={form.type??'other'} onChange={e=>setForm({...form,type:e.target.value})}>
                 <option value="lease">Lease</option><option value="id">ID Document</option><option value="inspection">Inspection Report</option><option value="statement">Statement</option><option value="other">Other</option>
