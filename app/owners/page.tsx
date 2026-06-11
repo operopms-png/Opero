@@ -130,7 +130,7 @@ export default function OwnersPage() {
                 {/* Profit Split */}
                 <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '24px', marginBottom: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                    <span>💰</span>
+                    
                     <span style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>Profit Split — After All Expenses</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
