@@ -126,13 +126,15 @@ export default function AnalyticsPage() {
             {/* KPI Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
               {[
-                { icon: '💰', label: `£${totalRevenue.toLocaleString()} Revenue`, sub: `${totalBookings * 30} Nights` },
-                { icon: '📅', label: `${totalBookings} Bookings`, sub: `${totalBookings * 30} Nights` },
-                { icon: '❌', label: `${cancellations} Cancellations`, sub: '0 Nights', dim: true },
+                { icon: 'revenue', label: `£${totalRevenue.toLocaleString()} Revenue`, sub: `${totalBookings * 30} Nights` },
+                { icon: 'calendar', label: `${totalBookings} Bookings`, sub: `${totalBookings * 30} Nights` },
+                { icon: 'cancel', label: `${cancellations} Cancellations`, sub: '0 Nights', dim: true },
               ].map((card, i) => (
                 <div key={i} style={{ background: '#fff', borderRadius: 12, border: `1px solid ${card.dim ? '#FEE2E2' : '#E5E7EB'}`, padding: '20px 24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontSize: 18 }}>{card.icon}</span>
+                    {card.icon === 'revenue' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>}
+                  {card.icon === 'calendar' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+                  {card.icon === 'cancel' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>}
                     <span style={{ fontSize: 18, fontWeight: 700, color: card.dim ? '#EF4444' : '#111827' }}>{card.label}</span>
                   </div>
                   <div style={{ fontSize: 13, color: '#9CA3AF' }}>{card.sub}</div>
