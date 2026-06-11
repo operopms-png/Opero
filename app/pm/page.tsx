@@ -530,6 +530,23 @@ export default function PMPage() {
               </select>
             </div>
             <FileUpload label="ID Document" value={form.id_url??''} onChange={url=>setForm({...form,id_url:url})} folder="landlord-ids" />
+            <div style={{borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:4}}>
+              <div style={{fontSize:13,fontWeight:600,color:'#344054',marginBottom:12}}>Bank Details</div>
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div><label style={lbl}>Bank Name</label><input style={inp} value={form.bank_name??''} onChange={e=>setForm({...form,bank_name:e.target.value})} placeholder="e.g. Barclays" /></div>
+                  <div><label style={lbl}>Account Name</label><input style={inp} value={form.account_name??''} onChange={e=>setForm({...form,account_name:e.target.value})} placeholder="Full name on account" /></div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div><label style={lbl}>Account Number</label><input style={inp} value={form.account_number??''} onChange={e=>setForm({...form,account_number:e.target.value})} placeholder="12345678" /></div>
+                  <div><label style={lbl}>Sort Code</label><input style={inp} value={form.sort_code??''} onChange={e=>setForm({...form,sort_code:e.target.value})} placeholder="00-00-00" /></div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div><label style={lbl}>IBAN</label><input style={inp} value={form.iban??''} onChange={e=>setForm({...form,iban:e.target.value})} placeholder="GB00 XXXX 0000 0000 0000 00" /></div>
+                  <div><label style={lbl}>SWIFT / BIC</label><input style={inp} value={form.swift??''} onChange={e=>setForm({...form,swift:e.target.value})} placeholder="BARCGB22" /></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
