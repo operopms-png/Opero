@@ -1346,24 +1346,12 @@
 
   async function checkout(e, btn) {
   e.preventDefault();
-  var orig = btn.textContent;
   var plan = btn.getAttribute("data-plan");
   var priceId = isYearly ? yearlyPlans[plan] : null;
-  btn.textContent = "Loading...";
-  btn.disabled = true;
-  try {
-    var body = priceId ? {plan: plan, priceId: priceId} : {plan: plan};
-    var res = await fetch("/api/create-checkout", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(body)
-    });
-    var data = await res.json();
-    if (data.url) { window.location.href = data.url; }
-    else { alert("Error: " + (data.error || "Unknown")); btn.textContent = orig; btn.disabled = false; }
-  } catch(err) {
-    alert("Error: " + err.message); btn.textContent = orig; btn.disabled = false;
-  }
+  // Redirect to signup first with plan stored in URL
+  var params = new URLSearchParams({ plan: plan, billing: isYearly ? 'yearly' : 'monthly' });
+  if (priceId) params.set('priceId', priceId);
+  window.location.href = '/login?mode=signup&' + params.toString();
 }
 </script>
 <script>

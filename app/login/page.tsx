@@ -21,7 +21,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
-  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login')
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(searchParams.get('mode') === 'signup' ? 'signup' : 'login')
 
   const planInfo = PLAN_DETAILS[plan]
 
@@ -39,9 +39,19 @@ function LoginForm() {
       if (error) { setError(error.message) }
       else { window.location.href = redirect }
     } else if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })
+      const { error, data } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })
       if (error) { setError(error.message) }
-      else { setSuccessMsg('Check your email to confirm your account!') }
+      else if (plan && searchParams.get('mode') === 'signup') {
+        // User signed up from pricing page — go straight to Stripe checkout
+        const priceId = searchParams.get('priceId')
+        const body = priceId ? { plan, priceId } : { plan }
+        const res = await fetch('/api/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        const data2 = await res.json()
+        if (data2.url) window.location.href = data2.url
+        else setSuccessMsg('Account created! Check your email to confirm.')
+      } else {
+        setSuccessMsg('Check your email to confirm your account!')
+      }
     } else if (mode === 'reset') {
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` })
       if (error) { setError(error.message) }
