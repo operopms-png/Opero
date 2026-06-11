@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 
 const NAV = [
@@ -35,10 +35,6 @@ export default function Sidebar() {
   const [plan, setPlan] = useState('starter')
 
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
     async function loadPlan() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -50,10 +46,6 @@ export default function Sidebar() {
   }, [])
 
   async function handleSignOut() {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
     await supabase.auth.signOut()
     window.location.href = '/landing.html'
   }
