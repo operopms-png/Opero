@@ -133,7 +133,7 @@ export default function DashboardPage() {
           {NAV_ITEMS.map(item => {
             const hasAccess = features.includes(item.key)
             return (
-              
+              <a
                 key={item.key}
                 href={hasAccess ? item.href : '#'}
                 onClick={!hasAccess ? (e) => e.preventDefault() : undefined}
