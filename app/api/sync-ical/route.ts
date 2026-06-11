@@ -1,96 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-function parseIcal(text: string) {
-  const events: any[] = []
-  const lines = text.replace(/\r\n /g, '').split(/\r\n|\n/)
-  let current: any = null
-
-  for (const line of lines) {
-    if (line === 'BEGIN:VEVENT') {
-      current = {}
-    } else if (line === 'END:VEVENT' && current) {
-      events.push(current)
-      current = null
-    } else if (current) {
-      if (line.startsWith('DTSTART')) {
-        const val = line.split(':')[1]
-        current.check_in = `${val.slice(0,4)}-${val.slice(4,6)}-${val.slice(6,8)}`
-      } else if (line.startsWith('DTEND')) {
-        const val = line.split(':')[1]
-        current.check_out = `${val.slice(0,4)}-${val.slice(4,6)}-${val.slice(6,8)}`
-      } else if (line.startsWith('SUMMARY')) {
-        current.guest_name = line.split(':').slice(1).join(':').trim()
-      } else if (line.startsWith('UID')) {
-        current.uid = line.split(':').slice(1).join(':').trim()
-      } else if (line.startsWith('DESCRIPTION')) {
-        current.description = line.split(':').slice(1).join(':').trim()
-      }
-    }
-  }
-  return events
-}
-
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { ical_url, property_id, platform } = await request.json()
-
-    if (!ical_url || !property_id) {
-      return NextResponse.json({ error: 'ical_url and property_id are required' }, { status: 400 })
-    }
-
-    // Fetch iCal
-    const response = await fetch(ical_url)
-    if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch iCal URL' }, { status: 400 })
-    }
-    const text = await response.text()
-    const events = parseIcal(text)
-
-    let imported = 0
-    let skipped = 0
-
-    for (const event of events) {
-      if (!event.check_in || !event.check_out) continue
-      if (event.guest_name?.toLowerCase().includes('blocked') ||
-          event.guest_name?.toLowerCase().includes('not available')) {
-        skipped++
-        continue
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: properties } = await supabase.from('properties').select('id, name, ical_url')
+    if (!properties?.length) return NextResponse.json({ message: 'No properties with iCal URLs' })
+    const results = []
+    for (const property of properties) {
+      if (!property.ical_url) continue
+      try {
+        const res = await fetch(property.ical_url)
+        const text = await res.text()
+        const events = text.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g) || []
+        for (const event of events) {
+          const dtstart = event.match(/DTSTART[^:]*:(\S+)/)?.[1]
+          const dtend = event.match(/DTEND[^:]*:(\S+)/)?.[1]
+          const summary = event.match(/SUMMARY:(.*)/)?.[1]?.trim()
+          const uid = event.match(/UID:(.*)/)?.[1]?.trim()
+          if (dtstart && dtend) {
+            await supabase.from('bookings').upsert({
+              property_id: property.id,
+              check_in: dtstart.slice(0, 10),
+              check_out: dtend.slice(0, 10),
+              guest_name: summary || 'iCal booking',
+              source: 'ical',
+              external_id: uid,
+            }, { onConflict: 'external_id' })
+          }
+        }
+        results.push({ property: property.name, events: events.length })
+      } catch (e) {
+        results.push({ property: property.name, error: String(e) })
       }
-
-      // Check if already exists by uid
-      const { data: existing } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('property_id', property_id)
-        .eq('ical_uid', event.uid)
-        .single()
-
-      if (existing) {
-        skipped++
-        continue
-      }
-
-      await supabase.from('bookings').insert([{
-        property_id,
-        guest_name: event.guest_name ?? 'Guest',
-        check_in: event.check_in,
-        check_out: event.check_out,
-        status: 'confirmed',
-        platform: platform ?? 'iCal',
-        ical_uid: event.uid,
-      }])
-      imported++
     }
-
-    return NextResponse.json({ success: true, imported, skipped, total: events.length })
-  } catch (err) {
-    return NextResponse.json({ error: 'Failed to sync' }, { status: 500 })
+    return NextResponse.json({ synced: results })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
