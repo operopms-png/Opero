@@ -9,20 +9,7 @@ const NAV_GROUPS = [
   {
     label: 'Vacation Rentals',
     items: [
-      { href: '/dashboard',    label: 'Home',          key: 'dashboard',    icon: 'home' },
-      { href: '/bookings',     label: 'Bookings',      key: 'bookings',     icon: 'calendar', minPlan: 'growth' },
-      { href: '/properties',   label: 'Properties',    key: 'properties',   icon: 'building' },
-      { href: '/cleaning',     label: 'Cleaning',      key: 'cleaning',     icon: 'sparkles' },
-      { href: '/maintenance',  label: 'Maintenance',   key: 'maintenance',  icon: 'wrench' },
-      { href: '/turnovers',    label: 'Turnovers',     key: 'turnovers',    icon: 'refresh' },
-      { href: '/owners',       label: 'Owner Reports', key: 'owners',       icon: 'users', minPlan: 'growth' },
-      { href: '/analytics',    label: 'Analytics',     key: 'analytics',    icon: 'chart', minPlan: 'growth' },
-      { href: '/integrations', label: 'Integrations',  key: 'integrations', icon: 'plug', minPlan: 'growth' },
-      { href: '/team',         label: 'Team',          key: 'team',         icon: 'team' },
-      { href: '/reports',      label: 'Reports',       key: 'reports',      icon: 'file', minPlan: 'professional' },
-      { href: '/documents',    label: 'Documents',     key: 'documents',    icon: 'folder', minPlan: 'professional' },
-      { href: '/guest-comms',  label: 'Guest Comms',   key: 'guest-comms',  icon: 'message', minPlan: 'professional' },
-      { href: '/audit',        label: 'Audit Log',     key: 'audit',        icon: 'shield', minPlan: 'professional' },
+      { href: '/dashboard', label: 'Vacation Rentals', key: 'dashboard', icon: 'home' },
     ]
   },
   {
@@ -30,17 +17,7 @@ const NAV_GROUPS = [
     module: 'pm',
     modulePrice: '£99/mo',
     items: [
-      { href: '/pm?tab=Dashboard',   label: 'Dashboard',   key: 'pm-dashboard',   icon: 'home' },
-      { href: '/pm?tab=Properties',  label: 'Properties',  key: 'pm-properties',  icon: 'building' },
-      { href: '/pm?tab=Units',       label: 'Units',       key: 'pm-units',       icon: 'folder' },
-      { href: '/pm?tab=Landlords',   label: 'Landlords',   key: 'pm-landlords',   icon: 'users' },
-      { href: '/pm?tab=Tenants',     label: 'Tenants',     key: 'pm-tenants',     icon: 'team' },
-      { href: '/pm?tab=Leases',      label: 'Leases',      key: 'pm-leases',      icon: 'file' },
-      { href: '/pm?tab=Rent',        label: 'Rent',        key: 'pm-rent',        icon: 'revenue' },
-      { href: '/pm?tab=Maintenance', label: 'Maintenance', key: 'pm-maintenance', icon: 'wrench' },
-      { href: '/pm?tab=Inspections', label: 'Inspections', key: 'pm-inspections', icon: 'shield' },
-      { href: '/pm?tab=Documents',   label: 'Documents',   key: 'pm-documents',   icon: 'folder' },
-      { href: '/pm?tab=Statements',  label: 'Statements',  key: 'pm-statements',  icon: 'file' },
+      { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
     ]
   },
   {
@@ -48,11 +25,7 @@ const NAV_GROUPS = [
     module: 'dev',
     modulePrice: '£149/mo',
     items: [
-      { href: '/dev?tab=Dashboard',  label: 'Dashboard',  key: 'dev-dashboard',  icon: 'home' },
-      { href: '/dev?tab=Projects',   label: 'Projects',   key: 'dev-projects',   icon: 'folder' },
-      { href: '/dev?tab=Budget',     label: 'Budget',     key: 'dev-budget',     icon: 'chart' },
-      { href: '/dev?tab=Investors',  label: 'Investors',  key: 'dev-investors',  icon: 'users' },
-      { href: '/dev?tab=Documents',  label: 'Documents',  key: 'dev-documents',  icon: 'file' },
+      { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
     ]
   },
 ]
