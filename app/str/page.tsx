@@ -192,7 +192,58 @@ export default function STRPage() {
           </div>
         )}
         {tab==='Owner Reports' && <div style={{ textAlign:'center', padding:40 }}><div style={{ fontSize:14, color:'#667085', marginBottom:16 }}>Full owner reporting with revenue splits and ROI</div><a href="/owners" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Open Owner Reports</a></div>}
-        {tab==='Analytics' && <div style={{ textAlign:'center', padding:40 }}><div style={{ fontSize:14, color:'#667085', marginBottom:16 }}>Revenue charts, occupancy rates and booking trends</div><a href="/analytics" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Open Analytics</a></div>}
+        {tab==='Analytics' && (
+          <div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+                <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div>
+                <div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>£{stats.revenue.toLocaleString()}</div>
+                <svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}>
+                  <polyline points="5,45 40,35 75,38 110,20 145,25 175,10 195,8" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+                <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Bookings</div>
+                <div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>{bookings.filter(b=>b.status!=='cancelled').length}</div>
+                <svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}>
+                  <polyline points="5,45 40,38 75,40 110,28 145,30 175,18 195,15" fill="none" stroke="#3B4AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #FEE2E2', padding:'20px 24px' }}>
+                <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Cancellations</div>
+                <div style={{ fontSize:24, fontWeight:800, color:'#EF4444' }}>{bookings.filter(b=>b.status==='cancelled').length}</div>
+                <svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}>
+                  <polyline points="5,20 40,25 75,18 110,30 145,22 175,35 195,30" fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/>
+                </svg>
+              </div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
+                <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:16 }}>Occupancy</div>
+                <svg viewBox="0 0 200 110" style={{ width:'100%', maxWidth:240, display:'block', margin:'0 auto' }}>
+                  <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#F3F4F6" strokeWidth="16" strokeLinecap="round"/>
+                  <path d="M 20 80 A 80 80 0 0 1 100 0" fill="none" stroke="#3B4AFF" strokeWidth="16" strokeLinecap="round"/>
+                  <text x="18" y="98" fontSize="10" fill="#9CA3AF">0%</text>
+                  <text x="88" y="18" fontSize="10" fill="#9CA3AF">50%</text>
+                  <text x="172" y="98" fontSize="10" fill="#9CA3AF">100%</text>
+                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#101828" textAnchor="middle">0%</text>
+                </svg>
+              </div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
+                <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:4 }}>Occupancy & Revenue</div>
+                <div style={{ display:'flex', gap:16, fontSize:12, color:'#667085', marginBottom:16 }}>
+                  <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#3B4AFF', display:'inline-block' }}></span>Revenue</span>
+                  <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#10B981', display:'inline-block', borderTop:'2px dashed #10B981' }}></span>Occupancy</span>
+                </div>
+                <svg viewBox="0 0 300 120" style={{ width:'100%' }}>
+                  <polyline points="10,110 60,90 110,95 160,60 210,65 260,40 290,30" fill="none" stroke="#3B4AFF" strokeWidth="2"/>
+                  <polyline points="10,100 60,85 110,88 160,70 210,72 260,55 290,48" fill="none" stroke="#10B981" strokeWidth="2" strokeDasharray="5 3"/>
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*52)} y={118} fontSize="8" fill="#9CA3AF" textAnchor="middle">{m}</text>))}
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
         {tab==='Integrations' && <div style={{ textAlign:'center', padding:40 }}><div style={{ fontSize:14, color:'#667085', marginBottom:16 }}>Connect Airbnb, VRBO, Booking.com and PriceLabs</div><a href="/integrations" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Open Integrations</a></div>}
         {tab==='Team' && (
           <div>
