@@ -69,7 +69,7 @@ export default function PropertiesPage() {
       const { data: sub } = await supabase.from('subscriptions').select('plan').eq('user_id', user.id).single()
       if (sub && (sub as any).plan) setPlan((sub as any).plan)
     }
-    const { data } = await supabase.from('properties').select('*').order('created_at', { ascending: false })
+    const { data } = await (supabase as any).from('properties').select('*').order('created_at', { ascending: false })
     if (data) setProperties(data as Property[])
     setLoading(false)
   }
@@ -124,9 +124,9 @@ export default function PropertiesPage() {
       booking_ical_url: form.booking_ical_url || null,
     }
     if (editId) {
-      await supabase.from('properties').update(payload).eq('id', editId)
+      await (supabase as any).from('properties').update(payload).eq('id', editId)
     } else {
-      await supabase.from('properties').insert([payload])
+      await (supabase as any).from('properties').insert([payload])
     }
     setSaving(false)
     setShowModal(false)
@@ -136,7 +136,7 @@ export default function PropertiesPage() {
 
   async function deleteProperty(id: string) {
     if (!confirm('Delete this property?')) return
-    await supabase.from('properties').delete().eq('id', id)
+    await (supabase as any).from('properties').delete().eq('id', id)
     setProperties(prev => prev.filter(p => p.id !== id))
   }
 
