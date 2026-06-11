@@ -166,28 +166,96 @@ export default function STRPage() {
         )}
         {tab==='Cleaning' && (
           <div>
-            <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:16 }}><a href="/cleaning" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Manage Cleaning</a></div>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {cleaning.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No cleaning tasks</div> :
-              cleaning.map(t=>(<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}><div><div style={{ fontWeight:500, fontSize:14, color:'#101828' }}>{t.properties?.name??'—'}</div><div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{t.scheduled_date} · {t.assigned_to??'Unassigned'}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.status==='completed'?'#D1FAE5':'#DBEAFE', color:t.status==='completed'?'#059669':'#2563EB' }}>{t.status}</span></div>))}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
+              {[
+                { label:'Total Tasks', value:cleaning.length },
+                { label:'Pending', value:cleaning.filter((t:any)=>t.status==='pending').length, amber:true },
+                { label:'Completed', value:cleaning.filter((t:any)=>t.status==='completed').length, green:true },
+              ].map((c:any)=>(
+                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:28, fontWeight:800, color:c.green?'#10B981':c.amber?'#F59E0B':'#101828' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 100px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase' }}>
+                <span>Property</span><span>Date</span><span>Assigned To</span><span>Status</span>
+              </div>
+              {cleaning.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No cleaning tasks yet</div> :
+              cleaning.map((t:any)=>(
+                <div key={t.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 100px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
+                  <span style={{ fontWeight:500, color:'#101828' }}>{t.properties?.name??'—'}</span>
+                  <span>{t.scheduled_date??'—'}</span>
+                  <span>{t.assigned_to??'Unassigned'}</span>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.status==='completed'?'#D1FAE5':t.status==='in_progress'?'#FEF3C7':'#DBEAFE', color:t.status==='completed'?'#059669':t.status==='in_progress'?'#D97706':'#2563EB' }}>{t.status??'pending'}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
         {tab==='Maintenance' && (
           <div>
-            <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:16 }}><a href="/maintenance" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Manage Maintenance</a></div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
+              {[
+                { label:'Total Tickets', value:maintenance.length },
+                { label:'Open', value:maintenance.filter((m:any)=>m.status==='open').length, blue:true },
+                { label:'In Progress', value:maintenance.filter((m:any)=>m.status==='in_progress').length, amber:true },
+                { label:'Urgent', value:maintenance.filter((m:any)=>m.priority==='urgent').length, red:true },
+              ].map((c:any)=>(
+                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:28, fontWeight:800, color:c.red?'#EF4444':c.amber?'#F59E0B':c.blue?'#3B4AFF':'#101828' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {maintenance.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No maintenance tickets</div> :
-              maintenance.map(m=>(<div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}><div><div style={{ fontWeight:500, fontSize:14, color:'#101828' }}>{m.title}</div><div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{m.properties?.name} · {m.priority}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:m.status==='open'?'#DBEAFE':'#D1FAE5', color:m.status==='open'?'#2563EB':'#059669' }}>{m.status}</span></div>))}
+              maintenance.map((m:any)=>{
+                const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#3B4AFF'
+                const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#EEF0FF'
+                return(
+                  <div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr auto auto', alignItems:'center', gap:16 }}>
+                    <div>
+                      <div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:2 }}>{m.title}</div>
+                      <div style={{ fontSize:12, color:'#667085' }}>{m.properties?.name}{m.assigned_to?` · ${m.assigned_to}`:''}</div>
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:priBg, color:priColor, textTransform:'uppercase' }}>{m.priority}</span>
+                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:m.status==='open'?'#DBEAFE':m.status==='resolved'?'#D1FAE5':'#FEF3C7', color:m.status==='open'?'#2563EB':m.status==='resolved'?'#059669':'#D97706' }}>{m.status}</span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
         {tab==='Turnovers' && (
           <div>
-            <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:16 }}><a href="/turnovers" style={{ background:'#101828', color:'#fff', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, textDecoration:'none' }}>Manage Turnovers</a></div>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {turnovers.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No turnovers</div> :
-              turnovers.map(t=>(<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}><div><div style={{ fontWeight:500, fontSize:14, color:'#101828' }}>{t.properties?.name??'—'}</div><div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{t.turnover_date} · {t.assigned_to??'Unassigned'}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#DBEAFE', color:'#2563EB' }}>{t.status??'scheduled'}</span></div>))}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
+              {[
+                { label:'Total Turnovers', value:turnovers.length },
+                { label:'Upcoming', value:turnovers.filter((t:any)=>t.status==='scheduled'&&t.turnover_date>=new Date().toISOString().split('T')[0]).length, blue:true },
+                { label:'Completed', value:turnovers.filter((t:any)=>t.status==='completed').length, green:true },
+              ].map((c:any)=>(
+                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:28, fontWeight:800, color:c.green?'#10B981':c.blue?'#3B4AFF':'#101828' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase' }}>
+                <span>Property</span><span>Date</span><span>Check Out</span><span>Assigned To</span><span>Status</span>
+              </div>
+              {turnovers.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No turnovers scheduled</div> :
+              turnovers.map((t:any)=>(
+                <div key={t.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
+                  <span style={{ fontWeight:500, color:'#101828' }}>{t.properties?.name??'—'}</span>
+                  <span>{t.turnover_date??'—'}</span>
+                  <span>{t.check_out_time??'—'}</span>
+                  <span>{t.assigned_to??'Unassigned'}</span>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.status==='completed'?'#D1FAE5':t.status==='in_progress'?'#FEF3C7':'#DBEAFE', color:t.status==='completed'?'#059669':t.status==='in_progress'?'#D97706':'#2563EB' }}>{t.status??'scheduled'}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
