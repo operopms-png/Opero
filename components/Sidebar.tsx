@@ -9,7 +9,7 @@ const NAV_GROUPS = [
   {
     label: 'Vacation Rentals',
     items: [
-      { href: '/dashboard', label: 'Vacation Rentals', key: 'dashboard', icon: 'home' },
+      { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
     ]
   },
   {
