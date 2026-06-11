@@ -27,6 +27,12 @@ const STATUS_CONFIG = {
   maintenance: { label: 'Maintenance', color: '#F59E0B', bg: '#FEF3C7' },
 }
 
+const PLAN_LIMITS: Record<string, number> = {
+  starter: 5,
+  growth: 25,
+  professional: Infinity,
+}
+
 const INITIAL_FORM = {
   name: '', address: '', city: '', country: '',
   bedrooms: '', bathrooms: '', max_guests: '', status: 'active',
@@ -40,17 +46,30 @@ export default function PropertiesPage() {
   const [saving, setSaving] = useState(false)
   const [search, setSearch] = useState('')
   const [editId, setEditId] = useState<string | null>(null)
+  const [plan, setPlan] = useState<string>('starter')
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
-  useEffect(() => { fetchProperties() }, [])
+  useEffect(() => { fetchData() }, [])
 
-  async function fetchProperties() {
+  async function fetchData() {
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: sub } = await supabase.from('subscriptions').select('plan').eq('user_id', user.id).single()
+      if (sub?.plan) setPlan(sub.plan)
+    }
     const { data } = await supabase.from('properties').select('*').order('created_at', { ascending: false })
     if (data) setProperties(data as Property[])
     setLoading(false)
   }
 
-  function openCreate() { setEditId(null); setForm(INITIAL_FORM); setShowModal(true) }
+  const propertyLimit = PLAN_LIMITS[plan] ?? 5
+  const atLimit = properties.length >= propertyLimit
+
+  function openCreate() {
+    if (atLimit) { setShowUpgradeModal(true); return }
+    setEditId(null); setForm(INITIAL_FORM); setShowModal(true)
+  }
 
   function openEdit(p: Property) {
     setEditId(p.id)
@@ -60,6 +79,8 @@ export default function PropertiesPage() {
 
   async function handleSave() {
     if (!form.name) return
+    // Safety check — block if at limit and creating new
+    if (!editId && atLimit) { setShowModal(false); setShowUpgradeModal(true); return }
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     const payload = {
@@ -80,7 +101,7 @@ export default function PropertiesPage() {
     }
     setSaving(false)
     setShowModal(false)
-    fetchProperties()
+    fetchData()
   }
 
   async function deleteProperty(id: string) {
@@ -95,23 +116,76 @@ export default function PropertiesPage() {
     p.country?.toLowerCase().includes(search.toLowerCase())
   )
 
+  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1)
+  const nextPlan = plan === 'starter' ? 'Growth' : 'Professional'
+  const nextPrice = plan === 'starter' ? '£79' : '£199'
+
   return (
     <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+
+      {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 20 }}>🏠</span>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Properties</h1>
-            <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{properties.length}</span>
+            <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>
+              {properties.length}{propertyLimit !== Infinity ? `/${propertyLimit}` : ''}
+            </span>
           </div>
-          <button onClick={openCreate} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>+ Add Property</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {atLimit && plan !== 'professional' && (
+              <a href="/landing.html#pricing" style={{ fontSize: 13, color: '#5B7BF8', fontWeight: 500, textDecoration: 'none' }}>
+                ⚡ Upgrade for more
+              </a>
+            )}
+            <button
+              onClick={openCreate}
+              style={{
+                background: atLimit ? '#E5E7EB' : '#111827',
+                color: atLimit ? '#9CA3AF' : '#fff',
+                border: 'none', borderRadius: 8, padding: '9px 18px',
+                fontSize: 14, fontWeight: 500,
+                cursor: atLimit ? 'not-allowed' : 'pointer',
+              }}
+            >
+              + Add Property
+            </button>
+          </div>
         </div>
       </div>
+
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px' }}>
+
+        {/* Limit warning banner */}
+        {atLimit && plan !== 'professional' && (
+          <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#92400E' }}>
+                🚫 You've reached your {planLabel} plan limit of {propertyLimit} {propertyLimit === 1 ? 'property' : 'properties'}
+              </div>
+              <div style={{ fontSize: 13, color: '#92400E', marginTop: 2, opacity: 0.8 }}>
+                Upgrade to {nextPlan} to add more properties.
+              </div>
+            </div>
+            <a href="/landing.html#pricing" style={{ padding: '9px 18px', background: '#F59E0B', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Upgrade to {nextPlan} →
+            </a>
+          </div>
+        )}
+
+        {/* Near limit warning */}
+        {!atLimit && propertyLimit !== Infinity && properties.length === propertyLimit - 1 && (
+          <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 20px', marginBottom: 24, fontSize: 13, color: '#92400E' }}>
+            ⚠️ You have <strong>1 property slot remaining</strong> on your {planLabel} plan. <a href="/landing.html#pricing" style={{ color: '#5B7BF8', fontWeight: 500 }}>Upgrade</a> to add more.
+          </div>
+        )}
+
         <div style={{ marginBottom: 24 }}>
           <input type="text" placeholder="Search properties…" value={search} onChange={e => setSearch(e.target.value)} style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid #E5E7EB', fontSize: 14, width: 280, fontFamily: 'inherit', background: '#fff' }} />
         </div>
+
         {loading ? (
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>Loading…</div>
         ) : filtered.length === 0 ? (
@@ -153,6 +227,8 @@ export default function PropertiesPage() {
           </div>
         )}
       </div>
+
+      {/* Add/Edit modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 520, margin: '0 16px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -175,9 +251,31 @@ export default function PropertiesPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Property'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade modal */}
+      {showUpgradeModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e => e.target === e.currentTarget && setShowUpgradeModal(false)}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 420, margin: '0 16px', textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Property limit reached</h2>
+            <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 8px' }}>
+              Your <strong>{planLabel} plan</strong> allows up to <strong>{propertyLimit} {propertyLimit === 1 ? 'property' : 'properties'}</strong>.
+            </p>
+            <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px' }}>
+              Upgrade to <strong>{nextPlan} ({nextPrice}/mo)</strong> to add more.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowUpgradeModal(false)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+              <a href="/landing.html#pricing" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#5B7BF8', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>
+                Upgrade to {nextPlan} →
+              </a>
             </div>
           </div>
         </div>
