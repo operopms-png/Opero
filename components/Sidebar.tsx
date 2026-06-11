@@ -21,6 +21,9 @@ const NAV = [
   { href: '/documents',    label: 'Documents',       key: 'documents',    icon: 'folder', minPlan: 'professional' },
   { href: '/guest-comms',  label: 'Guest Comms',     key: 'guest-comms',  icon: 'message', minPlan: 'professional' },
   { href: '/audit',        label: 'Audit Log',       key: 'audit',        icon: 'shield', minPlan: 'professional' },
+  { href: '/pm',           label: 'Property Mgmt',   key: 'pm',           icon: 'building', module: 'pm' },
+  { href: '/dev',          label: 'Developments',    key: 'dev',          icon: 'folder',   module: 'dev' },
+  { href: '/modules',      label: 'Add Modules',     key: 'modules',      icon: 'plug' },
 ]
 
 const PLAN_FEATURES: Record<string, string[]> = {
