@@ -1,10 +1,8 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-
-
 
 const PLAN_DETAILS: Record<string, { label: string; price: string; color: string }> = {
   starter:      { label: 'Starter',      price: '£29/mo', color: '#6B7280' },
@@ -27,26 +25,25 @@ function LoginForm() {
 
   const planInfo = PLAN_DETAILS[plan]
 
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   async function handleSubmit() {
     setLoading(true)
     setError('')
     setSuccessMsg('')
-
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError(error.message) }
       else { window.location.href = redirect }
     } else if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({
-        email, password,
-        options: { emailRedirectTo: `${window.location.origin}${redirect}` }
-      })
+      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })
       if (error) { setError(error.message) }
       else { setSuccessMsg('Check your email to confirm your account!') }
     } else if (mode === 'reset') {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
-      })
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` })
       if (error) { setError(error.message) }
       else { setSuccessMsg('Password reset email sent — check your inbox!') }
     }
@@ -58,7 +55,6 @@ function LoginForm() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
       <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E5E7EB', padding: 40, width: '100%', maxWidth: 400, margin: '0 16px' }}>
 
-        {/* Plan confirmation banner */}
         {success && planInfo && (
           <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: '14px 16px', marginBottom: 24 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#15803D', marginBottom: 4 }}>✅ Plan selected!</div>
@@ -90,17 +86,14 @@ function LoginForm() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
-
           {mode !== 'reset' && (
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 5 }}>Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
             </div>
           )}
-
           {error && <div style={{ fontSize: 13, color: '#EF4444', background: '#FEE2E2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
           {successMsg && <div style={{ fontSize: 13, color: '#10B981', background: '#D1FAE5', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}
-
           <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#2563EB', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) ? 0.6 : 1, marginTop: 4 }}>
             {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Email'}
           </button>
@@ -113,14 +106,9 @@ function LoginForm() {
               <div><button onClick={() => setMode('reset')} style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Forgot password?</button></div>
             </>
           )}
-          {mode === 'signup' && (
-            <div>Already have an account? <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign in</button></div>
-          )}
-          {mode === 'reset' && (
-            <div><button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back to sign in</button></div>
-          )}
+          {mode === 'signup' && <div>Already have an account? <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign in</button></div>}
+          {mode === 'reset' && <div><button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back to sign in</button></div>}
         </div>
-
         <div style={{ textAlign: 'center', marginTop: 16 }}>
           <a href="/landing.html" style={{ fontSize: 13, color: '#9CA3AF', textDecoration: 'none' }}>← Back to homepage</a>
         </div>
@@ -130,13 +118,5 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
-  )
+  return <Suspense><LoginForm /></Suspense>
 }
