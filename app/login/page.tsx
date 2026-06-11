@@ -51,8 +51,8 @@ function LoginForm() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: '#F8F9FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
+      <style>{``}</style>
       <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E5E7EB', padding: 40, width: '100%', maxWidth: 400, margin: '0 16px' }}>
 
         {success && planInfo && (

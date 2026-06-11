@@ -104,7 +104,7 @@ export default function Sidebar() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+        
         .mobile-menu-btn { display: none; }
         .desktop-sidebar { display: flex; }
         .mobile-overlay { display: none; }
@@ -120,10 +120,10 @@ export default function Sidebar() {
         <img src="/logo.PNG" alt="Opero" style={{ width: 36, height: 36, objectFit: 'contain' }} />
       </div>
       <div className="mobile-overlay" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40 }} />
-      <aside className="mobile-sidebar" style={{ display: 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 260, background: '#fff', zIndex: 50, flexDirection: 'column', fontFamily: "'DM Sans', sans-serif", boxShadow: '4px 0 20px rgba(0,0,0,0.1)' }}>
+      <aside className="mobile-sidebar" style={{ display: 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 260, background: '#fff', zIndex: 50, flexDirection: 'column', fontFamily: "var(--font, 'Inter', sans-serif)", boxShadow: '4px 0 20px rgba(0,0,0,0.1)' }}>
         {sidebarContent}
       </aside>
-      <aside className="desktop-sidebar" style={{ width: 220, minHeight: '100vh', background: '#fff', borderRight: '1px solid #E5E7EB', flexDirection: 'column', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'DM Sans', sans-serif" }}>
+      <aside className="desktop-sidebar" style={{ width: 220, minHeight: '100vh', background: '#fff', borderRight: '1px solid #E5E7EB', flexDirection: 'column', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "var(--font, 'Inter', sans-serif)" }}>
         {sidebarContent}
       </aside>
     </>

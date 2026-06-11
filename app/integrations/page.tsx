@@ -175,7 +175,7 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');`}</style>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111', marginBottom: 4 }}>Integrations</h1>
       <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Connect your tools to get the most out of Opero.</p>

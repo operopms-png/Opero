@@ -61,8 +61,8 @@ export default function TeamPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F4F6FA', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: '#F4F6FA', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
+      <style>{``}</style>
       <div style={{ background: '#fff', borderBottom: '1px solid #E8ECF4', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

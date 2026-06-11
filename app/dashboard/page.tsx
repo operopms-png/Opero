@@ -81,9 +81,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F4F6FA', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#F4F6FA', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+        
         .card { background: #fff; border-radius: 14px; border: 1px solid #E8ECF4; }
         .hover-row:hover { background: #F8FAFF !important; }
       `}</style>
