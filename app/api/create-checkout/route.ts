@@ -1,10 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
-import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-05-27.dahlia',
-})
+import { NextRequest, NextResponse } from 'next/server'
 
 const PRICE_IDS: Record<string, string> = {
   starter: 'price_1TfeoYGVqeDYuzWEDnDdfTS8',
@@ -14,14 +9,12 @@ const PRICE_IDS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    const Stripe = (await import('stripe')).default
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' })
     const body = await request.json()
     const { plan, priceId } = body
     const finalPriceId = priceId || PRICE_IDS[plan]
-
-    if (!finalPriceId) {
-      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
-    }
-
+    if (!finalPriceId) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -31,10 +24,7 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing.html#pricing`,
       allow_promotion_codes: true,
     })
-
-    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-      expand: ['line_items'],
-    })
+    const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
     return NextResponse.json({ url: fullSession.url })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
