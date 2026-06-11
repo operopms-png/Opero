@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Sidebar from '@/components/Sidebar'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -7,18 +6,11 @@ export const metadata: Metadata = {
   description: 'Operations platform for vacation rental managers',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body style={{ margin: 0, background: '#F8F9FA' }}>
-        <Sidebar />
-        <main style={{ marginLeft: 220, minHeight: '100vh' }}>
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   )
