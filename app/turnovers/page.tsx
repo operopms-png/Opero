@@ -39,8 +39,9 @@ export default function TurnoversPage() {
   const [form, setForm] = useState(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([])
+  const [teamMembers, setTeamMembers] = useState<{ id: string; name: string; role: string }[]>([])
 
-  useEffect(() => { fetchTurnovers(); fetchProperties() }, [])
+  useEffect(() => { fetchTurnovers(); fetchProperties(); fetchTeam() }, [])
 
   async function fetchTurnovers() {
     setLoading(true)
@@ -52,6 +53,12 @@ export default function TurnoversPage() {
   async function fetchProperties() {
     const { data } = await supabase.from('properties').select('id, name')
     if (data) setProperties(data)
+  }
+  async function fetchTeam() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('team_members').select('id, name, role').eq('user_id', user.id).order('name')
+    if (data) setTeamMembers(data)
   }
 
   async function handleSave() {
@@ -150,7 +157,13 @@ export default function TurnoversPage() {
                 <div><label style={lbl}>Check-out Time</label><input type="time" value={form.check_out_time} onChange={e => setForm({ ...form, check_out_time: e.target.value })} style={inp} /></div>
                 <div><label style={lbl}>Check-in Time</label><input type="time" value={form.check_in_time} onChange={e => setForm({ ...form, check_in_time: e.target.value })} style={inp} /></div>
               </div>
-              <div><label style={lbl}>Assigned To</label><input type="text" value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={inp} placeholder="Cleaner name or email" /></div>
+              <div>
+                <label style={lbl}>Assigned To</label>
+                <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={{ ...inp, cursor: 'pointer' }}>
+                  <option value="">Select team member…</option>
+                  {teamMembers.map(m => <option key={m.id} value={m.name}>{m.name} ({m.role})</option>)}
+                </select>
+              </div>
               <div><label style={lbl}>Notes</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Special instructions…" /></div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>

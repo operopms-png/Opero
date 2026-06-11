@@ -47,8 +47,9 @@ export default function MaintenancePage() {
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('all')
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([])
+  const [teamMembers, setTeamMembers] = useState<{ id: string; name: string; role: string }[]>([])
 
-  useEffect(() => { fetchTickets(); fetchProperties() }, [])
+  useEffect(() => { fetchTickets(); fetchProperties(); fetchTeam() }, [])
 
   async function fetchTickets() {
     setLoading(true)
@@ -60,6 +61,12 @@ export default function MaintenancePage() {
   async function fetchProperties() {
     const { data } = await supabase.from('properties').select('id, name')
     if (data) setProperties(data)
+  }
+  async function fetchTeam() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('team_members').select('id, name, role').eq('user_id', user.id).order('name')
+    if (data) setTeamMembers(data)
   }
 
   async function handleSave() {
@@ -178,7 +185,13 @@ export default function MaintenancePage() {
                     <option value="urgent">Urgent</option>
                   </select>
                 </div>
-                <div><label style={lbl}>Assigned To</label><input type="text" value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={inp} placeholder="Name or email" /></div>
+                <div>
+                  <label style={lbl}>Assigned To</label>
+                  <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={{ ...inp, cursor: 'pointer' }}>
+                    <option value="">Select team member…</option>
+                    {teamMembers.map(m => <option key={m.id} value={m.name}>{m.name} ({m.role})</option>)}
+                  </select>
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
