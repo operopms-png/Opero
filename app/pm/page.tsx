@@ -72,6 +72,7 @@ export default function PMPage() {
   const [modal, setModal] = useState<string|null>(null)
   const [form, setForm] = useState<any>({})
   const [saving, setSaving] = useState(false)
+  const [editId, setEditId] = useState<string|null>(null)
 
   useEffect(() => {
     async function init() {
@@ -106,9 +107,19 @@ export default function PMPage() {
   async function save(table: string, data: any) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from(table).insert([{ ...data, user_id: user?.id }])
-    setSaving(false); setModal(null); setForm({})
+    if (editId) {
+      await supabase.from(table).update({ ...data }).eq('id', editId)
+    } else {
+      await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+    }
+    setSaving(false); setModal(null); setForm({}); setEditId(null)
     await loadAll()
+  }
+
+  function openEdit(modalName: string, record: any) {
+    setForm(record)
+    setEditId(record.id)
+    setModal(modalName)
   }
 
   async function del(table: string, id: string, setter: any) {
@@ -300,7 +311,10 @@ export default function PMPage() {
                     <span>{units.filter(u=>u.property_id===p.id).length} units</span>
                     <span>£{(p.monthly_income??0).toLocaleString()}/mo</span>
                   </div>
-                  <button onClick={()=>del('pm_properties',p.id,setProperties)} style={{marginTop:12,fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  <div style={{display:'flex',gap:8,marginTop:12}}>
+                    <button onClick={()=>openEdit('property',p)} style={{fontSize:12,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_properties',p.id,setProperties)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
                 </div>
               ))}
             </div>}
@@ -338,6 +352,7 @@ export default function PMPage() {
                   <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[l.email,l.phone].filter(Boolean).join(' · ')}</div>
                 </div>
                 <div style={{fontSize:13,color:'#667085'}}>{properties.filter(p=>p.owner_id===l.id).length} properties</div>
+                <button onClick={()=>openEdit('landlord',l)} style={{fontSize:12,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_landlords',l.id,setLandlords)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
             ))}
@@ -356,6 +371,7 @@ export default function PMPage() {
                   <div style={{fontSize:12,color:'#98A2B3',marginTop:2}}>{t.pm_properties?.name}{t.pm_units?.unit_number?` — Unit ${t.pm_units.unit_number}`:''}</div>
                 </div>
                 <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:t.status==='active'?'#D1FAE5':'#F3F4F6',color:t.status==='active'?'#059669':'#6B7280'}}>{t.status}</span>
+                <button onClick={()=>openEdit('tenant',t)} style={{fontSize:12,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_tenants',t.id,setTenants)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
             ))}
@@ -496,7 +512,7 @@ export default function PMPage() {
       </div>
 
       {modal==='property'&&(
-        <Modal title="Add Property" onClose={()=>setModal(null)}>
+        <Modal title={editId?"Edit Property":"Add Property"} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Property Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Harbour View Apartments"/></div>
             <div><label style={lbl}>Address</label><input style={inp} value={form.address??''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="123 Main Street"/></div>
@@ -508,13 +524,13 @@ export default function PMPage() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_properties',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':'Add Property'}</button>
+            <button onClick={()=>save('pm_properties',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
           </div>
         </Modal>
       )}
 
       {modal==='landlord'&&(
-        <Modal title="Add Landlord" onClose={()=>setModal(null)}>
+        <Modal title={editId?"Edit Landlord":"Add Landlord"} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Full Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="John Smith"/></div>
             <div><label style={lbl}>Email</label><input type="email" style={inp} value={form.email??''} onChange={e=>setForm({...form,email:e.target.value})} placeholder="john@example.com"/></div>
@@ -550,13 +566,13 @@ export default function PMPage() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_landlords',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':'Add Landlord'}</button>
+            <button onClick={()=>save('pm_landlords',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Landlord'}</button>
           </div>
         </Modal>
       )}
 
       {modal==='tenant'&&(
-        <Modal title="Add Tenant" onClose={()=>setModal(null)}>
+        <Modal title={editId?"Edit Tenant":"Add Tenant"} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Full Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Jane Doe"/></div>
             <div><label style={lbl}>Email</label><input type="email" style={inp} value={form.email??''} onChange={e=>setForm({...form,email:e.target.value})} placeholder="jane@example.com"/></div>
@@ -585,13 +601,13 @@ export default function PMPage() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_tenants',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':'Add Tenant'}</button>
+            <button onClick={()=>save('pm_tenants',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Tenant'}</button>
           </div>
         </Modal>
       )}
 
       {modal==='unit'&&(
-        <Modal title="Add Unit" onClose={()=>setModal(null)}>
+        <Modal title={editId?"Edit Unit":"Add Unit"} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Property *</label>
               <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
@@ -616,13 +632,13 @@ export default function PMPage() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_units',form)} disabled={saving||!form.unit_number||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.unit_number||!form.property_id?0.6:1}}>{saving?'Saving…':'Add Unit'}</button>
+            <button onClick={()=>save('pm_units',form)} disabled={saving||!form.unit_number||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.unit_number||!form.property_id?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Unit'}</button>
           </div>
         </Modal>
       )}
 
       {modal==='lease'&&(
-        <Modal title="Add Lease" onClose={()=>setModal(null)}>
+        <Modal title={editId?"Edit Lease":"Add Lease"} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Tenant *</label>
               <select style={{...inp,cursor:'pointer'}} value={form.tenant_id??''} onChange={e=>setForm({...form,tenant_id:e.target.value})}>
@@ -654,7 +670,7 @@ export default function PMPage() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_leases',form)} disabled={saving||!form.tenant_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.tenant_id?0.6:1}}>{saving?'Saving…':'Add Lease'}</button>
+            <button onClick={()=>save('pm_leases',form)} disabled={saving||!form.tenant_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.tenant_id?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Lease'}</button>
           </div>
         </Modal>
       )}
