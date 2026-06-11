@@ -81,7 +81,7 @@ export default function TeamPage() {
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>Loading…</div>
         ) : members.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>👥</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
             <div style={{ fontSize: 16, fontWeight: 500 }}>No team members yet</div>
             <div style={{ fontSize: 13, marginTop: 4 }}>Add your cleaners, maintenance staff and managers</div>
           </div>

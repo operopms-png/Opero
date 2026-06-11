@@ -91,7 +91,7 @@ export default function DashboardPage() {
       {/* Top bar */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E8ECF4', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#0F172A' }}>{greeting}, {user?.email?.split('@')[0]} 👋</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#0F172A' }}>{greeting}, {user?.email?.split('@')[0]}</div>
           <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 1 }}>Here's what's happening today</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -113,14 +113,19 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           {[
             { label: 'Properties', value: `${stats.properties}${propertyLimit !== Infinity ? `/${propertyLimit}` : ''}`, sub: 'Total active', icon: '🏠', color: '#5B7BF8', bg: '#EEF2FF' },
-            { label: 'Cleaning Tasks', value: stats.cleaning, sub: 'Pending today', icon: '🧹', color: '#10B981', bg: '#D1FAE5' },
-            { label: 'Maintenance', value: stats.maintenance, sub: 'Open tickets', icon: '🔧', color: '#F59E0B', bg: '#FEF3C7' },
-            { label: 'Revenue', value: `£${stats.revenue.toLocaleString()}`, sub: 'This month', icon: '💷', color: '#fff', bg: '#5B7BF8', dark: true },
+            { label: 'Cleaning Tasks', value: stats.cleaning, sub: 'Pending today', icon: 'clean', color: '#10B981', bg: '#D1FAE5' },
+            { label: 'Maintenance', value: stats.maintenance, sub: 'Open tickets', icon: 'wrench', color: '#F59E0B', bg: '#FEF3C7' },
+            { label: 'Revenue', value: `£${stats.revenue.toLocaleString()}`, sub: 'This month', icon: 'revenue', color: '#fff', bg: '#5B7BF8', dark: true },
           ].map(card => (
             <div key={card.label} className="card" style={{ padding: '20px 24px', background: (card as any).dark ? '#5B7BF8' : '#fff', border: (card as any).dark ? 'none' : '1px solid #E8ECF4' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: (card as any).dark ? 'rgba(255,255,255,0.7)' : '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: (card as any).dark ? 'rgba(255,255,255,0.2)' : card.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{card.icon}</div>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: (card as any).dark ? 'rgba(255,255,255,0.2)' : card.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {card.icon === 'home' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#fff' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
+                  {card.icon === 'clean' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#fff' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l9-9M12.5 6.5l5 5-9 9H3v-5.5l9-9z"/><path d="M15 3l3 3-9 9-3-3z"/></svg>}
+                  {card.icon === 'wrench' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#fff' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>}
+                  {card.icon === 'revenue' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>}
+                </div>
               </div>
               <div style={{ fontSize: 32, fontWeight: 800, color: (card as any).dark ? '#fff' : '#0F172A', letterSpacing: '-1px' }}>{loading ? '—' : card.value}</div>
               <div style={{ fontSize: 12, color: (card as any).dark ? 'rgba(255,255,255,0.6)' : '#94A3B8', marginTop: 4 }}>{card.sub}</div>
@@ -143,7 +148,7 @@ export default function DashboardPage() {
               <div style={{ color: '#94A3B8', textAlign: 'center', padding: 32, fontSize: 14 }}>Loading…</div>
             ) : upcomingBookings.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                <div style={{ fontSize: 36, marginBottom: 8 }}>📅</div>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:8}}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 <div style={{ fontSize: 14, fontWeight: 500, color: '#64748B' }}>No upcoming check-ins</div>
                 <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>Bookings will appear here</div>
               </div>
@@ -151,7 +156,7 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {upcomingBookings.map(b => (
                   <div key={b.id} className="hover-row" style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, cursor: 'pointer' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🏠</div>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>{b.guest_name ?? 'Guest'}</div>
                       <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 1 }}>{b.properties?.name} · {nightsBetween(b.check_in, b.check_out)} nights</div>
@@ -174,14 +179,14 @@ export default function DashboardPage() {
               <div style={{ color: '#94A3B8', textAlign: 'center', padding: 32, fontSize: 14 }}>Loading…</div>
             ) : recentActivity.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                <div style={{ fontSize: 36, marginBottom: 8 }}>📋</div>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:8}}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <div style={{ fontSize: 14, fontWeight: 500, color: '#64748B' }}>No activity yet</div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {recentActivity.map(b => (
                   <div key={b.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F1F5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>📝</div>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F1F5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>{b.guest_name ?? 'New booking'}</div>
                       <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{b.properties?.name} · {b.platform ?? 'Direct'}</div>
@@ -209,7 +214,7 @@ export default function DashboardPage() {
               <div style={{ color: '#94A3B8', textAlign: 'center', padding: 32, fontSize: 14 }}>Loading…</div>
             ) : properties.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                <div style={{ fontSize: 36, marginBottom: 8 }}>🏡</div>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:8}}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 <div style={{ fontSize: 14, fontWeight: 500, color: '#64748B' }}>No properties yet</div>
                 <a href="/properties" style={{ display: 'inline-block', marginTop: 12, padding: '8px 16px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Add property</a>
               </div>
@@ -218,7 +223,7 @@ export default function DashboardPage() {
                 {properties.slice(0, 5).map(p => (
                   <div key={p.id} className="hover-row" style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10 }}>
                     <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', background: '#F1F5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-                      {p.image_url ? <img src={p.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🏠'}
+                      {p.image_url ? <img src={p.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#98A2B3' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>}
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>{p.name}</div>

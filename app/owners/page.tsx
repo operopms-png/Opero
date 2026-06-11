@@ -8,14 +8,14 @@ import { createClient } from '@supabase/supabase-js'
 
 
 const TABS = [
-  { id: 'dashboard', icon: '📊', label: 'Dashboard' },
-  { id: 'bookings', icon: '🏨', label: 'My Bookings' },
-  { id: 'calendar', icon: '📅', label: 'Calendar' },
-  { id: 'maintenance', icon: '🔧', label: 'Maintenance' },
-  { id: 'statements', icon: '📄', label: 'Statements' },
-  { id: 'roi', icon: '📈', label: 'ROI Per Owner' },
-  { id: 'properties', icon: '🏠', label: 'My Properties' },
-  { id: 'finance', icon: '💰', label: 'Finance & Documents' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'bookings', label: 'My Bookings' },
+  { id: 'calendar', label: 'Calendar' },
+  { id: 'maintenance', label: 'Maintenance' },
+  { id: 'statements', label: 'Statements' },
+  { id: 'roi', label: 'ROI Per Owner' },
+  { id: 'properties', label: 'My Properties' },
+  { id: 'finance', label: 'Finance & Documents' },
 ]
 
 const MANAGEMENT_FEE = 0.20 // 20% management fee
@@ -100,7 +100,7 @@ export default function OwnersPage() {
               color: tab === t.id ? '#2563EB' : '#6B7280',
               borderBottom: tab === t.id ? '2px solid #2563EB' : '2px solid transparent',
             }}>
-              {t.icon} {t.label}
+              {t.label}
             </button>
           ))}
         </div>

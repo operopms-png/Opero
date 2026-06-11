@@ -187,7 +187,7 @@ export default function PropertiesPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {syncMsg && <span style={{ fontSize: 13, color: '#6B7280' }}>{syncMsg}</span>}
             <button onClick={syncAllIcal} disabled={syncing} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#374151' }}>
-              {syncing ? 'Syncing…' : '🔄 Sync iCal'}
+              {syncing ? 'Syncing…' : 'Sync iCal'}
             </button>
             {atLimit && plan !== 'professional' && (
               <a href="/landing.html#pricing" style={{ fontSize: 13, color: '#5B7BF8', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
@@ -218,7 +218,7 @@ export default function PropertiesPage() {
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>Loading…</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🏡</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <div style={{ fontSize: 16, fontWeight: 500 }}>{search ? 'No properties match' : 'No properties yet'}</div>
           </div>
         ) : (
