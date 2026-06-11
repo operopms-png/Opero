@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opero – Instagram Carousel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 24px;
+  }
+
+  h1 {
+    color: #F9D15F;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  p.sub {
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 32px;
+  }
+
+  /* Each slide is 1080x1080 scaled down for preview */
+  .slide {
+    width: 540px;
+    height: 540px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  /* ─── SLIDE 1: Hero ─────────────────────────── */
+  .slide-1 {
+    background: linear-gradient(135deg, #05080f 0%, #0a1020 50%, #0d1535 100%);
+  }
+
+  .slide-1 .tag {
+    position: absolute;
+    top: 28px; left: 28px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .logo-mark {
+    width: 32px; height: 32px;
+    background: #5B7CFA;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900; color: #fff;
+  }
+
+  .logo-text {
+    font-size: 15px; font-weight: 800;
+    color: #fff; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .slide-num {
+    position: absolute;
+    top: 28px; right: 28px;
+    font-size: 12px; color: rgba(255,255,255,0.4);
+    letter-spacing: 1px;
+  }
+
+  .slide-1 .headline {
+    position: absolute;
+    top: 90px; left: 28px; right: 28px;
+  }
+
+  .slide-1 .headline h2 {
+    font-size: 48px; font-weight: 900; color: #fff;
+    line-height: 1.05; letter-spacing: -1px;
+  }
+
+  .slide-1 .headline h2 span {
+    color: #7B9CFF;
+    display: inline-block;
+    background: rgba(91,124,250,0.15);
+    padding: 2px 12px;
+    border-radius: 6px;
+  }
+
+  .slide-1 .sub-line {
+    position: absolute;
+    top: 268px; left: 28px;
+    font-size: 14px; color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+  }
+
+  .pill-list {
+    position: absolute;
+    top: 330px; left: 28px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-size: 13px; font-weight: 600; color: #fff;
+    display: inline-block;
+    width: fit-content;
+  }
+
+  /* Phone mockup shared */
+  .phone {
+    position: absolute;
+    right: -20px; bottom: -20px;
+    width: 220px; height: 380px;
+    background: #111;
+    border-radius: 28px;
+    border: 6px solid #333;
+    overflow: hidden;
+    box-shadow: -20px -20px 60px rgba(249,209,95,0.08);
+  }
+
+  .phone-screen {
+    width: 100%; height: 100%;
+    background: #fff;
+    display: flex; flex-direction: column;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .phone-header {
+    font-size: 9px; font-weight: 800; color: #0f0f1a;
+    letter-spacing: 0.5px;
+  }
+
+  .phone-header span { color: #5B7CFA; }
+
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px; margin-top: 4px;
+  }
+
+  .stat-box {
+    background: #f8f8f8;
+    border-radius: 8px;
+    padding: 8px;
+  }
+
+  .stat-box .label {
+    font-size: 7px; color: #888; font-weight: 500;
+  }
+
+  .stat-box .value {
+    font-size: 11px; font-weight: 800; color: #0f0f1a;
+    margin-top: 2px;
+  }
+
+  .stat-box .value.gold { color: #c9933a; }
+  .stat-box .value.green { color: #22a85a; }
+
+  /* ─── SLIDE 2: Dashboard ─────────────────────── */
+  .slide-2 {
+    background: linear-gradient(160deg, #05080f 0%, #080f1e 60%, #0d1535 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 40px 28px;
+    text-align: center;
+  }
+
+  .slide-2 .tag {
+    position: absolute; top: 28px; left: 28px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .slide-2 .eyebrow {
+    font-size: 12px; font-weight: 600;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .slide-2 h2 {
+    font-size: 34px; font-weight: 900; color: #fff;
+    line-height: 1.1; letter-spacing: -0.5px;
+    margin-bottom: 12px;
+  }
+
+  .slide-2 h2 em {
+    font-style: normal;
+    background: linear-gradient(90deg, #5B7CFA, #7B9CFF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .slide-2 .descriptor {
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    margin-bottom: 28px; line-height: 1.6;
+  }
+
+  .phone-wide {
+    width: 260px; height: 180px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+
+  .phone-wide .pw-header {
+    font-size: 10px; font-weight: 800; color: #0f0f1a;
+    margin-bottom: 10px;
+  }
+
+  .phone-wide .pw-header span { color: #c9933a; }
+
+  .pw-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .pw-stat {
+    background: #f5f5f5;
+    border-radius: 8px; padding: 8px 10px;
+  }
+
+  .pw-stat .lbl { font-size: 7px; color: #999; }
+  .pw-stat .val { font-size: 13px; font-weight: 800; color: #0f0f1a; margin-top: 2px; }
+  .pw-stat .val.gold { color: #c9933a; }
+
+  /* ─── SLIDE 3: Booking Engine ────────────────── */
+  .slide-3 {
+    background: linear-gradient(150deg, #0a0a0f 0%, #0f0f1f 100%);
+    overflow: hidden;
+  }
+
+  .slide-3 .tag { position: absolute; top: 28px; left: 28px; display: flex; align-items: center; gap: 8px; }
+
+  .slide-3 .content {
+    position: absolute;
+    top: 85px; right: 28px;
+    width: 240px;
+  }
+
+  .slide-3 h2 {
+    font-size: 30px; font-weight: 900; color: #fff;
+    line-height: 1.15; text-align: right;
+  }
+
+  .slide-3 h2 strong { color: #7B9CFF; }
+
+  .slide-3 .descriptor {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    text-align: right; margin-top: 10px; line-height: 1.6;
+  }
+
+  .slide-3 .cta {
+    font-size: 11px; color: rgba(91,124,250,0.9);
+    text-align: right; margin-top: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .booking-card {
+    position: absolute;
+    left: 20px; bottom: 20px;
+    width: 200px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  }
+
+  .booking-card .bc-title {
+    font-size: 9px; font-weight: 800; color: #0f0f1a;
+    margin-bottom: 10px;
+  }
+
+  .bc-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 7px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .bc-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .bc-row .k { font-size: 8px; color: #888; }
+  .bc-row .v { font-size: 9px; font-weight: 700; color: #0f0f1a; }
+  .bc-row .v.gold { color: #c9933a; }
+  .bc-row .v.green { color: #22a85a; }
+
+  /* ─── SLIDE 4: Automation ────────────────────── */
+  .slide-4 {
+    background: linear-gradient(140deg, #05080f 0%, #0a1020 40%, #0d1535 100%);
+  }
+
+  .slide-4 .tag { position: absolute; top: 28px; left: 28px; display: flex; align-items: center; gap: 8px; }
+
+  .slide-4 .headline {
+    position: absolute; top: 88px; left: 28px; right: 28px;
+  }
+
+  .slide-4 h2 {
+    font-size: 34px; font-weight: 900; color: #fff;
+    line-height: 1.1;
+  }
+
+  .slide-4 h2 strong { color: #7B9CFF; }
+
+  .slide-4 .descriptor {
+    font-size: 13px; color: rgba(255,255,255,0.45);
+    margin-top: 10px; line-height: 1.6;
+  }
+
+  .slide-4 .cta { font-size: 11px; color: rgba(91,124,250,0.8); margin-top: 12px; }
+
+  .feature-pills {
+    position: absolute;
+    bottom: 28px; left: 28px; right: 28px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+
+  .fp {
+    background: rgba(91,124,250,0.1);
+    border: 1px solid rgba(91,124,250,0.3);
+    border-radius: 50px;
+    padding: 7px 14px;
+    font-size: 11px; font-weight: 600;
+    color: #7B9CFF;
+  }
+
+  .flow-card {
+    position: absolute;
+    right: 20px; bottom: 20px;
+    width: 190px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+  }
+
+  .flow-card .fc-title { font-size: 8px; font-weight: 800; color: #0f0f1a; margin-bottom: 8px; }
+
+  .fc-step {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 7px;
+  }
+
+  .fc-step:last-child { margin-bottom: 0; }
+
+  .fc-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+
+  .fc-dot.gold { background: #c9933a; }
+  .fc-dot.blue { background: #5B7CFA; }
+  .fc-dot.green { background: #22a85a; }
+  .fc-dot.purple { background: #5B7CFA; }
+
+  .fc-step span { font-size: 8px; color: #444; font-weight: 500; }
+
+  /* ─── SLIDE 5: Pricing ───────────────────────── */
+  .slide-5 {
+    background: linear-gradient(150deg, #05080f 0%, #0a1020 50%, #080f1e 100%);
+  }
+
+  .slide-5 .tag { position: absolute; top: 28px; left: 28px; display: flex; align-items: center; gap: 8px; }
+
+  .slide-5 h2 {
+    position: absolute;
+    top: 88px; left: 28px; right: 28px;
+    font-size: 36px; font-weight: 900; color: #fff;
+    text-align: center; line-height: 1.1;
+  }
+
+  .pricing-grid {
+    position: absolute;
+    top: 175px; left: 18px; right: 18px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .price-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 14px 12px;
+  }
+
+  .price-card.featured {
+    background: #0f0f1a;
+    border-color: #5B7CFA;
+    box-shadow: 0 0 30px rgba(91,124,250,0.2);
+  }
+
+  .price-card .tier {
+    font-size: 10px; font-weight: 800;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .price-card.featured .tier { color: #5B7CFA; }
+
+  .price-card .tagline {
+    font-size: 8px; color: rgba(255,255,255,0.3);
+    line-height: 1.4; margin-bottom: 10px;
+  }
+
+  .price-card .amount {
+    font-size: 22px; font-weight: 900; color: #fff;
+    line-height: 1;
+  }
+
+  .price-card .period { font-size: 9px; color: rgba(255,255,255,0.4); }
+
+  .price-card .features {
+    margin-top: 10px; display: flex; flex-direction: column; gap: 5px;
+  }
+
+  .price-card .feat {
+    font-size: 8px; color: rgba(255,255,255,0.5);
+    display: flex; align-items: flex-start; gap: 5px;
+    line-height: 1.3;
+  }
+
+  .price-card .feat::before {
+    content: '✓';
+    color: rgba(249,209,95,0.5);
+    flex-shrink: 0;
+    font-size: 8px;
+    margin-top: 1px;
+  }
+
+  .price-card.featured .feat { color: rgba(255,255,255,0.7); }
+  .price-card.featured .feat::before { color: #5B7CFA; }
+
+  .price-card .btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 7px 0;
+    border-radius: 50px;
+    font-size: 9px; font-weight: 800;
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.6);
+    border: none;
+    cursor: pointer;
+    display: block;
+  }
+
+  .price-card.featured .btn {
+    background: #5B7CFA;
+    color: #fff;
+  }
+
+  .trust-row {
+    position: absolute;
+    bottom: 22px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 20px;
+  }
+
+  .trust-item {
+    font-size: 9px; color: rgba(255,255,255,0.35);
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  .trust-item::before { content: '✓'; color: #5B7CFA; font-size: 9px; }
+
+  /* Glow accents */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+  }
+
+  .glow-gold {
+    background: rgba(249,209,95,0.12);
+    width: 200px; height: 200px;
+  }
+
+  .glow-purple {
+    background: rgba(91,124,250,0.18);
+    width: 250px; height: 250px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Opero — Instagram Carousel</h1>
+<p class="sub">5 slides · 1080×1080 (rendered at 540px) · Export each slide as image</p>
+
+<!-- ════════════════════════════════════════════
+     SLIDE 1 — Hero / All-In-One
+════════════════════════════════════════════ -->
+<div class="slide slide-1">
+  <div class="glow glow-purple" style="top:-60px;right:-60px;"></div>
+  <div class="glow glow-gold" style="bottom:60px;left:-40px;"></div>
+
+  <div class="tag">
+    <div class="logo-mark">O</div>
+    <div class="logo-text">OPERO</div>
+  </div>
+  <div class="slide-num">1 / 5</div>
+
+  <div class="slide-1 headline" style="position:absolute;top:90px;left:28px;right:240px;">
+    <h2>All-In-One<br>Vacation<br><span>Rental PMS</span></h2>
+  </div>
+
+  <div class="slide-1 sub-line" style="position:absolute;top:264px;left:28px;right:240px;">
+    Run your short-let business<br>smarter — from one dashboard.
+  </div>
+
+  <div class="pill-list">
+    <div class="pill">Unified Inbox & Messaging</div>
+    <div class="pill">Direct Booking Engine</div>
+    <div class="pill">Owner Statements & Portal</div>
+  </div>
+
+  <!-- Phone mockup -->
+  <div style="position:absolute;right:18px;top:70px;width:200px;height:340px;background:#111;border-radius:24px;border:5px solid #2a2a2a;overflow:hidden;box-shadow:-16px 16px 50px rgba(91,124,250,0.15);">
+    <div style="width:100%;height:100%;background:#fff;padding:10px;">
+      <div style="font-size:8px;font-weight:800;color:#0f0f1a;margin-bottom:8px;">OPERO <span style="color:#5B7CFA;">Dashboard</span></div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="label">Occupancy</div><div class="value gold">87%</div></div>
+        <div class="stat-box"><div class="label">Revenue MTD</div><div class="value">£8,240</div></div>
+        <div class="stat-box"><div class="label">New Bookings</div><div class="value green">14</div></div>
+        <div class="stat-box"><div class="label">Avg Night</div><div class="value">£96</div></div>
+      </div>
+      <div style="margin-top:8px;background:#f5f5f5;border-radius:8px;height:100px;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-size:7px;color:#888;margin-bottom:4px;">UPCOMING CHECKOUTS</div>
+          <div style="font-size:9px;font-weight:700;color:#0f0f1a;">Aurévo Sea Castle · 12pm</div>
+          <div style="font-size:9px;font-weight:700;color:#0f0f1a;">Montego Bay Villa · 11am</div>
+          <div style="font-size:7px;color:#5B7CFA;margin-top:4px;font-weight:600;">2 tasks assigned →</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;background:#fff9e6;border:1px solid #f0d97a;border-radius:8px;padding:8px;">
+        <div style="font-size:7px;font-weight:700;color:#5B7CFA;">New Enquiry — Airbnb</div>
+        <div style="font-size:7px;color:#555;margin-top:2px;">3 nights · £288 · Check availability →</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SLIDE 2 — Portfolio Dashboard
+════════════════════════════════════════════ -->
+<div class="slide slide-2">
+  <div class="glow glow-gold" style="top:-80px;right:-80px;"></div>
+  <div class="glow glow-purple" style="bottom:-60px;left:-60px;"></div>
+
+  <div class="tag">
+    <div class="logo-mark">O</div>
+    <div class="logo-text">OPERO</div>
+  </div>
+  <div class="slide-num" style="position:absolute;top:28px;right:28px;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:1px;">2 / 5</div>
+
+  <div style="margin-top:52px;text-align:center;">
+    <div class="slide-2 eyebrow">Your Portfolio, at a glance</div>
+    <h2 class="slide-2" style="font-size:34px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-0.5px;margin-bottom:12px;">
+      See every property's<br>performance — <em>instantly.</em>
+    </h2>
+    <p class="descriptor slide-2" style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;max-width:320px;margin:0 auto 28px;">
+      Track occupancy, revenue, channel splits,<br>and owner payouts across your whole portfolio.
+    </p>
+    <div class="phone-wide">
+      <div class="pw-header">Portfolio <span>Overview</span> · 12 properties</div>
+      <div class="pw-grid">
+        <div class="pw-stat"><div class="lbl">Total Revenue MTD</div><div class="val gold">£24,880</div></div>
+        <div class="pw-stat"><div class="lbl">Avg Occupancy</div><div class="val">82%</div></div>
+        <div class="pw-stat"><div class="lbl">Bookings This Month</div><div class="val">67</div></div>
+        <div class="pw-stat"><div class="lbl">Owner Payouts Due</div><div class="val gold">£9,340</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SLIDE 3 — Direct Booking Engine
+════════════════════════════════════════════ -->
+<div class="slide slide-3">
+  <div class="glow glow-purple" style="top:0;left:-60px;width:300px;height:300px;"></div>
+
+  <div class="tag">
+    <div class="logo-mark">O</div>
+    <div class="logo-text">OPERO</div>
+  </div>
+  <div class="slide-num" style="position:absolute;top:28px;right:28px;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:1px;">3 / 5</div>
+
+  <div class="slide-3 content">
+    <h2>Airbnb fees<br>eating your<br><strong>margins?</strong></h2>
+    <p class="slide-3 descriptor">
+      Opero's built-in direct booking engine lets guests book — and pay — without the platform cut.
+    </p>
+    <div class="slide-3 cta">Try it at helloopero.com →</div>
+  </div>
+
+  <div class="booking-card">
+    <div class="bc-title">DIRECT BOOKING · Aurévo Sea Castle</div>
+    <div class="bc-row"><span class="k">Check-in</span><span class="v">14 Jun 2026</span></div>
+    <div class="bc-row"><span class="k">Check-out</span><span class="v">17 Jun 2026</span></div>
+    <div class="bc-row"><span class="k">Nightly Rate</span><span class="v" style="color:#5B7CFA;">£120</span></div>
+    <div class="bc-row"><span class="k">Airbnb Fee</span><span class="v" style="color:#e05252;">£0.00</span></div>
+    <div class="bc-row"><span class="k">Total</span><span class="v green">£360 collected</span></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SLIDE 4 — Automation & Operations
+════════════════════════════════════════════ -->
+<div class="slide slide-4">
+  <div class="glow glow-gold" style="top:0;right:-40px;width:220px;height:220px;"></div>
+
+  <div class="tag">
+    <div class="logo-mark">O</div>
+    <div class="logo-text">OPERO</div>
+  </div>
+  <div class="slide-num" style="position:absolute;top:28px;right:28px;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:1px;">4 / 5</div>
+
+  <div class="slide-4 headline">
+    <h2>Stop doing things<br>manually.<br><strong>Automate it.</strong></h2>
+    <p class="slide-4 descriptor">
+      Guest messaging, cleaning schedules, check-in instructions — all triggered automatically.
+    </p>
+    <div class="slide-4 cta">helloopero.com →</div>
+  </div>
+
+  <div class="feature-pills">
+    <div class="fp">Auto Check-in Emails</div>
+    <div class="fp">Cleaning Dispatch</div>
+    <div class="fp">Review Requests</div>
+    <div class="fp">Late Checkout Alerts</div>
+  </div>
+
+  <div class="flow-card">
+    <div class="fc-title">AUTOMATION FLOW — Guest Books</div>
+    <div class="fc-step"><div class="fc-dot gold">1</div><span>Booking confirmed → Guest receives check-in details</span></div>
+    <div class="fc-step"><div class="fc-dot blue">2</div><span>48hrs before → Cleaner dispatched automatically</span></div>
+    <div class="fc-step"><div class="fc-dot green">3</div><span>Checkout → Review request sent instantly</span></div>
+    <div class="fc-step"><div class="fc-dot purple">4</div><span>Month end → Owner statement generated</span></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SLIDE 5 — Pricing
+════════════════════════════════════════════ -->
+<div class="slide slide-5">
+  <div class="glow glow-gold" style="top:-80px;left:50%;transform:translateX(-50%);width:300px;height:200px;"></div>
+
+  <div class="tag">
+    <div class="logo-mark">O</div>
+    <div class="logo-text">OPERO</div>
+  </div>
+  <div class="slide-num" style="position:absolute;top:28px;right:28px;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:1px;">5 / 5</div>
+
+  <h2 class="slide-5">Simple,<br>Transparent Pricing</h2>
+
+  <div class="pricing-grid">
+    <!-- Starter -->
+    <div class="price-card">
+      <div class="tier">Starter</div>
+      <div class="tagline">For independent hosts just getting started.</div>
+      <div class="amount">£29<span class="period">/mo</span></div>
+      <div class="features">
+        <div class="feat">Unified inbox</div>
+        <div class="feat">Direct booking engine</div>
+        <div class="feat">Booking & calendar management</div>
+        <div class="feat">14-day free trial</div>
+      </div>
+      <div class="btn">GET STARTED</div>
+    </div>
+
+    <!-- Growth -->
+    <div class="price-card featured">
+      <div class="tier">Growth</div>
+      <div class="tagline">For co-hosts scaling a portfolio.</div>
+      <div class="amount">£79<span class="period">/mo</span></div>
+      <div class="features">
+        <div class="feat">Everything in Starter</div>
+        <div class="feat">Owner portal & statements</div>
+        <div class="feat">Automation & messaging flows</div>
+        <div class="feat">Subscription management</div>
+      </div>
+      <div class="btn">GET STARTED</div>
+    </div>
+
+    <!-- Professional -->
+    <div class="price-card">
+      <div class="tier">Professional</div>
+      <div class="tagline">For property managers at scale.</div>
+      <div class="amount">£199<span class="period">/mo</span></div>
+      <div class="features">
+        <div class="feat">Everything in Growth</div>
+        <div class="feat">Team access & roles</div>
+        <div class="feat">Advanced reporting</div>
+        <div class="feat">Priority support</div>
+      </div>
+      <div class="btn">GET STARTED</div>
+    </div>
+  </div>
+
+  <div class="trust-row">
+    <div class="trust-item">Cancel anytime</div>
+    <div class="trust-item">14-day free trial</div>
+    <div class="trust-item">helloopero.com</div>
+  </div>
+</div>
+
+</body>
+</html>

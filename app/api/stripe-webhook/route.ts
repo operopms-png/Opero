@@ -20,6 +20,12 @@ const PLAN_MAP: Record<string, string> = {
   'price_1Tfl2AGVqeDYuzWEjAuZlyCI': 'professional',
 }
 
+const YEARLY_IDS = [
+  'price_1Tfl0kGVqeDYuzWElsWlZLyf',
+  'price_1Tfl1qGVqeDYuzWEb1htih5S',
+  'price_1Tfl2AGVqeDYuzWEjAuZlyCI',
+]
+
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const sig = request.headers.get('stripe-signature')!
@@ -37,27 +43,58 @@ export async function POST(request: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
-    const email = session.customer_email
-    const priceId = session.line_items?.data?.[0]?.price?.id || ''
-    const plan = PLAN_MAP[priceId] || 'starter'
-    const billingPeriod = ['price_1Tfl0kGVqeDYuzWElsWlZLyf','price_1Tfl1qGVqeDYuzWEb1htih5S','price_1Tfl2AGVqeDYuzWEjAuZlyCI'].includes(priceId) ? 'yearly' : 'monthly'
+    // Expand line_items to get the price ID
+    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['line_items'],
+    })
+
+    const email = fullSession.customer_email
+    const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
+    const plan = PLAN_MAP[priceId] ?? 'starter'
+    const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
 
     if (email) {
       const { data: users } = await supabase.auth.admin.listUsers()
-      const user = users?.users?.find((u: any) => u.email === email)
+      const user = users?.users?.find((u: { email: string }) => u.email === email)
 
       if (user) {
         await supabase.from('subscriptions').upsert({
           user_id: user.id,
           plan,
           billing_period: billingPeriod,
-          status: 'active',
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
+          status: 'trialing',
+          stripe_customer_id: fullSession.customer as string,
+          stripe_subscription_id: fullSession.subscription as string,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' })
+
+        console.log(`✅ Subscription saved: ${email} → ${plan} (${billingPeriod})`)
+      } else {
+        console.warn(`⚠️ No Supabase user found for email: ${email}`)
       }
     }
+  }
+
+  if (event.type === 'customer.subscription.updated') {
+    const sub = event.data.object as Stripe.Subscription
+    const priceId = sub.items.data[0]?.price?.id ?? ''
+    const plan = PLAN_MAP[priceId] ?? 'starter'
+    const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
+
+    await supabase.from('subscriptions').update({
+      plan,
+      billing_period: billingPeriod,
+      status: sub.status,
+      updated_at: new Date().toISOString(),
+    }).eq('stripe_subscription_id', sub.id)
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object as Stripe.Subscription
+    await supabase.from('subscriptions').update({
+      status: 'cancelled',
+      updated_at: new Date().toISOString(),
+    }).eq('stripe_subscription_id', sub.id)
   }
 
   return NextResponse.json({ received: true })
