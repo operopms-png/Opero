@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import WeatherWidget from '@/components/WeatherWidget'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
@@ -239,10 +240,10 @@ export default function DevPage() {
                 </div>
               )}
             </div>
-                    </div>
+                    <div style={{marginTop:16}}><WeatherWidget /></div>
         )}
 
-        {/* PROJECTS */}
+        {/* PROJECTS */
         {tab==='Projects' && (
           <div>
             {projects.length===0 ? <div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No projects yet</div> :

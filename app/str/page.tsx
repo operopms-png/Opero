@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import WeatherWidget from '@/components/WeatherWidget'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Turnovers','Owner Reports','Analytics','Integrations','Team','Reports','Guest Comms']
@@ -152,6 +153,9 @@ export default function STRPage() {
                 {bookings.slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No bookings yet</div> :
                 bookings.slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:b.status==='confirmed'?'#D1FAE5':'#F3F4F6', color:b.status==='confirmed'?'#059669':'#6B7280' }}>{b.status}</span></div>))}
               </div>
+            </div>
+            <div style={{ marginTop:16 }}>
+              <WeatherWidget />
             </div>
           </div>
         )}
