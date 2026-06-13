@@ -140,57 +140,63 @@ export default function DevPage() {
               ))}
             </div>
 
-            {/* Project cards */}
-            <div style={{ marginBottom:20 }}>
-              <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:12 }}>Active Projects</div>
-              {projects.length===0 ? (
-                <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:40, textAlign:'center', color:'#98A2B3', fontSize:14 }}>No projects yet. Click Projects tab to add one.</div>
-              ) : (
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
-                  {projects.map(p => {
-                    const pct = p.total_budget > 0 ? Math.round((p.spent / p.total_budget) * 100) : 0
-                    const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.planning
-                    return (
-                      <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
-                          <div style={{ fontWeight:600, fontSize:15, color:'#101828' }}>{p.name}</div>
-                          <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:sc.bg, color:sc.color, textTransform:'capitalize' }}>{p.status}</span>
-                        </div>
-                        <div style={{ fontSize:13, color:'#667085', marginBottom:12 }}>{p.location}</div>
-                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#667085', marginBottom:8 }}>
-                          <span>Budget: £{(p.total_budget??0).toLocaleString()}</span>
-                          <span>Spent: £{(p.spent??0).toLocaleString()} ({pct}%)</span>
-                        </div>
-                        <div style={{ background:'#F2F4F7', borderRadius:100, height:6 }}>
-                          <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#8B5CF6', borderRadius:100, height:6, width:`${Math.min(100,pct)}%`, transition:'width 0.3s' }} />
-                        </div>
-                        {p.end_date && <div style={{ fontSize:11, color:'#98A2B3', marginTop:8 }}>Due: {p.end_date}</div>}
-                      </div>
-                    )
-                  })}
+            {/* Charts */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Budget vs Spent</div>
+                <div style={{ display:'flex', gap:16, fontSize:11, color:'#667085', marginBottom:12 }}>
+                  <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#8B5CF6', display:'inline-block', borderRadius:2 }}></span>Budget</span>
+                  <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#F59E0B', display:'inline-block', borderRadius:2 }}></span>Spent</span>
                 </div>
-              )}
+                <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
+                  <polyline points="10,70 60,55 110,50 160,35 210,30 260,20 290,15" fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="10,75 60,68 110,65 160,55 210,50 260,42 290,38" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
+                </svg>
+              </div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Project Status</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:12, marginTop:8 }}>
+                  {[
+                    { label:'Planning', count:projects.filter((p:any)=>p.status==='planning').length, color:'#8B5CF6' },
+                    { label:'Active', count:projects.filter((p:any)=>p.status==='active').length, color:'#10B981' },
+                    { label:'On Hold', count:projects.filter((p:any)=>p.status==='on_hold').length, color:'#F59E0B' },
+                    { label:'Completed', count:projects.filter((p:any)=>p.status==='completed').length, color:'#667085' },
+                  ].map((s:any)=>(
+                    <div key={s.label} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <div style={{ fontSize:12, color:'#667085', width:72 }}>{s.label}</div>
+                      <div style={{ flex:1, background:'#F2F4F7', borderRadius:100, height:8 }}>
+                        <div style={{ background:s.color, borderRadius:100, height:8, width:projects.length>0?`${Math.round((s.count/projects.length)*100)}%`:'0%' }}/>
+                      </div>
+                      <div style={{ fontSize:12, fontWeight:600, color:'#101828', width:20, textAlign:'right' }}>{s.count}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Upcoming milestones */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+            {/* Milestones + Investors */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Upcoming Milestones</div>
-                {milestones.filter(m=>m.status!=='completed').slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No upcoming milestones</div> :
-                milestones.filter(m=>m.status!=='completed').slice(0,5).map(m => (
-                  <div key={m.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}>
-                    <div>
-                      <div style={{ fontWeight:500, color:'#101828' }}>{m.name}</div>
-                      <div style={{ fontSize:11, color:'#667085' }}>{m.dev_projects?.name} · {m.due_date}</div>
+                {milestones.filter((m:any)=>m.status!=='completed').slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No upcoming milestones</div> :
+                milestones.filter((m:any)=>m.status!=='completed').slice(0,5).map((m:any) => {
+                  const overdue = m.due_date && m.due_date < today && m.status !== 'completed'
+                  return (
+                    <div key={m.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}>
+                      <div>
+                        <div style={{ fontWeight:500, color:'#101828' }}>{m.name}</div>
+                        <div style={{ fontSize:11, color:overdue?'#EF4444':'#667085' }}>{m.dev_projects?.name} · {m.due_date}{overdue?' · Overdue':''}</div>
+                      </div>
+                      <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:overdue?'#FEE2E2':'#EEF0FF', color:overdue?'#DC2626':'#3B4AFF' }}>{m.status}</span>
                     </div>
-                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#EEF0FF', color:'#3B4AFF' }}>{m.status}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Investor Summary</div>
                 {investors.length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No investors yet</div> :
-                investors.slice(0,5).map(i => (
+                investors.slice(0,5).map((i:any) => (
                   <div key={i.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}>
                     <div>
                       <div style={{ fontWeight:500, color:'#101828' }}>{i.name}</div>
@@ -201,7 +207,39 @@ export default function DevPage() {
                 ))}
               </div>
             </div>
-          </div>
+
+            {/* Active project cards */}
+            <div>
+              <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:12 }}>Projects</div>
+              {projects.length===0 ? (
+                <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:40, textAlign:'center', color:'#98A2B3', fontSize:14 }}>No projects yet — click Projects tab to add one.</div>
+              ) : (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:16 }}>
+                  {projects.map((p:any) => {
+                    const pct = p.total_budget > 0 ? Math.round((p.spent / p.total_budget) * 100) : 0
+                    const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.planning
+                    return (
+                      <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                          <div style={{ fontWeight:600, fontSize:15, color:'#101828' }}>{p.name}</div>
+                          <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:sc.bg, color:sc.color, textTransform:'capitalize' }}>{p.status}</span>
+                        </div>
+                        <div style={{ fontSize:13, color:'#667085', marginBottom:12 }}>{p.location}</div>
+                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#667085', marginBottom:6 }}>
+                          <span>Budget: £{(p.total_budget??0).toLocaleString()}</span>
+                          <span>Spent: £{(p.spent??0).toLocaleString()} ({pct}%)</span>
+                        </div>
+                        <div style={{ background:'#F2F4F7', borderRadius:100, height:6 }}>
+                          <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#8B5CF6', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
+                        </div>
+                        {p.end_date && <div style={{ fontSize:11, color:'#98A2B3', marginTop:8 }}>Due: {p.end_date}</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+                    </div>
         )}
 
         {/* PROJECTS */}
