@@ -240,7 +240,8 @@ export default function DevPage() {
                 </div>
               )}
             </div>
-                    <div style={{marginTop:16}}><WeatherWidget /></div>
+            <div style={{marginTop:16}}><WeatherWidget /></div>
+          </div>
         )}
 
         {/* PROJECTS */}
