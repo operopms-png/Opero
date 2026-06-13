@@ -295,19 +295,7 @@ export default function PMPage() {
               </div>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16 }}>
-              <WeatherWidget />
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Quick Stats</div>
-                <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Properties</span><span style={{ fontWeight:600, color:'#101828' }}>{properties.length}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Tenants</span><span style={{ fontWeight:600, color:'#101828' }}>{tenants.length}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Active Leases</span><span style={{ fontWeight:600, color:'#10B981' }}>{leases.filter((l:any)=>l.status==='active').length}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Open Maintenance</span><span style={{ fontWeight:600, color:'#F59E0B' }}>{maintenance.filter((m:any)=>m.status==='open').length}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Outstanding Arrears</span><span style={{ fontWeight:600, color:'#EF4444' }}>£{rentPayments.filter((r:any)=>r.status==='overdue').reduce((s:number,r:any)=>s+(r.amount??0),0).toLocaleString()}</span></div>
-                </div>
-              </div>
-          </div>
+
         )}
 
         {tab==='Properties'&&(
