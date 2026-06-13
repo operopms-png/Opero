@@ -31,9 +31,9 @@ const NAV_GROUPS = [
 ]
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team'],
-  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team'],
-  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit'],
+  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str'],
+  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str'],
+  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str'],
 }
 
 function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
