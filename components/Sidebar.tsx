@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react'
 
 const NAV_GROUPS = [
   {
+    label: 'CRM',
+    items: [
+      { href: '/crm', label: 'CRM', key: 'crm', icon: 'users' },
+    ]
+  },
+  {
     label: 'Vacation Rentals',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
