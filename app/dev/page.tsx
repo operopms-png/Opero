@@ -243,7 +243,7 @@ export default function DevPage() {
                     <div style={{marginTop:16}}><WeatherWidget /></div>
         )}
 
-        {/* PROJECTS */
+        {/* PROJECTS */}
         {tab==='Projects' && (
           <div>
             {projects.length===0 ? <div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No projects yet</div> :
