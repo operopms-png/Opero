@@ -294,7 +294,6 @@ export default function PMPage() {
                 ))}
               </div>
             </div>
-          </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16 }}>
               <WeatherWidget />
@@ -308,7 +307,7 @@ export default function PMPage() {
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Outstanding Arrears</span><span style={{ fontWeight:600, color:'#EF4444' }}>£{rentPayments.filter((r:any)=>r.status==='overdue').reduce((s:number,r:any)=>s+(r.amount??0),0).toLocaleString()}</span></div>
                 </div>
               </div>
-            </div>
+          </div>
         )}
 
         {tab==='Properties'&&(
