@@ -154,8 +154,19 @@ export default function STRPage() {
                 bookings.slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:b.status==='confirmed'?'#D1FAE5':'#F3F4F6', color:b.status==='confirmed'?'#059669':'#6B7280' }}>{b.status}</span></div>))}
               </div>
             </div>
-            <div style={{ marginTop:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16 }}>
               <WeatherWidget />
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Quick Stats</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Avg nightly rate</span><span style={{ fontWeight:600, color:'#101828' }}>£{properties.length>0?Math.round(properties.reduce((s:number,p:any)=>s+(p.nightly_rate??0),0)/properties.length):0}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total bookings</span><span style={{ fontWeight:600, color:'#101828' }}>{bookings.length}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Confirmed</span><span style={{ fontWeight:600, color:'#10B981' }}>{bookings.filter((b:any)=>b.status==='confirmed').length}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Cancelled</span><span style={{ fontWeight:600, color:'#EF4444' }}>{bookings.filter((b:any)=>b.status==='cancelled').length}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Cleaning pending</span><span style={{ fontWeight:600, color:'#F59E0B' }}>{cleaning.filter((c:any)=>c.status==='pending').length}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Open maintenance</span><span style={{ fontWeight:600, color:'#3B4AFF' }}>{maintenance.filter((m:any)=>m.status==='open').length}</span></div>
+                </div>
+              </div>
             </div>
           </div>
         )}
