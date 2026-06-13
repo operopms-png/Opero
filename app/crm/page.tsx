@@ -1,490 +1,467 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+const DEAL_STAGES = ['Lead','Qualified','Proposal','Negotiation','Closed Won','Closed Lost']
+const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
+const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
-type Contact = {
-  id: string
-  type: 'guest' | 'owner' | 'lead'
-  name: string
-  email: string | null
-  phone: string | null
-  source: string | null
-  status: string | null
-  notes: string | null
-  created_at: string
-  last_seen: string | null
-  booking_count?: number
-  total_spent?: number
-  property_name?: string | null
-}
-
-type Activity = {
-  id: string
-  contact_id: string
-  type: 'note' | 'email' | 'call' | 'booking'
-  body: string
-  created_at: string
-}
-
-const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  guest:  { label: 'Guest',  color: '#5B7BF8', bg: '#EEF2FF' },
-  owner:  { label: 'Owner',  color: '#10B981', bg: '#D1FAE5' },
-  lead:   { label: 'Lead',   color: '#F59E0B', bg: '#FEF3C7' },
-}
-
-const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
-  active:   { color: '#10B981', bg: '#D1FAE5' },
-  inactive: { color: '#6B7280', bg: '#F3F4F6' },
-  vip:      { color: '#8B5CF6', bg: '#EDE9FE' },
-  prospect: { color: '#F59E0B', bg: '#FEF3C7' },
-}
-
-const INITIAL_FORM = {
-  type: 'guest',
-  name: '',
-  email: '',
-  phone: '',
-  source: '',
-  status: 'active',
-  notes: '',
-}
-
-function Avatar({ name, size = 38 }: { name: string; size?: number }) {
-  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-  const colors = ['#5B7BF8','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4']
-  const color = colors[name.charCodeAt(0) % colors.length]
+function Modal({ title, onClose, children }: any) {
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: color + '20', border: `2px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.35, fontWeight: 700, color, flexShrink: 0 }}>
-      {initials}
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50 }} onClick={(e:any)=>e.target===e.currentTarget&&onClose()}>
+      <div style={{ background:'#fff', borderRadius:16, padding:32, width:'100%', maxWidth:520, margin:'0 16px', maxHeight:'90vh', overflowY:'auto' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
+          <h2 style={{ fontSize:18, fontWeight:600, margin:0 }}>{title}</h2>
+          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#667085' }}>×</button>
+        </div>
+        {children}
+      </div>
     </div>
   )
 }
 
 export default function CRMPage() {
-  const [contacts, setContacts] = useState<Contact[]>([])
+  const [section, setSection] = useState('Contacts')
+  const [module, setModule] = useState('all')
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'guest' | 'owner' | 'lead'>('all')
-  const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState<Contact | null>(null)
-  const [activities, setActivities] = useState<Activity[]>([])
-  const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState(INITIAL_FORM)
+  const [modal, setModal] = useState<string|null>(null)
+  const [form, setForm] = useState<any>({})
+  const [editId, setEditId] = useState<string|null>(null)
   const [saving, setSaving] = useState(false)
-  const [newNote, setNewNote] = useState('')
-  const [addingNote, setAddingNote] = useState(false)
+  const [contacts, setContacts] = useState<any[]>([])
+  const [companies, setCompanies] = useState<any[]>([])
+  const [deals, setDeals] = useState<any[]>([])
+  const [tasks, setTasks] = useState<any[]>([])
+  const [activities, setActivities] = useState<any[]>([])
+  const [meetings, setMeetings] = useState<any[]>([])
+  const [search, setSearch] = useState('')
+  const [dragDeal, setDragDeal] = useState<string|null>(null)
 
-  useEffect(() => { fetchContacts() }, [])
-
-  async function fetchContacts() {
-    setLoading(true)
-    // Try to get contacts from crm_contacts table first
-    const { data: crmData } = await supabase
-      .from('crm_contacts')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (crmData && crmData.length > 0) {
-      setContacts(crmData as Contact[])
-    } else {
-      // Fall back to building contacts from bookings + owners
-      const [{ data: bookings }, { data: owners }] = await Promise.all([
-        supabase.from('bookings').select('guest_name, guest_email, created_at, total_amount, properties(name)').not('guest_name', 'is', null),
-        supabase.from('owners').select('*').catch(() => ({ data: [] })),
-      ])
-
-      const guestMap: Record<string, Contact> = {}
-      for (const b of (bookings ?? [])) {
-        const key = b.guest_email ?? b.guest_name
-        if (!key) continue
-        if (!guestMap[key]) {
-          guestMap[key] = {
-            id: `g-${key}`,
-            type: 'guest',
-            name: b.guest_name ?? 'Unknown',
-            email: b.guest_email ?? null,
-            phone: null,
-            source: 'Booking',
-            status: 'active',
-            notes: null,
-            created_at: b.created_at,
-            last_seen: b.created_at,
-            booking_count: 0,
-            total_spent: 0,
-            property_name: (b.properties as any)?.name ?? null,
-          }
-        }
-        guestMap[key].booking_count! += 1
-        guestMap[key].total_spent! += b.total_amount ?? 0
-      }
-
-      const ownerContacts: Contact[] = (owners ?? []).map((o: any) => ({
-        id: o.id,
-        type: 'owner',
-        name: o.name ?? o.full_name ?? 'Owner',
-        email: o.email ?? null,
-        phone: o.phone ?? null,
-        source: 'Owner Portal',
-        status: 'active',
-        notes: null,
-        created_at: o.created_at,
-        last_seen: null,
-        booking_count: 0,
-        total_spent: 0,
-        property_name: o.property_name ?? null,
-      }))
-
-      setContacts([...ownerContacts, ...Object.values(guestMap)])
+  useEffect(() => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { window.location.href = '/login'; return }
+      await loadAll()
+      setLoading(false)
     }
-    setLoading(false)
+    init()
+  }, [])
+
+  async function loadAll() {
+    const [c,co,d,t,a,m] = await Promise.all([
+      supabase.from('crm_contacts').select('*').order('created_at',{ascending:false}),
+      supabase.from('crm_companies').select('*').order('created_at',{ascending:false}),
+      supabase.from('crm_deals').select('*,crm_contacts(name)').order('created_at',{ascending:false}),
+      supabase.from('crm_tasks').select('*,crm_contacts(name)').order('due_date',{ascending:true}),
+      supabase.from('crm_activities').select('*,crm_contacts(name)').order('created_at',{ascending:false}),
+      supabase.from('crm_meetings').select('*,crm_contacts(name)').order('date',{ascending:true}),
+    ])
+    setContacts(c.data??[]); setCompanies(co.data??[]); setDeals(d.data??[])
+    setTasks(t.data??[]); setActivities(a.data??[]); setMeetings(m.data??[])
   }
 
-  async function fetchActivities(contactId: string) {
-    const { data } = await supabase
-      .from('crm_activities')
-      .select('*')
-      .eq('contact_id', contactId)
-      .order('created_at', { ascending: false })
-    setActivities(data ?? [])
-  }
-
-  function selectContact(c: Contact) {
-    setSelected(c)
-    fetchActivities(c.id)
-  }
-
-  async function handleSave() {
-    if (!form.name) return
+  async function save(table: string, data: any) {
     setSaving(true)
-    const { data, error } = await supabase.from('crm_contacts').insert([form]).select().single()
-    if (!error && data) {
-      setContacts(prev => [data as Contact, ...prev])
-      setShowModal(false)
-      setForm(INITIAL_FORM)
-    }
-    setSaving(false)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (editId) { await supabase.from(table).update({...data}).eq('id',editId) }
+    else { await supabase.from(table).insert([{...data,user_id:user?.id}]) }
+    setSaving(false); setModal(null); setForm({}); setEditId(null)
+    await loadAll()
   }
 
-  async function handleAddNote() {
-    if (!newNote.trim() || !selected) return
-    setAddingNote(true)
-    await supabase.from('crm_activities').insert([{
-      contact_id: selected.id,
-      type: 'note',
-      body: newNote.trim(),
-    }])
-    setNewNote('')
-    fetchActivities(selected.id)
-    setAddingNote(false)
+  async function del(table: string, id: string) {
+    if (!confirm('Delete?')) return
+    await supabase.from(table).delete().eq('id',id)
+    await loadAll()
   }
 
-  const filtered = contacts.filter(c => {
-    if (filter !== 'all' && c.type !== filter) return false
-    if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.email?.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+  function openEdit(mn: string, r: any) { setForm(r); setEditId(r.id); setModal(mn) }
 
-  const stats = {
-    total: contacts.length,
-    guests: contacts.filter(c => c.type === 'guest').length,
-    owners: contacts.filter(c => c.type === 'owner').length,
-    leads: contacts.filter(c => c.type === 'lead').length,
-  }
+  const filtered = (arr: any[]) => arr.filter(x =>
+    (module==='all'||x.module===module) &&
+    (search===''||JSON.stringify(x).toLowerCase().includes(search.toLowerCase()))
+  )
 
-  function fmtDate(d: string) {
-    return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-  }
-  function fmtTime(d: string) {
-    return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  }
+  const today = new Date().toISOString().split('T')[0]
 
-  const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13.5, fontFamily: 'inherit', boxSizing: 'border-box', color: '#101828', outline: 'none' }
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 500, color: '#374151', marginBottom: 5 }
+  if (loading) return <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Inter',sans-serif", color:'#98A2B3' }}>Loading...</div>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'Inter', sans-serif" }}>
-
-      {/* Top bar */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-          <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#101828' }}>CRM</h1>
-          <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 12.5, fontWeight: 500 }}>{contacts.length}</span>
+    <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
+      <div style={{ width:220, background:'#fff', borderRight:'1px solid #F2F4F7', display:'flex', flexDirection:'column', paddingTop:16, flexShrink:0, minHeight:'100vh' }}>
+        <div style={{ padding:'0 16px 16px', borderBottom:'1px solid #F2F4F7' }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'#101828', marginBottom:10 }}>CRM</div>
+          <select value={module} onChange={e=>setModule(e.target.value)} style={{ width:'100%', padding:'7px 10px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:12, fontFamily:'inherit', cursor:'pointer' }}>
+            <option value="all">All Modules</option>
+            <option value="str">Vacation Rentals</option>
+            <option value="pm">Property Management</option>
+            <option value="dev">Developments</option>
+          </select>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <a href={`https://app.hubspot.com/contacts/51357725`} target="_blank" rel="noreferrer"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, color: '#374151', textDecoration: 'none', cursor: 'pointer' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            HubSpot
-          </a>
-          <button onClick={() => setShowModal(true)}
-            style={{ background: '#101828', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13.5, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>
-            + Add Contact
-          </button>
-        </div>
+        <nav style={{ flex:1, padding:'8px 10px', overflowY:'auto' }}>
+          {([{label:'Contacts',icon:'👤'},{label:'Companies',icon:'🏢'},{label:'Deals',icon:'💼'},{label:'Tasks',icon:'✓'},{label:'Meetings',icon:'📅'},{label:'Activity Feed',icon:'⚡'},{label:'Inbox',icon:'✉️'},{label:'Calls',icon:'📞'}] as any[]).map((s:any)=>(
+            <button key={s.label} onClick={()=>setSection(s.label)} style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'8px 10px', borderRadius:7, border:'none', background:section===s.label?'#EEF0FF':'transparent', color:section===s.label?'#3B4AFF':'#344054', fontSize:13, fontWeight:section===s.label?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:1 }}>
+              <span style={{ fontSize:14 }}>{s.icon}</span>
+              {s.label}
+              {s.label==='Tasks'&&tasks.filter((t:any)=>t.status==='pending'&&t.due_date<=today).length>0&&(
+                <span style={{ marginLeft:'auto', background:'#EF4444', color:'#fff', borderRadius:20, fontSize:10, fontWeight:700, padding:'1px 6px' }}>{tasks.filter((t:any)=>t.status==='pending'&&t.due_date<=today).length}</span>
+              )}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
-
-        {/* Left panel */}
-        <div style={{ width: selected ? 360 : '100%', borderRight: selected ? '1px solid #E5E7EB' : 'none', display: 'flex', flexDirection: 'column', background: '#fff', transition: 'width 0.2s' }}>
-
-          {/* Stats strip */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderBottom: '1px solid #F2F4F7' }}>
-            {[
-              { label: 'Total', value: stats.total, color: '#5B7BF8' },
-              { label: 'Guests', value: stats.guests, color: '#5B7BF8' },
-              { label: 'Owners', value: stats.owners, color: '#10B981' },
-              { label: 'Leads', value: stats.leads, color: '#F59E0B' },
-            ].map(s => (
-              <div key={s.label} style={{ padding: '14px 20px', borderRight: '1px solid #F2F4F7' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#101828', letterSpacing: '-0.5px' }}>{s.value}</div>
-                <div style={{ fontSize: 11.5, color: '#98A2B3', fontWeight: 500, marginTop: 1 }}>{s.label}</div>
-              </div>
-            ))}
+      <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:'100vh' }}>
+        <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:60, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+            <h1 style={{ fontSize:17, fontWeight:600, margin:0, color:'#101828' }}>{section}</h1>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{ padding:'7px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:13, fontFamily:'inherit', width:220, outline:'none' }}/>
           </div>
+          <div style={{ display:'flex', gap:8 }}>
+            {section==='Contacts'&&<button onClick={()=>{setModal('contact');setForm({module});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Contact</button>}
+            {section==='Companies'&&<button onClick={()=>{setModal('company');setForm({});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Company</button>}
+            {section==='Deals'&&<button onClick={()=>{setModal('deal');setForm({module,stage:'Lead'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Deal</button>}
+            {section==='Tasks'&&<button onClick={()=>{setModal('task');setForm({module,status:'pending',priority:'medium'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Task</button>}
+            {section==='Meetings'&&<button onClick={()=>{setModal('meeting');setForm({module,status:'scheduled'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Schedule Meeting</button>}
+            {section==='Activity Feed'&&<button onClick={()=>{setModal('activity');setForm({module,type:'note'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Log Activity</button>}
+          </div>
+        </div>
 
-          {/* Search + filter */}
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid #F2F4F7', display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search contacts…"
-                style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', color: '#101828' }}
-              />
+        <div style={{ flex:1, padding:24, overflowY:'auto' }}>
+          {section==='Contacts'&&(
+            <div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
+                {([{label:'Total',value:filtered(contacts).length},{label:'Guests',value:filtered(contacts).filter((c:any)=>c.type==='guest').length},{label:'Landlords',value:filtered(contacts).filter((c:any)=>c.type==='landlord').length},{label:'Investors',value:filtered(contacts).filter((c:any)=>c.type==='investor').length}] as any[]).map((s:any)=>(
+                  <div key={s.label} style={{ background:'#fff', borderRadius:10, border:'1px solid #E4E7EC', padding:'16px 20px' }}>
+                    <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>{s.label}</div>
+                    <div style={{ fontSize:24, fontWeight:700, color:'#101828' }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 80px 80px 100px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase' }}>
+                  <span>Name</span><span>Email</span><span>Phone</span><span>Type</span><span>Module</span><span></span>
+                </div>
+                {filtered(contacts).length===0?<div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No contacts yet</div>:
+                filtered(contacts).map((c:any)=>(
+                  <div key={c.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 80px 80px 100px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <div style={{ width:32, height:32, borderRadius:'50%', background:'#EEF0FF', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:12, color:'#3B4AFF', flexShrink:0 }}>{c.name.charAt(0)}</div>
+                      <span style={{ fontWeight:500, color:'#101828' }}>{c.name}</span>
+                    </div>
+                    <span style={{ color:'#667085' }}>{c.email??'—'}</span>
+                    <span style={{ color:'#667085' }}>{c.phone??'—'}</span>
+                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#EEF0FF', color:'#3B4AFF', textTransform:'capitalize' }}>{c.type}</span>
+                    <span style={{ fontSize:11, color:'#98A2B3', textTransform:'uppercase' }}>{c.module}</span>
+                    <div style={{ display:'flex', gap:6 }}>
+                      <button onClick={()=>openEdit('contact',c)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                      <button onClick={()=>del('crm_contacts',c.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {(['all', 'guest', 'owner', 'lead'] as const).map(t => (
-                <button key={t} onClick={() => setFilter(t)} style={{
-                  padding: '6px 12px', borderRadius: 20, border: '1px solid',
-                  borderColor: filter === t ? '#101828' : '#E5E7EB',
-                  background: filter === t ? '#101828' : '#fff',
-                  color: filter === t ? '#fff' : '#6B7280',
-                  fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-                  textTransform: 'capitalize',
-                }}>{t}</button>
+          )}
+
+          {section==='Companies'&&(
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {filtered(companies).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No companies yet</div>:
+              filtered(companies).map((c:any)=>(
+                <div key={c.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ width:40, height:40, borderRadius:10, background:'#EEF0FF', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:15, color:'#3B4AFF' }}>{c.name.charAt(0)}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{c.name}</div>
+                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{[c.industry,c.website].filter(Boolean).join(' · ')}</div>
+                  </div>
+                  <button onClick={()=>openEdit('company',c)} style={{ fontSize:12, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>del('crm_companies',c.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                </div>
               ))}
             </div>
-          </div>
+          )}
 
-          {/* Contact list */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>Loading contacts…</div>
-            ) : filtered.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60 }}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12 }}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                <div style={{ fontSize: 14, fontWeight: 500, color: '#64748B' }}>No contacts found</div>
-                <button onClick={() => setShowModal(true)} style={{ marginTop: 12, padding: '8px 16px', background: '#5B7BF8', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Contact</button>
-              </div>
-            ) : filtered.map(c => {
-              const typeCfg = TYPE_CONFIG[c.type]
-              const statCfg = STATUS_CONFIG[c.status ?? 'active'] ?? STATUS_CONFIG.active
-              const isActive = selected?.id === c.id
-              return (
-                <div key={c.id} onClick={() => selectContact(c)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #F9FAFB', background: isActive ? '#F5F7FF' : '#fff', transition: 'background 0.1s' }}>
-                  <Avatar name={c.name} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <span style={{ fontSize: 13.5, fontWeight: 600, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
-                      <span style={{ fontSize: 10.5, fontWeight: 600, padding: '1px 7px', borderRadius: 10, color: typeCfg.color, background: typeCfg.bg, flexShrink: 0 }}>{typeCfg.label}</span>
+          {section==='Deals'&&(
+            <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:16 }}>
+              {DEAL_STAGES.map(stage=>{
+                const sd=filtered(deals).filter((d:any)=>d.stage===stage)
+                const sv=sd.reduce((s:number,d:any)=>s+(d.value??0),0)
+                return(
+                  <div key={stage} style={{ minWidth:220, background:'#F7F8FA', borderRadius:12, border:'1px solid #E4E7EC', padding:12, flexShrink:0 }}
+                    onDragOver={e=>e.preventDefault()}
+                    onDrop={async()=>{if(dragDeal){await supabase.from('crm_deals').update({stage}).eq('id',dragDeal);setDragDeal(null);loadAll()}}}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+                      <div style={{ fontSize:12, fontWeight:600, color:'#344054' }}>{stage}</div>
+                      <span style={{ fontSize:11, color:'#667085' }}>{sd.length} · £{sv.toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#98A2B3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {c.email ?? c.phone ?? c.property_name ?? 'No contact info'}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    {c.booking_count != null && c.booking_count > 0 && (
-                      <div style={{ fontSize: 11.5, fontWeight: 600, color: '#5B7BF8' }}>{c.booking_count} booking{c.booking_count > 1 ? 's' : ''}</div>
-                    )}
-                    <div style={{ fontSize: 10.5, color: '#C1C9D2', marginTop: 1 }}>{fmtTime(c.created_at)}</div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Right panel — contact detail */}
-        {selected && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#F8F9FA', overflowY: 'auto' }}>
-
-            {/* Contact header */}
-            <div style={{ background: '#fff', padding: '24px 28px', borderBottom: '1px solid #E5E7EB' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <Avatar name={selected.name} size={52} />
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: '#101828', marginBottom: 4 }}>{selected.name}</div>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 10, color: TYPE_CONFIG[selected.type].color, background: TYPE_CONFIG[selected.type].bg }}>{TYPE_CONFIG[selected.type].label}</span>
-                      {selected.status && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 10, color: (STATUS_CONFIG[selected.status] ?? STATUS_CONFIG.active).color, background: (STATUS_CONFIG[selected.status] ?? STATUS_CONFIG.active).bg, textTransform: 'capitalize' }}>{selected.status}</span>}
-                      {selected.source && <span style={{ fontSize: 11, color: '#98A2B3', padding: '2px 9px', borderRadius: 10, background: '#F3F4F6' }}>{selected.source}</span>}
-                    </div>
-                  </div>
-                </div>
-                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#98A2B3', fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
-              </div>
-
-              {/* Contact info row */}
-              <div style={{ display: 'flex', gap: 24, marginTop: 20, flexWrap: 'wrap' }}>
-                {selected.email && (
-                  <a href={`mailto:${selected.email}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#5B7BF8', textDecoration: 'none' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    {selected.email}
-                  </a>
-                )}
-                {selected.phone && (
-                  <a href={`tel:${selected.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#374151', textDecoration: 'none' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 .01h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.9z"/></svg>
-                    {selected.phone}
-                  </a>
-                )}
-                {selected.property_name && (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#374151' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    {selected.property_name}
-                  </span>
-                )}
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#98A2B3' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                  Added {fmtDate(selected.created_at)}
-                </span>
-              </div>
-
-              {/* Stats row if guest */}
-              {selected.type === 'guest' && (selected.booking_count ?? 0) > 0 && (
-                <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
-                  <div style={{ padding: '10px 16px', background: '#F5F7FF', borderRadius: 10 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: '#5B7BF8' }}>{selected.booking_count}</div>
-                    <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>Bookings</div>
-                  </div>
-                  <div style={{ padding: '10px 16px', background: '#F0FDF4', borderRadius: 10 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: '#10B981' }}>£{(selected.total_spent ?? 0).toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>Total spent</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Notes section */}
-            <div style={{ padding: '20px 28px' }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 14 }}>Notes & Activity</div>
-
-              {/* Add note */}
-              <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E5E7EB', padding: 14, marginBottom: 16 }}>
-                <textarea
-                  value={newNote}
-                  onChange={e => setNewNote(e.target.value)}
-                  placeholder="Add a note…"
-                  rows={2}
-                  style={{ width: '100%', border: 'none', outline: 'none', fontSize: 13.5, fontFamily: 'inherit', color: '#101828', resize: 'none', boxSizing: 'border-box' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                  <button onClick={handleAddNote} disabled={addingNote || !newNote.trim()}
-                    style={{ padding: '7px 16px', background: '#101828', color: '#fff', border: 'none', borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: !newNote.trim() ? 0.4 : 1 }}>
-                    {addingNote ? 'Saving…' : 'Add note'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Activity list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {selected.notes && (
-                  <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E5E7EB', padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Note</span>
-                    </div>
-                    <div style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.6 }}>{selected.notes}</div>
-                  </div>
-                )}
-                {activities.length === 0 && !selected.notes ? (
-                  <div style={{ textAlign: 'center', padding: '32px 0', color: '#98A2B3', fontSize: 13 }}>No activity yet</div>
-                ) : (
-                  activities.map(a => (
-                    <div key={a.id} style={{ background: '#fff', borderRadius: 10, border: '1px solid #E5E7EB', padding: '14px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      {sd.map((d:any)=>(
+                        <div key={d.id} draggable onDragStart={()=>setDragDeal(d.id)} style={{ background:'#fff', borderRadius:8, border:'1px solid #E4E7EC', padding:'12px 14px', cursor:'grab' }}>
+                          <div style={{ fontWeight:500, fontSize:13, color:'#101828', marginBottom:4 }}>{d.name}</div>
+                          <div style={{ fontSize:11, color:'#667085', marginBottom:6 }}>{d.crm_contacts?.name??'—'}</div>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                            <span style={{ fontSize:12, fontWeight:600, color:'#10B981' }}>£{(d.value??0).toLocaleString()}</span>
+                            <button onClick={()=>openEdit('deal',d)} style={{ fontSize:10, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:5, padding:'2px 7px', cursor:'pointer' }}>Edit</button>
+                          </div>
                         </div>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: '#374151', textTransform: 'capitalize' }}>{a.type}</span>
-                        <span style={{ fontSize: 11, color: '#98A2B3', marginLeft: 'auto' }}>{fmtTime(a.created_at)}</span>
-                      </div>
-                      <div style={{ fontSize: 13.5, color: '#374151', lineHeight: 1.6 }}>{a.body}</div>
+                      ))}
+                      <button onClick={()=>{setModal('deal');setForm({module,stage});setEditId(null)}} style={{ width:'100%', padding:'8px', borderRadius:8, border:'1px dashed #D0D5DD', background:'none', fontSize:12, color:'#98A2B3', cursor:'pointer', fontFamily:'inherit' }}>+ Add deal</button>
                     </div>
-                  ))
-                )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {section==='Tasks'&&(
+            <div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
+                {([{label:'Pending',value:filtered(tasks).filter((t:any)=>t.status==='pending').length,color:'#F59E0B'},{label:'Overdue',value:filtered(tasks).filter((t:any)=>t.status==='pending'&&t.due_date<today).length,color:'#EF4444'},{label:'Completed',value:filtered(tasks).filter((t:any)=>t.status==='completed').length,color:'#10B981'}] as any[]).map((s:any)=>(
+                  <div key={s.label} style={{ background:'#fff', borderRadius:10, border:'1px solid #E4E7EC', padding:'16px 20px' }}>
+                    <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>{s.label}</div>
+                    <div style={{ fontSize:24, fontWeight:700, color:s.color }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {filtered(tasks).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No tasks yet</div>:
+                filtered(tasks).map((t:any)=>{
+                  const overdue=t.status==='pending'&&t.due_date<today
+                  return(
+                    <div key={t.id} style={{ background:'#fff', borderRadius:12, border:`1px solid ${overdue?'#FEE2E2':'#E4E7EC'}`, padding:'14px 20px', display:'grid', gridTemplateColumns:'auto 1fr auto auto auto', alignItems:'center', gap:14 }}>
+                      <input type="checkbox" checked={t.status==='completed'} onChange={async()=>{await supabase.from('crm_tasks').update({status:t.status==='completed'?'pending':'completed'}).eq('id',t.id);loadAll()}} style={{ width:16, height:16, cursor:'pointer' }}/>
+                      <div>
+                        <div style={{ fontWeight:500, fontSize:14, color:t.status==='completed'?'#98A2B3':'#101828', textDecoration:t.status==='completed'?'line-through':'none' }}>{t.title}</div>
+                        <div style={{ fontSize:11, color:'#667085', marginTop:2 }}>{t.crm_contacts?.name}{t.due_date?` · Due: ${t.due_date}`:''}{overdue?' · Overdue':''}</div>
+                      </div>
+                      <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.priority==='high'?'#FEE2E2':t.priority==='medium'?'#FEF3C7':'#F3F4F6', color:t.priority==='high'?'#DC2626':t.priority==='medium'?'#D97706':'#6B7280', textTransform:'uppercase' }}>{t.priority}</span>
+                      <button onClick={()=>openEdit('task',t)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                      <button onClick={()=>del('crm_tasks',t.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
+                    </div>
+                  )
+                })}
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {section==='Meetings'&&(
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {filtered(meetings).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No meetings scheduled</div>:
+              filtered(meetings).map((m:any)=>(
+                <div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ width:44, height:44, borderRadius:10, background:'#EEF0FF', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>📅</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{m.title}</div>
+                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{m.crm_contacts?.name}{m.date?` · ${m.date}`:''}{m.time?` at ${m.time}`:''}{m.location?` · ${m.location}`:''}</div>
+                  </div>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:m.status==='completed'?'#D1FAE5':'#DBEAFE', color:m.status==='completed'?'#059669':'#2563EB' }}>{m.status}</span>
+                  <button onClick={()=>openEdit('meeting',m)} style={{ fontSize:12, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>del('crm_meetings',m.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {section==='Activity Feed'&&(
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {filtered(activities).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No activity logged yet</div>:
+              filtered(activities).map((a:any)=>(
+                <div key={a.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', gap:14 }}>
+                  <div style={{ width:36, height:36, borderRadius:'50%', background:a.type==='call'?'#D1FAE5':a.type==='email'?'#DBEAFE':'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>
+                    {a.type==='call'?'📞':a.type==='email'?'✉️':a.type==='meeting'?'📅':'📝'}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:500, fontSize:14, color:'#101828' }}>{a.subject}</div>
+                    <div style={{ fontSize:13, color:'#667085', marginTop:4, lineHeight:1.5 }}>{a.body}</div>
+                    <div style={{ fontSize:11, color:'#98A2B3', marginTop:6 }}>{a.crm_contacts?.name} · {new Date(a.created_at).toLocaleDateString('en-GB')}</div>
+                  </div>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#F3F4F6', color:'#6B7280', textTransform:'capitalize', alignSelf:'flex-start' }}>{a.type}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {section==='Inbox'&&(
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginTop:8 }}>
+              {([{icon:'✉️',title:'Team Email',desc:'Manage and respond to team emails'},{icon:'💬',title:'Chat',desc:'Connect live chat on your website'},{icon:'📋',title:'Forms',desc:'Connect and respond to forms'},{icon:'📘',title:'Facebook Messenger',desc:'Start receiving Messenger conversations'},{icon:'📱',title:'WhatsApp',desc:'Start receiving WhatsApp conversations'},{icon:'📞',title:'Calling',desc:'Start making and receiving calls'}] as any[]).map((c:any)=>(
+                <div key={c.title} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px', textAlign:'center' }}>
+                  <div style={{ fontSize:32, marginBottom:12 }}>{c.icon}</div>
+                  <div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:6 }}>{c.title}</div>
+                  <div style={{ fontSize:12, color:'#667085', lineHeight:1.5 }}>{c.desc}</div>
+                  <button style={{ marginTop:16, padding:'8px 20px', borderRadius:8, border:'1px solid #D0D5DD', background:'#fff', fontSize:13, cursor:'pointer', fontFamily:'inherit', color:'#344054' }}>Connect</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {section==='Calls'&&(
+            <div style={{ textAlign:'center', padding:60 }}>
+              <div style={{ fontSize:48, marginBottom:16 }}>📞</div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:8 }}>Call Logging</div>
+              <div style={{ fontSize:14, color:'#667085', marginBottom:24 }}>Log calls against contacts and track your outreach history</div>
+              <button onClick={()=>{setModal('activity');setForm({module,type:'call'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>+ Log a Call</button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Add Contact modal */}
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
-          onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 480, margin: '0 16px' }}>
-            <h2 style={{ margin: '0 0 22px', fontSize: 17, fontWeight: 600, color: '#101828' }}>Add Contact</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={lbl}>Full Name *</label>
-                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inp} placeholder="Jane Smith" />
-              </div>
-              <div>
-                <label style={lbl}>Type</label>
-                <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} style={inp}>
-                  <option value="guest">Guest</option>
-                  <option value="owner">Owner</option>
-                  <option value="lead">Lead</option>
+      {modal==='contact'&&(
+        <Modal title={editId?'Edit Contact':'Add Contact'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Full Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="John Smith"/></div>
+            <div><label style={lbl}>Email</label><input type="email" style={inp} value={form.email??''} onChange={e=>setForm({...form,email:e.target.value})}/></div>
+            <div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})}/></div>
+            <div><label style={lbl}>Company</label><input style={inp} value={form.company??''} onChange={e=>setForm({...form,company:e.target.value})}/></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Type</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.type??'contact'} onChange={e=>setForm({...form,type:e.target.value})}>
+                  <option value="contact">Contact</option><option value="guest">Guest</option><option value="landlord">Landlord</option><option value="tenant">Tenant</option><option value="investor">Investor</option><option value="vendor">Vendor</option>
                 </select>
               </div>
-              <div>
-                <label style={lbl}>Status</label>
-                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={inp}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="vip">VIP</option>
-                  <option value="prospect">Prospect</option>
+              <div><label style={lbl}>Module</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.module??'str'} onChange={e=>setForm({...form,module:e.target.value})}>
+                  <option value="str">Vacation Rentals</option><option value="pm">Property Management</option><option value="dev">Developments</option>
                 </select>
               </div>
-              <div>
-                <label style={lbl}>Email</label>
-                <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} style={inp} placeholder="jane@example.com" />
-              </div>
-              <div>
-                <label style={lbl}>Phone</label>
-                <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} style={inp} placeholder="+44 7700 900000" />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={lbl}>Source</label>
-                <input value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} style={inp} placeholder="Airbnb, Referral, Direct…" />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={lbl}>Notes</label>
-                <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} style={{ ...inp, resize: 'vertical' } as any} rows={3} placeholder="Any additional notes…" />
-              </div>
             </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-              <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', color: '#374151' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.name}
-                style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
-                {saving ? 'Saving…' : 'Add Contact'}
-              </button>
-            </div>
+            <div><label style={lbl}>Source</label><input style={inp} value={form.source??''} onChange={e=>setForm({...form,source:e.target.value})} placeholder="e.g. Airbnb, Referral"/></div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
-        </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('crm_contacts',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Contact'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='company'&&(
+        <Modal title={editId?'Edit Company':'Add Company'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Company Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Acme Ltd"/></div>
+            <div><label style={lbl}>Industry</label><input style={inp} value={form.industry??''} onChange={e=>setForm({...form,industry:e.target.value})}/></div>
+            <div><label style={lbl}>Website</label><input type="url" style={inp} value={form.website??''} onChange={e=>setForm({...form,website:e.target.value})} placeholder="https://..."/></div>
+            <div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})}/></div>
+            <div><label style={lbl}>Address</label><input style={inp} value={form.address??''} onChange={e=>setForm({...form,address:e.target.value})}/></div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('crm_companies',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Company'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='deal'&&(
+        <Modal title={editId?'Edit Deal':'Add Deal'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Deal Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Rose Hall Deal"/></div>
+            <div><label style={lbl}>Contact</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}>
+                <option value="">Select contact...</option>
+                {contacts.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Stage</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.stage??'Lead'} onChange={e=>setForm({...form,stage:e.target.value})}>
+                  {DEAL_STAGES.map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Value (£)</label><input type="number" style={inp} value={form.value??''} onChange={e=>setForm({...form,value:parseFloat(e.target.value)})}/></div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Close Date</label><input type="date" style={inp} value={form.close_date??''} onChange={e=>setForm({...form,close_date:e.target.value})}/></div>
+              <div><label style={lbl}>Module</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.module??'str'} onChange={e=>setForm({...form,module:e.target.value})}>
+                  <option value="str">Vacation Rentals</option><option value="pm">Property Management</option><option value="dev">Developments</option>
+                </select>
+              </div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('crm_deals',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Deal'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='task'&&(
+        <Modal title={editId?'Edit Task':'Add Task'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})} placeholder="e.g. Follow up with investor"/></div>
+            <div><label style={lbl}>Contact</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}>
+                <option value="">Select contact...</option>
+                {contacts.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.due_date??''} onChange={e=>setForm({...form,due_date:e.target.value})}/></div>
+              <div><label style={lbl}>Priority</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.priority??'medium'} onChange={e=>setForm({...form,priority:e.target.value})}>
+                  <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                </select>
+              </div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('crm_tasks',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Task'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='meeting'&&(
+        <Modal title={editId?'Edit Meeting':'Schedule Meeting'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})} placeholder="e.g. Property viewing call"/></div>
+            <div><label style={lbl}>Contact</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}>
+                <option value="">Select contact...</option>
+                {contacts.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.date??''} onChange={e=>setForm({...form,date:e.target.value})}/></div>
+              <div><label style={lbl}>Time</label><input type="time" style={inp} value={form.time??''} onChange={e=>setForm({...form,time:e.target.value})}/></div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Duration (mins)</label><input type="number" style={inp} value={form.duration_mins??30} onChange={e=>setForm({...form,duration_mins:parseInt(e.target.value)})}/></div>
+              <div><label style={lbl}>Location</label><input style={inp} value={form.location??''} onChange={e=>setForm({...form,location:e.target.value})} placeholder="Zoom / Address"/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('crm_meetings',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Schedule'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='activity'&&(
+        <Modal title="Log Activity" onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Type</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.type??'note'} onChange={e=>setForm({...form,type:e.target.value})}>
+                <option value="note">Note</option><option value="call">Call</option><option value="email">Email</option><option value="meeting">Meeting</option>
+              </select>
+            </div>
+            <div><label style={lbl}>Contact</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}>
+                <option value="">Select contact...</option>
+                {contacts.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Subject *</label><input style={inp} value={form.subject??''} onChange={e=>setForm({...form,subject:e.target.value})} placeholder="e.g. Spoke about investment"/></div>
+            <div><label style={lbl}>Details</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={3} value={form.body??''} onChange={e=>setForm({...form,body:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('crm_activities',form)} disabled={saving||!form.subject} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.subject?0.6:1 }}>{saving?'Saving...':'Log Activity'}</button>
+          </div>
+        </Modal>
       )}
     </div>
   )
