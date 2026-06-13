@@ -240,7 +240,20 @@ export default function DevPage() {
                 </div>
               )}
             </div>
-            <div style={{marginTop:16}}><WeatherWidget /></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16 }}>
+            <WeatherWidget />
+            <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+              <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Quick Stats</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Projects</span><span style={{ fontWeight:600, color:'#101828' }}>{projects.length}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Active</span><span style={{ fontWeight:600, color:'#10B981' }}>{projects.filter((p:any)=>p.status==='active').length}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Budget</span><span style={{ fontWeight:600, color:'#8B5CF6' }}>£{totalBudget.toLocaleString()}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Spent</span><span style={{ fontWeight:600, color:'#F59E0B' }}>£{totalSpent.toLocaleString()}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Investors</span><span style={{ fontWeight:600, color:'#101828' }}>{investors.length}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Investment</span><span style={{ fontWeight:600, color:'#10B981' }}>£{totalInvestment.toLocaleString()}</span></div>
+              </div>
+            </div>
+          </div>
           </div>
         )}
 
