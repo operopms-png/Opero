@@ -16,6 +16,7 @@ const NAV_GROUPS = [
     label: 'Vacation Rentals',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
+      { href: '/str/crm', label: 'CRM', key: 'str', icon: 'users' },
     ]
   },
   {
@@ -24,6 +25,7 @@ const NAV_GROUPS = [
     modulePrice: '£99/mo',
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
+      { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'users' },
     ]
   },
   {
@@ -32,6 +34,7 @@ const NAV_GROUPS = [
     modulePrice: '£149/mo',
     items: [
       { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
+      { href: '/dev/crm', label: 'CRM', key: 'dev', icon: 'users' },
     ]
   },
 ]
