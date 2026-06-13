@@ -521,8 +521,8 @@
       <li><a href="#pricing">Pricing</a></li>
     </ul>
     <div class="nav-actions">
-      <a href="/login" class="btn-ghost-sm">Log in</a>
-      <a href="/login?mode=signup" class="btn-primary-sm">14-day free trial →</a>
+      <a href="#" class="btn-ghost-sm">Log in</a>
+      <a href="#" class="btn-primary-sm">14-day free trial →</a>
     </div>
   </div>
 </nav>
@@ -535,7 +535,7 @@
       <span class="hero-badge-dot"></span>
       Operations Platform for Vacation Rentals
     </div>
-    <h1 style="text-align:left;font-size:clamp(2.4rem,5vw,3.8rem);line-height:1.1;font-weight:800;letter-spacing:-0.03em">Boost your<br>vacation rental<br><span style="color:var(--blue)">revenue</span></h1>
+    <h1 style="text-align:left">Manage your rentals<br><span style="color:var(--blue)">end-to-end,</span><br>without the chaos</h1>
     <p style="text-align:left">Opero brings together turnovers, cleaning, maintenance, inspections, and owner reporting in one powerful platform — so your team never misses a beat.</p>
     <div class="hero-cta" style="justify-content:flex-start">
       <a href="/login" class="btn-primary-lg">Start for free <span>→</span></a>
@@ -1072,7 +1072,8 @@
       </div>
 
     </div>
-        <div class="pricing-grid">
+    <div class="pricing-grid">
+
       <div class="price-card">
         <div class="price-plan">Starter</div>
         <div class="price-amt">£29</div>
@@ -1088,6 +1089,7 @@
         </ul>
         <a href="#" class="btn-price btn-price-outline" data-plan="starter" onclick="checkout(event, this)">Start free trial</a>
       </div>
+
       <div class="price-card featured">
         <div class="price-popular">Most popular</div>
         <div class="price-plan">Growth</div>
@@ -1096,16 +1098,16 @@
         <div class="price-divider"></div>
         <ul class="price-features">
           <li><span class="pcheck">✓</span>Up to 25 properties</li>
-          <li><span class="pcheck">✓</span>Full cleaning &amp; inspections</li>
-          <li><span class="pcheck">✓</span>Bookings management</li>
+          <li><span class="pcheck">✓</span>Full cleaning & inspections</li>
           <li><span class="pcheck">✓</span>Owner reporting portal</li>
           <li><span class="pcheck">✓</span>Photo verification</li>
           <li><span class="pcheck">✓</span>Calendar integrations</li>
-          <li><span class="pcheck">✓</span>Performance analytics</li>
           <li><span class="pcheck">✓</span>10 team members</li>
+          <li><span class="pcheck">✓</span>Performance analytics</li>
         </ul>
         <a href="#" class="btn-price btn-price-fill" data-plan="growth" onclick="checkout(event, this)">Start free trial</a>
       </div>
+
       <div class="price-card">
         <div class="price-plan">Professional</div>
         <div class="price-amt">£199</div>
@@ -1113,20 +1115,15 @@
         <div class="price-divider"></div>
         <ul class="price-features">
           <li><span class="pcheck">✓</span>Unlimited properties</li>
-          <li><span class="pcheck">✓</span>Everything in Growth</li>
-          <li><span class="pcheck">✓</span>Advanced reporting &amp; CSV/PDF exports</li>
+          <li><span class="pcheck">✓</span>All Growth features</li>
+          <li><span class="pcheck">✓</span>Advanced reporting & exports</li>
           <li><span class="pcheck">✓</span>Document storage</li>
-          <li><span class="pcheck">✓</span>Automated owner statements</li>
-          <li><span class="pcheck">✓</span>Guest communication templates</li>
-          <li><span class="pcheck">✓</span>Custom branding (white-label)</li>
-          <li><span class="pcheck">✓</span>API access</li>
-          <li><span class="pcheck">✓</span>Multi-portfolio view</li>
-          <li><span class="pcheck">✓</span>Audit log</li>
-          <li><span class="pcheck">✓</span>Priority support</li>
           <li><span class="pcheck">✓</span>Unlimited team members</li>
+          <li><span class="pcheck">✓</span>Priority support</li>
         </ul>
         <a href="#" class="btn-price btn-price-outline" data-plan="professional" onclick="checkout(event, this)">Start free trial</a>
       </div>
+
     </div>
   </div>
 </section>
@@ -1227,7 +1224,7 @@
   <div class="bottom-cta-inner">
     <h2>Ready to simplify your operations?</h2>
     <p>Join property managers already using Opero to automate turnovers, coordinate teams, and keep owners informed — all from one platform.</p>
-    <a href="/login?mode=signup" class="btn-primary-lg">Try Opero for free →</a>
+    <a href="#" class="btn-primary-lg">Try Opero for free →</a>
     <p class="bottom-cta-note">14-day trial · No credit card needed</p>
   </div>
 </div>
@@ -1346,12 +1343,24 @@
 
   async function checkout(e, btn) {
   e.preventDefault();
+  var orig = btn.textContent;
   var plan = btn.getAttribute("data-plan");
   var priceId = isYearly ? yearlyPlans[plan] : null;
-  // Redirect to signup first with plan stored in URL
-  var params = new URLSearchParams({ plan: plan, billing: isYearly ? 'yearly' : 'monthly' });
-  if (priceId) params.set('priceId', priceId);
-  window.location.href = '/login?mode=signup&' + params.toString();
+  btn.textContent = "Loading...";
+  btn.disabled = true;
+  try {
+    var body = priceId ? {plan: plan, priceId: priceId} : {plan: plan};
+    var res = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    if (data.url) { window.location.href = data.url; }
+    else { alert("Error: " + (data.error || "Unknown")); btn.textContent = orig; btn.disabled = false; }
+  } catch(err) {
+    alert("Error: " + err.message); btn.textContent = orig; btn.disabled = false;
+  }
 }
 </script>
 <script>
