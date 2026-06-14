@@ -11,12 +11,12 @@ const NAV_GROUPS = [
     label: 'Vacation Rentals',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
-      { href: '/str/crm', label: 'CRM', key: 'str', icon: 'users' },
+      { href: '/str/crm', label: 'CRM', key: 'str', icon: 'contacts' },
       { href: '/str/marketing', label: 'Marketing', key: 'str', icon: 'sparkles' },
-      { href: '/str/sales', label: 'Sales', key: 'str', icon: 'revenue' },
-      { href: '/str/reporting', label: 'Reporting', key: 'str', icon: 'chart' },
+      { href: '/str/sales', label: 'Sales', key: 'str', icon: 'trendingup' },
+      { href: '/str/reporting', label: 'Reporting', key: 'str', icon: 'report' },
       { href: '/str/vendors', label: 'Contractors', key: 'str', icon: 'wrench' },
-      { href: '/str/service', label: 'Service', key: 'str', icon: 'message' },
+      { href: '/str/service', label: 'Service', key: 'str', icon: 'headset' },
     ]
   },
   {
@@ -25,12 +25,12 @@ const NAV_GROUPS = [
     modulePrice: '£99/mo',
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
-      { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'users' },
+      { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'contacts' },
       { href: '/pm/marketing', label: 'Marketing', key: 'pm', icon: 'sparkles' },
-      { href: '/pm/sales', label: 'Sales', key: 'pm', icon: 'revenue' },
-      { href: '/pm/reporting', label: 'Reporting', key: 'pm', icon: 'chart' },
+      { href: '/pm/sales', label: 'Sales', key: 'pm', icon: 'trendingup' },
+      { href: '/pm/reporting', label: 'Reporting', key: 'pm', icon: 'report' },
       { href: '/pm/vendors', label: 'Contractors', key: 'pm', icon: 'wrench' },
-      { href: '/pm/service', label: 'Service', key: 'pm', icon: 'message' },
+      { href: '/pm/service', label: 'Service', key: 'pm', icon: 'headset' },
     ]
   },
   {
@@ -39,16 +39,16 @@ const NAV_GROUPS = [
     modulePrice: '£99/mo',
     items: [
       { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
-      { href: '/estate/crm', label: 'CRM', key: 'estate', icon: 'users' },
+      { href: '/estate/crm', label: 'CRM', key: 'estate', icon: 'contacts' },
       { href: '/estate/marketing', label: 'Marketing', key: 'estate', icon: 'sparkles' },
-      { href: '/estate/sales', label: 'Sales', key: 'estate', icon: 'revenue' },
-      { href: '/estate/reporting', label: 'Reporting', key: 'estate', icon: 'chart' },
+      { href: '/estate/sales', label: 'Sales', key: 'estate', icon: 'trendingup' },
+      { href: '/estate/reporting', label: 'Reporting', key: 'estate', icon: 'report' },
     ]
   },
   {
     label: 'Invest',
     items: [
-      { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'revenue' },
+      { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator' },
       { href: '/invest/watchlist', label: 'Watchlist', key: 'invest', icon: 'bookmark' },
     ]
   },
@@ -58,12 +58,12 @@ const NAV_GROUPS = [
     modulePrice: '£149/mo',
     items: [
       { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
-      { href: '/dev/crm', label: 'CRM', key: 'dev', icon: 'users' },
+      { href: '/dev/crm', label: 'CRM', key: 'dev', icon: 'contacts' },
       { href: '/dev/marketing', label: 'Marketing', key: 'dev', icon: 'sparkles' },
-      { href: '/dev/sales', label: 'Sales', key: 'dev', icon: 'revenue' },
-      { href: '/dev/reporting', label: 'Reporting', key: 'dev', icon: 'chart' },
+      { href: '/dev/sales', label: 'Sales', key: 'dev', icon: 'trendingup' },
+      { href: '/dev/reporting', label: 'Reporting', key: 'dev', icon: 'report' },
       { href: '/dev/vendors', label: 'Contractors', key: 'dev', icon: 'wrench' },
-      { href: '/dev/service', label: 'Service', key: 'dev', icon: 'message' },
+      { href: '/dev/service', label: 'Service', key: 'dev', icon: 'headset' },
     ]
   },
 ]
@@ -97,6 +97,11 @@ function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?
     bell:     <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>,
     search:   <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
     map:      <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    report:   <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg>,
+    headset:  <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>,
+    contacts: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+    trendingup: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+    calculator: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>,
   }
   return icons[name] ?? <span style={{ width: size, height: size, display: 'block' }} />
 }
