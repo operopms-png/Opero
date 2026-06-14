@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import WeatherWidget from '@/components/WeatherWidget'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Turnovers','Owner Reports','Analytics','Integrations','Team','Reports','Guest Comms']
+const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Turnovers','Owner Reports','Analytics','Integrations','Team','Reports','Expenses','Banking','Guest Comms']
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
@@ -36,6 +36,17 @@ export default function STRPage() {
   const [maintenance, setMaintenance] = useState<any[]>([])
   const [turnovers, setTurnovers] = useState<any[]>([])
   const [team, setTeam] = useState<any[]>([])
+  const [expenses, setExpenses] = useState<any[]>([])
+  const [showAddExpense, setShowAddExpense] = useState(false)
+  const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Property',amount:'',date:'',status:'Confirmed',notes:''})
+  const [bankAccounts, setBankAccounts] = useState<any[]>([])
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [showAddBank, setShowAddBank] = useState(false)
+  const [showAddTx, setShowAddTx] = useState(false)
+  const [bankForm, setBankForm] = useState({name:'',type:'Current',balance:'',currency:'GBP'})
+  const [txForm, setTxForm] = useState({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'})
+  const [bankingTab, setBankingTab] = useState('Overview')
+  const [reportTab, setReportTab] = useState('P&L')
 
   useEffect(() => {
     async function load() {
@@ -352,20 +363,366 @@ export default function STRPage() {
 
         {tab==='Reports' && (
           <div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
-              {[{label:'Total Revenue',value:`£${stats.revenue.toLocaleString()}`},{label:'Total Bookings',value:bookings.filter(b=>b.status!=='cancelled').length},{label:'Properties',value:properties.length}].map((c:any)=>(
-                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div><div style={{ fontSize:28, fontWeight:800, color:'#101828' }}>{c.value}</div></div>
+            {/* Net Profit Banner */}
+            <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
+              <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>{new Date().toLocaleString('default',{month:'long',year:'numeric'}).toUpperCase()} · NET PROFIT</div>
+              <div style={{fontSize:36,fontWeight:800}}>£{(stats.revenue - expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
+              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{stats.revenue.toLocaleString()} income · £{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()} costs</div>
+            </div>
+            {/* Period tabs */}
+            <div style={{display:'flex',gap:8,marginBottom:20}}>
+              {['P&L','Rent Collection','Cash Flow','Forecast'].map(t=>(
+                <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',border:'1px solid '+(reportTab===t?'#101828':'#E4E7EC')}}>{t}</button>
               ))}
             </div>
-            <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase' }}>
-                <span>Guest</span><span>Property</span><span>Check In</span><span>Check Out</span><span>Amount</span>
+            {reportTab==='P&L'&&(
+              <div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#101828'},{l:'YTD Costs',v:'£'+expenses.filter((e:any)=>e.category==='Property').reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString(),c:'#10B981'}].map((s:any)=>(
+                    <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
+                      <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
+                      <div style={{fontSize:11,color:'#667085',fontWeight:600,textTransform:'uppercase'}}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                    <span>Month</span><span>Income</span><span>LL Costs</span><span>Expenses</span><span>Net Profit</span>
+                  </div>
+                  {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>(
+                    <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
+                      <span>{m} {new Date().getFullYear()}</span>
+                      <span style={{color:'#10B981'}}>£0</span>
+                      <span style={{color:'#EF4444'}}>£0</span>
+                      <span style={{color:'#F59E0B'}}>£0</span>
+                      <span style={{fontWeight:600}}>£0</span>
+                    </div>
+                  ))}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828'}}>
+                    <span>TOTAL {new Date().getFullYear()}</span>
+                    <span style={{color:'#10B981'}}>£{stats.revenue.toLocaleString()}</span>
+                    <span style={{color:'#EF4444'}}>£0</span>
+                    <span style={{color:'#F59E0B'}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</span>
+                    <span>£{(stats.revenue-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
-              {bookings.filter(b=>b.status!=='cancelled').length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No bookings yet</div> :
-              bookings.filter(b=>b.status!=='cancelled').map(b=>(<div key={b.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
-                <span style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'—'}</span><span>{b.properties?.name??'—'}</span><span>{b.check_in??'—'}</span><span>{b.check_out??'—'}</span><span style={{ fontWeight:600 }}>£{(b.total_amount??0).toLocaleString()}</span>
-              </div>))}
+            )}
+            {reportTab==='Rent Collection'&&(
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center',color:'#98A2B3'}}>
+                <div style={{fontSize:32,marginBottom:12}}>📊</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>Rent Collection Report</div>
+                <div style={{fontSize:13}}>Payment history and arrears data will appear here as bookings are recorded.</div>
+              </div>
+            )}
+            {reportTab==='Cash Flow'&&(
+              <div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Cash Flow (Last 6 Months)</div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
+                    {['Jan','Feb','Mar','Apr','May','Jun'].map(m=>(
+                      <div key={m} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                        <div style={{width:'100%',background:'#10B98133',borderRadius:'4px 4px 0 0',height:Math.random()*80+20,minHeight:20}}/>
+                        <div style={{fontSize:10,color:'#98A2B3'}}>{m}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                    <span>Month</span><span>Money In</span><span>Money Out</span><span>Net</span><span>Cumulative</span>
+                  </div>
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map(m=>(
+                    <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
+                      <span>{m} {new Date().getFullYear()}</span><span style={{color:'#10B981'}}>£0</span><span style={{color:'#EF4444'}}>£0</span><span>£0</span><span>£0</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {reportTab==='Forecast'&&(
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center',color:'#98A2B3'}}>
+                <div style={{fontSize:32,marginBottom:12}}>🔮</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>Revenue Forecast</div>
+                <div style={{fontSize:13}}>Add bookings and expenses to generate a 12-month forecast.</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab==='Expenses' && (
+          <div>
+            {/* Banner */}
+            <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
+                <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{expenses.length} records</div>
+              </div>
+              <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#101828',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
             </div>
+            {/* Category stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
+              {['Property','Staff','Overhead'].map(cat=>(
+                <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>{cat}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+            {/* Add form */}
+            {showAddExpense&&(
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add expense</h3>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                  <div><label style={lbl}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Cleaning supplies" style={inp}/></div>
+                  <div><label style={lbl}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Amazon" style={inp}/></div>
+                  <div><label style={lbl}>Category</label><select value={expForm.category} onChange={e=>setExpForm({...expForm,category:e.target.value})} style={inp}>{['Property','Staff','Overhead','Maintenance','Marketing','Insurance','Utilities','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
+                  <div><label style={lbl}>Amount (£)</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+                  <div><label style={lbl}>Date</label><input value={expForm.date} onChange={e=>setExpForm({...expForm,date:e.target.value})} type="date" style={inp}/></div>
+                  <div><label style={lbl}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={inp}>{['Confirmed','Estimated'].map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={expForm.notes} onChange={e=>setExpForm({...expForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={()=>{if(!expForm.description||!expForm.amount)return;setExpenses([...expenses,{id:Date.now(),...expForm}]);setExpForm({description:'',vendor:'',category:'Property',amount:'',date:'',status:'Confirmed',notes:''});setShowAddExpense(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
+                  <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                </div>
+              </div>
+            )}
+            {/* Table */}
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 140px 120px 100px 80px 100px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                <span>Description</span><span>Vendor</span><span>Category</span><span>Amount</span><span>Date</span><span>Status</span><span></span>
+              </div>
+              {expenses.length===0?(
+                <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
+                  <div style={{fontSize:32,marginBottom:12}}>🧾</div>
+                  <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No expenses yet</div>
+                  <div style={{fontSize:13}}>Add your first expense to start tracking costs.</div>
+                </div>
+              ):expenses.map((e:any)=>(
+                <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 120px 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.description}</div>
+                    {e.notes&&<div style={{fontSize:11,color:'#98A2B3'}}>{e.notes}</div>}
+                  </div>
+                  <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054',display:'inline-block'}}>{e.category}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{e.date||'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:e.status==='Confirmed'?'#ECFDF5':'#FEF3C7',color:e.status==='Confirmed'?'#10B981':'#F59E0B'}}>{e.status}</span>
+                  <button onClick={()=>setExpenses(expenses.filter((x:any)=>x.id!==e.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab==='Banking' && (
+          <div>
+            {/* Banking sub-tabs */}
+            <div style={{display:'flex',gap:0,marginBottom:20,background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:4,width:'fit-content'}}>
+              {['Overview','Bank Accounts','Transactions','Reconciliation','Cash Flow'].map(t=>(
+                <button key={t} onClick={()=>setBankingTab(t)} style={{padding:'7px 14px',borderRadius:7,border:'none',background:bankingTab===t?'#101828':'transparent',color:bankingTab===t?'#fff':'#344054',fontSize:13,fontWeight:bankingTab===t?600:400,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+              ))}
+            </div>
+
+            {bankingTab==='Overview'&&(
+              <div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>TOTAL CASH BALANCE</div>
+                    <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
+                    <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
+                  </div>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Reconciliation Status</div>
+                    <div style={{display:'flex',gap:12}}>
+                      {[{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length,c:'#10B981'},{l:'To review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length,c:'#F59E0B'},{l:'Ignored',v:0,c:'#98A2B3'}].map((s:any)=>(
+                        <div key={s.l} style={{flex:1,textAlign:'center'}}>
+                          <div style={{fontSize:20,fontWeight:700,color:s.c}}>{s.v}</div>
+                          <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Recent Transactions</div>
+                    {transactions.length===0?<div style={{textAlign:'center',padding:24,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.slice(0,5).map((t:any)=>(
+                      <div key={t.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #F2F4F7'}}>
+                        <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                        <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Quick Actions</div>
+                    {[{l:'Add Bank Account',d:'Connect or manually add an account'},{l:'Add Transaction',d:'Record income or expense'},{l:'Reconcile',d:'Match transactions to records'}].map(a=>(
+                      <div key={a.l} onClick={()=>{if(a.l==='Add Bank Account')setShowAddBank(true);if(a.l==='Add Transaction')setShowAddTx(true);if(a.l==='Reconcile')setBankingTab('Reconciliation')}} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 0',borderBottom:'1px solid #F2F4F7',cursor:'pointer'}}>
+                        <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{a.l}</div><div style={{fontSize:11,color:'#98A2B3'}}>{a.d}</div></div>
+                        <span style={{color:'#667085'}}>›</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {bankingTab==='Bank Accounts'&&(
+              <div>
+                {showAddBank&&(
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
+                    <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add bank account</h3>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                      <div><label style={lbl}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={inp}/></div>
+                      <div><label style={lbl}>Type</label><select value={bankForm.type} onChange={e=>setBankForm({...bankForm,type:e.target.value})} style={inp}>{['Current','Savings','Business','Credit'].map(t=><option key={t}>{t}</option>)}</select></div>
+                      <div><label style={lbl}>Balance (£)</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+                      <div><label style={lbl}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={inp}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
+                    </div>
+                    <div style={{display:'flex',gap:8}}>
+                      <button onClick={()=>{if(!bankForm.name)return;setBankAccounts([...bankAccounts,{id:Date.now(),...bankForm}]);setBankForm({name:'',type:'Current',balance:'',currency:'GBP'});setShowAddBank(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
+                      <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+                {bankAccounts.length===0?(
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
+                    <div style={{fontSize:32,marginBottom:12}}>🏦</div>
+                    <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No bank accounts connected</div>
+                    <div style={{fontSize:13,marginBottom:16}}>Add a bank account to start tracking transactions.</div>
+                    <button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>
+                  </div>
+                ):(
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
+                    {bankAccounts.map((a:any)=>(
+                      <div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
+                          <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div>
+                          <button onClick={()=>setBankAccounts(bankAccounts.filter((x:any)=>x.id!==a.id))} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button>
+                        </div>
+                        <div style={{fontSize:28,fontWeight:800,color:'#101828',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div>
+                        <div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div>
+                      </div>
+                    ))}
+                    <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13,fontWeight:500}}>+ Add Account</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {bankingTab==='Transactions'&&(
+              <div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:16}}>
+                  {[{l:'Imported',v:transactions.length},{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length},{l:'Needs Review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length},{l:'Reconciled',v:Math.round(transactions.filter((t:any)=>t.status==='Reconciled').length/Math.max(transactions.length,1)*100)+'%'},{l:'Total Amount',v:'£'+transactions.reduce((s:number,t:any)=>s+(t.type==='Income'?parseFloat(t.amount||0):0),0).toLocaleString()}].map((s:any)=>(
+                    <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,textAlign:'center'}}>
+                      <div style={{fontSize:20,fontWeight:700,color:'#101828',marginBottom:4}}>{s.v}</div>
+                      <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+                {showAddTx&&(
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:16}}>
+                    <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                      <div><label style={lbl}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={inp}/></div>
+                      <div><label style={lbl}>Account</label><select value={txForm.account} onChange={e=>setTxForm({...txForm,account:e.target.value})} style={inp}><option value="">Select account</option>{bankAccounts.map((a:any)=><option key={a.id}>{a.name}</option>)}</select></div>
+                      <div><label style={lbl}>Amount (£)</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+                      <div><label style={lbl}>Type</label><select value={txForm.type} onChange={e=>setTxForm({...txForm,type:e.target.value})} style={inp}>{['Income','Expense'].map(t=><option key={t}>{t}</option>)}</select></div>
+                      <div><label style={lbl}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={inp}/></div>
+                      <div><label style={lbl}>Category</label><select value={txForm.category} onChange={e=>setTxForm({...txForm,category:e.target.value})} style={inp}>{['Rent','Maintenance','Utilities','Insurance','Marketing','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
+                    </div>
+                    <div style={{display:'flex',gap:8}}>
+                      <button onClick={()=>{if(!txForm.description||!txForm.amount)return;setTransactions([...transactions,{id:Date.now(),...txForm,status:'Unreconciled'}]);setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'});setShowAddTx(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add transaction</button>
+                      <button onClick={()=>setShowAddTx(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{transactions.length} transactions</div>
+                    <button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 120px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                    <span>Description</span><span>Account</span><span>Amount</span><span>Type</span><span>Category</span><span>Status</span><span></span>
+                  </div>
+                  {transactions.length===0?<div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet — add one above</div>:transactions.map((t:any)=>(
+                    <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                      <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                      <span style={{fontSize:12,color:'#344054'}}>{t.account||'—'}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                      <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600,display:'inline-block'}}>{t.type}</span>
+                      <span style={{fontSize:12,color:'#667085'}}>{t.category}</span>
+                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:x.status==='Reconciled'?'Unreconciled':'Reconciled'}:x))}>{t.status}</span>
+                      <button onClick={()=>setTransactions(transactions.filter((x:any)=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {bankingTab==='Reconciliation'&&(
+              <div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
+                  {[{l:'To Review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length,c:'#F59E0B'},{l:'High Confidence',v:0,c:'#10B981'},{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length,c:'#101828'}].map((s:any)=>(
+                    <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
+                      <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
+                      <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+                {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
+                    <div style={{fontSize:32,marginBottom:12}}>✅</div>
+                    <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div>
+                    <div style={{fontSize:13}}>No incoming transactions are waiting for review.</div>
+                  </div>
+                ):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
+                  <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date} · {t.category}</div></div>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}>
+                      <span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                      <button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {bankingTab==='Cash Flow'&&(
+              <div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Cash Flow (Last 6 Months)</div>
+                  <div style={{display:'flex',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
+                    {['Jan','Feb','Mar','Apr','May','Jun'].map(m=>(
+                      <div key={m} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                        <div style={{width:'100%',background:'#10B98133',borderRadius:'4px 4px 0 0',height:40}}/>
+                        <div style={{fontSize:10,color:'#98A2B3'}}>{m}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                    <span>Month</span><span>Money In</span><span>Money Out</span><span>Net</span><span>Cumulative</span>
+                  </div>
+                  {['Jan','Feb','Mar','Apr','May','Jun'].map(m=>{
+                    const inflow = transactions.filter((t:any)=>t.type==='Income'&&t.date?.includes(m.toLowerCase())).reduce((s:number,t:any)=>s+parseFloat(t.amount||0),0)
+                    const outflow = transactions.filter((t:any)=>t.type==='Expense'&&t.date?.includes(m.toLowerCase())).reduce((s:number,t:any)=>s+parseFloat(t.amount||0),0)
+                    return (
+                      <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
+                        <span>{m} {new Date().getFullYear()}</span>
+                        <span style={{color:'#10B981'}}>£{inflow.toLocaleString()}</span>
+                        <span style={{color:'#EF4444'}}>£{outflow.toLocaleString()}</span>
+                        <span style={{fontWeight:600}}>£{(inflow-outflow).toLocaleString()}</span>
+                        <span>£{(inflow-outflow).toLocaleString()}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
