@@ -191,18 +191,21 @@ export default function Sidebar() {
   )
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        .sidebar-nav a:hover { background: #F9FAFB !important; }
-      `}</style>
-      {open && <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />}
-      <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#fff', zIndex: 50, borderRight: '1px solid #F2F4F7', fontFamily: "'Inter', sans-serif" }}>
-        {nav}
-      </aside>
-      <aside className="sidebar-nav" style={{ width: 260, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto' }}>
-        {nav}
-      </aside>
-    </>
+    <aside style={{
+      width: 260,
+      height: '100vh',
+      background: '#fff',
+      borderRight: '1px solid #F2F4F7',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      zIndex: 40,
+      fontFamily: "'Inter', sans-serif",
+      display: 'flex',
+      flexDirection: 'column',
+      overflowY: 'auto'
+    }}>
+      {nav}
+    </aside>
   )
 }
