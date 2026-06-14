@@ -92,11 +92,39 @@ export default function Page() {
               <button style={{marginTop:16,padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save changes</button>
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>API Key</h3>
-              <div style={{fontSize:13,color:'#667085',marginBottom:12}}>Use this key to connect Opero with external tools and websites.</div>
-              <div style={{display:'flex',gap:8}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>API Key</h3>
+              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>Use this key to connect Opero with external tools and websites. Keep it private — anyone with this key can add contacts to your account.</div>
+              <div style={{display:'flex',gap:8,marginBottom:20}}>
                 <input value={apiKey} readOnly style={{flex:1,padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:12,fontFamily:'monospace',outline:'none',background:'#F9FAFB',color:'#344054'}}/>
-                <button onClick={copyKey} style={{padding:'9px 16px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054',whiteSpace:'nowrap'}}>{copied?'Copied!':'Copy'}</button>
+                <button onClick={copyKey} style={{padding:'9px 16px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054',whiteSpace:'nowrap'}}>{copied?'✓ Copied!':'Copy'}</button>
+              </div>
+              <div style={{background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC',padding:20}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:12}}>How to use</div>
+                <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                  {[{n:'1',t:'Copy your API key above'},{n:'2',t:'In your website form script, add',code:"api_key: 'YOUR_KEY'"},{n:'3',t:'Enquiries from your website will appear in your STR and PM CRM automatically'},{n:'4',t:'For the source field, pass the form name e.g.',code:"source: 'Contact Form'"}].map(s=>(
+                    <div key={s.n} style={{display:'flex',alignItems:'flex-start',gap:10}}>
+                      <div style={{width:20,height:20,borderRadius:'50%',background:ACCENT,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,flexShrink:0}}>{s.n}</div>
+                      <div style={{fontSize:13,color:'#344054',lineHeight:1.5}}>
+                        {s.t}{s.code&&<><br/><code style={{background:'#E4E7EC',padding:'2px 6px',borderRadius:4,fontSize:12,fontFamily:'monospace',color:ACCENT}}>{s.code}</code></>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{marginTop:16,background:'#fff',borderRadius:6,border:'1px solid #E4E7EC',padding:14}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.04em'}}>Example fetch call</div>
+                  <pre style={{fontSize:11,color:'#344054',fontFamily:'monospace',margin:0,lineHeight:1.6,overflow:'auto'}}>{`fetch('https://helloopero.com/api/crm-enquiry', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'John Smith',
+    email: 'john@example.com',
+    module: 'str',  // or 'pm' or 'dev'
+    type: 'guest',  // or 'landlord'
+    source: 'Contact Form',
+    api_key: '${apiKey}'
+  })
+})`}</pre>
+                </div>
               </div>
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
