@@ -372,7 +372,140 @@ export default function Page() {
     </div>
   </div>
 </div>)}
-          {section!=='Email'&&section!=='Ads'&&section!=='Events'&&section!=='Forms'&&section!=='CTAs'&&section!=='Campaigns'&&section!=='Lead Scoring'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
+          {section==='Analytics'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+    <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0}}>Reports</h2>
+    <button style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create ▾</button>
+  </div>
+  <div style={{display:'grid',gridTemplateColumns:'240px 1fr',gap:16}}>
+    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:16}}>
+      <input placeholder="Search" style={{width:'100%',padding:'8px 12px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:13,fontFamily:'inherit',outline:'none',marginBottom:16,boxSizing:'border-box'}}/>
+      <div style={{fontSize:13,color:'#344054',padding:'8px 10px',display:'flex',justifyContent:'space-between',borderRadius:6,marginBottom:4}}><span>My dashboards</span><span style={{color:'#667085'}}>0</span></div>
+      <div style={{fontSize:13,color:'#344054',padding:'8px 10px',display:'flex',justifyContent:'space-between',borderRadius:6,marginBottom:12}}><span>My reports</span><span style={{color:'#667085'}}>0</span></div>
+      <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'4px 10px',marginBottom:8}}>Analytics suites</div>
+      {[{l:'Marketing',active:true},{l:'Sales',active:false},{l:'Service',active:false}].map(item=>(
+        <div key={item.l} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:6,background:item.active?ACCENT+'18':'transparent',color:item.active?ACCENT:'#344054',fontSize:13,fontWeight:item.active?600:400,cursor:'pointer',marginBottom:2}}>
+          <span>›</span>{item.l}
+        </div>
+      ))}
+    </div>
+    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+      <div style={{fontSize:18,fontWeight:700,color:'#101828',marginBottom:4}}>Marketing analytics suite</div>
+      <div style={{fontSize:13,color:'#667085',marginBottom:20}}>Ready-made marketing reports based on best practices</div>
+      <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:20,marginBottom:20}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+          <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>QUICK ANSWERS</span>
+          <span style={{fontSize:12,color:'#F59E0B',fontWeight:600}}>🔥 Most popular</span>
+          <span style={{marginLeft:'auto',fontSize:12,color:ACCENT,cursor:'pointer'}}>See all (7) ▾</span>
+        </div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+          {['Which sources are generating the most sessions?','Which forms are receiving the most submissions?','Which pages have the highest bounce rates?'].map(q=>(
+            <button key={q} style={{padding:'8px 14px',borderRadius:20,border:'1px solid #E4E7EC',background:'#fff',fontSize:12,color:'#344054',cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',gap:6}}>
+              <span>🔥</span>{q}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{marginBottom:20}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+          <span style={{fontSize:14,fontWeight:600,color:'#101828'}}>Suggested for you</span>
+          <span style={{fontSize:10,fontWeight:700,background:'#E0E7FF',color:ACCENT,padding:'2px 6px',borderRadius:4}}>BETA</span>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+          {[{i:'📅',t:'Meetings that generated deals'},{i:'🔥',t:'Page visits that led to form submissions'},{i:'📊',t:'Lead creation broken down by ad network'},{i:'📈',t:'Lifecycle stage progression'}].map(r=>(
+            <div key={r.t} style={{padding:'12px 16px',border:'1px solid #E4E7EC',borderRadius:8,fontSize:13,color:'#344054',cursor:'pointer',display:'flex',alignItems:'center',gap:8,background:'#F9FAFB'}}>
+              <span>{r.i}</span>{r.t}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Ready-made reports</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          {[{i:'📊',t:'Sources',d:'See the web sources that are driving the most traffic to your website. View metrics like sessions, session length, and more.'},{i:'📄',t:'Pages',d:'See which specific pages across your website are driving the most traffic. View page views, time on page, and more.'},{i:'📧',t:'Email performance',d:'Analyze your email marketing performance including open rates, click rates, and unsubscribes.'},{i:'📋',t:'Form submissions',d:'Track which forms are performing best and where your leads are coming from.'}].map(r=>(
+            <div key={r.t} style={{padding:20,border:'1px solid #E4E7EC',borderRadius:10,cursor:'pointer'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}><span style={{fontSize:20}}>{r.i}</span><span style={{fontSize:14,fontWeight:600,color:'#101828'}}>{r.t}</span></div>
+              <div style={{fontSize:12,color:'#667085',lineHeight:1.5}}>{r.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>)}
+          {section==='Brand'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+    <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0}}>Brand Identity</h2>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden',marginBottom:16}}>
+    <div style={{display:'flex',gap:0,borderBottom:'1px solid #E4E7EC',padding:'0 24px'}}>
+      {['Brand overview','Data sources'].map((tab,i)=>(
+        <button key={tab} style={{padding:'14px 16px',background:'none',border:'none',borderBottom:i===0?'2px solid '+ACCENT:'2px solid transparent',color:i===0?ACCENT:'#667085',fontSize:13,fontWeight:i===0?600:400,cursor:'pointer',fontFamily:'inherit'}}>{tab}</button>
+      ))}
+    </div>
+    <div style={{padding:32}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 340px',gap:24,marginBottom:32}}>
+        <div>
+          <h3 style={{fontSize:16,fontWeight:600,color:'#101828',marginBottom:8}}>Overview</h3>
+          <p style={{fontSize:13,color:'#667085',lineHeight:1.6}}>Updating your brand here will feed into all AI content you and your team create — from mission and values to visual identity and messaging — ensuring consistent, powerful brand communication across every touchpoint.</p>
+        </div>
+        <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+            <div style={{width:8,height:8,borderRadius:'50%',background:'#10B981'}}/>
+            <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>Website crawl</span>
+          </div>
+          <div style={{fontSize:12,color:'#667085',marginBottom:12}}>Latest crawl: sangstersgroup.com</div>
+          <p style={{fontSize:12,color:'#667085',lineHeight:1.5,marginBottom:12}}>When you apply brand identity to your content, this data is used as additional context to generate AI content that is even more on-brand.</p>
+          <button style={{padding:'7px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Crawl website</button>
+        </div>
+      </div>
+      <div style={{marginBottom:32}}>
+        <h3 style={{fontSize:16,fontWeight:600,color:'#101828',marginBottom:4}}>Brand kit</h3>
+        <p style={{fontSize:13,color:'#667085',marginBottom:16}}>Set your logo and colors for tools where you can show your branding.</p>
+        <div style={{border:'1px solid #E4E7EC',borderRadius:10,overflow:'hidden'}}>
+          {['Logos','Favicons','Colors','Theme','Fonts'].map((item,i)=>(
+            <div key={item} style={{display:'grid',gridTemplateColumns:'1fr 1fr auto',alignItems:'center',padding:'14px 20px',borderBottom:i<4?'1px solid #F2F4F7':'none',background:'#fff'}}>
+              <span style={{fontSize:13,fontWeight:500,color:ACCENT,cursor:'pointer'}}>{item}</span>
+              <span style={{fontSize:13,color:'#98A2B3'}}>--</span>
+              <button style={{padding:'5px 12px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Add</button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h3 style={{fontSize:16,fontWeight:600,color:'#101828',marginBottom:4}}>Additional context</h3>
+        <p style={{fontSize:13,color:'#667085',marginBottom:16}}>This data is gathered from your website crawl and is used to enhance your generated AI content.</p>
+        <div style={{border:'1px solid #E4E7EC',borderRadius:10,overflow:'hidden'}}>
+          <div style={{padding:'14px 20px',borderBottom:'1px solid #E4E7EC',background:'#F9FAFB',cursor:'pointer'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>Industry classification</span>
+              <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:6,height:6,borderRadius:'50%',background:'#10B981'}}/><span style={{fontSize:12,color:'#10B981',fontWeight:500}}>Complete</span></div>
+            </div>
+            <div style={{marginTop:12,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:0}}>
+              <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',padding:'6px 0',borderBottom:'1px solid #E4E7EC'}}>Data</div>
+              <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',padding:'6px 0',borderBottom:'1px solid #E4E7EC'}}>Content</div>
+              <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',padding:'6px 0',borderBottom:'1px solid #E4E7EC'}}>Source</div>
+              {[{d:'Industry',c:'REAL_ESTATE',s:'AI'},{d:'Sub-industry',c:'REAL_ESTATE',s:'AI'},{d:'Industry group',c:'REAL_ESTATE',s:'AI'},{d:'Business sector',c:'CONSUMER_DISCRETIONARY',s:'AI'}].map(r=>(
+                <>
+                  <div key={r.d+'-d'} style={{fontSize:12,color:ACCENT,padding:'8px 0',borderBottom:'1px solid #F2F4F7',cursor:'pointer'}}>{r.d}</div>
+                  <div key={r.d+'-c'} style={{fontSize:12,color:'#344054',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>{r.c}</div>
+                  <div key={r.d+'-s'} style={{fontSize:12,color:'#667085',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>{r.s}</div>
+                </>
+              ))}
+            </div>
+          </div>
+          {[{l:'Customer sentiment',s:'1 missing',c:'#F59E0B'},{l:'Competitive landscape',s:'Complete',c:'#10B981'},{l:'Content themes',s:'1 missing',c:'#F59E0B'},{l:'Tech stack',s:'1 missing',c:'#F59E0B'},{l:'Social responsibility',s:'1 missing',c:'#F59E0B'}].map((item,i)=>(
+            <div key={item.l} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:i<4?'1px solid #F2F4F7':'none',cursor:'pointer'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{color:'#667085',fontSize:12}}>›</span><span style={{fontSize:13,color:'#344054'}}>{item.l}</span></div>
+              <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:6,height:6,borderRadius:'50%',background:item.c}}/><span style={{fontSize:12,color:item.c,fontWeight:500}}>{item.s}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>)}
+          {section!=='Email'&&section!=='Ads'&&section!=='Events'&&section!=='Forms'&&section!=='CTAs'&&section!=='Campaigns'&&section!=='Lead Scoring'&&section!=='Analytics'&&section!=='Brand'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
         </div>
       </div>
     </div>
