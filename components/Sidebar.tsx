@@ -46,6 +46,13 @@ const NAV_GROUPS = [
     ]
   },
   {
+    label: 'Invest',
+    items: [
+      { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'chart' },
+      { href: '/invest/watchlist', label: 'Watchlist', key: 'invest', icon: 'folder' },
+    ]
+  },
+  {
     label: 'Developments',
     module: 'dev',
     modulePrice: '£149/mo',
