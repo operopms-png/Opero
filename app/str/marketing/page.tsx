@@ -182,7 +182,91 @@ export default function Page() {
     </div>
   </div>
 </div>)}
-          {section!=='Email'&&section!=='Ads'&&section!=='Events'&&section!=='Forms'&&section!=='CTAs'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
+          {section==='Campaigns'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+    <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0}}>Campaigns</h2>
+    <button style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create campaign</button>
+  </div>
+  <div style={{background:'linear-gradient(135deg,'+ACCENT+' 0%,#1a1a2e 100%)',borderRadius:12,padding:40,marginBottom:20,display:'flex',gap:40,alignItems:'center'}}>
+    <div style={{flex:1}}>
+      <div style={{fontSize:32,fontWeight:800,color:'#fff',marginBottom:12,lineHeight:1.2}}>All-in-one campaign management</div>
+      <div style={{fontSize:14,color:'rgba(255,255,255,0.8)',marginBottom:20,lineHeight:1.6}}>Everything you need to execute great campaigns, all in one place. View, manage, and action campaign priorities directly from Opero.</div>
+      <button style={{padding:'10px 24px',borderRadius:8,border:'2px solid #fff',background:'transparent',color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create your first campaign</button>
+    </div>
+    <div style={{background:'rgba(255,255,255,0.1)',borderRadius:10,padding:20,minWidth:300,flexShrink:0}}>
+      <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginBottom:12,fontWeight:600}}>CAMPAIGN OVERVIEW</div>
+      {[{l:'Sessions',v:'0'},{l:'New Contacts',v:'0'},{l:'Influenced Contacts',v:'0'},{l:'Closed Deals',v:'0'},{l:'Attributed Revenue',v:'£0'}].map(s=>(
+        <div key={s.l} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid rgba(255,255,255,0.1)',fontSize:13}}>
+          <span style={{color:'rgba(255,255,255,0.7)'}}>{s.l}</span>
+          <span style={{color:'#fff',fontWeight:600}}>{s.v}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',marginBottom:16,overflow:'hidden'}}>
+    <div style={{padding:'16px 20px',borderBottom:'1px solid #E4E7EC',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Campaign tasks</div>
+      <div style={{display:'flex',gap:8}}>
+        <button style={{padding:'6px 12px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>All assignees ▾</button>
+        <button style={{padding:'6px 12px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',fontWeight:500}}>Create task</button>
+      </div>
+    </div>
+    <div style={{display:'flex',gap:0,borderBottom:'1px solid #E4E7EC',padding:'0 20px'}}>
+      {['All (0)','Due today','Overdue','All completed'].map((tab,i)=>(
+        <button key={tab} style={{padding:'10px 14px',background:'none',border:'none',borderBottom:i===0?'2px solid '+ACCENT:'2px solid transparent',color:i===0?ACCENT:'#667085',fontSize:13,fontWeight:i===0?600:400,cursor:'pointer',fontFamily:'inherit'}}>{tab}</button>
+      ))}
+    </div>
+    <div style={{padding:'12px 20px',display:'flex',gap:8,borderBottom:'1px solid #E4E7EC'}}>
+      <input placeholder="Search" style={{width:200,padding:'7px 12px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+      <button style={{padding:'7px 12px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Filter</button>
+      <button style={{padding:'7px 12px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit columns</button>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'40px 100px 1fr 180px 160px 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+      <span></span><span>Status</span><span>Title</span><span>Due date</span><span>Assigned to</span><span>Notes</span>
+    </div>
+    <div style={{textAlign:'center',padding:48,color:'#98A2B3'}}>
+      <div style={{fontSize:36,marginBottom:12}}>✓</div>
+      <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No tasks yet</div>
+      <div style={{fontSize:13,color:'#667085'}}>Create a campaign to start adding tasks.</div>
+    </div>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Track complex campaigns from one place</div>
+    <div style={{fontSize:13,color:'#667085',marginBottom:20,lineHeight:1.6}}>Use real-time customer data with Opero Campaigns built on top of your CRM. View sessions, new contacts, influenced contacts, closed deals and attributed revenue.</div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:20}}>
+      {[{l:'SESSIONS',v:'0'},{l:'NEW CONTACTS',v:'0'},{l:'INFLUENCED CONTACTS',v:'0'},{l:'CLOSED DEALS',v:'0'},{l:'ATTRIBUTED REVENUE',v:'£0'}].map(s=>(
+        <div key={s.l} style={{textAlign:'center',padding:16,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
+          <div style={{fontSize:10,color:'#667085',marginBottom:6,fontWeight:600,letterSpacing:'0.04em'}}>{s.l}</div>
+          <div style={{fontSize:24,fontWeight:700,color:ACCENT}}>{s.v}</div>
+        </div>
+      ))}
+    </div>
+    <div style={{height:120,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3',fontSize:13}}>
+      📈 Campaign analytics chart — data will appear once campaigns are created
+    </div>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Effortless collaboration</div>
+      <div style={{display:'flex',gap:8}}>
+        <button style={{padding:'6px 12px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Month ▾</button>
+        <button style={{padding:'6px 12px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Today</button>
+        <button style={{padding:'6px 12px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',fontWeight:500}}>Create task</button>
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:1,background:'#E4E7EC',borderRadius:8,overflow:'hidden'}}>
+      {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>(
+        <div key={d} style={{background:'#F9FAFB',padding:'8px 4px',textAlign:'center',fontSize:11,fontWeight:600,color:'#667085'}}>{d}</div>
+      ))}
+      {Array.from({length:35},(_,i)=>(
+        <div key={i} style={{background:'#fff',minHeight:80,padding:6,fontSize:11,color:'#344054'}}>
+          <div style={{color:'#98A2B3',marginBottom:4}}>{i<2?'':i-1}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>)}
+          {section!=='Email'&&section!=='Ads'&&section!=='Events'&&section!=='Forms'&&section!=='CTAs'&&section!=='Campaigns'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
         </div>
       </div>
     </div>
