@@ -87,7 +87,7 @@ export default function Page() {
   })
 
   const inputStyle = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box' as const}
-  const labelStyle = {{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}
+  const labelStyle = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
