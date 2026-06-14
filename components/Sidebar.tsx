@@ -126,7 +126,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.PNG" alt="Opero" style={{ height: 28, width: 'auto', maxWidth: 120, objectFit: 'contain' }} />
+          <img src="/logo.PNG?v=2" alt="Opero" style={{ height: 28, width: 'auto', maxWidth: 120, objectFit: 'contain' }} />
           
         </div>
       </div>
