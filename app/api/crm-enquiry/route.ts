@@ -15,21 +15,10 @@ const headers = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, phone, postcode, bedrooms, source, module, type, api_key } = body
-
-    let user_id = 'bd780fdd-15e3-4306-8c87-788b23647ee5'
-
-    if (api_key && api_key !== 'e0f520e0-3d00-4db8-9b3d-fa1ad26a7a88') {
-      const { data: sub } = await supabase
-        .from('subscriptions')
-        .select('user_id')
-        .eq('api_key', api_key)
-        .single()
-      if (sub) user_id = sub.user_id
-    }
+    const { name, email, phone, postcode, bedrooms, source, module, type } = body
 
     await supabase.from('crm_contacts').insert([{
-      user_id,
+      user_id: 'bd780fdd-15e3-4306-8c87-788b23647ee5',
       name: name ?? 'Unknown',
       email: email ?? null,
       phone: phone ?? null,
