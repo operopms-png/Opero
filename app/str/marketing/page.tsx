@@ -274,7 +274,7 @@ export default function Page() {
   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:20}}>
     <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32}}>
       <h3 style={{fontSize:22,fontWeight:700,color:'#101828',marginBottom:12,lineHeight:1.3}}>Prioritize and qualify your leads with Lead Scoring</h3>
-      <p style={{fontSize:14,color:'#667085',marginBottom:20,lineHeight:1.6}}>Understand your leads digital body language with fit and engagement scores, help shorten sales cycles and drive more conversions.</p>
+      <p style={{fontSize:14,color:'#667085',marginBottom:20,lineHeight:1.6}}>Understand your leads&apos; digital body language with fit and engagement scores, help shorten sales cycles and drive more conversions.</p>
       <button style={{padding:'10px 24px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',marginBottom:12}}>Get started with Lead Scoring</button>
     </div>
     <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32}}>
@@ -326,7 +326,7 @@ export default function Page() {
           {['Contacts','Companies'].map((t,i)=><button key={t} style={{flex:1,padding:'8px',borderRadius:6,border:'1px solid '+(i===0?ACCENT:'rgba(255,255,255,0.2)'),background:i===0?ACCENT:'transparent',color:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',fontWeight:i===0?600:400}}>{t}</button>)}
         </div>
         <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginBottom:8}}>Choose how you'd like to score them</div>
-        {[{t:'Contact engagement score',d:'Measure your contact's level of engagement based on their behavior and interactions.'},{t:'Contact fit score',d:'Evaluate how closely a contact aligns with your ideal customer based on demographics.'},{t:'Contact combined score',d:'Measure your contact's level of engagement and how they align to your ideal customer.'}].map((opt,i)=>(
+        {[{t:'Contact engagement score',d:'Measure your contact&apos;s level of engagement based on their behavior and interactions.'},{t:'Contact fit score',d:'Evaluate how closely a contact aligns with your ideal customer based on demographics.'},{t:'Contact combined score',d:'Measure your contact&apos;s level of engagement and how they align to your ideal customer.'}].map((opt,i)=>(
           <div key={opt.t} style={{background:i===0?ACCENT+'22':'rgba(255,255,255,0.05)',border:'1px solid '+(i===0?ACCENT:'rgba(255,255,255,0.1)'),borderRadius:8,padding:12,marginBottom:8,cursor:'pointer'}}>
             <div style={{fontSize:12,fontWeight:600,color:'#fff',marginBottom:4}}>{opt.t}</div>
             <div style={{fontSize:11,color:'rgba(255,255,255,0.6)'}}>{opt.d}</div>
@@ -366,7 +366,7 @@ export default function Page() {
       </div>
       <div>
         <h3 style={{fontSize:18,fontWeight:700,color:'#101828',marginBottom:12}}>Track lead scores with complete transparency</h3>
-        <p style={{fontSize:14,color:'#667085',lineHeight:1.6,marginBottom:12}}>Easily view a contact's lead score right on their CRM record with the contact score card and score history panel. This gives you a detailed overview of the lead's score history and recent activities that influenced their score.</p>
+        <p style={{fontSize:14,color:'#667085',lineHeight:1.6,marginBottom:12}}>Easily view a contact&apos;s lead score right on their CRM record with the contact score card and score history panel. This gives you a detailed overview of the lead&apos;s score history and recent activities that influenced their score.</p>
         <p style={{fontSize:14,color:'#667085',lineHeight:1.6}}>Effectively sharing valuable leads between Marketing and Sales is essential for your success. With a clear view of how scores evolve over time, Sales can fully trust the scores provided by Marketing.</p>
       </div>
     </div>
