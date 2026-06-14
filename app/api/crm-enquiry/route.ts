@@ -9,9 +9,20 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, phone, postcode, bedrooms, source, module, type } = body
+    const { name, email, phone, postcode, bedrooms, source, module, type, api_key } = body
+
+    if (!api_key) return NextResponse.json({ error: 'Missing API key' }, { status: 401 })
+
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('user_id')
+      .eq('api_key', api_key)
+      .single()
+
+    if (!sub) return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
 
     await supabase.from('crm_contacts').insert([{
+      user_id: sub.user_id,
       name: name ?? 'Unknown',
       email: email ?? null,
       phone: phone ?? null,
