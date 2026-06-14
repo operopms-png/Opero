@@ -110,6 +110,7 @@ export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [plan, setPlan] = useState('starter')
   const [modules, setModules] = useState<string[]>([])
   const [userEmail, setUserEmail] = useState('')
@@ -209,6 +210,8 @@ export default function Sidebar() {
   return (
     <>
       <style>{`
+        @media(max-width:768px){.desktop-sidebar{display:none!important}.mobile-trigger{display:flex!important}}
+        @media(min-width:769px){.mobile-trigger{display:none!important}.mobile-overlay{display:none!important}}
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         .sidebar-nav a:hover { background: #F9FAFB !important; }
       `}</style>
