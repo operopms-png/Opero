@@ -46,12 +46,45 @@ export default function Page() {
         <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:60, display:'flex', alignItems:'center' }}>
           <h1 style={{ fontSize:17, fontWeight:600, margin:0, color:'#101828' }}>{section}</h1>
         </div>
-        <div style={{ flex:1, padding:24, overflowY:'auto', display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ textAlign:'center' }}>
-            <div style={{ fontSize:48, marginBottom:16 }}>🚀</div>
-            <div style={{ fontSize:18, fontWeight:600, color:'#101828', marginBottom:8 }}>{section}</div>
-            <div style={{ fontSize:14, color:'#667085' }}>Coming soon</div>
-          </div>
+        <div style={{ flex:1, padding:24, overflowY:'auto' }}>
+          {section==='Email'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+    <div>
+      <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0,marginBottom:4}}>Marketing Email</h2>
+      <div style={{fontSize:13,color:'#667085'}}>0 marketing emails</div>
+    </div>
+    <div style={{display:'flex',gap:8,alignItems:'center'}}>
+      <div style={{fontSize:13,color:'#667085',marginRight:8}}>0/5,000 sent this month</div>
+      <button style={{padding:'8px 16px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Email tools ▾</button>
+      <button style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create email</button>
+    </div>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+    <div style={{display:'flex',gap:0,borderBottom:'1px solid #E4E7EC',padding:'0 20px'}}>
+      {['All emails','Drafts','Scheduled','Sent','Archived'].map((tab,i)=>(
+        <button key={tab} style={{padding:'12px 16px',background:'none',border:'none',borderBottom:i===0?'2px solid '+ACCENT:'2px solid transparent',color:i===0?ACCENT:'#667085',fontSize:13,fontWeight:i===0?600:400,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
+          {tab}
+        </button>
+      ))}
+    </div>
+    <div style={{padding:'12px 20px',display:'flex',gap:8,borderBottom:'1px solid #E4E7EC'}}>
+      <input placeholder="Search email name or subject line" style={{flex:1,padding:'8px 12px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Email type ▾</button>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>+ Add quick filter</button>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Advanced filters</button>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 120px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+      <span>Email name</span><span style={{textAlign:'center'}}>Delivered</span><span style={{textAlign:'center'}}>Open rate</span><span style={{textAlign:'center'}}>Click rate</span>
+    </div>
+    <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
+      <div style={{fontSize:40,marginBottom:12}}>✉️</div>
+      <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:8}}>No emails yet</div>
+      <div style={{fontSize:13,color:'#667085',marginBottom:20}}>Create your first marketing email to get started.</div>
+      <button style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create email</button>
+    </div>
+  </div>
+</div>)}
+          {section!=='Email'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
         </div>
       </div>
     </div>
