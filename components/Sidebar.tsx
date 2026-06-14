@@ -124,15 +124,15 @@ export default function Sidebar() {
   const nav = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
-      <div style={{ padding: '18px 20px 14px 24px', borderBottom: '1px solid #F2F4F7' }}>
+      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.PNG?v=2" alt="Opero" style={{ height: 28, width: 'auto', maxWidth: 120, objectFit: 'contain' }} />
-          
+          <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>Opero</span>
         </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '8px 10px 8px 14px', overflowY: 'auto' }}>
+      <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
           const hasModule = !group.module || (modules.includes(group.module) && roleModules.includes(group.module))
@@ -191,21 +191,18 @@ export default function Sidebar() {
   )
 
   return (
-    <aside style={{
-      width: 260,
-      height: '100vh',
-      background: '#fff',
-      borderRight: '1px solid #F2F4F7',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      zIndex: 40,
-      fontFamily: "'Inter', sans-serif",
-      display: 'flex',
-      flexDirection: 'column',
-      overflowY: 'auto'
-    }}>
-      {nav}
-    </aside>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        .sidebar-nav a:hover { background: #F9FAFB !important; }
+      `}</style>
+      {open && <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />}
+      <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#fff', zIndex: 50, borderRight: '1px solid #F2F4F7', fontFamily: "'Inter', sans-serif" }}>
+        {nav}
+      </aside>
+      <aside className="sidebar-nav" style={{ width: 220, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto' }}>
+        {nav}
+      </aside>
+    </>
   )
 }
