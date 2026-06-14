@@ -84,7 +84,105 @@ export default function Page() {
     </div>
   </div>
 </div>)}
-          {section!=='Email'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
+          {section==='Ads'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+    <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0}}>Ads</h2>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:48,display:'flex',alignItems:'center',gap:48}}>
+    <div style={{flex:1}}>
+      <h3 style={{fontSize:22,fontWeight:700,color:'#101828',marginBottom:16}}>Track and optimize your ad campaigns to turn prospects into customers</h3>
+      {[{t:'View the ROI',d:'of each ad campaign'},{t:'Use CRM data',d:'to create and optimize targeted ads'},{t:'Automatically follow up',d:'with new leads'}].map(i=>(
+        <div key={i.t} style={{display:'flex',alignItems:'center',gap:8,marginBottom:10,fontSize:14,color:'#344054'}}>
+          <span style={{color:ACCENT}}>→</span><strong>{i.t}</strong> {i.d}
+        </div>
+      ))}
+      <button style={{marginTop:20,padding:'10px 24px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Get started with Ads</button>
+    </div>
+    <div style={{display:'flex',gap:12,flexShrink:0}}>
+      {['🎯','💼','📘','📸'].map((icon,i)=>(
+        <div key={i} style={{width:56,height:56,borderRadius:12,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>{icon}</div>
+      ))}
+    </div>
+  </div>
+</div>)}
+          {section==='Events'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+    <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0}}>Marketing events</h2>
+    <button style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create marketing event</button>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+    <div style={{padding:'12px 20px',display:'flex',gap:8,borderBottom:'1px solid #E4E7EC'}}>
+      <input placeholder="Type / to search" style={{flex:1,padding:'8px 12px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Filter</button>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Sort by</button>
+    </div>
+    <div style={{padding:40,textAlign:'center'}}>
+      <div style={{fontSize:36,marginBottom:16}}>📅</div>
+      <div style={{fontSize:16,fontWeight:600,color:'#101828',marginBottom:8}}>Centralize and manage your marketing events</div>
+      <div style={{fontSize:13,color:'#667085',marginBottom:20}}>Track and analyze data from your Marketing Events to optimize your marketing efforts and event strategy.</div>
+      <button style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create marketing event</button>
+    </div>
+    <div style={{borderTop:'1px solid #E4E7EC',padding:24}}>
+      <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Sync your marketing events with</div>
+      <div style={{display:'flex',gap:12}}>
+        {['Zoom','Eventbrite','Hopin','GoToWebinar'].map(p=>(
+          <div key={p} style={{padding:'12px 20px',border:'1px solid #E4E7EC',borderRadius:8,fontSize:13,color:'#344054',fontWeight:500}}>{p}</div>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>)}
+          {section==='Forms'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+    <div>
+      <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0,marginBottom:4}}>Forms</h2>
+      <div style={{fontSize:13,color:'#667085'}}>0 forms</div>
+    </div>
+    <button style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create form</button>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+    <div style={{display:'flex',gap:0,borderBottom:'1px solid #E4E7EC',padding:'0 20px'}}>
+      {['All forms','Published'].map((tab,i)=>(
+        <button key={tab} style={{padding:'12px 16px',background:'none',border:'none',borderBottom:i===0?'2px solid '+ACCENT:'2px solid transparent',color:i===0?ACCENT:'#667085',fontSize:13,fontWeight:i===0?600:400,cursor:'pointer',fontFamily:'inherit'}}>{tab}</button>
+      ))}
+    </div>
+    <div style={{padding:'12px 20px',display:'flex',gap:8,borderBottom:'1px solid #E4E7EC'}}>
+      <input placeholder="Search forms" style={{width:280,padding:'8px 12px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Form Type ▾</button>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>+ Add quick filter</button>
+      <button style={{padding:'8px 14px',border:'1px solid #D0D5DD',borderRadius:6,background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Advanced filters</button>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 120px 140px 120px 120px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+      <span>Name</span><span>Page views</span><span>Submissions / page view</span><span>Spam submissions</span><span>Form submissions</span>
+    </div>
+    <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
+      <div style={{fontSize:40,marginBottom:12}}>📋</div>
+      <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:8}}>No forms yet</div>
+      <div style={{fontSize:13,color:'#667085',marginBottom:20}}>Create a form to start capturing leads.</div>
+      <button style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create form</button>
+    </div>
+  </div>
+</div>)}
+          {section==='CTAs'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+    <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0}}>CTAs</h2>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,marginBottom:16}}>
+    <div style={{fontSize:13,color:'#667085',marginBottom:8,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.04em'}}>Calls-to-action (CTAs)</div>
+    <h3 style={{fontSize:24,fontWeight:700,color:'#101828',marginBottom:24}}>Engage visitors with personalized pop-ups and buttons</h3>
+    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Choose a recommended template to get started</div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
+      {[{t:'Pop-up',d:'A high-visibility message for lead generation, event sign-ups, or promotions.'},{t:'Slide-in',d:'Appears from the left or right side of the screen, encouraging visitors to take action.'},{t:'Button',d:'Place buttons anywhere on your site to encourage clicks for sign-ups, downloads, or purchases.'}].map(c=>(
+        <div key={c.t} style={{border:'1px solid #E4E7EC',borderRadius:10,padding:20,background:'#F9FAFB'}}>
+          <div style={{fontWeight:600,fontSize:14,color:'#101828',marginBottom:8}}>{c.t}</div>
+          <div style={{fontSize:13,color:'#667085',marginBottom:16,lineHeight:1.5}}>{c.d}</div>
+          <button style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Use template</button>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>)}
+          {section!=='Email'&&section!=='Ads'&&section!=='Events'&&section!=='Forms'&&section!=='CTAs'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
         </div>
       </div>
     </div>
