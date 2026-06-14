@@ -33,6 +33,18 @@ const NAV_GROUPS = [
     ]
   },
   {
+    label: 'Estate Agency',
+    module: 'estate',
+    modulePrice: '£99/mo',
+    items: [
+      { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
+      { href: '/estate/crm', label: 'CRM', key: 'estate', icon: 'users' },
+      { href: '/estate/marketing', label: 'Marketing', key: 'estate', icon: 'chart' },
+      { href: '/estate/sales', label: 'Sales', key: 'estate', icon: 'revenue' },
+      { href: '/estate/reporting', label: 'Reporting', key: 'estate', icon: 'chart' },
+    ]
+  },
+  {
     label: 'Developments',
     module: 'dev',
     modulePrice: '£149/mo',
@@ -49,9 +61,9 @@ const NAV_GROUPS = [
 ]
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str'],
-  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str'],
-  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str'],
+  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate'],
+  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate'],
+  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate'],
 }
 
 function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
