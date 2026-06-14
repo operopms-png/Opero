@@ -9,6 +9,7 @@ const NAV = [
     {s:'Team Management',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>},
     {s:'Referrals',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>},
     {s:'Billing & Subscriptions',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>},
+    {s:'System Messages',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>},
   ]}
 ]
 
@@ -26,6 +27,7 @@ export default function Page() {
   const [apiKey, setApiKey] = useState('')
   const [copied, setCopied] = useState(false)
   const [plan, setPlan] = useState('Professional')
+  const [messages, setMessages] = useState<any[]>([])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({data:{user}})=>{
@@ -36,6 +38,8 @@ export default function Page() {
         setApiKey((sub as any).api_key??'')
         setPlan((sub as any).plan??'Professional')
       }
+      const {data:msgs} = await supabase.from('system_messages').select('*').eq('published',true).order('created_at',{ascending:false})
+      setMessages(msgs??[])
       setLoading(false)
     })
   },[])
@@ -282,6 +286,32 @@ export default function Page() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>)}
+
+          {section==='System Messages'&&(<div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>System Messages</h2>
+                <div style={{fontSize:13,color:'#667085'}}>Platform updates, new features and announcements from Opero.</div>
+              </div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              {messages.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center',color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:8}}>🔔</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No messages yet</div><div style={{fontSize:13}}>System announcements will appear here.</div></div>):messages.map(msg=>{
+                const colors:any = {success:{bg:'#ECFDF5',border:'#6EE7B7',icon:'✅',tag:'#10B981',tagBg:'#ECFDF5'},info:{bg:'#EFF6FF',border:'#93C5FD',icon:'ℹ️',tag:'#3B82F6',tagBg:'#EFF6FF'},update:{bg:'#EEF0FF',border:'#A5B4FC',icon:'🚀',tag:'#6366F1',tagBg:'#EEF0FF'},warning:{bg:'#FFFBEB',border:'#FCD34D',icon:'⚠️',tag:'#F59E0B',tagBg:'#FFFBEB'}}
+                const c = colors[msg.type]??colors.info
+                return(<div key={msg.id} style={{background:c.bg,borderRadius:12,border:'1px solid '+c.border,padding:20,display:'flex',gap:14}}>
+                  <span style={{fontSize:24,flexShrink:0}}>{c.icon}</span>
+                  <div style={{flex:1}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{msg.title}</div>
+                      <span style={{fontSize:10,fontWeight:700,background:c.tagBg,color:c.tag,border:'1px solid '+c.border,padding:'2px 8px',borderRadius:20,textTransform:'uppercase'}}>{msg.type}</span>
+                    </div>
+                    {msg.body&&<div style={{fontSize:13,color:'#344054',lineHeight:1.6}}>{msg.body}</div>}
+                    <div style={{fontSize:11,color:'#98A2B3',marginTop:6}}>{new Date(msg.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+                  </div>
+                </div>)
+              })}
             </div>
           </div>)}
 
