@@ -13,6 +13,7 @@ const NAV_GROUPS = [
       { href: '/str/crm', label: 'CRM', key: 'str', icon: 'users' },
       { href: '/str/marketing', label: 'Marketing', key: 'str', icon: 'chart' },
       { href: '/str/sales', label: 'Sales', key: 'str', icon: 'revenue' },
+      { href: '/str/reporting', label: 'Reporting', key: 'str', icon: 'chart' },
     ]
   },
   {
@@ -24,6 +25,7 @@ const NAV_GROUPS = [
       { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'users' },
       { href: '/pm/marketing', label: 'Marketing', key: 'pm', icon: 'chart' },
       { href: '/pm/sales', label: 'Sales', key: 'pm', icon: 'revenue' },
+      { href: '/pm/reporting', label: 'Reporting', key: 'pm', icon: 'chart' },
     ]
   },
   {
@@ -35,6 +37,7 @@ const NAV_GROUPS = [
       { href: '/dev/crm', label: 'CRM', key: 'dev', icon: 'users' },
       { href: '/dev/marketing', label: 'Marketing', key: 'dev', icon: 'chart' },
       { href: '/dev/sales', label: 'Sales', key: 'dev', icon: 'revenue' },
+      { href: '/dev/reporting', label: 'Reporting', key: 'dev', icon: 'chart' },
     ]
   },
 ]
