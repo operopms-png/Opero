@@ -1,15 +1,25 @@
 'use client'
 import { useState } from 'react'
 
+const STRATEGY_ICONS: Record<string,React.ReactElement> = {
+  btl:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  flip:      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>,
+  brrr:      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>,
+  hmo:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M1 22V9l7-7 7 7v13"/><path d="M15 22V13h4v9"/><path d="M19 6l4 3"/></svg>,
+  r2r:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+  social:    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>,
+  supported: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>,
+  land:      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>,
+}
 const STRATEGIES = [
-  { id:'btl', label:'Buy to Let', icon:'🏠', desc:'Purchase and rent out residential property' },
-  { id:'flip', label:'Flip', icon:'🔄', desc:'Buy, refurbish and sell for profit' },
-  { id:'brrr', label:'BRRR', icon:'♻️', desc:'Buy, Refurb, Rent, Refinance, Repeat' },
-  { id:'hmo', label:'HMO', icon:'🏘️', desc:'House in Multiple Occupation — rent by room' },
-  { id:'r2r', label:'Rent to Rent', icon:'🤝', desc:'Sublet a property you rent from a landlord' },
-  { id:'social', label:'Social Housing', icon:'🏛️', desc:'Long-term lets to councils or housing associations' },
-  { id:'supported', label:'Supported Living', icon:'❤️', desc:'Specialist accommodation for vulnerable adults' },
-  { id:'land', label:'Land Purchase', icon:'🌍', desc:'Buy land for development or planning gain' },
+  { id:'btl', label:'Buy to Let', desc:'Purchase and rent out residential property' },
+  { id:'flip', label:'Flip', desc:'Buy, refurbish and sell for profit' },
+  { id:'brrr', label:'BRRR', desc:'Buy, Refurb, Rent, Refinance, Repeat' },
+  { id:'hmo', label:'HMO', desc:'House in Multiple Occupation — rent by room' },
+  { id:'r2r', label:'Rent to Rent', desc:'Sublet a property you rent from a landlord' },
+  { id:'social', label:'Social Housing', desc:'Long-term lets to councils or housing associations' },
+  { id:'supported', label:'Supported Living', desc:'Specialist accommodation for vulnerable adults' },
+  { id:'land', label:'Land Purchase', desc:'Buy land for development or planning gain' },
 ]
 
 const SECTIONS = ['Deal Analyser','Saved Deals','Watchlist','Postcode Insights']
@@ -166,7 +176,7 @@ export default function InvestPage() {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
                   {STRATEGIES.map(s=>(
                     <div key={s.id} onClick={()=>setStrategy(s.id)} style={{background:'#fff',borderRadius:12,border:'2px solid #E4E7EC',padding:20,cursor:'pointer',transition:'all 0.15s'}} onMouseEnter={e=>(e.currentTarget.style.borderColor=BLUE)} onMouseLeave={e=>(e.currentTarget.style.borderColor='#E4E7EC')}>
-                      <div style={{fontSize:28,marginBottom:8}}>{s.icon}</div>
+                      <div style={{marginBottom:12,color:BLUE}}>{STRATEGY_ICONS[s.id]}</div>
                       <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>{s.label}</div>
                       <div style={{fontSize:12,color:'#667085'}}>{s.desc}</div>
                     </div>
@@ -180,7 +190,7 @@ export default function InvestPage() {
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
                   <button onClick={()=>setStrategy(null)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← Back</button>
-                  <div style={{fontSize:16,fontWeight:600,color:'#101828'}}>{STRATEGIES.find(s=>s.id===strategy)?.icon} {STRATEGIES.find(s=>s.id===strategy)?.label} Analysis</div>
+                  <div style={{fontSize:16,fontWeight:600,color:'#101828'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} Analysis</div>
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
@@ -236,7 +246,7 @@ export default function InvestPage() {
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
                   <button onClick={()=>setResult(null)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
-                  <div style={{fontSize:16,fontWeight:600,color:'#101828'}}>{STRATEGIES.find(s=>s.id===strategy)?.icon} {STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
+                  <div style={{fontSize:16,fontWeight:600,color:'#101828'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
                 </div>
 
