@@ -11,6 +11,8 @@ const NAV_GROUPS = [
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
       { href: '/str/crm', label: 'CRM', key: 'str', icon: 'users' },
+      { href: '/str/marketing', label: 'Marketing', key: 'str', icon: 'chart' },
+      { href: '/str/sales', label: 'Sales', key: 'str', icon: 'revenue' },
     ]
   },
   {
@@ -20,6 +22,8 @@ const NAV_GROUPS = [
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
       { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'users' },
+      { href: '/pm/marketing', label: 'Marketing', key: 'pm', icon: 'chart' },
+      { href: '/pm/sales', label: 'Sales', key: 'pm', icon: 'revenue' },
     ]
   },
   {
@@ -29,6 +33,8 @@ const NAV_GROUPS = [
     items: [
       { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
       { href: '/dev/crm', label: 'CRM', key: 'dev', icon: 'users' },
+      { href: '/dev/marketing', label: 'Marketing', key: 'dev', icon: 'chart' },
+      { href: '/dev/sales', label: 'Sales', key: 'dev', icon: 'revenue' },
     ]
   },
 ]
