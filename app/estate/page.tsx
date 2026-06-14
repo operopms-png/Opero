@@ -19,7 +19,7 @@ export default function Page() {
   const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})
   const [ten, setTen] = useState({name:'',email:'',phone:'',dob:''})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active'})
-  const [rentSchedules, setRentSchedules] = useState([])
+  const [rentSchedules, setRentSchedules] = useState<any[]>([])
   const [showAddRent, setShowAddRent] = useState(false)
   const [rentForm, setRentForm] = useState({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
 
