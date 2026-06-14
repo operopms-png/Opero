@@ -13,7 +13,7 @@ const NAV = [
   ]}
 ]
 
-const ROLES = ['Admin','Property Manager','Cleaner','Maintenance','Viewer']
+const ROLES = ['Admin','Airbnb Agent','Property Manager','Cleaner','Maintenance','Viewer','Estate Agent']
 
 export default function Page() {
   const [section, setSection] = useState('My Account')

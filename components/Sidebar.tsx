@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
+import { useRole, ROLE_MODULES } from '@/lib/useRole'
 
 const NAV_GROUPS = [
   {
@@ -96,6 +97,7 @@ export default function Sidebar() {
   const [plan, setPlan] = useState('starter')
   const [modules, setModules] = useState<string[]>([])
   const [userEmail, setUserEmail] = useState('')
+  const { role, hasSettings } = useRole()
 
   useEffect(() => {
     async function loadPlan() {
@@ -132,7 +134,8 @@ export default function Sidebar() {
       {/* Nav */}
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
-          const hasModule = !group.module || modules.includes(group.module)
+          const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
+          const hasModule = !group.module || (modules.includes(group.module) && roleModules.includes(group.module))
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#F2F4F7', margin: '6px 0' }} />}
@@ -179,10 +182,10 @@ export default function Sidebar() {
             <Icon name="logout" size={14} color="#98A2B3" />
           </button>
         </div>
-        <a href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, textDecoration: 'none', fontSize: 13, color: '#667085', marginTop: 4 }}>
+        {hasSettings&&<a href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, textDecoration: 'none', fontSize: 13, color: '#667085', marginTop: 4 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Settings
-        </a>
+        </a>}
       </div>
     </div>
   )
