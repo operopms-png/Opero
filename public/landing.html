@@ -35,7 +35,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
 .footer-links{display:flex;gap:24px}
 .footer-links a{font-size:13px;color:#667085}
 .save-badge{background:#10B981;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;position:absolute;top:-10px;left:20px}
-</style>
+@media(max-width:768px){nav{padding:14px 20px}.nav-links{display:none!important}.nav-cta-desktop{display:none!important}.hamburger{display:flex!important}.mobile-menu{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:200;padding:80px 32px 32px;gap:24px}.mobile-menu.open{display:flex}.mobile-menu a{font-size:22px;font-weight:600;color:#101828;text-decoration:none}.close-btn{position:absolute;top:20px;right:20px;background:none;border:none;font-size:28px;cursor:pointer;color:#101828}section[style*="96px 64px"]{padding:48px 20px 32px!important}h1[style*="52px"]{font-size:30px!important}.module-strip{flex-wrap:wrap!important;padding:16px!important}.module-divider{display:none!important}.module-item{width:calc(50% - 5px);background:#F9FAFB;border-radius:10px;border:1px solid #E4E7EC;padding:12px}.section{padding:40px 16px!important}.features-grid{grid-template-columns:1fr!important}.pricing-grid-top,.pricing-grid-bottom{grid-template-columns:1fr!important}.compare-row{grid-template-columns:1fr!important}.testimonials-grid{grid-template-columns:1fr!important}.cta-section{padding:48px 20px!important}footer{flex-direction:column!important;gap:16px;text-align:center;padding:24px 20px!important}.footer-links{justify-content:center}}</style>
 </head>
 <body>
 
@@ -43,7 +43,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   <div style="display:flex;align-items:center;gap:10px">
     <img src="/logo.PNG" alt="Opero" style="height:36px;width:auto"/>
   </div>
-  <div class="nav-links">
+  <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')" style="display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px"><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div><div style="width:15px;height:2px;background:#101828;border-radius:2px"></div><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div></button><div class="nav-links">
     <a href="#features">Features</a>
     <a href="#pricing">Pricing</a>
     <a href="#compare">Compare</a>
@@ -53,7 +53,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     <button class="btn-outline" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Log in</button>
     <button class="btn-primary" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Start free trial <i class="ti ti-arrow-right"></i></button>
   </div>
-</nav>
+</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#pricing" onclick="document.getElementById('mobileMenu').classList.remove('open')">Pricing</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
 
 <section style="padding:96px 64px 72px;text-align:center;max-width:900px;margin:0 auto">
   <div style="display:inline-flex;align-items:center;gap:8px;background:#EEF1FF;border:1px solid #C7D2FE;border-radius:20px;padding:6px 14px;margin-bottom:24px">
