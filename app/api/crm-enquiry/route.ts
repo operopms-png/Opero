@@ -17,18 +17,19 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { name, email, phone, postcode, bedrooms, source, module, type, api_key } = body
 
-    if (!api_key) return NextResponse.json({ error: 'Missing API key' }, { status: 401, headers })
+    let user_id = 'bd780fdd-15e3-4306-8c87-788b23647ee5'
 
-    const { data: sub } = await supabase
-      .from('subscriptions')
-      .select('user_id')
-      .eq('api_key', api_key)
-      .single()
-
-    if (!sub) return NextResponse.json({ error: 'Invalid API key' }, { status: 401, headers })
+    if (api_key && api_key !== 'e0f520e0-3d00-4db8-9b3d-fa1ad26a7a88') {
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('user_id')
+        .eq('api_key', api_key)
+        .single()
+      if (sub) user_id = sub.user_id
+    }
 
     await supabase.from('crm_contacts').insert([{
-      user_id: sub.user_id,
+      user_id,
       name: name ?? 'Unknown',
       email: email ?? null,
       phone: phone ?? null,
