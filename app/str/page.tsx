@@ -372,7 +372,7 @@ export default function STRPage() {
             {/* Period tabs */}
             <div style={{display:'flex',gap:8,marginBottom:20}}>
               {['P&L','Rent Collection','Cash Flow','Forecast'].map(t=>(
-                <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',border:'1px solid '+(reportTab===t?'#101828':'#E4E7EC')}}>{t}</button>
+                <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',outline:'1px solid '+(reportTab===t?'#101828':'#E4E7EC')}}>{t}</button>
               ))}
             </div>
             {reportTab==='P&L'&&(
