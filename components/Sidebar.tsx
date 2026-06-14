@@ -126,8 +126,8 @@ export default function Sidebar() {
       {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>Opero</span>
+          <img src="/logo.PNG" alt="Opero" style={{ height: 28, width: 'auto', maxWidth: 120, objectFit: 'contain' }} />
+          
         </div>
       </div>
 
@@ -200,7 +200,7 @@ export default function Sidebar() {
       <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#fff', zIndex: 50, borderRight: '1px solid #F2F4F7', fontFamily: "'Inter', sans-serif" }}>
         {nav}
       </aside>
-      <aside className="sidebar-nav" style={{ width: 220, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto' }}>
+      <aside className="sidebar-nav" style={{ width: 240, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto' }}>
         {nav}
       </aside>
     </>
