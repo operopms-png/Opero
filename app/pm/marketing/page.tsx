@@ -266,7 +266,113 @@ export default function Page() {
     </div>
   </div>
 </div>)}
-          {section!=='Email'&&section!=='Ads'&&section!=='Events'&&section!=='Forms'&&section!=='CTAs'&&section!=='Campaigns'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
+          {section==='Lead Scoring'&&(<div>
+  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+    <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:0}}>Lead Scoring</h2>
+    <button style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create score</button>
+  </div>
+  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:20}}>
+    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32}}>
+      <h3 style={{fontSize:22,fontWeight:700,color:'#101828',marginBottom:12,lineHeight:1.3}}>Prioritize and qualify your leads with Lead Scoring</h3>
+      <p style={{fontSize:14,color:'#667085',marginBottom:20,lineHeight:1.6}}>Understand your leads digital body language with fit and engagement scores, help shorten sales cycles and drive more conversions.</p>
+      <button style={{padding:'10px 24px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',marginBottom:12}}>Get started with Lead Scoring</button>
+    </div>
+    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32}}>
+      <h3 style={{fontSize:18,fontWeight:700,color:'#101828',marginBottom:12}}>Prioritise your most promising leads, improve conversion rates and align marketing and sales</h3>
+      <div style={{background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC',padding:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+          <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>Combined contact score</div>
+          <div style={{display:'flex',gap:6}}>
+            <span style={{fontSize:11,color:'#667085'}}>Score is OFF</span>
+            <button style={{padding:'4px 10px',borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>Review and turn on</button>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8,marginBottom:12,borderBottom:'1px solid #E4E7EC',paddingBottom:8}}>
+          {['Criteria','Contacts','Settings'].map((t,i)=><button key={t} style={{padding:'4px 12px',borderRadius:4,border:'none',background:i===0?ACCENT:'transparent',color:i===0?'#fff':'#667085',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>)}
+        </div>
+        <div style={{fontSize:12,color:'#667085',marginBottom:8}}>Score limit: 0 to 300 points</div>
+        <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:6,padding:12,marginBottom:6}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <span style={{fontSize:12,fontWeight:600,color:'#101828'}}>Group 1 — EVENT</span>
+            <span style={{fontSize:11,color:'#667085'}}>Group score limit +/-: 100</span>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:8,alignItems:'center'}}>
+            <span style={{fontSize:11,color:'#667085'}}>Decay scores</span>
+            <span style={{padding:'2px 8px',borderRadius:4,background:'#10B981',color:'#fff',fontSize:11,fontWeight:600}}>ON</span>
+            <span style={{fontSize:11,color:'#667085'}}>reduce by 50% every 3 months</span>
+          </div>
+          {[{l:'Sales Email (1:1)',pts:'+10'},{l:'Meetings',pts:'-10'}].map(r=>(
+            <div key={r.l} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderTop:'1px solid #F2F4F7',fontSize:12,color:'#344054'}}>
+              <span>{r.l}</span><span style={{fontWeight:600,color:r.pts.startsWith('+')?'#10B981':'#EF4444'}}>{r.pts} pts</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,marginBottom:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:32,alignItems:'start'}}>
+      <div>
+        <h3 style={{fontSize:18,fontWeight:700,color:'#101828',marginBottom:12}}>Draw deeper insights from your lead data</h3>
+        <p style={{fontSize:14,color:'#667085',lineHeight:1.6}}>Stop treating all leads the same. Fit and engagement scoring helps you evaluate how well a lead matches your ideal customer profile and their level of interest in your brand.</p>
+      </div>
+      <div style={{background:'#1D2939',borderRadius:10,padding:20}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+          <div style={{fontSize:13,fontWeight:600,color:'#fff'}}>Choose score type</div>
+          <button style={{padding:'4px 10px',borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>Create</button>
+        </div>
+        <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginBottom:12}}>Choose who you'd like to score</div>
+        <div style={{display:'flex',gap:8,marginBottom:16}}>
+          {['Contacts','Companies'].map((t,i)=><button key={t} style={{flex:1,padding:'8px',borderRadius:6,border:'1px solid '+(i===0?ACCENT:'rgba(255,255,255,0.2)'),background:i===0?ACCENT:'transparent',color:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',fontWeight:i===0?600:400}}>{t}</button>)}
+        </div>
+        <div style={{fontSize:12,color:'rgba(255,255,255,0.6)',marginBottom:8}}>Choose how you'd like to score them</div>
+        {[{t:'Contact engagement score',d:'Measure your contact's level of engagement based on their behavior and interactions.'},{t:'Contact fit score',d:'Evaluate how closely a contact aligns with your ideal customer based on demographics.'},{t:'Contact combined score',d:'Measure your contact's level of engagement and how they align to your ideal customer.'}].map((opt,i)=>(
+          <div key={opt.t} style={{background:i===0?ACCENT+'22':'rgba(255,255,255,0.05)',border:'1px solid '+(i===0?ACCENT:'rgba(255,255,255,0.1)'),borderRadius:8,padding:12,marginBottom:8,cursor:'pointer'}}>
+            <div style={{fontSize:12,fontWeight:600,color:'#fff',marginBottom:4}}>{opt.t}</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.6)'}}>{opt.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32}}>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:32,alignItems:'start'}}>
+      <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+          <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>Lead score history</div>
+          <button style={{background:'none',border:'none',fontSize:16,cursor:'pointer',color:'#667085'}}>×</button>
+        </div>
+        <div style={{fontSize:12,color:'#667085',marginBottom:4}}>Intent Score: 90</div>
+        <div style={{fontSize:12,color:ACCENT,marginBottom:12}}>See score calculations →</div>
+        <div style={{fontSize:11,fontWeight:600,color:'#667085',marginBottom:8}}>Score trend — MONTHLY</div>
+        <div style={{height:80,background:'#fff',borderRadius:6,border:'1px solid #E4E7EC',display:'flex',alignItems:'flex-end',padding:'8px',gap:4}}>
+          {[20,35,45,60,55,70,80,90].map((h,i)=>(
+            <div key={i} style={{flex:1,background:ACCENT,borderRadius:'2px 2px 0 0',height:`${h}%`,opacity:0.7+i*0.04}}/>
+          ))}
+        </div>
+        <div style={{marginTop:12}}>
+          <div style={{display:'grid',gridTemplateColumns:'60px 60px 1fr 80px',fontSize:10,fontWeight:600,color:'#667085',padding:'4px 0',borderBottom:'1px solid #E4E7EC',textTransform:'uppercase'}}>
+            <span>Score</span><span>Change</span><span>Event</span><span>Date</span>
+          </div>
+          {[{s:90,c:'+30',e:'Enrolled in workflow',d:'11/01/2024'},{s:60,c:'+20',e:'Email opened',d:'10/15/2024'},{s:40,c:'+40',e:'Page visited',d:'10/01/2024'}].map((r,i)=>(
+            <div key={i} style={{display:'grid',gridTemplateColumns:'60px 60px 1fr 80px',fontSize:11,color:'#344054',padding:'6px 0',borderBottom:'1px solid #F2F4F7'}}>
+              <span style={{fontWeight:600,color:ACCENT}}>{r.s}</span>
+              <span style={{color:'#10B981',fontWeight:600}}>{r.c}</span>
+              <span>{r.e}</span>
+              <span style={{color:'#667085'}}>{r.d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <h3 style={{fontSize:18,fontWeight:700,color:'#101828',marginBottom:12}}>Track lead scores with complete transparency</h3>
+        <p style={{fontSize:14,color:'#667085',lineHeight:1.6,marginBottom:12}}>Easily view a contact's lead score right on their CRM record with the contact score card and score history panel. This gives you a detailed overview of the lead's score history and recent activities that influenced their score.</p>
+        <p style={{fontSize:14,color:'#667085',lineHeight:1.6}}>Effectively sharing valuable leads between Marketing and Sales is essential for your success. With a clear view of how scores evolve over time, Sales can fully trust the scores provided by Marketing.</p>
+      </div>
+    </div>
+  </div>
+</div>)}
+          {section!=='Email'&&section!=='Ads'&&section!=='Events'&&section!=='Forms'&&section!=='CTAs'&&section!=='Campaigns'&&section!=='Lead Scoring'&&<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'60vh'}}><div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:16}}>🚀</div><div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div><div style={{fontSize:14,color:'#667085'}}>Coming soon</div></div></div>}
         </div>
       </div>
     </div>
