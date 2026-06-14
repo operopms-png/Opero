@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const ACCENT = '#2D6A4F'
-const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Rent Collection','Documents']
+const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Rent Collection','Vacancies','Documents']
 const NAV_REST = ['Contacts','Maintenance','Tasks','Notes','Messages','Candidates','Tools','Community']
 
 export default function Page() {
@@ -19,6 +19,10 @@ export default function Page() {
   const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})
   const [ten, setTen] = useState({name:'',email:'',phone:'',dob:''})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active'})
+  const [vacancies, setVacancies] = useState<any[]>([])
+  const [showAddVacancy, setShowAddVacancy] = useState(false)
+  const [vacForm, setVacForm] = useState({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''})
+
   const [rentSchedules, setRentSchedules] = useState<any[]>([])
   const [showAddRent, setShowAddRent] = useState(false)
   const [rentForm, setRentForm] = useState({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
@@ -104,6 +108,7 @@ export default function Page() {
           <div style={{display:'flex',gap:8}}>
             {section==='Properties'&&<button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
+            {section==='Vacancies'&&<button onClick={()=>setShowAddVacancy(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
           </div>
@@ -324,6 +329,77 @@ export default function Page() {
             </div>
           </div>)}
 
+          {section==='Vacancies'&&(<div>
+            {/* Stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
+              <div style={{background:'linear-gradient(135deg,'+ACCENT+',#1B4332)',borderRadius:10,padding:20,color:'#fff'}}>
+                <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.06em',opacity:0.8,marginBottom:8}}>Untapped potential / month</div>
+                <div style={{fontSize:32,fontWeight:700}}>£{vacancies.filter(v=>v.status==='Available').reduce((s,v)=>s+(parseFloat(v.rent)||0),0).toLocaleString()}</div>
+                <div style={{fontSize:12,opacity:0.7,marginTop:4}}>If all {vacancies.filter(v=>v.status==='Available').length} vacancies were filled</div>
+              </div>
+              <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
+                <div style={{fontSize:32,fontWeight:700,color:ACCENT,marginBottom:4}}>{vacancies.filter(v=>v.status==='Available').length}</div>
+                <div style={{fontSize:12,color:'#667085'}}>Vacant units</div>
+              </div>
+              <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
+                <div style={{fontSize:32,fontWeight:700,color:'#F59E0B',marginBottom:4}}>{vacancies.length>0?'£'+(vacancies.reduce((s,v)=>s+(parseFloat(v.rent)||0),0)/vacancies.length).toFixed(0):'£0'}</div>
+                <div style={{fontSize:12,color:'#667085'}}>Avg rent / unit</div>
+              </div>
+            </div>
+            {/* Add form */}
+            {showAddVacancy&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add vacancy</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={labelStyle}>Property name *</label><select value={vacForm.property} onChange={e=>setVacForm({...vacForm,property:e.target.value})} style={inputStyle}><option value=''>Select property</option>{properties.map(p=><option key={p.id}>{p.name}</option>)}</select></div>
+                <div><label style={labelStyle}>Room type</label><select value={vacForm.roomType} onChange={e=>setVacForm({...vacForm,roomType:e.target.value})} style={inputStyle}>{['Whole Unit','Single','Double','Suite','Studio'].map(t=><option key={t}>{t}</option>)}</select></div>
+                <div><label style={labelStyle}>Monthly rent (£)</label><input value={vacForm.rent} onChange={e=>setVacForm({...vacForm,rent:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
+                <div><label style={labelStyle}>Bedrooms</label><select value={vacForm.bedrooms} onChange={e=>setVacForm({...vacForm,bedrooms:e.target.value})} style={inputStyle}>{['Studio','1','2','3','4','5','6+'].map(b=><option key={b}>{b}</option>)}</select></div>
+                <div><label style={labelStyle}>Available from</label><input value={vacForm.available} onChange={e=>setVacForm({...vacForm,available:e.target.value})} type='date' style={inputStyle}/></div>
+                <div><label style={labelStyle}>Type</label><select value={vacForm.type} onChange={e=>setVacForm({...vacForm,type:e.target.value})} style={inputStyle}>{['Apartment','House','Studio','HMO','Commercial'].map(t=><option key={t}>{t}</option>)}</select></div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Description</label><input value={vacForm.description} onChange={e=>setVacForm({...vacForm,description:e.target.value})} placeholder='Brief description of the unit...' style={inputStyle}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{if(!vacForm.property)return;setVacancies([...vacancies,{id:Date.now(),...vacForm,status:'Available',created:new Date().toISOString().split('T')[0]}]);setVacForm({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''});setShowAddVacancy(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add vacancy</button>
+                <button onClick={()=>setShowAddVacancy(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            {/* Filter pills */}
+            <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap'}}>
+              {['All','Whole Unit','Single','Double','Suite','Studio'].map(t=>(
+                <button key={t} style={{padding:'6px 14px',borderRadius:20,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:500,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>{t}</button>
+              ))}
+            </div>
+            {/* Cards */}
+            {vacancies.length===0?(
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
+                <div style={{fontSize:40,marginBottom:12}}>🏠</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No vacancies right now</div>
+                <div style={{fontSize:13}}>When a unit becomes vacant it will show here.</div>
+              </div>
+            ):(
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
+                {vacancies.map(v=>(
+                  <div key={v.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                    <div style={{background:ACCENT+'15',height:80,display:'flex',alignItems:'center',justifyContent:'center',fontSize:32}}>🏠</div>
+                    <div style={{padding:16}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                        <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{v.property}</div>
+                        <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#ECFDF5',color:'#10B981'}}>{v.status}</span>
+                      </div>
+                      <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{v.roomType} · {v.bedrooms} bed · {v.type}</div>
+                      {v.description&&<div style={{fontSize:12,color:'#667085',marginBottom:8}}>{v.description}</div>}
+                      <div style={{fontSize:18,fontWeight:700,color:ACCENT,marginBottom:8}}>£{parseFloat(v.rent||0).toLocaleString()}<span style={{fontSize:12,fontWeight:400,color:'#667085'}}>/mo</span></div>
+                      {v.available&&<div style={{fontSize:11,color:'#667085',marginBottom:12}}>Available from {v.available}</div>}
+                      <div style={{display:'flex',gap:6}}>
+                        <button onClick={()=>setVacancies(vacancies.map(x=>x.id===v.id?{...x,status:x.status==='Available'?'Let Agreed':'Available'}:x))} style={{flex:1,padding:'7px',borderRadius:6,border:'none',background:v.status==='Available'?ACCENT:'#F2F4F7',color:v.status==='Available'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{v.status==='Available'?'Mark let':'Re-list'}</button>
+                        <button onClick={()=>setVacancies(vacancies.filter(x=>x.id!==v.id))} style={{padding:'7px 10px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>)}
           {section==='Rent Collection'&&(<div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
               {[{l:'Scheduled',v:rentSchedules.length,c:ACCENT},{l:'Collected',v:'£'+rentSchedules.filter(r=>r.status==='Paid').reduce((s,r)=>s+(parseFloat(r.amount)||0),0).toLocaleString(),c:'#10B981'},{l:'Overdue',v:rentSchedules.filter(r=>r.status==='Overdue').length,c:'#EF4444'},{l:'Pending',v:rentSchedules.filter(r=>r.status==='Pending').length,c:'#F59E0B'}].map(s=>(
