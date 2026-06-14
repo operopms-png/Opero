@@ -124,7 +124,7 @@ export default function Sidebar() {
   const nav = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
-      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7' }}>
+      <div style={{ padding: '18px 20px 14px 24px', borderBottom: '1px solid #F2F4F7' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG?v=2" alt="Opero" style={{ height: 28, width: 'auto', maxWidth: 120, objectFit: 'contain' }} />
           
@@ -132,7 +132,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
+      <nav style={{ flex: 1, padding: '8px 10px 8px 14px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
           const hasModule = !group.module || (modules.includes(group.module) && roleModules.includes(group.module))
