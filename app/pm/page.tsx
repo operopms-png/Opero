@@ -699,10 +699,7 @@ export default function PMPage() {
                     </div>
                   </div>
                 )
-              })()}</span><span style={{color:'#10B981'}}>£0</span><span style={{color:'#EF4444'}}>£0</span><span>£0</span><span>£0</span>
-                  </div>
-                ))}
-              </div>
+              })()
             )}
           </div>
         )}
