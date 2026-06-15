@@ -32,6 +32,82 @@ const STATUS_COLORS: Record<string,{bg:string,color:string}> = {
   over_budget: { bg:'#FEE2E2', color:'#DC2626' },
 }
 
+
+function CashFlowTab({transactions}:{transactions:any[]}) {
+  const year = new Date().getFullYear()
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const cfData = months.map((m,i)=>{
+    const inflow = transactions.filter(t=>t.type==='Income'&&t.date?.startsWith(year+'-'+(String(i+1).padStart(2,'0')))).reduce((s:number,t:any)=>s+parseFloat(t.amount||0),0)
+    const outflow = transactions.filter(t=>t.type==='Expense'&&t.date?.startsWith(year+'-'+(String(i+1).padStart(2,'0')))).reduce((s:number,t:any)=>s+parseFloat(t.amount||0),0)
+    return {m, inflow, outflow, net: inflow-outflow}
+  })
+  const maxVal = Math.max(...cfData.map(d=>Math.max(d.inflow,d.outflow,Math.abs(d.net))),1)
+  const W=700,H=180,PAD=32
+  const x=(i:number)=>PAD+(i/(months.length-1))*(W-PAD*2)
+  const y=(v:number)=>H-PAD-(v/maxVal)*(H-PAD*2)
+  const line=(arr:number[])=>arr.map((v,i)=>(i===0?'M':'L')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ')
+  let cumulative=0
+  return (
+    <div>
+      <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Cash Flow ({year})</div>
+          <div style={{display:'flex',gap:16,alignItems:'center'}}>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Inflows</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#EF4444',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Outflows</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#5B7CFA',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
+          </div>
+        </div>
+        <svg viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:H,overflow:'visible'}}>
+          {[0,0.25,0.5,0.75,1].map((p,i)=>(
+            <g key={i}>
+              <line x1={PAD} y1={y(maxVal*p)} x2={W-PAD} y2={y(maxVal*p)} stroke='#F2F4F7' strokeWidth='1'/>
+              <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{'£'}{(maxVal*p).toFixed(0)}</text>
+            </g>
+          ))}
+          {months.map((m,i)=>(
+            <text key={m} x={x(i)} y={H-4} textAnchor='middle' fontSize='9' fill='#98A2B3'>{m}</text>
+          ))}
+          <path d={line(cfData.map(d=>d.inflow))+' L'+x(11)+' '+(H-PAD)+' L'+x(0)+' '+(H-PAD)+' Z'} fill='#10B98115'/>
+          <path d={line(cfData.map(d=>d.inflow))} fill='none' stroke='#10B981' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
+          <path d={line(cfData.map(d=>d.outflow))} fill='none' stroke='#EF4444' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
+          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#5B7CFA' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
+          {cfData.map((d,i)=>(
+            <g key={i}>
+              <circle cx={x(i)} cy={y(d.inflow)} r='3' fill='#10B981'/>
+              <circle cx={x(i)} cy={y(d.outflow)} r='3' fill='#EF4444'/>
+              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#5B7CFA'/>
+            </g>
+          ))}
+        </svg>
+      </div>
+      <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+        <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+          <span>Month</span><span>Money In</span><span>Money Out</span><span>Net</span><span>Cumulative</span>
+        </div>
+        {cfData.map((d,i)=>{
+          cumulative+=d.net
+          return(
+            <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
+              <span style={{fontWeight:500,color:'#101828'}}>{d.m} {year}</span>
+              <span style={{color:'#10B981'}}>£{d.inflow.toLocaleString()}</span>
+              <span style={{color:'#EF4444'}}>£{d.outflow.toLocaleString()}</span>
+              <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
+              <span>£{cumulative.toLocaleString()}</span>
+            </div>
+          )
+        })}
+        <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828',gap:8,borderTop:'2px solid #E4E7EC'}}>
+          <span>TOTAL {year}</span>
+          <span style={{color:'#10B981'}}>£{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
+          <span style={{color:'#EF4444'}}>£{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
+          <span>£{cfData.reduce((s,d)=>s+d.net,0).toLocaleString()}</span>
+          <span>—</span>
+        </div>
+      </div>
+    </div>
+  )
+}
 export default function DevPage() {
   const [tab, setTab] = useState('Dashboard')
   const [loading, setLoading] = useState(true)
@@ -270,66 +346,8 @@ export default function DevPage() {
                 ))}
               </div>
             )}
-            {bankingTab==='Cash Flow'&&(()=>{
-                const year = new Date().getFullYear()
-                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-                const cfData = months.map((m:string,i:number)=>{
-                  const inflow = transactions.filter((t:any)=>t.type==='Income'&&t.date?.startsWith(year+'-'+(String(i+1).padStart(2,'0')))).reduce((s:number,t:any)=>s+parseFloat(t.amount||0),0)
-                  const outflow = transactions.filter((t:any)=>t.type==='Expense'&&t.date?.startsWith(year+'-'+(String(i+1).padStart(2,'0')))).reduce((s:number,t:any)=>s+parseFloat(t.amount||0),0)
-                  return {m, inflow, outflow, net: inflow-outflow}
-                })
-                const maxVal = Math.max(...cfData.map((d:any)=>Math.max(d.inflow,d.outflow,Math.abs(d.net))),1)
-                const W=700,H=180,PAD=32
-                const x=(i:number)=>PAD+(i/(months.length-1))*(W-PAD*2)
-                const y=(v:number)=>H-PAD-(v/maxVal)*(H-PAD*2)
-                const line=(arr:number[])=>arr.map((v,i)=>(i===0?'M':'L')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ')
-                let cumulative=0
-                return (
-                  <div>
-                    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-                        <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Cash Flow ({year})</div>
-                        <div style={{display:'flex',gap:16,alignItems:'center'}}>
-                          <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Inflows</span></div>
-                          <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#EF4444',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Outflows</span></div>
-                          <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#5B7CFA',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
-                        </div>
-                      </div>
-                      <svg viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:H,overflow:'visible'}}>
-                        {[0,0.25,0.5,0.75,1].map((p:number,i:number)=>(<g key={i}><line x1={PAD} y1={y(maxVal*p)} x2={W-PAD} y2={y(maxVal*p)} stroke='#F2F4F7' strokeWidth='1'/><text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>£{(maxVal*p).toFixed(0)}</text></g>))}
-                        {months.map((m:string,i:number)=>(<text key={m} x={x(i)} y={H-4} textAnchor='middle' fontSize='9' fill='#98A2B3'>{m}</text>))}
-                        <path d={line(cfData.map((d:any)=>d.inflow))+' L'+x(11)+' '+(H-PAD)+' L'+x(0)+' '+(H-PAD)+' Z'} fill='#10B98115'/>
-                        <path d={line(cfData.map((d:any)=>d.inflow))} fill='none' stroke='#10B981' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-                        <path d={line(cfData.map((d:any)=>d.outflow))} fill='none' stroke='#EF4444' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-                        <path d={line(cfData.map((d:any)=>d.net))} fill='none' stroke='#5B7CFA' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
-                        {cfData.map((d:any,i:number)=>(<g key={i}><circle cx={x(i)} cy={y(d.inflow)} r='3' fill='#10B981'/><circle cx={x(i)} cy={y(d.outflow)} r='3' fill='#EF4444'/><circle cx={x(i)} cy={y(d.net)} r='3' fill='#5B7CFA'/></g>))}
-                      </svg>
-                    </div>
-                    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-                      <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                        <span>Month</span><span>Money In</span><span>Money Out</span><span>Net</span><span>Cumulative</span>
-                      </div>
-                      {cfData.map((d:any,i:number)=>{
-                        cumulative+=d.net
-                        return(<div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
-                          <span style={{fontWeight:500,color:'#101828'}}>{d.m} {year}</span>
-                          <span style={{color:'#10B981'}}>£{d.inflow.toLocaleString()}</span>
-                          <span style={{color:'#EF4444'}}>£{d.outflow.toLocaleString()}</span>
-                          <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
-                          <span>£{cumulative.toLocaleString()}</span>
-                        </div>)
-                      })}
-                      <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828',gap:8,borderTop:'2px solid #E4E7EC'}}>
-                        <span>TOTAL {year}</span>
-                        <span style={{color:'#10B981'}}>£{cfData.reduce((s:number,d:any)=>s+d.inflow,0).toLocaleString()}</span>
-                        <span style={{color:'#EF4444'}}>£{cfData.reduce((s:number,d:any)=>s+d.outflow,0).toLocaleString()}</span>
-                        <span>£{cfData.reduce((s:number,d:any)=>s+d.net,0).toLocaleString()}</span>
-                        <span>—</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()
+                        {bankingTab==='Cash Flow'&&(
+              <CashFlowTab transactions={transactions} />
             )}
 
           </div>
