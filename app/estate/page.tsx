@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const ACCENT = '#2D6A4F'
-const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Rent Collection','Vacancies','Expenses','Banking','Reports','Documents']
+const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Rent Collection','Vacancies','Expenses','Banking','Reports','Owner Reports','Documents']
 const NAV_REST = ['Contacts','Maintenance','Tasks','Notes','Messages','Candidates','Tools','Community']
 
 
@@ -196,6 +196,7 @@ export default function Page() {
             {section==='Properties'&&<button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
             {section==='Vacancies'&&<button onClick={()=>setShowAddVacancy(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
+            {section==='Owner Reports'&&<button style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Export Report</button>}
             {section==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Expense</button>}
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
@@ -708,6 +709,32 @@ export default function Page() {
             </div>
           )}
 
+
+          {section==='Owner Reports'&&(
+            <div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:20}}>
+                {[{label:'Annual Rent Roll',value:'£'+annualRent.toLocaleString()},{label:'Management Fee (15%)',value:'£'+Math.round(annualRent*0.15).toLocaleString()},{label:'Owner Share (85%)',value:'£'+Math.round(annualRent*0.85).toLocaleString(),green:true},{label:'Active Tenancies',value:tenancies.filter((t:any)=>t.status==='Active').length}].map((c:any)=>(
+                  <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
+                    <div style={{fontSize:24,fontWeight:800,color:c.green?'#10B981':'#101828'}}>{c.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+                <div style={{background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:12,padding:'20px 24px',textAlign:'center' as const}}><div style={{fontSize:11,fontWeight:600,color:'#6B7280',textTransform:'uppercase' as const,marginBottom:8}}>Owner Share (85%)</div><div style={{fontSize:32,fontWeight:800,color:'#10B981'}}>£{Math.round(annualRent*0.85).toLocaleString()}</div></div>
+                <div style={{background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:12,padding:'20px 24px',textAlign:'center' as const}}><div style={{fontSize:11,fontWeight:600,color:'#6B7280',textTransform:'uppercase' as const,marginBottom:8}}>Management Fee (15%)</div><div style={{fontSize:32,fontWeight:800,color:'#2563EB'}}>£{Math.round(annualRent*0.15).toLocaleString()}</div></div>
+              </div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                <div style={{padding:'14px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:13,fontWeight:600,color:'#101828'}}>Tenancy Revenue Breakdown</div>
+                {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No active tenancies yet</div>):tenancies.filter((t:any)=>t.status==='Active').map((t:any)=>(
+                  <div key={t.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
+                    <div><div style={{fontWeight:500,color:'#101828'}}>{t.tenant}</div><div style={{fontSize:11,color:'#667085'}}>{t.property}</div></div>
+                    <div style={{textAlign:'right' as const}}><div style={{fontWeight:600,color:'#10B981'}}>£{(parseFloat(t.rent)||0).toLocaleString()}/mo</div><div style={{fontSize:11,color:'#98A2B3'}}>Owner: £{Math.round((parseFloat(t.rent)||0)*0.85).toLocaleString()}/mo</div></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {(section==='Maintenance'||section==='Tasks'||section==='Messages'||section==='Documents'||section==='Notes'||section==='Contacts'||section==='Candidates'||section==='Bookings'||section==='Inventories'||section==='Units'||section==='Buildings'||section==='Tools'||section==='Community')&&(
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center'}}>
               <div style={{fontSize:48,marginBottom:16}}>🏗️</div>

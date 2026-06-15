@@ -4,7 +4,7 @@ import WeatherWidget from '@/components/WeatherWidget'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Inspections','Documents','Expenses','Banking','Reports','Statements']
+const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements']
 
 async function uploadFile(file: File, folder: string): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -748,6 +748,32 @@ export default function PMPage() {
           </div>
         )}
 
+
+        {tab==='Owner Reports'&&(
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:20}}>
+              {[{label:'Total Collected',value:'£'+totalCollected.toLocaleString()},{label:'Management Fee (20%)',value:'£'+Math.round(totalCollected*0.2).toLocaleString()},{label:'Owner Share (80%)',value:'£'+Math.round(totalCollected*0.8).toLocaleString(),green:true},{label:'Total Payments',value:payments.filter((p:any)=>p.status==='paid').length}].map((c:any)=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
+                  <div style={{fontSize:24,fontWeight:800,color:c.green?'#10B981':'#101828'}}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+              <div style={{background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:12,padding:'20px 24px',textAlign:'center' as const}}><div style={{fontSize:11,fontWeight:600,color:'#6B7280',textTransform:'uppercase' as const,marginBottom:8}}>Owner Share (80%)</div><div style={{fontSize:32,fontWeight:800,color:'#10B981'}}>£{Math.round(totalCollected*0.8).toLocaleString()}</div></div>
+              <div style={{background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:12,padding:'20px 24px',textAlign:'center' as const}}><div style={{fontSize:11,fontWeight:600,color:'#6B7280',textTransform:'uppercase' as const,marginBottom:8}}>Management Take (20%)</div><div style={{fontSize:32,fontWeight:800,color:'#2563EB'}}>£{Math.round(totalCollected*0.2).toLocaleString()}</div></div>
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{padding:'14px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:13,fontWeight:600,color:'#101828'}}>Payment Breakdown</div>
+              {payments.filter((p:any)=>p.status==='paid').length===0?(<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No payments recorded yet</div>):payments.filter((p:any)=>p.status==='paid').slice(0,10).map((p:any)=>(
+                <div key={p.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
+                  <div><div style={{fontWeight:500,color:'#101828'}}>{p.pm_tenants?.name??'—'}</div><div style={{fontSize:11,color:'#667085'}}>{p.pm_properties?.name??'—'}</div></div>
+                  <div style={{textAlign:'right' as const}}><div style={{fontWeight:600,color:'#10B981'}}>£{(p.amount??0).toLocaleString()}</div><div style={{fontSize:11,color:'#98A2B3'}}>Owner: £{Math.round((p.amount??0)*0.8).toLocaleString()}</div></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {tab==='Statements'&&(
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
             {[
