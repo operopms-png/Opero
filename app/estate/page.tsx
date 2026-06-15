@@ -712,29 +712,58 @@ export default function Page() {
 
           {section==='Owner Reports'&&(
             <div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:20}}>
-                {[{label:'Annual Rent Roll',value:'£'+annualRent.toLocaleString()},{label:'Management Fee (15%)',value:'£'+Math.round(annualRent*0.15).toLocaleString()},{label:'Owner Share (85%)',value:'£'+Math.round(annualRent*0.85).toLocaleString(),green:true},{label:'Active Tenancies',value:tenancies.filter((t:any)=>t.status==='Active').length}].map((c:any)=>(
-                  <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
-                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
-                    <div style={{fontSize:24,fontWeight:800,color:c.green?'#10B981':'#101828'}}>{c.value}</div>
-                  </div>
-                ))}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:20}}>
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:12,color:'#667085'}}>Annual Rent Roll</span></div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{annualRent.toLocaleString()}</div>
+                  <div style={{fontSize:12,color:'#98A2B3'}}>{tenancies.filter((t:any)=>t.status==='Active').length} active tenancies</div>
+                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,38 75,35 110,22 145,18 175,10 195,6" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="195" cy="6" r="3" fill="#10B981"/></svg>
+                </div>
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>🏘️</span><span style={{fontSize:12,color:'#667085'}}>Properties</span></div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>{properties.length}</div>
+                  <div style={{fontSize:12,color:'#98A2B3'}}>{tenants.length} tenants</div>
+                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,40 75,42 110,28 145,24 175,14 195,10" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>🏠</span><span style={{fontSize:12,color:'#667085'}}>Vacancies</span></div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#F59E0B',marginBottom:4}}>{vacancies.filter((v:any)=>v.status==='Available').length}</div>
+                  <div style={{fontSize:12,color:'#98A2B3'}}>units available</div>
+                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,20 40,22 75,18 110,25 145,20 175,28 195,24" fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/></svg>
+                </div>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-                <div style={{background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:12,padding:'20px 24px',textAlign:'center' as const}}><div style={{fontSize:11,fontWeight:600,color:'#6B7280',textTransform:'uppercase' as const,marginBottom:8}}>Owner Share (85%)</div><div style={{fontSize:32,fontWeight:800,color:'#10B981'}}>£{Math.round(annualRent*0.85).toLocaleString()}</div></div>
-                <div style={{background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:12,padding:'20px 24px',textAlign:'center' as const}}><div style={{fontSize:11,fontWeight:600,color:'#6B7280',textTransform:'uppercase' as const,marginBottom:8}}>Management Fee (15%)</div><div style={{fontSize:32,fontWeight:800,color:'#2563EB'}}>£{Math.round(annualRent*0.15).toLocaleString()}</div></div>
-              </div>
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-                <div style={{padding:'14px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:13,fontWeight:600,color:'#101828'}}>Tenancy Revenue Breakdown</div>
-                {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No active tenancies yet</div>):tenancies.filter((t:any)=>t.status==='Active').map((t:any)=>(
-                  <div key={t.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
-                    <div><div style={{fontWeight:500,color:'#101828'}}>{t.tenant}</div><div style={{fontSize:11,color:'#667085'}}>{t.property}</div></div>
-                    <div style={{textAlign:'right' as const}}><div style={{fontWeight:600,color:'#10B981'}}>£{(parseFloat(t.rent)||0).toLocaleString()}/mo</div><div style={{fontSize:11,color:'#98A2B3'}}>Owner: £{Math.round((parseFloat(t.rent)||0)*0.85).toLocaleString()}/mo</div></div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24,display:'flex',flexDirection:'column',alignItems:'center'}}>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:20,alignSelf:'flex-start'}}>Occupancy Rate</div>
+                  <svg viewBox="0 0 200 120" style={{width:'100%',maxWidth:200}}>
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#F3F4F6" strokeWidth="20" strokeLinecap="round"/>
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={ACCENT} strokeWidth="20" strokeLinecap="round"/>
+                    <text x="100" y="95" fontSize="22" fontWeight="800" fill="#101828" textAnchor="middle">{properties.length>0?Math.round(tenancies.filter((t:any)=>t.status==='Active').length/Math.max(properties.length,1)*100):0}%</text>
+                    <text x="100" y="115" fontSize="10" fill="#98A2B3" textAnchor="middle">occupancy rate</text>
+                  </svg>
+                </div>
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Owner vs Management Split</div>
+                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                    <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Owner (85%)</span><span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>£{Math.round(annualRent*0.85).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#10B981',borderRadius:4,width:'85%'}}></div></div></div>
+                    <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (15%)</span><span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{Math.round(annualRent*0.15).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:'15%'}}></div></div></div>
                   </div>
-                ))}
+                </div>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Active Tenancies</div>
+                  {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>):tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#101828',fontWeight:500}}>{t.tenant}</span><span style={{color:'#10B981',fontWeight:600}}>£{(parseFloat(t.rent)||0).toLocaleString()}/mo</span></div>))}
+                </div>
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Recent Finance</div>
+                  {tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#101828'}}>{t.tenant} — monthly rent</span><span style={{color:'#10B981',fontWeight:600}}>+£{(parseFloat(t.rent)||0).toLocaleString()}</span></div>))}
+                  {tenancies.filter((t:any)=>t.status==='Active').length===0&&<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>}
+                </div>
               </div>
             </div>
           )}
+
           {(section==='Maintenance'||section==='Tasks'||section==='Messages'||section==='Documents'||section==='Notes'||section==='Contacts'||section==='Candidates'||section==='Bookings'||section==='Inventories'||section==='Units'||section==='Buildings'||section==='Tools'||section==='Community')&&(
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center'}}>
               <div style={{fontSize:48,marginBottom:16}}>🏗️</div>
