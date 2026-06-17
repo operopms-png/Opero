@@ -160,7 +160,7 @@ export default function Sidebar() {
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
-          const hasModule = !group.module || (modules.includes(group.module) && roleModules.includes(group.module))
+          const hasModule = !group.module || group.module === 'ai' || (modules.includes(group.module) && roleModules.includes(group.module))
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#F2F4F7', margin: '6px 0' }} />}
