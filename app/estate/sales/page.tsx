@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const ACCENT = '#3B4AFF'
-const LABEL = 'DEVELOPMENTS'
+const LABEL = 'ESTATE AGENCY'
 const SECTIONS = ['Pipeline','Leads','Quotes','Documents','Meetings','Analytics']
 const STAGES = ['Enquiry','Qualified','Proposal','Negotiation','Won','Lost']
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}

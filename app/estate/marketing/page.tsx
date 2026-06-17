@@ -30,7 +30,7 @@ export default function Page() {
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>PROPERTY MANAGEMENT</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>ESTATE AGENCY</div>
           <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Marketing</div>
         </div>
         <div style={{display:'flex',gap:8}}>
