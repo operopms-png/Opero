@@ -77,9 +77,9 @@ const NAV_GROUPS = [
 ]
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate','invest'],
-  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest'],
-  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest'],
+  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate','invest','ai'],
+  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai'],
+  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai'],
 }
 
 function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
