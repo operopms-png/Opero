@@ -45,6 +45,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   </div>
   <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')" style="display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px"><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div><div style="width:15px;height:2px;background:#101828;border-radius:2px"></div><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div></button><div class="nav-links">
     <a href="#features">Features</a>
+    <a href="#ai-agents">AI Agents</a>
     <a href="#pricing">Pricing</a>
     <a href="#compare">Compare</a>
     <a href="#reviews">Reviews</a>
@@ -53,7 +54,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     <button class="btn-outline" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Log in</button>
     <button class="btn-primary" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Start free trial <i class="ti ti-arrow-right"></i></button>
   </div>
-</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#pricing" onclick="document.getElementById('mobileMenu').classList.remove('open')">Pricing</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
+</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#ai-agents" onclick="document.getElementById('mobileMenu').classList.remove('open')">AI Agents</a><a href="#pricing" onclick="document.getElementById('mobileMenu').classList.remove('open')">Pricing</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
 
 <section style="padding:96px 64px 72px;text-align:center;max-width:900px;margin:0 auto">
   <div style="display:inline-flex;align-items:center;gap:8px;background:#EEF1FF;border:1px solid #C7D2FE;border-radius:20px;padding:6px 14px;margin-bottom:24px">
@@ -69,21 +70,446 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   <p style="font-size:13px;color:#98A2B3">No credit card required &middot; 14-day free trial &middot; Cancel anytime</p>
 </section>
 
-<section style="padding:0 64px 72px">
-  <div class="module-strip">
-    <div class="module-item"><div class="module-icon"><i class="ti ti-home" style="color:#5B7CFA;font-size:18px"></i></div><div><div style="font-size:13px;font-weight:600">STR</div><div style="font-size:11px;color:#667085">Vacation Rentals</div></div></div>
-    <div class="module-divider"></div>
-    <div class="module-item"><div class="module-icon"><i class="ti ti-building" style="color:#5B7CFA;font-size:18px"></i></div><div><div style="font-size:13px;font-weight:600">PM</div><div style="font-size:11px;color:#667085">Property Management</div></div></div>
-    <div class="module-divider"></div>
-    <div class="module-item"><div class="module-icon"><i class="ti ti-certificate" style="color:#5B7CFA;font-size:18px"></i></div><div><div style="font-size:13px;font-weight:600">EA</div><div style="font-size:11px;color:#667085">Estate Agency</div></div></div>
-    <div class="module-divider"></div>
-    <div class="module-item"><div class="module-icon"><i class="ti ti-crane" style="color:#5B7CFA;font-size:18px"></i></div><div><div style="font-size:13px;font-weight:600">Dev</div><div style="font-size:11px;color:#667085">Developments</div></div></div>
-    <div class="module-divider"></div>
-    <div class="module-item"><div class="module-icon"><i class="ti ti-trending-up" style="color:#5B7CFA;font-size:18px"></i></div><div><div style="font-size:13px;font-weight:600">Invest</div><div style="font-size:11px;color:#667085">Deal Analyser</div></div></div>
-    <div class="module-divider"></div>
-    <div style="font-size:13px;color:#667085;max-width:180px;line-height:1.5">All modules work together seamlessly in one login.</div>
+<section class="section" id="how-it-works">
+  <div style="max-width:1000px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:48px">
+      <span class="tag">How it works</span>
+      <h2 style="font-size:36px;font-weight:700;margin:10px 0 12px">Up and running in four steps</h2>
+      <p style="font-size:15px;color:#667085;max-width:520px;margin:0 auto">No lengthy onboarding calls. Pick what you need and start using it the same day.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
+      <div style="position:relative">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">1</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Create your account</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Sign up free, no card required. Tell us a little about your portfolio.</div>
+      </div>
+      <div style="position:relative">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">2</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Pick your modules</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">STR, Property Management, Estate Agency, Developments, Invest — turn on only what you run.</div>
+      </div>
+      <div style="position:relative">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">3</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Connect your channels</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Sync calendars, link your bank, invite your team and contractors.</div>
+      </div>
+      <div style="position:relative">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">4</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Go live</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Bookings, rent, reporting and CRM all flow through one dashboard from day one.</div>
+      </div>
+    </div>
   </div>
 </section>
+
+<section class="section" id="see-it-in-action" style="background:#F9FAFB">
+  <div style="max-width:1000px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:36px">
+      <span class="tag">See it in action</span>
+      <h2 style="font-size:36px;font-weight:700;margin:10px 0 12px">One login. Every module.</h2>
+      <p style="font-size:15px;color:#667085;max-width:560px;margin:0 auto">Switch between Vacation Rentals, Property Management, Estate Agency, Developments and AI Agents — same login, same dashboard family.</p>
+    </div>
+
+    <style>
+    .prev-tabs{display:flex;gap:8px;background:#0d0d1a;padding:6px;border-radius:12px;margin:0 auto 28px;width:fit-content;flex-wrap:wrap;justify-content:center}
+    .prev-tab{padding:10px 22px;border-radius:8px;border:none;background:transparent;color:#9999b3;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
+    .prev-tab.prev-on{background:#5B7CFA;color:#fff}
+    .prev-tab:hover:not(.prev-on){color:#fff;background:rgba(255,255,255,0.08)}
+    .prev-devices{display:flex;gap:40px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+    .prev-laptop{width:660px;max-width:100%}
+    .prev-laptop-screen{background:#1a1a1a;border-radius:12px 12px 0 0;padding:12px 12px 0;box-shadow:0 30px 80px rgba(0,0,0,0.35)}
+    .prev-laptop-inner{background:#fff;border-radius:6px;overflow:hidden;height:400px;position:relative}
+    .prev-laptop-base{height:16px;background:linear-gradient(180deg,#3a3a3a,#2a2a2a);border-radius:0 0 9px 9px;position:relative}
+    .prev-laptop-base::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80px;height:4px;background:#1a1a1a;border-radius:0 0 5px 5px}
+    .prev-phone{width:230px;background:#0d0d0d;border-radius:34px;padding:9px;border:6px solid #2a2a2a;box-shadow:0 24px 70px rgba(0,0,0,0.35);position:relative;flex-shrink:0}
+    .prev-phone::before{content:'';position:absolute;top:19px;left:50%;transform:translateX(-50%);width:60px;height:5px;background:#1a1a1a;border-radius:8px;z-index:5}
+    .prev-phone-screen{background:#fff;border-radius:26px;overflow:hidden;height:460px;position:relative}
+    .prev-ui{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif}
+    .prev-screen{display:none;height:100%}
+    .prev-screen.prev-on{display:flex}
+    .prev-pscreen{display:none;height:100%;flex-direction:column}
+    .prev-pscreen.prev-on{display:flex}
+    .prev-sidebar{width:140px;background:#fff;border-right:1px solid #F2F4F7;padding:10px 0;flex-shrink:0;overflow:hidden}
+    .prev-logo-row{padding:0 12px 10px;border-bottom:1px solid #F2F4F7;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+    .prev-nav-group{font-size:8px;font-weight:700;color:#98A2B3;text-transform:uppercase;padding:5px 14px 2px}
+    .prev-nav-item{padding:5px 14px;font-size:10px;color:#667085}
+    .prev-nav-item.prev-on{margin:0 8px;padding:5px 7px;border-radius:5px;background:#EEF1FF;color:#5B7CFA;font-weight:600}
+    .prev-main{flex:1;padding:14px;overflow:hidden}
+    .prev-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+    .prev-stat{background:#F9FAFB;border:1px solid #E4E7EC;border-radius:7px;padding:8px}
+    .prev-stat-label{font-size:7px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:3px}
+    .prev-stat-value{font-size:15px;font-weight:700;color:#101828}
+    .prev-infopanel{display:none;width:660px;max-width:100%;background:#fff;border-radius:12px;padding:20px 24px;margin:0 auto}
+    .prev-infopanel.prev-on{display:block}
+    .prev-info-title{font-size:15px;font-weight:700;color:#101828;margin-bottom:4px}
+    .prev-info-sub{font-size:12px;color:#667085;margin-bottom:14px}
+    .prev-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .prev-info-item{display:flex;gap:8px;align-items:flex-start}
+    .prev-info-dot{width:6px;height:6px;border-radius:50%;background:#5B7CFA;margin-top:5px;flex-shrink:0}
+    .prev-info-text{font-size:12px;color:#344054;line-height:1.4}
+    @media(max-width:768px){.prev-devices{flex-direction:column;align-items:center}.prev-laptop{width:100%}}
+    </style>
+
+    <div class="prev-tabs">
+      <button class="prev-tab prev-on" data-prevtab="str">STR</button>
+      <button class="prev-tab" data-prevtab="pm">PM</button>
+      <button class="prev-tab" data-prevtab="ea">EA</button>
+      <button class="prev-tab" data-prevtab="dev">Dev</button>
+      <button class="prev-tab" data-prevtab="ai">AI Agents</button>
+    </div>
+
+    <div class="prev-devices">
+
+      <div class="prev-laptop">
+        <div class="prev-laptop-screen">
+          <div class="prev-laptop-inner prev-ui">
+
+            <div class="prev-screen prev-on" id="prevscreen-str">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Vacation Rentals</div>
+                <div class="prev-nav-item prev-on">Vacation Rentals</div>
+                <div class="prev-nav-item">CRM</div>
+                <div class="prev-nav-item">Marketing</div>
+                <div class="prev-nav-item">Sales</div>
+                <div class="prev-nav-item">Reporting</div>
+                <div class="prev-nav-item">Contractors</div>
+                <div class="prev-nav-item">Service</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:2px">Hello Jordan!</div>
+                <div style="font-size:9px;color:#667085;margin-bottom:12px">Sunday, 14 June 2026</div>
+                <div class="prev-stat-grid">
+                  <div class="prev-stat"><div class="prev-stat-label">Properties</div><div class="prev-stat-value" style="color:#5B7CFA">1</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Revenue</div><div class="prev-stat-value">£0</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Cleaning</div><div class="prev-stat-value" style="color:#F59E0B">0</div></div>
+                  <div class="prev-stat" style="background:#101828;border-color:#101828"><div class="prev-stat-label" style="color:rgba(255,255,255,0.5)">Maint.</div><div class="prev-stat-value" style="color:#fff">0</div></div>
+                </div>
+                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
+                  <div style="font-size:10px;font-weight:600;margin-bottom:8px">Revenue trends</div>
+                  <svg viewBox="0 0 280 50" style="width:100%;height:50px">
+                    <polyline points="10,40 55,34 100,36 145,22 190,18 235,8 270,4" fill="none" stroke="#5B7CFA" stroke-width="2"/>
+                    <circle cx="270" cy="4" r="3" fill="#5B7CFA"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-pm">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Property Management</div>
+                <div class="prev-nav-item prev-on">Property Management</div>
+                <div class="prev-nav-item">CRM</div>
+                <div class="prev-nav-item">Marketing</div>
+                <div class="prev-nav-item">Sales</div>
+                <div class="prev-nav-item">Reporting</div>
+                <div class="prev-nav-item">Contractors</div>
+                <div class="prev-nav-item">Service</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:12px">Property Management</div>
+                <div class="prev-stat-grid">
+                  <div class="prev-stat"><div class="prev-stat-label">Properties</div><div class="prev-stat-value" style="color:#5B7CFA">1</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Collected</div><div class="prev-stat-value" style="color:#10B981">£0</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Arrears</div><div class="prev-stat-value" style="color:#EF4444">£0</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Maint.</div><div class="prev-stat-value" style="color:#F59E0B">0</div></div>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
+                    <div style="font-size:10px;font-weight:600;margin-bottom:6px">Rent trends</div>
+                    <svg viewBox="0 0 130 40" style="width:100%;height:40px">
+                      <polyline points="5,32 25,26 45,28 65,14 85,11 105,5 125,2" fill="none" stroke="#10B981" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
+                    <div style="font-size:10px;font-weight:600;margin-bottom:6px">Occupancy</div>
+                    <div style="display:flex;gap:3px;align-items:flex-end;height:40px">
+                      <div style="flex:1;background:#E0E7FF;height:30%;border-radius:2px"></div>
+                      <div style="flex:1;background:#E0E7FF;height:40%;border-radius:2px"></div>
+                      <div style="flex:1;background:#5B7CFA;height:80%;border-radius:2px"></div>
+                      <div style="flex:1;background:#5B7CFA;height:100%;border-radius:2px"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-ea">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Estate Agency</div>
+                <div class="prev-nav-item prev-on">Estate Agency</div>
+                <div class="prev-nav-item">CRM</div>
+                <div class="prev-nav-item">Marketing</div>
+                <div class="prev-nav-item">Sales</div>
+                <div class="prev-nav-item">Reporting</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:12px">Finance overview</div>
+                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:12px;margin-bottom:10px">
+                  <div style="display:flex;gap:20px;margin-bottom:8px">
+                    <div><div style="font-size:8px;font-weight:600;color:#667085;text-transform:uppercase">Rent paid</div><div style="font-size:18px;font-weight:700;color:#10B981">1</div></div>
+                    <div><div style="font-size:8px;font-weight:600;color:#667085;text-transform:uppercase">Late rent</div><div style="font-size:18px;font-weight:700;color:#EF4444">1</div></div>
+                  </div>
+                  <div style="height:7px;background:#F3F4F6;border-radius:4px;overflow:hidden"><div style="width:40%;height:100%;background:linear-gradient(90deg,#10B981,#059669)"></div></div>
+                </div>
+                <div class="prev-stat-grid" style="grid-template-columns:repeat(2,1fr)">
+                  <div class="prev-stat"><div class="prev-stat-label">Gross income</div><div class="prev-stat-value">£923</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Net profit</div><div class="prev-stat-value" style="color:#5B7CFA">£923</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-dev">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Developments</div>
+                <div class="prev-nav-item prev-on">Developments</div>
+                <div class="prev-nav-item">CRM</div>
+                <div class="prev-nav-item">Marketing</div>
+                <div class="prev-nav-item">Sales</div>
+                <div class="prev-nav-item">Reporting</div>
+              </div>
+              <div class="prev-main" style="display:flex;gap:12px">
+                <div style="flex:1">
+                  <div style="font-size:12px;font-weight:700;color:#101828;margin-bottom:2px">Seacastle Phase II</div>
+                  <div style="font-size:8px;color:#667085;margin-bottom:12px">Project timeline</div>
+                  <div style="position:relative;padding-left:14px">
+                    <div style="position:absolute;left:4px;top:5px;bottom:5px;width:2px;background:#E4E7EC"></div>
+                    <div style="position:relative;margin-bottom:12px">
+                      <div style="position:absolute;left:-14px;top:2px;width:9px;height:9px;border-radius:50%;background:#10B981"></div>
+                      <div style="font-size:9px;font-weight:600;color:#101828">Land acquisition</div>
+                      <div style="font-size:7px;color:#667085">Completed · Jan</div>
+                    </div>
+                    <div style="position:relative;margin-bottom:12px">
+                      <div style="position:absolute;left:-14px;top:2px;width:9px;height:9px;border-radius:50%;background:#5B7CFA"></div>
+                      <div style="font-size:9px;font-weight:600;color:#101828">Foundation works</div>
+                      <div style="font-size:7px;color:#667085">Due Jul 2026</div>
+                      <div style="height:4px;background:#F3F4F6;border-radius:3px;margin-top:3px;width:100px"><div style="height:100%;width:62%;background:#5B7CFA;border-radius:3px"></div></div>
+                    </div>
+                    <div style="position:relative">
+                      <div style="position:absolute;left:-14px;top:2px;width:9px;height:9px;border-radius:50%;background:#E4E7EC"></div>
+                      <div style="font-size:9px;font-weight:600;color:#98A2B3">Structural build</div>
+                      <div style="font-size:7px;color:#98A2B3">Upcoming</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="width:120px;border-left:1px solid #F2F4F7;padding-left:12px">
+                  <div style="font-size:8px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:6px">Budget</div>
+                  <div style="font-size:14px;font-weight:700;color:#101828">£2.4M</div>
+                  <div style="font-size:7px;color:#10B981;margin-bottom:10px">68% allocated</div>
+                  <div style="background:#EEF1FF;color:#5B7CFA;font-size:8px;font-weight:600;padding:3px 7px;border-radius:5px;display:inline-block">On track</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-ai">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">AI Property Manager</div>
+                <div class="prev-nav-item prev-on">AI Property Manager</div>
+              </div>
+              <div class="prev-main">
+                <div style="background:#5B7CFA;border-radius:10px;padding:12px;color:#fff;margin-bottom:10px">
+                  <div style="font-size:8px;opacity:0.85;font-weight:600;text-transform:uppercase;margin-bottom:3px">AI Property Manager</div>
+                  <div style="font-size:13px;font-weight:700">2 of 6 agents active</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+                  <div style="background:#fff;border:1px solid #5B7CFA;border-radius:7px;padding:8px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Guest</div>
+                    <div style="font-size:7px;color:#10B981;font-weight:600">● Active</div>
+                  </div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Maint.</div>
+                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
+                  </div>
+                  <div style="background:#fff;border:1px solid #5B7CFA;border-radius:7px;padding:8px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8"><path d="M3 3l18 18M9 9l-6 6a2 2 0 002.83 2.83L12 11.8M14 4l6 6-3.5 3.5L10 7l4-3z"/></svg>
+                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Cleaning</div>
+                    <div style="font-size:7px;color:#10B981;font-weight:600">● Active</div>
+                  </div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Revenue</div>
+                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
+                  </div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Owner</div>
+                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
+                  </div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Leads</div>
+                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="prev-laptop-base"></div>
+      </div>
+
+      <div class="prev-phone">
+        <div class="prev-phone-screen prev-ui">
+
+          <div class="prev-pscreen prev-on" id="prevphone-str">
+            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;border-bottom:1px solid #F2F4F7">
+              <div style="display:flex;flex-direction:column;gap:3px"><div style="width:14px;height:2px;background:#101828"></div><div style="width:10px;height:2px;background:#101828"></div><div style="width:14px;height:2px;background:#101828"></div></div>
+              <span style="font-size:11px;font-weight:700">Bookings</span>
+              <div style="width:22px;height:22px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#5B7CFA">J</div>
+            </div>
+            <div style="padding:10px 14px 0">
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px">
+                <span style="font-size:7px;color:#98A2B3;text-align:center">M</span><span style="font-size:7px;color:#98A2B3;text-align:center">T</span><span style="font-size:7px;color:#98A2B3;text-align:center">W</span><span style="font-size:7px;color:#98A2B3;text-align:center">T</span><span style="font-size:7px;color:#98A2B3;text-align:center">F</span><span style="font-size:7px;color:#98A2B3;text-align:center">S</span><span style="font-size:7px;color:#98A2B3;text-align:center">S</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+                <div style="height:26px;border-radius:5px;background:#F9FAFB"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
+                <div style="height:26px;border-radius:5px;background:#EEF1FF"></div><div style="height:26px;border-radius:5px;background:#EEF1FF"></div>
+                <div style="height:26px;border-radius:5px;background:#EEF1FF"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
+                <div style="height:26px;border-radius:5px;background:#F9FAFB"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
+                <div style="height:26px;border-radius:5px;background:#F9FAFB"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
+                <div style="height:26px;border-radius:5px;background:#5B7CFA"></div><div style="height:26px;border-radius:5px;background:#5B7CFA"></div>
+                <div style="height:26px;border-radius:5px;background:#5B7CFA"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
+              </div>
+            </div>
+            <div style="padding:12px 14px 0">
+              <div style="font-size:9px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:6px">Check-ins</div>
+              <div style="background:#F9FAFB;border-radius:8px;padding:9px;margin-bottom:6px;display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600">Sarah J.</span><span style="font-size:9px;color:#5B7CFA;font-weight:600">Jun 11</span></div>
+              <div style="background:#F9FAFB;border-radius:8px;padding:9px;display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600">Marcus K.</span><span style="font-size:9px;color:#5B7CFA;font-weight:600">Jun 18</span></div>
+            </div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-pm">
+            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Rent collection</span></div>
+            <div style="padding:0 14px">
+              <div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:8px"><div style="font-size:8px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:3px">Collected</div><div style="font-size:18px;font-weight:700;color:#10B981">£0</div></div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:8px"><div style="font-size:8px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:3px">Arrears</div><div style="font-size:18px;font-weight:700;color:#EF4444">£0</div></div>
+            </div>
+            <div style="padding:6px 14px">
+              <div style="font-size:9px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:6px">Tenants</div>
+              <div style="background:#F9FAFB;border-radius:8px;padding:9px;display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600">Apt C1-12</span><span style="font-size:9px;color:#10B981">Paid</span></div>
+            </div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-ea">
+            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Estate Agency</span></div>
+            <div style="padding:0 14px">
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:12px;margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:9px;color:#667085">Rent paid</span><span style="font-size:11px;font-weight:700;color:#10B981">£923</span></div>
+                <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden"><div style="width:40%;height:100%;background:#10B981"></div></div>
+              </div>
+            </div>
+            <div style="padding:0 14px"><div style="background:#F9FAFB;border-radius:10px;padding:12px"><div style="font-size:8px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:3px">Net profit</div><div style="font-size:18px;font-weight:700;color:#5B7CFA">£923</div></div></div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-dev">
+            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Seacastle II</span></div>
+            <div style="padding:0 14px;position:relative;padding-left:24px">
+              <div style="position:absolute;left:18px;top:6px;bottom:6px;width:2px;background:#E4E7EC"></div>
+              <div style="position:relative;margin-bottom:14px"><div style="position:absolute;left:-6px;top:2px;width:9px;height:9px;border-radius:50%;background:#10B981"></div><div style="font-size:10px;font-weight:600">Land acquisition</div><div style="font-size:8px;color:#667085">Completed</div></div>
+              <div style="position:relative;margin-bottom:14px"><div style="position:absolute;left:-6px;top:2px;width:9px;height:9px;border-radius:50%;background:#5B7CFA"></div><div style="font-size:10px;font-weight:600">Foundation</div><div style="font-size:8px;color:#667085">62% · Jul 2026</div></div>
+              <div style="position:relative"><div style="position:absolute;left:-6px;top:2px;width:9px;height:9px;border-radius:50%;background:#E4E7EC"></div><div style="font-size:10px;font-weight:600;color:#98A2B3">Structural build</div><div style="font-size:8px;color:#98A2B3">Sep 2026</div></div>
+            </div>
+            <div style="margin-top:14px;padding:0 14px"><div style="background:#EEF1FF;color:#5B7CFA;font-size:9px;font-weight:600;padding:4px 9px;border-radius:6px;display:inline-block">£2.4M · On track</div></div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-ai">
+            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">AI Agents</span></div>
+            <div style="padding:0 14px;display:flex;flex-direction:column;gap:6px">
+              <div style="background:#fff;border:1px solid #5B7CFA;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Guest Agent</span><span style="font-size:8px;color:#10B981;font-weight:600">● Active</span></div>
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Maintenance</span><span style="font-size:8px;color:#98A2B3">○ Off</span></div>
+              <div style="background:#fff;border:1px solid #5B7CFA;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Cleaning</span><span style="font-size:8px;color:#10B981;font-weight:600">● Active</span></div>
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Revenue</span><span style="font-size:8px;color:#98A2B3">○ Off</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="prev-infopanel prev-on" id="previnfo-str">
+      <div class="prev-info-title">Vacation Rentals — £24/mo</div>
+      <div class="prev-info-sub">Bookings, CRM, cleaning, maintenance, banking, reports, contractor portal and guest comms in one module.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Direct booking engine + iCal sync across Airbnb/Vrbo</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Auto-scheduled cleaning after every checkout</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Owner reports with revenue & occupancy charts</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-pm">
+      <div class="prev-info-title">Property Management — £49/mo</div>
+      <div class="prev-info-sub">Tenants, leases, rent collection, inspections, banking and reports for long-term lets.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Automated rent reminders and arrears tracking</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Lease renewal alerts 60 days ahead</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Owner statements with 80/20 split breakdown</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-ea">
+      <div class="prev-info-title">Estate Agency — £59/mo</div>
+      <div class="prev-info-sub">Vacancies, rent collection, landlord portal, CRM and banking for agency operations.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Untapped income potential calculated from vacant units</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Loans & mortgages tracker with repayment progress</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Landlord-facing portal with live finance dashboard</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-dev">
+      <div class="prev-info-title">Developments — £55/mo</div>
+      <div class="prev-info-sub">Projects, budgets, investors, milestones and contractor management for build projects.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Milestone timeline with budget allocation tracking</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Multiple investors per project with avatar tracking</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Contractor management integrated with budgets</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-ai">
+      <div class="prev-info-title">AI Property Manager — £79/mo</div>
+      <div class="prev-info-sub">Six AI agents designed to reduce day-to-day admin while operating 24/7.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Guest Agent — 24/7 enquiry handling & check-in info</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Maintenance Coordinator — logs, assigns, tracks repairs</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Cleaning Coordinator — auto-schedules after bookings</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Revenue Manager — dynamic pricing & gap filling</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Owner Relations — automated monthly reports</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Lead Qualification — finds & scores landlord leads</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.prev-tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var key = btn.getAttribute('data-prevtab')
+    document.querySelectorAll('.prev-tab').forEach(function(t){t.classList.remove('prev-on')})
+    btn.classList.add('prev-on')
+    document.querySelectorAll('.prev-screen').forEach(function(s){s.classList.remove('prev-on')})
+    document.getElementById('prevscreen-'+key).classList.add('prev-on')
+    document.querySelectorAll('.prev-pscreen').forEach(function(s){s.classList.remove('prev-on')})
+    document.getElementById('prevphone-'+key).classList.add('prev-on')
+    document.querySelectorAll('.prev-infopanel').forEach(function(s){s.classList.remove('prev-on')})
+    document.getElementById('previnfo-'+key).classList.add('prev-on')
+  })
+})
+</script>
 
 <section class="section" id="features" style="background:#F9FAFB">
   <div style="text-align:center;margin-bottom:52px">
@@ -104,6 +530,51 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   </div>
 </section>
 
+<section class="section" id="ai-agents" style="background:#F9FAFB">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:40px">
+      <span class="tag">New</span>
+      <h2 style="font-size:36px;font-weight:700;margin:10px 0 12px">Let AI handle the day-to-day</h2>
+      <p style="font-size:15px;color:#667085;max-width:600px;margin:0 auto">Six AI agents built into Opero — designed to take routine guest, maintenance and reporting work off your plate.</p>
+    </div>
+    <div class="features-grid" style="margin-bottom:32px">
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Guest Agent</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Answers guest questions 24/7, sends check-in instructions, Wi-Fi details and house rules, and handles common complaints.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Maintenance Coordinator</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Logs issues, assigns jobs to contractors, tracks repairs and follows up until work is completed.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M3 3l18 18M9 9l-6 6a2 2 0 002.83 2.83L12 11.8M14 4l6 6-3.5 3.5L10 7l4-3z"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Cleaning Coordinator</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Automatically schedules cleaners after bookings, notifies them of turnovers and tracks completion.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Revenue Manager</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Adjusts nightly rates, monitors competitor pricing, raises rates in high demand and fills calendar gaps.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Owner Relations Manager</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Generates monthly income reports, occupancy reports, expense tracking and P&amp;L statements for owners.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Lead Qualification Agent</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Finds landlord leads, qualifies property owners, books appointments and follows up with prospects.</div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <button class="btn-primary" onclick="window.location.href='/login'">Add AI Property Manager — £79/mo <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="pricing">
   <div style="text-align:center;margin-bottom:52px">
     <span class="tag" style="display:block;margin-bottom:10px">Pricing</span>
@@ -111,13 +582,14 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     <p style="font-size:16px;color:#667085">Add modules as your business grows. Save 33% with the full bundle.</p>
   </div>
   <div class="pricing-grid-top">
-    <div class="pricing-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="module-icon"><i class="ti ti-home" style="color:#5B7CFA;font-size:16px"></i></div><div style="font-size:14px;font-weight:600">Vacation Rentals</div></div><div style="font-size:32px;font-weight:700;color:#5B7CFA;margin-bottom:10px">£39<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div><div style="font-size:12px;color:#667085;line-height:1.8">Bookings &middot; CRM &middot; Cleaning &middot; Maintenance &middot; Banking &middot; Reports &middot; Guest comms</div></div>
+    <div class="pricing-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="module-icon"><i class="ti ti-home" style="color:#5B7CFA;font-size:16px"></i></div><div style="font-size:14px;font-weight:600">Vacation Rentals</div></div><div style="font-size:32px;font-weight:700;color:#5B7CFA;margin-bottom:10px">£24<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div><div style="font-size:12px;color:#667085;line-height:1.8">Bookings &middot; CRM &middot; Cleaning &middot; Maintenance &middot; Banking &middot; Reports &middot; Guest comms</div></div>
     <div class="pricing-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="module-icon"><i class="ti ti-building" style="color:#5B7CFA;font-size:16px"></i></div><div style="font-size:14px;font-weight:600">Property Management</div></div><div style="font-size:32px;font-weight:700;color:#5B7CFA;margin-bottom:10px">£49<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div><div style="font-size:12px;color:#667085;line-height:1.8">Tenants &middot; Leases &middot; Rent collection &middot; Inspections &middot; Banking &middot; Reports</div></div>
     <div class="pricing-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="module-icon"><i class="ti ti-certificate" style="color:#5B7CFA;font-size:16px"></i></div><div style="font-size:14px;font-weight:600">Estate Agency</div></div><div style="font-size:32px;font-weight:700;color:#5B7CFA;margin-bottom:10px">£59<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div><div style="font-size:12px;color:#667085;line-height:1.8">Vacancies &middot; Rent collection &middot; Landlord portal &middot; CRM &middot; Banking</div></div>
   </div>
   <div class="pricing-grid-bottom">
     <div class="pricing-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="module-icon"><i class="ti ti-crane" style="color:#5B7CFA;font-size:16px"></i></div><div style="font-size:14px;font-weight:600">Developments</div></div><div style="font-size:32px;font-weight:700;color:#5B7CFA;margin-bottom:10px">£55<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div><div style="font-size:12px;color:#667085;line-height:1.8">Projects &middot; Budgets &middot; Investors &middot; Milestones &middot; Contractor management</div></div>
     <div class="pricing-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="module-icon"><i class="ti ti-trending-up" style="color:#5B7CFA;font-size:16px"></i></div><div style="font-size:14px;font-weight:600">Invest</div></div><div style="font-size:32px;font-weight:700;color:#5B7CFA;margin-bottom:10px">£19<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div><div style="font-size:12px;color:#667085;line-height:1.8">8 strategies &middot; Deal analyser &middot; Watchlist &middot; Saved deals &middot; ROI calculator</div></div>
+    <div class="pricing-card" style="background:#5B7CFA;border-color:#5B7CFA;position:relative;overflow:hidden"><div style="position:absolute;top:0;right:0;background:rgba(255,255,255,0.2);color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:0 0 0 8px">BEST VALUE</div><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div class="module-icon" style="background:rgba(255,255,255,0.15)"><i class="ti ti-stack-2" style="color:#fff;font-size:16px"></i></div><div style="font-size:14px;font-weight:600;color:#fff">All Modules Bundle</div></div><div style="font-size:32px;font-weight:700;color:#fff;margin-bottom:10px">£149<span style="font-size:14px;font-weight:400;color:rgba(255,255,255,0.7)">/mo</span></div><div style="font-size:12px;color:rgba(255,255,255,0.85);line-height:1.8">Every module included &middot; STR, PM, EA, Dev & Invest &middot; Save over £55/mo vs buying separately</div></div>
     <div class="bundle-card"><span class="save-badge">Best value</span><div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:8px;margin-top:10px">All 5 modules</div><div style="font-size:32px;font-weight:700;color:#fff;margin-bottom:8px">£149<span style="font-size:14px;font-weight:400;color:rgba(255,255,255,0.7)">/mo</span></div><div style="font-size:12px;color:rgba(255,255,255,0.8);margin-bottom:16px">Save £72/mo vs buying separately</div><button onclick="window.location.href='/login'" style="background:#fff;color:#5B7CFA;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;width:100%">Get the bundle</button></div>
   </div>
   <p style="text-align:center;font-size:12px;color:#98A2B3;margin-top:16px">All plans include 14-day free trial &middot; Annual billing saves 2 months</p>
@@ -129,14 +601,45 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     <h2 style="font-size:36px;font-weight:700;margin-bottom:12px">More features. Lower price.</h2>
     <p style="font-size:16px;color:#667085;max-width:480px;margin:0 auto">Here's what you'd pay piecing together the same features across separate tools.</p>
   </div>
-  <div class="compare-row"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Vacation Rentals</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£39/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Alternatives</div><div><span class="competitor-tag">Smoobu €25 — no CRM or banking</span><span class="competitor-tag">Lodgify £29 — extras cost more</span><span class="competitor-tag">Hostaway £40+ — no reports built in</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: bookings, CRM, cleaning, maintenance, banking, reports, contractor portal, guest comms</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£30–80/mo</div></div></div>
+  <div class="compare-row"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Vacation Rentals</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£24/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Alternatives</div><div><span class="competitor-tag">Smoobu €25-29 — no CRM or banking</span><span class="competitor-tag">Lodgify £29 — extras cost more</span><span class="competitor-tag">Hostaway £80+ — no reports built in</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: bookings, CRM, cleaning, maintenance, banking, reports, contractor portal, guest comms</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£5–60/mo</div></div></div>
   <div class="compare-row"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Property Management</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£49/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Alternatives</div><div><span class="competitor-tag">Arthur Online £45–90 — complex UI</span><span class="competitor-tag">Landlord Vision £29 — very basic</span><span class="competitor-tag">Buildium $50–150 — US-focused</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: tenants, leases, rent collection, inspections, banking, reconciliation, contractor portal</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£40–120/mo</div></div></div>
   <div class="compare-row"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Estate Agency</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£59/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Alternatives</div><div><span class="competitor-tag">Jupix £100–200/mo</span><span class="competitor-tag">Alto £150+/mo</span><span class="competitor-tag">Reapit £200+/mo</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: vacancies, rent collection, landlord portal, CRM, banking, compliance tracking</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£40–140/mo</div></div></div>
   <div class="compare-row"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Developments</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£55/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Alternatives</div><div><span class="competitor-tag">Procore £300+/mo</span><span class="competitor-tag">Buildertrend $99+/mo</span><span class="competitor-tag">CoConstruct $99+/mo</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: projects, budgets, milestones, investor tracking, contractor management, banking</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£44–245/mo</div></div></div>
-  <div class="compare-row" style="margin-bottom:16px"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Invest</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£19/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Alternatives</div><div><span class="competitor-tag">Lendlord £25/mo — analysis only</span><span class="competitor-tag">Property Filter £29/mo — sourcing only</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: 8 strategies, deal analyser, watchlist, saved deals comparison</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£6–10/mo</div></div></div>
+  <div class="compare-row"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Invest</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£19/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Alternatives</div><div><span class="competitor-tag">Lendlord £25/mo — analysis only</span><span class="competitor-tag">Property Filter £29/mo — sourcing only</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: 8 strategies, deal analyser, watchlist, saved deals comparison</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£6–10/mo</div></div></div>
+  <div class="compare-row" style="margin-bottom:16px;background:#EEF1FF;border-color:#5B7CFA"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px">All Modules Bundle</div><div style="font-size:24px;font-weight:700;color:#5B7CFA">£149/mo</div></div><div><div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">vs buying separately</div><div><span class="competitor-tag">5 modules at full price: £206/mo</span><span class="competitor-tag">Hostaway-style enterprise quotes: £400+/mo</span></div><div style="font-size:12px;color:#667085;margin-top:8px">Opero includes: every module — STR, PM, EA, Dev & Invest — under one login, one bill</div></div><div style="text-align:right"><div style="font-size:11px;color:#667085">You save</div><div style="font-size:22px;font-weight:700;color:#10B981">£57+/mo</div></div></div>
   <div style="background:#5B7CFA;border-radius:12px;padding:28px 32px;display:flex;justify-content:space-between;align-items:center">
     <div><div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:6px">All 5 modules &middot; £149/mo</div><div style="font-size:16px;font-weight:600;color:#fff">Competitors charge £500–700/mo for equivalent tools across 5 separate platforms</div></div>
     <button onclick="window.location.href='/login'" style="background:#fff;color:#5B7CFA;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:8px">Get the bundle <i class="ti ti-arrow-right"></i></button>
+  </div>
+</section>
+
+<section class="section">
+  <div style="max-width:900px;margin:0 auto;text-align:center">
+    <span class="tag">Why Opero</span>
+    <h2 style="font-size:32px;font-weight:700;margin:10px 0 16px">Built by people who run property businesses</h2>
+    <p style="font-size:15px;color:#667085;line-height:1.7;max-width:680px;margin:0 auto 28px">Opero started as an internal tool for managing a short-let and lettings portfolio across Jamaica, the UK, the US and Dubai. We got tired of stitching together five different platforms for bookings, CRM, cleaning, banking and reporting — so we built the one we wished existed, and opened it up for other property operators.</p>
+    <div style="display:flex;justify-content:center;gap:36px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Short-term rentals</div>
+        <div style="font-size:12px;color:#667085">Hosts &amp; co-hosts</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Property management</div>
+        <div style="font-size:12px;color:#667085">Letting agents &amp; landlords</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Estate agencies</div>
+        <div style="font-size:12px;color:#667085">Sales &amp; lettings teams</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Developers</div>
+        <div style="font-size:12px;color:#667085">Project &amp; investor management</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Investors</div>
+        <div style="font-size:12px;color:#667085">Deal analysis &amp; sourcing</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -152,6 +655,41 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   </div>
 </section>
 
+<section class="section" id="faq" style="background:#F9FAFB">
+  <div style="max-width:760px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:36px">
+      <span class="tag">FAQ</span>
+      <h2 style="font-size:36px;font-weight:700;margin:10px 0 0">Questions, answered</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Can I use just one module?</summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes. Every module — Vacation Rentals, Property Management, Estate Agency, Developments and Invest — can be activated on its own. Add more later as your business grows.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Is there a contract or minimum term?</summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">No. Opero is billed monthly with no lock-in. Cancel any time from your account settings.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Do you take a commission on bookings?</summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">No. Your subscription price is fixed — we don't take a cut of your booking revenue or rent collected.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Can I switch plans later?</summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes, you can upgrade, downgrade, or add/remove modules at any time. Changes apply from your next billing cycle.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">What happens to my data if I cancel?</summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">You can export your bookings, tenants, and financial records at any time. We retain your data for a limited period after cancellation in case you want to return, then it's deleted.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Is the AI Property Manager fully autonomous?</summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">AI Property Manager is an actively developing feature. Today it gives you a central place to manage and log AI-assisted workflows across guest communication, maintenance, cleaning, pricing, owner reporting and lead qualification — with deeper automation rolling out over time.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
 <section class="cta-section">
   <h2 style="font-size:42px;font-weight:700;color:#fff;margin-bottom:16px">Ready to run your property business smarter?</h2>
   <p style="font-size:17px;color:rgba(255,255,255,0.8);margin-bottom:36px;max-width:500px;margin-left:auto;margin-right:auto">Join operators across the UK, Jamaica, US and Dubai already using Opero.</p>
@@ -159,16 +697,53 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   <p style="font-size:13px;color:rgba(255,255,255,0.6)">14-day free trial &middot; No credit card required &middot; Cancel anytime</p>
 </section>
 
-<footer>
-  <div style="display:flex;align-items:center;gap:8px">
-    <div style="width:26px;height:26px;background:#5B7CFA;border-radius:6px;display:flex;align-items:center;justify-content:center"><i class="ti ti-building-skyscraper" style="color:#fff;font-size:13px"></i></div>
-    <span style="font-size:15px;font-weight:700">Opero</span>
+<footer style="flex-direction:column;align-items:stretch;gap:0;padding:56px 64px 28px">
+  <div style="display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap;padding-bottom:36px;border-bottom:1px solid #F2F4F7;margin-bottom:24px">
+    <div style="max-width:260px">
+      <img src="/logo.PNG" alt="Opero" style="height:30px;width:auto;margin-bottom:14px"/>
+      <p style="font-size:13px;color:#667085;line-height:1.6">The all-in-one platform for vacation rentals, property management, estate agencies, developments and property investment.</p>
+    </div>
+    <div style="display:flex;gap:48px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Product</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="#features" style="font-size:13px;color:#667085">Features</a>
+          <a href="#pricing" style="font-size:13px;color:#667085">Pricing</a>
+          <a href="#compare" style="font-size:13px;color:#667085">Compare</a>
+          <a href="#ai-agents" style="font-size:13px;color:#667085">AI Property Manager</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Modules</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="/login" style="font-size:13px;color:#667085">Vacation Rentals</a>
+          <a href="/login" style="font-size:13px;color:#667085">Property Management</a>
+          <a href="/login" style="font-size:13px;color:#667085">Estate Agency</a>
+          <a href="/login" style="font-size:13px;color:#667085">Developments</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Company</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="#faq" style="font-size:13px;color:#667085">FAQ</a>
+          <a href="/login" style="font-size:13px;color:#667085">Log in</a>
+          <a href="mailto:hello@helloopero.com" style="font-size:13px;color:#667085">Contact</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Legal</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="#" style="font-size:13px;color:#667085">Privacy policy</a>
+          <a href="#" style="font-size:13px;color:#667085">Terms of service</a>
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="font-size:12px;color:#98A2B3">&copy; 2026 Opero. All rights reserved.</div>
-  <div class="footer-links">
-    <a href="#">Privacy</a>
-    <a href="#">Terms</a>
-    <a href="/login">Log in</a>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:12px;color:#98A2B3">&copy; 2026 Opero. All rights reserved.</div>
+    <div style="display:flex;gap:14px">
+      <a href="https://www.instagram.com/hellooperoofficial" style="font-size:12px;color:#98A2B3">Instagram</a>
+    </div>
   </div>
 </footer>
 
