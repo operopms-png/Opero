@@ -46,6 +46,14 @@ const NAV_GROUPS = [
     ]
   },
   {
+    label: 'AI Property Manager',
+    module: 'ai',
+    modulePrice: '£79/mo',
+    items: [
+      { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles' },
+    ]
+  },
+  {
     label: 'Invest',
     items: [
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator' },
