@@ -126,28 +126,61 @@ export default function Page() {
   useEffect(()=>{
     supabase.auth.getUser().then(({data:{user}})=>{
       if(!user){window.location.href='/login';return}
-      setLoading(false)
+      loadAll()
     })
   },[])
 
-  const addProperty = () => {
+  async function loadAll() {
+    const [p,t,tn,v,m,e,ba,tx,r] = await Promise.all([
+      supabase.from('estate_properties').select('*').order('created_at',{ascending:false}),
+      supabase.from('estate_tenants').select('*').order('created_at',{ascending:false}),
+      supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name)').order('created_at',{ascending:false}),
+      supabase.from('estate_vacancies').select('*,estate_properties(name)').order('created_at',{ascending:false}),
+      supabase.from('estate_mortgages').select('*,estate_properties(name)').order('created_at',{ascending:false}),
+      supabase.from('estate_expenses').select('*').order('created_at',{ascending:false}),
+      supabase.from('estate_bank_accounts').select('*').order('created_at',{ascending:false}),
+      supabase.from('estate_transactions').select('*').order('date',{ascending:false}),
+      supabase.from('estate_rent_schedules').select('*').order('created_at',{ascending:false}),
+    ])
+    setProperties(p.data??[]); setTenants(t.data??[]); setTenancies(tn.data??[])
+    setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
+    setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
+    setLoading(false)
+  }
+
+  async function saveRecord(table: string, data: any, id?: any) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (id) {
+      await supabase.from(table).update(data).eq('id', id)
+    } else {
+      await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+    }
+    await loadAll()
+  }
+
+  async function delRecord(table: string, id: any) {
+    await supabase.from(table).delete().eq('id', id)
+    await loadAll()
+  }
+
+  const addProperty = async () => {
     if(!prop.name) return
-    if(editItem) { setProperties(properties.map(p=>p.id===editItem.id?{...p,...prop}:p)); setEditItem(null) }
-    else setProperties([...properties,{id:Date.now(),...prop}])
+    await saveRecord('estate_properties', prop, editItem?.id)
+    setEditItem(null)
     setProp({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})
     setShowAddProperty(false)
   }
-  const addTenant = () => {
+  const addTenant = async () => {
     if(!ten.name) return
-    if(editItem) { setTenants(tenants.map(t=>t.id===editItem.id?{...t,...ten}:t)); setEditItem(null) }
-    else setTenants([...tenants,{id:Date.now(),...ten}])
+    await saveRecord('estate_tenants', ten, editItem?.id)
+    setEditItem(null)
     setTen({name:'',email:'',phone:'',dob:''})
     setShowAddTenant(false)
   }
-  const addTenancy = () => {
+  const addTenancy = async () => {
     if(!tenancy.property) return
-    if(editItem) { setTenancies(tenancies.map(t=>t.id===editItem.id?{...t,...tenancy}:t)); setEditItem(null) }
-    else setTenancies([...tenancies,{id:Date.now(),...tenancy}])
+    await saveRecord('estate_tenancies', {property_id:tenancy.property,tenant_id:tenancy.tenant,start_date:tenancy.start,end_date:tenancy.end,rent:tenancy.rent,deposit:tenancy.deposit,status:tenancy.status}, editItem?.id)
+    setEditItem(null)
     setTenancy({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active'})
     setShowAddTenancy(false)
   }
@@ -323,7 +356,7 @@ export default function Page() {
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:p.status==='Rented'?'#FEF3C7':p.status==='Available'?'#ECFDF5':'#F2F4F7',color:p.status==='Rented'?'#F59E0B':p.status==='Available'?'#10B981':'#667085',display:'inline-block'}}>{p.status}</span>
                   <div style={{display:'flex',gap:4}}>
                     <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,rent:p.rent,status:p.status});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
-                    <button onClick={()=>setProperties(properties.filter(x=>x.id!==p.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    <button onClick={()=>delRecord('estate_properties',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
               ))}
@@ -356,7 +389,7 @@ export default function Page() {
                   <span style={{fontSize:13,color:'#344054'}}>{t.dob||'—'}</span>
                   <div style={{display:'flex',gap:4}}>
                     <button onClick={()=>{setEditItem(t);setTen({name:t.name,email:t.email,phone:t.phone,dob:t.dob});setShowAddTenant(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
-                    <button onClick={()=>setTenants(tenants.filter(x=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    <button onClick={()=>delRecord('estate_tenants',t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
               ))}
@@ -367,8 +400,8 @@ export default function Page() {
             {showAddTenancy&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit tenancy':'Add tenancy'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={labelStyle}>Property *</label><select value={tenancy.property} onChange={e=>setTenancy({...tenancy,property:e.target.value})} style={inputStyle}><option value="">Select property</option>{properties.map(p=><option key={p.id}>{p.name}</option>)}</select></div>
-                <div><label style={labelStyle}>Tenant</label><select value={tenancy.tenant} onChange={e=>setTenancy({...tenancy,tenant:e.target.value})} style={inputStyle}><option value="">Select tenant</option>{tenants.map(t=><option key={t.id}>{t.name}</option>)}</select></div>
+                <div><label style={labelStyle}>Property *</label><select value={tenancy.property} onChange={e=>setTenancy({...tenancy,property:e.target.value})} style={inputStyle}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                <div><label style={labelStyle}>Tenant</label><select value={tenancy.tenant} onChange={e=>setTenancy({...tenancy,tenant:e.target.value})} style={inputStyle}><option value="">Select tenant</option>{tenants.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Start date</label><input value={tenancy.start} onChange={e=>setTenancy({...tenancy,start:e.target.value})} type="date" style={inputStyle}/></div>
                 <div><label style={labelStyle}>End date</label><input value={tenancy.end} onChange={e=>setTenancy({...tenancy,end:e.target.value})} type="date" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Monthly rent (£)</label><input value={tenancy.rent} onChange={e=>setTenancy({...tenancy,rent:e.target.value})} type="number" placeholder="0.00" style={inputStyle}/></div>
@@ -384,17 +417,17 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 100px 100px 80px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span>Property</span><span>Tenant</span><span>Start</span><span>End</span><span>Rent/mo</span><span>Status</span><span></span>
               </div>
-              {tenancies.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No tenancies yet</div><div style={{fontSize:13}}>Add your first tenancy to get started.</div></div>):tenancies.map(t=>(
+              {tenancies.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No tenancies yet</div><div style={{fontSize:13}}>Add your first tenancy to get started.</div></div>):tenancies.map((t:any)=>(
                 <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 100px 100px 80px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.property}</span>
-                  <span style={{fontSize:13,color:'#344054'}}>{t.tenant||'—'}</span>
-                  <span style={{fontSize:12,color:'#667085'}}>{t.start||'—'}</span>
-                  <span style={{fontSize:12,color:'#667085'}}>{t.end||'—'}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.estate_properties?.name??'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{t.estate_tenants?.name||'—'}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{t.start_date||'—'}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{t.end_date||'—'}</span>
                   <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{t.rent?'£'+t.rent:' —'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:t.status==='Active'?'#ECFDF5':t.status==='Pending'?'#FEF3C7':'#FEE2E2',color:t.status==='Active'?'#10B981':t.status==='Pending'?'#F59E0B':'#EF4444',display:'inline-block'}}>{t.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(t);setTenancy({property:t.property,tenant:t.tenant,start:t.start,end:t.end,rent:t.rent,deposit:t.deposit,status:t.status});setShowAddTenancy(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
-                    <button onClick={()=>setTenancies(tenancies.filter(x=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    <button onClick={()=>{setEditItem(t);setTenancy({property:t.property_id,tenant:t.tenant_id,start:t.start_date,end:t.end_date,rent:t.rent,deposit:t.deposit,status:t.status});setShowAddTenancy(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>delRecord('estate_tenancies',t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
               ))}
@@ -483,7 +516,7 @@ export default function Page() {
             {showAddVacancy&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add vacancy</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={labelStyle}>Property name *</label><select value={vacForm.property} onChange={e=>setVacForm({...vacForm,property:e.target.value})} style={inputStyle}><option value=''>Select property</option>{properties.map(p=><option key={p.id}>{p.name}</option>)}</select></div>
+                <div><label style={labelStyle}>Property name *</label><select value={vacForm.property} onChange={e=>setVacForm({...vacForm,property:e.target.value})} style={inputStyle}><option value=''>Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Room type</label><select value={vacForm.roomType} onChange={e=>setVacForm({...vacForm,roomType:e.target.value})} style={inputStyle}>{['Whole Unit','Single','Double','Suite','Studio'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={labelStyle}>Monthly rent (£)</label><input value={vacForm.rent} onChange={e=>setVacForm({...vacForm,rent:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Bedrooms</label><select value={vacForm.bedrooms} onChange={e=>setVacForm({...vacForm,bedrooms:e.target.value})} style={inputStyle}>{['Studio','1','2','3','4','5','6+'].map(b=><option key={b}>{b}</option>)}</select></div>
@@ -492,7 +525,7 @@ export default function Page() {
                 <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Description</label><input value={vacForm.description} onChange={e=>setVacForm({...vacForm,description:e.target.value})} placeholder='Brief description of the unit...' style={inputStyle}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!vacForm.property)return;setVacancies([...vacancies,{id:Date.now(),...vacForm,status:'Available',created:new Date().toISOString().split('T')[0]}]);setVacForm({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''});setShowAddVacancy(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add vacancy</button>
+                <button onClick={()=>{if(!vacForm.property)return;saveRecord('estate_vacancies',{property_id:vacForm.property,type:vacForm.type,room_type:vacForm.roomType,rent:vacForm.rent,available_date:vacForm.available,bedrooms:vacForm.bedrooms,description:vacForm.description});setVacForm({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''});setShowAddVacancy(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add vacancy</button>
                 <button onClick={()=>setShowAddVacancy(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -516,16 +549,16 @@ export default function Page() {
                     <div style={{background:ACCENT+'15',height:80,display:'flex',alignItems:'center',justifyContent:'center',fontSize:32}}>🏠</div>
                     <div style={{padding:16}}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-                        <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{v.property}</div>
+                        <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{v.estate_properties?.name??'—'}</div>
                         <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#ECFDF5',color:'#10B981'}}>{v.status}</span>
                       </div>
-                      <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{v.roomType} · {v.bedrooms} bed · {v.type}</div>
+                      <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{v.room_type} · {v.bedrooms} bed · {v.type}</div>
                       {v.description&&<div style={{fontSize:12,color:'#667085',marginBottom:8}}>{v.description}</div>}
                       <div style={{fontSize:18,fontWeight:700,color:ACCENT,marginBottom:8}}>£{parseFloat(v.rent||0).toLocaleString()}<span style={{fontSize:12,fontWeight:400,color:'#667085'}}>/mo</span></div>
-                      {v.available&&<div style={{fontSize:11,color:'#667085',marginBottom:12}}>Available from {v.available}</div>}
+                      {v.available_date&&<div style={{fontSize:11,color:'#667085',marginBottom:12}}>Available from {v.available_date}</div>}
                       <div style={{display:'flex',gap:6}}>
-                        <button onClick={()=>setVacancies(vacancies.map(x=>x.id===v.id?{...x,status:x.status==='Available'?'Let Agreed':'Available'}:x))} style={{flex:1,padding:'7px',borderRadius:6,border:'none',background:v.status==='Available'?ACCENT:'#F2F4F7',color:v.status==='Available'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{v.status==='Available'?'Mark let':'Re-list'}</button>
-                        <button onClick={()=>setVacancies(vacancies.filter(x=>x.id!==v.id))} style={{padding:'7px 10px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                        <button onClick={()=>saveRecord('estate_vacancies',{status:v.status==='Available'?'Let Agreed':'Available'},v.id)} style={{flex:1,padding:'7px',borderRadius:6,border:'none',background:v.status==='Available'?ACCENT:'#F2F4F7',color:v.status==='Available'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{v.status==='Available'?'Mark let':'Re-list'}</button>
+                        <button onClick={()=>delRecord('estate_vacancies',v.id)} style={{padding:'7px 10px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                       </div>
                     </div>
                   </div>
@@ -538,9 +571,9 @@ export default function Page() {
             {/* Summary stats */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
               {[
-                {l:'Interest Paid',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.interestPaid||0)),0).toLocaleString(),c:'#667085'},
-                {l:'Outstanding Capital',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaidCapital||0)),0).toLocaleString(),c:'#EF4444'},
-                {l:'Monthly Payments',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.monthlyPayment||0)),0).toLocaleString(),c:ACCENT},
+                {l:'Interest Paid',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.interest_paid||0)),0).toLocaleString(),c:'#667085'},
+                {l:'Outstanding Capital',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaid_capital||0)),0).toLocaleString(),c:'#EF4444'},
+                {l:'Monthly Payments',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.monthly_payment||0)),0).toLocaleString(),c:ACCENT},
               ].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{s.l}</div>
@@ -552,7 +585,7 @@ export default function Page() {
               {[
                 {l:'Insurance Paid',v:'£0'},
                 {l:'Already Refunded',v:'£0'},
-                {l:'Remaining to Pay',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaidCapital||0)),0).toLocaleString()},
+                {l:'Remaining to Pay',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaid_capital||0)),0).toLocaleString()},
               ].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{s.l}</div>
@@ -564,7 +597,7 @@ export default function Page() {
             {showAddMortgage&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:16}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add Loan / Mortgage</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Property *</label><select value={mortgageForm.property} onChange={e=>setMortgageForm({...mortgageForm,property:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id}>{p.name}</option>)}</select></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Property *</label><select value={mortgageForm.property} onChange={e=>setMortgageForm({...mortgageForm,property:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Bank / Lender</label><input value={mortgageForm.bank} onChange={e=>setMortgageForm({...mortgageForm,bank:e.target.value})} placeholder="e.g. Barclays" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Mortgage Amount (£)</label><input value={mortgageForm.amount} onChange={e=>setMortgageForm({...mortgageForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Interest Rate (%)</label><input value={mortgageForm.rate} onChange={e=>setMortgageForm({...mortgageForm,rate:e.target.value})} type="number" placeholder="5.0" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -576,7 +609,7 @@ export default function Page() {
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Insurance (£)</label><input value={mortgageForm.insurance} onChange={e=>setMortgageForm({...mortgageForm,insurance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!mortgageForm.property||!mortgageForm.amount)return;setMortgages([...mortgages,{id:Date.now(),...mortgageForm,repaidCapital:'0',interestPaid:'0'}]);setMortgageForm({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'});setShowAddMortgage(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add Loan</button>
+                <button onClick={()=>{if(!mortgageForm.property||!mortgageForm.amount)return;saveRecord('estate_mortgages',{property_id:mortgageForm.property,bank:mortgageForm.bank,amount:mortgageForm.amount,rate:mortgageForm.rate,start_date:mortgageForm.startDate,end_date:mortgageForm.endDate,duration:mortgageForm.duration,monthly_payment:mortgageForm.monthlyPayment,insurance:mortgageForm.insurance,type:mortgageForm.type});setMortgageForm({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'});setShowAddMortgage(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add Loan</button>
                 <button onClick={()=>setShowAddMortgage(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -594,15 +627,15 @@ export default function Page() {
               ):mortgages.map((m:any)=>(
                 <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 100px 100px 100px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div>
-                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.property}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.estate_properties?.name??'—'}</div>
                     <div style={{fontSize:11,color:'#667085'}}>{m.bank||'—'}</div>
                   </div>
                   <span style={{fontSize:12,color:'#344054'}}>{m.bank||'—'}</span>
                   <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(m.amount||0).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{m.rate||'—'}%</span>
-                  <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(m.monthlyPayment||0).toLocaleString()}</span>
-                  <span style={{fontSize:11,color:'#667085'}}>{m.startDate||'—'}</span>
-                  <span style={{fontSize:11,color:'#667085'}}>{m.endDate||'—'}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(m.monthly_payment||0).toLocaleString()}</span>
+                  <span style={{fontSize:11,color:'#667085'}}>{m.start_date||'—'}</span>
+                  <span style={{fontSize:11,color:'#667085'}}>{m.end_date||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:'#5B7CFA'}}>{m.type}</span>
                 </div>
               ))}
@@ -612,12 +645,12 @@ export default function Page() {
                 <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Repayment Progress</div>
                 {mortgages.map((m:any)=>{
                   const total = parseFloat(m.amount||0)
-                  const repaid = parseFloat(m.repaidCapital||0)
+                  const repaid = parseFloat(m.repaid_capital||0)
                   const pct = total>0?Math.round(repaid/total*100):0
                   return(
                     <div key={m.id} style={{marginBottom:16}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-                        <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.property}</span>
+                        <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.estate_properties?.name??'—'}</span>
                         <span style={{fontSize:12,color:'#667085'}}>{pct}% repaid · £{repaid.toLocaleString()} of £{total.toLocaleString()}</span>
                       </div>
                       <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:pct+'%'}}></div></div>
@@ -640,7 +673,7 @@ export default function Page() {
             {showAddRent&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add rent schedule</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={labelStyle}>Tenancy *</label><select value={rentForm.tenancy} onChange={e=>setRentForm({...rentForm,tenancy:e.target.value})} style={inputStyle}><option value=''>Select tenancy</option>{tenancies.map(t=><option key={t.id}>{t.property} — {t.tenant}</option>)}</select></div>
+                <div><label style={labelStyle}>Tenancy *</label><select value={rentForm.tenancy} onChange={e=>setRentForm({...rentForm,tenancy:e.target.value})} style={inputStyle}><option value=''>Select tenancy</option>{tenancies.map((t:any)=><option key={t.id} value={t.id}>{t.estate_properties?.name} — {t.estate_tenants?.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Tenant name</label><input value={rentForm.tenant} onChange={e=>setRentForm({...rentForm,tenant:e.target.value})} placeholder='e.g. Jane Smith' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Amount (£)</label><input value={rentForm.amount} onChange={e=>setRentForm({...rentForm,amount:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Due day</label><select value={rentForm.dueDay} onChange={e=>setRentForm({...rentForm,dueDay:e.target.value})} style={inputStyle}>{Array.from({length:28},(_,i)=>String(i+1)).map(d=><option key={d}>{d}</option>)}</select></div>
@@ -648,7 +681,7 @@ export default function Page() {
                 <div><label style={labelStyle}>Method</label><select value={rentForm.method} onChange={e=>setRentForm({...rentForm,method:e.target.value})} style={inputStyle}>{['Bank Transfer','Direct Debit','Standing Order','Cash','Cheque'].map(m=><option key={m}>{m}</option>)}</select></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!rentForm.tenancy||!rentForm.amount)return;const today=new Date();const due=new Date(today.getFullYear(),today.getMonth(),parseInt(rentForm.dueDay));setRentSchedules([...rentSchedules,{id:Date.now(),...rentForm,status:due<today?'Overdue':'Pending'}]);setRentForm({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'});setShowAddRent(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add schedule</button>
+                <button onClick={()=>{if(!rentForm.tenancy||!rentForm.amount)return;const today=new Date();const due=new Date(today.getFullYear(),today.getMonth(),parseInt(rentForm.dueDay));saveRecord('estate_rent_schedules',{tenancy_id:rentForm.tenancy,tenant_id:rentForm.tenant,amount:rentForm.amount,due_day:rentForm.dueDay,frequency:rentForm.frequency,method:rentForm.method,status:due<today?'Overdue':'Pending'});setRentForm({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'});setShowAddRent(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add schedule</button>
                 <button onClick={()=>setShowAddRent(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -656,18 +689,18 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 100px 140px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Tenancy</span><span>Tenant</span><span>Amount</span><span>Due</span><span>Frequency</span><span>Status</span><span>Actions</span>
               </div>
-              {rentSchedules.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No rent schedules yet</div><div style={{fontSize:13}}>Add a schedule to track rent collection.</div></div>):rentSchedules.map(r=>(
+              {rentSchedules.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No rent schedules yet</div><div style={{fontSize:13}}>Add a schedule to track rent collection.</div></div>):rentSchedules.map((r:any)=>(
                 <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 100px 140px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{r.tenancy}</span>
-                  <span style={{fontSize:12,color:'#344054'}}>{r.tenant||'—'}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{r.tenancy_id||'—'}</span>
+                  <span style={{fontSize:12,color:'#344054'}}>{r.tenant_id||'—'}</span>
                   <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(r.amount).toLocaleString()}</span>
-                  <span style={{fontSize:12,color:'#344054'}}>{r.dueDay}{['st','nd','rd'][parseInt(r.dueDay)-1]||'th'}</span>
+                  <span style={{fontSize:12,color:'#344054'}}>{r.due_day}{['st','nd','rd'][parseInt(r.due_day)-1]||'th'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{r.frequency}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:r.status==='Paid'?'#ECFDF5':r.status==='Overdue'?'#FEE2E2':'#FEF3C7',color:r.status==='Paid'?'#10B981':r.status==='Overdue'?'#EF4444':'#F59E0B'}}>{r.status}</span>
                   <div style={{display:'flex',gap:4}}>
                     {r.status!=='Paid'&&<button onClick={()=>setRentSchedules(rentSchedules.map(x=>x.id===r.id?{...x,status:'Paid'}:x))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#ECFDF5',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#10B981',fontWeight:600}}>✓ Paid</button>}
                     {r.status==='Paid'&&<button onClick={()=>setRentSchedules(rentSchedules.map(x=>x.id===r.id?{...x,status:'Pending'}:x))} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#667085'}}>Undo</button>}
-                    <button onClick={()=>setRentSchedules(rentSchedules.filter(x=>x.id!==r.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    <button onClick={()=>delRecord('estate_rent_schedules',r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
               ))}
@@ -704,7 +737,7 @@ export default function Page() {
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>{['Confirmed','Estimated'].map(s=><option key={s}>{s}</option>)}</select></div>
                   </div>
                   <div style={{display:'flex',gap:8}}>
-                    <button onClick={()=>{if(!expForm.description||!expForm.amount)return;setExpenses([...expenses,{id:Date.now(),...expForm}]);setExpForm({description:'',vendor:'',category:'Property',amount:'',date:'',status:'Confirmed'});setShowAddExpense(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
+                    <button onClick={()=>{if(!expForm.description||!expForm.amount)return;saveRecord('estate_expenses',expForm);setExpForm({description:'',vendor:'',category:'Property',amount:'',date:'',status:'Confirmed'});setShowAddExpense(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
                     <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                   </div>
                 </div>
@@ -721,7 +754,7 @@ export default function Page() {
                     <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
                     <span style={{fontSize:12,color:'#667085'}}>{e.date||'—'}</span>
                     <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:e.status==='Confirmed'?'#ECFDF5':'#FEF3C7',color:e.status==='Confirmed'?'#10B981':'#F59E0B'}}>{e.status}</span>
-                    <button onClick={()=>setExpenses(expenses.filter((x:any)=>x.id!==e.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    <button onClick={()=>delRecord('estate_expenses',e.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 ))}
               </div>
@@ -764,13 +797,13 @@ export default function Page() {
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!bankForm.name)return;setBankAccounts([...bankAccounts,{id:Date.now(),...bankForm}]);setBankForm({name:'',type:'Current',balance:'',currency:'GBP'});setShowAddBank(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
+                      <button onClick={()=>{if(!bankForm.name)return;saveRecord('estate_bank_accounts',bankForm);setBankForm({name:'',type:'Current',balance:'',currency:'GBP'});setShowAddBank(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
                       <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>)}
                   {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                     <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                      {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div><button onClick={()=>setBankAccounts(bankAccounts.filter((x:any)=>x.id!==a.id))} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:ACCENT,marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
+                      {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div><button onClick={()=>delRecord('estate_bank_accounts',a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:ACCENT,marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                       <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
                     </div>
                   )}
@@ -787,7 +820,7 @@ export default function Page() {
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!txForm.description||!txForm.amount)return;setTransactions([...transactions,{id:Date.now(),...txForm,status:'Unreconciled'}]);setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'});setShowAddTx(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
+                      <button onClick={()=>{if(!txForm.description||!txForm.amount)return;saveRecord('estate_transactions',{account_id:txForm.account,description:txForm.description,amount:txForm.amount,type:txForm.type,date:txForm.date,category:txForm.category,status:'Unreconciled'});setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'});setShowAddTx(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
                       <button onClick={()=>setShowAddTx(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>)}
@@ -798,8 +831,8 @@ export default function Page() {
                         <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                         <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
                         <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600}}>{t.type}</span>
-                        <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:x.status==='Reconciled'?'Unreconciled':'Reconciled'}:x))}>{t.status}</span>
-                        <button onClick={()=>setTransactions(transactions.filter((x:any)=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                        <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>saveRecord('estate_transactions',{status:t.status==='Reconciled'?'Unreconciled':'Reconciled'},t.id)}>{t.status}</span>
+                        <button onClick={()=>delRecord('estate_transactions',t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                       </div>
                     ))}
                   </div>
@@ -810,7 +843,7 @@ export default function Page() {
                   {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                     <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                      <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
+                      <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>saveRecord('estate_transactions',{status:'Reconciled'},t.id)} style={{padding:'6px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                     </div>
                   ))}
                 </div>
