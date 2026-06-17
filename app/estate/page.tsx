@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const ACCENT = '#2D6A4F'
-const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Rent Collection','Vacancies','Expenses','Banking','Reports','Owner Reports','Documents']
+const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Loans & Mortgages','Rent Collection','Vacancies','Expenses','Banking','Reports','Owner Reports','Documents']
 const NAV_REST = ['Contacts','Maintenance','Tasks','Notes','Messages','Candidates','Tools','Community']
 
 
@@ -100,6 +100,9 @@ export default function Page() {
   const [vacForm, setVacForm] = useState({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''})
 
   const [rentSchedules, setRentSchedules] = useState<any[]>([])
+  const [mortgages, setMortgages] = useState<any[]>([])
+  const [showAddMortgage, setShowAddMortgage] = useState(false)
+  const [mortgageForm, setMortgageForm] = useState({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'})
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Property',amount:'',date:'',status:'Confirmed'})
@@ -399,21 +402,61 @@ export default function Page() {
           </div>)}
 
           {section==='Finance'&&(<div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Monthly income',v:'£'+monthlyRent.toLocaleString(),c:ACCENT},{l:'Annual rent',v:'£'+annualRent.toLocaleString(),c:'#10B981'},{l:'Outstanding',v:'£0',c:'#EF4444'}].map(s=>(
-                <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                  <div style={{fontSize:24,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
-                  <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
+            {/* Rent paid progress */}
+            <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+                <div style={{fontSize:15,fontWeight:600,color:'#101828'}}>Rent Overview</div>
+                <div style={{fontSize:12,color:'#667085'}}>{new Date().toLocaleString('default',{month:'long',year:'numeric'})}</div>
+              </div>
+              <div style={{display:'flex',gap:32,marginBottom:16}}>
+                <div><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>Rent Paid</div><div style={{fontSize:32,fontWeight:800,color:'#10B981'}}>{rentSchedules.filter((r:any)=>r.status==='Paid').length}</div></div>
+                <div><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>Late Rent</div><div style={{fontSize:32,fontWeight:800,color:'#EF4444'}}>{rentSchedules.filter((r:any)=>r.status==='Overdue').length}</div></div>
+              </div>
+              <div style={{height:10,background:'#F3F4F6',borderRadius:5,overflow:'hidden',marginBottom:8}}>
+                <div style={{height:'100%',background:'linear-gradient(90deg,#10B981,#059669)',borderRadius:5,width:rentSchedules.length>0?(rentSchedules.filter((r:any)=>r.status==='Paid').length/rentSchedules.length*100)+'%':'0%'}}></div>
+              </div>
+              <div style={{display:'flex',gap:16,fontSize:12}}>
+                <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#10B981',display:'inline-block'}}></span> Paid £{rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0).toLocaleString()}</span>
+                <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#EF4444',display:'inline-block'}}></span> Overdue £{rentSchedules.filter((r:any)=>r.status==='Overdue').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0).toLocaleString()}</span>
+              </div>
+            </div>
+            {/* Finance cards */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
+                <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Gross Income for the Month</div>
+                <div style={{fontSize:28,fontWeight:800,color:'#101828'}}>£{monthlyRent.toLocaleString()}</div>
+                <div style={{display:'inline-flex',alignItems:'center',gap:4,marginTop:8,background:'#ECFDF5',padding:'3px 8px',borderRadius:20}}><span style={{fontSize:11,color:'#10B981',fontWeight:600}}>↑ Active</span></div>
+              </div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
+                <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Monthly Expenses</div>
+                <div style={{fontSize:28,fontWeight:800,color:'#EF4444'}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                <div style={{display:'inline-flex',alignItems:'center',gap:4,marginTop:8,background:'#FEE2E2',padding:'3px 8px',borderRadius:20}}><span style={{fontSize:11,color:'#EF4444',fontWeight:600}}>↓ Costs</span></div>
+              </div>
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'2px solid '+ACCENT,padding:20,marginBottom:16}}>
+              <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Current Month Net Profit</div>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <span style={{fontSize:36,color:ACCENT,fontWeight:300}}>💰</span>
+                <div>
+                  <div style={{fontSize:36,fontWeight:800,color:ACCENT}}>£{(monthlyRent-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
+                  <div style={{fontSize:12,color:'#667085'}}>vs previous month</div>
                 </div>
+              </div>
+            </div>
+            {/* Period tabs */}
+            <div style={{display:'flex',gap:0,marginBottom:16,borderBottom:'1px solid #E4E7EC'}}>
+              {['Current Month','Last Month','Current Year','12 Months'].map((t:string)=>(
+                <button key={t} style={{padding:'8px 16px',border:'none',background:'transparent',fontSize:12,fontWeight:600,color:t==='Current Month'?ACCENT:'#667085',borderBottom:t==='Current Month'?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
               ))}
             </div>
+            {/* Revenue by property */}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Revenue by property</div>
-              {tenancies.filter(t=>t.status==='Active').length===0?(<div style={{textAlign:'center',padding:40,color:'#98A2B3'}}>No active tenancies yet</div>):tenancies.filter(t=>t.status==='Active').map(t=>(
+              <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Revenue by Property</div>
+              {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3'}}>No active tenancies yet</div>):tenancies.filter((t:any)=>t.status==='Active').map((t:any)=>(
                 <div key={t.id} style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-                  <div style={{fontSize:13,color:'#344054',width:200,flexShrink:0}}>{t.property}</div>
+                  <div style={{fontSize:13,color:'#344054',width:180,flexShrink:0}}>{t.property}</div>
                   <div style={{flex:1,background:'#F2F4F7',borderRadius:4,height:8,overflow:'hidden'}}><div style={{width:monthlyRent?(parseFloat(t.rent)/monthlyRent*100)+'%':'0%',height:'100%',background:ACCENT,borderRadius:4}}/></div>
-                  <div style={{fontSize:13,fontWeight:600,color:ACCENT,width:80,textAlign:'right'}}>£{t.rent}/mo</div>
+                  <div style={{fontSize:13,fontWeight:600,color:ACCENT,width:80,textAlign:'right' as const}}>£{t.rent}/mo</div>
                 </div>
               ))}
             </div>
@@ -490,6 +533,101 @@ export default function Page() {
               </div>
             )}
           </div>)}
+
+          {section==='Loans & Mortgages'&&(<div>
+            {/* Summary stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+              {[
+                {l:'Interest Paid',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.interestPaid||0)),0).toLocaleString(),c:'#667085'},
+                {l:'Outstanding Capital',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaidCapital||0)),0).toLocaleString(),c:'#EF4444'},
+                {l:'Monthly Payments',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.monthlyPayment||0)),0).toLocaleString(),c:ACCENT},
+              ].map((s:any)=>(
+                <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{s.l}</div>
+                  <div style={{fontSize:24,fontWeight:800,color:s.c}}>{s.v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
+              {[
+                {l:'Insurance Paid',v:'£0'},
+                {l:'Already Refunded',v:'£0'},
+                {l:'Remaining to Pay',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaidCapital||0)),0).toLocaleString()},
+              ].map((s:any)=>(
+                <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{s.l}</div>
+                  <div style={{fontSize:24,fontWeight:800,color:'#101828'}}>{s.v}</div>
+                </div>
+              ))}
+            </div>
+            {/* Add form */}
+            {showAddMortgage&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:16}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add Loan / Mortgage</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Property *</label><select value={mortgageForm.property} onChange={e=>setMortgageForm({...mortgageForm,property:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id}>{p.name}</option>)}</select></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Bank / Lender</label><input value={mortgageForm.bank} onChange={e=>setMortgageForm({...mortgageForm,bank:e.target.value})} placeholder="e.g. Barclays" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Mortgage Amount (£)</label><input value={mortgageForm.amount} onChange={e=>setMortgageForm({...mortgageForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Interest Rate (%)</label><input value={mortgageForm.rate} onChange={e=>setMortgageForm({...mortgageForm,rate:e.target.value})} type="number" placeholder="5.0" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Payment (£)</label><input value={mortgageForm.monthlyPayment} onChange={e=>setMortgageForm({...mortgageForm,monthlyPayment:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Duration (years)</label><input value={mortgageForm.duration} onChange={e=>setMortgageForm({...mortgageForm,duration:e.target.value})} type="number" placeholder="25" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Start Date</label><input value={mortgageForm.startDate} onChange={e=>setMortgageForm({...mortgageForm,startDate:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>End Date</label><input value={mortgageForm.endDate} onChange={e=>setMortgageForm({...mortgageForm,endDate:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Type</label><select value={mortgageForm.type} onChange={e=>setMortgageForm({...mortgageForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Repayment','Interest Only','Buy to Let','Commercial'].map(t=><option key={t}>{t}</option>)}</select></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Insurance (£)</label><input value={mortgageForm.insurance} onChange={e=>setMortgageForm({...mortgageForm,insurance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{if(!mortgageForm.property||!mortgageForm.amount)return;setMortgages([...mortgages,{id:Date.now(),...mortgageForm,repaidCapital:'0',interestPaid:'0'}]);setMortgageForm({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'});setShowAddMortgage(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add Loan</button>
+                <button onClick={()=>setShowAddMortgage(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            {/* Table */}
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 100px 100px 100px 100px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Property</span><span>Bank</span><span>Amount</span><span>Rate</span><span>Monthly</span><span>Start</span><span>End</span><span>Type</span>
+              </div>
+              {mortgages.length===0?(
+                <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>
+                  <div style={{fontSize:40,marginBottom:12}}>🏦</div>
+                  <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No loans or mortgages yet</div>
+                  <div style={{fontSize:13}}>Add your first mortgage or loan to track repayments.</div>
+                </div>
+              ):mortgages.map((m:any)=>(
+                <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 100px 100px 100px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.property}</div>
+                    <div style={{fontSize:11,color:'#667085'}}>{m.bank||'—'}</div>
+                  </div>
+                  <span style={{fontSize:12,color:'#344054'}}>{m.bank||'—'}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(m.amount||0).toLocaleString()}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{m.rate||'—'}%</span>
+                  <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(m.monthlyPayment||0).toLocaleString()}</span>
+                  <span style={{fontSize:11,color:'#667085'}}>{m.startDate||'—'}</span>
+                  <span style={{fontSize:11,color:'#667085'}}>{m.endDate||'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:'#5B7CFA'}}>{m.type}</span>
+                </div>
+              ))}
+            </div>
+            {mortgages.length>0&&(
+              <div style={{marginTop:12,background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Repayment Progress</div>
+                {mortgages.map((m:any)=>{
+                  const total = parseFloat(m.amount||0)
+                  const repaid = parseFloat(m.repaidCapital||0)
+                  const pct = total>0?Math.round(repaid/total*100):0
+                  return(
+                    <div key={m.id} style={{marginBottom:16}}>
+                      <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+                        <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.property}</span>
+                        <span style={{fontSize:12,color:'#667085'}}>{pct}% repaid · £{repaid.toLocaleString()} of £{total.toLocaleString()}</span>
+                      </div>
+                      <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:pct+'%'}}></div></div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>)}
+
           {section==='Rent Collection'&&(<div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
               {[{l:'Scheduled',v:rentSchedules.length,c:ACCENT},{l:'Collected',v:'£'+rentSchedules.filter(r=>r.status==='Paid').reduce((s,r)=>s+(parseFloat(r.amount)||0),0).toLocaleString(),c:'#10B981'},{l:'Overdue',v:rentSchedules.filter(r=>r.status==='Overdue').length,c:'#EF4444'},{l:'Pending',v:rentSchedules.filter(r=>r.status==='Pending').length,c:'#F59E0B'}].map(s=>(
