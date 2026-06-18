@@ -1,5 +1,3 @@
-cd ~/Desktop/Opero
-cat > app/str/crm/page.tsx << 'PLAYBOOK_EOF'
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
