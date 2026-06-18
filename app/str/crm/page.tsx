@@ -5,7 +5,7 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 const MODULE = 'str'
 const ACCENT = '#3B4AFF'
 const CONTACT_TYPES = ['guest','contact','vendor']
-const DEAL_STAGES = ['Lead','Qualified','Proposal','Negotiation','Closed Won','Closed Lost']
+const DEAL_STAGES = ['Lead','Qualified','Proposal','Negotiation','Closed Won','Closed Lost','New Lead','Contacted','Replied','Call Booked','Closed']
 const DEFAULT_PLAYBOOK = {
   name: 'Get 5 Properties in 7 Days',
   description: 'A 7-day client acquisition sprint across outreach and sales channels.',
@@ -19,6 +19,17 @@ const DEFAULT_PLAYBOOK = {
     {title:'Airbnb + Realtors outreach',category:'Outreach',daily_target:80,day_offset:6},
   ],
 }
+const ACQUISITION_PLAYBOOK = {
+  name: 'Airbnb Property Acquisition — Daily Execution',
+  description: 'Repeatable daily outreach loop: add lead, message, move to Contacted, follow up in 48 hours.',
+  tasks: [
+    {title:'Outreach Messages',category:'Outreach',daily_target:100,day_offset:0},
+    {title:'Follow-ups',category:'Outreach',daily_target:50,day_offset:0},
+    {title:'Replies Managed',category:'Sales',daily_target:10,day_offset:0},
+    {title:'Calls Booked',category:'Sales',daily_target:3,day_offset:0},
+  ],
+}
+const OUTREACH_TEMPLATE = "Hello, hope you're well. We are Sangsters Group, a property management company operating in Jamaica and internationally. We help Airbnb and short-term rental owners increase occupancy and manage everything hands-free. Would you be open to a quick conversation about your property?"
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 const IC:any = {
@@ -159,6 +170,30 @@ export default function Page() {
                     <span style={{ color:'#667085' }}>{t.daily_target} {t.category.toLowerCase()}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+            <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:24, marginBottom:20 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+                <div>
+                  <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:4 }}>{ACQUISITION_PLAYBOOK.name}</div>
+                  <div style={{ fontSize:13, color:'#667085' }}>{ACQUISITION_PLAYBOOK.description}</div>
+                </div>
+                <button onClick={()=>startPlaybook(ACQUISITION_PLAYBOOK)} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'10px 20px', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>Start today's targets</button>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:16 }}>
+                {ACQUISITION_PLAYBOOK.tasks.map((t,i)=>(
+                  <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'8px 12px', background:'#F9FAFB', borderRadius:8, fontSize:12 }}>
+                    <span style={{ color:'#344054' }}>{t.title}</span>
+                    <span style={{ color:'#667085' }}>{t.daily_target} {t.category.toLowerCase()}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:16, paddingTop:16, borderTop:'1px solid #F2F4F7' }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                  <span style={{ fontSize:12, fontWeight:600, color:'#344054' }}>Initial Outreach template</span>
+                  <button onClick={()=>{navigator.clipboard.writeText(OUTREACH_TEMPLATE);alert('Copied to clipboard')}} style={{ fontSize:11, color:ACCENT, background:'none', border:`1px solid ${ACCENT}`, borderRadius:6, padding:'3px 8px', cursor:'pointer', fontFamily:'inherit' }}>Copy</button>
+                </div>
+                <div style={{ fontSize:12, color:'#667085', lineHeight:1.6, background:'#F9FAFB', borderRadius:8, padding:12 }}>{OUTREACH_TEMPLATE}</div>
               </div>
             </div>
             {Object.entries(tasks.filter(t=>t.playbook_run_id).reduce((acc:any,t)=>{(acc[t.playbook_run_id]=acc[t.playbook_run_id]||[]).push(t);return acc},{})).map(([runId,runTasks]:any)=>{
