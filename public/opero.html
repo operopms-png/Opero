@@ -155,6 +155,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
       <button class="prev-tab" data-prevtab="pm">PM</button>
       <button class="prev-tab" data-prevtab="ea">EA</button>
       <button class="prev-tab" data-prevtab="dev">Dev</button>
+      <button class="prev-tab" data-prevtab="invest">Invest</button>
       <button class="prev-tab" data-prevtab="ai">AI Agents</button>
     </div>
 
@@ -304,6 +305,35 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
               </div>
             </div>
 
+            <div class="prev-screen" id="prevscreen-invest">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Invest</div>
+                <div class="prev-nav-item prev-on">Deal Analyser</div>
+                <div class="prev-nav-item">Saved Deals</div>
+                <div class="prev-nav-item">Watchlist</div>
+                <div class="prev-nav-item">Postcode Insights</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:12px">Deal Analyser</div>
+                <div class="prev-stat-grid">
+                  <div class="prev-stat"><div class="prev-stat-label">Yield</div><div class="prev-stat-value" style="color:#10B981">7.2%</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Cash flow</div><div class="prev-stat-value" style="color:#5B7CFA">£340</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">ROI</div><div class="prev-stat-value" style="color:#F59E0B">14%</div></div>
+                  <div class="prev-stat" style="background:#101828;border-color:#101828"><div class="prev-stat-label" style="color:rgba(255,255,255,0.5)">Strategy</div><div class="prev-stat-value" style="color:#fff;font-size:11px">BRRR</div></div>
+                </div>
+                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
+                  <div style="font-size:10px;font-weight:600;margin-bottom:8px">Saved deals comparison</div>
+                  <div style="display:flex;gap:3px;align-items:flex-end;height:40px">
+                    <div style="flex:1;background:#E0E7FF;height:55%;border-radius:2px"></div>
+                    <div style="flex:1;background:#5B7CFA;height:85%;border-radius:2px"></div>
+                    <div style="flex:1;background:#E0E7FF;height:40%;border-radius:2px"></div>
+                    <div style="flex:1;background:#E0E7FF;height:65%;border-radius:2px"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="prev-screen" id="prevscreen-ai">
               <div class="prev-sidebar">
                 <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
@@ -423,6 +453,17 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
             <div style="margin-top:14px;padding:0 14px"><div style="background:#EEF1FF;color:#5B7CFA;font-size:9px;font-weight:600;padding:4px 9px;border-radius:6px;display:inline-block">£2.4M · On track</div></div>
           </div>
 
+          <div class="prev-pscreen" id="prevphone-invest">
+            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Deal Analyser</span></div>
+            <div style="padding:0 14px;display:flex;flex-direction:column;gap:6px">
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Yield</span><span style="font-size:10px;color:#10B981;font-weight:700">7.2%</span></div>
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Cash flow</span><span style="font-size:10px;color:#5B7CFA;font-weight:700">£340/mo</span></div>
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">ROI</span><span style="font-size:10px;color:#F59E0B;font-weight:700">14%</span></div>
+            </div>
+            <div style="margin-top:14px;padding:0 14px"><div style="background:#EEF1FF;color:#5B7CFA;font-size:9px;font-weight:600;padding:4px 9px;border-radius:6px;display:inline-block">BRRR strategy</div></div>
+          </div>
+
           <div class="prev-pscreen" id="prevphone-ai">
             <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
             <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">AI Agents</span></div>
@@ -476,6 +517,16 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Milestone timeline with budget allocation tracking</div></div>
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Multiple investors per project with avatar tracking</div></div>
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Contractor management integrated with budgets</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-invest">
+      <div class="prev-info-title">Invest — £19/mo</div>
+      <div class="prev-info-sub">8 strategies, deal analyser, watchlist and saved deals for property investors.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Instant yield, cash flow and ROI calculations per deal</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Compare saved deals side-by-side before committing</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Postcode-level insights to spot opportunity areas</div></div>
       </div>
     </div>
 
