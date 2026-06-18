@@ -1,12 +1,11 @@
+
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 type Booking = {
   id: string
@@ -41,6 +40,10 @@ const INITIAL_FORM = {
 }
 
 export default function BookingsPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -96,13 +99,13 @@ export default function BookingsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
+      <style>{``}</style>
 
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>📅</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Bookings</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{bookings.length}</span>
           </div>
@@ -131,7 +134,7 @@ export default function BookingsPage() {
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>Loading bookings…</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📅</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             <div style={{ fontSize: 16, fontWeight: 500 }}>No bookings yet</div>
           </div>
         ) : (
@@ -145,7 +148,7 @@ export default function BookingsPage() {
                     <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{b.properties?.name ?? '—'}</div>
                   </div>
                   <div style={{ fontSize: 13, color: '#374151' }}>
-                    <div>📅 {new Date(b.check_in).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(b.check_out).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                    <div>{new Date(b.check_in).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(b.check_out).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     <div style={{ color: '#9CA3AF', marginTop: 2 }}>{nights(b.check_in, b.check_out)} nights{b.platform ? ` · ${b.platform}` : ''}</div>
                   </div>
                   <div style={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>

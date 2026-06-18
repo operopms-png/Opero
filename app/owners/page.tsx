@@ -1,27 +1,30 @@
+
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 const TABS = [
-  { id: 'dashboard', icon: '📊', label: 'Dashboard' },
-  { id: 'bookings', icon: '🏨', label: 'My Bookings' },
-  { id: 'calendar', icon: '📅', label: 'Calendar' },
-  { id: 'maintenance', icon: '🔧', label: 'Maintenance' },
-  { id: 'statements', icon: '📄', label: 'Statements' },
-  { id: 'roi', icon: '📈', label: 'ROI Per Owner' },
-  { id: 'properties', icon: '🏠', label: 'My Properties' },
-  { id: 'finance', icon: '💰', label: 'Finance & Documents' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'bookings', label: 'My Bookings' },
+  { id: 'calendar', label: 'Calendar' },
+  { id: 'maintenance', label: 'Maintenance' },
+  { id: 'statements', label: 'Statements' },
+  { id: 'roi', label: 'ROI Per Owner' },
+  { id: 'properties', label: 'My Properties' },
+  { id: 'finance', label: 'Finance & Documents' },
 ]
 
 const MANAGEMENT_FEE = 0.20 // 20% management fee
 
 export default function OwnersPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [tab, setTab] = useState('dashboard')
   const [properties, setProperties] = useState<any[]>([])
   const [bookings, setBookings] = useState<any[]>([])
@@ -65,14 +68,14 @@ export default function OwnersPage() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
+      <style>{``}</style>
 
       {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>👥</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Owner Reports</h1>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -97,7 +100,7 @@ export default function OwnersPage() {
               color: tab === t.id ? '#2563EB' : '#6B7280',
               borderBottom: tab === t.id ? '2px solid #2563EB' : '2px solid transparent',
             }}>
-              {t.icon} {t.label}
+              {t.label}
             </button>
           ))}
         </div>
@@ -127,7 +130,7 @@ export default function OwnersPage() {
                 {/* Profit Split */}
                 <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '24px', marginBottom: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                    <span>💰</span>
+                    
                     <span style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>Profit Split — After All Expenses</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
@@ -267,7 +270,7 @@ export default function OwnersPage() {
             {/* STATEMENTS / FINANCE / CALENDAR — placeholder tabs */}
             {(tab === 'statements' || tab === 'finance' || tab === 'calendar') && (
               <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>🚧</div>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <div style={{ fontSize: 16, fontWeight: 500 }}>Coming soon</div>
                 <div style={{ fontSize: 14, marginTop: 4 }}>This section is being built</div>
               </div>

@@ -1,12 +1,11 @@
+
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 type CleaningTask = {
   id: string
@@ -27,6 +26,10 @@ const STATUS_CONFIG = {
 }
 
 export default function CleaningTasksPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [tasks, setTasks] = useState<CleaningTask[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
@@ -94,15 +97,15 @@ export default function CleaningTasksPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
       {/* Google Fonts */}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+      <style>{``}</style>
 
       {/* Header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>🧹</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l9-9M12.5 6.5l5 5-9 9H3v-5.5l9-9z"/><path d="M15 3l3 3-9 9-3-3z"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Cleaning Tasks</h1>
           </div>
           <button
@@ -179,9 +182,9 @@ export default function CleaningTasksPage() {
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#6B7280' }}>
-                      <span>📅 {new Date(task.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                      {task.assigned_to && <span>👤 {task.assigned_to}</span>}
-                      {task.notes && <span>📝 {task.notes}</span>}
+                      <span>{new Date(task.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                      {task.assigned_to && <span>{task.assigned_to}</span>}
+                      {task.notes && <span>{task.notes}</span>}
                     </div>
                   </div>
 

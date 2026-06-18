@@ -7,16 +7,12 @@ export const metadata: Metadata = {
   description: 'Operations platform for vacation rental managers',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, background: '#F8F9FA' }}>
+      <body style={{ margin: 0, background: '#F7F8FA', display: 'flex' }}>
         <Sidebar />
-        <main style={{ marginLeft: 220, minHeight: '100vh' }}>
+        <main style={{ marginLeft: 220, flex: 1, minHeight: '100vh' }}>
           {children}
         </main>
       </body>

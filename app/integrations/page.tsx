@@ -1,12 +1,11 @@
+
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 const integrations = [
   {
@@ -75,6 +74,10 @@ const integrations = [
 ]
 
 export default function IntegrationsPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [userId, setUserId] = useState<string | null>(null)
   const [connected, setConnected] = useState<Record<string, boolean>>({})
   const [inputs, setInputs] = useState<Record<string, string>>({})
@@ -172,7 +175,7 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');`}</style>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111', marginBottom: 4 }}>Integrations</h1>
       <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Connect your tools to get the most out of Opero.</p>

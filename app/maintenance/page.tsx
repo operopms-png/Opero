@@ -1,12 +1,11 @@
+
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 type Ticket = {
   id: string
@@ -37,6 +36,10 @@ const STATUS_CONFIG = {
 const INITIAL_FORM = { property_id: '', title: '', description: '', priority: 'medium', status: 'open', assigned_to: '' }
 
 export default function MaintenancePage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -44,8 +47,9 @@ export default function MaintenancePage() {
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('all')
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([])
+  const [teamMembers, setTeamMembers] = useState<{ id: string; name: string; role: string }[]>([])
 
-  useEffect(() => { fetchTickets(); fetchProperties() }, [])
+  useEffect(() => { fetchTickets(); fetchProperties(); fetchTeam() }, [])
 
   async function fetchTickets() {
     setLoading(true)
@@ -57,6 +61,12 @@ export default function MaintenancePage() {
   async function fetchProperties() {
     const { data } = await supabase.from('properties').select('id, name')
     if (data) setProperties(data)
+  }
+  async function fetchTeam() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('team_members').select('id, name, role').eq('user_id', user.id).order('name')
+    if (data) setTeamMembers(data)
   }
 
   async function handleSave() {
@@ -83,13 +93,13 @@ export default function MaintenancePage() {
   const filtered = filter === 'all' ? tickets : tickets.filter(t => t.status === filter)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
+      <style>{``}</style>
 
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>🔧</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Maintenance</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{tickets.filter(t => t.status === 'open').length} open</span>
           </div>
@@ -116,7 +126,7 @@ export default function MaintenancePage() {
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>Loading tickets…</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔧</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
             <div style={{ fontSize: 16, fontWeight: 500 }}>No tickets</div>
           </div>
         ) : (
@@ -132,7 +142,7 @@ export default function MaintenancePage() {
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: pri.color, background: pri.bg, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{pri.label}</span>
                     </div>
                     <div style={{ fontSize: 13, color: '#6B7280' }}>
-                      {t.properties?.name ?? '—'}{t.assigned_to ? ` · 👤 ${t.assigned_to}` : ''}{t.description ? ` · ${t.description}` : ''}
+                      {t.properties?.name ?? '—'}{t.assigned_to ? ` · ${t.assigned_to}` : ''}{t.description ? ` · ${t.description}` : ''}
                     </div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: sta.color, background: sta.bg, whiteSpace: 'nowrap' }}>{sta.label}</span>
@@ -175,7 +185,13 @@ export default function MaintenancePage() {
                     <option value="urgent">Urgent</option>
                   </select>
                 </div>
-                <div><label style={lbl}>Assigned To</label><input type="text" value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={inp} placeholder="Name or email" /></div>
+                <div>
+                  <label style={lbl}>Assigned To</label>
+                  <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={{ ...inp, cursor: 'pointer' }}>
+                    <option value="">Select team member…</option>
+                    {teamMembers.map(m => <option key={m.id} value={m.name}>{m.name} ({m.role})</option>)}
+                  </select>
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>

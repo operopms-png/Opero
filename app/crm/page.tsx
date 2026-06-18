@@ -9,7 +9,7 @@ const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadi
 
 function Modal({ title, onClose, children }: any) {
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50 }} onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50 }} onClick={(e:any)=>e.target===e.currentTarget&&onClose()}>
       <div style={{ background:'#fff', borderRadius:16, padding:32, width:'100%', maxWidth:520, margin:'0 16px', maxHeight:'90vh', overflowY:'auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <h2 style={{ fontSize:18, fontWeight:600, margin:0 }}>{title}</h2>
@@ -100,12 +100,12 @@ export default function CRMPage() {
           </select>
         </div>
         <nav style={{ flex:1, padding:'8px 10px', overflowY:'auto' }}>
-          {[{label:'Contacts',icon:'👤'},{label:'Companies',icon:'🏢'},{label:'Deals',icon:'💼'},{label:'Tasks',icon:'✓'},{label:'Meetings',icon:'📅'},{label:'Activity Feed',icon:'⚡'},{label:'Inbox',icon:'✉️'},{label:'Calls',icon:'📞'}].map(s=>(
+          {([{label:'Contacts',icon:'👤'},{label:'Companies',icon:'🏢'},{label:'Deals',icon:'💼'},{label:'Tasks',icon:'✓'},{label:'Meetings',icon:'📅'},{label:'Activity Feed',icon:'⚡'},{label:'Inbox',icon:'✉️'},{label:'Calls',icon:'📞'}] as any[]).map((s:any)=>(
             <button key={s.label} onClick={()=>setSection(s.label)} style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'8px 10px', borderRadius:7, border:'none', background:section===s.label?'#EEF0FF':'transparent', color:section===s.label?'#3B4AFF':'#344054', fontSize:13, fontWeight:section===s.label?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:1 }}>
               <span style={{ fontSize:14 }}>{s.icon}</span>
               {s.label}
-              {s.label==='Tasks'&&tasks.filter(t=>t.status==='pending'&&t.due_date<=today).length>0&&(
-                <span style={{ marginLeft:'auto', background:'#EF4444', color:'#fff', borderRadius:20, fontSize:10, fontWeight:700, padding:'1px 6px' }}>{tasks.filter(t=>t.status==='pending'&&t.due_date<=today).length}</span>
+              {s.label==='Tasks'&&tasks.filter((t:any)=>t.status==='pending'&&t.due_date<=today).length>0&&(
+                <span style={{ marginLeft:'auto', background:'#EF4444', color:'#fff', borderRadius:20, fontSize:10, fontWeight:700, padding:'1px 6px' }}>{tasks.filter((t:any)=>t.status==='pending'&&t.due_date<=today).length}</span>
               )}
             </button>
           ))}
@@ -129,11 +129,10 @@ export default function CRMPage() {
         </div>
 
         <div style={{ flex:1, padding:24, overflowY:'auto' }}>
-
           {section==='Contacts'&&(
             <div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>
-                {[{label:'Total',value:filtered(contacts).length},{label:'Guests',value:filtered(contacts).filter((c:any)=>c.type==='guest').length},{label:'Landlords',value:filtered(contacts).filter((c:any)=>c.type==='landlord').length},{label:'Investors',value:filtered(contacts).filter((c:any)=>c.type==='investor').length}].map((s:any)=>(
+                {([{label:'Total',value:filtered(contacts).length},{label:'Guests',value:filtered(contacts).filter((c:any)=>c.type==='guest').length},{label:'Landlords',value:filtered(contacts).filter((c:any)=>c.type==='landlord').length},{label:'Investors',value:filtered(contacts).filter((c:any)=>c.type==='investor').length}] as any[]).map((s:any)=>(
                   <div key={s.label} style={{ background:'#fff', borderRadius:10, border:'1px solid #E4E7EC', padding:'16px 20px' }}>
                     <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>{s.label}</div>
                     <div style={{ fontSize:24, fontWeight:700, color:'#101828' }}>{s.value}</div>
@@ -217,7 +216,7 @@ export default function CRMPage() {
           {section==='Tasks'&&(
             <div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>
-                {[{label:'Pending',value:filtered(tasks).filter((t:any)=>t.status==='pending').length,color:'#F59E0B'},{label:'Overdue',value:filtered(tasks).filter((t:any)=>t.status==='pending'&&t.due_date<today).length,color:'#EF4444'},{label:'Completed',value:filtered(tasks).filter((t:any)=>t.status==='completed').length,color:'#10B981'}].map((s:any)=>(
+                {([{label:'Pending',value:filtered(tasks).filter((t:any)=>t.status==='pending').length,color:'#F59E0B'},{label:'Overdue',value:filtered(tasks).filter((t:any)=>t.status==='pending'&&t.due_date<today).length,color:'#EF4444'},{label:'Completed',value:filtered(tasks).filter((t:any)=>t.status==='completed').length,color:'#10B981'}] as any[]).map((s:any)=>(
                   <div key={s.label} style={{ background:'#fff', borderRadius:10, border:'1px solid #E4E7EC', padding:'16px 20px' }}>
                     <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>{s.label}</div>
                     <div style={{ fontSize:24, fontWeight:700, color:s.color }}>{s.value}</div>
@@ -284,7 +283,7 @@ export default function CRMPage() {
 
           {section==='Inbox'&&(
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginTop:8 }}>
-              {[{icon:'✉️',title:'Team Email',desc:'Manage and respond to team emails'},{icon:'💬',title:'Chat',desc:'Connect live chat on your website'},{icon:'📋',title:'Forms',desc:'Connect and respond to forms'},{icon:'📘',title:'Facebook Messenger',desc:'Start receiving Messenger conversations'},{icon:'📱',title:'WhatsApp',desc:'Start receiving WhatsApp conversations'},{icon:'📞',title:'Calling',desc:'Start making and receiving calls'}].map(c=>(
+              {([{icon:'✉️',title:'Team Email',desc:'Manage and respond to team emails'},{icon:'💬',title:'Chat',desc:'Connect live chat on your website'},{icon:'📋',title:'Forms',desc:'Connect and respond to forms'},{icon:'📘',title:'Facebook Messenger',desc:'Start receiving Messenger conversations'},{icon:'📱',title:'WhatsApp',desc:'Start receiving WhatsApp conversations'},{icon:'📞',title:'Calling',desc:'Start making and receiving calls'}] as any[]).map((c:any)=>(
                 <div key={c.title} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px', textAlign:'center' }}>
                   <div style={{ fontSize:32, marginBottom:12 }}>{c.icon}</div>
                   <div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:6 }}>{c.title}</div>
@@ -303,7 +302,6 @@ export default function CRMPage() {
               <button onClick={()=>{setModal('activity');setForm({module,type:'call'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>+ Log a Call</button>
             </div>
           )}
-
         </div>
       </div>
 
@@ -317,24 +315,17 @@ export default function CRMPage() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
               <div><label style={lbl}>Type</label>
                 <select style={{...inp,cursor:'pointer'}} value={form.type??'contact'} onChange={e=>setForm({...form,type:e.target.value})}>
-                  <option value="contact">Contact</option>
-                  <option value="guest">Guest</option>
-                  <option value="landlord">Landlord</option>
-                  <option value="tenant">Tenant</option>
-                  <option value="investor">Investor</option>
-                  <option value="vendor">Vendor</option>
+                  <option value="contact">Contact</option><option value="guest">Guest</option><option value="landlord">Landlord</option><option value="tenant">Tenant</option><option value="investor">Investor</option><option value="vendor">Vendor</option>
                 </select>
               </div>
               <div><label style={lbl}>Module</label>
                 <select style={{...inp,cursor:'pointer'}} value={form.module??'str'} onChange={e=>setForm({...form,module:e.target.value})}>
-                  <option value="str">Vacation Rentals</option>
-                  <option value="pm">Property Management</option>
-                  <option value="dev">Developments</option>
+                  <option value="str">Vacation Rentals</option><option value="pm">Property Management</option><option value="dev">Developments</option>
                 </select>
               </div>
             </div>
             <div><label style={lbl}>Source</label><input style={inp} value={form.source??''} onChange={e=>setForm({...form,source:e.target.value})} placeholder="e.g. Airbnb, Referral"/></div>
-            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
@@ -351,7 +342,7 @@ export default function CRMPage() {
             <div><label style={lbl}>Website</label><input type="url" style={inp} value={form.website??''} onChange={e=>setForm({...form,website:e.target.value})} placeholder="https://..."/></div>
             <div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})}/></div>
             <div><label style={lbl}>Address</label><input style={inp} value={form.address??''} onChange={e=>setForm({...form,address:e.target.value})}/></div>
-            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
@@ -382,13 +373,11 @@ export default function CRMPage() {
               <div><label style={lbl}>Close Date</label><input type="date" style={inp} value={form.close_date??''} onChange={e=>setForm({...form,close_date:e.target.value})}/></div>
               <div><label style={lbl}>Module</label>
                 <select style={{...inp,cursor:'pointer'}} value={form.module??'str'} onChange={e=>setForm({...form,module:e.target.value})}>
-                  <option value="str">Vacation Rentals</option>
-                  <option value="pm">Property Management</option>
-                  <option value="dev">Developments</option>
+                  <option value="str">Vacation Rentals</option><option value="pm">Property Management</option><option value="dev">Developments</option>
                 </select>
               </div>
             </div>
-            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
@@ -415,7 +404,7 @@ export default function CRMPage() {
                 </select>
               </div>
             </div>
-            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
@@ -442,7 +431,7 @@ export default function CRMPage() {
               <div><label style={lbl}>Duration (mins)</label><input type="number" style={inp} value={form.duration_mins??30} onChange={e=>setForm({...form,duration_mins:parseInt(e.target.value)})}/></div>
               <div><label style={lbl}>Location</label><input style={inp} value={form.location??''} onChange={e=>setForm({...form,location:e.target.value})} placeholder="Zoom / Address"/></div>
             </div>
-            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
@@ -466,7 +455,7 @@ export default function CRMPage() {
               </select>
             </div>
             <div><label style={lbl}>Subject *</label><input style={inp} value={form.subject??''} onChange={e=>setForm({...form,subject:e.target.value})} placeholder="e.g. Spoke about investment"/></div>
-            <div><label style={lbl}>Details</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.body??''} onChange={e=>setForm({...form,body:e.target.value})}/></div>
+            <div><label style={lbl}>Details</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={3} value={form.body??''} onChange={e=>setForm({...form,body:e.target.value})}/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
@@ -474,7 +463,6 @@ export default function CRMPage() {
           </div>
         </Modal>
       )}
-
     </div>
   )
 }

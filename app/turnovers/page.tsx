@@ -1,12 +1,11 @@
+
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+
 
 type Turnover = {
   id: string
@@ -30,14 +29,19 @@ const STATUS_CONFIG = {
 const INITIAL_FORM = { property_id: '', turnover_date: '', check_out_time: '', check_in_time: '', assigned_to: '', status: 'scheduled', notes: '' }
 
 export default function TurnoversPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const [turnovers, setTurnovers] = useState<Turnover[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([])
+  const [teamMembers, setTeamMembers] = useState<{ id: string; name: string; role: string }[]>([])
 
-  useEffect(() => { fetchTurnovers(); fetchProperties() }, [])
+  useEffect(() => { fetchTurnovers(); fetchProperties(); fetchTeam() }, [])
 
   async function fetchTurnovers() {
     setLoading(true)
@@ -49,6 +53,12 @@ export default function TurnoversPage() {
   async function fetchProperties() {
     const { data } = await supabase.from('properties').select('id, name')
     if (data) setProperties(data)
+  }
+  async function fetchTeam() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('team_members').select('id, name, role').eq('user_id', user.id).order('name')
+    if (data) setTeamMembers(data)
   }
 
   async function handleSave() {
@@ -83,13 +93,13 @@ export default function TurnoversPage() {
   const past = turnovers.filter(t => t.turnover_date < today)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: '#F8F9FA', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
+      <style>{``}</style>
 
       <div style={{ background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20 }}>🔄</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Turnovers</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{upcoming.length} upcoming</span>
           </div>
@@ -104,7 +114,7 @@ export default function TurnoversPage() {
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>Loading turnovers…</div>
         ) : turnovers.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 80, color: '#9CA3AF' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔄</div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:12}}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
             <div style={{ fontSize: 16, fontWeight: 500 }}>No turnovers scheduled</div>
           </div>
         ) : (
@@ -147,7 +157,13 @@ export default function TurnoversPage() {
                 <div><label style={lbl}>Check-out Time</label><input type="time" value={form.check_out_time} onChange={e => setForm({ ...form, check_out_time: e.target.value })} style={inp} /></div>
                 <div><label style={lbl}>Check-in Time</label><input type="time" value={form.check_in_time} onChange={e => setForm({ ...form, check_in_time: e.target.value })} style={inp} /></div>
               </div>
-              <div><label style={lbl}>Assigned To</label><input type="text" value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={inp} placeholder="Cleaner name or email" /></div>
+              <div>
+                <label style={lbl}>Assigned To</label>
+                <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={{ ...inp, cursor: 'pointer' }}>
+                  <option value="">Select team member…</option>
+                  {teamMembers.map(m => <option key={m.id} value={m.name}>{m.name} ({m.role})</option>)}
+                </select>
+              </div>
               <div><label style={lbl}>Notes</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Special instructions…" /></div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
@@ -170,10 +186,10 @@ function TurnoverRow({ t, onStatus, onDelete }: { t: Turnover; onStatus: (id: st
       <div>
         <div style={{ fontWeight: 600, fontSize: 15, color: '#111827', marginBottom: 4 }}>{t.properties?.name ?? '—'}</div>
         <div style={{ fontSize: 13, color: '#6B7280', display: 'flex', gap: 12 }}>
-          <span>📅 {new Date(t.turnover_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+          <span>{new Date(t.turnover_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
           {t.check_out_time && <span>🚪 Out {t.check_out_time}</span>}
           {t.check_in_time && <span>🔑 In {t.check_in_time}</span>}
-          {t.assigned_to && <span>👤 {t.assigned_to}</span>}
+          {t.assigned_to && <span>{t.assigned_to}</span>}
         </div>
       </div>
       <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: cfg.color, background: cfg.bg, whiteSpace: 'nowrap' }}>{cfg.label}</span>
