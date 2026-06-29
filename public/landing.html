@@ -824,22 +824,8 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
 
 
 <script>
-async function startCheckout(plan) {
-  try {
-    const res = await fetch('/api/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan })
-    });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert(data.error || 'Something went wrong starting checkout. Please try again.');
-    }
-  } catch (err) {
-    alert('Could not start checkout. Please try again.');
-  }
+function startCheckout(plan) {
+  window.location.href = '/login?plan=' + plan + '&mode=signup';
 }
 </script>
 </body>

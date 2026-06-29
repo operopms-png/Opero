@@ -6,35 +6,67 @@ import { createClient } from '@supabase/supabase-js'
 
 const PLANS = [
   {
-    id: 'starter',
-    label: 'Starter',
-    price: '£29',
+    id: 'aipm',
+    label: 'AI Property Manager',
+    price: '£9.99',
     period: '/mo',
-    color: '#6B7280',
-    features: ['Up to 5 properties', 'Cleaning management', 'Maintenance tickets', 'Turnover automation', '2 team members'],
+    color: '#5B7CFA',
+    features: ['Guest comms', 'Maintenance coordination', 'Cleaning scheduling', 'Dynamic pricing', 'Owner reporting', 'Lead qualification'],
   },
   {
-    id: 'growth',
-    label: 'Growth',
-    price: '£79',
+    id: 'invest',
+    label: 'Invest',
+    price: '£19',
+    period: '/mo',
+    color: '#5B7CFA',
+    features: ['8 investment strategies', 'Deal analyser', 'Watchlist', 'Saved deals', 'ROI calculator'],
+  },
+  {
+    id: 'str',
+    label: 'Vacation Rentals (STR)',
+    price: '£29',
     period: '/mo',
     color: '#3B4AFF',
     popular: true,
-    features: ['Up to 25 properties', 'Everything in Starter', 'Owner reporting portal', 'Performance analytics', 'Calendar integrations', '10 team members'],
+    features: ['Bookings & CRM', 'Cleaning & maintenance', 'Banking & reports', 'Guest comms', 'Contractor portal', 'iCal sync'],
   },
   {
-    id: 'professional',
-    label: 'Professional',
-    price: '£199',
+    id: 'pm',
+    label: 'Property Management',
+    price: '£39',
+    period: '/mo',
+    color: '#5B7CFA',
+    features: ['Tenants & leases', 'Rent collection', 'Inspections', 'Banking & reports', 'Owner portal'],
+  },
+  {
+    id: 'dev',
+    label: 'Developments',
+    price: '£49',
+    period: '/mo',
+    color: '#5B7CFA',
+    features: ['Projects & budgets', 'Investors', 'Milestones', 'Contractor management', 'Documents'],
+  },
+  {
+    id: 'ea',
+    label: 'Estate Agency',
+    price: '£59',
+    period: '/mo',
+    color: '#5B7CFA',
+    features: ['Vacancy management', 'Rent collection', 'Landlord portal', 'CRM', 'Banking & reports'],
+  },
+  {
+    id: 'bundle',
+    label: 'All Modules Bundle',
+    price: '£175.50',
     period: '/mo',
     color: '#1a1a2e',
-    features: ['Unlimited properties', 'Everything in Growth', 'Advanced reporting', 'Custom branding', 'API access', 'Priority support', 'Unlimited team members'],
+    features: ['Every module included', '10% off vs buying separately', 'Unlimited properties', 'Priority support'],
   },
 ]
 
 function LoginForm() {
   const searchParams = useSearchParams()
-  const initialPlan = searchParams.get('plan') ?? 'growth'
+  const initialPlan = searchParams.get('plan') ?? 'str'
   const success = searchParams.get('success') === 'true'
   const redirect = searchParams.get('redirect') ?? '/dashboard'
   const fromPricing = searchParams.get('mode') === 'signup'
