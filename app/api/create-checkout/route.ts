@@ -2,9 +2,13 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 
 const PRICE_IDS: Record<string, string> = {
-  starter: 'price_1TfeoYGVqeDYuzWEDnDdfTS8',
-  growth: 'price_1TfepHGVqeDYuzWEH6Ugvb8Q',
-  professional: 'price_1TfeplGVqeDYuzWEAcUuLdCB',
+  aipm: 'price_1TnhJFGa2COshwfZ4gPTqI5U',
+  invest: 'price_1TnhKSGa2COshwfZ2htSNZgt',
+  str: 'price_1TnhL3Ga2COshwfZw7qLRJt2',
+  pm: 'price_1TnhLWGa2COshwfZE1YImFSK',
+  dev: 'price_1TnhM2Ga2COshwfZSViH7HsG',
+  ea: 'price_1TnhMYGa2COshwfZVkT5DQGt',
+  bundle: 'price_1TnhN2Ga2COshwfZPkq6XNA7',
 }
 
 export async function POST(request: NextRequest) {
