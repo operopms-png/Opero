@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 
@@ -78,11 +78,22 @@ function LoginForm() {
   const [successMsg, setSuccessMsg] = useState('')
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(fromPricing ? 'signup' : 'login')
   const [selectedPlan, setSelectedPlan] = useState('')
+  const [checkingSession, setCheckingSession] = useState(true)
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        window.location.href = redirect
+      } else {
+        setCheckingSession(false)
+      }
+    })
+  }, [])
 
   async function handleSubmit() {
     setLoading(true)
@@ -111,6 +122,14 @@ function LoginForm() {
       else setSuccessMsg('Password reset email sent — check your inbox!')
     }
     setLoading(false)
+  }
+
+  if (checkingSession) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F7F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', -apple-system, sans-serif", color: '#98A2B3', fontSize: 14 }}>
+        Loading…
+      </div>
+    )
   }
 
   return (

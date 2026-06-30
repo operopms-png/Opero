@@ -126,21 +126,23 @@ export default function Page() {
   useEffect(()=>{
     supabase.auth.getUser().then(({data:{user}})=>{
       if(!user){window.location.href='/login';return}
-      loadAll()
+      loadAll(user.id)
     })
   },[])
 
-  async function loadAll() {
+  async function loadAll(uid?: string) {
+    let userId = uid
+    if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
     const [p,t,tn,v,m,e,ba,tx,r] = await Promise.all([
-      supabase.from('estate_properties').select('*').order('created_at',{ascending:false}),
-      supabase.from('estate_tenants').select('*').order('created_at',{ascending:false}),
-      supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name)').order('created_at',{ascending:false}),
-      supabase.from('estate_vacancies').select('*,estate_properties(name)').order('created_at',{ascending:false}),
-      supabase.from('estate_mortgages').select('*,estate_properties(name)').order('created_at',{ascending:false}),
-      supabase.from('estate_expenses').select('*').order('created_at',{ascending:false}),
-      supabase.from('estate_bank_accounts').select('*').order('created_at',{ascending:false}),
-      supabase.from('estate_transactions').select('*').order('date',{ascending:false}),
-      supabase.from('estate_rent_schedules').select('*').order('created_at',{ascending:false}),
+      supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_tenants').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_vacancies').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_mortgages').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_expenses').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_bank_accounts').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_transactions').select('*').eq('user_id',userId).order('date',{ascending:false}),
+      supabase.from('estate_rent_schedules').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     setProperties(p.data??[]); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])

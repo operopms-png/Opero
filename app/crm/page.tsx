@@ -42,20 +42,22 @@ export default function CRMPage() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
-      await loadAll()
+      await loadAll(user.id)
       setLoading(false)
     }
     init()
   }, [])
 
-  async function loadAll() {
+  async function loadAll(uid?: string) {
+    let userId = uid
+    if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
     const [c,co,d,t,a,m] = await Promise.all([
-      supabase.from('crm_contacts').select('*').order('created_at',{ascending:false}),
-      supabase.from('crm_companies').select('*').order('created_at',{ascending:false}),
-      supabase.from('crm_deals').select('*,crm_contacts(name)').order('created_at',{ascending:false}),
-      supabase.from('crm_tasks').select('*,crm_contacts(name)').order('due_date',{ascending:true}),
-      supabase.from('crm_activities').select('*,crm_contacts(name)').order('created_at',{ascending:false}),
-      supabase.from('crm_meetings').select('*,crm_contacts(name)').order('date',{ascending:true}),
+      supabase.from('crm_contacts').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('crm_companies').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('crm_deals').select('*,crm_contacts(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('crm_tasks').select('*,crm_contacts(name)').eq('user_id',userId).order('due_date',{ascending:true}),
+      supabase.from('crm_activities').select('*,crm_contacts(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('crm_meetings').select('*,crm_contacts(name)').eq('user_id',userId).order('date',{ascending:true}),
     ])
     setContacts(c.data??[]); setCompanies(co.data??[]); setDeals(d.data??[])
     setTasks(t.data??[]); setActivities(a.data??[]); setMeetings(m.data??[])

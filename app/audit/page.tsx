@@ -9,11 +9,13 @@ export default function AuditPage() {
 
   useEffect(() => {
     async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { window.location.href = '/login'; return }
       const [{ data: bookings }, { data: cleaning }, { data: maintenance }, { data: properties }] = await Promise.all([
-        supabase.from('bookings').select('*, properties(name)').order('created_at', { ascending: false }).limit(20),
-        supabase.from('cleaning_tasks').select('*, properties(name)').order('created_at', { ascending: false }).limit(20),
-        supabase.from('maintenance_tickets').select('*, properties(name)').order('created_at', { ascending: false }).limit(20),
-        supabase.from('properties').select('*').order('created_at', { ascending: false }).limit(20),
+        supabase.from('bookings').select('*, properties(name)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
+        supabase.from('cleaning_tasks').select('*, properties(name)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
+        supabase.from('maintenance_tickets').select('*, properties(name)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
+        supabase.from('properties').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
       ])
       const entries: any[] = []
       bookings?.forEach(b => entries.push({ type: 'booking', action: 'Booking created', detail: `${b.guest_name ?? 'Guest'} — ${b.properties?.name}`, date: b.created_at }))

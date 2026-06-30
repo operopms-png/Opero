@@ -136,19 +136,21 @@ export default function DevPage() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
-      await loadAll()
+      await loadAll(user.id)
       setLoading(false)
     }
     init()
   }, [])
 
-  async function loadAll() {
+  async function loadAll(uid?: string) {
+    let userId = uid
+    if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
     const [p, b, i, d, m] = await Promise.all([
-      supabase.from('dev_projects').select('*').order('created_at', { ascending: false }),
-      supabase.from('dev_budget_items').select('*, dev_projects(name)').order('created_at', { ascending: false }),
-      supabase.from('dev_investors').select('*, dev_projects(name)').order('created_at', { ascending: false }),
-      supabase.from('dev_documents').select('*, dev_projects(name)').order('created_at', { ascending: false }),
-      supabase.from('dev_milestones').select('*, dev_projects(name)').order('due_date', { ascending: true }),
+      supabase.from('dev_projects').select('*').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_budget_items').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_investors').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_documents').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_milestones').select('*, dev_projects(name)').eq('user_id',userId).order('due_date', { ascending: true }),
     ])
     setProjects(p.data ?? [])
     setBudgetItems(b.data ?? [])

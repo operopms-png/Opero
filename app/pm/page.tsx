@@ -169,23 +169,25 @@ export default function PMPage() {
       const { data: sub } = await supabase.from('subscriptions').select('modules').eq('user_id', user.id).single()
       const mods = (sub as any)?.modules ?? []
       setHasModule(mods.includes('pm') || mods.includes('dev'))
-      await loadAll()
+      await loadAll(user.id)
       setLoading(false)
     }
     init()
   }, [])
 
-  async function loadAll() {
+  async function loadAll(uid?: string) {
+    let userId = uid
+    if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
     const [p,u,l,t,le,pay,m,ins,docs] = await Promise.all([
-      supabase.from('pm_properties').select('*').order('created_at',{ascending:false}),
-      supabase.from('pm_units').select('*,pm_properties(name)').order('created_at',{ascending:false}),
-      supabase.from('pm_landlords').select('*').order('created_at',{ascending:false}),
-      supabase.from('pm_tenants').select('*,pm_properties(name),pm_units(unit_number)').order('created_at',{ascending:false}),
-      supabase.from('pm_leases').select('*,pm_tenants(name),pm_units(unit_number),pm_properties(name)').order('created_at',{ascending:false}),
-      supabase.from('pm_rent_payments').select('*,pm_tenants(name),pm_properties(name)').order('due_date',{ascending:false}),
-      supabase.from('pm_maintenance').select('*,pm_properties(name),pm_units(unit_number)').order('created_at',{ascending:false}),
-      supabase.from('pm_inspections').select('*,pm_properties(name),pm_units(unit_number)').order('scheduled_date',{ascending:true}),
-      supabase.from('pm_documents').select('*,pm_properties(name)').order('created_at',{ascending:false}),
+      supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_units').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_tenants').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_leases').select('*,pm_tenants(name),pm_units(unit_number),pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_rent_payments').select('*,pm_tenants(name),pm_properties(name)').eq('user_id',userId).order('due_date',{ascending:false}),
+      supabase.from('pm_maintenance').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_inspections').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
+      supabase.from('pm_documents').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     setProperties(p.data??[]); setUnits(u.data??[]); setLandlords(l.data??[])
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])

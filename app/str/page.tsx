@@ -62,11 +62,11 @@ export default function STRPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const userId = uid || user?.id
     const [p, b, c, m, t, tm] = await Promise.all([
-      supabase.from('properties').select('*').order('created_at', { ascending: false }),
-      supabase.from('bookings').select('*, properties(name)').order('check_in', { ascending: false }),
-      supabase.from('cleaning_tasks').select('*, properties(name)').order('scheduled_date', { ascending: true }),
-      supabase.from('maintenance_tickets').select('*, properties(name)').order('created_at', { ascending: false }),
-      supabase.from('turnovers').select('*, properties(name)').order('turnover_date', { ascending: true }),
+      supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabase.from('bookings').select('*, properties(name)').eq('user_id', userId).order('check_in', { ascending: false }),
+      supabase.from('cleaning_tasks').select('*, properties(name)').eq('user_id', userId).order('scheduled_date', { ascending: true }),
+      supabase.from('maintenance_tickets').select('*, properties(name)').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabase.from('turnovers').select('*, properties(name)').eq('user_id', userId).order('turnover_date', { ascending: true }),
       supabase.from('team_members').select('*').eq('user_id', userId),
     ])
     setProperties(p.data ?? [])
