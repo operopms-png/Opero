@@ -71,6 +71,14 @@ export default function DashboardPage() {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
+  // Trial countdown logic
+  const isTrialing = subscription?.status === 'trialing'
+  const isPaid = subscription?.status === 'active'
+  const trialStart = subscription?.updated_at ? new Date(subscription.updated_at) : null
+  const trialEnd = trialStart ? new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000) : null
+  const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null
+  const trialUrgent = daysLeft !== null && daysLeft <= 3
+
   function formatDate(d: string) {
     return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
   }
@@ -94,7 +102,26 @@ export default function DashboardPage() {
           <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 1 }}>Here's what's happening today</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {subscription && (
+          {subscription && isTrialing && daysLeft !== null && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px',
+              borderRadius: 20,
+              background: trialUrgent ? '#FEF3C7' : '#EEF1FF',
+              border: `1px solid ${trialUrgent ? '#FCD34D' : '#C7D2FE'}`,
+            }}>
+              <span style={{ fontSize: 16 }}>{trialUrgent ? '⚠️' : '⏱️'}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: trialUrgent ? '#B45309' : '#5B7CFA' }}>
+                {daysLeft === 0 ? 'Trial ends today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in trial`}
+              </span>
+            </div>
+          )}
+          {subscription && isPaid && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 20, background: '#D1FAE5', border: '1px solid #6EE7B7' }}>
+              <span style={{ fontSize: 13 }}>✅</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#065F46', textTransform: 'capitalize' }}>{plan} · Active</span>
+            </div>
+          )}
+          {subscription && !isTrialing && !isPaid && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 20, background: '#F1F5FF', border: '1px solid #E0E7FF' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: PLAN_COLOR[plan] }} />
               <span style={{ fontSize: 13, fontWeight: 600, color: PLAN_COLOR[plan], textTransform: 'capitalize' }}>{plan}</span>

@@ -3,12 +3,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 const PLAN_MAP: Record<string, string> = {
+  // Old 3-tier prices (kept for backwards compat)
   'price_1TfeoYGVqeDYuzWEDnDdfTS8': 'starter',
   'price_1TfepHGVqeDYuzWEH6Ugvb8Q': 'growth',
   'price_1TfeplGVqeDYuzWEAcUuLdCB': 'professional',
   'price_1Tfl0kGVqeDYuzWElsWlZLyf': 'starter',
   'price_1Tfl1qGVqeDYuzWEb1htih5S': 'growth',
   'price_1Tfl2AGVqeDYuzWEjAuZlyCI': 'professional',
+  // New 6-module prices (live)
+  'price_1TnhJFGa2COshwfZ4gPTqI5U': 'aipm',
+  'price_1TnhKSGa2COshwfZ2htSNZgt': 'invest',
+  'price_1TnhL3Ga2COshwfZw7qLRJt2': 'str',
+  'price_1TnhLWGa2COshwfZE1YImFSK': 'pm',
+  'price_1TnhM2Ga2COshwfZSViH7HsG': 'dev',
+  'price_1TnhMYGa2COshwfZVkT5DQGt': 'ea',
+  'price_1TnhN2Ga2COshwfZPkq6XNA7': 'bundle',
 }
 
 const YEARLY_IDS = [
