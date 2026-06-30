@@ -2,7 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
+
 
 const PLANS = [
   {
@@ -79,11 +80,6 @@ function LoginForm() {
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(fromPricing ? 'signup' : 'login')
   const [selectedPlan, setSelectedPlan] = useState('')
   const [checkingSession, setCheckingSession] = useState(true)
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

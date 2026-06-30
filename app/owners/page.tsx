@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 
 
@@ -21,11 +21,7 @@ const TABS = [
 const MANAGEMENT_FEE = 0.20 // 20% management fee
 
 export default function OwnersPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  const [tab, setTab] = useState('dashboard')
+    const [tab, setTab] = useState('dashboard')
   const [properties, setProperties] = useState<any[]>([])
   const [bookings, setBookings] = useState<any[]>([])
   const [tickets, setTickets] = useState<any[]>([])

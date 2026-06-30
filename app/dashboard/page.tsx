@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 const PLAN_FEATURES: Record<string, string[]> = {
   starter: ['properties', 'cleaning', 'maintenance', 'turnovers'],
@@ -21,8 +21,7 @@ const GROWTH_LOCKED = ['Bookings management', 'Owner reporting portal', 'Photo v
 const PRO_LOCKED = ['Advanced reporting & exports', 'Document storage', 'Automated owner statements', 'Guest communication templates', 'Custom branding', 'API access', 'Multi-portfolio view', 'Audit log', 'Priority support', 'Unlimited team members']
 
 export default function DashboardPage() {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-  const [stats, setStats] = useState({ properties: 0, cleaning: 0, maintenance: 0, revenue: 0 })
+    const [stats, setStats] = useState({ properties: 0, cleaning: 0, maintenance: 0, revenue: 0 })
   const [subscription, setSubscription] = useState<any>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [upcomingBookings, setUpcomingBookings] = useState<any[]>([])

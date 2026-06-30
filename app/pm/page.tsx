@@ -1,9 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import WeatherWidget from '@/components/WeatherWidget'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements']
 
 async function uploadFile(file: File, folder: string): Promise<string | null> {

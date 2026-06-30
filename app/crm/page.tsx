@@ -1,8 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const DEAL_STAGES = ['Lead','Qualified','Proposal','Negotiation','Closed Won','Closed Lost']
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }

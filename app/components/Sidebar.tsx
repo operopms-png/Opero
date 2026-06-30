@@ -1,9 +1,8 @@
 'use client'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 import { useEffect, useState } from 'react'
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const NAV = [
   { group: 'VACATION RENTALS', items: [
     { label: 'Vacation Rentals', href: '/str', icon: '🏖️' },

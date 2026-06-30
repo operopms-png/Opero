@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 
 
@@ -36,11 +36,7 @@ const STATUS_CONFIG = {
 const INITIAL_FORM = { property_id: '', title: '', description: '', priority: 'medium', status: 'open', assigned_to: '' }
 
 export default function MaintenancePage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  const [tickets, setTickets] = useState<Ticket[]>([])
+    const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(INITIAL_FORM)

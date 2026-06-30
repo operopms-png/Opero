@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 function StaffLoginForm() {
   const searchParams = useSearchParams()
@@ -15,11 +15,7 @@ function StaffLoginForm() {
   const [successMsg, setSuccessMsg] = useState('')
   const [mode, setMode] = useState<'login' | 'reset'>('login')
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
+  
   async function handleSubmit() {
     setLoading(true)
     setError('')

@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+import { supabase } from '../../lib/supabase'
 const ACCENT = '#2D6A4F'
 const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Loans & Mortgages','Rent Collection','Vacancies','Expenses','Banking','Reports','Owner Reports','Documents']
 const NAV_REST = ['Contacts','Maintenance','Tasks','Notes','Messages','Candidates','Tools','Community']

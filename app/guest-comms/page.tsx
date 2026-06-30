@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 const TEMPLATES = [
   { id: 'welcome', label: 'Welcome Message', subject: 'Welcome to {property_name}!', body: 'Hi {guest_name},\n\nWelcome! We\'re excited to host you at {property_name}.\n\nCheck-in: {check_in}\nCheck-out: {check_out}\n\nPlease don\'t hesitate to reach out if you need anything.\n\nBest regards' },
@@ -10,8 +10,7 @@ const TEMPLATES = [
 ]
 
 export default function GuestCommsPage() {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-  const [selected, setSelected] = useState(TEMPLATES[0])
+    const [selected, setSelected] = useState(TEMPLATES[0])
   const [bookings, setBookings] = useState<any[]>([])
   const [selectedBooking, setSelectedBooking] = useState<any>(null)
   const [preview, setPreview] = useState(TEMPLATES[0].body)

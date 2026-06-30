@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 
 
@@ -74,11 +74,7 @@ const integrations = [
 ]
 
 export default function IntegrationsPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  const [userId, setUserId] = useState<string | null>(null)
+    const [userId, setUserId] = useState<string | null>(null)
   const [connected, setConnected] = useState<Record<string, boolean>>({})
   const [inputs, setInputs] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState<Record<string, boolean>>({})

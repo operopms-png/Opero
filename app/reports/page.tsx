@@ -1,10 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 export default function ReportsPage() {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-  const [bookings, setBookings] = useState<any[]>([])
+    const [bookings, setBookings] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'revenue' | 'occupancy'>('revenue')

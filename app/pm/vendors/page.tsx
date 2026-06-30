@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+import { supabase } from '../../../lib/supabase'
 const ACCENT = '#101828'
 const MODULE = 'pm'
 const LABEL = 'Property Management'

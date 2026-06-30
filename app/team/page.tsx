@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 
 type TeamMember = {
   id: string
@@ -14,8 +14,7 @@ const ROLES = ['cleaner', 'maintenance', 'manager', 'inspector', 'admin']
 const INITIAL_FORM = { name: '', email: '', role: 'cleaner', phone: '' }
 
 export default function TeamPage() {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-  const [members, setMembers] = useState<TeamMember[]>([])
+    const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(INITIAL_FORM)
