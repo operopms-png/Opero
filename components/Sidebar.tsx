@@ -57,7 +57,7 @@ const NAV_GROUPS = [
     label: 'Invest',
     items: [
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator' },
-      { href: '/invest/watchlist', label: 'Watchlist', key: 'invest', icon: 'bookmark' },
+      { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark' },
     ]
   },
   {
