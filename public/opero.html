@@ -587,22 +587,97 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
 
 
 <section class="section" id="features" style="background:#F9FAFB">
-  <div style="text-align:center;margin-bottom:52px">
+  <div style="text-align:center;margin-bottom:64px">
     <span class="tag" style="display:block;margin-bottom:10px">Features</span>
     <h2 style="font-size:36px;font-weight:700;margin-bottom:12px;letter-spacing:-0.01em">Everything your portfolio needs</h2>
     <p style="font-size:16px;color:#667085;max-width:480px;margin:0 auto">Replace five disconnected tools with one platform built for serious property operators.</p>
   </div>
-  <div class="features-grid">
-    <div class="card"><div class="card-icon"><i class="ti ti-layout-dashboard"></i></div><div class="card-title">Unified dashboard</div><div class="card-desc">All properties, revenue, tasks and alerts across every module in one view.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-users"></i></div><div class="card-title">Built-in CRM</div><div class="card-desc">Guests, tenants, landlords and investors — HubSpot-style CRM per module.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-credit-card"></i></div><div class="card-title">Banking & finance</div><div class="card-desc">Expenses, bank reconciliation and P&L reports built into every module.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-tool"></i></div><div class="card-title">Contractor portal</div><div class="card-desc">Work orders, job tracking and invoices with a dedicated contractor login.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-calculator"></i></div><div class="card-title">Deal analyser</div><div class="card-desc">Eight strategies — BTL, HMO, BRRR, R2R, Social Housing, Supported Living, Flip & Land.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-lock"></i></div><div class="card-title">Role-based access</div><div class="card-desc">Cleaners, managers, agents and viewers — tailored permissions per staff member.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-mail"></i></div><div class="card-title">Guest messaging</div><div class="card-desc">Templates, automated messages and full comms history in one inbox.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-chart-bar"></i></div><div class="card-title">Reports & analytics</div><div class="card-desc">Revenue trends, occupancy, rent collection and cash flow — per module and portfolio-wide.</div></div>
-    <div class="card"><div class="card-icon"><i class="ti ti-building-community"></i></div><div class="card-title">Vacancy management</div><div class="card-desc">Track vacant units, untapped income potential and let-agreed status in real time.</div></div>
+
+  <style>
+  .module-showcase{display:flex;align-items:center;gap:56px;max-width:1180px;margin:0 auto 88px}
+  .module-showcase.reverse{flex-direction:row-reverse}
+  .module-showcase-text{flex:0 0 360px}
+  .module-showcase-img{flex:1;min-width:0;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(16,24,40,0.10);border:1px solid #E4E7EC}
+  .module-showcase-img img{width:100%;display:block}
+  .module-showcase-text .tag{display:inline-block;margin-bottom:14px}
+  .module-showcase-text h3{font-size:26px;font-weight:700;margin-bottom:12px;letter-spacing:-0.01em;color:#101828}
+  .module-showcase-text p{font-size:14px;color:#667085;line-height:1.7;margin-bottom:20px}
+  .module-showcase-list{display:flex;flex-direction:column;gap:10px}
+  .module-showcase-list div{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:#344054}
+  .module-showcase-list div::before{content:'';width:5px;height:5px;border-radius:50%;background:#5B7CFA;margin-top:7px;flex-shrink:0}
+  @media(max-width:900px){.module-showcase,.module-showcase.reverse{flex-direction:column;gap:28px}.module-showcase-text{flex:0 0 auto;text-align:center}.module-showcase-list div{text-align:left}}
+  </style>
+
+  <div class="module-showcase">
+    <div class="module-showcase-text">
+      <span class="tag">Vacation Rentals</span>
+      <h3>Run short-term rentals like a pro</h3>
+      <p>Bookings, revenue trends, occupancy and check-ins — all on one dashboard, synced directly with Airbnb and Vrbo.</p>
+      <div class="module-showcase-list">
+        <div>Direct booking engine + iCal sync</div>
+        <div>Auto-scheduled cleaning after every checkout</div>
+        <div>Owner reports with revenue & occupancy charts</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/str.png" alt="Opero Vacation Rentals dashboard" loading="lazy"></div>
   </div>
+
+  <div class="module-showcase reverse">
+    <div class="module-showcase-text">
+      <span class="tag">Property Management</span>
+      <h3>Tenants, leases and rent — handled</h3>
+      <p>Track rent collected, arrears, lease expiries and maintenance from a single property management dashboard.</p>
+      <div class="module-showcase-list">
+        <div>Rent collection trends vs amounts due</div>
+        <div>Lease expiry tracking with automatic alerts</div>
+        <div>Inspections, maintenance and owner reports</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/pm.png" alt="Opero Property Management dashboard" loading="lazy"></div>
+  </div>
+
+  <div class="module-showcase">
+    <div class="module-showcase-text">
+      <span class="tag">Estate Agency</span>
+      <h3>Manage lettings on behalf of landlords</h3>
+      <p>Rented properties, tenancies and rent collection in one place, with built-in real estate news and market updates.</p>
+      <div class="module-showcase-list">
+        <div>Revenue and expenses by month or year</div>
+        <div>Tenancy and tenant tracking with archiving</div>
+        <div>Landlord portal with owner-facing reports</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/estate.png" alt="Opero Estate Agency dashboard" loading="lazy"></div>
+  </div>
+
+  <div class="module-showcase reverse">
+    <div class="module-showcase-text">
+      <span class="tag">Developments</span>
+      <h3>Track every build from start to finish</h3>
+      <p>Budgets, spend, investor equity and project status — all visible at a glance across every development.</p>
+      <div class="module-showcase-list">
+        <div>Budget vs spend tracked over time</div>
+        <div>Investor summary with equity breakdown</div>
+        <div>Milestones and project status by stage</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/dev.png" alt="Opero Developments dashboard" loading="lazy"></div>
+  </div>
+
+  <div class="module-showcase">
+    <div class="module-showcase-text">
+      <span class="tag">Invest</span>
+      <h3>Analyse any deal before you buy</h3>
+      <p>Eight investment strategies built in, so you can model returns before committing to a purchase.</p>
+      <div class="module-showcase-list">
+        <div>Buy to Let, Flip, BRRR, HMO and more</div>
+        <div>Rent to Rent, Social Housing, Supported Living</div>
+        <div>Land Purchase analysis for development gain</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/invest.png" alt="Opero Invest Deal Analyser" loading="lazy"></div>
+  </div>
+
 </section>
 
 <section class="section" id="ai-agents" style="background:#F9FAFB">
@@ -611,6 +686,9 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
       <span class="tag">New</span>
       <h2 style="font-size:36px;font-weight:700;margin:10px 0 12px">Let AI handle the day-to-day</h2>
       <p style="font-size:15px;color:#667085;max-width:600px;margin:0 auto">Six AI agents built into Opero — designed to take routine guest, maintenance and reporting work off your plate.</p>
+    </div>
+    <div style="max-width:900px;margin:0 auto 48px;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(16,24,40,0.10);border:1px solid #E4E7EC">
+      <img src="/screenshots/ai-manager.png" alt="Opero AI Property Manager dashboard" loading="lazy" style="width:100%;display:block">
     </div>
     <div class="features-grid" style="margin-bottom:32px">
       <div class="card">
