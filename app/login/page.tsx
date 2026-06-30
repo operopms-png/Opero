@@ -77,7 +77,7 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(fromPricing ? 'signup' : 'login')
-  const [selectedPlan, setSelectedPlan] = useState(initialPlan)
+  const [selectedPlan, setSelectedPlan] = useState('')
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -208,7 +208,7 @@ function LoginForm() {
             )}
             {error && <div style={{ fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
             {successMsg && <div style={{ fontSize: 13, color: '#12B76A', background: '#F6FEF9', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}
-            <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#3B4AFF', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) ? 0.6 : 1, marginTop: 4 }}>
+            <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#3B4AFF', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
               {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? `Start free trial →` : 'Send Reset Email'}
             </button>
           </div>
