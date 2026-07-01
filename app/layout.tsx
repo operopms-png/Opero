@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import './globals.css'
 
-const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password']
+const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal']
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

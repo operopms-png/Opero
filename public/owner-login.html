@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Portal — Sangsters Group</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#1A1A1A;min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .card{background:#fff;border-radius:16px;padding:44px 40px;width:100%;max-width:420px;box-shadow:0 24px 80px rgba(0,0,0,0.4)}
+  .logo-wrap{text-align:center;margin-bottom:28px}
+  .logo-wrap img{width:72px;height:72px;border-radius:12px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto}
+  .brand{font-size:18px;font-weight:800;color:#1A1A1A;letter-spacing:0.03em}
+  .sub{font-size:12px;color:#9A8B6E;text-transform:uppercase;letter-spacing:0.1em;margin-top:3px}
+  h1{font-size:22px;font-weight:700;color:#1A1A1A;text-align:center;margin-bottom:6px}
+  .tagline{font-size:13px;color:#667085;text-align:center;margin-bottom:28px}
+  .divider{height:1px;background:#F2F4F7;margin-bottom:24px}
+  label{display:block;font-size:11px;font-weight:700;color:#667085;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+  input{width:100%;padding:12px 14px;border:1.5px solid #E4E7EC;border-radius:9px;font-size:14px;color:#101828;outline:none;transition:border-color 0.15s}
+  input:focus{border-color:#C9A84C}
+  .field{margin-bottom:18px}
+  .btn{width:100%;padding:13px;background:#C9A84C;color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;transition:background 0.15s;margin-top:6px}
+  .btn:hover{background:#B8963B}
+  .btn:disabled{opacity:0.6;cursor:not-allowed}
+  .error{background:#FEE2E2;color:#DC2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+  .footer{text-align:center;margin-top:24px;font-size:12px;color:#98A2B3;line-height:1.6}
+  .footer a{color:#C9A84C;text-decoration:none}
+  .gold-bar{height:3px;background:linear-gradient(90deg,#C9A84C,#E8C97A,#C9A84C);border-radius:2px;margin-bottom:28px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo-wrap">
+    <img src="https://sangstersgroup.com/wp-content/uploads/2024/02/Sangsters-Group-developments.png" alt="Sangsters Group" onerror="this.style.display='none'">
+    <div class="brand">Sangsters Group</div>
+    <div class="sub">Developments Ltd</div>
+  </div>
+  <div class="gold-bar"></div>
+  <h1>Owner Portal</h1>
+  <p class="tagline">Sign in to view your property dashboard</p>
+  <div class="divider"></div>
+  <div class="error" id="errMsg"></div>
+  <div class="field">
+    <label>Email address</label>
+    <input type="email" id="email" placeholder="your@email.com" autocomplete="email">
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button class="btn" id="loginBtn" onclick="handleLogin()">Sign in to Owner Portal</button>
+  <div class="footer">
+    <br>Having trouble signing in?<br>
+    Contact us at <a href="mailto:admin@sangstersgroup.com">admin@sangstersgroup.com</a><br>
+    or call <a href="tel:+18762775467">+1 876 277-5467</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://mzjsxrlgnthelwwtfkke.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16anN4cmxnbnRoZWx3d3Rma2tlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NDc2MTksImV4cCI6MjA5NjIyMzYxOX0.XXCEu26E_p3M-ylcoEDmKlR84Ww49KL7DifDOJMRDRo'
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+async function handleLogin() {
+  const email = document.getElementById('email').value.trim()
+  const password = document.getElementById('password').value
+  const btn = document.getElementById('loginBtn')
+  const err = document.getElementById('errMsg')
+
+  if (!email || !password) { showError('Please enter your email and password.'); return }
+
+  btn.disabled = true
+  btn.textContent = 'Signing in…'
+  err.style.display = 'none'
+
+  const { data, error } = await client.auth.signInWithPassword({ email, password })
+  if (error) { showError(error.message); btn.disabled = false; btn.textContent = 'Sign in to Owner Portal'; return }
+
+  // Check owner profile
+  const { data: profile } = await client.from('owner_profiles').select('id').eq('user_id', data.user.id).single()
+  window.location.href = profile ? 'https://helloopero.com/owner-portal' : 'https://helloopero.com/dashboard'
+}
+
+function showError(msg) {
+  const err = document.getElementById('errMsg')
+  err.textContent = msg
+  err.style.display = 'block'
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin() })
+</script>
+</body>
+</html>

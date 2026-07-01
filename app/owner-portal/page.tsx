@@ -1,0 +1,749 @@
+'use client'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabase'
+
+const MGMT_FEE = 0.40 // Sangsters takes 40%, owner gets 60%
+
+const NAV = [
+  { section: 'OVERVIEW', items: ['Dashboard', 'My Bookings', 'Calendar'] },
+  { section: 'REPORTS', items: ['Maintenance', 'Statements', 'ROI Per Owner', 'My Properties', 'Finance & Documents'] },
+  { section: 'COMMUNICATION', items: ['Messages', 'Contact & Payment'] },
+]
+
+const STAFF_NAV = [
+  { section: 'STAFF ONLY', items: ['Staff Panel', 'Manage Owners'] }
+]
+
+function StatCard({ label, value, sub, dark }: any) {
+  return (
+    <div style={{ background: dark ? '#101828' : '#fff', border: `1px solid ${dark ? '#101828' : '#E4E7EC'}`, borderRadius: 10, padding: '16px 20px' }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: dark ? '#6B7280' : '#667085', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: dark ? '#fff' : '#101828' }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: dark ? '#6B7280' : '#98A2B3', marginTop: 4 }}>{sub}</div>}
+    </div>
+  )
+}
+
+function Badge({ status }: { status: string }) {
+  const colors: Record<string, [string, string]> = {
+    confirmed: ['#D1FAE5', '#059669'], cancelled: ['#FEE2E2', '#DC2626'],
+    pending: ['#FEF3C7', '#D97706'], resolved: ['#D1FAE5', '#059669'],
+    open: ['#FEF3C7', '#92400E'], paid: ['#D1FAE5', '#059669'],
+    active: ['#D1FAE5', '#059669'], draft: ['#F3F4F6', '#6B7280'],
+  }
+  const [bg, color] = colors[status?.toLowerCase()] ?? ['#F3F4F6', '#6B7280']
+  return <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: bg, color }}>{status}</span>
+}
+
+export default function OwnerPortalPage() {
+  const [tab, setTab] = useState('Dashboard')
+  const [user, setUser] = useState<any>(null)
+  const [ownerProfile, setOwnerProfile] = useState<any>(null)
+  const [isStaff, setIsStaff] = useState(false)
+  const [properties, setProperties] = useState<any[]>([])
+  const [bookings, setBookings] = useState<any[]>([])
+  const [tickets, setTickets] = useState<any[]>([])
+  const [statements, setStatements] = useState<any[]>([])
+  const [financeRecords, setFinanceRecords] = useState<any[]>([])
+  const [messages, setMessages] = useState<any[]>([])
+  const [allOwners, setAllOwners] = useState<any[]>([])
+  const [contactInfo, setContactInfo] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [calMonth, setCalMonth] = useState(new Date())
+  const [newMsg, setNewMsg] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  // Manage owners form
+  const [ownerForm, setOwnerForm] = useState({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
+
+  useEffect(() => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { window.location.href = '/login'; return }
+      setUser(user)
+
+      // Check owner profile
+      const { data: profile } = await supabase.from('owner_profiles').select('*').eq('user_id', user.id).single()
+      if (profile) {
+        setOwnerProfile(profile)
+        setIsStaff(false)
+        await loadOwnerData(profile)
+      } else {
+        // Staff/admin — can see all owners
+        setIsStaff(true)
+        await loadStaffData(user.id)
+      }
+      setLoading(false)
+    }
+    init()
+  }, [])
+
+  async function loadOwnerData(profile: any) {
+    const ids: string[] = profile.property_ids ?? []
+    const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
+    const [p, b, t, s, f, m, c] = await Promise.all([
+      supabase.from('properties').select('*').in('id', safeIds),
+      supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
+      supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
+      supabase.from('owner_statements').select('*').eq('owner_id', profile.id).order('period_start', { ascending: false }),
+      supabase.from('owner_finance').select('*').eq('owner_id', profile.id).order('created_at', { ascending: false }),
+      supabase.from('owner_messages').select('*').eq('owner_id', profile.id).order('created_at', { ascending: false }),
+      supabase.from('owner_contact').select('*').eq('owner_id', profile.id).single(),
+    ])
+    setProperties(p.data ?? [])
+    setBookings(b.data ?? [])
+    setTickets(t.data ?? [])
+    setStatements(s.data ?? [])
+    setFinanceRecords(f.data ?? [])
+    setMessages(m.data ?? [])
+    setContactInfo(c.data ?? null)
+  }
+
+  async function loadStaffData(userId: string) {
+    const [owners] = await Promise.all([
+      supabase.from('owner_profiles').select('*, owner_contact(*), owner_finance(*), properties:property_ids').order('created_at', { ascending: false }),
+    ])
+    setAllOwners(owners.data ?? [])
+    // Also load all data for staff overview
+    const [p, b, t] = await Promise.all([
+      supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabase.from('bookings').select('*, properties(name)').eq('user_id', userId).order('check_in', { ascending: false }),
+      supabase.from('maintenance_tickets').select('*, properties(name)').eq('user_id', userId).order('created_at', { ascending: false }),
+    ])
+    setProperties(p.data ?? [])
+    setBookings(b.data ?? [])
+    setTickets(t.data ?? [])
+  }
+
+  // Computed values
+  const today = new Date().toISOString().split('T')[0]
+  const thisMonth = new Date().toISOString().slice(0, 7)
+  const activeBookings = bookings.filter(b => b.status !== 'cancelled')
+  const monthBookings = activeBookings.filter(b => b.check_in?.startsWith(thisMonth))
+  const totalRevenue = activeBookings.reduce((s, b) => s + (Number(b.total_amount) || 0), 0)
+  const monthRevenue = monthBookings.reduce((s, b) => s + (Number(b.total_amount) || 0), 0)
+  const ownerShare = totalRevenue * (1 - MGMT_FEE)
+  const expenses = financeRecords.filter(f => f.amount < 0).reduce((s, f) => s + Math.abs(Number(f.amount) || 0), 0)
+  const ninetyAgo = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]
+  const bookedNights = activeBookings.filter(b => b.check_out >= ninetyAgo).reduce((s, b) => {
+    return s + Math.max(0, Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000))
+  }, 0)
+  const occupancyPct = Math.min(100, Math.round((bookedNights / (90 * Math.max(1, properties.length))) * 100))
+  const invested = ownerProfile?.invested ?? 0
+  const netProfit = ownerShare - expenses
+  const roi = invested > 0 ? ((netProfit / invested) * 100).toFixed(1) : '0.0'
+
+  // Calendar helpers
+  function getDaysInMonth(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+  function getFirstDayOfMonth(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
+  function isBooked(day: number) {
+    const d = `${calMonth.getFullYear()}-${String(calMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return activeBookings.some(b => b.check_in <= d && b.check_out > d)
+  }
+
+  // Finance grouped by month
+  const allFinance = [
+    ...bookings.filter(b => b.status !== 'cancelled').map(b => ({ ...b, amount: Number(b.total_amount) || 0, type: 'booking', label: `${b.guest_name ?? 'Guest'} — booking revenue`, property: b.properties?.name })),
+    ...financeRecords.map(f => ({ ...f, type: 'expense', label: f.description ?? f.category })),
+  ].sort((a, b) => (b.created_at ?? b.check_in ?? '') > (a.created_at ?? a.check_in ?? '') ? 1 : -1)
+
+  const financeByMonth: Record<string, any[]> = {}
+  allFinance.forEach(r => {
+    const m = (r.created_at ?? r.check_in ?? '').slice(0, 7)
+    if (!financeByMonth[m]) financeByMonth[m] = []
+    financeByMonth[m].push(r)
+  })
+
+  async function sendMessage() {
+    if (!newMsg.trim() || !ownerProfile) return
+    setSaving(true)
+    await supabase.from('owner_messages').insert({ owner_id: ownerProfile.id, sender: 'owner', message: newMsg, created_at: new Date().toISOString() })
+    setMessages(prev => [...prev, { owner_id: ownerProfile.id, sender: 'owner', message: newMsg, created_at: new Date().toISOString() }])
+    setNewMsg('')
+    setSaving(false)
+  }
+
+  async function createOwnerAccount() {
+    if (ownerForm.password !== ownerForm.confirm_password) { alert('Passwords do not match'); return }
+    setSaving(true)
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: ownerForm.email, password: ownerForm.password,
+      email_confirm: true,
+      user_metadata: { first_name: ownerForm.first_name, last_name: ownerForm.last_name }
+    })
+    if (error) { alert(error.message); setSaving(false); return }
+    await supabase.from('owner_profiles').insert({
+      user_id: data.user.id,
+      name: `${ownerForm.first_name} ${ownerForm.last_name}`,
+      email: ownerForm.email, phone: ownerForm.phone,
+      property_ids: [], split_percentage: 60,
+    })
+    setOwnerForm({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
+    await loadStaffData(user.id)
+    setSaving(false)
+  }
+
+  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', fontSize: 14 }}>Loading your portal…</div>
+
+  const card = { background: '#fff', border: '1px solid #EAECF0', borderRadius: 12, padding: '20px 24px' }
+  const th = { textAlign: 'left' as const, padding: '8px 12px', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase' as const, borderBottom: '1px solid #EAECF0' }
+  const td = { padding: '12px', borderBottom: '1px solid #F2F4F7', fontSize: 13 }
+
+  const allTabs = [
+    ...NAV.flatMap(n => n.items),
+    ...(isStaff ? STAFF_NAV.flatMap(n => n.items) : [])
+  ]
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif" }}>
+      {/* Sidebar */}
+      <div style={{ width: 220, background: '#fff', borderRight: '1px solid #EAECF0', display: 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
+        {/* Logo */}
+        <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #EAECF0', textAlign: 'center' }}>
+          <img src="/logo.PNG" alt="Opero" width={44} height={44} style={{ borderRadius: 8, marginBottom: 8 }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#101828' }}>Opero</div>
+          <div style={{ fontSize: 11, color: '#667085' }}>Owner Portal</div>
+        </div>
+
+        {/* User */}
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+            {(ownerProfile?.name ?? user?.email ?? 'U')[0].toUpperCase()}
+          </div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#101828' }}>{ownerProfile?.name ?? user?.email?.split('@')[0]}</div>
+            <div style={{ fontSize: 10, color: '#667085' }}>{isStaff ? 'Admin / Staff' : 'Owner'}</div>
+          </div>
+        </div>
+
+        {/* Nav */}
+        <div style={{ flex: 1, padding: '8px 0' }}>
+          {[...NAV, ...(isStaff ? STAFF_NAV : [])].map(group => (
+            <div key={group.section}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', padding: '12px 16px 4px', letterSpacing: '0.08em' }}>{group.section}</div>
+              {group.items.map(item => (
+                <button key={item} onClick={() => setTab(item)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 16px', fontSize: 12, fontWeight: tab === item ? 600 : 400, color: tab === item ? '#5B7CFA' : '#667085', background: tab === item ? '#EEF1FF' : 'transparent', border: 'none', cursor: 'pointer', borderLeft: tab === item ? '2px solid #5B7CFA' : '2px solid transparent' }}>
+                  {item}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding: '12px 16px', borderTop: '1px solid #EAECF0' }}>
+          <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ width: '100%', padding: '8px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 12, color: '#667085', cursor: 'pointer' }}>← Sign Out</button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+
+        {/* DASHBOARD */}
+        {tab === 'Dashboard' && (
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#101828', marginBottom: 20 }}>Command Centre 👋 <span style={{ float: 'right', fontSize: 12, color: '#98A2B3', fontWeight: 400 }}>Last 6 months</span></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
+              <StatCard label="Revenue" value={`£${totalRevenue.toLocaleString()}`} sub="All time" />
+              <StatCard label="Bookings" value={activeBookings.length} sub="All time" />
+              <StatCard label="Cancellations" value={bookings.filter(b => b.status === 'cancelled').length} sub="All time" />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+              <div style={card}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Occupancy</div>
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ fontSize: 48, fontWeight: 800, color: '#5B7CFA' }}>{occupancyPct}%</div>
+                  <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Last 90 days</div>
+                </div>
+              </div>
+              <div style={card}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Occupancy & Revenue</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: '#667085' }}>Gross Revenue</span><span style={{ fontWeight: 700 }}>£{totalRevenue.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: '#667085' }}>This month</span><span style={{ fontWeight: 700 }}>£{monthRevenue.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderTop: '1px solid #F2F4F7', paddingTop: 10 }}>
+                    <span style={{ color: '#667085' }}>Your share (60%)</span><span style={{ fontWeight: 700, color: '#10B981' }}>£{ownerShare.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+              {[
+                { label: 'Revenues / Portal', value: `£${ownerShare.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, note: 'Direct 100%' },
+                { label: 'Bookings', value: activeBookings.length, note: 'Direct 100%' },
+                { label: 'Nights / Portal', value: bookedNights, note: 'Direct 100%' },
+                { label: 'Cancellations', value: bookings.filter(b => b.status === 'cancelled').length, note: '0%' },
+              ].map(s => (
+                <div key={s.label} style={card}>
+                  <div style={{ fontSize: 11, color: '#667085', marginBottom: 8 }}>{s.label}</div>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', border: '5px solid #5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#101828', margin: '0 auto 8px' }}>{s.value}</div>
+                  <div style={{ fontSize: 11, color: '#10B981', textAlign: 'center' }}>● {s.note}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* MY BOOKINGS */}
+        {tab === 'My Bookings' && (
+          <div style={card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>My Bookings</div>
+              <span style={{ fontSize: 12, color: '#667085' }}>👁 View only — contact your manager to make changes</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+              <StatCard label="This Month" value={monthBookings.length} />
+              <StatCard label="Confirmed" value={activeBookings.filter(b => b.status === 'confirmed').length} />
+              <StatCard label="Pending" value={bookings.filter(b => b.status === 'pending').length} />
+              <StatCard label="Revenue" value={`£${totalRevenue.toLocaleString()}`} dark />
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead><tr>{['Guest', 'Property', 'Check-in', 'Check-out', 'Nights', 'Revenue', 'Platform', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+              <tbody>
+                {bookings.length === 0 ? <tr><td colSpan={8} style={{ ...td, textAlign: 'center', color: '#98A2B3', padding: 40 }}>No bookings yet</td></tr>
+                  : bookings.map(b => {
+                    const nights = b.check_in && b.check_out ? Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000) : 0
+                    return (
+                      <tr key={b.id}>
+                        <td style={td}>{b.guest_name ?? '—'}</td>
+                        <td style={{ ...td, color: '#667085' }}>{b.properties?.name ?? '—'}</td>
+                        <td style={td}>{b.check_in ?? '—'}</td>
+                        <td style={td}>{b.check_out ?? '—'}</td>
+                        <td style={td}>{nights}</td>
+                        <td style={{ ...td, fontWeight: 600, color: '#10B981' }}>£{(Number(b.total_amount) || 0).toLocaleString()}</td>
+                        <td style={{ ...td, color: '#667085' }}>{b.platform ?? 'Direct'}</td>
+                        <td style={td}><Badge status={b.status ?? 'pending'} /></td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* CALENDAR */}
+        {tab === 'Calendar' && (
+          <div style={card}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Availability Calendar</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <button onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1))} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 13 }}>← Prev</button>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>{calMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
+              <button onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1))} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 13 }}>Next →</button>
+            </div>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+              <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#EF4444', borderRadius: 2, display: 'inline-block' }} /> Booked</span>
+              <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#10B981', borderRadius: 2, display: 'inline-block' }} /> Available</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#667085', padding: '8px 0' }}>{d}</div>)}
+              {Array.from({ length: getFirstDayOfMonth(calMonth) }).map((_, i) => <div key={`empty-${i}`} />)}
+              {Array.from({ length: getDaysInMonth(calMonth) }).map((_, i) => {
+                const day = i + 1
+                const booked = isBooked(day)
+                return <div key={day} style={{ textAlign: 'center', padding: '10px 4px', borderRadius: 6, background: booked ? '#EF4444' : '#10B981', color: '#fff', fontSize: 13, fontWeight: 600 }}>{day}</div>
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* MAINTENANCE */}
+        {tab === 'Maintenance' && (
+          <div style={card}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Maintenance</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+              <StatCard label="Open" value={tickets.filter(t => t.status === 'open').length} />
+              <StatCard label="In Progress" value={tickets.filter(t => t.status === 'in_progress').length} />
+              <StatCard label="Resolved" value={tickets.filter(t => t.status === 'resolved').length} />
+              <StatCard label="Total Cost" value={`£${tickets.reduce((s, t) => s + (Number(t.cost) || 0), 0).toLocaleString()}`} dark />
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead><tr>{['Property', 'Issue', 'Category', 'Priority', 'Status', 'Cost', 'Date'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+              <tbody>
+                {tickets.length === 0 ? <tr><td colSpan={7} style={{ ...td, textAlign: 'center', color: '#98A2B3', padding: 40 }}>No maintenance tickets</td></tr>
+                  : tickets.map(t => (
+                    <tr key={t.id}>
+                      <td style={td}>{t.properties?.name ?? '—'}</td>
+                      <td style={td}>{t.title ?? t.description ?? '—'}</td>
+                      <td style={td}>{t.category ?? '—'}</td>
+                      <td style={td}>{t.priority ? <Badge status={t.priority} /> : '—'}</td>
+                      <td style={td}><Badge status={t.status ?? 'open'} /></td>
+                      <td style={td}>{t.cost ? `£${t.cost}` : '—'}</td>
+                      <td style={{ ...td, color: '#667085' }}>{t.created_at?.slice(0, 10) ?? '—'}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* STATEMENTS */}
+        {tab === 'Statements' && (
+          <div style={card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>Statements</div>
+              <button onClick={() => window.print()} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>🖨 Print</button>
+            </div>
+            <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>👁 View only</div>
+            {statements.length === 0
+              ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 14 }}>No statements yet. Your manager will generate these monthly.</div>
+              : Object.entries(
+                statements.reduce((acc: any, s: any) => {
+                  const period = s.period_start?.slice(0, 7) ?? 'Unknown'
+                  if (!acc[period]) acc[period] = []
+                  acc[period].push(s)
+                  return acc
+                }, {})
+              ).map(([period, stmts]: any) => (
+                <div key={period} style={{ marginBottom: 24 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#101828', marginBottom: 8, padding: '8px 0', borderBottom: '1px solid #EAECF0' }}>
+                    <span>{new Date(period + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span>
+                    <span style={{ color: '#10B981' }}>£{stmts.reduce((s: number, r: any) => s + (Number(r.owner_amount) || 0), 0).toLocaleString()}</span>
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead><tr>{['Owner', 'Date', 'Description', 'Property', 'Amount', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+                    <tbody>
+                      {stmts.map((s: any) => (
+                        <tr key={s.id}>
+                          <td style={td}>{ownerProfile?.name ?? '—'}</td>
+                          <td style={td}>{s.period_start}</td>
+                          <td style={td}>{s.notes ?? 'Monthly statement'}</td>
+                          <td style={td}>{s.property_name ?? '—'}</td>
+                          <td style={{ ...td, fontWeight: 600 }}>£{(Number(s.owner_amount) || 0).toLocaleString()}</td>
+                          <td style={td}><Badge status={s.status ?? 'draft'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))
+            }
+          </div>
+        )}
+
+        {/* ROI PER OWNER */}
+        {tab === 'ROI Per Owner' && (
+          <div style={card}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>ROI Per Owner</div>
+            <div style={{ border: '1px solid #EAECF0', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
+                  {(ownerProfile?.name ?? 'O')[0]}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{ownerProfile?.name ?? user?.email}</div>
+                  <div style={{ fontSize: 12, color: '#667085' }}>{properties[0]?.name ?? 'Properties'}</div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                {[
+                  { label: 'Invested', value: `£${Number(invested).toLocaleString()}` },
+                  { label: 'Total Revenue', value: `£${totalRevenue.toLocaleString()}` },
+                  { label: 'Net Profit', value: `£${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
+                  { label: 'ROI', value: `${roi}%` },
+                ].map(s => (
+                  <div key={s.label} style={{ padding: '16px 20px', borderRight: '1px solid #EAECF0' }}>
+                    <div style={{ fontSize: 11, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{s.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: s.label === 'ROI' ? '#5B7CFA' : '#101828' }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: '12px 20px', borderTop: '1px solid #EAECF0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#667085', marginBottom: 4 }}>
+                  <span>Occupancy</span><span>{occupancyPct}%</span>
+                </div>
+                <div style={{ height: 8, background: '#F2F4F7', borderRadius: 4 }}>
+                  <div style={{ height: 8, width: `${occupancyPct}%`, background: '#5B7CFA', borderRadius: 4 }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MY PROPERTIES */}
+        {tab === 'My Properties' && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>My Properties</div>
+            {properties.length === 0
+              ? <div style={{ ...card, textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 14 }}>No properties linked yet. Contact your manager.</div>
+              : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                {properties.map(p => (
+                  <div key={p.id} style={card}>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{p.name}</div>
+                    <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>{p.address ?? p.location ?? 'Jamaica'}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Purchase:</span><span style={{ fontWeight: 600 }}>£{(Number(p.purchase_price) || 0).toLocaleString()}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Down payment:</span><span style={{ fontWeight: 600 }}>£{(Number(p.down_payment) || 0).toLocaleString()}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Platform:</span><span style={{ fontWeight: 600 }}>{p.platform ?? 'Wire Transfer'}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Status:</span><Badge status={p.status ?? 'active'} /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            }
+          </div>
+        )}
+
+        {/* FINANCE & DOCUMENTS */}
+        {tab === 'Finance & Documents' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>Finance & Documents</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+              <StatCard label="Paid Out" value={`£0`} />
+              <StatCard label="Guest Revenue" value={`£${totalRevenue.toLocaleString()}`} />
+              <StatCard label="Expenses" value={`£${expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+              <StatCard label="Net This Month" value={`£${monthRevenue.toLocaleString()}`} dark />
+            </div>
+            <div style={{ ...card, marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>💰 Profit Split — After All Expenses</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>
+                <div style={{ background: '#F9FAFB', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>GROSS REVENUE</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>£{totalRevenue.toLocaleString()}</div>
+                </div>
+                <div style={{ background: '#F9FAFB', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>TOTAL EXPENSES</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>£{expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                </div>
+                <div style={{ background: '#F9FAFB', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>NET PROFIT</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: netProfit >= 0 ? '#10B981' : '#EF4444' }}>£{netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ border: '1px solid #E4E7EC', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>OWNER SHARE (60%)</div>
+                  <div style={{ fontSize: 22, fontWeight: 700 }}>£{ownerShare.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontSize: 12, color: '#667085' }}>{ownerProfile?.name ?? 'Owner'}</div>
+                </div>
+                <div style={{ border: '1px solid #E4E7EC', borderRadius: 8, padding: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>MANAGEMENT FEE (40%)</div>
+                  <div style={{ fontSize: 22, fontWeight: 700 }}>£{(totalRevenue * MGMT_FEE).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontSize: 12, color: '#667085' }}>Management Fee</div>
+                </div>
+              </div>
+            </div>
+            {Object.entries(financeByMonth).map(([month, records]: any) => {
+              const mRev = records.filter((r: any) => r.amount > 0).reduce((s: number, r: any) => s + r.amount, 0)
+              const mExp = records.filter((r: any) => r.amount < 0).reduce((s: number, r: any) => s + Math.abs(r.amount), 0)
+              return (
+                <div key={month} style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, color: '#101828', padding: '10px 0', borderBottom: '1px solid #EAECF0', marginBottom: 8 }}>
+                    <span>{new Date(month + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span>
+                    <span style={{ fontSize: 12, color: '#667085' }}>+£{mRev.toLocaleString()} -£{mExp.toLocaleString()} Net: £{(mRev - mExp).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  </div>
+                  {records.map((r: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F9FAFB', fontSize: 13 }}>
+                      <div>
+                        <div style={{ fontWeight: 500 }}>{r.label}</div>
+                        <div style={{ fontSize: 11, color: '#667085' }}>{r.property} · {(r.created_at ?? r.check_in ?? '').slice(0, 10)}</div>
+                      </div>
+                      <span style={{ fontWeight: 700, color: r.amount > 0 ? '#10B981' : '#EF4444' }}>
+                        {r.amount > 0 ? '+' : '-'}£{Math.abs(r.amount).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* MESSAGES */}
+        {tab === 'Messages' && (
+          <div style={card}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Messages</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20, maxHeight: 400, overflowY: 'auto' }}>
+              {messages.length === 0
+                ? <div style={{ textAlign: 'center', padding: 40, color: '#98A2B3', fontSize: 14 }}>No messages yet</div>
+                : messages.map((m, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: m.sender === 'owner' ? 'flex-end' : 'flex-start' }}>
+                    <div style={{ maxWidth: '70%', background: m.sender === 'owner' ? '#5B7CFA' : '#F3F4F6', color: m.sender === 'owner' ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
+                      <div>{m.message}</div>
+                      <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{m.created_at?.slice(0, 16)}</div>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+            {ownerProfile && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }} />
+                <button onClick={sendMessage} disabled={saving} style={{ padding: '10px 20px', background: '#5B7CFA', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Send</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CONTACT & PAYMENT */}
+        {tab === 'Contact & Payment' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={card}>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>🧑 Personal Information</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {[
+                  { label: 'FIRST NAME', value: ownerProfile?.name?.split(' ')[0] ?? '', key: 'first_name' },
+                  { label: 'LAST NAME', value: ownerProfile?.name?.split(' ').slice(1).join(' ') ?? '', key: 'last_name' },
+                  { label: 'EMAIL', value: ownerProfile?.email ?? user?.email ?? '', key: 'email' },
+                  { label: 'PHONE', value: ownerProfile?.phone ?? '', key: 'phone' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{f.label}</div>
+                    <input defaultValue={f.value} placeholder={f.label.toLowerCase()} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                ))}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>ADDRESS</div>
+                  <input defaultValue={ownerProfile?.address ?? ''} placeholder="Full address" style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <button style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+            </div>
+            <div style={card}>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🏦 Banking Details <span style={{ fontSize: 11, fontWeight: 400, color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: 20 }}>Secure</span></div>
+              <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>Your payout account</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {[
+                  { label: 'BANK NAME', placeholder: 'e.g. Barclays', key: 'bank_name' },
+                  { label: 'ACCOUNT NAME', placeholder: 'Name on account', key: 'account_name' },
+                  { label: 'ACCOUNT NUMBER', placeholder: 'e.g. 12345678', key: 'account_number' },
+                  { label: 'SORT CODE', placeholder: 'e.g. 01-02-03', key: 'sort_code' },
+                  { label: 'ROUTING NUMBER', placeholder: 'e.g. 021000021', key: 'routing_number' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{f.label}</div>
+                    <input defaultValue={contactInfo?.[f.key] ?? ''} placeholder={f.placeholder} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                ))}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>PAYOUT SCHEDULE</div>
+                  <select style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }}>
+                    <option>Monthly</option><option>Quarterly</option><option>Weekly</option>
+                  </select>
+                </div>
+              </div>
+              <button style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Banking Info</button>
+            </div>
+            <div style={card}>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>💳 Payment History</div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead><tr>{['Date', 'Description', 'Property', 'Amount', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {statements.filter(s => s.status === 'paid').length === 0
+                    ? <tr><td colSpan={5} style={{ ...td, textAlign: 'center', color: '#98A2B3', padding: 30 }}>No payments yet</td></tr>
+                    : statements.filter(s => s.status === 'paid').map(s => (
+                      <tr key={s.id}>
+                        <td style={td}>{s.period_start}</td>
+                        <td style={td}>{s.notes ?? 'Monthly payout'}</td>
+                        <td style={td}>{s.property_name ?? '—'}</td>
+                        <td style={{ ...td, fontWeight: 600, color: '#10B981' }}>£{(Number(s.owner_amount) || 0).toLocaleString()}</td>
+                        <td style={td}><Badge status="paid" /></td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* STAFF PANEL */}
+        {tab === 'Staff Panel' && isStaff && (
+          <div style={card}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Staff Panel 🔒 <span style={{ fontSize: 11, color: '#EF4444', fontWeight: 600, background: '#FEE2E2', padding: '2px 8px', borderRadius: 20 }}>ADMIN ONLY</span></div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 20, marginTop: 16 }}>
+              {[
+                { label: 'ACTIVE OWNERS', value: allOwners.length },
+                { label: 'TOTAL PROPERTIES', value: properties.length },
+                { label: 'TOTAL REVENUE', value: `£${totalRevenue.toLocaleString()}` },
+                { label: 'OPEN MAINTENANCE', value: tickets.filter(t => t.status === 'open').length },
+                { label: 'TOTAL BOOKINGS', value: activeBookings.length },
+                { label: 'TOTAL PAID OUT', value: '£0' },
+              ].map(s => (
+                <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 8, padding: '12px 14px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: '#667085', textTransform: 'uppercase', fontWeight: 600, marginBottom: 6 }}>{s.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#101828' }}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+            {allOwners.map(owner => (
+              <div key={owner.id} style={{ border: '1px solid #EAECF0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F9FAFB' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13 }}>{(owner.name ?? 'O')[0]}</div>
+                    <span style={{ fontWeight: 600 }}>{owner.name}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>Edit</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12 }}>Finance</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>+ Payment</button>
+                  </div>
+                </div>
+                <div style={{ padding: '12px 20px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Revenue</div><div style={{ fontWeight: 600 }}>—</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Paid Out</div><div style={{ fontWeight: 600 }}>—</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>ROI</div><div style={{ fontWeight: 600 }}>—</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Properties</div><div style={{ fontWeight: 600 }}>{(owner.property_ids ?? []).length}</div></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* MANAGE OWNERS */}
+        {tab === 'Manage Owners' && isStaff && (
+          <div style={card}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Manage Owners 🔒 <span style={{ fontSize: 11, color: '#EF4444', fontWeight: 600, background: '#FEE2E2', padding: '2px 8px', borderRadius: 20 }}>ADMIN ONLY</span></div>
+            <div style={{ marginTop: 20, marginBottom: 28 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 14 }}>+ Create Owner Account</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {[
+                  { label: 'FIRST NAME *', key: 'first_name', placeholder: 'First name' },
+                  { label: 'LAST NAME *', key: 'last_name', placeholder: 'Last name' },
+                  { label: 'EMAIL *', key: 'email', placeholder: 'owner@email.com' },
+                  { label: 'PHONE', key: 'phone', placeholder: '+44 7700 000000' },
+                  { label: 'PASSWORD *', key: 'password', placeholder: 'Min 6 characters', type: 'password' },
+                  { label: 'CONFIRM PASSWORD *', key: 'confirm_password', placeholder: 'Repeat password', type: 'password' },
+                ].map(f => (
+                  <div key={f.key}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{f.label}</div>
+                    <input type={f.type ?? 'text'} value={(ownerForm as any)[f.key]} onChange={e => setOwnerForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  </div>
+                ))}
+              </div>
+              <button onClick={createOwnerAccount} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+                {saving ? 'Creating…' : 'Create Account'}
+              </button>
+            </div>
+            <div style={{ borderTop: '1px solid #EAECF0', paddingTop: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#667085', textTransform: 'uppercase', marginBottom: 12 }}>All Registered Owners</div>
+              {allOwners.length === 0
+                ? <div style={{ color: '#98A2B3', fontSize: 13, padding: 20, textAlign: 'center' }}>No owners yet</div>
+                : allOwners.map(o => (
+                  <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #F2F4F7', fontSize: 13 }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{o.name}</div>
+                      <div style={{ fontSize: 11, color: '#667085' }}>— {o.user_id === user?.id ? 'admin' : 'owner'}</div>
+                    </div>
+                    <Badge status={o.user_id === user?.id ? 'admin' : 'owner'} />
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}

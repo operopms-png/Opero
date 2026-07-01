@@ -97,9 +97,17 @@ function LoginForm() {
     setSuccessMsg('')
 
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
-      else window.location.href = redirect
+      else {
+        // Check if this user is an owner — if so, send to owner portal
+        const { data: ownerProfile } = await supabase
+          .from('owner_profiles')
+          .select('id')
+          .eq('user_id', data.user?.id)
+          .single()
+        window.location.href = ownerProfile ? '/owner-portal' : redirect
+      }
     } else if (mode === 'signup') {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })
       if (error) { setError(error.message) }
