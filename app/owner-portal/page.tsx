@@ -181,19 +181,32 @@ export default function OwnerPortalPage() {
 
   async function createOwnerAccount() {
     if (ownerForm.password !== ownerForm.confirm_password) { alert('Passwords do not match'); return }
+    if (ownerForm.password.length < 6) { alert('Password must be at least 6 characters'); return }
     setSaving(true)
-    const { data, error } = await supabase.auth.admin.createUser({
-      email: ownerForm.email, password: ownerForm.password,
-      email_confirm: true,
-      user_metadata: { first_name: ownerForm.first_name, last_name: ownerForm.last_name }
+
+    // Use standard signUp — works with anon key, no service role needed
+    const { data, error } = await supabase.auth.signUp({
+      email: ownerForm.email,
+      password: ownerForm.password,
+      options: { data: { first_name: ownerForm.first_name, last_name: ownerForm.last_name } }
     })
+
     if (error) { alert(error.message); setSaving(false); return }
-    await supabase.from('owner_profiles').insert({
+    if (!data.user) { alert('Could not create user — check email is not already registered'); setSaving(false); return }
+
+    // Insert owner profile row
+    const { error: profileError } = await supabase.from('owner_profiles').insert({
       user_id: data.user.id,
-      name: `${ownerForm.first_name} ${ownerForm.last_name}`,
-      email: ownerForm.email, phone: ownerForm.phone,
-      property_ids: [], split_percentage: 60,
+      name: `${ownerForm.first_name} ${ownerForm.last_name}`.trim(),
+      email: ownerForm.email,
+      phone: ownerForm.phone,
+      property_ids: [],
+      split_percentage: 60,
     })
+
+    if (profileError) { alert('User created but profile failed: ' + profileError.message); setSaving(false); return }
+
+    alert(`Owner account created for ${ownerForm.email}. They will need to confirm their email before logging in.`)
     setOwnerForm({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
     await loadStaffData(user.id)
     setSaving(false)
