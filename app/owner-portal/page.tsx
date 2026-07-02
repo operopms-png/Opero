@@ -184,29 +184,25 @@ export default function OwnerPortalPage() {
     if (ownerForm.password.length < 6) { alert('Password must be at least 6 characters'); return }
     setSaving(true)
 
-    // Use standard signUp — works with anon key, no service role needed
-    const { data, error } = await supabase.auth.signUp({
-      email: ownerForm.email,
-      password: ownerForm.password,
-      options: { data: { first_name: ownerForm.first_name, last_name: ownerForm.last_name } }
+    // Goes through a server API route (service role key) so creating an owner
+    // never swaps out the admin's own browser session — client-side signUp()
+    // would log the admin out and log them in as the owner just created.
+    const res = await fetch('/api/create-owner', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: ownerForm.first_name,
+        last_name: ownerForm.last_name,
+        email: ownerForm.email,
+        phone: ownerForm.phone,
+        password: ownerForm.password,
+      }),
     })
+    const result = await res.json()
 
-    if (error) { alert(error.message); setSaving(false); return }
-    if (!data.user) { alert('Could not create user — check email is not already registered'); setSaving(false); return }
+    if (!res.ok) { alert(result.error || 'Could not create owner account'); setSaving(false); return }
 
-    // Insert owner profile row
-    const { error: profileError } = await supabase.from('owner_profiles').insert({
-      user_id: data.user.id,
-      name: `${ownerForm.first_name} ${ownerForm.last_name}`.trim(),
-      email: ownerForm.email,
-      phone: ownerForm.phone,
-      property_ids: [],
-      split_percentage: 60,
-    })
-
-    if (profileError) { alert('User created but profile failed: ' + profileError.message); setSaving(false); return }
-
-    alert(`Owner account created for ${ownerForm.email}. They will need to confirm their email before logging in.`)
+    alert(`Owner account created for ${ownerForm.email}. They can log in immediately.`)
     setOwnerForm({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
     await loadStaffData(user.id)
     setSaving(false)
