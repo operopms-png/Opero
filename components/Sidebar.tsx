@@ -17,6 +17,7 @@ const NAV_GROUPS = [
       { href: '/str/reporting', label: 'Reporting', key: 'str', icon: 'report' },
       { href: '/str/vendors', label: 'Contractors', key: 'str', icon: 'wrench' },
       { href: '/str/service', label: 'Service', key: 'str', icon: 'headset' },
+      { href: '/owner-portal', label: 'Owners', key: 'str', icon: 'users' },
     ]
   },
   {
