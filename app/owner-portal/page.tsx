@@ -405,7 +405,7 @@ export default function OwnerPortalPage() {
           <div style={card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>My Bookings</div>
-              <span style={{ fontSize: 12, color: '#667085' }}>👁 View only — contact your manager to make changes</span>
+              {!isStaff && <span style={{ fontSize: 12, color: '#667085' }}>👁 View only — contact your manager to make changes</span>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
               <StatCard label="This Month" value={monthBookings.length} />
@@ -506,7 +506,7 @@ export default function OwnerPortalPage() {
               <div style={{ fontSize: 16, fontWeight: 700 }}>Statements</div>
               <button onClick={() => window.print()} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>🖨 Print</button>
             </div>
-            <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>👁 View only</div>
+            {!isStaff && <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>👁 View only</div>}
             {statements.length === 0
               ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 14 }}>No statements yet. Your manager will generate these monthly.</div>
               : Object.entries(
