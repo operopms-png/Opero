@@ -55,6 +55,16 @@ export default function OwnerPortalPage() {
   const [newMsg, setNewMsg] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // Admin edit state
+  const [editingOwner, setEditingOwner] = useState<any>(null)
+  const [editOwnerForm, setEditOwnerForm] = useState<any>({})
+  const [addPaymentOwner, setAddPaymentOwner] = useState<any>(null)
+  const [paymentForm, setPaymentForm] = useState({ amount: '', description: '', property_name: '', period_start: '', period_end: '', status: 'paid' })
+  const [addFinanceOwner, setAddFinanceOwner] = useState<any>(null)
+  const [financeForm, setFinanceForm] = useState({ amount: '', description: '', category: '', type: 'expense' })
+  const [contactForm, setContactForm] = useState<any>({})
+  const [bankingForm, setBankingForm] = useState<any>({})
+
   // Manage owners form
   const [ownerForm, setOwnerForm] = useState({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
 
@@ -187,6 +197,94 @@ export default function OwnerPortalPage() {
     setOwnerForm({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
     await loadStaffData(user.id)
     setSaving(false)
+  }
+
+  async function saveOwnerEdit() {
+    if (!editingOwner) return
+    setSaving(true)
+    await supabase.from('owner_profiles').update({
+      name: `${editOwnerForm.first_name ?? ''} ${editOwnerForm.last_name ?? ''}`.trim(),
+      email: editOwnerForm.email,
+      phone: editOwnerForm.phone,
+      invested: editOwnerForm.invested,
+      split_percentage: editOwnerForm.split_percentage,
+      property_ids: editOwnerForm.property_ids,
+    }).eq('id', editingOwner.id)
+    setEditingOwner(null)
+    await loadStaffData(user.id)
+    setSaving(false)
+  }
+
+  async function deleteOwner(ownerId: string) {
+    if (!confirm('Delete this owner account? This cannot be undone.')) return
+    setSaving(true)
+    await supabase.from('owner_profiles').delete().eq('id', ownerId)
+    await loadStaffData(user.id)
+    setSaving(false)
+  }
+
+  async function addPayment() {
+    if (!addPaymentOwner || !paymentForm.amount) return
+    setSaving(true)
+    await supabase.from('owner_statements').insert({
+      owner_id: addPaymentOwner.id,
+      property_name: paymentForm.property_name,
+      period_start: paymentForm.period_start || new Date().toISOString().slice(0, 10),
+      period_end: paymentForm.period_end || new Date().toISOString().slice(0, 10),
+      owner_amount: Number(paymentForm.amount),
+      notes: paymentForm.description,
+      status: paymentForm.status,
+    })
+    setAddPaymentOwner(null)
+    setPaymentForm({ amount: '', description: '', property_name: '', period_start: '', period_end: '', status: 'paid' })
+    setSaving(false)
+  }
+
+  async function addFinanceRecord() {
+    if (!addFinanceOwner || !financeForm.amount) return
+    setSaving(true)
+    const amt = financeForm.type === 'expense' ? -Math.abs(Number(financeForm.amount)) : Math.abs(Number(financeForm.amount))
+    await supabase.from('owner_finance').insert({
+      owner_id: addFinanceOwner.id,
+      amount: amt,
+      description: financeForm.description,
+      category: financeForm.category,
+      created_at: new Date().toISOString(),
+    })
+    setAddFinanceOwner(null)
+    setFinanceForm({ amount: '', description: '', category: '', type: 'expense' })
+    setSaving(false)
+  }
+
+  async function saveContactInfo() {
+    if (!ownerProfile) return
+    setSaving(true)
+    await supabase.from('owner_profiles').update({
+      name: `${contactForm.first_name ?? ''} ${contactForm.last_name ?? ''}`.trim(),
+      email: contactForm.email,
+      phone: contactForm.phone,
+      address: contactForm.address,
+    }).eq('id', ownerProfile.id)
+    setSaving(false)
+    alert('Saved!')
+  }
+
+  async function saveBankingInfo() {
+    if (!ownerProfile) return
+    setSaving(true)
+    const existing = contactInfo?.id
+    if (existing) {
+      await supabase.from('owner_contact').update(bankingForm).eq('id', existing)
+    } else {
+      await supabase.from('owner_contact').insert({ ...bankingForm, owner_id: ownerProfile.id })
+    }
+    setSaving(false)
+    alert('Banking info saved!')
+  }
+
+  async function updateTicketStatus(ticketId: string, status: string) {
+    await supabase.from('maintenance_tickets').update({ status }).eq('id', ticketId)
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status } : t))
   }
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', fontSize: 14 }}>Loading your portal…</div>
@@ -375,7 +473,14 @@ export default function OwnerPortalPage() {
                       <td style={td}>{t.title ?? t.description ?? '—'}</td>
                       <td style={td}>{t.category ?? '—'}</td>
                       <td style={td}>{t.priority ? <Badge status={t.priority} /> : '—'}</td>
-                      <td style={td}><Badge status={t.status ?? 'open'} /></td>
+                      <td style={td}>{isStaff
+                        ? <select value={t.status ?? 'open'} onChange={e => updateTicketStatus(t.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
+                            <option value="open">open</option>
+                            <option value="in_progress">in progress</option>
+                            <option value="resolved">resolved</option>
+                          </select>
+                        : <Badge status={t.status ?? 'open'} />
+                      }</td>
                       <td style={td}>{t.cost ? `£${t.cost}` : '—'}</td>
                       <td style={{ ...td, color: '#667085' }}>{t.created_at?.slice(0, 10) ?? '—'}</td>
                     </tr>
@@ -607,7 +712,7 @@ export default function OwnerPortalPage() {
                   <input defaultValue={ownerProfile?.address ?? ''} placeholder="Full address" style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
               </div>
-              <button style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+              <button onClick={saveContactInfo} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
             </div>
             <div style={card}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🏦 Banking Details <span style={{ fontSize: 11, fontWeight: 400, color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: 20 }}>Secure</span></div>
@@ -632,7 +737,7 @@ export default function OwnerPortalPage() {
                   </select>
                 </div>
               </div>
-              <button style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Banking Info</button>
+              <button onClick={saveBankingInfo} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Banking Info</button>
             </div>
             <div style={card}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>💳 Payment History</div>
@@ -684,9 +789,9 @@ export default function OwnerPortalPage() {
                     <span style={{ fontWeight: 600 }}>{owner.name}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>Edit</button>
-                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12 }}>Finance</button>
-                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>+ Payment</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(owner); setEditOwnerForm({ first_name: owner.name?.split(' ')[0] ?? '', last_name: owner.name?.split(' ').slice(1).join(' ') ?? '', email: owner.email, phone: owner.phone, invested: owner.invested ?? 0, split_percentage: owner.split_percentage ?? 60, property_ids: (owner.property_ids ?? []).join(', ') }) }}>Edit</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddFinanceOwner(owner)}>Finance</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddPaymentOwner(owner)}>+ Payment</button>
                   </div>
                 </div>
                 <div style={{ padding: '12px 20px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
@@ -744,6 +849,101 @@ export default function OwnerPortalPage() {
         )}
 
       </div>
+
+      {/* EDIT OWNER MODAL */}
+      {editingOwner && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: 32, width: 500, maxWidth: '90vw' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Edit Owner — {editingOwner.name}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {[
+                { label: 'First Name', key: 'first_name' }, { label: 'Last Name', key: 'last_name' },
+                { label: 'Email', key: 'email' }, { label: 'Phone', key: 'phone' },
+                { label: 'Amount Invested (£)', key: 'invested' }, { label: 'Owner Split %', key: 'split_percentage' },
+              ].map(f => (
+                <div key={f.key}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>{f.label}</div>
+                  <input value={editOwnerForm[f.key] ?? ''} onChange={e => setEditOwnerForm((p: any) => ({ ...p, [f.key]: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              ))}
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Property IDs (comma separated)</div>
+                <input value={editOwnerForm.property_ids ?? ''} onChange={e => setEditOwnerForm((p: any) => ({ ...p, property_ids: e.target.value }))} placeholder="uuid1, uuid2, ..." style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <button onClick={() => deleteOwner(editingOwner.id)} style={{ padding: '9px 16px', background: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Delete Owner</button>
+              <button onClick={() => setEditingOwner(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={saveOwnerEdit} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD PAYMENT MODAL */}
+      {addPaymentOwner && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: 32, width: 460, maxWidth: '90vw' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Add Payment — {addPaymentOwner.name}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { label: 'Amount (£)', key: 'amount', placeholder: '0.00' },
+                { label: 'Description', key: 'description', placeholder: 'Monthly payout' },
+                { label: 'Property Name', key: 'property_name', placeholder: 'Sangsters Aurevo' },
+                { label: 'Period Start', key: 'period_start', placeholder: '2026-06-01' },
+                { label: 'Period End', key: 'period_end', placeholder: '2026-06-30' },
+              ].map(f => (
+                <div key={f.key}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>{f.label}</div>
+                  <input value={(paymentForm as any)[f.key]} onChange={e => setPaymentForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              ))}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Status</div>
+                <select value={paymentForm.status} onChange={e => setPaymentForm(p => ({ ...p, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                  <option value="paid">Paid</option><option value="pending">Pending</option><option value="draft">Draft</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <button onClick={() => setAddPaymentOwner(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={addPayment} disabled={saving} style={{ padding: '9px 20px', background: '#10B981', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Payment</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD FINANCE RECORD MODAL */}
+      {addFinanceOwner && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: 32, width: 420, maxWidth: '90vw' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Add Finance Record — {addFinanceOwner.name}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Type</div>
+                <select value={financeForm.type} onChange={e => setFinanceForm(p => ({ ...p, type: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                  <option value="expense">Expense (debit)</option><option value="income">Income (credit)</option>
+                </select>
+              </div>
+              {[
+                { label: 'Amount (£)', key: 'amount', placeholder: '0.00' },
+                { label: 'Description', key: 'description', placeholder: 'Utility bill payment' },
+                { label: 'Category', key: 'category', placeholder: 'Utilities / Maintenance / Rent' },
+              ].map(f => (
+                <div key={f.key}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>{f.label}</div>
+                  <input value={(financeForm as any)[f.key]} onChange={e => setFinanceForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <button onClick={() => setAddFinanceOwner(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={addFinanceRecord} disabled={saving} style={{ padding: '9px 20px', background: '#5B7CFA', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Record</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
