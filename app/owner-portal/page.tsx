@@ -65,6 +65,11 @@ export default function OwnerPortalPage() {
   const [contactForm, setContactForm] = useState<any>({})
   const [bankingForm, setBankingForm] = useState<any>({})
 
+  // Staff "view as owner" state — lets admin browse/edit a specific owner's tabs
+  const [viewingOwner, setViewingOwner] = useState<any>(null)
+  const [editingProperty, setEditingProperty] = useState<any>(null)
+  const [editPropertyForm, setEditPropertyForm] = useState<any>({})
+
   // Manage owners form
   const [ownerForm, setOwnerForm] = useState({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
 
@@ -125,6 +130,49 @@ export default function OwnerPortalPage() {
     setProperties(p.data ?? [])
     setBookings(b.data ?? [])
     setTickets(t.data ?? [])
+  }
+
+  // Staff clicks "View Portal" on an owner — loads that owner's data into the
+  // shared state so the normal tabs (Bookings, Statements, Properties, etc.)
+  // show and edit THEIR data, while isStaff stays true so edit controls remain visible.
+  async function viewOwnerPortal(owner: any) {
+    setLoading(true)
+    setOwnerProfile(owner)
+    setViewingOwner(owner)
+    await loadOwnerData(owner)
+    setTab('Dashboard')
+    setLoading(false)
+  }
+
+  async function exitOwnerView() {
+    setLoading(true)
+    setViewingOwner(null)
+    setOwnerProfile(null)
+    await loadStaffData(user.id)
+    setTab('Manage Owners')
+    setLoading(false)
+  }
+
+  async function updateBookingStatus(bookingId: string, status: string) {
+    setSaving(true)
+    await supabase.from('bookings').update({ status }).eq('id', bookingId)
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b))
+    setSaving(false)
+  }
+
+  async function savePropertyEdit() {
+    if (!editingProperty) return
+    setSaving(true)
+    await supabase.from('properties').update({
+      purchase_price: Number(editPropertyForm.purchase_price) || 0,
+      down_payment: Number(editPropertyForm.down_payment) || 0,
+      platform: editPropertyForm.platform,
+      status: editPropertyForm.status,
+      address: editPropertyForm.address,
+    }).eq('id', editingProperty.id)
+    setProperties(prev => prev.map(p => p.id === editingProperty.id ? { ...p, ...editPropertyForm } : p))
+    setEditingProperty(null)
+    setSaving(false)
   }
 
   // Computed values
@@ -246,6 +294,7 @@ export default function OwnerPortalPage() {
     })
     setAddPaymentOwner(null)
     setPaymentForm({ amount: '', description: '', property_name: '', period_start: '', period_end: '', status: 'paid' })
+    if (viewingOwner && viewingOwner.id === addPaymentOwner.id) await loadOwnerData(viewingOwner)
     setSaving(false)
   }
 
@@ -262,6 +311,7 @@ export default function OwnerPortalPage() {
     })
     setAddFinanceOwner(null)
     setFinanceForm({ amount: '', description: '', category: '', type: 'expense' })
+    if (viewingOwner && viewingOwner.id === addFinanceOwner.id) await loadOwnerData(viewingOwner)
     setSaving(false)
   }
 
@@ -351,6 +401,13 @@ export default function OwnerPortalPage() {
       {/* Main content */}
       <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
 
+        {isStaff && viewingOwner && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#EEF1FF', border: '1px solid #C7D2FE', borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 13 }}>
+            <span>👁 Viewing as owner: <strong>{viewingOwner.name}</strong> — all edits save to their account</span>
+            <button onClick={exitOwnerView} style={{ padding: '6px 14px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Exit owner view</button>
+          </div>
+        )}
+
         {/* DASHBOARD */}
         {tab === 'Dashboard' && (
           <div>
@@ -428,7 +485,14 @@ export default function OwnerPortalPage() {
                         <td style={td}>{nights}</td>
                         <td style={{ ...td, fontWeight: 600, color: '#10B981' }}>£{(Number(b.total_amount) || 0).toLocaleString()}</td>
                         <td style={{ ...td, color: '#667085' }}>{b.platform ?? 'Direct'}</td>
-                        <td style={td}><Badge status={b.status ?? 'pending'} /></td>
+                        <td style={td}>{isStaff
+                          ? <select value={b.status ?? 'pending'} onChange={e => updateBookingStatus(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
+                              <option value="pending">pending</option>
+                              <option value="confirmed">confirmed</option>
+                              <option value="cancelled">cancelled</option>
+                            </select>
+                          : <Badge status={b.status ?? 'pending'} />
+                        }</td>
                       </tr>
                     )
                   })}
@@ -504,7 +568,10 @@ export default function OwnerPortalPage() {
           <div style={card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>Statements</div>
-              <button onClick={() => window.print()} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>🖨 Print</button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {isStaff && viewingOwner && <button onClick={() => setAddPaymentOwner(viewingOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#10B981', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Payment</button>}
+                <button onClick={() => window.print()} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>🖨 Print</button>
+              </div>
             </div>
             {!isStaff && <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>👁 View only</div>}
             {statements.length === 0
@@ -591,7 +658,10 @@ export default function OwnerPortalPage() {
               : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                 {properties.map(p => (
                   <div key={p.id} style={card}>
-                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{p.name}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{p.name}</div>
+                      {isStaff && <button onClick={() => { setEditingProperty(p); setEditPropertyForm({ purchase_price: p.purchase_price ?? 0, down_payment: p.down_payment ?? 0, platform: p.platform ?? '', status: p.status ?? 'active', address: p.address ?? '' }) }} style={{ padding: '3px 10px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 11 }}>Edit</button>}
+                    </div>
                     <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>{p.address ?? p.location ?? 'Jamaica'}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Purchase:</span><span style={{ fontWeight: 600 }}>£{(Number(p.purchase_price) || 0).toLocaleString()}</span></div>
@@ -611,6 +681,7 @@ export default function OwnerPortalPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>Finance & Documents</div>
+              {isStaff && viewingOwner && <button onClick={() => setAddFinanceOwner(viewingOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Record</button>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
               <StatCard label="Paid Out" value={`£0`} />
@@ -798,6 +869,7 @@ export default function OwnerPortalPage() {
                     <span style={{ fontWeight: 600 }}>{owner.name}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
+                    <button style={{ padding: '5px 12px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(owner)}>View Portal</button>
                     <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(owner); setEditOwnerForm({ first_name: owner.name?.split(' ')[0] ?? '', last_name: owner.name?.split(' ').slice(1).join(' ') ?? '', email: owner.email, phone: owner.phone, invested: owner.invested ?? 0, split_percentage: owner.split_percentage ?? 60, property_ids: (owner.property_ids ?? []).join(', ') }) }}>Edit</button>
                     <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddFinanceOwner(owner)}>Finance</button>
                     <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddPaymentOwner(owner)}>+ Payment</button>
@@ -849,7 +921,15 @@ export default function OwnerPortalPage() {
                       <div style={{ fontWeight: 600 }}>{o.name}</div>
                       <div style={{ fontSize: 11, color: '#667085' }}>— {o.user_id === user?.id ? 'admin' : 'owner'}</div>
                     </div>
-                    <Badge status={o.user_id === user?.id ? 'admin' : 'owner'} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Badge status={o.user_id === user?.id ? 'admin' : 'owner'} />
+                      {o.user_id !== user?.id && (
+                        <>
+                          <button style={{ padding: '5px 12px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(o)}>View Portal</button>
+                          <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(o); setEditOwnerForm({ first_name: o.name?.split(' ')[0] ?? '', last_name: o.name?.split(' ').slice(1).join(' ') ?? '', email: o.email, phone: o.phone, invested: o.invested ?? 0, split_percentage: o.split_percentage ?? 60, property_ids: (o.property_ids ?? []).join(', ') }) }}>Edit</button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))
               }
@@ -884,6 +964,49 @@ export default function OwnerPortalPage() {
               <button onClick={() => deleteOwner(editingOwner.id)} style={{ padding: '9px 16px', background: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Delete Owner</button>
               <button onClick={() => setEditingOwner(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
               <button onClick={saveOwnerEdit} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PROPERTY MODAL */}
+      {editingProperty && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: 32, width: 460, maxWidth: '90vw' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Edit Property — {editingProperty.name}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Address</div>
+                <input value={editPropertyForm.address ?? ''} onChange={e => setEditPropertyForm((p: any) => ({ ...p, address: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Purchase Price (£)</div>
+                  <input value={editPropertyForm.purchase_price ?? ''} onChange={e => setEditPropertyForm((p: any) => ({ ...p, purchase_price: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Down Payment (£)</div>
+                  <input value={editPropertyForm.down_payment ?? ''} onChange={e => setEditPropertyForm((p: any) => ({ ...p, down_payment: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Platform</div>
+                  <input value={editPropertyForm.platform ?? ''} onChange={e => setEditPropertyForm((p: any) => ({ ...p, platform: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Status</div>
+                  <select value={editPropertyForm.status ?? 'active'} onChange={e => setEditPropertyForm((p: any) => ({ ...p, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                    <option value="active">active</option>
+                    <option value="draft">draft</option>
+                    <option value="inactive">inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <button onClick={() => setEditingProperty(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={savePropertyEdit} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
             </div>
           </div>
         </div>
