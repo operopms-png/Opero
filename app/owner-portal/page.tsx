@@ -870,7 +870,7 @@ export default function OwnerPortalPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button style={{ padding: '5px 12px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(owner)}>View Portal</button>
-                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(owner); setEditOwnerForm({ first_name: owner.name?.split(' ')[0] ?? '', last_name: owner.name?.split(' ').slice(1).join(' ') ?? '', email: owner.email, phone: owner.phone, invested: owner.invested ?? 0, split_percentage: owner.split_percentage ?? 60, property_ids: (owner.property_ids ?? []).join(', ') }) }}>Edit</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(owner); setEditOwnerForm({ first_name: owner.name?.split(' ')[0] ?? '', last_name: owner.name?.split(' ').slice(1).join(' ') ?? '', email: owner.email, phone: owner.phone, invested: owner.invested ?? 0, split_percentage: owner.split_percentage ?? 60, property_ids: owner.property_ids ?? [] }) }}>Edit</button>
                     <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddFinanceOwner(owner)}>Finance</button>
                     <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddPaymentOwner(owner)}>+ Payment</button>
                   </div>
@@ -926,7 +926,7 @@ export default function OwnerPortalPage() {
                       {o.user_id !== user?.id && (
                         <>
                           <button style={{ padding: '5px 12px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(o)}>View Portal</button>
-                          <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(o); setEditOwnerForm({ first_name: o.name?.split(' ')[0] ?? '', last_name: o.name?.split(' ').slice(1).join(' ') ?? '', email: o.email, phone: o.phone, invested: o.invested ?? 0, split_percentage: o.split_percentage ?? 60, property_ids: (o.property_ids ?? []).join(', ') }) }}>Edit</button>
+                          <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(o); setEditOwnerForm({ first_name: o.name?.split(' ')[0] ?? '', last_name: o.name?.split(' ').slice(1).join(' ') ?? '', email: o.email, phone: o.phone, invested: o.invested ?? 0, split_percentage: o.split_percentage ?? 60, property_ids: o.property_ids ?? [] }) }}>Edit</button>
                         </>
                       )}
                     </div>
@@ -956,8 +956,27 @@ export default function OwnerPortalPage() {
                 </div>
               ))}
               <div style={{ gridColumn: '1 / -1' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Property IDs (comma separated)</div>
-                <input value={editOwnerForm.property_ids ?? ''} onChange={e => setEditOwnerForm((p: any) => ({ ...p, property_ids: e.target.value }))} placeholder="uuid1, uuid2, ..." style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Assigned Properties</div>
+                <div style={{ border: '1px solid #EAECF0', borderRadius: 8, maxHeight: 180, overflowY: 'auto', padding: 4 }}>
+                  {properties.length === 0 && <div style={{ padding: 10, fontSize: 12, color: '#98A2B3' }}>No properties found on this account.</div>}
+                  {properties.map(prop => {
+                    const selected: string[] = editOwnerForm.property_ids ?? []
+                    const checked = selected.includes(prop.id)
+                    return (
+                      <label key={prop.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px', fontSize: 13, cursor: 'pointer', borderRadius: 6 }}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => setEditOwnerForm((p: any) => {
+                            const cur: string[] = p.property_ids ?? []
+                            return { ...p, property_ids: checked ? cur.filter(id => id !== prop.id) : [...cur, prop.id] }
+                          })}
+                        />
+                        {prop.name}
+                      </label>
+                    )
+                  })}
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
