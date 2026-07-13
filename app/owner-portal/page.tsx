@@ -622,7 +622,29 @@ export default function OwnerPortalPage() {
                       <tr key={b.id}>
                         <td style={td}>{b.guest_name ?? '—'}</td>
                         <td style={{ ...td, color: '#667085' }}>{b.properties?.name ?? '—'}</td>
-                        {isStaff && !viewingOwner && <td style={{ ...td, color: '#667085' }}>{bookingOwner?.name ?? 'Unassigned'}</td>}
+                        {isStaff && !viewingOwner && (
+                          <td style={{ ...td, color: '#667085' }}>
+                            <select
+                              value={bookingOwner?.id ?? ''}
+                              onChange={async e => {
+                                const newOwnerId = e.target.value || null
+                                setSaving(true)
+                                const res = await fetch('/api/admin/assign-property', {
+                                  method: 'POST', headers: await authHeader(),
+                                  body: JSON.stringify({ property_id: b.property_id, owner_id: newOwnerId }),
+                                })
+                                const result = await res.json()
+                                if (!res.ok) { alert(result.error || 'Could not assign owner'); setSaving(false); return }
+                                await loadStaffData(user.id)
+                                setSaving(false)
+                              }}
+                              style={{ padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}
+                            >
+                              <option value="">Unassigned</option>
+                              {allOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                            </select>
+                          </td>
+                        )}
                         <td style={td}>{b.check_in ?? '—'}</td>
                         <td style={td}>{b.check_out ?? '—'}</td>
                         <td style={td}>{nights}</td>
