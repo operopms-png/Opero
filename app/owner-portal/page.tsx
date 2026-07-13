@@ -70,6 +70,8 @@ export default function OwnerPortalPage() {
   const [viewingOwner, setViewingOwner] = useState<any>(null)
   const [editingProperty, setEditingProperty] = useState<any>(null)
   const [editPropertyForm, setEditPropertyForm] = useState<any>({})
+  const [addingBooking, setAddingBooking] = useState(false)
+  const [newBookingForm, setNewBookingForm] = useState<any>({ property_id: '', guest_name: '', guest_email: '', check_in: '', check_out: '', total_amount: '', platform: '', status: 'confirmed' })
 
   // Manage owners form
   const [ownerForm, setOwnerForm] = useState({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
@@ -164,6 +166,25 @@ export default function OwnerPortalPage() {
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not update booking status'); setSaving(false); return }
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b))
+    setSaving(false)
+  }
+
+  async function addBooking() {
+    if (!newBookingForm.property_id || !newBookingForm.check_in || !newBookingForm.check_out) {
+      alert('Property, check-in and check-out are required'); return
+    }
+    setSaving(true)
+    const res = await fetch('/api/admin/add-booking', {
+      method: 'POST',
+      headers: await authHeader(),
+      body: JSON.stringify(newBookingForm),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not add booking'); setSaving(false); return }
+    setAddingBooking(false)
+    setNewBookingForm({ property_id: '', guest_name: '', guest_email: '', check_in: '', check_out: '', total_amount: '', platform: '', status: 'confirmed' })
+    if (viewingOwner) await loadOwnerData(viewingOwner)
+    else await loadStaffData(user.id)
     setSaving(false)
   }
 
@@ -604,6 +625,7 @@ export default function OwnerPortalPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>My Bookings</div>
               {!isStaff && <span style={{ fontSize: 12, color: '#667085' }}>👁 View only — contact your manager to make changes</span>}
+              {isStaff && <button onClick={() => setAddingBooking(true)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#10B981', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Booking</button>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
               <StatCard label="This Month" value={monthBookings.length} />
@@ -1275,6 +1297,66 @@ export default function OwnerPortalPage() {
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setEditingProperty(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
               <button onClick={savePropertyEdit} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD BOOKING MODAL */}
+      {addingBooking && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: 32, width: 500, maxWidth: '90vw' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Add Booking</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Property</div>
+                <select value={newBookingForm.property_id} onChange={e => setNewBookingForm((p: any) => ({ ...p, property_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                  <option value="">Select a property…</option>
+                  {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Guest Name</div>
+                  <input value={newBookingForm.guest_name} onChange={e => setNewBookingForm((p: any) => ({ ...p, guest_name: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Guest Email</div>
+                  <input value={newBookingForm.guest_email} onChange={e => setNewBookingForm((p: any) => ({ ...p, guest_email: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Check-in</div>
+                  <input type="date" value={newBookingForm.check_in} onChange={e => setNewBookingForm((p: any) => ({ ...p, check_in: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Check-out</div>
+                  <input type="date" value={newBookingForm.check_out} onChange={e => setNewBookingForm((p: any) => ({ ...p, check_out: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Revenue (£)</div>
+                  <input value={newBookingForm.total_amount} onChange={e => setNewBookingForm((p: any) => ({ ...p, total_amount: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Platform</div>
+                  <input value={newBookingForm.platform} onChange={e => setNewBookingForm((p: any) => ({ ...p, platform: e.target.value }))} placeholder="Direct, Airbnb, …" style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Status</div>
+                <select value={newBookingForm.status} onChange={e => setNewBookingForm((p: any) => ({ ...p, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                  <option value="confirmed">confirmed</option>
+                  <option value="pending">pending</option>
+                  <option value="cancelled">cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <button onClick={() => setAddingBooking(false)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={addBooking} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Booking</button>
             </div>
           </div>
         </div>
