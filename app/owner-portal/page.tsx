@@ -797,7 +797,9 @@ export default function OwnerPortalPage() {
             {properties.length === 0
               ? <div style={{ ...card, textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 14 }}>No properties linked yet. Contact your manager.</div>
               : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                {properties.map(p => (
+                {properties.map(p => {
+                  const assignedOwner = allOwners.find(o => (o.property_ids ?? []).includes(p.id))
+                  return (
                   <div key={p.id} style={card}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{p.name}</div>
@@ -809,9 +811,39 @@ export default function OwnerPortalPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Down payment:</span><span style={{ fontWeight: 600 }}>£{(Number(p.down_payment) || 0).toLocaleString()}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Platform:</span><span style={{ fontWeight: 600 }}>{p.platform ?? 'Wire Transfer'}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Status:</span><Badge status={p.status ?? 'active'} /></div>
+                      {isStaff && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F2F4F7', paddingTop: 8, marginTop: 4 }}>
+                          <span style={{ color: '#667085' }}>Owner:</span>
+                          <select
+                            value={assignedOwner?.id ?? ''}
+                            onChange={async e => {
+                              const newOwnerId = e.target.value || null
+                              setSaving(true)
+                              const res = await fetch('/api/admin/assign-property', {
+                                method: 'POST', headers: await authHeader(),
+                                body: JSON.stringify({ property_id: p.id, owner_id: newOwnerId }),
+                              })
+                              const result = await res.json()
+                              if (!res.ok) { alert(result.error || 'Could not assign owner'); setSaving(false); return }
+                              if (viewingOwner) {
+                                const { data: freshProfile } = await supabase.from('owner_profiles').select('*').eq('id', viewingOwner.id).single()
+                                if (freshProfile) { setViewingOwner(freshProfile); setOwnerProfile(freshProfile); await loadOwnerData(freshProfile) }
+                              } else {
+                                await loadStaffData(user.id)
+                              }
+                              setSaving(false)
+                            }}
+                            style={{ padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                          >
+                            <option value="">Unassigned</option>
+                            {allOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             }
           </div>
