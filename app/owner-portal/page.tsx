@@ -755,38 +755,90 @@ export default function OwnerPortalPage() {
         {tab === 'ROI Per Owner' && (
           <div style={card}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>ROI Per Owner</div>
-            <div style={{ border: '1px solid #EAECF0', borderRadius: 10, overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
-                  {(ownerProfile?.name ?? 'O')[0]}
+
+            {isStaff && !viewingOwner ? (
+              <div style={{ border: '1px solid #EAECF0', borderRadius: 10, overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', background: '#F9FAFB', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase' }}>
+                  <div style={{ padding: '10px 16px' }}>Owner</div>
+                  <div style={{ padding: '10px 16px' }}>Invested</div>
+                  <div style={{ padding: '10px 16px' }}>Revenue</div>
+                  <div style={{ padding: '10px 16px' }}>Net Profit</div>
+                  <div style={{ padding: '10px 16px' }}>ROI</div>
+                  <div style={{ padding: '10px 16px' }}>Occupancy</div>
                 </div>
-                <div>
-                  <div style={{ fontWeight: 600 }}>{ownerProfile?.name ?? user?.email}</div>
-                  <div style={{ fontSize: 12, color: '#667085' }}>{properties[0]?.name ?? 'Properties'}</div>
-                </div>
+                {allOwners.length === 0 && <div style={{ padding: 20, fontSize: 13, color: '#98A2B3' }}>No owners yet.</div>}
+                {allOwners.map(o => {
+                  const ids: string[] = o.property_ids ?? []
+                  const ownerBookings = bookings.filter(b => b.status !== 'cancelled' && ids.includes(b.property_id))
+                  const ownerRevenue = ownerBookings.reduce((s, b) => s + (Number(b.total_amount) || 0), 0)
+                  const ownerShareAmt = ownerRevenue * ((o.split_percentage ?? 60) / 100)
+                  const ownerInvested = Number(o.invested) || 0
+                  const ownerRoi = ownerInvested > 0 ? ((ownerShareAmt / ownerInvested) * 100).toFixed(1) : '0.0'
+                  const ownerProps = properties.filter(p => ids.includes(p.id))
+                  const ownerNights = ownerBookings.filter(b => b.check_out >= ninetyAgo).reduce((s, b) => s + Math.max(0, Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000)), 0)
+                  const ownerOccupancy = Math.min(100, Math.round((ownerNights / (90 * Math.max(1, ownerProps.length))) * 100))
+                  return (
+                    <div key={o.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', borderTop: '1px solid #EAECF0', alignItems: 'center', fontSize: 13 }}>
+                      <div style={{ padding: '12px 16px', fontWeight: 600 }}>{o.name}</div>
+                      <div style={{ padding: '12px 16px' }}>
+                        <input
+                          type="number"
+                          defaultValue={ownerInvested}
+                          onBlur={async e => {
+                            const val = e.target.value
+                            if (Number(val) === ownerInvested) return
+                            setSaving(true)
+                            const res = await fetch('/api/admin/update-owner', { method: 'PATCH', headers: await authHeader(), body: JSON.stringify({ owner_id: o.id, invested: val }) })
+                            const result = await res.json()
+                            if (!res.ok) { alert(result.error || 'Could not save'); setSaving(false); return }
+                            await loadStaffData(user.id)
+                            setSaving(false)
+                          }}
+                          style={{ width: 90, padding: '5px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13 }}
+                        />
+                      </div>
+                      <div style={{ padding: '12px 16px' }}>£{ownerRevenue.toLocaleString()}</div>
+                      <div style={{ padding: '12px 16px' }}>£{ownerShareAmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                      <div style={{ padding: '12px 16px', fontWeight: 700, color: '#5B7CFA' }}>{ownerRoi}%</div>
+                      <div style={{ padding: '12px 16px' }}>{ownerOccupancy}%</div>
+                    </div>
+                  )
+                })}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                {[
-                  { label: 'Invested', value: `£${Number(invested).toLocaleString()}` },
-                  { label: 'Total Revenue', value: `£${totalRevenue.toLocaleString()}` },
-                  { label: 'Net Profit', value: `£${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
-                  { label: 'ROI', value: `${roi}%` },
-                ].map(s => (
-                  <div key={s.label} style={{ padding: '16px 20px', borderRight: '1px solid #EAECF0' }}>
-                    <div style={{ fontSize: 11, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{s.label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: s.label === 'ROI' ? '#5B7CFA' : '#101828' }}>{s.value}</div>
+            ) : (
+              <div style={{ border: '1px solid #EAECF0', borderRadius: 10, overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
+                    {(ownerProfile?.name ?? 'O')[0]}
                   </div>
-                ))}
-              </div>
-              <div style={{ padding: '12px 20px', borderTop: '1px solid #EAECF0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#667085', marginBottom: 4 }}>
-                  <span>Occupancy</span><span>{occupancyPct}%</span>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{ownerProfile?.name ?? user?.email}</div>
+                    <div style={{ fontSize: 12, color: '#667085' }}>{properties[0]?.name ?? 'Properties'}</div>
+                  </div>
                 </div>
-                <div style={{ height: 8, background: '#F2F4F7', borderRadius: 4 }}>
-                  <div style={{ height: 8, width: `${occupancyPct}%`, background: '#5B7CFA', borderRadius: 4 }} />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                  {[
+                    { label: 'Invested', value: `£${Number(invested).toLocaleString()}` },
+                    { label: 'Total Revenue', value: `£${totalRevenue.toLocaleString()}` },
+                    { label: 'Net Profit', value: `£${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
+                    { label: 'ROI', value: `${roi}%` },
+                  ].map(s => (
+                    <div key={s.label} style={{ padding: '16px 20px', borderRight: '1px solid #EAECF0' }}>
+                      <div style={{ fontSize: 11, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{s.label}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: s.label === 'ROI' ? '#5B7CFA' : '#101828' }}>{s.value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ padding: '12px 20px', borderTop: '1px solid #EAECF0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#667085', marginBottom: 4 }}>
+                    <span>Occupancy</span><span>{occupancyPct}%</span>
+                  </div>
+                  <div style={{ height: 8, background: '#F2F4F7', borderRadius: 4 }}>
+                    <div style={{ height: 8, width: `${occupancyPct}%`, background: '#5B7CFA', borderRadius: 4 }} />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
