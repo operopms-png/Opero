@@ -155,7 +155,13 @@ export default function OwnerPortalPage() {
 
   async function updateBookingStatus(bookingId: string, status: string) {
     setSaving(true)
-    await supabase.from('bookings').update({ status }).eq('id', bookingId)
+    const res = await fetch('/api/admin/update-booking-status', {
+      method: 'PATCH',
+      headers: await authHeader(),
+      body: JSON.stringify({ booking_id: bookingId, status }),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not update booking status'); setSaving(false); return }
     setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b))
     setSaving(false)
   }
@@ -163,13 +169,20 @@ export default function OwnerPortalPage() {
   async function savePropertyEdit() {
     if (!editingProperty) return
     setSaving(true)
-    await supabase.from('properties').update({
-      purchase_price: Number(editPropertyForm.purchase_price) || 0,
-      down_payment: Number(editPropertyForm.down_payment) || 0,
-      platform: editPropertyForm.platform,
-      status: editPropertyForm.status,
-      address: editPropertyForm.address,
-    }).eq('id', editingProperty.id)
+    const res = await fetch('/api/admin/update-property', {
+      method: 'PATCH',
+      headers: await authHeader(),
+      body: JSON.stringify({
+        property_id: editingProperty.id,
+        purchase_price: editPropertyForm.purchase_price,
+        down_payment: editPropertyForm.down_payment,
+        platform: editPropertyForm.platform,
+        status: editPropertyForm.status,
+        address: editPropertyForm.address,
+      }),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not save property changes'); setSaving(false); return }
     setProperties(prev => prev.map(p => p.id === editingProperty.id ? { ...p, ...editPropertyForm } : p))
     setEditingProperty(null)
     setSaving(false)
@@ -256,17 +269,29 @@ export default function OwnerPortalPage() {
     setSaving(false)
   }
 
+  async function authHeader() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` }
+  }
+
   async function saveOwnerEdit() {
     if (!editingOwner) return
     setSaving(true)
-    await supabase.from('owner_profiles').update({
-      name: `${editOwnerForm.first_name ?? ''} ${editOwnerForm.last_name ?? ''}`.trim(),
-      email: editOwnerForm.email,
-      phone: editOwnerForm.phone,
-      invested: editOwnerForm.invested,
-      split_percentage: editOwnerForm.split_percentage,
-      property_ids: editOwnerForm.property_ids,
-    }).eq('id', editingOwner.id)
+    const res = await fetch('/api/admin/update-owner', {
+      method: 'PATCH',
+      headers: await authHeader(),
+      body: JSON.stringify({
+        owner_id: editingOwner.id,
+        name: `${editOwnerForm.first_name ?? ''} ${editOwnerForm.last_name ?? ''}`.trim(),
+        email: editOwnerForm.email,
+        phone: editOwnerForm.phone,
+        invested: editOwnerForm.invested,
+        split_percentage: editOwnerForm.split_percentage,
+        property_ids: editOwnerForm.property_ids,
+      }),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not save owner changes'); setSaving(false); return }
     setEditingOwner(null)
     await loadStaffData(user.id)
     setSaving(false)
@@ -275,7 +300,13 @@ export default function OwnerPortalPage() {
   async function deleteOwner(ownerId: string) {
     if (!confirm('Delete this owner account? This cannot be undone.')) return
     setSaving(true)
-    await supabase.from('owner_profiles').delete().eq('id', ownerId)
+    const res = await fetch('/api/admin/delete-owner', {
+      method: 'POST',
+      headers: await authHeader(),
+      body: JSON.stringify({ owner_id: ownerId }),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not delete owner'); setSaving(false); return }
     await loadStaffData(user.id)
     setSaving(false)
   }
@@ -283,15 +314,21 @@ export default function OwnerPortalPage() {
   async function addPayment() {
     if (!addPaymentOwner || !paymentForm.amount) return
     setSaving(true)
-    await supabase.from('owner_statements').insert({
-      owner_id: addPaymentOwner.id,
-      property_name: paymentForm.property_name,
-      period_start: paymentForm.period_start || new Date().toISOString().slice(0, 10),
-      period_end: paymentForm.period_end || new Date().toISOString().slice(0, 10),
-      owner_amount: Number(paymentForm.amount),
-      notes: paymentForm.description,
-      status: paymentForm.status,
+    const res = await fetch('/api/admin/add-payment', {
+      method: 'POST',
+      headers: await authHeader(),
+      body: JSON.stringify({
+        owner_id: addPaymentOwner.id,
+        property_name: paymentForm.property_name,
+        period_start: paymentForm.period_start,
+        period_end: paymentForm.period_end,
+        amount: paymentForm.amount,
+        description: paymentForm.description,
+        status: paymentForm.status,
+      }),
     })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not add payment'); setSaving(false); return }
     setAddPaymentOwner(null)
     setPaymentForm({ amount: '', description: '', property_name: '', period_start: '', period_end: '', status: 'paid' })
     if (viewingOwner && viewingOwner.id === addPaymentOwner.id) await loadOwnerData(viewingOwner)
@@ -301,14 +338,19 @@ export default function OwnerPortalPage() {
   async function addFinanceRecord() {
     if (!addFinanceOwner || !financeForm.amount) return
     setSaving(true)
-    const amt = financeForm.type === 'expense' ? -Math.abs(Number(financeForm.amount)) : Math.abs(Number(financeForm.amount))
-    await supabase.from('owner_finance').insert({
-      owner_id: addFinanceOwner.id,
-      amount: amt,
-      description: financeForm.description,
-      category: financeForm.category,
-      created_at: new Date().toISOString(),
+    const res = await fetch('/api/admin/add-finance', {
+      method: 'POST',
+      headers: await authHeader(),
+      body: JSON.stringify({
+        owner_id: addFinanceOwner.id,
+        amount: financeForm.amount,
+        description: financeForm.description,
+        category: financeForm.category,
+        type: financeForm.type,
+      }),
     })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not add finance record'); setSaving(false); return }
     setAddFinanceOwner(null)
     setFinanceForm({ amount: '', description: '', category: '', type: 'expense' })
     if (viewingOwner && viewingOwner.id === addFinanceOwner.id) await loadOwnerData(viewingOwner)
