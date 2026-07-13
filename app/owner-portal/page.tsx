@@ -612,15 +612,17 @@ export default function OwnerPortalPage() {
               <StatCard label="Revenue" value={`£${totalRevenue.toLocaleString()}`} dark />
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead><tr>{['Guest', 'Property', 'Check-in', 'Check-out', 'Nights', 'Revenue', 'Platform', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+              <thead><tr>{['Guest', 'Property', ...(isStaff && !viewingOwner ? ['Owner'] : []), 'Check-in', 'Check-out', 'Nights', 'Revenue', 'Platform', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
               <tbody>
-                {bookings.length === 0 ? <tr><td colSpan={8} style={{ ...td, textAlign: 'center', color: '#98A2B3', padding: 40 }}>No bookings yet</td></tr>
+                {bookings.length === 0 ? <tr><td colSpan={9} style={{ ...td, textAlign: 'center', color: '#98A2B3', padding: 40 }}>No bookings yet</td></tr>
                   : bookings.map(b => {
                     const nights = b.check_in && b.check_out ? Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000) : 0
+                    const bookingOwner = isStaff && !viewingOwner ? allOwners.find(o => (o.property_ids ?? []).includes(b.property_id)) : null
                     return (
                       <tr key={b.id}>
                         <td style={td}>{b.guest_name ?? '—'}</td>
                         <td style={{ ...td, color: '#667085' }}>{b.properties?.name ?? '—'}</td>
+                        {isStaff && !viewingOwner && <td style={{ ...td, color: '#667085' }}>{bookingOwner?.name ?? 'Unassigned'}</td>}
                         <td style={td}>{b.check_in ?? '—'}</td>
                         <td style={td}>{b.check_out ?? '—'}</td>
                         <td style={td}>{nights}</td>
