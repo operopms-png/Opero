@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, RadialBarChart, RadialBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts'
 
 const MGMT_FEE = 0.40 // Sangsters takes 40%, owner gets 60%
 
@@ -206,6 +207,33 @@ export default function OwnerPortalPage() {
   const netProfit = ownerShare - expenses
   const roi = invested > 0 ? ((netProfit / invested) * 100).toFixed(1) : '0.0'
 
+  // Last 6 months of data for dashboard sparklines/charts
+  const monthLabels: string[] = []
+  const chartData: any[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date()
+    d.setMonth(d.getMonth() - i)
+    const key = d.toISOString().slice(0, 7)
+    const label = d.toLocaleString('en-GB', { month: 'short' })
+    monthLabels.push(key)
+    const monthActiveBookings = activeBookings.filter(b => b.check_in?.startsWith(key))
+    const monthCancelled = bookings.filter(b => b.status === 'cancelled' && b.check_in?.startsWith(key))
+    const monthNights = monthActiveBookings.reduce((s, b) => s + Math.max(0, Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000)), 0)
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+    chartData.push({
+      month: label,
+      revenue: monthActiveBookings.reduce((s, b) => s + (Number(b.total_amount) || 0), 0),
+      bookings: monthActiveBookings.length,
+      cancellations: monthCancelled.length,
+      occupancy: Math.min(100, Math.round((monthNights / (daysInMonth * Math.max(1, properties.length))) * 100)),
+    })
+  }
+  const platformBreakdown: Record<string, number> = {}
+  activeBookings.forEach(b => { const p = b.platform ?? 'Direct'; platformBreakdown[p] = (platformBreakdown[p] ?? 0) + 1 })
+  const platformColors: Record<string, string> = { Direct: '#10B981', Airbnb: '#FF5A5F', 'Booking.com': '#003580', Vrbo: '#3D67FF' }
+  const platformPieData = Object.entries(platformBreakdown).map(([name, value]) => ({ name, value, color: platformColors[name] ?? '#98A2B3' }))
+  const upcomingBookings = activeBookings.filter(b => b.check_in >= today).sort((a, b) => a.check_in < b.check_in ? -1 : 1).slice(0, 5)
+
   // Calendar helpers
   function getDaysInMonth(date: Date) {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
@@ -223,6 +251,7 @@ export default function OwnerPortalPage() {
     ...bookings.filter(b => b.status !== 'cancelled').map(b => ({ ...b, amount: Number(b.total_amount) || 0, type: 'booking', label: `${b.guest_name ?? 'Guest'} — booking revenue`, property: b.properties?.name })),
     ...financeRecords.map(f => ({ ...f, type: 'expense', label: f.description ?? f.category })),
   ].sort((a, b) => (b.created_at ?? b.check_in ?? '') > (a.created_at ?? a.check_in ?? '') ? 1 : -1)
+  const recentFinance = allFinance.slice(0, 5)
 
   const financeByMonth: Record<string, any[]> = {}
   allFinance.forEach(r => {
@@ -454,47 +483,117 @@ export default function OwnerPortalPage() {
         {tab === 'Dashboard' && (
           <div>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#101828', marginBottom: 20 }}>Command Centre 👋 <span style={{ float: 'right', fontSize: 12, color: '#98A2B3', fontWeight: 400 }}>Last 6 months</span></div>
+
+            {/* Sparkline stat cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
-              <StatCard label="Revenue" value={`£${totalRevenue.toLocaleString()}`} sub="All time" />
-              <StatCard label="Bookings" value={activeBookings.length} sub="All time" />
-              <StatCard label="Cancellations" value={bookings.filter(b => b.status === 'cancelled').length} sub="All time" />
+              <div style={card}>
+                <div style={{ fontSize: 13, color: '#101828', marginBottom: 8 }}>💰 Revenue</div>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>£{totalRevenue.toLocaleString()}</div>
+                <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>{bookedNights} Nights</div>
+                <ResponsiveContainer width="100%" height={70}>
+                  <AreaChart data={chartData}>
+                    <Area type="monotone" dataKey="revenue" stroke="#10B981" fill="#10B98122" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={card}>
+                <div style={{ fontSize: 13, color: '#101828', marginBottom: 8 }}>📅 Bookings</div>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{activeBookings.length}</div>
+                <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>{bookedNights} Nights</div>
+                <ResponsiveContainer width="100%" height={70}>
+                  <AreaChart data={chartData}>
+                    <Area type="monotone" dataKey="bookings" stroke="#5B7CFA" fill="#5B7CFA22" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={card}>
+                <div style={{ fontSize: 13, color: '#101828', marginBottom: 8 }}>❌ Cancellations</div>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{bookings.filter(b => b.status === 'cancelled').length}</div>
+                <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>0 Nights</div>
+                <ResponsiveContainer width="100%" height={70}>
+                  <AreaChart data={chartData}>
+                    <Area type="monotone" dataKey="cancellations" stroke="#EF4444" fill="#EF444422" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+
+            {/* Occupancy gauge + full revenue/occupancy line chart */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 20 }}>
               <div style={card}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Occupancy</div>
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ fontSize: 48, fontWeight: 800, color: '#5B7CFA' }}>{occupancyPct}%</div>
-                  <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Last 90 days</div>
-                </div>
+                <ResponsiveContainer width="100%" height={180}>
+                  <RadialBarChart innerRadius="70%" outerRadius="100%" startAngle={180} endAngle={0} data={[{ value: occupancyPct, fill: '#5B7CFA' }]} barSize={22}>
+                    <RadialBar background dataKey="value" cornerRadius={11} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+                <div style={{ textAlign: 'center', marginTop: -70, fontSize: 32, fontWeight: 800 }}>{occupancyPct}%</div>
               </div>
               <div style={card}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Occupancy & Revenue</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: '#667085' }}>Gross Revenue</span><span style={{ fontWeight: 700 }}>£{totalRevenue.toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: '#667085' }}>This month</span><span style={{ fontWeight: 700 }}>£{monthRevenue.toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderTop: '1px solid #F2F4F7', paddingTop: 10 }}>
-                    <span style={{ color: '#667085' }}>Your share (60%)</span><span style={{ fontWeight: 700, color: '#10B981' }}>£{ownerShare.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                  </div>
-                </div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={v => `£${v}`} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} domain={[0, 100]} />
+                    <Tooltip />
+                    <Legend />
+                    <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="occupancy" name="Occupancy" stroke="#5B7CFA" strokeWidth={2} dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+
+            {/* Donut breakdowns by platform */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
               {[
-                { label: 'Revenues / Portal', value: `£${ownerShare.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, note: 'Direct 100%' },
-                { label: 'Bookings', value: activeBookings.length, note: 'Direct 100%' },
-                { label: 'Nights / Portal', value: bookedNights, note: 'Direct 100%' },
-                { label: 'Cancellations', value: bookings.filter(b => b.status === 'cancelled').length, note: '0%' },
-              ].map(s => (
-                <div key={s.label} style={card}>
-                  <div style={{ fontSize: 11, color: '#667085', marginBottom: 8 }}>{s.label}</div>
-                  <div style={{ width: 56, height: 56, borderRadius: '50%', border: '5px solid #5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#101828', margin: '0 auto 8px' }}>{s.value}</div>
-                  <div style={{ fontSize: 11, color: '#10B981', textAlign: 'center' }}>● {s.note}</div>
+                { label: 'Revenues / Portal', data: platformPieData.map(p => ({ ...p, value: activeBookings.filter(b => (b.platform ?? 'Direct') === p.name).reduce((s, b) => s + (Number(b.total_amount) || 0), 0) })) },
+                { label: 'Bookings', data: platformPieData },
+                { label: 'Nights / Portal', data: platformPieData.map(p => ({ ...p, value: activeBookings.filter(b => (b.platform ?? 'Direct') === p.name).reduce((s, b) => s + Math.max(0, Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000)), 0) })) },
+                { label: 'Cancellations', data: bookings.some(b => b.status === 'cancelled') ? [{ name: 'Cancelled', value: bookings.filter(b => b.status === 'cancelled').length, color: '#EF4444' }] : [{ name: 'None', value: 1, color: '#EAECF0' }] },
+              ].map(donut => (
+                <div key={donut.label} style={card}>
+                  <div style={{ fontSize: 12, color: '#667085', textAlign: 'center', marginBottom: 8 }}>{donut.label}</div>
+                  <ResponsiveContainer width="100%" height={120}>
+                    <PieChart>
+                      <Pie data={donut.data.length ? donut.data : [{ name: 'None', value: 1, color: '#EAECF0' }]} dataKey="value" innerRadius={35} outerRadius={50} paddingAngle={2}>
+                        {(donut.data.length ? donut.data : [{ color: '#EAECF0' }]).map((d, i) => <Cell key={i} fill={d.color} />)}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ textAlign: 'center', fontSize: 11, color: '#667085' }}>
+                    {donut.data.length ? donut.data.map(d => `● ${d.name} ${Math.round((d.value / Math.max(1, donut.data.reduce((s, x) => s + x.value, 0))) * 100)}%`).join('  ') : '0%'}
+                  </div>
                 </div>
               ))}
+            </div>
+
+            {/* Upcoming bookings + recent finance */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={card}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#667085', textTransform: 'uppercase', marginBottom: 12 }}>Upcoming Bookings</div>
+                {upcomingBookings.length === 0
+                  ? <div style={{ fontSize: 13, color: '#98A2B3' }}>No upcoming bookings</div>
+                  : upcomingBookings.map(b => (
+                    <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F2F4F7', fontSize: 13 }}>
+                      <span>{b.guest_name ?? 'Guest'} — {b.properties?.name ?? ''}</span>
+                      <span style={{ color: '#667085' }}>{b.check_in}</span>
+                    </div>
+                  ))}
+              </div>
+              <div style={card}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#667085', textTransform: 'uppercase', marginBottom: 12 }}>Recent Finance</div>
+                {recentFinance.length === 0
+                  ? <div style={{ fontSize: 13, color: '#98A2B3' }}>No finance activity yet</div>
+                  : recentFinance.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F2F4F7', fontSize: 13 }}>
+                      <span>{f.label}</span>
+                      <span style={{ fontWeight: 700, color: (f.amount ?? 0) < 0 ? '#DC2626' : '#10B981' }}>{(f.amount ?? 0) < 0 ? '−' : '+'}£{Math.abs(Number(f.amount) || 0).toLocaleString()}</span>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         )}
