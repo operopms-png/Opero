@@ -7,9 +7,22 @@ import { AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, RadialBarChart, 
 
 const MGMT_FEE = 0.40 // Sangsters takes 40%, owner gets 60%
 
+const STAGING_STEPS = [
+  'Property virtually viewed and confirmed',
+  'Management agreement signed',
+  'Fees, rent and deposit sent to Sangsters Group',
+  'Offer accepted or rejected by landlord',
+  'Contract viewed and signed',
+  'Rent and deposit sent to broker',
+  'Furnishing the property',
+  'Cleaning the property',
+  'Pictures of the property',
+  'Going live on all travel booking platforms',
+]
+
 const NAV = [
   { section: 'OVERVIEW', items: ['Dashboard', 'My Bookings', 'Calendar'] },
-  { section: 'REPORTS', items: ['Maintenance', 'Statements', 'ROI Per Owner', 'My Properties', 'Finance & Documents'] },
+  { section: 'REPORTS', items: ['Maintenance', 'Statements', 'ROI Per Owner', 'My Properties', 'Finance & Documents', 'Property Onboarding'] },
   { section: 'COMMUNICATION', items: ['Messages', 'Contact & Payment'] },
 ]
 
@@ -257,6 +270,19 @@ export default function OwnerPortalPage() {
     if (!res.ok) { alert(result.error || 'Could not save property changes'); setSaving(false); return }
     setProperties(prev => prev.map(p => p.id === editingProperty.id ? { ...p, ...editPropertyForm } : p))
     setEditingProperty(null)
+    setSaving(false)
+  }
+
+  async function updateStagingStage(propertyId: string, stage: number) {
+    setSaving(true)
+    const res = await fetch('/api/admin/update-staging', {
+      method: 'PATCH',
+      headers: await authHeader(),
+      body: JSON.stringify({ property_id: propertyId, stage }),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not update staging stage'); setSaving(false); return }
+    setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, staging_stage: stage } : p))
     setSaving(false)
   }
 
@@ -1082,6 +1108,50 @@ export default function OwnerPortalPage() {
                       </span>
                     </div>
                   ))}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* STAGING */}
+        {tab === 'Property Onboarding' && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Property Onboarding</div>
+            {properties.length === 0 && <div style={card}><div style={{ fontSize: 13, color: '#98A2B3' }}>No properties yet.</div></div>}
+            {properties.map(p => {
+              const stage = p.staging_stage ?? 0
+              return (
+                <div key={p.id} style={{ ...card, marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
+                    <div style={{ fontSize: 12, color: '#667085' }}>{stage} of {STAGING_STEPS.length} complete</div>
+                  </div>
+                  <div style={{ height: 6, background: '#F2F4F7', borderRadius: 3, marginBottom: 16, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${(stage / STAGING_STEPS.length) * 100}%`, background: '#5B7CFA' }} />
+                  </div>
+                  {STAGING_STEPS.map((label, i) => {
+                    const done = i < stage
+                    const current = i === stage
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => isStaff && updateStagingStage(p.id, done ? i : i + 1)}
+                        style={{ display: 'flex', gap: 12, cursor: isStaff ? 'pointer' : 'default' }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{
+                            width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700,
+                            background: done ? '#10B981' : current ? '#EEF1FF' : '#F2F4F7',
+                            color: done ? '#fff' : current ? '#5B7CFA' : '#98A2B3',
+                            border: current ? '1px solid #5B7CFA' : 'none',
+                          }}>{done ? '✓' : i + 1}</div>
+                          {i < STAGING_STEPS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 16, background: '#EAECF0' }} />}
+                        </div>
+                        <div style={{ paddingBottom: 14, fontSize: 13, color: done || current ? '#101828' : '#667085' }}>{label}</div>
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })}
