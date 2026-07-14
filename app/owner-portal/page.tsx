@@ -5,6 +5,19 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, RadialBarChart, RadialBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts'
 
+async function uploadAttachment(file: File, folder: string): Promise<string | null> {
+  const ext = file.name.split('.').pop()
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('pm-files').upload(path, file)
+  if (error) { console.error(error); return null }
+  const { data } = supabase.storage.from('pm-files').getPublicUrl(path)
+  return data.publicUrl
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|mov|webm|m4v)$/i.test(url)
+}
+
 const MGMT_FEE = 0.40 // Sangsters takes 40%, owner gets 60%
 
 const STAGING_STEPS = [
@@ -68,6 +81,8 @@ export default function OwnerPortalPage() {
   const [calMonth, setCalMonth] = useState(new Date())
   const [calProperty, setCalProperty] = useState<string>('')
   const [newMsg, setNewMsg] = useState('')
+  const [msgAttachment, setMsgAttachment] = useState('')
+  const [uploadingMsg, setUploadingMsg] = useState(false)
   const [msgOwner, setMsgOwner] = useState<any>(null)
   const [stmtOwner, setStmtOwner] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -91,7 +106,8 @@ export default function OwnerPortalPage() {
   const [addingBooking, setAddingBooking] = useState(false)
   const [newBookingForm, setNewBookingForm] = useState<any>({ property_id: '', guest_name: '', guest_email: '', check_in: '', check_out: '', total_amount: '', platform: '', status: 'confirmed' })
   const [addingIssue, setAddingIssue] = useState(false)
-  const [newIssueForm, setNewIssueForm] = useState<any>({ owner_id: '', property_id: '', category: '', priority: 'high', title: '', description: '' })
+  const [newIssueForm, setNewIssueForm] = useState<any>({ owner_id: '', property_id: '', category: '', priority: 'high', title: '', description: '', attachment_url: '' })
+  const [uploadingIssue, setUploadingIssue] = useState(false)
 
   // Manage owners form
   const [ownerForm, setOwnerForm] = useState({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
@@ -260,7 +276,7 @@ export default function OwnerPortalPage() {
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not add maintenance issue'); setSaving(false); return }
     setAddingIssue(false)
-    setNewIssueForm({ owner_id: '', property_id: '', category: '', priority: 'high', title: '', description: '' })
+    setNewIssueForm({ owner_id: '', property_id: '', category: '', priority: 'high', title: '', description: '', attachment_url: '' })
     if (viewingOwner) await loadOwnerData(viewingOwner)
     else await loadStaffData(user.id)
     setSaving(false)
@@ -375,22 +391,24 @@ export default function OwnerPortalPage() {
   })
 
   async function sendMessage() {
-    if (!newMsg.trim() || !chatOwner) return
+    if ((!newMsg.trim() && !msgAttachment) || !chatOwner) return
     setSaving(true)
     const text = newMsg.trim()
+    const attachment = msgAttachment
     if (isStaff) {
       const res = await fetch('/api/admin/send-message', {
         method: 'POST', headers: await authHeader(),
-        body: JSON.stringify({ owner_id: chatOwner.id, message: text }),
+        body: JSON.stringify({ owner_id: chatOwner.id, message: text, attachment_url: attachment }),
       })
       const result = await res.json()
       if (!res.ok) { alert(result.error || 'Could not send message'); setSaving(false); return }
-      setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'staff', message: text, created_at: new Date().toISOString() }])
+      setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'staff', message: text, attachment_url: attachment, created_at: new Date().toISOString() }])
     } else {
-      await supabase.from('owner_messages').insert({ owner_id: chatOwner.id, sender: 'owner', message: text, created_at: new Date().toISOString() })
-      setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'owner', message: text, created_at: new Date().toISOString() }])
+      await supabase.from('owner_messages').insert({ owner_id: chatOwner.id, sender: 'owner', message: text, attachment_url: attachment || null, created_at: new Date().toISOString() })
+      setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'owner', message: text, attachment_url: attachment, created_at: new Date().toISOString() }])
     }
     setNewMsg('')
+    setMsgAttachment('')
     setSaving(false)
   }
 
@@ -854,9 +872,9 @@ export default function OwnerPortalPage() {
               <StatCard label="Total Cost" value={`£${tickets.reduce((s, t) => s + (Number(t.cost) || 0), 0).toLocaleString()}`} dark />
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead><tr>{['Property', 'Issue', 'Category', 'Priority', 'Status', 'Cost', 'Date'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+              <thead><tr>{['Property', 'Issue', 'Category', 'Priority', 'Status', 'Cost', 'Date', 'Media'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
               <tbody>
-                {tickets.length === 0 ? <tr><td colSpan={7} style={{ ...td, textAlign: 'center', color: '#98A2B3', padding: 40 }}>No maintenance tickets</td></tr>
+                {tickets.length === 0 ? <tr><td colSpan={8} style={{ ...td, textAlign: 'center', color: '#98A2B3', padding: 40 }}>No maintenance tickets</td></tr>
                   : tickets.map(t => (
                     <tr key={t.id}>
                       <td style={td}>{t.properties?.name ?? '—'}</td>
@@ -873,6 +891,13 @@ export default function OwnerPortalPage() {
                       }</td>
                       <td style={td}>{t.cost ? `£${t.cost}` : '—'}</td>
                       <td style={{ ...td, color: '#667085' }}>{t.created_at?.slice(0, 10) ?? '—'}</td>
+                      <td style={td}>
+                        {t.attachment_url ? (
+                          isVideoUrl(t.attachment_url)
+                            ? <video src={t.attachment_url} style={{ height: 40, borderRadius: 4, cursor: 'pointer' }} onClick={() => window.open(t.attachment_url, '_blank')} />
+                            : <img src={t.attachment_url} alt="attachment" style={{ height: 40, borderRadius: 4, cursor: 'pointer' }} onClick={() => window.open(t.attachment_url, '_blank')} />
+                        ) : '—'}
+                      </td>
                     </tr>
                   ))}
               </tbody>
@@ -1242,7 +1267,12 @@ export default function OwnerPortalPage() {
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     <div style={{ maxWidth: '70%', background: isMine ? '#5B7CFA' : '#F3F4F6', color: isMine ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
                       <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'Sangsters Group' : (chatOwner?.name ?? 'Owner')}</div>
-                      <div>{m.message}</div>
+                      {m.attachment_url && (
+                        isVideoUrl(m.attachment_url)
+                          ? <video src={m.attachment_url} controls style={{ maxWidth: '100%', borderRadius: 8, marginBottom: m.message ? 8 : 0, display: 'block' }} />
+                          : <img src={m.attachment_url} alt="attachment" style={{ maxWidth: '100%', borderRadius: 8, marginBottom: m.message ? 8 : 0, display: 'block', cursor: 'pointer' }} onClick={() => window.open(m.attachment_url, '_blank')} />
+                      )}
+                      {m.message && <div>{m.message}</div>}
                       <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{m.created_at?.slice(0, 16)}</div>
                     </div>
                   </div>
@@ -1251,9 +1281,31 @@ export default function OwnerPortalPage() {
               }
             </div>
             {chatOwner && (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }} />
-                <button onClick={sendMessage} disabled={saving} style={{ padding: '10px 20px', background: '#5B7CFA', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Send</button>
+              <div>
+                {msgAttachment && (
+                  <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {isVideoUrl(msgAttachment)
+                      ? <video src={msgAttachment} style={{ height: 60, borderRadius: 6 }} />
+                      : <img src={msgAttachment} alt="preview" style={{ height: 60, borderRadius: 6 }} />
+                    }
+                    <button onClick={() => setMsgAttachment('')} style={{ fontSize: 12, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 42, border: '1px solid #EAECF0', borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>
+                    {uploadingMsg ? '…' : '📎'}
+                    <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={async e => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      setUploadingMsg(true)
+                      const url = await uploadAttachment(file, 'messages')
+                      if (url) setMsgAttachment(url); else alert('Upload failed')
+                      setUploadingMsg(false)
+                    }} />
+                  </label>
+                  <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }} />
+                  <button onClick={sendMessage} disabled={saving || uploadingMsg} style={{ padding: '10px 20px', background: '#5B7CFA', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Send</button>
+                </div>
               </div>
             )}
           </div>
@@ -1629,6 +1681,30 @@ export default function OwnerPortalPage() {
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Description</div>
                 <textarea value={newIssueForm.description} onChange={e => setNewIssueForm((p: any) => ({ ...p, description: e.target.value }))} placeholder="Full details…" rows={3} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box', resize: 'vertical' }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Photo / Video</div>
+                {newIssueForm.attachment_url ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {isVideoUrl(newIssueForm.attachment_url)
+                      ? <video src={newIssueForm.attachment_url} style={{ height: 70, borderRadius: 6 }} controls />
+                      : <img src={newIssueForm.attachment_url} alt="preview" style={{ height: 70, borderRadius: 6 }} />
+                    }
+                    <button onClick={() => setNewIssueForm((p: any) => ({ ...p, attachment_url: '' }))} style={{ fontSize: 12, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
+                  </div>
+                ) : (
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', border: '1px dashed #C9A84C', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#C9A84C' }}>
+                    {uploadingIssue ? 'Uploading…' : '📎 Attach a photo or video'}
+                    <input type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={async e => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      setUploadingIssue(true)
+                      const url = await uploadAttachment(file, 'maintenance')
+                      if (url) setNewIssueForm((p: any) => ({ ...p, attachment_url: url })); else alert('Upload failed')
+                      setUploadingIssue(false)
+                    }} />
+                  </label>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>

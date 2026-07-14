@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
   if (!staffId) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
 
-  const { property_id, title, description, category, priority } = await req.json()
+  const { property_id, title, description, category, priority, attachment_url } = await req.json()
   if (!property_id || !title) return NextResponse.json({ error: 'property_id and title are required' }, { status: 400 })
 
   const { error } = await serviceClient.from('maintenance_tickets').insert({
@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     description: description || null,
     category: category || null,
     priority: priority || 'medium',
+    attachment_url: attachment_url || null,
     status: 'open',
   })
 
