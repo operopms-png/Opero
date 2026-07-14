@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import WeatherWidget from '@/components/WeatherWidget'
 
-const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Turnovers','Owner Reports','Analytics','Integrations','Team','Reports','Expenses','Banking','Guest Comms']
+const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Owner Reports','Analytics','Integrations','Team','Reports','Expenses','Banking','Guest Comms']
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
@@ -33,7 +33,6 @@ export default function STRPage() {
   const [properties, setProperties] = useState<any[]>([])
   const [cleaning, setCleaning] = useState<any[]>([])
   const [maintenance, setMaintenance] = useState<any[]>([])
-  const [turnovers, setTurnovers] = useState<any[]>([])
   const [team, setTeam] = useState<any[]>([])
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
@@ -61,24 +60,22 @@ export default function STRPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const userId = uid || user?.id
     // properties has a user_id column, but bookings/cleaning_tasks/
-    // maintenance_tickets/turnovers don't — they only relate to the
+    // maintenance_tickets don't — they only relate to the
     // business via property_id, so fetch properties first and filter
     // the rest by that (same fix as the owner-portal).
     const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     const ids = (propsData ?? []).map((p: any) => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-    const [b, c, m, t, tm] = await Promise.all([
+    const [b, c, m, tm] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
       supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safeIds).order('scheduled_date', { ascending: true }),
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
-      supabase.from('turnovers').select('*, properties(name)').in('property_id', safeIds).order('turnover_date', { ascending: true }),
       supabase.from('team_members').select('*').eq('user_id', userId),
     ])
     setProperties(propsData ?? [])
     setBookings(b.data ?? [])
     setCleaning(c.data ?? [])
     setMaintenance(m.data ?? [])
-    setTurnovers(t.data ?? [])
     setTeam(tm.data ?? [])
     const rev = (b.data ?? []).filter((x:any) => x.status !== 'cancelled').reduce((s:number, x:any) => s + (x.total_amount ?? 0), 0)
     setStats({ properties:(propsData??[]).length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
@@ -86,7 +83,7 @@ export default function STRPage() {
 
   // These tables relate to the business via property_id only — they have
   // no user_id column, so save() must not try to write one.
-  const NO_USER_ID_TABLES = ['bookings', 'cleaning_tasks', 'maintenance_tickets', 'turnovers']
+  const NO_USER_ID_TABLES = ['bookings', 'cleaning_tasks', 'maintenance_tickets']
 
   // assigned_to now stores a team_members.id (uuid) — resolve it back to a name for display
   function teamName(id: string | null | undefined) {
@@ -103,18 +100,6 @@ export default function STRPage() {
       const payload = NO_USER_ID_TABLES.includes(table) ? { ...data } : { ...data, user_id: user?.id }
       const { error } = await supabase.from(table).insert([payload])
       if (error) { alert(error.message); setSaving(false); return }
-
-      // Scheduling a turnover also creates its matching cleaning task —
-      // the clean is the part of the turnover housekeeping actually does.
-      if (table === 'turnovers') {
-        await supabase.from('cleaning_tasks').insert([{
-          property_id: data.property_id,
-          scheduled_date: data.turnover_date,
-          assigned_to: data.assigned_to || null,
-          status: 'pending',
-          notes: data.notes ? `Turnover: ${data.notes}` : 'Auto-created from turnover',
-        }])
-      }
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
     await loadAll()
@@ -147,7 +132,7 @@ export default function STRPage() {
             {tab==='Properties' && <button onClick={()=>{setModal('property');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Property</button>}
             {tab==='Cleaning' && <button onClick={()=>{setModal('cleaning');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Task</button>}
             {tab==='Maintenance' && <button onClick={()=>{setModal('maintenance');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Ticket</button>}
-            {tab==='Turnovers' && <button onClick={()=>{setModal('turnover');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Schedule Turnover</button>}
+
             {tab==='Team' && <button onClick={()=>{setModal('team');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Member</button>}
           </div>
         </div>
@@ -289,29 +274,6 @@ export default function STRPage() {
                   <button onClick={()=>del('maintenance_tickets',m.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
                 </div>)
               })}
-            </div>
-          </div>
-        )}
-
-        {tab==='Turnovers' && (
-          <div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
-              {[{label:'Total',value:turnovers.length,color:'#101828'},{label:'Upcoming',value:turnovers.filter(t=>t.status==='scheduled'&&t.turnover_date>=today).length,color:'#3B4AFF'},{label:'Completed',value:turnovers.filter(t=>t.status==='completed').length,color:'#10B981'}].map((c:any)=>(
-                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div><div style={{ fontSize:28, fontWeight:800, color:c.color }}>{c.value}</div></div>
-              ))}
-            </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {turnovers.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No turnovers scheduled</div> :
-              turnovers.map((t:any)=>(<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto auto auto', alignItems:'center', gap:12 }}>
-                <div><div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{t.properties?.name??'—'}</div><div style={{ fontSize:12, color:'#667085' }}>{t.turnover_date}</div></div>
-                <span style={{ fontSize:13, color:'#667085' }}>{teamName(t.assigned_to)??'Unassigned'}</span>
-                <select value={t.status??'scheduled'} onChange={async e=>{await supabase.from('turnovers').update({status:e.target.value}).eq('id',t.id);loadAll()}} style={{ padding:'6px 10px', borderRadius:8, border:'1px solid #E4E7EC', fontSize:13, fontFamily:'inherit' }}>
-                  <option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
-                </select>
-                <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.status==='completed'?'#D1FAE5':t.status==='in_progress'?'#FEF3C7':'#DBEAFE', color:t.status==='completed'?'#059669':t.status==='in_progress'?'#D97706':'#2563EB' }}>{t.status??'scheduled'}</span>
-                <button onClick={()=>openEdit('turnover',t)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
-                <button onClick={()=>del('turnovers',t.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
-              </div>))}
             </div>
           </div>
         )}
@@ -949,26 +911,6 @@ export default function STRPage() {
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
             <button onClick={()=>save('maintenance_tickets',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Create Ticket'}</button>
-          </div>
-        </Modal>
-      )}
-
-      {modal==='turnover' && (
-        <Modal title={editId?'Edit Turnover':'Schedule Turnover'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <div><label style={lbl}>Property *</label><select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}><option value="">Select…</option>{properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-            <div><label style={lbl}>Date *</label><input type="date" style={inp} value={form.turnover_date??''} onChange={e=>setForm({...form,turnover_date:e.target.value})}/></div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <div><label style={lbl}>Check-out Time</label><input type="time" style={inp} value={form.check_out_time??''} onChange={e=>setForm({...form,check_out_time:e.target.value})}/></div>
-              <div><label style={lbl}>Check-in Time</label><input type="time" style={inp} value={form.check_in_time??''} onChange={e=>setForm({...form,check_in_time:e.target.value})}/></div>
-            </div>
-            <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select…</option>{team.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
-            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
-            {!editId && <div style={{ fontSize:12, color:'#98A2B3' }}>A matching cleaning task will be created automatically on this date.</div>}
-          </div>
-          <div style={{ display:'flex', gap:10, marginTop:24 }}>
-            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('turnovers',form)} disabled={saving||!form.property_id||!form.turnover_date} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.property_id||!form.turnover_date?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Schedule'}</button>
           </div>
         </Modal>
       )}
