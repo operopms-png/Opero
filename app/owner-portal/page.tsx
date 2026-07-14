@@ -73,6 +73,8 @@ export default function OwnerPortalPage() {
   const [editPropertyForm, setEditPropertyForm] = useState<any>({})
   const [addingBooking, setAddingBooking] = useState(false)
   const [newBookingForm, setNewBookingForm] = useState<any>({ property_id: '', guest_name: '', guest_email: '', check_in: '', check_out: '', total_amount: '', platform: '', status: 'confirmed' })
+  const [addingIssue, setAddingIssue] = useState(false)
+  const [newIssueForm, setNewIssueForm] = useState<any>({ owner_id: '', property_id: '', category: '', priority: 'high', title: '', description: '' })
 
   // Manage owners form
   const [ownerForm, setOwnerForm] = useState({ first_name: '', last_name: '', email: '', phone: '', password: '', confirm_password: '' })
@@ -201,6 +203,36 @@ export default function OwnerPortalPage() {
     if (!res.ok) { alert(result.error || 'Could not add booking'); setSaving(false); return }
     setAddingBooking(false)
     setNewBookingForm({ property_id: '', guest_name: '', guest_email: '', check_in: '', check_out: '', total_amount: '', platform: '', status: 'confirmed' })
+    if (viewingOwner) await loadOwnerData(viewingOwner)
+    else await loadStaffData(user.id)
+    setSaving(false)
+  }
+
+  async function addMaintenanceIssue() {
+    if (!newIssueForm.property_id || !newIssueForm.title) {
+      alert('Property and a title/issue are required'); return
+    }
+    setSaving(true)
+    // If an owner was picked and the chosen property isn't theirs yet, assign it —
+    // mirrors the reference design's Owner + Property fields on one form.
+    if (newIssueForm.owner_id) {
+      const owner = allOwners.find(o => o.id === newIssueForm.owner_id)
+      if (owner && !(owner.property_ids ?? []).includes(newIssueForm.property_id)) {
+        await fetch('/api/admin/assign-property', {
+          method: 'POST', headers: await authHeader(),
+          body: JSON.stringify({ property_id: newIssueForm.property_id, owner_id: newIssueForm.owner_id }),
+        })
+      }
+    }
+    const res = await fetch('/api/admin/add-maintenance', {
+      method: 'POST',
+      headers: await authHeader(),
+      body: JSON.stringify(newIssueForm),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not add maintenance issue'); setSaving(false); return }
+    setAddingIssue(false)
+    setNewIssueForm({ owner_id: '', property_id: '', category: '', priority: 'high', title: '', description: '' })
     if (viewingOwner) await loadOwnerData(viewingOwner)
     else await loadStaffData(user.id)
     setSaving(false)
@@ -754,7 +786,10 @@ export default function OwnerPortalPage() {
         {/* MAINTENANCE */}
         {tab === 'Maintenance' && (
           <div style={card}>
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Maintenance</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>Maintenance</div>
+              {isStaff && <button onClick={() => setAddingIssue(true)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#C9A84C', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Issue</button>}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
               <StatCard label="Open" value={tickets.filter(t => t.status === 'open').length} />
               <StatCard label="In Progress" value={tickets.filter(t => t.status === 'in_progress').length} />
@@ -1395,6 +1430,65 @@ export default function OwnerPortalPage() {
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setAddingBooking(false)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
               <button onClick={addBooking} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Booking</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD MAINTENANCE ISSUE MODAL */}
+      {addingIssue && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', borderRadius: 14, padding: 32, width: 500, maxWidth: '90vw' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Add Maintenance Issue</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Owner</div>
+                <select value={newIssueForm.owner_id} onChange={e => setNewIssueForm((p: any) => ({ ...p, owner_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                  <option value="">Select owner…</option>
+                  {allOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Property</div>
+                <select value={newIssueForm.property_id} onChange={e => setNewIssueForm((p: any) => ({ ...p, property_id: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                  <option value="">Select a property…</option>
+                  {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Category</div>
+                  <select value={newIssueForm.category} onChange={e => setNewIssueForm((p: any) => ({ ...p, category: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                    <option value="">Select…</option>
+                    <option value="Plumbing">Plumbing</option>
+                    <option value="Electrical">Electrical</option>
+                    <option value="Appliance">Appliance</option>
+                    <option value="Structural">Structural</option>
+                    <option value="Cleaning">Cleaning</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Priority</div>
+                  <select value={newIssueForm.priority} onChange={e => setNewIssueForm((p: any) => ({ ...p, priority: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Title / Issue</div>
+                <input value={newIssueForm.title} onChange={e => setNewIssueForm((p: any) => ({ ...p, title: e.target.value }))} placeholder="Brief description of the issue" style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Description</div>
+                <textarea value={newIssueForm.description} onChange={e => setNewIssueForm((p: any) => ({ ...p, description: e.target.value }))} placeholder="Full details…" rows={3} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box', resize: 'vertical' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+              <button onClick={() => setAddingIssue(false)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={addMaintenanceIssue} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Submit Issue</button>
             </div>
           </div>
         </div>
