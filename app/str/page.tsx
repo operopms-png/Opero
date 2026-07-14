@@ -60,23 +60,33 @@ export default function STRPage() {
   async function loadAll(uid?: string) {
     const { data: { user } } = await supabase.auth.getUser()
     const userId = uid || user?.id
-    const [p, b, c, m, t, tm] = await Promise.all([
-      supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      supabase.from('bookings').select('*, properties(name)').eq('user_id', userId).order('check_in', { ascending: false }),
-      supabase.from('cleaning_tasks').select('*, properties(name)').eq('user_id', userId).order('scheduled_date', { ascending: true }),
-      supabase.from('maintenance_tickets').select('*, properties(name)').eq('user_id', userId).order('created_at', { ascending: false }),
-      supabase.from('turnovers').select('*, properties(name)').eq('user_id', userId).order('turnover_date', { ascending: true }),
+    // properties has a user_id column, but bookings/cleaning_tasks/
+    // maintenance_tickets/turnovers don't — they only relate to the
+    // business via property_id, so fetch properties first and filter
+    // the rest by that (same fix as the owner-portal).
+    const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    const ids = (propsData ?? []).map((p: any) => p.id)
+    const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
+    const [b, c, m, t, tm] = await Promise.all([
+      supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
+      supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safeIds).order('scheduled_date', { ascending: true }),
+      supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
+      supabase.from('turnovers').select('*, properties(name)').in('property_id', safeIds).order('turnover_date', { ascending: true }),
       supabase.from('team_members').select('*').eq('user_id', userId),
     ])
-    setProperties(p.data ?? [])
+    setProperties(propsData ?? [])
     setBookings(b.data ?? [])
     setCleaning(c.data ?? [])
     setMaintenance(m.data ?? [])
     setTurnovers(t.data ?? [])
     setTeam(tm.data ?? [])
     const rev = (b.data ?? []).filter((x:any) => x.status !== 'cancelled').reduce((s:number, x:any) => s + (x.total_amount ?? 0), 0)
-    setStats({ properties:(p.data??[]).length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
+    setStats({ properties:(propsData??[]).length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
   }
+
+  // These tables relate to the business via property_id only — they have
+  // no user_id column, so save() must not try to write one.
+  const NO_USER_ID_TABLES = ['bookings', 'cleaning_tasks', 'maintenance_tickets', 'turnovers']
 
   async function save(table: string, data: any) {
     setSaving(true)
@@ -84,7 +94,9 @@ export default function STRPage() {
     if (editId) {
       await supabase.from(table).update({ ...data }).eq('id', editId)
     } else {
-      await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+      const payload = NO_USER_ID_TABLES.includes(table) ? { ...data } : { ...data, user_id: user?.id }
+      const { error } = await supabase.from(table).insert([payload])
+      if (error) { alert(error.message); setSaving(false); return }
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
     await loadAll()
