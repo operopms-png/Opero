@@ -124,13 +124,17 @@ export default function OwnerPortalPage() {
       supabase.from('owner_profiles').select('*, owner_contact(*), owner_finance(*), properties:property_ids').order('created_at', { ascending: false }),
     ])
     setAllOwners(owners.data ?? [])
-    // Also load all data for staff overview
-    const [p, b, t] = await Promise.all([
-      supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      supabase.from('bookings').select('*, properties(name)').eq('user_id', userId).order('check_in', { ascending: false }),
-      supabase.from('maintenance_tickets').select('*, properties(name)').eq('user_id', userId).order('created_at', { ascending: false }),
+    // properties has a user_id column, but bookings/maintenance_tickets don't —
+    // they only relate to the business via property_id, so fetch properties
+    // first and filter the rest by that.
+    const { data: props } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    const ids = (props ?? []).map(p => p.id)
+    const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
+    const [b, t] = await Promise.all([
+      supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
+      supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
     ])
-    setProperties(p.data ?? [])
+    setProperties(props ?? [])
     setBookings(b.data ?? [])
     setTickets(t.data ?? [])
   }

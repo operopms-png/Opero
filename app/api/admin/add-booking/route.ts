@@ -11,7 +11,6 @@ export async function POST(req: NextRequest) {
   }
 
   const { error } = await serviceClient.from('bookings').insert({
-    user_id: staffId,
     property_id,
     guest_name: guest_name || null,
     guest_email: guest_email || null,
