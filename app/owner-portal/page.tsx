@@ -1649,14 +1649,22 @@ export default function OwnerPortalPage() {
                 { label: 'Amount (£)', key: 'amount', placeholder: '0.00' },
                 { label: 'Description', key: 'description', placeholder: 'Monthly payout' },
                 { label: 'Property Name', key: 'property_name', placeholder: 'Sangsters Aurevo' },
-                { label: 'Period Start', key: 'period_start', placeholder: '2026-06-01' },
-                { label: 'Period End', key: 'period_end', placeholder: '2026-06-30' },
               ].map(f => (
                 <div key={f.key}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>{f.label}</div>
                   <input value={(paymentForm as any)[f.key]} onChange={e => setPaymentForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
               ))}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Period Start</div>
+                  <input type="date" value={paymentForm.period_start} onChange={e => setPaymentForm(p => ({ ...p, period_start: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Period End</div>
+                  <input type="date" value={paymentForm.period_end} onChange={e => setPaymentForm(p => ({ ...p, period_end: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                </div>
+              </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Status</div>
                 <select value={paymentForm.status} onChange={e => setPaymentForm(p => ({ ...p, status: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}>

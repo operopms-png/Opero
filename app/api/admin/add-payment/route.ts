@@ -8,6 +8,13 @@ export async function POST(req: NextRequest) {
   const { owner_id, property_name, period_start, period_end, amount, description, status } = await req.json()
   if (!owner_id || !amount) return NextResponse.json({ error: 'owner_id and amount are required' }, { status: 400 })
 
+  const dateRe = /^\d{4}-\d{2}-\d{2}$/
+  for (const [label, val] of [['Period start', period_start], ['Period end', period_end]] as const) {
+    if (val && !dateRe.test(val)) {
+      return NextResponse.json({ error: `${label} must be a valid date (YYYY-MM-DD) — got "${val}"` }, { status: 400 })
+    }
+  }
+
   const { error } = await serviceClient.from('owner_statements').insert({
     owner_id,
     property_name,
