@@ -7,6 +7,55 @@ const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Analytics
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
+async function uploadAttachment(file: File, folder: string): Promise<string | null> {
+  const ext = file.name.split('.').pop()
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('pm-files').upload(path, file)
+  if (error) { console.error(error); return null }
+  const { data } = supabase.storage.from('pm-files').getPublicUrl(path)
+  return data.publicUrl
+}
+function isVideoUrl(url: string) { return /\.(mp4|mov|webm|m4v)$/i.test(url) }
+function parseMedia(val: string | null | undefined): string[] {
+  if (!val) return []
+  try { const parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed.filter(Boolean) } catch {}
+  return val.startsWith('http') ? [val] : []
+}
+
+function MediaPicker({ label, urls, onChange }: { label: string; urls: string[]; onChange: (urls: string[]) => void }) {
+  const [uploading, setUploading] = useState(false)
+  return (
+    <div>
+      <label style={lbl}>{label}</label>
+      {urls.length > 0 && (
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:8 }}>
+          {urls.map((url, i) => (
+            <div key={i} style={{ position:'relative' }}>
+              {isVideoUrl(url)
+                ? <video src={url} style={{ height:70, width:70, objectFit:'cover', borderRadius:6, display:'block' }} controls />
+                : <img src={url} alt="" style={{ height:70, width:70, objectFit:'cover', borderRadius:6, display:'block' }} />
+              }
+              <button onClick={()=>onChange(urls.filter((_,idx)=>idx!==i))} style={{ position:'absolute', top:-6, right:-6, width:18, height:18, borderRadius:'50%', background:'#DC2626', color:'#fff', border:'2px solid #fff', fontSize:11, lineHeight:'14px', cursor:'pointer' }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <label style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 12px', border:'1px dashed #D0D5DD', borderRadius:8, cursor:'pointer', fontSize:13, color:'#667085' }}>
+        {uploading ? 'Uploading…' : '📎 Add photo/video'}
+        <input type="file" accept="image/*,video/*" multiple style={{ display:'none' }} onChange={async e=>{
+          const files = Array.from(e.target.files ?? [])
+          if (!files.length) return
+          setUploading(true)
+          const uploaded = await Promise.all(files.map(f=>uploadAttachment(f,'cleaning')))
+          onChange([...urls, ...uploaded.filter((u): u is string => !!u)])
+          setUploading(false)
+          e.target.value = ''
+        }} />
+      </label>
+    </div>
+  )
+}
+
 function Modal({ title, onClose, children }: any) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50 }} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -240,14 +289,24 @@ export default function STRPage() {
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {cleaning.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No cleaning tasks yet</div> :
-              cleaning.map((t:any)=>(<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto auto auto', alignItems:'center', gap:12 }}>
+              cleaning.map((t:any)=>{
+                const before = parseMedia(t.before_media)
+                const after = parseMedia(t.after_media)
+                return (<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto auto auto auto', alignItems:'center', gap:12 }}>
                 <span style={{ fontWeight:500, color:'#101828' }}>{t.properties?.name??'—'}</span>
                 <span style={{ fontSize:13, color:'#667085' }}>{t.scheduled_date??'—'}</span>
                 <span style={{ fontSize:13, color:'#667085' }}>{teamName(t.assigned_to)??'Unassigned'}</span>
                 <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.status==='completed'?'#D1FAE5':t.status==='in_progress'?'#FEF3C7':'#DBEAFE', color:t.status==='completed'?'#059669':t.status==='in_progress'?'#D97706':'#2563EB' }}>{t.status??'pending'}</span>
+                <div style={{ display:'flex', gap:3 }}>
+                  {[...before.slice(0,2), ...after.slice(0,2)].map((url,i)=>(
+                    isVideoUrl(url)
+                      ? <video key={i} src={url} style={{ height:32, width:32, objectFit:'cover', borderRadius:4, cursor:'pointer' }} onClick={()=>window.open(url,'_blank')} />
+                      : <img key={i} src={url} alt="" style={{ height:32, width:32, objectFit:'cover', borderRadius:4, cursor:'pointer' }} onClick={()=>window.open(url,'_blank')} />
+                  ))}
+                </div>
                 <button onClick={()=>openEdit('cleaning',t)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                 <button onClick={()=>del('cleaning_tasks',t.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
-              </div>))}
+              </div>)})}
             </div>
           </div>
         )}
@@ -817,6 +876,8 @@ export default function STRPage() {
             <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select team member…</option>{team.map(m=><option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}</select></div>
             <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??'pending'} onChange={e=>setForm({...form,status:e.target.value})}><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option></select></div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            <MediaPicker label="Before Photos/Videos" urls={parseMedia(form.before_media)} onChange={urls=>setForm({...form,before_media:JSON.stringify(urls)})} />
+            <MediaPicker label="After Photos/Videos" urls={parseMedia(form.after_media)} onChange={urls=>setForm({...form,after_media:JSON.stringify(urls)})} />
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
