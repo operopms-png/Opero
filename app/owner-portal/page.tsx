@@ -114,6 +114,17 @@ export default function OwnerPortalPage() {
     init()
   }, [])
 
+  // Poll for new messages every 4s while the Messages tab is open, so
+  // staff and owner conversations stay in sync without a manual refresh.
+  useEffect(() => {
+    if (tab !== 'Messages' || !ownerProfile?.id) return
+    const interval = setInterval(async () => {
+      const { data } = await supabase.from('owner_messages').select('*').eq('owner_id', ownerProfile.id).order('created_at', { ascending: true })
+      if (data) setMessages(data)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [tab, ownerProfile?.id])
+
   async function loadOwnerData(profile: any) {
     const ids: string[] = profile.property_ids ?? []
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
@@ -123,7 +134,7 @@ export default function OwnerPortalPage() {
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
       supabase.from('owner_statements').select('*').eq('owner_id', profile.id).order('period_start', { ascending: false }),
       supabase.from('owner_finance').select('*').eq('owner_id', profile.id).order('created_at', { ascending: false }),
-      supabase.from('owner_messages').select('*').eq('owner_id', profile.id).order('created_at', { ascending: false }),
+      supabase.from('owner_messages').select('*').eq('owner_id', profile.id).order('created_at', { ascending: true }),
       supabase.from('owner_contact').select('*').eq('owner_id', profile.id).single(),
     ])
     setProperties(p.data ?? [])
@@ -362,8 +373,19 @@ export default function OwnerPortalPage() {
   async function sendMessage() {
     if (!newMsg.trim() || !ownerProfile) return
     setSaving(true)
-    await supabase.from('owner_messages').insert({ owner_id: ownerProfile.id, sender: 'owner', message: newMsg, created_at: new Date().toISOString() })
-    setMessages(prev => [...prev, { owner_id: ownerProfile.id, sender: 'owner', message: newMsg, created_at: new Date().toISOString() }])
+    const text = newMsg.trim()
+    if (isStaff) {
+      const res = await fetch('/api/admin/send-message', {
+        method: 'POST', headers: await authHeader(),
+        body: JSON.stringify({ owner_id: ownerProfile.id, message: text }),
+      })
+      const result = await res.json()
+      if (!res.ok) { alert(result.error || 'Could not send message'); setSaving(false); return }
+      setMessages(prev => [...prev, { owner_id: ownerProfile.id, sender: 'staff', message: text, created_at: new Date().toISOString() }])
+    } else {
+      await supabase.from('owner_messages').insert({ owner_id: ownerProfile.id, sender: 'owner', message: text, created_at: new Date().toISOString() })
+      setMessages(prev => [...prev, { owner_id: ownerProfile.id, sender: 'owner', message: text, created_at: new Date().toISOString() }])
+    }
     setNewMsg('')
     setSaving(false)
   }
@@ -1162,17 +1184,43 @@ export default function OwnerPortalPage() {
         {tab === 'Messages' && (
           <div style={card}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Messages</div>
+            {isStaff && (
+              <div style={{ marginBottom: 16 }}>
+                <select
+                  value={viewingOwner?.id ?? ''}
+                  onChange={async e => {
+                    const owner = allOwners.find(o => o.id === e.target.value)
+                    if (!owner) { setViewingOwner(null); setOwnerProfile(null); setMessages([]); return }
+                    setLoading(true)
+                    setOwnerProfile(owner)
+                    setViewingOwner(owner)
+                    await loadOwnerData(owner)
+                    setLoading(false)
+                  }}
+                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}
+                >
+                  <option value="">Select an owner to message…</option>
+                  {allOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select>
+              </div>
+            )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20, maxHeight: 400, overflowY: 'auto' }}>
-              {messages.length === 0
+              {!ownerProfile
+                ? <div style={{ textAlign: 'center', padding: 40, color: '#98A2B3', fontSize: 14 }}>{isStaff ? 'Pick an owner above to see the conversation' : 'No messages yet'}</div>
+                : messages.length === 0
                 ? <div style={{ textAlign: 'center', padding: 40, color: '#98A2B3', fontSize: 14 }}>No messages yet</div>
-                : messages.map((m, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: m.sender === 'owner' ? 'flex-end' : 'flex-start' }}>
-                    <div style={{ maxWidth: '70%', background: m.sender === 'owner' ? '#5B7CFA' : '#F3F4F6', color: m.sender === 'owner' ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
+                : messages.map((m, i) => {
+                  const isMine = isStaff ? m.sender === 'staff' : m.sender === 'owner'
+                  return (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
+                    <div style={{ maxWidth: '70%', background: isMine ? '#5B7CFA' : '#F3F4F6', color: isMine ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
+                      <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'Sangsters Group' : (ownerProfile?.name ?? 'Owner')}</div>
                       <div>{m.message}</div>
                       <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{m.created_at?.slice(0, 16)}</div>
                     </div>
                   </div>
-                ))
+                  )
+                })
               }
             </div>
             {ownerProfile && (
