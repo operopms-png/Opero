@@ -224,11 +224,19 @@ export default function Sidebar() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         .sidebar-nav a:hover { background: #F9FAFB !important; }
       `}</style>
-      {open && <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />}
+      {open && <div className="mobile-overlay" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />}
+      <button
+        className="mobile-trigger"
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+        style={{ display: 'none', position: 'fixed', top: 14, left: 14, zIndex: 45, width: 40, height: 40, borderRadius: 8, background: '#fff', border: '1px solid #EAECF0', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 3px rgba(16,24,40,0.08)' }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#fff', zIndex: 50, borderRight: '1px solid #F2F4F7', fontFamily: "'Inter', sans-serif" }}>
         {nav}
       </aside>
-      <aside className="sidebar-nav" style={{ width: 220, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto' }}>
+      <aside className="sidebar-nav desktop-sidebar" style={{ width: 220, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto' }}>
         {nav}
       </aside>
     </>
