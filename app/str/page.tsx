@@ -103,6 +103,18 @@ export default function STRPage() {
       const payload = NO_USER_ID_TABLES.includes(table) ? { ...data } : { ...data, user_id: user?.id }
       const { error } = await supabase.from(table).insert([payload])
       if (error) { alert(error.message); setSaving(false); return }
+
+      // Scheduling a turnover also creates its matching cleaning task —
+      // the clean is the part of the turnover housekeeping actually does.
+      if (table === 'turnovers') {
+        await supabase.from('cleaning_tasks').insert([{
+          property_id: data.property_id,
+          scheduled_date: data.turnover_date,
+          assigned_to: data.assigned_to || null,
+          status: 'pending',
+          notes: data.notes ? `Turnover: ${data.notes}` : 'Auto-created from turnover',
+        }])
+      }
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
     await loadAll()
@@ -952,6 +964,7 @@ export default function STRPage() {
             </div>
             <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select…</option>{team.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+            {!editId && <div style={{ fontSize:12, color:'#98A2B3' }}>A matching cleaning task will be created automatically on this date.</div>}
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
