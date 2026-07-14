@@ -69,6 +69,7 @@ export default function OwnerPortalPage() {
   const [calProperty, setCalProperty] = useState<string>('')
   const [newMsg, setNewMsg] = useState('')
   const [msgOwner, setMsgOwner] = useState<any>(null)
+  const [stmtOwner, setStmtOwner] = useState<any>(null)
   const [saving, setSaving] = useState(false)
 
   // Admin edit state
@@ -84,6 +85,7 @@ export default function OwnerPortalPage() {
   // Staff "view as owner" state — lets admin browse/edit a specific owner's tabs
   const [viewingOwner, setViewingOwner] = useState<any>(null)
   const chatOwner = isStaff ? (viewingOwner ?? msgOwner) : ownerProfile
+  const statementsOwner = isStaff ? (viewingOwner ?? stmtOwner) : ownerProfile
   const [editingProperty, setEditingProperty] = useState<any>(null)
   const [editPropertyForm, setEditPropertyForm] = useState<any>({})
   const [addingBooking, setAddingBooking] = useState(false)
@@ -483,7 +485,12 @@ export default function OwnerPortalPage() {
     if (!res.ok) { alert(result.error || 'Could not add payment'); setSaving(false); return }
     setAddPaymentOwner(null)
     setPaymentForm({ amount: '', description: '', property_name: '', period_start: '', period_end: '', status: 'paid' })
-    if (viewingOwner && viewingOwner.id === addPaymentOwner.id) await loadOwnerData(viewingOwner)
+    if (viewingOwner && viewingOwner.id === addPaymentOwner.id) {
+      await loadOwnerData(viewingOwner)
+    } else if (stmtOwner && stmtOwner.id === addPaymentOwner.id) {
+      const { data } = await supabase.from('owner_statements').select('*').eq('owner_id', stmtOwner.id).order('period_start', { ascending: false })
+      setStatements(data ?? [])
+    }
     setSaving(false)
   }
 
@@ -879,12 +886,32 @@ export default function OwnerPortalPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>Statements</div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                {isStaff && viewingOwner && <button onClick={() => setAddPaymentOwner(viewingOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#10B981', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Payment</button>}
+                {isStaff && statementsOwner && <button onClick={() => setAddPaymentOwner(statementsOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#10B981', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Payment</button>}
                 <button onClick={() => window.print()} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }}>🖨 Print</button>
               </div>
             </div>
             {!isStaff && <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>👁 View only</div>}
-            {statements.length === 0
+            {isStaff && !viewingOwner && (
+              <div style={{ marginBottom: 16 }}>
+                <select
+                  value={stmtOwner?.id ?? ''}
+                  onChange={async e => {
+                    const owner = allOwners.find(o => o.id === e.target.value)
+                    setStmtOwner(owner ?? null)
+                    if (!owner) { setStatements([]); return }
+                    const { data } = await supabase.from('owner_statements').select('*').eq('owner_id', owner.id).order('period_start', { ascending: false })
+                    setStatements(data ?? [])
+                  }}
+                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}
+                >
+                  <option value="">Select an owner…</option>
+                  {allOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                </select>
+              </div>
+            )}
+            {isStaff && !statementsOwner
+              ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 14 }}>Pick an owner above to see their statements</div>
+              : statements.length === 0
               ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 14 }}>No statements yet. Your manager will generate these monthly.</div>
               : Object.entries(
                 statements.reduce((acc: any, s: any) => {
@@ -904,7 +931,7 @@ export default function OwnerPortalPage() {
                     <tbody>
                       {stmts.map((s: any) => (
                         <tr key={s.id}>
-                          <td style={td}>{ownerProfile?.name ?? '—'}</td>
+                          <td style={td}>{statementsOwner?.name ?? '—'}</td>
                           <td style={td}>{s.period_start}</td>
                           <td style={td}>{s.notes ?? 'Monthly statement'}</td>
                           <td style={td}>{s.property_name ?? '—'}</td>
