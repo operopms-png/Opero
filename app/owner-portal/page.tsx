@@ -68,6 +68,7 @@ export default function OwnerPortalPage() {
   const [calMonth, setCalMonth] = useState(new Date())
   const [calProperty, setCalProperty] = useState<string>('')
   const [newMsg, setNewMsg] = useState('')
+  const [msgOwner, setMsgOwner] = useState<any>(null)
   const [saving, setSaving] = useState(false)
 
   // Admin edit state
@@ -82,6 +83,7 @@ export default function OwnerPortalPage() {
 
   // Staff "view as owner" state — lets admin browse/edit a specific owner's tabs
   const [viewingOwner, setViewingOwner] = useState<any>(null)
+  const chatOwner = isStaff ? (viewingOwner ?? msgOwner) : ownerProfile
   const [editingProperty, setEditingProperty] = useState<any>(null)
   const [editPropertyForm, setEditPropertyForm] = useState<any>({})
   const [addingBooking, setAddingBooking] = useState(false)
@@ -117,13 +119,13 @@ export default function OwnerPortalPage() {
   // Poll for new messages every 4s while the Messages tab is open, so
   // staff and owner conversations stay in sync without a manual refresh.
   useEffect(() => {
-    if (tab !== 'Messages' || !ownerProfile?.id) return
+    if (tab !== 'Messages' || !chatOwner?.id) return
     const interval = setInterval(async () => {
-      const { data } = await supabase.from('owner_messages').select('*').eq('owner_id', ownerProfile.id).order('created_at', { ascending: true })
+      const { data } = await supabase.from('owner_messages').select('*').eq('owner_id', chatOwner.id).order('created_at', { ascending: true })
       if (data) setMessages(data)
     }, 4000)
     return () => clearInterval(interval)
-  }, [tab, ownerProfile?.id])
+  }, [tab, chatOwner?.id])
 
   async function loadOwnerData(profile: any) {
     const ids: string[] = profile.property_ids ?? []
@@ -371,20 +373,20 @@ export default function OwnerPortalPage() {
   })
 
   async function sendMessage() {
-    if (!newMsg.trim() || !ownerProfile) return
+    if (!newMsg.trim() || !chatOwner) return
     setSaving(true)
     const text = newMsg.trim()
     if (isStaff) {
       const res = await fetch('/api/admin/send-message', {
         method: 'POST', headers: await authHeader(),
-        body: JSON.stringify({ owner_id: ownerProfile.id, message: text }),
+        body: JSON.stringify({ owner_id: chatOwner.id, message: text }),
       })
       const result = await res.json()
       if (!res.ok) { alert(result.error || 'Could not send message'); setSaving(false); return }
-      setMessages(prev => [...prev, { owner_id: ownerProfile.id, sender: 'staff', message: text, created_at: new Date().toISOString() }])
+      setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'staff', message: text, created_at: new Date().toISOString() }])
     } else {
-      await supabase.from('owner_messages').insert({ owner_id: ownerProfile.id, sender: 'owner', message: text, created_at: new Date().toISOString() })
-      setMessages(prev => [...prev, { owner_id: ownerProfile.id, sender: 'owner', message: text, created_at: new Date().toISOString() }])
+      await supabase.from('owner_messages').insert({ owner_id: chatOwner.id, sender: 'owner', message: text, created_at: new Date().toISOString() })
+      setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'owner', message: text, created_at: new Date().toISOString() }])
     }
     setNewMsg('')
     setSaving(false)
@@ -1184,18 +1186,16 @@ export default function OwnerPortalPage() {
         {tab === 'Messages' && (
           <div style={card}>
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Messages</div>
-            {isStaff && (
+            {isStaff && !viewingOwner && (
               <div style={{ marginBottom: 16 }}>
                 <select
-                  value={viewingOwner?.id ?? ''}
+                  value={msgOwner?.id ?? ''}
                   onChange={async e => {
                     const owner = allOwners.find(o => o.id === e.target.value)
-                    if (!owner) { setViewingOwner(null); setOwnerProfile(null); setMessages([]); return }
-                    setLoading(true)
-                    setOwnerProfile(owner)
-                    setViewingOwner(owner)
-                    await loadOwnerData(owner)
-                    setLoading(false)
+                    setMsgOwner(owner ?? null)
+                    if (!owner) { setMessages([]); return }
+                    const { data } = await supabase.from('owner_messages').select('*').eq('owner_id', owner.id).order('created_at', { ascending: true })
+                    setMessages(data ?? [])
                   }}
                   style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }}
                 >
@@ -1205,7 +1205,7 @@ export default function OwnerPortalPage() {
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20, maxHeight: 400, overflowY: 'auto' }}>
-              {!ownerProfile
+              {!chatOwner
                 ? <div style={{ textAlign: 'center', padding: 40, color: '#98A2B3', fontSize: 14 }}>{isStaff ? 'Pick an owner above to see the conversation' : 'No messages yet'}</div>
                 : messages.length === 0
                 ? <div style={{ textAlign: 'center', padding: 40, color: '#98A2B3', fontSize: 14 }}>No messages yet</div>
@@ -1214,7 +1214,7 @@ export default function OwnerPortalPage() {
                   return (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     <div style={{ maxWidth: '70%', background: isMine ? '#5B7CFA' : '#F3F4F6', color: isMine ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
-                      <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'Sangsters Group' : (ownerProfile?.name ?? 'Owner')}</div>
+                      <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'Sangsters Group' : (chatOwner?.name ?? 'Owner')}</div>
                       <div>{m.message}</div>
                       <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{m.created_at?.slice(0, 16)}</div>
                     </div>
@@ -1223,7 +1223,7 @@ export default function OwnerPortalPage() {
                 })
               }
             </div>
-            {ownerProfile && (
+            {chatOwner && (
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }} />
                 <button onClick={sendMessage} disabled={saving} style={{ padding: '10px 20px', background: '#5B7CFA', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Send</button>
