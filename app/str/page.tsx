@@ -88,6 +88,12 @@ export default function STRPage() {
   // no user_id column, so save() must not try to write one.
   const NO_USER_ID_TABLES = ['bookings', 'cleaning_tasks', 'maintenance_tickets', 'turnovers']
 
+  // assigned_to now stores a team_members.id (uuid) — resolve it back to a name for display
+  function teamName(id: string | null | undefined) {
+    if (!id) return null
+    return team.find((m: any) => m.id === id)?.name ?? null
+  }
+
   async function save(table: string, data: any) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -240,7 +246,7 @@ export default function STRPage() {
               cleaning.map((t:any)=>(<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto auto auto', alignItems:'center', gap:12 }}>
                 <span style={{ fontWeight:500, color:'#101828' }}>{t.properties?.name??'—'}</span>
                 <span style={{ fontSize:13, color:'#667085' }}>{t.scheduled_date??'—'}</span>
-                <span style={{ fontSize:13, color:'#667085' }}>{t.assigned_to??'Unassigned'}</span>
+                <span style={{ fontSize:13, color:'#667085' }}>{teamName(t.assigned_to)??'Unassigned'}</span>
                 <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.status==='completed'?'#D1FAE5':t.status==='in_progress'?'#FEF3C7':'#DBEAFE', color:t.status==='completed'?'#059669':t.status==='in_progress'?'#D97706':'#2563EB' }}>{t.status??'pending'}</span>
                 <button onClick={()=>openEdit('cleaning',t)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                 <button onClick={()=>del('cleaning_tasks',t.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
@@ -262,7 +268,7 @@ export default function STRPage() {
                 const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#3B4AFF'
                 const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#EEF0FF'
                 return(<div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr auto auto auto auto', alignItems:'center', gap:12 }}>
-                  <div><div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:2 }}>{m.title}</div><div style={{ fontSize:12, color:'#667085' }}>{m.properties?.name}{m.assigned_to?` · ${m.assigned_to}`:''}</div></div>
+                  <div><div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:2 }}>{m.title}</div><div style={{ fontSize:12, color:'#667085' }}>{m.properties?.name}{teamName(m.assigned_to)?` · ${teamName(m.assigned_to)}`:''}</div></div>
                   <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:priBg, color:priColor, textTransform:'uppercase' }}>{m.priority}</span>
                   <select value={m.status} onChange={async e=>{await supabase.from('maintenance_tickets').update({status:e.target.value}).eq('id',m.id);loadAll()}} style={{ padding:'6px 10px', borderRadius:8, border:'1px solid #E4E7EC', fontSize:13, fontFamily:'inherit' }}>
                     <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
@@ -286,7 +292,7 @@ export default function STRPage() {
               {turnovers.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No turnovers scheduled</div> :
               turnovers.map((t:any)=>(<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto auto auto', alignItems:'center', gap:12 }}>
                 <div><div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{t.properties?.name??'—'}</div><div style={{ fontSize:12, color:'#667085' }}>{t.turnover_date}</div></div>
-                <span style={{ fontSize:13, color:'#667085' }}>{t.assigned_to??'Unassigned'}</span>
+                <span style={{ fontSize:13, color:'#667085' }}>{teamName(t.assigned_to)??'Unassigned'}</span>
                 <select value={t.status??'scheduled'} onChange={async e=>{await supabase.from('turnovers').update({status:e.target.value}).eq('id',t.id);loadAll()}} style={{ padding:'6px 10px', borderRadius:8, border:'1px solid #E4E7EC', fontSize:13, fontFamily:'inherit' }}>
                   <option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
                 </select>
@@ -906,7 +912,7 @@ export default function STRPage() {
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
             <div><label style={lbl}>Property *</label><select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}><option value="">Select…</option>{properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
             <div><label style={lbl}>Scheduled Date</label><input type="date" style={inp} value={form.scheduled_date??''} onChange={e=>setForm({...form,scheduled_date:e.target.value})}/></div>
-            <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select team member…</option>{team.map(m=><option key={m.id} value={m.name}>{m.name} ({m.role})</option>)}</select></div>
+            <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select team member…</option>{team.map(m=><option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}</select></div>
             <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??'pending'} onChange={e=>setForm({...form,status:e.target.value})}><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option></select></div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
@@ -925,7 +931,7 @@ export default function STRPage() {
             <div><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})}/></div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
               <div><label style={lbl}>Priority</label><select style={{...inp,cursor:'pointer'}} value={form.priority??'medium'} onChange={e=>setForm({...form,priority:e.target.value})}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
-              <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select…</option>{team.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}</select></div>
+              <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select…</option>{team.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
             </div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
@@ -944,7 +950,7 @@ export default function STRPage() {
               <div><label style={lbl}>Check-out Time</label><input type="time" style={inp} value={form.check_out_time??''} onChange={e=>setForm({...form,check_out_time:e.target.value})}/></div>
               <div><label style={lbl}>Check-in Time</label><input type="time" style={inp} value={form.check_in_time??''} onChange={e=>setForm({...form,check_in_time:e.target.value})}/></div>
             </div>
-            <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select…</option>{team.map(m=><option key={m.id} value={m.name}>{m.name}</option>)}</select></div>
+            <div><label style={lbl}>Assigned To</label><select style={{...inp,cursor:'pointer'}} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}><option value="">Select…</option>{team.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
