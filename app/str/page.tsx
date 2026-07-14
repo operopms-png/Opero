@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import WeatherWidget from '@/components/WeatherWidget'
 
-const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Owner Reports','Analytics','Integrations','Team','Reports','Expenses','Banking','Guest Comms']
+const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Integrations','Team','Reports','Expenses','Banking','Guest Comms']
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
@@ -287,107 +287,6 @@ export default function STRPage() {
               <button onClick={()=>openEdit('team',m)} style={{ fontSize:12, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
               <button onClick={()=>del('team_members',m.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Remove</button>
             </div>))}
-          </div>
-        )}
-
-        {tab==='Owner Reports' && (
-          <div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:20}}>
-              <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
-                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:12,color:'#667085'}}>Revenue</span></div>
-                <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{stats.revenue.toLocaleString()}</div>
-                <div style={{fontSize:12,color:'#98A2B3'}}>{bookings.filter((b:any)=>b.status!=='cancelled').length} bookings</div>
-                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,38 75,35 110,22 145,18 175,10 195,6" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="195" cy="6" r="3" fill="#10B981"/></svg>
-              </div>
-              <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
-                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>📅</span><span style={{fontSize:12,color:'#667085'}}>Bookings</span></div>
-                <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>{bookings.filter((b:any)=>b.status!=='cancelled').length}</div>
-                <div style={{fontSize:12,color:'#98A2B3'}}>confirmed bookings</div>
-                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,40 75,42 110,28 145,24 175,14 195,10" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="195" cy="10" r="3" fill="#5B7CFA"/></svg>
-              </div>
-              <div style={{background:'#fff',borderRadius:14,border:'1px solid #FEE2E2',padding:24}}>
-                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>❌</span><span style={{fontSize:12,color:'#667085'}}>Cancellations</span></div>
-                <div style={{fontSize:32,fontWeight:800,color:'#EF4444',marginBottom:4}}>{bookings.filter((b:any)=>b.status==='cancelled').length}</div>
-                <div style={{fontSize:12,color:'#98A2B3'}}>cancelled bookings</div>
-                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,20 40,22 75,18 110,25 145,20 175,28 195,24" fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/></svg>
-              </div>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
-              <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24,display:'flex',flexDirection:'column',alignItems:'center'}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:20,alignSelf:'flex-start'}}>Occupancy</div>
-                <svg viewBox="0 0 200 120" style={{width:'100%',maxWidth:200}}>
-                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#F3F4F6" strokeWidth="20" strokeLinecap="round"/>
-                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#5B7CFA" strokeWidth="20" strokeLinecap="round"/>
-                  <text x="100" y="95" fontSize="22" fontWeight="800" fill="#101828" textAnchor="middle">100%</text>
-                  <text x="100" y="115" fontSize="10" fill="#98A2B3" textAnchor="middle">occupancy rate</text>
-                </svg>
-              </div>
-              <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:8}}>Occupancy & Revenue</div>
-                <div style={{display:'flex',gap:16,marginBottom:12}}>
-                  <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:20,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:11,color:'#667085'}}>Revenue</span></div>
-                  <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:20,height:3,background:'#5B7CFA',borderRadius:2}}></div><span style={{fontSize:11,color:'#667085'}}>Occupancy</span></div>
-                </div>
-                <svg viewBox="0 0 300 120" style={{width:'100%'}}>
-                  <polyline points="30,100 80,92 130,95 180,70 230,65 280,40 295,30" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <polyline points="30,90 80,85 130,88 180,62 230,58 280,35 295,25" fill="none" stroke="#5B7CFA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 2"/>
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m:string,i:number)=>(<text key={m} x={30+i*52} y={115} fontSize="8" fill="#98A2B3" textAnchor="middle">{m}</text>))}
-                </svg>
-              </div>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{label:'Revenues / Portal',pct:100,color:'#10B981'},{label:'Bookings',pct:100,color:'#10B981'},{label:'Nights / Portal',pct:100,color:'#10B981'},{label:'Cancellations',pct:0,color:'#E4E7EC'}].map((d:any)=>(
-                <div key={d.label} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:16,textAlign:'center' as const}}>
-                  <div style={{fontSize:11,color:'#667085',marginBottom:12}}>{d.label}</div>
-                  <svg viewBox="0 0 80 80" style={{width:64,height:64}}>
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#F3F4F6" strokeWidth="10"/>
-                    <circle cx="40" cy="40" r="28" fill="none" stroke={d.color} strokeWidth="10" strokeDasharray={String(2*Math.PI*28)} strokeDashoffset={String(2*Math.PI*28*(1-d.pct/100))} transform="rotate(-90 40 40)" strokeLinecap="round"/>
-                    <text x="40" y="45" fontSize="13" fontWeight="700" fill="#101828" textAnchor="middle">{d.pct}%</text>
-                  </svg>
-                  <div style={{fontSize:11,color:'#10B981',marginTop:8,fontWeight:500}}>Direct {d.pct}%</div>
-                </div>
-              ))}
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-              <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
-                <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Upcoming Bookings</div>
-                {bookings.filter((b:any)=>b.status!=='cancelled'&&b.check_in>new Date().toISOString().split('T')[0]).length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No upcoming bookings</div>):bookings.filter((b:any)=>b.status!=='cancelled').slice(0,4).map((b:any)=>(<div key={b.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#101828',fontWeight:500}}>{b.guest_name??'Guest'}</span><span style={{color:'#667085'}}>{b.check_in}</span></div>))}
-              </div>
-              <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
-                <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Recent Finance</div>
-                {bookings.filter((b:any)=>b.status!=='cancelled').slice(0,4).map((b:any)=>(<div key={b.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#101828'}}>{b.guest_name??'Guest'} — booking</span><span style={{color:'#10B981',fontWeight:600}}>+£{(b.total_amount??0).toLocaleString()}</span></div>))}
-                {bookings.filter((b:any)=>b.status!=='cancelled').length===0&&<div style={{color:'#98A2B3',fontSize:13}}>No recent transactions</div>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {tab==='Analytics' && (
-          <div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>£{stats.revenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points="5,45 40,35 75,38 110,20 145,25 175,10 195,8" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Bookings</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>{bookings.filter(b=>b.status!=='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points="5,45 40,38 75,40 110,28 145,30 175,18 195,15" fill="none" stroke="#3B4AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #FEE2E2', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Cancellations</div><div style={{ fontSize:24, fontWeight:800, color:'#EF4444' }}>{bookings.filter(b=>b.status==='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points="5,20 40,25 75,18 110,30 145,22 175,35 195,30" fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/></svg></div>
-            </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
-                <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:16 }}>Occupancy</div>
-                <svg viewBox="0 0 200 110" style={{ width:'100%', maxWidth:240, display:'block', margin:'0 auto' }}>
-                  <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#F3F4F6" strokeWidth="16" strokeLinecap="round"/>
-                  <path d="M 20 80 A 80 80 0 0 1 100 0" fill="none" stroke="#3B4AFF" strokeWidth="16" strokeLinecap="round"/>
-                  <text x="18" y="98" fontSize="10" fill="#9CA3AF">0%</text><text x="88" y="18" fontSize="10" fill="#9CA3AF">50%</text><text x="172" y="98" fontSize="10" fill="#9CA3AF">100%</text>
-                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#101828" textAnchor="middle">0%</text>
-                </svg>
-              </div>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
-                <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:16 }}>Revenue & Occupancy</div>
-                <svg viewBox="0 0 300 120" style={{ width:'100%' }}>
-                  <polyline points="10,110 60,90 110,95 160,60 210,65 260,40 290,30" fill="none" stroke="#3B4AFF" strokeWidth="2"/>
-                  <polyline points="10,100 60,85 110,88 160,70 210,72 260,55 290,48" fill="none" stroke="#10B981" strokeWidth="2" strokeDasharray="5 3"/>
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*52)} y={118} fontSize="8" fill="#9CA3AF" textAnchor="middle">{m}</text>))}
-                </svg>
-              </div>
-            </div>
           </div>
         )}
 
