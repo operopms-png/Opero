@@ -69,12 +69,19 @@ export default function CleaningTasksPage() {
   async function handleCreate() {
     if (!form.property_id || !form.scheduled_date) return
     setSaving(true)
-    const { error } = await supabase.from('cleaning_tasks').insert([form])
-    if (!error) {
-      setShowModal(false)
-      setForm({ property_id: '', assigned_to: '', scheduled_date: '', notes: '', status: 'pending' })
-      fetchTasks()
+    const { error } = await supabase.from('cleaning_tasks').insert([{
+      ...form,
+      assigned_to: form.assigned_to || null,
+      notes: form.notes || null,
+    }])
+    if (error) {
+      alert(error.message)
+      setSaving(false)
+      return
     }
+    setShowModal(false)
+    setForm({ property_id: '', assigned_to: '', scheduled_date: '', notes: '', status: 'pending' })
+    fetchTasks()
     setSaving(false)
   }
 
