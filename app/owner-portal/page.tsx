@@ -53,6 +53,7 @@ export default function OwnerPortalPage() {
   const [contactInfo, setContactInfo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [calMonth, setCalMonth] = useState(new Date())
+  const [calProperty, setCalProperty] = useState<string>('')
   const [newMsg, setNewMsg] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -173,6 +174,19 @@ export default function OwnerPortalPage() {
     setSaving(false)
   }
 
+  async function updateBookingRevenue(bookingId: string, totalAmount: string) {
+    setSaving(true)
+    const res = await fetch('/api/admin/update-booking-status', {
+      method: 'PATCH',
+      headers: await authHeader(),
+      body: JSON.stringify({ booking_id: bookingId, total_amount: totalAmount }),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not update revenue'); setSaving(false); return }
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, total_amount: totalAmount === '' ? null : Number(totalAmount) } : b))
+    setSaving(false)
+  }
+
   async function addBooking() {
     if (!newBookingForm.property_id || !newBookingForm.check_in || !newBookingForm.check_out) {
       alert('Property, check-in and check-out are required'); return
@@ -268,7 +282,9 @@ export default function OwnerPortalPage() {
   }
   function isBooked(day: number) {
     const d = `${calMonth.getFullYear()}-${String(calMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return activeBookings.some(b => b.check_in <= d && b.check_out > d)
+    return activeBookings
+      .filter(b => !calProperty || b.property_id === calProperty)
+      .some(b => b.check_in <= d && b.check_out > d)
   }
 
   // Finance grouped by month
@@ -674,7 +690,17 @@ export default function OwnerPortalPage() {
                         <td style={td}>{b.check_in ?? '—'}</td>
                         <td style={td}>{b.check_out ?? '—'}</td>
                         <td style={td}>{nights}</td>
-                        <td style={{ ...td, fontWeight: 600, color: '#10B981' }}>£{(Number(b.total_amount) || 0).toLocaleString()}</td>
+                        <td style={{ ...td, fontWeight: 600, color: '#10B981' }}>
+                          {isStaff
+                            ? <input
+                                type="number"
+                                defaultValue={b.total_amount ?? ''}
+                                onBlur={e => { if (Number(e.target.value || 0) !== (Number(b.total_amount) || 0)) updateBookingRevenue(b.id, e.target.value) }}
+                                style={{ width: 80, padding: '4px 6px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13, color: '#10B981', fontWeight: 600 }}
+                              />
+                            : `£${(Number(b.total_amount) || 0).toLocaleString()}`
+                          }
+                        </td>
                         <td style={{ ...td, color: '#667085' }}>{b.platform ?? 'Direct'}</td>
                         <td style={td}>{isStaff
                           ? <select value={b.status ?? 'pending'} onChange={e => updateBookingStatus(b.id, e.target.value)} style={{ padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
@@ -701,6 +727,14 @@ export default function OwnerPortalPage() {
               <div style={{ fontSize: 15, fontWeight: 600 }}>{calMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</div>
               <button onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1))} style={{ padding: '6px 14px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 13 }}>Next →</button>
             </div>
+            {properties.length > 1 && (
+              <div style={{ marginBottom: 16 }}>
+                <select value={calProperty} onChange={e => setCalProperty(e.target.value)} style={{ padding: '6px 12px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13 }}>
+                  <option value="">All properties</option>
+                  {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
               <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#EF4444', borderRadius: 2, display: 'inline-block' }} /> Booked</span>
               <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 12, height: 12, background: '#10B981', borderRadius: 2, display: 'inline-block' }} /> Available</span>
