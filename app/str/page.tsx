@@ -860,6 +860,14 @@ export default function STRPage() {
               <div><label style={lbl}>Nightly Rate (£)</label><input type="number" style={inp} value={form.nightly_rate??''} onChange={e=>setForm({...form,nightly_rate:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Max Guests</label><input type="number" style={inp} value={form.max_guests??''} onChange={e=>setForm({...form,max_guests:parseInt(e.target.value)})}/></div>
             </div>
+            <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:8 }}>AI Guest Agent Knowledge Base</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>WiFi Network Name</label><input style={inp} value={form.wifi_name??''} onChange={e=>setForm({...form,wifi_name:e.target.value})}/></div>
+              <div><label style={lbl}>WiFi Password</label><input style={inp} value={form.wifi_password??''} onChange={e=>setForm({...form,wifi_password:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Check-in Instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkin_instructions??''} onChange={e=>setForm({...form,checkin_instructions:e.target.value})} placeholder="e.g. Self check-in via lockbox, code sent 24h before arrival"/></div>
+            <div><label style={lbl}>Check-out Instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkout_instructions??''} onChange={e=>setForm({...form,checkout_instructions:e.target.value})} placeholder="e.g. Check-out by 11am, leave keys in lockbox"/></div>
+            <div><label style={lbl}>House Rules</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.house_rules??''} onChange={e=>setForm({...form,house_rules:e.target.value})} placeholder="e.g. No smoking, no parties, quiet hours 10pm-8am"/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>

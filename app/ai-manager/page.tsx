@@ -52,18 +52,65 @@ const AGENTS = [
 
 export default function Page() {
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
   const [section, setSection] = useState('Overview')
   const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})
   const [selectedAgent, setSelectedAgent] = useState<string|null>(null)
+  const [properties, setProperties] = useState<any[]>([])
+  const [guestTest, setGuestTest] = useState({ property_id:'', guest_name:'', message:'' })
+  const [guestReply, setGuestReply] = useState('')
+  const [testing, setTesting] = useState(false)
 
-  useEffect(()=>{ supabase.auth.getUser().then(({data:{user}})=>{ if(!user){window.location.href='/login';return}; setLoading(false) }) },[])
+  async function loadActivityLog(uid: string) {
+    const { data } = await supabase.from('ai_activity_log').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(50)
+    setActivityLog((data ?? []).map((l:any) => ({ id: l.id, agent: l.agent_key, action: l.action, property: l.property_name, notes: l.notes, createdAt: new Date(l.created_at).toLocaleString() })))
+  }
+
+  useEffect(()=>{
+    supabase.auth.getUser().then(async ({data:{user}})=>{
+      if(!user){window.location.href='/login';return}
+      setUserId(user.id)
+      const [agentsRes, propsRes] = await Promise.all([
+        supabase.from('ai_agents').select('*').eq('user_id', user.id),
+        supabase.from('properties').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+      ])
+      if (agentsRes.data?.length) {
+        const loaded: Record<string,boolean> = {guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false}
+        agentsRes.data.forEach((a:any) => { loaded[a.agent_key] = a.enabled })
+        setActiveAgents(loaded)
+      }
+      setProperties(propsRes.data ?? [])
+      await loadActivityLog(user.id)
+      setLoading(false)
+    })
+  },[])
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
-  const toggleAgent = (key:string) => setActiveAgents({...activeAgents,[key]:!activeAgents[key]})
+  const toggleAgent = async (key:string) => {
+    const next = !activeAgents[key]
+    setActiveAgents({...activeAgents,[key]:next})
+    if (userId) await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
+  }
   const activeCount = Object.values(activeAgents).filter(Boolean).length
+
+  async function testGuestAgent() {
+    if (!guestTest.property_id || !guestTest.message.trim() || !userId) return
+    setTesting(true)
+    setGuestReply('')
+    const res = await fetch('/api/ai/guest-reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...guestTest, user_id: userId }),
+    })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not get a reply'); setTesting(false); return }
+    setGuestReply(result.reply)
+    await loadActivityLog(userId)
+    setTesting(false)
+  }
 
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
@@ -154,6 +201,24 @@ export default function Page() {
                   </div>
                 ))}
               </div>
+              {agent.key==='guest' && (
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Simulates a guest message and gets a real AI-drafted reply using that property's WiFi, house rules, and check-in/out info (edit these under Vacation Rentals → Properties).</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                    <div><label style={lbl}>Property</label><select value={guestTest.property_id} onChange={e=>setGuestTest({...guestTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                    <div><label style={lbl}>Guest Name</label><input value={guestTest.guest_name} onChange={e=>setGuestTest({...guestTest,guest_name:e.target.value})} placeholder="e.g. Sarah" style={inp}/></div>
+                  </div>
+                  <div style={{marginBottom:12}}><label style={lbl}>Guest Message</label><textarea value={guestTest.message} onChange={e=>setGuestTest({...guestTest,message:e.target.value})} rows={2} placeholder="e.g. What's the WiFi password?" style={{...inp,resize:'vertical' as const}}/></div>
+                  <button onClick={testGuestAgent} disabled={testing||!guestTest.property_id||!guestTest.message.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!guestTest.property_id||!guestTest.message.trim()?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
+                  {guestReply && (
+                    <div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}>
+                      <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft Reply</div>
+                      <div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{guestReply}</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>)}
@@ -168,7 +233,12 @@ export default function Page() {
               <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Notes</label><textarea value={logForm.notes} onChange={e=>setLogForm({...logForm,notes:e.target.value})} rows={2} style={{...inp,resize:'vertical' as const}}/></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!logForm.action)return;setActivityLog([{id:Date.now(),...logForm,createdAt:new Date().toLocaleString()},...activityLog]);setLogForm({agent:'guest',action:'',property:'',notes:''});setShowLogForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
+              <button onClick={async ()=>{
+                if(!logForm.action || !userId) return
+                await supabase.from('ai_activity_log').insert({ user_id: userId, agent_key: logForm.agent, action: logForm.action, property_name: logForm.property || null, notes: logForm.notes || null })
+                await loadActivityLog(userId)
+                setLogForm({agent:'guest',action:'',property:'',notes:''});setShowLogForm(false)
+              }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
               <button onClick={()=>setShowLogForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -184,7 +254,7 @@ export default function Page() {
                   <span style={{fontSize:13,color:'#101828'}}>{l.action}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{l.property||'—'}</span>
                   <span style={{fontSize:11,color:'#98A2B3'}}>{l.createdAt}</span>
-                  <button onClick={()=>setActivityLog(activityLog.filter((x:any)=>x.id!==l.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                  <button onClick={async ()=>{ await supabase.from('ai_activity_log').delete().eq('id', l.id); setActivityLog(activityLog.filter((x:any)=>x.id!==l.id)) }} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
                 </div>
               )
             })}
