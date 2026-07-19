@@ -152,9 +152,11 @@ export default function Page() {
   async function saveRecord(table: string, data: any, id?: any) {
     const { data: { user } } = await supabase.auth.getUser()
     if (id) {
-      await supabase.from(table).update(data).eq('id', id)
+      const { error } = await supabase.from(table).update(data).eq('id', id)
+      if (error) { alert(error.message); return }
     } else {
-      await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+      const { error } = await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+      if (error) { alert(error.message); return }
     }
     await loadAll()
   }

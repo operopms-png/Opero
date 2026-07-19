@@ -197,9 +197,11 @@ export default function PMPage() {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (editId) {
-      await supabase.from(table).update({ ...data }).eq('id', editId)
+      const { error } = await supabase.from(table).update({ ...data }).eq('id', editId)
+      if (error) { alert(error.message); setSaving(false); return }
     } else {
-      await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+      const { error } = await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+      if (error) { alert(error.message); setSaving(false); return }
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
     await loadAll()
