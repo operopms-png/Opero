@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
   btl:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -112,6 +113,22 @@ export default function InvestPage() {
   const [watchForm, setWatchForm] = useState({address:'',price:'',notes:'',status:'Watching'})
   const [showAddWatch, setShowAddWatch] = useState(false)
   const [postcode, setPostcode] = useState('')
+  const [userId, setUserId] = useState<string|null>(null)
+  const [loadingData, setLoadingData] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { window.location.href = '/login'; return }
+      setUserId(user.id)
+      const [dealsRes, watchRes] = await Promise.all([
+        supabase.from('investment_deals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('investment_watchlist').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+      ])
+      setSavedDeals((dealsRes.data ?? []).map((d: any) => ({ id: d.id, strategy: d.strategy, address: d.address, savedAt: new Date(d.created_at).toLocaleDateString(), ...d.data })))
+      setWatchlist((watchRes.data ?? []).map((w: any) => ({ id: w.id, address: w.address, price: w.price, notes: w.notes, status: w.status })))
+      setLoadingData(false)
+    })
+  }, [])
 
   const inp = {width:'100%',padding:'10px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:14,fontFamily:'inherit',boxSizing:'border-box' as const}
   const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
@@ -132,10 +149,36 @@ export default function InvestPage() {
     setResult(r)
   }
 
-  function saveDeal() {
-    if(!result) return
-    setSavedDeals([...savedDeals, {id:Date.now(), ...form, ...result, savedAt: new Date().toLocaleDateString()}])
+  async function saveDeal() {
+    if(!result || !userId) return
+    const dealData = { ...form, ...result, savedAt: new Date().toLocaleDateString() }
+    const { data, error } = await supabase.from('investment_deals').insert({
+      user_id: userId, strategy: result.strategy, address: form.address || null, data: dealData,
+    }).select().single()
+    if (error) { alert(error.message); return }
+    setSavedDeals([{ id: data.id, strategy: data.strategy, address: data.address, savedAt: new Date(data.created_at).toLocaleDateString(), ...dealData }, ...savedDeals])
     alert('Deal saved!')
+  }
+
+  async function deleteDeal(id: string) {
+    await supabase.from('investment_deals').delete().eq('id', id)
+    setSavedDeals(savedDeals.filter(x=>x.id!==id))
+  }
+
+  async function addToWatchlist() {
+    if(!watchForm.address || !userId) return
+    const { data, error } = await supabase.from('investment_watchlist').insert({
+      user_id: userId, address: watchForm.address, price: watchForm.price, notes: watchForm.notes, status: watchForm.status,
+    }).select().single()
+    if (error) { alert(error.message); return }
+    setWatchlist([{ id: data.id, address: data.address, price: data.price, notes: data.notes, status: data.status }, ...watchlist])
+    setWatchForm({address:'',price:'',notes:'',status:'Watching'})
+    setShowAddWatch(false)
+  }
+
+  async function deleteWatch(id: string) {
+    await supabase.from('investment_watchlist').delete().eq('id', id)
+    setWatchlist(watchlist.filter(x=>x.id!==id))
   }
 
   const score = result ? (
@@ -337,7 +380,7 @@ export default function InvestPage() {
                   <div key={d.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{d.address||'Deal #'+d.id}</div>
-                      <button onClick={()=>setSavedDeals(savedDeals.filter(x=>x.id!==d.id))} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444'}}>×</button>
+                      <button onClick={()=>deleteDeal(d.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444'}}>×</button>
                     </div>
                     <div style={{fontSize:12,color:'#667085',marginBottom:12}}>{STRATEGIES.find(s=>s.id===d.strategy)?.label} · £{parseFloat(d.price).toLocaleString()}</div>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
@@ -369,7 +412,7 @@ export default function InvestPage() {
                   <div><label style={lbl}>Notes</label><input value={watchForm.notes} onChange={e=>setWatchForm({...watchForm,notes:e.target.value})} placeholder="Any notes..." style={inp}/></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={()=>{if(!watchForm.address)return;setWatchlist([...watchlist,{id:Date.now(),...watchForm}]);setWatchForm({address:'',price:'',notes:'',status:'Watching'});setShowAddWatch(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:BLUE,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
+                  <button onClick={addToWatchlist} style={{padding:'9px 20px',borderRadius:8,border:'none',background:BLUE,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
                   <button onClick={()=>setShowAddWatch(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
@@ -393,7 +436,7 @@ export default function InvestPage() {
                     <span style={{fontSize:12,color:'#667085'}}>{w.notes||'—'}</span>
                     <div style={{display:'flex',gap:6}}>
                       <button onClick={()=>{setSection('Deal Analyser');setForm({...form,address:w.address,price:w.price})}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#EFF6FF',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:BLUE,fontWeight:600}}>Analyse</button>
-                      <button onClick={()=>setWatchlist(watchlist.filter(x=>x.id!==w.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                      <button onClick={()=>deleteWatch(w.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                     </div>
                   </div>
                 ))}
