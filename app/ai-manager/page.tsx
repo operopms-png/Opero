@@ -60,8 +60,19 @@ export default function Page() {
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})
   const [selectedAgent, setSelectedAgent] = useState<string|null>(null)
   const [properties, setProperties] = useState<any[]>([])
+  const [owners, setOwners] = useState<any[]>([])
   const [guestTest, setGuestTest] = useState({ property_id:'', guest_name:'', message:'' })
   const [guestReply, setGuestReply] = useState('')
+  const [maintTest, setMaintTest] = useState({ property_id:'', title:'', description:'', priority:'medium' })
+  const [maintReply, setMaintReply] = useState('')
+  const [cleanTest, setCleanTest] = useState({ property_id:'', scheduled_date:'' })
+  const [cleanReply, setCleanReply] = useState('')
+  const [revTest, setRevTest] = useState({ property_id:'' })
+  const [revReply, setRevReply] = useState<any>(null)
+  const [ownerTest, setOwnerTest] = useState({ owner_id:'' })
+  const [ownerReply, setOwnerReply] = useState<any>(null)
+  const [leadTest, setLeadTest] = useState({ lead_name:'', source:'', inquiry:'' })
+  const [leadReply, setLeadReply] = useState('')
   const [testing, setTesting] = useState(false)
 
   async function loadActivityLog(uid: string) {
@@ -73,9 +84,10 @@ export default function Page() {
     supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
       setUserId(user.id)
-      const [agentsRes, propsRes] = await Promise.all([
+      const [agentsRes, propsRes, ownersRes] = await Promise.all([
         supabase.from('ai_agents').select('*').eq('user_id', user.id),
         supabase.from('properties').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('owner_profiles').select('*').order('created_at', { ascending: false }),
       ])
       if (agentsRes.data?.length) {
         const loaded: Record<string,boolean> = {guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false}
@@ -83,6 +95,7 @@ export default function Page() {
         setActiveAgents(loaded)
       }
       setProperties(propsRes.data ?? [])
+      setOwners(ownersRes.data ?? [])
       await loadActivityLog(user.id)
       setLoading(false)
     })
@@ -110,6 +123,51 @@ export default function Page() {
     setGuestReply(result.reply)
     await loadActivityLog(userId)
     setTesting(false)
+  }
+
+  async function testMaintenanceAgent() {
+    if (!maintTest.property_id || !maintTest.title.trim() || !userId) return
+    setTesting(true); setMaintReply('')
+    const res = await fetch('/api/ai/maintenance-reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...maintTest, user_id: userId }) })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not get a reply'); setTesting(false); return }
+    setMaintReply(result.reply); await loadActivityLog(userId); setTesting(false)
+  }
+
+  async function testCleaningAgent() {
+    if (!cleanTest.property_id || !cleanTest.scheduled_date || !userId) return
+    setTesting(true); setCleanReply('')
+    const res = await fetch('/api/ai/cleaning-reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...cleanTest, user_id: userId }) })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not get a reply'); setTesting(false); return }
+    setCleanReply(result.reply); await loadActivityLog(userId); setTesting(false)
+  }
+
+  async function testRevenueAgent() {
+    if (!revTest.property_id || !userId) return
+    setTesting(true); setRevReply(null)
+    const res = await fetch('/api/ai/revenue-suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...revTest, user_id: userId }) })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not get a suggestion'); setTesting(false); return }
+    setRevReply(result); await loadActivityLog(userId); setTesting(false)
+  }
+
+  async function testOwnerAgent() {
+    if (!ownerTest.owner_id || !userId) return
+    setTesting(true); setOwnerReply(null)
+    const res = await fetch('/api/ai/owner-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...ownerTest, user_id: userId }) })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not draft a report'); setTesting(false); return }
+    setOwnerReply(result); await loadActivityLog(userId); setTesting(false)
+  }
+
+  async function testLeadAgent() {
+    if (!leadTest.inquiry.trim() || !userId) return
+    setTesting(true); setLeadReply('')
+    const res = await fetch('/api/ai/lead-qualify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...leadTest, user_id: userId }) })
+    const result = await res.json()
+    if (!res.ok) { alert(result.error || 'Could not qualify this lead'); setTesting(false); return }
+    setLeadReply(result.reply); await loadActivityLog(userId); setTesting(false)
   }
 
   return (
@@ -217,6 +275,63 @@ export default function Page() {
                       <div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{guestReply}</div>
                     </div>
                   )}
+                </div>
+              )}
+              {agent.key==='maintenance' && (
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Drafts a contractor assignment message, using your Team list to suggest who's best suited.</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                    <div><label style={lbl}>Property</label><select value={maintTest.property_id} onChange={e=>setMaintTest({...maintTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                    <div><label style={lbl}>Priority</label><select value={maintTest.priority} onChange={e=>setMaintTest({...maintTest,priority:e.target.value})} style={inp}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+                  </div>
+                  <div style={{marginBottom:12}}><label style={lbl}>Issue Title</label><input value={maintTest.title} onChange={e=>setMaintTest({...maintTest,title:e.target.value})} placeholder="e.g. AC not cooling" style={inp}/></div>
+                  <div style={{marginBottom:12}}><label style={lbl}>Description</label><textarea value={maintTest.description} onChange={e=>setMaintTest({...maintTest,description:e.target.value})} rows={2} placeholder="Extra detail (optional)" style={{...inp,resize:'vertical' as const}}/></div>
+                  <button onClick={testMaintenanceAgent} disabled={testing||!maintTest.property_id||!maintTest.title.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!maintTest.property_id||!maintTest.title.trim()?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
+                  {maintReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{maintReply}</div></div>)}
+                </div>
+              )}
+              {agent.key==='cleaning' && (
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Drafts a turnover-cleaning checklist for the cleaner, based on the property's house rules and guest capacity.</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                    <div><label style={lbl}>Property</label><select value={cleanTest.property_id} onChange={e=>setCleanTest({...cleanTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                    <div><label style={lbl}>Turnover Date</label><input type="date" value={cleanTest.scheduled_date} onChange={e=>setCleanTest({...cleanTest,scheduled_date:e.target.value})} style={inp}/></div>
+                  </div>
+                  <button onClick={testCleaningAgent} disabled={testing||!cleanTest.property_id||!cleanTest.scheduled_date} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!cleanTest.property_id||!cleanTest.scheduled_date?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
+                  {cleanReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{cleanReply}</div></div>)}
+                </div>
+              )}
+              {agent.key==='revenue' && (
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Reasons from the property's own last-90-day occupancy and realized rates (no external competitor data source is connected yet) to suggest a rate change.</div>
+                  <div style={{marginBottom:12}}><label style={lbl}>Property</label><select value={revTest.property_id} onChange={e=>setRevTest({...revTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                  <button onClick={testRevenueAgent} disabled={testing||!revTest.property_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!revTest.property_id?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
+                  {revReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Occupancy {revReply.occupancyPct}% · Avg realized rate £{revReply.avgNightly}</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{revReply.reply}</div></div>)}
+                </div>
+              )}
+              {agent.key==='owner' && (
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Drafts a monthly report email using this owner's real last-30-day bookings and their split percentage.</div>
+                  <div style={{marginBottom:12}}><label style={lbl}>Owner</label><select value={ownerTest.owner_id} onChange={e=>setOwnerTest({...ownerTest,owner_id:e.target.value})} style={inp}><option value="">Select…</option>{owners.map((o:any)=><option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
+                  <button onClick={testOwnerAgent} disabled={testing||!ownerTest.owner_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!ownerTest.owner_id?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
+                  {ownerReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Revenue £{ownerReply.revenue?.toLocaleString()} · Owner Share £{ownerReply.ownerShare?.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{ownerReply.reply}</div></div>)}
+                </div>
+              )}
+              {agent.key==='leads' && (
+                <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Scores a landlord/owner inquiry and drafts a qualifying reply. Saves the lead to CRM Contacts if a name is given.</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                    <div><label style={lbl}>Lead Name</label><input value={leadTest.lead_name} onChange={e=>setLeadTest({...leadTest,lead_name:e.target.value})} placeholder="e.g. Michael Chen" style={inp}/></div>
+                    <div><label style={lbl}>Source</label><input value={leadTest.source} onChange={e=>setLeadTest({...leadTest,source:e.target.value})} placeholder="e.g. Instagram DM" style={inp}/></div>
+                  </div>
+                  <div style={{marginBottom:12}}><label style={lbl}>Inquiry</label><textarea value={leadTest.inquiry} onChange={e=>setLeadTest({...leadTest,inquiry:e.target.value})} rows={3} placeholder="Paste the lead's message…" style={{...inp,resize:'vertical' as const}}/></div>
+                  <button onClick={testLeadAgent} disabled={testing||!leadTest.inquiry.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!leadTest.inquiry.trim()?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
+                  {leadReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Analysis</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{leadReply}</div></div>)}
                 </div>
               )}
             </div>

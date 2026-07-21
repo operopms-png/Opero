@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { callClaude } from '@/lib/claude'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,32 +35,8 @@ House rules: ${property.house_rules ?? 'Not provided'}
 
 ${knowledge}`
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY is not configured on the server' }, { status: 500 })
-  }
-
-  const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 500,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: `Guest name: ${guest_name || 'Guest'}\nGuest message: ${message}` }],
-    }),
-  })
-
-  if (!claudeRes.ok) {
-    const errText = await claudeRes.text()
-    return NextResponse.json({ error: `Claude API error: ${errText}` }, { status: 500 })
-  }
-
-  const claudeData = await claudeRes.json()
-  const reply = claudeData.content?.find((c: any) => c.type === 'text')?.text ?? ''
+  const { text: reply, error } = await callClaude(systemPrompt, `Guest name: ${guest_name || 'Guest'}\nGuest message: ${message}`, 500)
+  if (error) return NextResponse.json({ error }, { status: 500 })
 
   // Log both the inbound guest message and the AI's drafted reply
   await supabase.from('guest_messages').insert([
