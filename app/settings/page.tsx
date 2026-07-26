@@ -256,12 +256,15 @@ export default function Page() {
                   <div style={{fontSize:13,color:'#667085'}}>Your subscription details</div>
                 </div>
                 <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:22,fontWeight:700,color:'#101828',textTransform:'capitalize'}}>{plan}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>{({aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency',bundle:'All Modules Bundle'} as any)[plan] ?? plan}</div>
                   <div style={{fontSize:12,color:'#667085'}}>Active</div>
                 </div>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-                {[{l:'Unlimited properties',icon:'🏠'},{l:'All modules included',icon:'✅'},{l:'Priority support',icon:'⚡'}].map(f=>(
+                {(plan==='bundle'
+                  ? [{l:'All modules included',icon:'✅'},{l:'One-time payment',icon:'💳'},{l:'No recurring fees',icon:'⚡'}]
+                  : [{l:{aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency'}[plan] ?? plan,icon:'📦'},{l:'Billed monthly',icon:'🗓️'},{l:'Add more modules anytime',icon:'➕'}]
+                ).map(f=>(
                   <div key={f.l} style={{padding:16,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8}}>
                     <span style={{fontSize:18}}>{f.icon}</span>
                     <span style={{fontSize:12,fontWeight:500,color:'#344054'}}>{f.l}</span>
@@ -274,16 +277,45 @@ export default function Page() {
               </div>
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Available plans</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Modules</h3>
+              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>Opero is priced à la carte — add only the modules you need, or take the full bundle.</div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                {[{name:'Starter',price:'£29',period:'/mo',features:['Up to 5 properties','CRM','Basic reporting']},{name:'Growth',price:'£79',period:'/mo',features:['Up to 20 properties','All modules','Advanced analytics']},{name:'Professional',price:'£199',period:'/mo',features:['Unlimited properties','All modules','Priority support','Custom integrations']}].map(p=>(
-                  <div key={p.name} style={{border:'2px solid '+(p.name===plan?ACCENT:'#E4E7EC'),borderRadius:10,padding:20,background:p.name===plan?ACCENT+'08':'#fff'}}>
+                {[
+                  {key:'aipm',name:'AI Property Manager',price:'£9.99',period:'/mo'},
+                  {key:'invest',name:'Deal Analyser',price:'£19',period:'/mo'},
+                  {key:'str',name:'Vacation Rentals (STR)',price:'£29',period:'/mo'},
+                  {key:'pm',name:'Property Management',price:'£39',period:'/mo'},
+                  {key:'dev',name:'Developments',price:'£49',period:'/mo'},
+                  {key:'ea',name:'Estate Agency',price:'£59',period:'/mo'},
+                ].map(p=>(
+                  <div key={p.key} style={{border:'2px solid '+(p.key===plan?ACCENT:'#E4E7EC'),borderRadius:10,padding:20,background:p.key===plan?ACCENT+'08':'#fff'}}>
                     <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>{p.name}</div>
                     <div style={{fontSize:22,fontWeight:700,color:ACCENT,marginBottom:12}}>{p.price}<span style={{fontSize:12,color:'#667085',fontWeight:400}}>{p.period}</span></div>
-                    {p.features.map(f=><div key={f} style={{fontSize:12,color:'#344054',marginBottom:6,display:'flex',alignItems:'center',gap:6}}><span style={{color:'#10B981'}}>✓</span>{f}</div>)}
-                    <button style={{width:'100%',marginTop:12,padding:'8px',borderRadius:8,border:'none',background:p.name===plan?ACCENT:'#F2F4F7',color:p.name===plan?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{p.name===plan?'Current plan':'Switch'}</button>
+                    <button onClick={async ()=>{
+                      const res = await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:p.key})})
+                      const result = await res.json()
+                      if(result.url) window.location.href = result.url
+                      else alert(result.error || 'Could not start checkout')
+                    }} style={{width:'100%',marginTop:12,padding:'8px',borderRadius:8,border:'none',background:p.key===plan?ACCENT:'#F2F4F7',color:p.key===plan?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{p.key===plan?'Current plan':'Add module'}</button>
                   </div>
                 ))}
+                <div style={{border:'2px solid '+(plan==='bundle'?ACCENT:'#C9A84C'),borderRadius:10,padding:20,background:plan==='bundle'?ACCENT+'08':'#FBF4E6',gridColumn:'span 3'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>All Modules Bundle</div>
+                      <div style={{fontSize:12,color:'#667085'}}>Every module above, one-time payment — no recurring per-module fees.</div>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:16}}>
+                      <div style={{fontSize:22,fontWeight:700,color:'#C9A84C'}}>£175.50</div>
+                      <button onClick={async ()=>{
+                        const res = await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:'bundle'})})
+                        const result = await res.json()
+                        if(result.url) window.location.href = result.url
+                        else alert(result.error || 'Could not start checkout')
+                      }} style={{padding:'10px 20px',borderRadius:8,border:'none',background:plan==='bundle'?ACCENT:'#C9A84C',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{plan==='bundle'?'Current plan':'Get the bundle'}</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>)}

@@ -135,7 +135,8 @@ export default function InvestPage() {
   const BLUE = '#5B7CFA'
 
   function analyse() {
-    if(!strategy||!form.price) return
+    if(!strategy) return
+    if(strategy==='r2r' ? !form.rent : !form.price) return
     let r: any = {}
     if(strategy==='btl'||strategy==='brrr') r = calcBTL(form)
     else if(strategy==='hmo') r = calcHMO(form)
