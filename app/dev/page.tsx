@@ -280,6 +280,16 @@ export default function DevPage() {
             {tab==='Investors' && <button onClick={()=>{setModal('investor');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Investor</button>}
             {tab==='Documents' && <button onClick={()=>{setModal('document');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Document</button>}
     
+        {tab==='Milestones' && <button onClick={()=>{setModal('milestone');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Milestone</button>}
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:2, overflowX:'auto' }}>
+          {TABS.map(t => <button key={t} onClick={() => setTab(t)} style={{ padding:'10px 14px', background:'none', border:'none', cursor:'pointer', fontSize:13, fontWeight:500, color:tab===t?'#8B5CF6':'#667085', borderBottom:tab===t?'2px solid #8B5CF6':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}</button>)}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:1200, margin:'0 auto', padding:'28px 32px' }}>
+
         {tab==='Expenses'&&(
           <div>
             <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -462,15 +472,6 @@ export default function DevPage() {
           </div>
         )}
 
-        {tab==='Milestones' && <button onClick={()=>{setModal('milestone');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Milestone</button>}
-          </div>
-        </div>
-        <div style={{ display:'flex', gap:2, overflowX:'auto' }}>
-          {TABS.map(t => <button key={t} onClick={() => setTab(t)} style={{ padding:'10px 14px', background:'none', border:'none', cursor:'pointer', fontSize:13, fontWeight:500, color:tab===t?'#8B5CF6':'#667085', borderBottom:tab===t?'2px solid #8B5CF6':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}</button>)}
-        </div>
-      </div>
-
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'28px 32px' }}>
 
         {/* DASHBOARD */}
         {tab==='Dashboard' && (
