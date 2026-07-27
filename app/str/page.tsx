@@ -85,7 +85,7 @@ export default function STRPage() {
   const [team, setTeam] = useState<any[]>([])
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
-  const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Property',amount:'',date:'',status:'Confirmed',notes:''})
+  const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [showAddBank, setShowAddBank] = useState(false)
@@ -115,19 +115,53 @@ export default function STRPage() {
     const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     const ids = (propsData ?? []).map((p: any) => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-    const [b, c, m, tm] = await Promise.all([
+    const [b, c, m, tm, ex] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
       supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safeIds).order('scheduled_date', { ascending: true }),
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
       supabase.from('team_members').select('*').eq('user_id', userId),
+      supabase.from('office_expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
     ])
     setProperties(propsData ?? [])
     setBookings(b.data ?? [])
     setCleaning(c.data ?? [])
     setMaintenance(m.data ?? [])
     setTeam(tm.data ?? [])
+    setExpenses(ex.data ?? [])
     const rev = (b.data ?? []).filter((x:any) => x.status !== 'cancelled').reduce((s:number, x:any) => s + (x.total_amount ?? 0), 0)
     setStats({ properties:(propsData??[]).length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
+  }
+
+  async function addOfficeExpense() {
+    if (!expForm.description || !expForm.amount) return
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('office_expenses').insert({ ...expForm, amount: parseFloat(expForm.amount), user_id: user?.id })
+    if (error) { alert(error.message); return }
+    await loadAll()
+    setExpForm({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
+    setShowAddExpense(false)
+  }
+
+  async function deleteOfficeExpense(id: string) {
+    await supabase.from('office_expenses').delete().eq('id', id)
+    setExpenses(expenses.filter((x:any)=>x.id!==id))
+  }
+
+  async function toggleOfficeExpensePaid(id: string, status: string) {
+    await supabase.from('office_expenses').update({ status }).eq('id', id)
+    setExpenses(expenses.map((x:any)=>x.id===id?{...x,status}:x))
+  }
+
+  async function duplicateOfficeExpenseToNextMonth(e: any) {
+    const { data: { user } } = await supabase.auth.getUser()
+    let nextDate = null
+    if (e.date) { const d = new Date(e.date); d.setMonth(d.getMonth()+1); nextDate = d.toISOString().slice(0,10) }
+    const { error } = await supabase.from('office_expenses').insert({
+      user_id: user?.id, description: e.description, vendor: e.vendor,
+      category: e.category, amount: e.amount, date: nextDate, status: 'Unpaid', is_recurring: true, notes: e.notes,
+    })
+    if (error) { alert(error.message); return }
+    await loadAll()
   }
 
   // These tables relate to the business via property_id only — they have
@@ -493,8 +527,8 @@ export default function STRPage() {
               <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#101828',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
             </div>
             {/* Category stats */}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-              {['Property','Staff','Overhead'].map(cat=>(
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+              {['Property','Utilities','Staff','Overhead'].map(cat=>(
                 <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>{cat}</div>
                   <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
@@ -506,24 +540,25 @@ export default function STRPage() {
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
                 <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add expense</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                  <div><label style={lbl}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Cleaning supplies" style={inp}/></div>
-                  <div><label style={lbl}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Amazon" style={inp}/></div>
+                  <div><label style={lbl}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Office rent" style={inp}/></div>
+                  <div><label style={lbl}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Landlord" style={inp}/></div>
                   <div><label style={lbl}>Category</label><select value={expForm.category} onChange={e=>setExpForm({...expForm,category:e.target.value})} style={inp}>{['Property','Staff','Overhead','Maintenance','Marketing','Insurance','Utilities','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                   <div><label style={lbl}>Amount (£)</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
                   <div><label style={lbl}>Date</label><input value={expForm.date} onChange={e=>setExpForm({...expForm,date:e.target.value})} type="date" style={inp}/></div>
-                  <div><label style={lbl}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={inp}>{['Confirmed','Estimated'].map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div><label style={lbl}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={inp}>{['Paid','Unpaid'].map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
                   <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={expForm.notes} onChange={e=>setExpForm({...expForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={()=>{if(!expForm.description||!expForm.amount)return;setExpenses([...expenses,{id:Date.now(),...expForm}]);setExpForm({description:'',vendor:'',category:'Property',amount:'',date:'',status:'Confirmed',notes:''});setShowAddExpense(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
+                  <button onClick={addOfficeExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
                   <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
             )}
             {/* Table */}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 140px 120px 100px 80px 100px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
-                <span>Description</span><span>Vendor</span><span>Category</span><span>Amount</span><span>Date</span><span>Status</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                <span>Description</span><span>Vendor</span><span>Category</span><span>Amount</span><span>Date</span><span>Status</span><span></span><span></span>
               </div>
               {expenses.length===0?(
                 <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
@@ -532,17 +567,21 @@ export default function STRPage() {
                   <div style={{fontSize:13}}>Add your first expense to start tracking costs.</div>
                 </div>
               ):expenses.map((e:any)=>(
-                <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 120px 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div>
-                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.description}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</div>
                     {e.notes&&<div style={{fontSize:11,color:'#98A2B3'}}>{e.notes}</div>}
                   </div>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054',display:'inline-block'}}>{e.category}</span>
                   <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{e.date||'—'}</span>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:e.status==='Confirmed'?'#ECFDF5':'#FEF3C7',color:e.status==='Confirmed'?'#10B981':'#F59E0B'}}>{e.status}</span>
-                  <button onClick={()=>setExpenses(expenses.filter((x:any)=>x.id!==e.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                  <select value={e.status} onChange={ev=>toggleOfficeExpensePaid(e.id, ev.target.value)} style={{fontSize:11,fontWeight:600,padding:'3px 6px',borderRadius:4,border:'none',cursor:'pointer',background:e.status==='Paid'?'#ECFDF5':'#FEF3C7',color:e.status==='Paid'?'#10B981':'#F59E0B'}}>
+                    <option value="Paid">Paid</option>
+                    <option value="Unpaid">Unpaid</option>
+                  </select>
+                  <button onClick={()=>duplicateOfficeExpenseToNextMonth(e)} title="Duplicate to next month" style={{padding:'4px 8px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Next mo.</button>
+                  <button onClick={()=>deleteOfficeExpense(e.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                 </div>
               ))}
             </div>

@@ -164,7 +164,7 @@ export default function DevPage() {
       supabase.from('dev_investors').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_documents').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_milestones').select('*, dev_projects(name)').eq('user_id',userId).order('due_date', { ascending: true }),
-      supabase.from('dev_expenses').select('*').eq('user_id',userId).order('date', { ascending: false }),
+      supabase.from('office_expenses').select('*').eq('user_id',userId).order('date', { ascending: false }),
     ])
     setProjects(p.data ?? [])
     setBudgetItems(b.data ?? [])
@@ -177,7 +177,7 @@ export default function DevPage() {
   async function addExpense() {
     if (!expForm.description || !expForm.amount) return
     const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('dev_expenses').insert({ ...expForm, amount: parseFloat(expForm.amount), user_id: user?.id })
+    const { error } = await supabase.from('office_expenses').insert({ ...expForm, amount: parseFloat(expForm.amount), user_id: user?.id })
     if (error) { alert(error.message); return }
     await loadAll()
     setExpForm({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
@@ -185,12 +185,12 @@ export default function DevPage() {
   }
 
   async function deleteExpense(id: string) {
-    await supabase.from('dev_expenses').delete().eq('id', id)
+    await supabase.from('office_expenses').delete().eq('id', id)
     setExpenses(expenses.filter((x:any)=>x.id!==id))
   }
 
   async function toggleExpensePaid(id: string, status: string) {
-    await supabase.from('dev_expenses').update({ status }).eq('id', id)
+    await supabase.from('office_expenses').update({ status }).eq('id', id)
     setExpenses(expenses.map((x:any)=>x.id===id?{...x,status}:x))
   }
 
@@ -202,8 +202,8 @@ export default function DevPage() {
       d.setMonth(d.getMonth() + 1)
       nextDate = d.toISOString().slice(0,10)
     }
-    const { error } = await supabase.from('dev_expenses').insert({
-      user_id: user?.id, project_id: e.project_id, description: e.description, vendor: e.vendor,
+    const { error } = await supabase.from('office_expenses').insert({
+      user_id: user?.id, description: e.description, vendor: e.vendor,
       category: e.category, amount: e.amount, date: nextDate, status: 'Unpaid', is_recurring: true, notes: e.notes,
     })
     if (error) { alert(error.message); return }
