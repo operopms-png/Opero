@@ -212,7 +212,8 @@ export default function DevPage() {
   }
 
   function openEdit(modalName: string, record: any) {
-    setForm(record); setEditId(record.id); setModal(modalName)
+    const { dev_projects, ...clean } = record
+    setForm(clean); setEditId(record.id); setModal(modalName)
   }
 
   const totalBudget = projects.reduce((s, p) => s + (p.total_budget ?? 0), 0)
