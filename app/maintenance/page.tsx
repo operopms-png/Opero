@@ -68,7 +68,8 @@ export default function MaintenancePage() {
   async function handleSave() {
     if (!form.property_id || !form.title) return
     setSaving(true)
-    await supabase.from('maintenance_tickets').insert([{ ...form, assigned_to: form.assigned_to || null, description: form.description || null }])
+    const { error } = await supabase.from('maintenance_tickets').insert([{ ...form, assigned_to: form.assigned_to || null, description: form.description || null }])
+    if (error) { alert(error.message); setSaving(false); return }
     setSaving(false)
     setShowModal(false)
     setForm(INITIAL_FORM)
@@ -76,7 +77,8 @@ export default function MaintenancePage() {
   }
 
   async function updateStatus(id: string, status: string) {
-    await supabase.from('maintenance_tickets').update({ status }).eq('id', id)
+    const { error } = await supabase.from('maintenance_tickets').update({ status }).eq('id', id)
+    if (error) { alert(error.message); return }
     setTickets(prev => prev.map(t => t.id === id ? { ...t, status: status as Ticket['status'] } : t))
   }
 
@@ -138,7 +140,7 @@ export default function MaintenancePage() {
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: pri.color, background: pri.bg, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{pri.label}</span>
                     </div>
                     <div style={{ fontSize: 13, color: '#6B7280' }}>
-                      {t.properties?.name ?? '—'}{t.assigned_to ? ` · ${t.assigned_to}` : ''}{t.description ? ` · ${t.description}` : ''}
+                      {t.properties?.name ?? '—'}{t.assigned_to ? ` · ${teamMembers.find(m=>m.id===t.assigned_to)?.name ?? t.assigned_to}` : ''}{t.description ? ` · ${t.description}` : ''}
                     </div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: sta.color, background: sta.bg, whiteSpace: 'nowrap' }}>{sta.label}</span>
@@ -185,7 +187,7 @@ export default function MaintenancePage() {
                   <label style={lbl}>Assigned To</label>
                   <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={{ ...inp, cursor: 'pointer' }}>
                     <option value="">Select team member…</option>
-                    {teamMembers.map(m => <option key={m.id} value={m.name}>{m.name} ({m.role})</option>)}
+                    {teamMembers.map(m => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
                   </select>
                 </div>
               </div>

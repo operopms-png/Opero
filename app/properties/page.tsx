@@ -123,9 +123,11 @@ export default function PropertiesPage() {
       booking_ical_url: form.booking_ical_url || null,
     }
     if (editId) {
-      await (supabase as any).from('properties').update(payload).eq('id', editId)
+      const { error } = await (supabase as any).from('properties').update(payload).eq('id', editId)
+      if (error) { alert(error.message); setSaving(false); return }
     } else {
-      await (supabase as any).from('properties').insert([payload])
+      const { error } = await (supabase as any).from('properties').insert([payload])
+      if (error) { alert(error.message); setSaving(false); return }
     }
     setSaving(false)
     setShowModal(false)

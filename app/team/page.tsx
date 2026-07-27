@@ -37,9 +37,11 @@ export default function TeamPage() {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (editId) {
-      await supabase.from('team_members').update({ ...form }).eq('id', editId)
+      const { error } = await supabase.from('team_members').update({ ...form }).eq('id', editId)
+      if (error) { alert(error.message); setSaving(false); return }
     } else {
-      await supabase.from('team_members').insert([{ ...form, user_id: user?.id }])
+      const { error } = await supabase.from('team_members').insert([{ ...form, user_id: user?.id }])
+      if (error) { alert(error.message); setSaving(false); return }
     }
     setSaving(false)
     setShowModal(false)

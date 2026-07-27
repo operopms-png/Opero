@@ -65,8 +65,13 @@ export default function CRMPage() {
   async function save(table: string, data: any) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (editId) { await supabase.from(table).update({...data}).eq('id',editId) }
-    else { await supabase.from(table).insert([{...data,user_id:user?.id}]) }
+    if (editId) {
+      const { error } = await supabase.from(table).update({...data}).eq('id',editId)
+      if (error) { alert(error.message); setSaving(false); return }
+    } else {
+      const { error } = await supabase.from(table).insert([{...data,user_id:user?.id}])
+      if (error) { alert(error.message); setSaving(false); return }
+    }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
     await loadAll()
   }

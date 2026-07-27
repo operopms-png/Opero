@@ -417,7 +417,8 @@ export default function OwnerPortalPage() {
       if (!res.ok) { alert(result.error || 'Could not send message'); setSaving(false); return }
       setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'staff', message: text, attachment_url: attachmentJson, created_at: new Date().toISOString() }])
     } else {
-      await supabase.from('owner_messages').insert({ owner_id: chatOwner.id, sender: 'owner', message: text, attachment_url: attachmentJson || null, created_at: new Date().toISOString() })
+      const { error } = await supabase.from('owner_messages').insert({ owner_id: chatOwner.id, sender: 'owner', message: text, attachment_url: attachmentJson || null, created_at: new Date().toISOString() })
+      if (error) { alert(error.message); setSaving(false); return }
       setMessages(prev => [...prev, { owner_id: chatOwner.id, sender: 'owner', message: text, attachment_url: attachmentJson, created_at: new Date().toISOString() }])
     }
     setNewMsg('')
@@ -550,13 +551,14 @@ export default function OwnerPortalPage() {
   async function saveContactInfo() {
     if (!ownerProfile) return
     setSaving(true)
-    await supabase.from('owner_profiles').update({
+    const { error } = await supabase.from('owner_profiles').update({
       name: `${contactForm.first_name ?? ''} ${contactForm.last_name ?? ''}`.trim(),
       email: contactForm.email,
       phone: contactForm.phone,
       address: contactForm.address,
     }).eq('id', ownerProfile.id)
     setSaving(false)
+    if (error) { alert(error.message); return }
     alert('Saved!')
   }
 
@@ -564,17 +566,17 @@ export default function OwnerPortalPage() {
     if (!ownerProfile) return
     setSaving(true)
     const existing = contactInfo?.id
-    if (existing) {
-      await supabase.from('owner_contact').update(bankingForm).eq('id', existing)
-    } else {
-      await supabase.from('owner_contact').insert({ ...bankingForm, owner_id: ownerProfile.id })
-    }
+    const { error } = existing
+      ? await supabase.from('owner_contact').update(bankingForm).eq('id', existing)
+      : await supabase.from('owner_contact').insert({ ...bankingForm, owner_id: ownerProfile.id })
     setSaving(false)
+    if (error) { alert(error.message); return }
     alert('Banking info saved!')
   }
 
   async function updateTicketStatus(ticketId: string, status: string) {
-    await supabase.from('maintenance_tickets').update({ status }).eq('id', ticketId)
+    const { error } = await supabase.from('maintenance_tickets').update({ status }).eq('id', ticketId)
+    if (error) { alert(error.message); return }
     setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status } : t))
   }
 

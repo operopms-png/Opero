@@ -27,7 +27,8 @@ export default function DocumentsPage() {
     if (!form.name || !form.url) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('documents').insert([{ ...form, user_id: user?.id, property_id: form.property_id || null }])
+    const { error } = await supabase.from('documents').insert([{ ...form, user_id: user?.id, property_id: form.property_id || null }])
+    if (error) { alert(error.message); setSaving(false); return }
     setSaving(false)
     setShowModal(false)
     setForm({ name: '', type: 'contract', url: '', property_id: '' })

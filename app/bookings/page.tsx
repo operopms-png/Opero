@@ -71,10 +71,11 @@ export default function BookingsPage() {
   async function handleSave() {
     if (!form.property_id || !form.check_in || !form.check_out) return
     setSaving(true)
-    await supabase.from('bookings').insert([{
+    const { error } = await supabase.from('bookings').insert([{
       ...form,
       total_amount: form.total_amount ? parseFloat(form.total_amount) : null,
     }])
+    if (error) { alert(error.message); setSaving(false); return }
     setSaving(false)
     setShowModal(false)
     setForm(INITIAL_FORM)

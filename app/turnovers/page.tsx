@@ -60,13 +60,14 @@ export default function TurnoversPage() {
   async function handleSave() {
     if (!form.property_id || !form.turnover_date) return
     setSaving(true)
-    await supabase.from('turnovers').insert([{
+    const { error } = await supabase.from('turnovers').insert([{
       ...form,
       check_out_time: form.check_out_time || null,
       check_in_time: form.check_in_time || null,
       assigned_to: form.assigned_to || null,
       notes: form.notes || null,
     }])
+    if (error) { alert(error.message); setSaving(false); return }
     setSaving(false)
     setShowModal(false)
     setForm(INITIAL_FORM)
@@ -74,7 +75,8 @@ export default function TurnoversPage() {
   }
 
   async function updateStatus(id: string, status: string) {
-    await supabase.from('turnovers').update({ status }).eq('id', id)
+    const { error } = await supabase.from('turnovers').update({ status }).eq('id', id)
+    if (error) { alert(error.message); return }
     setTurnovers(prev => prev.map(t => t.id === id ? { ...t, status: status as Turnover['status'] } : t))
   }
 
@@ -119,7 +121,7 @@ export default function TurnoversPage() {
               <div style={{ marginBottom: 32 }}>
                 <h2 style={{ fontSize: 14, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>Upcoming</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {upcoming.map(t => <TurnoverRow key={t.id} t={t} onStatus={updateStatus} onDelete={deleteTurnover} />)}
+                  {upcoming.map(t => <TurnoverRow key={t.id} t={t} onStatus={updateStatus} onDelete={deleteTurnover} teamMembers={teamMembers} />)}
                 </div>
               </div>
             )}
@@ -127,7 +129,7 @@ export default function TurnoversPage() {
               <div>
                 <h2 style={{ fontSize: 14, fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>Past</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.6 }}>
-                  {past.map(t => <TurnoverRow key={t.id} t={t} onStatus={updateStatus} onDelete={deleteTurnover} />)}
+                  {past.map(t => <TurnoverRow key={t.id} t={t} onStatus={updateStatus} onDelete={deleteTurnover} teamMembers={teamMembers} />)}
                 </div>
               </div>
             )}
@@ -157,7 +159,7 @@ export default function TurnoversPage() {
                 <label style={lbl}>Assigned To</label>
                 <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={{ ...inp, cursor: 'pointer' }}>
                   <option value="">Select team member…</option>
-                  {teamMembers.map(m => <option key={m.id} value={m.name}>{m.name} ({m.role})</option>)}
+                  {teamMembers.map(m => <option key={m.id} value={m.id}>{m.name} ({m.role})</option>)}
                 </select>
               </div>
               <div><label style={lbl}>Notes</label><textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inp, resize: 'vertical' }} placeholder="Special instructions…" /></div>
@@ -175,7 +177,7 @@ export default function TurnoversPage() {
   )
 }
 
-function TurnoverRow({ t, onStatus, onDelete }: { t: Turnover; onStatus: (id: string, s: string) => void; onDelete: (id: string) => void }) {
+function TurnoverRow({ t, onStatus, onDelete, teamMembers }: { t: Turnover; onStatus: (id: string, s: string) => void; onDelete: (id: string) => void; teamMembers: { id: string; name: string; role: string }[] }) {
   const cfg = STATUS_CONFIG[t.status ?? 'scheduled'] ?? STATUS_CONFIG['scheduled']
   return (
     <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr auto auto auto', alignItems: 'center', gap: 16 }}>
@@ -185,7 +187,7 @@ function TurnoverRow({ t, onStatus, onDelete }: { t: Turnover; onStatus: (id: st
           <span>{new Date(t.turnover_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
           {t.check_out_time && <span>🚪 Out {t.check_out_time}</span>}
           {t.check_in_time && <span>🔑 In {t.check_in_time}</span>}
-          {t.assigned_to && <span>{t.assigned_to}</span>}
+          {t.assigned_to && <span>{teamMembers.find(m => m.id === t.assigned_to)?.name ?? t.assigned_to}</span>}
         </div>
       </div>
       <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: cfg.color, background: cfg.bg, whiteSpace: 'nowrap' }}>{cfg.label}</span>
