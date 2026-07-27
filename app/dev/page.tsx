@@ -125,7 +125,8 @@ export default function DevPage() {
   const [loading, setLoading] = useState(true)
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
-  const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
+  const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:'',property_name:''})
+  const [expensePropertyFilter, setExpensePropertyFilter] = useState('All')
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [showAddBank, setShowAddBank] = useState(false)
@@ -182,7 +183,7 @@ export default function DevPage() {
     const { error } = await supabase.from('office_expenses').insert({ ...expForm, amount: parseFloat(expForm.amount), user_id: user?.id })
     if (error) { alert(error.message); return }
     await loadAll()
-    setExpForm({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
+    setExpForm({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:'',property_name:''})
     setShowAddExpense(false)
   }
 
@@ -206,7 +207,7 @@ export default function DevPage() {
     }
     const { error } = await supabase.from('office_expenses').insert({
       user_id: user?.id, description: e.description, vendor: e.vendor,
-      category: e.category, amount: e.amount, date: nextDate, status: 'Unpaid', is_recurring: true, notes: e.notes,
+      category: e.category, amount: e.amount, date: nextDate, status: 'Unpaid', is_recurring: true, notes: e.notes, property_name: e.property_name,
     })
     if (error) { alert(error.message); return }
     await loadAll()
@@ -314,6 +315,10 @@ export default function DevPage() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Cleaning supplies" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Amazon" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                  <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Property / Project</label><select value={expForm.property_name} onChange={e=>setExpForm({...expForm,property_name:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>
+                    <option value="">Office / General (not property-specific)</option>
+                    {projects.map((p:any)=><option key={p.id} value={p.name}>{p.name}</option>)}
+                  </select></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category</label><select value={expForm.category} onChange={e=>setExpForm({...expForm,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Property','Staff','Overhead','Maintenance','Marketing','Insurance','Utilities','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={expForm.date} onChange={e=>setExpForm({...expForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -326,13 +331,20 @@ export default function DevPage() {
                 </div>
               </div>
             )}
+            {/* Filter by specific property/project */}
+            <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap' as const}}>
+              {['All','Office / General', ...projects.map((p:any)=>p.name)].map(p=>(
+                <button key={p} onClick={()=>setExpensePropertyFilter(p)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(expensePropertyFilter===p?'#8B5CF6':'#E4E7EC'),background:expensePropertyFilter===p?'#8B5CF6':'#fff',color:expensePropertyFilter===p?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap' as const}}>{p}</button>
+              ))}
+            </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Description</span><span>Vendor</span><span>Category</span><span>Amount</span><span>Date</span><span>Status</span><span></span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 120px 130px 110px 90px 90px 90px 70px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Description</span><span>Property</span><span>Vendor</span><span>Category</span><span>Amount</span><span>Date</span><span>Status</span><span></span><span></span>
               </div>
-              {expenses.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No expenses yet</div></div>):expenses.map((e:any)=>(
-                <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+              {expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No expenses yet</div></div>):expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).map((e:any)=>(
+                <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</span>
+                  <span style={{fontSize:12,color:'#344054'}}>{e.property_name||<span style={{color:'#98A2B3'}}>Office</span>}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{e.category}</span>
                   <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
