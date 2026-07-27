@@ -83,6 +83,8 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function Page() {
   const [section, setSection] = useState('Dashboard')
+
+  useEffect(() => { window.scrollTo(0, 0) }, [section])
   const [loading, setLoading] = useState(true)
   const [properties, setProperties] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])

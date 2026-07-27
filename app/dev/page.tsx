@@ -120,6 +120,8 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function DevPage() {
   const [tab, setTab] = useState('Dashboard')
+
+  useEffect(() => { window.scrollTo(0, 0) }, [tab])
   const [loading, setLoading] = useState(true)
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)

@@ -134,6 +134,8 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function PMPage() {
   const [tab, setTab] = useState('Dashboard')
+
+  useEffect(() => { window.scrollTo(0, 0) }, [tab])
   const [hasModule, setHasModule] = useState<boolean|null>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [units, setUnits] = useState<any[]>([])

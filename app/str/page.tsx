@@ -72,6 +72,8 @@ function Modal({ title, onClose, children }: any) {
 
 export default function STRPage() {
   const [tab, setTab] = useState('Home')
+
+  useEffect(() => { window.scrollTo(0, 0) }, [tab])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<string|null>(null)
   const [form, setForm] = useState<any>({})
