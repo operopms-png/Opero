@@ -823,7 +823,12 @@ export default function DevPage() {
               <select style={{...inp,cursor:'pointer'}} value={form.category??'other'} onChange={e=>setForm({...form,category:e.target.value})}>
                 <option value="construction">Construction</option>
                 <option value="materials">Materials</option>
-                <option value="labour">Labour</option>
+                <option value="furniture">Furniture</option>
+                <option value="contractor">Contractor</option>
+                <option value="mason">Mason</option>
+                <option value="plumbing">Plumbing</option>
+                <option value="electrical">Electrical</option>
+                <option value="labour">Labour (other)</option>
                 <option value="professional_fees">Professional Fees</option>
                 <option value="permits">Permits</option>
                 <option value="marketing">Marketing</option>
