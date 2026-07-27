@@ -141,7 +141,6 @@ export default function DevPage() {
   const [investors, setInvestors] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
-  const [checklist, setChecklist] = useState<any[]>([])
   const [checklistProjectId, setChecklistProjectId] = useState('')
   const [expandedPhase, setExpandedPhase] = useState<string|null>(null)
   const [seeding, setSeeding] = useState(false)
@@ -159,39 +158,37 @@ export default function DevPage() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p, b, i, d, m, c] = await Promise.all([
+    const [p, b, i, d, m] = await Promise.all([
       supabase.from('dev_projects').select('*').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_budget_items').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_investors').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_documents').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_milestones').select('*, dev_projects(name)').eq('user_id',userId).order('due_date', { ascending: true }),
-      supabase.from('dev_checklist_items').select('*').eq('user_id',userId).order('sort_order', { ascending: true }),
     ])
     setProjects(p.data ?? [])
     setBudgetItems(b.data ?? [])
     setInvestors(i.data ?? [])
     setDocuments(d.data ?? [])
     setMilestones(m.data ?? [])
-    setChecklist(c.data ?? [])
   }
 
   async function seedChecklist(projectId: string) {
     if (!projectId) return
     setSeeding(true)
     const { data: { user } } = await supabase.auth.getUser()
-    let order = 0
     const rows = CHECKLIST_TEMPLATE.flatMap(group => group.tasks.map(task => ({
-      user_id: user?.id, project_id: projectId, phase: group.phase, task, completed: false, sort_order: order++,
+      user_id: user?.id, project_id: projectId, phase: group.phase, name: task, status: 'pending',
     })))
-    const { error } = await supabase.from('dev_checklist_items').insert(rows)
+    const { error } = await supabase.from('dev_milestones').insert(rows)
     if (error) alert(error.message)
     await loadAll()
     setSeeding(false)
   }
 
   async function toggleChecklistItem(id: string, completed: boolean) {
-    await supabase.from('dev_checklist_items').update({ completed }).eq('id', id)
-    setChecklist(prev => prev.map(c => c.id === id ? { ...c, completed } : c))
+    const newStatus = completed ? 'completed' : 'pending'
+    await supabase.from('dev_milestones').update({ status: newStatus }).eq('id', id)
+    setMilestones(prev => prev.map(m => m.id === id ? { ...m, status: newStatus } : m))
   }
 
   async function save(table: string, data: any) {
@@ -727,7 +724,7 @@ export default function DevPage() {
             {!checklistProjectId ? (
               <div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>Pick a project to see or start its checklist.</div>
             ) : (() => {
-              const items = checklist.filter(c => c.project_id === checklistProjectId)
+              const items = milestones.filter(m => m.project_id === checklistProjectId && m.phase)
               if (items.length === 0) {
                 return (
                   <div style={{ textAlign:'center', padding:80 }}>
@@ -736,19 +733,20 @@ export default function DevPage() {
                   </div>
                 )
               }
-              const done = items.filter(i=>i.completed).length
+              const done = items.filter(i=>i.status==='completed').length
               const phases = Array.from(new Set(items.map(i=>i.phase)))
               return (
                 <div>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6, fontSize:13, color:'#667085' }}>
                     <span>{done} of {items.length} tasks complete</span>
+                    <span style={{ color:'#98A2B3' }}>Same list as Milestones — filtered to this project's checklist tasks</span>
                   </div>
                   <div style={{ height:6, background:'#F2F4F7', borderRadius:3, marginBottom:20, overflow:'hidden' }}>
                     <div style={{ height:'100%', width:`${Math.round(done/items.length*100)}%`, background:'#8B5CF6' }} />
                   </div>
                   {phases.map(phase => {
                     const phaseItems = items.filter(i=>i.phase===phase)
-                    const phaseDone = phaseItems.filter(i=>i.completed).length
+                    const phaseDone = phaseItems.filter(i=>i.status==='completed').length
                     const complete = phaseDone === phaseItems.length
                     const isOpen = expandedPhase === phase
                     return (
@@ -764,8 +762,8 @@ export default function DevPage() {
                           <div style={{ padding:'6px 16px 12px' }}>
                             {phaseItems.map(item=>(
                               <label key={item.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', fontSize:13, cursor:'pointer' }}>
-                                <input type="checkbox" checked={item.completed} onChange={e=>toggleChecklistItem(item.id, e.target.checked)} />
-                                <span style={{ color: item.completed?'#98A2B3':'#101828', textDecoration: item.completed?'line-through':'none' }}>{item.task}</span>
+                                <input type="checkbox" checked={item.status==='completed'} onChange={e=>toggleChecklistItem(item.id, e.target.checked)} />
+                                <span style={{ color: item.status==='completed'?'#98A2B3':'#101828', textDecoration: item.status==='completed'?'line-through':'none' }}>{item.name}</span>
                               </label>
                             ))}
                           </div>
