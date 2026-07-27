@@ -216,8 +216,10 @@ export default function DevPage() {
     setForm(clean); setEditId(record.id); setModal(modalName)
   }
 
-  const totalBudget = projects.reduce((s, p) => s + (p.total_budget ?? 0), 0)
-  const totalSpent = projects.reduce((s, p) => s + (p.spent ?? 0), 0)
+  const totalBudget = budgetItems.reduce((s, b) => s + (b.budgeted ?? 0), 0)
+  const totalSpent = budgetItems.reduce((s, b) => s + (b.actual ?? 0), 0)
+  function projectBudget(projectId: string) { return budgetItems.filter(b => b.project_id === projectId).reduce((s, b) => s + (b.budgeted ?? 0), 0) }
+  function projectSpent(projectId: string) { return budgetItems.filter(b => b.project_id === projectId).reduce((s, b) => s + (b.actual ?? 0), 0) }
   const totalInvestment = investors.reduce((s, i) => s + (i.investment_amount ?? 0), 0)
   const activeProjects = projects.filter(p => p.status === 'active').length
   const today = new Date().toISOString().split('T')[0]
@@ -519,7 +521,8 @@ export default function DevPage() {
               ) : (
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:16 }}>
                   {projects.map((p:any) => {
-                    const pct = p.total_budget > 0 ? Math.round((p.spent / p.total_budget) * 100) : 0
+                    const pBudget = projectBudget(p.id), pSpent = projectSpent(p.id)
+                    const pct = pBudget > 0 ? Math.round((pSpent / pBudget) * 100) : 0
                     const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.planning
                     return (
                       <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
@@ -529,8 +532,8 @@ export default function DevPage() {
                         </div>
                         <div style={{ fontSize:13, color:'#667085', marginBottom:12 }}>{p.location}</div>
                         <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#667085', marginBottom:6 }}>
-                          <span>Budget: £{(p.total_budget??0).toLocaleString()}</span>
-                          <span>Spent: £{(p.spent??0).toLocaleString()} ({pct}%)</span>
+                          <span>Budget: £{pBudget.toLocaleString()}</span>
+                          <span>Spent: £{pSpent.toLocaleString()} ({pct}%)</span>
                         </div>
                         <div style={{ background:'#F2F4F7', borderRadius:100, height:6 }}>
                           <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#8B5CF6', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
@@ -565,7 +568,8 @@ export default function DevPage() {
             {projects.length===0 ? <div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No projects yet</div> :
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
               {projects.map(p => {
-                const pct = p.total_budget > 0 ? Math.round((p.spent / p.total_budget) * 100) : 0
+                const pBudget = projectBudget(p.id), pSpent = projectSpent(p.id)
+                const pct = pBudget > 0 ? Math.round((pSpent / pBudget) * 100) : 0
                 const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.planning
                 return (
                   <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
@@ -576,8 +580,8 @@ export default function DevPage() {
                     <div style={{ fontSize:13, color:'#667085', marginBottom:4 }}>{p.location}</div>
                     <div style={{ fontSize:13, color:'#667085', marginBottom:12 }}>{p.description}</div>
                     <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#667085', marginBottom:8 }}>
-                      <span>Budget: £{(p.total_budget??0).toLocaleString()}</span>
-                      <span>Spent: {pct}%</span>
+                      <span>Budget: £{pBudget.toLocaleString()}</span>
+                      <span>Spent: £{pSpent.toLocaleString()} ({pct}%)</span>
                     </div>
                     <div style={{ background:'#F2F4F7', borderRadius:100, height:6, marginBottom:12 }}>
                       <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#8B5CF6', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
