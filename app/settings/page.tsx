@@ -23,6 +23,8 @@ export default function Page() {
   const [inviteName, setInviteName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('Cleaner')
+  const [invitePhone, setInvitePhone] = useState('')
+  const [inviting, setInviting] = useState(false)
   const [apiKey, setApiKey] = useState('')
   const [copied, setCopied] = useState(false)
   const [plan, setPlan] = useState('Professional')
@@ -39,6 +41,8 @@ export default function Page() {
       }
       const {data:msgs} = await supabase.from('system_messages').select('*').eq('published',true).order('created_at',{ascending:false})
       setMessages(msgs??[])
+      const {data:teamData} = await supabase.from('team_members').select('*').eq('user_id',user.id).order('name')
+      setTeam(teamData??[])
       setLoading(false)
     })
   },[])
@@ -153,7 +157,7 @@ export default function Page() {
               <button onClick={()=>setShowInvite(true)} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>+ Invite member</button>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1,c:'#101828'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaner').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaner'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
+              {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1+team.filter(t=>t.role==='Admin').length,c:'#101828'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaner').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaner'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
@@ -162,7 +166,7 @@ export default function Page() {
             </div>
             {showInvite&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Invite team member</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 160px',gap:12,marginBottom:16}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 160px',gap:12,marginBottom:16}}>
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Full name</div>
                   <input value={inviteName} onChange={e=>setInviteName(e.target.value)} placeholder="Jane Smith" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
@@ -172,6 +176,10 @@ export default function Page() {
                   <input value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="jane@example.com" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
                 </div>
                 <div>
+                  <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Phone (optional)</div>
+                  <input value={invitePhone} onChange={e=>setInvitePhone(e.target.value)} placeholder="+44 7700 900000" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
+                </div>
+                <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Role</div>
                   <select value={inviteRole} onChange={e=>setInviteRole(e.target.value)} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',background:'#fff',boxSizing:'border-box'}}>
                     {ROLES.map(r=><option key={r}>{r}</option>)}
@@ -179,7 +187,15 @@ export default function Page() {
                 </div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(inviteName&&inviteEmail){setTeam([...team,{id:Date.now(),name:inviteName,email:inviteEmail,role:inviteRole,status:'Pending'}]);setInviteName('');setInviteEmail('');setShowInvite(false)}}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Send invite</button>
+                <button onClick={async ()=>{
+                  if(!inviteName||!inviteEmail||!user)return
+                  setInviting(true)
+                  const res = await fetch('/api/invite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,user_id:user.id})})
+                  const result = await res.json()
+                  setInviting(false)
+                  if(!res.ok){alert(result.error||'Could not send invite');return}
+                  setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setShowInvite(false)
+                }} disabled={inviting} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:inviting?0.6:1}}>{inviting?'Sending…':'Send invite'}</button>
                 <button onClick={()=>setShowInvite(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -206,7 +222,7 @@ export default function Page() {
                   <span style={{fontSize:13,color:'#667085'}}>{m.email}</span>
                   <span style={{fontSize:12,fontWeight:600,color:'#344054',background:'#F2F4F7',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>{m.role}</span>
                   <span style={{fontSize:12,color:'#F59E0B',fontWeight:500}}>● {m.status}</span>
-                  <button onClick={()=>setTeam(team.filter(t=>t.id!==m.id))} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
+                  <button onClick={async ()=>{await supabase.from('team_members').delete().eq('id',m.id);setTeam(team.filter(t=>t.id!==m.id))}} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
                 </div>
               ))}
               {team.length===0&&(<div style={{textAlign:'center',padding:40,color:'#98A2B3'}}>

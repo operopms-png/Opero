@@ -7,15 +7,17 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { name, email, role, owner_id } = await req.json()
+  const { name, email, role, phone, user_id } = await req.json()
+  if (!email?.trim() || !user_id) return NextResponse.json({ error: 'email and user_id are required' }, { status: 400 })
 
-  const { error: dbError } = await supabase.from('team_members').upsert({
-    owner_id,
+  const { data: member, error: dbError } = await supabase.from('team_members').upsert({
+    user_id,
     name,
     email,
     role,
+    phone: phone || null,
     status: 'Pending'
-  })
+  }).select().single()
   if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 })
 
   const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
@@ -24,5 +26,5 @@ export async function POST(req: NextRequest) {
   })
   if (inviteError) return NextResponse.json({ error: inviteError.message }, { status: 500 })
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, member })
 }
