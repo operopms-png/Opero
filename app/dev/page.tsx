@@ -3,7 +3,18 @@ import { useEffect, useState } from 'react'
 import WeatherWidget from '@/components/WeatherWidget'
 import { supabase } from '../../lib/supabase'
 
-const TABS = ['Dashboard','Projects','Budget','Investors','Documents','Expenses','Banking','Reports','Milestones']
+const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Expenses','Banking','Reports','Milestones']
+
+const CHECKLIST_TEMPLATE = [
+  { phase: 'Pre-construction', tasks: ['Land title confirmed','Architectural drawings approved','Planning permission granted','Soil survey completed'] },
+  { phase: 'Financing', tasks: ['Budget approved','Funding secured'] },
+  { phase: 'Site prep', tasks: ['Site cleared','Groundworks and foundation poured'] },
+  { phase: 'Structural', tasks: ['Blockwork complete','Roof structure complete','Structural inspection signed off'] },
+  { phase: 'MEP', tasks: ['Electrical rough-in','Plumbing rough-in','HVAC installed'] },
+  { phase: 'Interior', tasks: ['Insulation and plastering','Flooring laid','Fixtures installed','Painting complete'] },
+  { phase: 'Exterior', tasks: ['Windows and doors fitted','Render/cladding complete','Landscaping done'] },
+  { phase: 'Final', tasks: ['Snagging list cleared','Certificate of occupancy issued','Handover complete'] },
+]
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
@@ -130,6 +141,10 @@ export default function DevPage() {
   const [investors, setInvestors] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
+  const [checklist, setChecklist] = useState<any[]>([])
+  const [checklistProjectId, setChecklistProjectId] = useState('')
+  const [expandedPhase, setExpandedPhase] = useState<string|null>(null)
+  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -144,18 +159,39 @@ export default function DevPage() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p, b, i, d, m] = await Promise.all([
+    const [p, b, i, d, m, c] = await Promise.all([
       supabase.from('dev_projects').select('*').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_budget_items').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_investors').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_documents').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_milestones').select('*, dev_projects(name)').eq('user_id',userId).order('due_date', { ascending: true }),
+      supabase.from('dev_checklist_items').select('*').eq('user_id',userId).order('sort_order', { ascending: true }),
     ])
     setProjects(p.data ?? [])
     setBudgetItems(b.data ?? [])
     setInvestors(i.data ?? [])
     setDocuments(d.data ?? [])
     setMilestones(m.data ?? [])
+    setChecklist(c.data ?? [])
+  }
+
+  async function seedChecklist(projectId: string) {
+    if (!projectId) return
+    setSeeding(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    let order = 0
+    const rows = CHECKLIST_TEMPLATE.flatMap(group => group.tasks.map(task => ({
+      user_id: user?.id, project_id: projectId, phase: group.phase, task, completed: false, sort_order: order++,
+    })))
+    const { error } = await supabase.from('dev_checklist_items').insert(rows)
+    if (error) alert(error.message)
+    await loadAll()
+    setSeeding(false)
+  }
+
+  async function toggleChecklistItem(id: string, completed: boolean) {
+    await supabase.from('dev_checklist_items').update({ completed }).eq('id', id)
+    setChecklist(prev => prev.map(c => c.id === id ? { ...c, completed } : c))
   }
 
   async function save(table: string, data: any) {
@@ -676,6 +712,70 @@ export default function DevPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {tab==='Checklist' && (
+          <div>
+            <div style={{ marginBottom:16 }}>
+              <label style={lbl}>Project</label>
+              <select value={checklistProjectId} onChange={e=>{setChecklistProjectId(e.target.value);setExpandedPhase(null)}} style={{...inp,maxWidth:320,cursor:'pointer'}}>
+                <option value="">Select a project…</option>
+                {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            {!checklistProjectId ? (
+              <div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>Pick a project to see or start its checklist.</div>
+            ) : (() => {
+              const items = checklist.filter(c => c.project_id === checklistProjectId)
+              if (items.length === 0) {
+                return (
+                  <div style={{ textAlign:'center', padding:80 }}>
+                    <div style={{ color:'#98A2B3', fontSize:14, marginBottom:16 }}>No checklist yet for this project.</div>
+                    <button onClick={()=>seedChecklist(checklistProjectId)} disabled={seeding} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer', opacity:seeding?0.6:1 }}>{seeding?'Setting up…':'Start standard checklist'}</button>
+                  </div>
+                )
+              }
+              const done = items.filter(i=>i.completed).length
+              const phases = Array.from(new Set(items.map(i=>i.phase)))
+              return (
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6, fontSize:13, color:'#667085' }}>
+                    <span>{done} of {items.length} tasks complete</span>
+                  </div>
+                  <div style={{ height:6, background:'#F2F4F7', borderRadius:3, marginBottom:20, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:`${Math.round(done/items.length*100)}%`, background:'#8B5CF6' }} />
+                  </div>
+                  {phases.map(phase => {
+                    const phaseItems = items.filter(i=>i.phase===phase)
+                    const phaseDone = phaseItems.filter(i=>i.completed).length
+                    const complete = phaseDone === phaseItems.length
+                    const isOpen = expandedPhase === phase
+                    return (
+                      <div key={phase} style={{ border:'1px solid #E4E7EC', borderRadius:10, marginBottom:8, overflow:'hidden' }}>
+                        <div onClick={()=>setExpandedPhase(isOpen?null:phase)} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', cursor:'pointer', background:'#F9FAFB' }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ color: complete?'#10B981':'#98A2B3', fontSize:16 }}>{complete?'✓':'○'}</span>
+                            <span style={{ fontSize:14, fontWeight:600, color:'#101828' }}>{phase}</span>
+                          </div>
+                          <span style={{ fontSize:12, color:'#667085' }}>{phaseDone}/{phaseItems.length}</span>
+                        </div>
+                        {isOpen && (
+                          <div style={{ padding:'6px 16px 12px' }}>
+                            {phaseItems.map(item=>(
+                              <label key={item.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', fontSize:13, cursor:'pointer' }}>
+                                <input type="checkbox" checked={item.completed} onChange={e=>toggleChecklistItem(item.id, e.target.checked)} />
+                                <span style={{ color: item.completed?'#98A2B3':'#101828', textDecoration: item.completed?'line-through':'none' }}>{item.task}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
           </div>
         )}
       </div>
