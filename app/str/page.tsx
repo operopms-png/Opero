@@ -80,6 +80,45 @@ export default function STRPage() {
   const [editId, setEditId] = useState<string|null>(null)
   const [saving, setSaving] = useState(false)
   const [stats, setStats] = useState({ properties:0, cleaning:0, maintenance:0, revenue:0 })
+  const [commTemplates, setCommTemplates] = useState<any[]>([])
+  const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
+  const [templateDraft, setTemplateDraft] = useState('')
+  const [templateSubjectDraft, setTemplateSubjectDraft] = useState('')
+  const [savingTemplate, setSavingTemplate] = useState(false)
+
+  const DEFAULT_TEMPLATES: Record<string, { label: string; subject: string; body: string }> = {
+    welcome: { label: 'Welcome Message', subject: 'Welcome to your stay!', body: "Hi {guest_name},\n\nWelcome! We're excited to host you.\n\nCheck-in: {check_in}\nCheck-out: {check_out}\n\nPlease don't hesitate to reach out if you need anything.\n\nBest regards" },
+    checkin: { label: 'Check-in Instructions', subject: 'Your check-in details', body: "Hi {guest_name},\n\nYour check-in is coming up on {check_in}. Here's everything you need:\n\nAddress: \nWiFi: \nLockbox code: \n\nSafe travels!" },
+    checkout: { label: 'Check-out Reminder', subject: 'Check-out reminder', body: "Hi {guest_name},\n\nJust a reminder that check-out is on {check_out}. Please leave the keys in the lockbox and lock up on your way out.\n\nThanks for staying with us!" },
+    review: { label: 'Review Request', subject: 'How was your stay?', body: "Hi {guest_name},\n\nThanks for staying with us! If you had a great time, we'd really appreciate a review — it means a lot to our small team.\n\nHope to host you again soon!" },
+  }
+
+  function selectTemplate(key: string) {
+    setActiveTemplateKey(key)
+    const saved = commTemplates.find((t:any) => t.template_key === key)
+    setTemplateSubjectDraft(saved?.subject ?? DEFAULT_TEMPLATES[key].subject)
+    setTemplateDraft(saved?.body ?? DEFAULT_TEMPLATES[key].body)
+  }
+
+  async function saveTemplate() {
+    setSavingTemplate(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('guest_comm_templates').upsert({
+      user_id: user?.id, template_key: activeTemplateKey, subject: templateSubjectDraft, body: templateDraft, updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,template_key' })
+    setSavingTemplate(false)
+    if (error) { alert(error.message); return }
+    await loadAll()
+  }
+
+  async function copyTemplate() {
+    try {
+      await navigator.clipboard.writeText(templateDraft)
+      alert('Copied!')
+    } catch {
+      alert('Could not copy — select the text and copy manually.')
+    }
+  }
   const [bookings, setBookings] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
   const [cleaning, setCleaning] = useState<any[]>([])
@@ -107,6 +146,8 @@ export default function STRPage() {
     load()
   }, [])
 
+  useEffect(() => { selectTemplate(activeTemplateKey) }, [commTemplates])
+
   async function loadAll(uid?: string) {
     const { data: { user } } = await supabase.auth.getUser()
     const userId = uid || user?.id
@@ -117,13 +158,15 @@ export default function STRPage() {
     const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     const ids = (propsData ?? []).map((p: any) => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-    const [b, c, m, tm, ex] = await Promise.all([
+    const [b, c, m, tm, ex, ct] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
       supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safeIds).order('scheduled_date', { ascending: true }),
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
       supabase.from('team_members').select('*').eq('user_id', userId),
       supabase.from('office_expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
+      supabase.from('guest_comm_templates').select('*').eq('user_id', userId),
     ])
+    setCommTemplates(ct.data ?? [])
     setProperties(propsData ?? [])
     setBookings(b.data ?? [])
     setCleaning(c.data ?? [])
@@ -442,10 +485,19 @@ export default function STRPage() {
                 <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',outline:'1px solid '+(reportTab===t?'#101828':'#E4E7EC')}}>{t}</button>
               ))}
             </div>
-            {reportTab==='P&L'&&(
+            {reportTab==='P&L'&&(() => {
+              const year = new Date().getFullYear()
+              const pnlByMonth = Array.from({length:12},(_,i)=>{
+                const monthKey = `${year}-${String(i+1).padStart(2,'0')}`
+                const income = bookings.filter((b:any)=>b.status!=='cancelled' && b.check_in?.startsWith(monthKey)).reduce((s:number,b:any)=>s+(Number(b.total_amount)||0),0)
+                const costs = expenses.filter((e:any)=>e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+                return { income, costs }
+              })
+              const totalExpenses = expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+              return (
               <div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#101828'},{l:'YTD Costs',v:'£'+expenses.filter((e:any)=>e.category==='Property').reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString(),c:'#10B981'}].map((s:any)=>(
+                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#101828'},{l:'YTD Costs',v:'£'+expenses.filter((e:any)=>e.category==='Property').reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                       <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                       <div style={{fontSize:11,color:'#667085',fontWeight:600,textTransform:'uppercase'}}>{s.l}</div>
@@ -458,23 +510,24 @@ export default function STRPage() {
                   </div>
                   {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>(
                     <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                      <span>{m} {new Date().getFullYear()}</span>
-                      <span style={{color:'#10B981'}}>£0</span>
+                      <span>{m} {year}</span>
+                      <span style={{color:'#10B981'}}>£{pnlByMonth[i].income.toLocaleString()}</span>
                       <span style={{color:'#EF4444'}}>£0</span>
-                      <span style={{color:'#F59E0B'}}>£0</span>
-                      <span style={{fontWeight:600}}>£0</span>
+                      <span style={{color:'#F59E0B'}}>£{pnlByMonth[i].costs.toLocaleString()}</span>
+                      <span style={{fontWeight:600}}>£{(pnlByMonth[i].income-pnlByMonth[i].costs).toLocaleString()}</span>
                     </div>
                   ))}
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828'}}>
-                    <span>TOTAL {new Date().getFullYear()}</span>
+                    <span>TOTAL {year}</span>
                     <span style={{color:'#10B981'}}>£{stats.revenue.toLocaleString()}</span>
                     <span style={{color:'#EF4444'}}>£0</span>
-                    <span style={{color:'#F59E0B'}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</span>
-                    <span>£{(stats.revenue-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</span>
+                    <span style={{color:'#F59E0B'}}>£{totalExpenses.toLocaleString()}</span>
+                    <span>£{(stats.revenue-totalExpenses).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
-            )}
+              )
+            })()}
             {reportTab==='Rent Collection'&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center',color:'#98A2B3'}}>
                 <div style={{fontSize:32,marginBottom:12}}>📊</div>
@@ -482,15 +535,28 @@ export default function STRPage() {
                 <div style={{fontSize:13}}>Payment history and arrears data will appear here as bookings are recorded.</div>
               </div>
             )}
-            {reportTab==='Cash Flow'&&(
+            {reportTab==='Cash Flow'&&(() => {
+              const year = new Date().getFullYear()
+              const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+              let cumulative = 0
+              const cfData = months.map((m,i)=>{
+                const monthKey = `${year}-${String(i+1).padStart(2,'0')}`
+                const moneyIn = bookings.filter((b:any)=>b.status!=='cancelled' && b.check_in?.startsWith(monthKey)).reduce((s:number,b:any)=>s+(Number(b.total_amount)||0),0)
+                const moneyOut = expenses.filter((e:any)=>e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+                const net = moneyIn - moneyOut
+                cumulative += net
+                return { m, moneyIn, moneyOut, net, cumulative }
+              })
+              const maxVal = Math.max(1, ...cfData.map(d=>d.moneyIn))
+              return (
               <div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Cash Flow (Last 6 Months)</div>
-                  <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
-                    {['Jan','Feb','Mar','Apr','May','Jun'].map(m=>(
-                      <div key={m} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                        <div style={{width:'100%',background:'#10B98133',borderRadius:'4px 4px 0 0',height:Math.random()*80+20,minHeight:20}}/>
-                        <div style={{fontSize:10,color:'#98A2B3'}}>{m}</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Cash Flow ({year})</div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(12,1fr)',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
+                    {cfData.map(d=>(
+                      <div key={d.m} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+                        <div style={{width:'100%',background:'#10B98133',borderRadius:'4px 4px 0 0',height:Math.max(4,(d.moneyIn/maxVal)*80),minHeight:4}}/>
+                        <div style={{fontSize:10,color:'#98A2B3'}}>{d.m}</div>
                       </div>
                     ))}
                   </div>
@@ -499,14 +565,15 @@ export default function STRPage() {
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
                     <span>Month</span><span>Money In</span><span>Money Out</span><span>Net</span><span>Cumulative</span>
                   </div>
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map(m=>(
-                    <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                      <span>{m} {new Date().getFullYear()}</span><span style={{color:'#10B981'}}>£0</span><span style={{color:'#EF4444'}}>£0</span><span>£0</span><span>£0</span>
+                  {cfData.map(d=>(
+                    <div key={d.m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
+                      <span>{d.m} {year}</span><span style={{color:'#10B981'}}>£{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{d.moneyOut.toLocaleString()}</span><span>£{d.net.toLocaleString()}</span><span>£{d.cumulative.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+              )
+            })()}
             {reportTab==='Forecast'&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center',color:'#98A2B3'}}>
                 <div style={{fontSize:32,marginBottom:12}}>🔮</div>
@@ -852,14 +919,23 @@ export default function STRPage() {
             <div>
               <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:12 }}>Templates</div>
               <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                {['Welcome Message','Check-in Instructions','Check-out Reminder','Review Request'].map(t=>(<div key={t} style={{ padding:'12px 14px', borderRadius:10, border:'1px solid #E4E7EC', background:'#fff', cursor:'pointer', fontSize:13, color:'#344054' }}>{t}</div>))}
+                {Object.entries(DEFAULT_TEMPLATES).map(([key,t])=>(
+                  <div key={key} onClick={()=>selectTemplate(key)} style={{ padding:'12px 14px', borderRadius:10, border:'1px solid '+(activeTemplateKey===key?'#101828':'#E4E7EC'), background:activeTemplateKey===key?'#101828':'#fff', cursor:'pointer', fontSize:13, color:activeTemplateKey===key?'#fff':'#344054', fontWeight:activeTemplateKey===key?600:400 }}>{t.label}</div>
+                ))}
               </div>
             </div>
             <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E4E7EC', padding:28 }}>
-              <div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:4 }}>Welcome Message</div>
-              <div style={{ fontSize:13, color:'#667085', marginBottom:16 }}>Subject: Welcome to your stay!</div>
-              <textarea defaultValue={"Hi {guest_name},\n\nWelcome! We're excited to host you.\n\nCheck-in: {check_in}\nCheck-out: {check_out}\n\nPlease don't hesitate to reach out if you need anything.\n\nBest regards"} style={{ width:'100%', minHeight:200, padding:14, borderRadius:10, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', resize:'vertical', boxSizing:'border-box', lineHeight:1.6 }} />
-              <button onClick={()=>alert('Copied!')} style={{ marginTop:12, padding:'10px 20px', borderRadius:8, border:'1px solid #D0D5DD', background:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>Copy to clipboard</button>
+              <div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:4 }}>{DEFAULT_TEMPLATES[activeTemplateKey].label}</div>
+              <div style={{ marginBottom:16 }}>
+                <label style={lbl}>Subject</label>
+                <input value={templateSubjectDraft} onChange={e=>setTemplateSubjectDraft(e.target.value)} style={inp} />
+              </div>
+              <label style={lbl}>Message</label>
+              <textarea value={templateDraft} onChange={e=>setTemplateDraft(e.target.value)} style={{ width:'100%', minHeight:200, padding:14, borderRadius:10, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', resize:'vertical', boxSizing:'border-box', lineHeight:1.6 }} />
+              <div style={{ display:'flex', gap:8, marginTop:12 }}>
+                <button onClick={saveTemplate} disabled={savingTemplate} style={{ padding:'10px 20px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:savingTemplate?0.6:1 }}>{savingTemplate?'Saving…':'Save template'}</button>
+                <button onClick={copyTemplate} style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #D0D5DD', background:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>Copy to clipboard</button>
+              </div>
             </div>
           </div>
         )}

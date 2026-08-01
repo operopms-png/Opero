@@ -311,7 +311,7 @@ export default function Page() {
                   <div style={{display:'flex',alignItems:'flex-end',gap:2,height:'100%'}}>
                     {months.map((m,i)=>(
                       <div key={m} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-                        <div style={{width:'100%',background:i===months.length-1?ACCENT:ACCENT+'40',borderRadius:'2px 2px 0 0',height:`${20+Math.random()*60}%`}}/>
+                        <div style={{width:'100%',background:i===months.length-1?ACCENT:ACCENT+'40',borderRadius:'2px 2px 0 0',height:'70%'}}/>
                         <div style={{fontSize:8,color:'#98A2B3'}}>{m}</div>
                       </div>
                     ))}
