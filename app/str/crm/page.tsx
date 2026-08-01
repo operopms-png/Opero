@@ -102,12 +102,17 @@ export default function Page() {
   async function save(table: string, data: any) {
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    if(editId){await supabase.from(table).update({...data}).eq('id',editId)}
-    else{await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])}
+    if(editId){
+      const {error}=await supabase.from(table).update({...data}).eq('id',editId)
+      if(error){alert(error.message);setSaving(false);return}
+    } else {
+      const {error}=await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+      if(error){alert(error.message);setSaving(false);return}
+    }
     setSaving(false); setModal(null); setForm({}); setEditId(null); await loadAll()
   }
   async function del(table: string, id: string) { if(!confirm('Delete?'))return; await supabase.from(table).delete().eq('id',id); await loadAll() }
-  function openEdit(mn: string, r: any) { setForm(r); setEditId(r.id); setModal(mn) }
+  function openEdit(mn: string, r: any) { const {crm_contacts,...clean}=r; setForm(clean); setEditId(r.id); setModal(mn) }
   async function startPlaybook(template: typeof DEFAULT_PLAYBOOK) {
     if(!confirm(`Start "${template.name}"? This creates ${template.tasks.length} tasks across the next ${Math.max(...template.tasks.map(t=>t.day_offset))+1} days.`)) return
     const {data:{user}} = await supabase.auth.getUser()

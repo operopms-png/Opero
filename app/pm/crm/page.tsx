@@ -78,12 +78,17 @@ export default function Page() {
   async function save(table: string, data: any) {
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    if(editId){await supabase.from(table).update({...data}).eq('id',editId)}
-    else{await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])}
+    if(editId){
+      const {error}=await supabase.from(table).update({...data}).eq('id',editId)
+      if(error){alert(error.message);setSaving(false);return}
+    } else {
+      const {error}=await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+      if(error){alert(error.message);setSaving(false);return}
+    }
     setSaving(false); setModal(null); setForm({}); setEditId(null); await loadAll()
   }
   async function del(table: string, id: string) { if(!confirm('Delete?'))return; await supabase.from(table).delete().eq('id',id); await loadAll() }
-  function openEdit(mn: string, r: any) { setForm(r); setEditId(r.id); setModal(mn) }
+  function openEdit(mn: string, r: any) { const {crm_contacts,...clean}=r; setForm(clean); setEditId(r.id); setModal(mn) }
   const filtered = (arr: any[]) => arr.filter(x => search===''||JSON.stringify(x).toLowerCase().includes(search.toLowerCase()))
   const overdueTasks = tasks.filter(t=>t.status==='pending'&&t.due_date<=today).length
   if(loading) return <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#98A2B3' }}>Loading...</div>
