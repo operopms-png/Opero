@@ -1,8 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useRole, getAllowedTab } from '@/lib/useRole'
 const ACCENT = '#2D6A4F'
-const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Finance','Loans & Mortgages','Rent Collection','Vacancies','Expenses','Banking','Reports','Owner Reports','Documents']
+const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Maintenance','Cleaning','Finance','Loans & Mortgages','Rent Collection','Vacancies','Expenses','Banking','Reports','Owner Reports','Documents']
 const NAV_REST = ['Contacts','Maintenance','Tasks','Notes','Messages','Candidates','Tools','Community']
 
 
@@ -83,8 +84,11 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function Page() {
   const [section, setSection] = useState('Dashboard')
+  const { role } = useRole()
+  const allowedTab = getAllowedTab(role, 'estate')
 
   useEffect(() => { window.scrollTo(0, 0) }, [section])
+  useEffect(() => { if (allowedTab) setSection(allowedTab) }, [allowedTab])
   const [loading, setLoading] = useState(true)
   const [properties, setProperties] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])
@@ -117,6 +121,12 @@ export default function Page() {
   const [reportTab, setReportTab] = useState('P&L')
   const [showAddRent, setShowAddRent] = useState(false)
   const [rentForm, setRentForm] = useState({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
+  const [maintenance, setMaintenance] = useState<any[]>([])
+  const [showAddMaint, setShowAddMaint] = useState(false)
+  const [maintForm, setMaintForm] = useState({title:'',property_id:'',description:'',priority:'medium'})
+  const [cleaning, setCleaning] = useState<any[]>([])
+  const [showAddCleaning, setShowAddCleaning] = useState(false)
+  const [cleanForm, setCleanForm] = useState({property_id:'',scheduled_date:'',assigned_to:'',notes:''})
 
   const [news] = useState([
     {title:'New Tenant Verification Regulations for Landlords',tag:'LEGISLATION',body:'The Renters Rights Act has introduced restrictions on upfront rental payments, requiring landlords to adopt alternative affordability checks.'},
@@ -134,7 +144,7 @@ export default function Page() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,t,tn,v,m,e,ba,tx,r] = await Promise.all([
+    const [p,t,tn,v,m,e,ba,tx,r,mt,cl] = await Promise.all([
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_tenants').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -144,10 +154,13 @@ export default function Page() {
       supabase.from('estate_bank_accounts').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_transactions').select('*').eq('user_id',userId).order('date',{ascending:false}),
       supabase.from('estate_rent_schedules').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_cleaning_tasks').select('*,estate_properties(name)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
     ])
     setProperties(p.data??[]); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
     setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
+    setMaintenance(mt.data??[]); setCleaning(cl.data??[])
     setLoading(false)
   }
 
@@ -227,9 +240,10 @@ export default function Page() {
         </div>
         <div style={{padding:'8px 10px'}}>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px'}}>THE BASICS</div>
-          {NAV_BASICS.map(s=>(
-            <button key={s} onClick={()=>setSection(s)} style={btnStyle(section===s)}>{s}</button>
-          ))}
+          {NAV_BASICS.map(s=>{
+            const locked = !!(allowedTab && s !== allowedTab)
+            return <button key={s} onClick={()=>!locked && setSection(s)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{...btnStyle(section===s && !locked), color:locked?'#C1C9D2':btnStyle(section===s).color, cursor:locked?'not-allowed':'pointer'}}>{s}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+          })}
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>THE REST</div>
           {NAV_REST.map(s=>(
             <button key={s} onClick={()=>setSection(s)} style={btnStyle(section===s)}>{s}</button>
@@ -248,6 +262,8 @@ export default function Page() {
             {section==='Properties'&&<button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
             {section==='Vacancies'&&<button onClick={()=>setShowAddVacancy(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
+            {section==='Maintenance'&&<button onClick={()=>setShowAddMaint(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New ticket</button>}
+            {section==='Cleaning'&&<button onClick={()=>setShowAddCleaning(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Schedule cleaning</button>}
             {section==='Owner Reports'&&<button style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Export Report</button>}
             {section==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Expense</button>}
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
@@ -581,6 +597,71 @@ export default function Page() {
                 ))}
               </div>
             )}
+          </div>)}
+
+          {section==='Maintenance'&&(<div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {showAddMaint&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:12}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>New maintenance ticket</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Title *</div><input value={maintForm.title} onChange={e=>setMaintForm({...maintForm,title:e.target.value})} placeholder="e.g. Boiler not working" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><select value={maintForm.property_id} onChange={e=>setMaintForm({...maintForm,property_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Priority</div><select value={maintForm.priority} onChange={e=>setMaintForm({...maintForm,priority:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+                <div style={{gridColumn:'span 2'}}><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Description</div><textarea value={maintForm.description} onChange={e=>setMaintForm({...maintForm,description:e.target.value})} rows={2} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',resize:'vertical',boxSizing:'border-box'}}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{if(!maintForm.title)return;saveRecord('estate_maintenance',maintForm);setMaintForm({title:'',property_id:'',description:'',priority:'medium'});setShowAddMaint(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create ticket</button>
+                <button onClick={()=>setShowAddMaint(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            {maintenance.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No maintenance tickets</div>:
+            maintenance.map((m:any)=>{
+              const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':ACCENT
+              const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':ACCENT+'18'
+              return(
+                <div key={m.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto auto',alignItems:'center',gap:16}}>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:14,color:'#101828',marginBottom:2}}>{m.title}</div>
+                    <div style={{fontSize:12,color:'#667085'}}>{m.estate_properties?.name??'—'}</div>
+                  </div>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:priBg,color:priColor,textTransform:'uppercase'}}>{m.priority}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:m.status==='open'?'#DBEAFE':m.status==='resolved'?'#D1FAE5':'#FEF3C7',color:m.status==='open'?'#2563EB':m.status==='resolved'?'#059669':'#D97706'}}>{m.status}</span>
+                  <select value={m.status} onChange={e=>saveRecord('estate_maintenance',{status:e.target.value},m.id)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
+                    <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
+                  </select>
+                  <button onClick={()=>delRecord('estate_maintenance',m.id)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                </div>
+              )
+            })}
+          </div>)}
+
+          {section==='Cleaning'&&(<div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {showAddCleaning&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:12}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Schedule cleaning</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><select value={cleanForm.property_id} onChange={e=>setCleanForm({...cleanForm,property_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Scheduled Date</div><input type="date" value={cleanForm.scheduled_date} onChange={e=>setCleanForm({...cleanForm,scheduled_date:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Assigned To</div><input value={cleanForm.assigned_to} onChange={e=>setCleanForm({...cleanForm,assigned_to:e.target.value})} placeholder="Cleaner name" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Notes</div><input value={cleanForm.notes} onChange={e=>setCleanForm({...cleanForm,notes:e.target.value})} placeholder="Optional" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{if(!cleanForm.property_id)return;saveRecord('estate_cleaning_tasks',cleanForm);setCleanForm({property_id:'',scheduled_date:'',assigned_to:'',notes:''});setShowAddCleaning(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Schedule</button>
+                <button onClick={()=>setShowAddCleaning(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            {cleaning.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No cleaning tasks scheduled</div>:
+            cleaning.map((c:any)=>(
+              <div key={c.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto',alignItems:'center',gap:16}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14,color:'#101828',marginBottom:2}}>{c.estate_properties?.name??'—'}</div>
+                  <div style={{fontSize:12,color:'#667085'}}>{c.scheduled_date??'—'}{c.assigned_to?` · ${c.assigned_to}`:''}</div>
+                </div>
+                <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:c.status==='completed'?'#D1FAE5':c.status==='in_progress'?'#DBEAFE':'#FEF3C7',color:c.status==='completed'?'#059669':c.status==='in_progress'?'#2563EB':'#D97706',textTransform:'capitalize'}}>{c.status}</span>
+                <select value={c.status} onChange={e=>saveRecord('estate_cleaning_tasks',{status:e.target.value},c.id)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
+                  <option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
+                </select>
+                <button onClick={()=>delRecord('estate_cleaning_tasks',c.id)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+              </div>
+            ))}
           </div>)}
 
           {section==='Loans & Mortgages'&&(<div>

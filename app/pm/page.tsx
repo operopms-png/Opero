@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react'
 import WeatherWidget from '@/components/WeatherWidget'
 import { supabase } from '../../lib/supabase'
+import { useRole, getAllowedTab } from '@/lib/useRole'
 
-const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements']
+const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements']
 
 async function uploadFile(file: File, folder: string): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -134,8 +135,11 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function PMPage() {
   const [tab, setTab] = useState('Dashboard')
+  const { role } = useRole()
+  const allowedTab = getAllowedTab(role, 'pm')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
+  useEffect(() => { if (allowedTab) setTab(allowedTab) }, [allowedTab])
   const [hasModule, setHasModule] = useState<boolean|null>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [units, setUnits] = useState<any[]>([])
@@ -144,6 +148,7 @@ export default function PMPage() {
   const [leases, setLeases] = useState<any[]>([])
   const [payments, setPayments] = useState<any[]>([])
   const [maintenance, setMaintenance] = useState<any[]>([])
+  const [cleaning, setCleaning] = useState<any[]>([])
   const [inspections, setInspections] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -179,7 +184,7 @@ export default function PMPage() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,u,l,t,le,pay,m,ins,docs,ex] = await Promise.all([
+    const [p,u,l,t,le,pay,m,ins,docs,ex,cl] = await Promise.all([
       supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_units').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -190,11 +195,12 @@ export default function PMPage() {
       supabase.from('pm_inspections').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
       supabase.from('pm_documents').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('office_expenses').select('*').eq('user_id',userId).order('date',{ascending:false}),
+      supabase.from('pm_cleaning_tasks').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
     ])
     setProperties(p.data??[]); setUnits(u.data??[]); setLandlords(l.data??[])
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
     setMaintenance(m.data??[]); setInspections(ins.data??[]); setDocuments(docs.data??[])
-    setExpenses(ex.data??[])
+    setExpenses(ex.data??[]); setCleaning(cl.data??[])
   }
 
   async function addExpense() {
@@ -308,6 +314,7 @@ export default function PMPage() {
             {tab==='Leases'&&<button onClick={()=>{setModal('lease');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Lease</button>}
             {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
             {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
+            {tab==='Cleaning'&&<button onClick={()=>{setModal('cleaning');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule Cleaning</button>}
             {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
             {tab==='Documents'&&<button onClick={()=>{setModal('document');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Document</button>}
             {tab==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Expense</button>}
@@ -315,9 +322,10 @@ export default function PMPage() {
           </div>
         </div>
         <div style={{display:'flex',gap:2,overflowX:'auto'}}>
-          {TABS.map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{padding:'10px 14px',background:'none',border:'none',cursor:'pointer',fontSize:13,fontWeight:500,color:tab===t?'#3B4AFF':'#667085',borderBottom:tab===t?'2px solid #3B4AFF':'2px solid transparent',fontFamily:'inherit',whiteSpace:'nowrap'}}>{t}</button>
-          ))}
+          {TABS.map(t=>{
+            const locked = !!(allowedTab && t !== allowedTab)
+            return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{padding:'10px 14px',background:'none',border:'none',cursor:locked?'not-allowed':'pointer',fontSize:13,fontWeight:500,color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#667085',borderBottom:tab===t&&!locked?'2px solid #3B4AFF':'2px solid transparent',fontFamily:'inherit',whiteSpace:'nowrap'}}>{t}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+          })}
         </div>
       </div>
 
@@ -580,6 +588,25 @@ export default function PMPage() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {tab==='Cleaning'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {cleaning.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No cleaning tasks scheduled</div>:
+            cleaning.map(c=>(
+              <div key={c.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto',alignItems:'center',gap:16}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14,color:'#101828',marginBottom:2}}>{c.pm_properties?.name??'—'}{c.pm_units?.unit_number?` — Unit ${c.pm_units.unit_number}`:''}</div>
+                  <div style={{fontSize:12,color:'#667085'}}>{c.scheduled_date??'—'}{c.notes?` · ${c.notes}`:''}</div>
+                </div>
+                <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:c.status==='completed'?'#D1FAE5':c.status==='in_progress'?'#DBEAFE':'#FEF3C7',color:c.status==='completed'?'#059669':c.status==='in_progress'?'#2563EB':'#D97706',textTransform:'capitalize'}}>{c.status}</span>
+                <select value={c.status} onChange={async e=>{await supabase.from('pm_cleaning_tasks').update({status:e.target.value}).eq('id',c.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
+                  <option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
+                </select>
+                <button onClick={()=>del('pm_cleaning_tasks',c.id,setCleaning)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+              </div>
+            ))}
           </div>
         )}
 
@@ -1147,6 +1174,34 @@ export default function PMPage() {
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
             <button onClick={()=>save('pm_maintenance',form)} disabled={saving||!form.title} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.title?0.6:1}}>{saving?'Saving…':'Create Ticket'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='cleaning'&&(
+        <Modal title="Schedule Cleaning" onClose={()=>setModal(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Unit</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.unit_id??''} onChange={e=>setForm({...form,unit_id:e.target.value})}>
+                <option value="">Select unit (optional)…</option>
+                {units.filter(u=>u.property_id===form.property_id).map(u=><option key={u.id} value={u.id}>{u.unit_number}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Scheduled Date</label><input type="date" style={inp} value={form.scheduled_date??''} onChange={e=>setForm({...form,scheduled_date:e.target.value})}/></div>
+              <div><label style={lbl}>Assigned To</label><input style={inp} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})} placeholder="Cleaner name"/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_cleaning_tasks',form)} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
           </div>
         </Modal>
       )}

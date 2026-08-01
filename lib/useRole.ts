@@ -5,12 +5,12 @@ import { supabase } from '@/lib/supabase'
 export type UserRole = 'Admin' | 'Airbnb Agent' | 'Property Manager' | 'Dev' | 'Cleaner' | 'Maintenance' | 'Viewer' | 'Estate Agent'
 
 export const ROLE_MODULES: Record<string, string[]> = {
-  'Admin':            ['str', 'pm', 'dev', 'estate'],
+  'Admin':            ['str', 'pm', 'dev', 'estate', 'invest'],
   'Airbnb Agent':     ['str'],
   'Property Manager': ['str', 'pm', 'estate'],
   'Dev':              ['str', 'pm', 'dev', 'estate'],
-  'Cleaner':          ['str'],
-  'Maintenance':      ['str', 'pm', 'dev', 'estate'],
+  'Cleaner':          ['str', 'pm', 'estate'],
+  'Maintenance':      ['str', 'pm', 'estate'],
   'Viewer':           ['str', 'pm', 'dev', 'estate'],
   'Estate Agent':     ['estate'],
 }
@@ -24,6 +24,22 @@ export const ROLE_SETTINGS: Record<string, boolean> = {
   'Maintenance':      false,
   'Viewer':           false,
   'Estate Agent':     false,
+}
+
+// For roles listed here, within a given module they can ONLY use the
+// named tab — every other tab in that module shows locked/greyed out.
+// Roles not listed here (Admin, Dev, Viewer, Property Manager, Estate
+// Agent, Airbnb Agent) have no tab-level restriction — module-level
+// access via ROLE_MODULES still applies on top of this.
+export const RESTRICTED_TABS: Record<string, Record<string, string>> = {
+  'Maintenance': { str: 'Maintenance', pm: 'Maintenance', estate: 'Maintenance' },
+  'Cleaner':     { str: 'Cleaning', pm: 'Cleaning', estate: 'Cleaning' },
+}
+
+// Returns the single tab name this role is restricted to within a module,
+// or null if this role has no tab-level restriction there.
+export function getAllowedTab(role: string, moduleKey: string): string | null {
+  return RESTRICTED_TABS[role]?.[moduleKey] ?? null
 }
 
 export function useRole() {

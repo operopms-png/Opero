@@ -56,6 +56,8 @@ const NAV_GROUPS = [
   },
   {
     label: 'Invest',
+    module: 'invest',
+    roleOnly: true,
     items: [
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark' },
@@ -161,7 +163,9 @@ export default function Sidebar() {
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
-          const hasModule = !group.module || group.module === 'ai' || (modules.includes(group.module) && roleModules.includes(group.module))
+          const hasModule = (group as any).roleOnly
+            ? roleModules.includes((group as any).module)
+            : (!group.module || group.module === 'ai' || (modules.includes(group.module) && roleModules.includes(group.module)))
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#F2F4F7', margin: '6px 0' }} />}
@@ -183,7 +187,7 @@ export default function Sidebar() {
                   </Link>
                 )
               })}
-              {!hasModule && <a href="/modules" style={{ display: 'block', textAlign: 'center', fontSize: 11, fontWeight: 600, color: (group as any).module === 'dev' ? '#8B5CF6' : '#3B4AFF', background: (group as any).module === 'dev' ? '#EDE9FE' : '#EEF0FF', borderRadius: 6, padding: '5px 8px', textDecoration: 'none', margin: '4px 0 8px' }}>Unlock — {(group as any).modulePrice}</a>}
+              {!hasModule && (group as any).modulePrice && <a href="/modules" style={{ display: 'block', textAlign: 'center', fontSize: 11, fontWeight: 600, color: (group as any).module === 'dev' ? '#8B5CF6' : '#3B4AFF', background: (group as any).module === 'dev' ? '#EDE9FE' : '#EEF0FF', borderRadius: 6, padding: '5px 8px', textDecoration: 'none', margin: '4px 0 8px' }}>Unlock — {(group as any).modulePrice}</a>}
             </div>
           )
         })}

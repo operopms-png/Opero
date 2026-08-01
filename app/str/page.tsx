@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import WeatherWidget from '@/components/WeatherWidget'
+import { useRole, getAllowedTab } from '@/lib/useRole'
 
 const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Reports','Expenses','Banking','Guest Comms']
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
@@ -72,8 +73,11 @@ function Modal({ title, onClose, children }: any) {
 
 export default function STRPage() {
   const [tab, setTab] = useState('Home')
+  const { role } = useRole()
+  const allowedTab = getAllowedTab(role, 'str')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
+  useEffect(() => { if (allowedTab) setTab(allowedTab) }, [allowedTab])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<string|null>(null)
   const [form, setForm] = useState<any>({})
@@ -265,7 +269,10 @@ export default function STRPage() {
           </div>
         </div>
         <div style={{ display:'flex', gap:2, overflowX:'auto' }}>
-          {TABS.map(t => <button key={t} onClick={() => setTab(t)} style={{ padding:'10px 14px', background:'none', border:'none', cursor:'pointer', fontSize:13, fontWeight:500, color:tab===t?'#3B4AFF':'#667085', borderBottom:tab===t?'2px solid #3B4AFF':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}</button>)}
+          {TABS.map(t => {
+            const locked = !!(allowedTab && t !== allowedTab)
+            return <button key={t} onClick={() => !locked && setTab(t)} disabled={locked} title={locked ? `Your role only has access to ${allowedTab}` : undefined} style={{ padding:'10px 14px', background:'none', border:'none', cursor: locked ? 'not-allowed' : 'pointer', fontSize:13, fontWeight:500, color: locked ? '#C1C9D2' : tab===t?'#3B4AFF':'#667085', borderBottom:tab===t && !locked?'2px solid #3B4AFF':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}{locked && <span style={{marginLeft:5}}>🔒</span>}</button>
+          })}
         </div>
       </div>
 
