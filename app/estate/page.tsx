@@ -178,6 +178,7 @@ export default function Page() {
     } else {
       const { error } = await supabase.from(table).insert([{ ...data, user_id: user?.id }])
       if (error) { alert(error.message); return }
+      notifyIfRelevant(table, data, user?.id)
     }
     await loadAll()
   }
@@ -185,6 +186,20 @@ export default function Page() {
   async function delRecord(table: string, id: any) {
     await supabase.from(table).delete().eq('id', id)
     await loadAll()
+  }
+
+  function notifyIfRelevant(table: string, data: any, userId?: string) {
+    if (!userId) return
+    const propertyName = properties.find((p:any)=>p.id===data.property_id)?.name
+    const configs: Record<string, { type: string; title: string }> = {
+      estate_maintenance: { type: 'maintenance', title: `New maintenance ticket: ${data.title || 'Untitled'}` },
+      estate_cleaning_tasks: { type: 'cleaning', title: `New cleaning task scheduled` },
+    }
+    const cfg = configs[table]
+    if (!cfg) return
+    fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+      user_id: userId, module: 'estate', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/estate',
+    }) }).catch(()=>{})
   }
 
   async function duplicateExpenseToNextMonth(e: any) {
@@ -248,7 +263,8 @@ export default function Page() {
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px'}}>THE BASICS</div>
           {NAV_BASICS.map(s=>{
             const locked = !!(allowedTab && s !== allowedTab)
-            return <button key={s} onClick={()=>!locked && setSection(s)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{...btnStyle(section===s && !locked), color:locked?'#C1C9D2':btnStyle(section===s).color, cursor:locked?'not-allowed':'pointer'}}>{s}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+            const badge = s==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : s==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : 0
+            return <button key={s} onClick={()=>!locked && setSection(s)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{...btnStyle(section===s && !locked), color:locked?'#C1C9D2':btnStyle(section===s).color, cursor:locked?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'space-between'}}><span>{s}</span>{badge>0&&!locked&&<span style={{background:s==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
           })}
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>THE REST</div>
           {NAV_REST.map(s=>(

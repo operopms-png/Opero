@@ -235,9 +235,25 @@ export default function STRPage() {
       const payload = NO_USER_ID_TABLES.includes(table) ? { ...data } : { ...data, user_id: user?.id }
       const { error } = await supabase.from(table).insert([payload])
       if (error) { alert(error.message); setSaving(false); return }
+      notifyIfRelevant(table, data, user?.id)
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
     await loadAll()
+  }
+
+  function notifyIfRelevant(table: string, data: any, userId?: string) {
+    if (!userId) return
+    const propertyName = properties.find((p:any)=>p.id===data.property_id)?.name
+    const configs: Record<string, { type: string; title: string }> = {
+      maintenance_tickets: { type: 'maintenance', title: `New maintenance ticket: ${data.title || 'Untitled'}` },
+      cleaning_tasks: { type: 'cleaning', title: `New cleaning task scheduled` },
+      bookings: { type: 'booking', title: `New booking: ${data.guest_name || 'Guest'}` },
+    }
+    const cfg = configs[table]
+    if (!cfg) return
+    fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+      user_id: userId, module: 'str', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/str',
+    }) }).catch(()=>{})
   }
 
   async function del(table: string, id: string) {
@@ -274,7 +290,8 @@ export default function STRPage() {
         <div style={{ display:'flex', gap:2, overflowX:'auto' }}>
           {TABS.map(t => {
             const locked = !!(allowedTab && t !== allowedTab)
-            return <button key={t} onClick={() => !locked && setTab(t)} disabled={locked} title={locked ? `Your role only has access to ${allowedTab}` : undefined} style={{ padding:'10px 14px', background:'none', border:'none', cursor: locked ? 'not-allowed' : 'pointer', fontSize:13, fontWeight:500, color: locked ? '#C1C9D2' : tab===t?'#3B4AFF':'#667085', borderBottom:tab===t && !locked?'2px solid #3B4AFF':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}{locked && <span style={{marginLeft:5}}>🔒</span>}</button>
+            const badge = t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : 0
+            return <button key={t} onClick={() => !locked && setTab(t)} disabled={locked} title={locked ? `Your role only has access to ${allowedTab}` : undefined} style={{ padding:'10px 14px', background:'none', border:'none', cursor: locked ? 'not-allowed' : 'pointer', fontSize:13, fontWeight:500, color: locked ? '#C1C9D2' : tab===t?'#3B4AFF':'#667085', borderBottom:tab===t && !locked?'2px solid #3B4AFF':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}{badge>0 && !locked && <span style={{marginLeft:6,background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked && <span style={{marginLeft:5}}>🔒</span>}</button>
           })}
         </div>
       </div>

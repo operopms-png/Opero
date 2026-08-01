@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useRole, ROLE_MODULES } from '@/lib/useRole'
+import NotificationBell from '@/components/NotificationBell'
 
 const NAV_GROUPS = [
   {
@@ -152,11 +153,12 @@ export default function Sidebar() {
   const nav = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
-      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7' }}>
+      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>Opero</span>
         </div>
+        <NotificationBell />
       </div>
 
       {/* Nav */}
