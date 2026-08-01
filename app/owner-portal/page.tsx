@@ -497,12 +497,15 @@ export default function OwnerPortalPage() {
     setSaving(false)
   }
 
-  async function editStatementAmount(id: string, newAmount: string) {
-    const numericAmount = Number(newAmount)
-    if (isNaN(numericAmount) || numericAmount <= 0) { alert('Enter a valid amount greater than £0'); return }
-    const { error } = await supabase.from('owner_statements').update({ owner_amount: numericAmount }).eq('id', id)
+  async function editStatementField(id: string, field: string, value: any) {
+    if (field === 'owner_amount') {
+      const numericAmount = Number(value)
+      if (isNaN(numericAmount) || numericAmount <= 0) { alert('Enter a valid amount greater than £0'); return }
+      value = numericAmount
+    }
+    const { error } = await supabase.from('owner_statements').update({ [field]: value }).eq('id', id)
     if (error) { alert(error.message); return }
-    setStatements(prev => prev.map((s: any) => s.id === id ? { ...s, owner_amount: numericAmount } : s))
+    setStatements(prev => prev.map((s: any) => s.id === id ? { ...s, [field]: value } : s))
   }
 
   async function deleteStatement(id: string) {
@@ -994,16 +997,40 @@ export default function OwnerPortalPage() {
                       {stmts.map((s: any) => (
                         <tr key={s.id}>
                           <td style={td}>{statementsOwner?.name ?? '—'}</td>
-                          <td style={td}>{s.period_start}</td>
-                          <td style={td}>{s.notes ?? 'Monthly statement'}</td>
-                          <td style={td}>{s.property_name ?? '—'}</td>
+                          <td style={td}>
+                            {isStaff
+                              ? <input type="date" defaultValue={s.period_start ?? ''} onBlur={e => { if (e.target.value && e.target.value !== s.period_start) editStatementField(s.id, 'period_start', e.target.value) }} style={{ width: 130, padding: '4px 6px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 12 }} />
+                              : s.period_start
+                            }
+                          </td>
+                          <td style={td}>
+                            {isStaff
+                              ? <input defaultValue={s.notes ?? ''} placeholder="Monthly statement" onBlur={e => { if (e.target.value !== (s.notes ?? '')) editStatementField(s.id, 'notes', e.target.value) }} style={{ width: '100%', padding: '4px 6px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13 }} />
+                              : (s.notes ?? 'Monthly statement')
+                            }
+                          </td>
+                          <td style={td}>
+                            {isStaff
+                              ? <input defaultValue={s.property_name ?? ''} placeholder="—" onBlur={e => { if (e.target.value !== (s.property_name ?? '')) editStatementField(s.id, 'property_name', e.target.value) }} style={{ width: 130, padding: '4px 6px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13 }} />
+                              : (s.property_name ?? '—')
+                            }
+                          </td>
                           <td style={{ ...td, fontWeight: 600 }}>
                             {isStaff
-                              ? <input type="number" step="0.01" min="0" defaultValue={s.owner_amount ?? 0} onBlur={e => { if (Number(e.target.value) !== Number(s.owner_amount)) editStatementAmount(s.id, e.target.value) }} style={{ width: 90, padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13, fontWeight: 600 }} />
+                              ? <input type="number" step="0.01" min="0" defaultValue={s.owner_amount ?? 0} onBlur={e => { if (Number(e.target.value) !== Number(s.owner_amount)) editStatementField(s.id, 'owner_amount', e.target.value) }} style={{ width: 90, padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13, fontWeight: 600 }} />
                               : `£${(Number(s.owner_amount) || 0).toLocaleString()}`
                             }
                           </td>
-                          <td style={td}><Badge status={s.status ?? 'draft'} /></td>
+                          <td style={td}>
+                            {isStaff
+                              ? <select value={s.status ?? 'draft'} onChange={e => editStatementField(s.id, 'status', e.target.value)} style={{ padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
+                                  <option value="paid">paid</option>
+                                  <option value="pending">pending</option>
+                                  <option value="draft">draft</option>
+                                </select>
+                              : <Badge status={s.status ?? 'draft'} />
+                            }
+                          </td>
                           {isStaff && <td style={td}><button onClick={() => deleteStatement(s.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 16 }}>×</button></td>}
                         </tr>
                       ))}
