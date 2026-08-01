@@ -34,10 +34,13 @@ export default function OwnersPage() {
 
   async function fetchData() {
     setLoading(true)
-    const [{ data: props }, { data: bkgs }, { data: tix }] = await Promise.all([
-      supabase.from('properties').select('*'),
-      supabase.from('bookings').select('*, properties(name)'),
-      supabase.from('maintenance_tickets').select('*, properties(name)'),
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: props } = await supabase.from('properties').select('*').eq('user_id', user?.id)
+    const propIds = (props ?? []).map((p: any) => p.id)
+    const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
+    const [{ data: bkgs }, { data: tix }] = await Promise.all([
+      supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds),
+      supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds),
     ])
     if (props) setProperties(props)
     if (bkgs) setBookings(bkgs)

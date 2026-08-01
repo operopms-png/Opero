@@ -47,9 +47,14 @@ export default function CleaningTasksPage() {
 
   async function fetchTasks() {
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: props } = await supabase.from('properties').select('id').eq('user_id', user?.id)
+    const safeIds = (props ?? []).map((p: any) => p.id)
+    const idsToUse = safeIds.length ? safeIds : ['00000000-0000-0000-0000-000000000000']
     const { data, error } = await supabase
       .from('cleaning_tasks')
       .select('*, properties(name)')
+      .in('property_id', idsToUse)
       .order('scheduled_date', { ascending: true })
 
     if (!error && data) setTasks(data as CleaningTask[])
@@ -57,7 +62,8 @@ export default function CleaningTasksPage() {
   }
 
   async function fetchProperties() {
-    const { data } = await supabase.from('properties').select('id, name')
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase.from('properties').select('id, name').eq('user_id', user?.id)
     if (data) setProperties(data)
   }
 

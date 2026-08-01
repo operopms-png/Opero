@@ -10,10 +10,11 @@ export default function ReportsPage() {
 
   useEffect(() => {
     async function load() {
-      const [{ data: b }, { data: p }] = await Promise.all([
-        supabase.from('bookings').select('*, properties(name)').order('check_in', { ascending: false }),
-        supabase.from('properties').select('*'),
-      ])
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: p } = await supabase.from('properties').select('*').eq('user_id', user?.id)
+      const propIds = (p ?? []).map((x: any) => x.id)
+      const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
+      const { data: b } = await supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false })
       setBookings(b ?? [])
       setProperties(p ?? [])
       setLoading(false)

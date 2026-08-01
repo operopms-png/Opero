@@ -14,9 +14,10 @@ export default function DocumentsPage() {
 
   async function load() {
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
     const [{ data: d }, { data: p }] = await Promise.all([
-      supabase.from('documents').select('*, properties(name)').order('created_at', { ascending: false }),
-      supabase.from('properties').select('id, name'),
+      supabase.from('documents').select('*, properties(name)').eq('user_id', user?.id).order('created_at', { ascending: false }),
+      supabase.from('properties').select('id, name').eq('user_id', user?.id),
     ])
     setDocs(d ?? [])
     setProperties(p ?? [])

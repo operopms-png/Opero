@@ -40,12 +40,19 @@ export default function DashboardPage() {
       const today = new Date().toISOString().split('T')[0]
       const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
 
-      const [{ data: props }, { data: cleaning }, { data: tickets }, { data: bookings }, { data: upcoming }] = await Promise.all([
-        supabase.from('properties').select('*'),
-        supabase.from('cleaning_tasks').select('*').eq('status', 'pending'),
-        supabase.from('maintenance_tickets').select('*').eq('status', 'open'),
-        supabase.from('bookings').select('total_amount'),
-        supabase.from('bookings').select('*, properties(name)').gte('check_in', today).lte('check_in', nextWeek).order('check_in', { ascending: true }).limit(5),
+      // properties has a user_id column, but bookings/cleaning_tasks/
+      // maintenance_tickets don't — they only relate to the business
+      // via property_id, so fetch this user's properties first and
+      // filter the rest by that (same pattern used elsewhere in the app).
+      const { data: props } = await supabase.from('properties').select('*').eq('user_id', user?.id)
+      const propIds = (props ?? []).map((p: any) => p.id)
+      const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
+
+      const [{ data: cleaning }, { data: tickets }, { data: bookings }, { data: upcoming }] = await Promise.all([
+        supabase.from('cleaning_tasks').select('*').in('property_id', safeIds).eq('status', 'pending'),
+        supabase.from('maintenance_tickets').select('*').in('property_id', safeIds).eq('status', 'open'),
+        supabase.from('bookings').select('total_amount').in('property_id', safeIds),
+        supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).gte('check_in', today).lte('check_in', nextWeek).order('check_in', { ascending: true }).limit(5),
       ])
 
       setStats({
@@ -58,7 +65,7 @@ export default function DashboardPage() {
       setUpcomingBookings(upcoming ?? [])
 
       // Recent activity from bookings
-      const { data: recent } = await supabase.from('bookings').select('*, properties(name)').order('created_at', { ascending: false }).limit(5)
+      const { data: recent } = await supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }).limit(5)
       setRecentActivity(recent ?? [])
       setLoading(false)
     }

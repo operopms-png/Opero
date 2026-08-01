@@ -23,10 +23,14 @@ export default function AnalyticsPage() {
   async function fetchData() {
     setLoading(true)
 
-    let query = supabase.from('bookings').select('*')
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: props } = await supabase.from('properties').select('id, name').eq('user_id', user?.id)
+    const propIds = (props ?? []).map((p: any) => p.id)
+    const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
+
+    let query = supabase.from('bookings').select('*').in('property_id', safeIds)
     if (selectedProperty !== 'all') query = query.eq('property_id', selectedProperty)
     const { data: bookings } = await query
-    const { data: props } = await supabase.from('properties').select('id, name')
 
     if (props) setProperties(props)
 

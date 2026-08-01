@@ -17,7 +17,15 @@ export default function GuestCommsPage() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    supabase.from('bookings').select('*, properties(name, address)').order('check_in', { ascending: false }).limit(20).then(({ data }) => setBookings(data ?? []))
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: props } = await supabase.from('properties').select('id').eq('user_id', user?.id)
+      const safeIds = (props ?? []).map((p: any) => p.id)
+      const idsToUse = safeIds.length ? safeIds : ['00000000-0000-0000-0000-000000000000']
+      const { data } = await supabase.from('bookings').select('*, properties(name, address)').in('property_id', idsToUse).order('check_in', { ascending: false }).limit(20)
+      setBookings(data ?? [])
+    }
+    load()
   }, [])
 
   useEffect(() => {

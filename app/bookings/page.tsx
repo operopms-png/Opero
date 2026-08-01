@@ -55,16 +55,22 @@ export default function BookingsPage() {
 
   async function fetchBookings() {
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: props } = await supabase.from('properties').select('id').eq('user_id', user?.id)
+    const safeIds = (props ?? []).map((p: any) => p.id)
+    const idsToUse = safeIds.length ? safeIds : ['00000000-0000-0000-0000-000000000000']
     const { data } = await supabase
       .from('bookings')
       .select('*, properties(name)')
+      .in('property_id', idsToUse)
       .order('check_in', { ascending: true })
     if (data) setBookings(data as Booking[])
     setLoading(false)
   }
 
   async function fetchProperties() {
-    const { data } = await supabase.from('properties').select('id, name')
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data } = await supabase.from('properties').select('id, name').eq('user_id', user?.id)
     if (data) setProperties(data)
   }
 
