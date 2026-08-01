@@ -497,8 +497,26 @@ export default function OwnerPortalPage() {
     setSaving(false)
   }
 
+  async function editStatementAmount(id: string, newAmount: string) {
+    const numericAmount = Number(newAmount)
+    if (isNaN(numericAmount) || numericAmount <= 0) { alert('Enter a valid amount greater than £0'); return }
+    const { error } = await supabase.from('owner_statements').update({ owner_amount: numericAmount }).eq('id', id)
+    if (error) { alert(error.message); return }
+    setStatements(prev => prev.map((s: any) => s.id === id ? { ...s, owner_amount: numericAmount } : s))
+  }
+
+  async function deleteStatement(id: string) {
+    if (!confirm('Delete this statement entry?')) return
+    const { error } = await supabase.from('owner_statements').delete().eq('id', id)
+    if (error) { alert(error.message); return }
+    setStatements(prev => prev.filter((s: any) => s.id !== id))
+  }
+
   async function addPayment() {
-    if (!addPaymentOwner || !paymentForm.amount) return
+    if (!addPaymentOwner) return
+    if (!paymentForm.amount || isNaN(Number(paymentForm.amount)) || Number(paymentForm.amount) <= 0) {
+      alert('Enter a valid amount greater than £0'); return
+    }
     setSaving(true)
     const res = await fetch('/api/admin/add-payment', {
       method: 'POST',
@@ -971,7 +989,7 @@ export default function OwnerPortalPage() {
                     <span style={{ color: '#10B981' }}>£{stmts.reduce((s: number, r: any) => s + (Number(r.owner_amount) || 0), 0).toLocaleString()}</span>
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <thead><tr>{['Owner', 'Date', 'Description', 'Property', 'Amount', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
+                    <thead><tr>{['Owner', 'Date', 'Description', 'Property', 'Amount', 'Status', ...(isStaff ? [''] : [])].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
                     <tbody>
                       {stmts.map((s: any) => (
                         <tr key={s.id}>
@@ -979,8 +997,14 @@ export default function OwnerPortalPage() {
                           <td style={td}>{s.period_start}</td>
                           <td style={td}>{s.notes ?? 'Monthly statement'}</td>
                           <td style={td}>{s.property_name ?? '—'}</td>
-                          <td style={{ ...td, fontWeight: 600 }}>£{(Number(s.owner_amount) || 0).toLocaleString()}</td>
+                          <td style={{ ...td, fontWeight: 600 }}>
+                            {isStaff
+                              ? <input type="number" step="0.01" min="0" defaultValue={s.owner_amount ?? 0} onBlur={e => { if (Number(e.target.value) !== Number(s.owner_amount)) editStatementAmount(s.id, e.target.value) }} style={{ width: 90, padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13, fontWeight: 600 }} />
+                              : `£${(Number(s.owner_amount) || 0).toLocaleString()}`
+                            }
+                          </td>
                           <td style={td}><Badge status={s.status ?? 'draft'} /></td>
+                          {isStaff && <td style={td}><button onClick={() => deleteStatement(s.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 16 }}>×</button></td>}
                         </tr>
                       ))}
                     </tbody>
@@ -1754,7 +1778,6 @@ export default function OwnerPortalPage() {
             <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Add Payment — {addPaymentOwner.name}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { label: 'Amount (£)', key: 'amount', placeholder: '0.00' },
                 { label: 'Description', key: 'description', placeholder: 'Monthly payout' },
                 { label: 'Property Name', key: 'property_name', placeholder: 'Sangsters Aurevo' },
               ].map(f => (
@@ -1763,6 +1786,10 @@ export default function OwnerPortalPage() {
                   <input value={(paymentForm as any)[f.key]} onChange={e => setPaymentForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
               ))}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Amount (£)</div>
+                <input type="number" step="0.01" min="0" value={paymentForm.amount} onChange={e => setPaymentForm(p => ({ ...p, amount: e.target.value }))} placeholder="0.00" style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Period Start</div>
