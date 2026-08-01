@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { requireStaff, serviceClient } from '@/lib/admin-auth'
 
 export async function POST(req: NextRequest) {
-  const { name, email, role, phone, user_id } = await req.json()
-  if (!email?.trim() || !user_id) return NextResponse.json({ error: 'email and user_id are required' }, { status: 400 })
+  const staffId = await requireStaff(req)
+  if (!staffId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: member, error: dbError } = await supabase.from('team_members').upsert({
-    user_id,
+  const { name, email, role, phone } = await req.json()
+  if (!email?.trim()) return NextResponse.json({ error: 'email is required' }, { status: 400 })
+
+  const { data: member, error: dbError } = await serviceClient.from('team_members').upsert({
+    user_id: staffId,
     name,
     email,
     role,
@@ -20,7 +18,7 @@ export async function POST(req: NextRequest) {
   }).select().single()
   if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 })
 
-  const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+  const { error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(email, {
     data: { name, role },
     redirectTo: 'https://helloopero.com/login'
   })

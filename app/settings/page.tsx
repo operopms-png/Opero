@@ -25,6 +25,9 @@ export default function Page() {
   const [inviteRole, setInviteRole] = useState('Cleaner')
   const [invitePhone, setInvitePhone] = useState('')
   const [inviting, setInviting] = useState(false)
+  const [addMode, setAddMode] = useState<'invite'|'create'>('invite')
+  const [staffPassword, setStaffPassword] = useState('')
+  const [creating, setCreating] = useState(false)
   const [apiKey, setApiKey] = useState('')
   const [copied, setCopied] = useState(false)
   const [plan, setPlan] = useState('Professional')
@@ -46,6 +49,11 @@ export default function Page() {
       setLoading(false)
     })
   },[])
+
+  async function authHeaders() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
+  }
 
   const copyKey = () => { navigator.clipboard.writeText(apiKey); setCopied(true); setTimeout(()=>setCopied(false),2000) }
 
@@ -165,8 +173,13 @@ export default function Page() {
               ))}
             </div>
             {showInvite&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Invite team member</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 160px',gap:12,marginBottom:16}}>
+              <div style={{display:'flex',gap:8,marginBottom:16}}>
+                <button onClick={()=>setAddMode('invite')} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(addMode==='invite'?ACCENT:'#E4E7EC'),background:addMode==='invite'?ACCENT:'#fff',color:addMode==='invite'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Send email invite</button>
+                <button onClick={()=>setAddMode('create')} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(addMode==='create'?ACCENT:'#E4E7EC'),background:addMode==='create'?ACCENT:'#fff',color:addMode==='create'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create account directly</button>
+              </div>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>{addMode==='invite'?'Invite team member':'Create staff account'}</h3>
+              <div style={{fontSize:12,color:'#667085',marginBottom:16}}>{addMode==='invite'?'Sends a real invite email — they set their own password via the link.':"Sets a password now — no email needed. Share the login details with them yourself (text, WhatsApp, in person)."}</div>
+              <div style={{display:'grid',gridTemplateColumns:addMode==='create'?'1fr 1fr 1fr 1fr 160px':'1fr 1fr 1fr 160px',gap:12,marginBottom:16}}>
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Full name</div>
                   <input value={inviteName} onChange={e=>setInviteName(e.target.value)} placeholder="Jane Smith" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
@@ -179,6 +192,12 @@ export default function Page() {
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Phone (optional)</div>
                   <input value={invitePhone} onChange={e=>setInvitePhone(e.target.value)} placeholder="+44 7700 900000" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
                 </div>
+                {addMode==='create'&&(
+                  <div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Password</div>
+                    <input value={staffPassword} onChange={e=>setStaffPassword(e.target.value)} type="text" placeholder="min. 6 characters" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
+                  </div>
+                )}
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Role</div>
                   <select value={inviteRole} onChange={e=>setInviteRole(e.target.value)} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',background:'#fff',boxSizing:'border-box'}}>
@@ -187,15 +206,28 @@ export default function Page() {
                 </div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={async ()=>{
-                  if(!inviteName||!inviteEmail||!user)return
-                  setInviting(true)
-                  const res = await fetch('/api/invite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,user_id:user.id})})
-                  const result = await res.json()
-                  setInviting(false)
-                  if(!res.ok){alert(result.error||'Could not send invite');return}
-                  setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setShowInvite(false)
-                }} disabled={inviting} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:inviting?0.6:1}}>{inviting?'Sending…':'Send invite'}</button>
+                {addMode==='invite'?(
+                  <button onClick={async ()=>{
+                    if(!inviteName||!inviteEmail)return
+                    setInviting(true)
+                    const res = await fetch('/api/invite',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone})})
+                    const result = await res.json()
+                    setInviting(false)
+                    if(!res.ok){alert(result.error||'Could not send invite');return}
+                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setShowInvite(false)
+                  }} disabled={inviting} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:inviting?0.6:1}}>{inviting?'Sending…':'Send invite'}</button>
+                ):(
+                  <button onClick={async ()=>{
+                    if(!inviteName||!inviteEmail||!staffPassword)return
+                    setCreating(true)
+                    const res = await fetch('/api/create-staff-account',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,password:staffPassword})})
+                    const result = await res.json()
+                    setCreating(false)
+                    if(!res.ok){alert(result.error||'Could not create account');return}
+                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setStaffPassword('');setShowInvite(false)
+                    alert(`Account created. Share these details with ${inviteName}:\n\nEmail: ${inviteEmail}\nPassword: ${staffPassword}\nLogin at: helloopero.com/login`)
+                  }} disabled={creating} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:creating?0.6:1}}>{creating?'Creating…':'Create account'}</button>
+                )}
                 <button onClick={()=>setShowInvite(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
