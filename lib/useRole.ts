@@ -44,6 +44,7 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
 
 export function useRole() {
   const [role, setRole] = useState<UserRole>('Admin')
+  const [propertyIds, setPropertyIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -55,15 +56,16 @@ export function useRole() {
       // accidental full access.
       const { data } = await supabase
         .from('team_members')
-        .select('role')
+        .select('role, property_ids')
         .eq('email', user.email)
         .order('created_at', { ascending: false })
         .limit(1)
       // Not in team_members = owner = Admin
       setRole((data?.[0]?.role as UserRole) ?? 'Admin')
+      setPropertyIds(data?.[0]?.property_ids ?? [])
       setLoading(false)
     })
   }, [])
 
-  return { role, loading, modules: ROLE_MODULES[role] ?? [], hasSettings: ROLE_SETTINGS[role] ?? false }
+  return { role, propertyIds, loading, modules: ROLE_MODULES[role] ?? [], hasSettings: ROLE_SETTINGS[role] ?? false }
 }

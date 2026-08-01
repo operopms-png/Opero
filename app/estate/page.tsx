@@ -84,7 +84,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function Page() {
   const [section, setSection] = useState('Dashboard')
-  const { role } = useRole()
+  const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'estate')
 
   useEffect(() => { window.scrollTo(0, 0) }, [section])
@@ -135,11 +135,12 @@ export default function Page() {
   ])
 
   useEffect(()=>{
+    if (roleLoading) return
     supabase.auth.getUser().then(({data:{user}})=>{
       if(!user){window.location.href='/login';return}
       loadAll(user.id)
     })
-  },[])
+  },[roleLoading, propertyIds])
 
   async function loadAll(uid?: string) {
     let userId = uid
@@ -157,10 +158,15 @@ export default function Page() {
       supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_cleaning_tasks').select('*,estate_properties(name)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
     ])
-    setProperties(p.data??[]); setTenants(t.data??[]); setTenancies(tn.data??[])
+    let restrictedProps = p.data ?? []
+    if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
+    const restrictedIds = restrictedProps.map((x: any) => x.id)
+    const maintData = propertyIds.length > 0 ? (mt.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (mt.data ?? [])
+    const cleanData = propertyIds.length > 0 ? (cl.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (cl.data ?? [])
+    setProperties(restrictedProps); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
     setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
-    setMaintenance(mt.data??[]); setCleaning(cl.data??[])
+    setMaintenance(maintData); setCleaning(cleanData)
     setLoading(false)
   }
 

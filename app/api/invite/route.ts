@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
   if (!staffId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { name, email, role, phone } = await req.json()
+  const { name, email, role, phone, property_ids } = await req.json()
   if (!email?.trim()) return NextResponse.json({ error: 'email is required' }, { status: 400 })
 
   const { data: member, error: dbError } = await serviceClient.from('team_members').upsert({
@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     email,
     role,
     phone: phone || null,
+    property_ids: property_ids || [],
     status: 'Pending'
   }).select().single()
   if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 })

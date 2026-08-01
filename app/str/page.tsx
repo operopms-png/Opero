@@ -73,7 +73,7 @@ function Modal({ title, onClose, children }: any) {
 
 export default function STRPage() {
   const [tab, setTab] = useState('Home')
-  const { role } = useRole()
+  const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'str')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
@@ -141,6 +141,7 @@ export default function STRPage() {
   const [reportTab, setReportTab] = useState('P&L')
 
   useEffect(() => {
+    if (roleLoading) return
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
@@ -148,7 +149,7 @@ export default function STRPage() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [roleLoading, propertyIds])
 
   useEffect(() => { selectTemplate(activeTemplateKey) }, [commTemplates])
 
@@ -160,7 +161,9 @@ export default function STRPage() {
     // business via property_id, so fetch properties first and filter
     // the rest by that (same fix as the owner-portal).
     const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-    const ids = (propsData ?? []).map((p: any) => p.id)
+    let restrictedProps = propsData ?? []
+    if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((p: any) => propertyIds.includes(p.id))
+    const ids = restrictedProps.map((p: any) => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
     const [b, c, m, tm, ex, ct] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
@@ -171,14 +174,14 @@ export default function STRPage() {
       supabase.from('guest_comm_templates').select('*').eq('user_id', userId),
     ])
     setCommTemplates(ct.data ?? [])
-    setProperties(propsData ?? [])
+    setProperties(restrictedProps)
     setBookings(b.data ?? [])
     setCleaning(c.data ?? [])
     setMaintenance(m.data ?? [])
     setTeam(tm.data ?? [])
     setExpenses(ex.data ?? [])
     const rev = (b.data ?? []).filter((x:any) => x.status !== 'cancelled').reduce((s:number, x:any) => s + (x.total_amount ?? 0), 0)
-    setStats({ properties:(propsData??[]).length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
+    setStats({ properties:restrictedProps.length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
   }
 
   async function addOfficeExpense() {

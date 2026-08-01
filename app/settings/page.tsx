@@ -19,6 +19,9 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [team, setTeam] = useState<any[]>([])
+  const [allProperties, setAllProperties] = useState<any[]>([])
+  const [assignedPropertyIds, setAssignedPropertyIds] = useState<string[]>([])
+  const [showPropertyPicker, setShowPropertyPicker] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [inviteName, setInviteName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
@@ -46,6 +49,16 @@ export default function Page() {
       setMessages(msgs??[])
       const {data:teamData} = await supabase.from('team_members').select('*').eq('user_id',user.id).order('name')
       setTeam(teamData??[])
+      const [strP, pmP, eaP] = await Promise.all([
+        supabase.from('properties').select('id,name').eq('user_id',user.id),
+        supabase.from('pm_properties').select('id,name').eq('user_id',user.id),
+        supabase.from('estate_properties').select('id,name').eq('user_id',user.id),
+      ])
+      setAllProperties([
+        ...(strP.data??[]).map((p:any)=>({...p,module:'Vacation Rentals'})),
+        ...(pmP.data??[]).map((p:any)=>({...p,module:'Property Management'})),
+        ...(eaP.data??[]).map((p:any)=>({...p,module:'Estate Agency'})),
+      ])
       setLoading(false)
     })
   },[])
@@ -205,26 +218,40 @@ export default function Page() {
                   </select>
                 </div>
               </div>
+              {allProperties.length>0 && (
+                <div style={{marginBottom:16}}>
+                  <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Assigned properties</div>
+                  <div style={{fontSize:11,color:'#98A2B3',marginBottom:6}}>Leave none checked to give access to all properties. Check specific ones to restrict them to only those.</div>
+                  <div style={{border:'1px solid #EAECF0',borderRadius:8,maxHeight:160,overflowY:'auto',padding:6}}>
+                    {allProperties.map((p:any)=>(
+                      <label key={p.id} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',fontSize:13,cursor:'pointer',borderRadius:6}}>
+                        <input type="checkbox" checked={assignedPropertyIds.includes(p.id)} onChange={()=>setAssignedPropertyIds(prev=>prev.includes(p.id)?prev.filter(id=>id!==p.id):[...prev,p.id])} />
+                        {p.name} <span style={{color:'#98A2B3',fontSize:11}}>({p.module})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div style={{display:'flex',gap:8}}>
                 {addMode==='invite'?(
                   <button onClick={async ()=>{
                     if(!inviteName||!inviteEmail)return
                     setInviting(true)
-                    const res = await fetch('/api/invite',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone})})
+                    const res = await fetch('/api/invite',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,property_ids:assignedPropertyIds})})
                     const result = await res.json()
                     setInviting(false)
                     if(!res.ok){alert(result.error||'Could not send invite');return}
-                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setShowInvite(false)
+                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setAssignedPropertyIds([]);setShowInvite(false)
                   }} disabled={inviting} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:inviting?0.6:1}}>{inviting?'Sending…':'Send invite'}</button>
                 ):(
                   <button onClick={async ()=>{
                     if(!inviteName||!inviteEmail||!staffPassword)return
                     setCreating(true)
-                    const res = await fetch('/api/create-staff-account',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,password:staffPassword})})
+                    const res = await fetch('/api/create-staff-account',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,password:staffPassword,property_ids:assignedPropertyIds})})
                     const result = await res.json()
                     setCreating(false)
                     if(!res.ok){alert(result.error||'Could not create account');return}
-                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setStaffPassword('');setShowInvite(false)
+                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setStaffPassword('');setAssignedPropertyIds([]);setShowInvite(false)
                     alert(`Account created. Share these details with ${inviteName}:\n\nEmail: ${inviteEmail}\nPassword: ${staffPassword}\nLogin at: helloopero.com/login`)
                   }} disabled={creating} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:creating?0.6:1}}>{creating?'Creating…':'Create account'}</button>
                 )}

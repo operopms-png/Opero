@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
   if (!staffId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { name, email, phone, role, password } = await req.json()
+  const { name, email, phone, role, password, property_ids } = await req.json()
 
   if (!email || !password) {
     return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     email,
     phone: phone || null,
     role,
+    property_ids: property_ids || [],
     status: 'Active',
   }).select().single()
 

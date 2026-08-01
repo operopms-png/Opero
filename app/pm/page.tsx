@@ -135,7 +135,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function PMPage() {
   const [tab, setTab] = useState('Dashboard')
-  const { role } = useRole()
+  const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'pm')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
@@ -169,6 +169,7 @@ export default function PMPage() {
   const [editId, setEditId] = useState<string|null>(null)
 
   useEffect(() => {
+    if (roleLoading) return
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
@@ -179,7 +180,7 @@ export default function PMPage() {
       setLoading(false)
     }
     init()
-  }, [])
+  }, [roleLoading, propertyIds])
 
   async function loadAll(uid?: string) {
     let userId = uid
@@ -197,10 +198,15 @@ export default function PMPage() {
       supabase.from('office_expenses').select('*').eq('user_id',userId).order('date',{ascending:false}),
       supabase.from('pm_cleaning_tasks').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
     ])
-    setProperties(p.data??[]); setUnits(u.data??[]); setLandlords(l.data??[])
+    let restrictedProps = p.data ?? []
+    if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
+    const restrictedIds = restrictedProps.map((x: any) => x.id)
+    const maintData = propertyIds.length > 0 ? (m.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (m.data ?? [])
+    const cleanData = propertyIds.length > 0 ? (cl.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (cl.data ?? [])
+    setProperties(restrictedProps); setUnits(u.data??[]); setLandlords(l.data??[])
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
-    setMaintenance(m.data??[]); setInspections(ins.data??[]); setDocuments(docs.data??[])
-    setExpenses(ex.data??[]); setCleaning(cl.data??[])
+    setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
+    setExpenses(ex.data??[]); setCleaning(cleanData)
   }
 
   async function addExpense() {
