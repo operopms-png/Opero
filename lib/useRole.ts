@@ -49,13 +49,18 @@ export function useRole() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setLoading(false); return }
+      // .single() throws if there's more than one team_members row for this
+      // email (which silently fell back to Admin below) — use a list query
+      // instead and take the most recent row so duplicates can't grant
+      // accidental full access.
       const { data } = await supabase
         .from('team_members')
         .select('role')
         .eq('email', user.email)
-        .single()
+        .order('created_at', { ascending: false })
+        .limit(1)
       // Not in team_members = owner = Admin
-      setRole((data?.role as UserRole) ?? 'Admin')
+      setRole((data?.[0]?.role as UserRole) ?? 'Admin')
       setLoading(false)
     })
   }, [])
