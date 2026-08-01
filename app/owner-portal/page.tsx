@@ -346,6 +346,7 @@ export default function OwnerPortalPage() {
   const occupancyPct = Math.min(100, Math.round((bookedNights / (90 * Math.max(1, properties.length))) * 100))
   const invested = ownerProfile?.invested ?? 0
   const netProfit = ownerShare - expenses
+  const paidOut = statements.filter((s: any) => s.status === 'paid').reduce((sum: number, s: any) => sum + (Number(s.owner_amount) || 0), 0)
   const roi = invested > 0 ? ((netProfit / invested) * 100).toFixed(1) : '0.0'
 
   // Last 6 months of data for dashboard sparklines/charts
@@ -1200,7 +1201,7 @@ export default function OwnerPortalPage() {
               {isStaff && viewingOwner && <button onClick={() => setAddFinanceOwner(viewingOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Record</button>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-              <StatCard label="Paid Out" value={`£0`} />
+              <StatCard label="Paid Out" value={`£${paidOut.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
               <StatCard label="Guest Revenue" value={`£${totalRevenue.toLocaleString()}`} />
               <StatCard label="Expenses" value={`£${expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
               <StatCard label="Net This Month" value={`£${monthRevenue.toLocaleString()}`} dark />
@@ -1397,19 +1398,19 @@ export default function OwnerPortalPage() {
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>🧑 Personal Information</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 {[
-                  { label: 'FIRST NAME', value: ownerProfile?.name?.split(' ')[0] ?? '', key: 'first_name' },
-                  { label: 'LAST NAME', value: ownerProfile?.name?.split(' ').slice(1).join(' ') ?? '', key: 'last_name' },
-                  { label: 'EMAIL', value: ownerProfile?.email ?? user?.email ?? '', key: 'email' },
-                  { label: 'PHONE', value: ownerProfile?.phone ?? '', key: 'phone' },
+                  { label: 'FIRST NAME', fallback: ownerProfile?.name?.split(' ')[0] ?? '', key: 'first_name' },
+                  { label: 'LAST NAME', fallback: ownerProfile?.name?.split(' ').slice(1).join(' ') ?? '', key: 'last_name' },
+                  { label: 'EMAIL', fallback: ownerProfile?.email ?? user?.email ?? '', key: 'email' },
+                  { label: 'PHONE', fallback: ownerProfile?.phone ?? '', key: 'phone' },
                 ].map(f => (
                   <div key={f.key}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{f.label}</div>
-                    <input defaultValue={f.value} placeholder={f.label.toLowerCase()} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                    <input value={contactForm[f.key] ?? f.fallback} onChange={e => setContactForm((p: any) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.label.toLowerCase()} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                   </div>
                 ))}
                 <div style={{ gridColumn: '1 / -1' }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>ADDRESS</div>
-                  <input defaultValue={ownerProfile?.address ?? ''} placeholder="Full address" style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                  <input value={contactForm.address ?? ownerProfile?.address ?? ''} onChange={e => setContactForm((p: any) => ({ ...p, address: e.target.value }))} placeholder="Full address" style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
               </div>
               <button onClick={saveContactInfo} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
@@ -1427,12 +1428,12 @@ export default function OwnerPortalPage() {
                 ].map(f => (
                   <div key={f.key}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{f.label}</div>
-                    <input defaultValue={contactInfo?.[f.key] ?? ''} placeholder={f.placeholder} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
+                    <input value={bankingForm[f.key] ?? contactInfo?.[f.key] ?? ''} onChange={e => setBankingForm((p: any) => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                   </div>
                 ))}
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>PAYOUT SCHEDULE</div>
-                  <select style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }}>
+                  <select value={bankingForm.payout_schedule ?? contactInfo?.payout_schedule ?? 'Monthly'} onChange={e => setBankingForm((p: any) => ({ ...p, payout_schedule: e.target.value }))} style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }}>
                     <option>Monthly</option><option>Quarterly</option><option>Weekly</option>
                   </select>
                 </div>
