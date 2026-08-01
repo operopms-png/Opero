@@ -249,6 +249,18 @@ export default function PMPage() {
     setModal(modalName)
   }
 
+  async function assignPropertiesToLandlord(landlordId: string, selectedPropertyIds: string[]) {
+    setSaving(true)
+    const toAssign = properties.filter(p => selectedPropertyIds.includes(p.id) && p.owner_id !== landlordId)
+    const toUnassign = properties.filter(p => p.owner_id === landlordId && !selectedPropertyIds.includes(p.id))
+    await Promise.all([
+      ...toAssign.map(p => supabase.from('pm_properties').update({ owner_id: landlordId }).eq('id', p.id)),
+      ...toUnassign.map(p => supabase.from('pm_properties').update({ owner_id: null }).eq('id', p.id)),
+    ])
+    await loadAll()
+    setSaving(false)
+  }
+
   async function del(table: string, id: string, setter: any) {
     if (!confirm('Delete?')) return
     await supabase.from(table).delete().eq('id', id)
@@ -875,6 +887,12 @@ export default function PMPage() {
               <div><label style={lbl}>Country</label><input style={inp} value={form.country??'United Kingdom'} onChange={e=>setForm({...form,country:e.target.value})}/></div>
             </div>
             <div><label style={lbl}>Monthly Income (£)</label><input type="number" style={inp} value={form.monthly_income??''} onChange={e=>setForm({...form,monthly_income:parseFloat(e.target.value)})} placeholder="0"/></div>
+            <div><label style={lbl}>Landlord / Owner</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.owner_id??''} onChange={e=>setForm({...form,owner_id:e.target.value||null})}>
+                <option value="">Unassigned</option>
+                {landlords.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </div>
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
@@ -900,6 +918,27 @@ export default function PMPage() {
               </select>
             </div>
             <FileUpload label="ID Document" value={form.id_url??''} onChange={url=>setForm({...form,id_url:url})} folder="landlord-ids" />
+            {editId && (
+              <div style={{borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:4}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#344054',marginBottom:8}}>Assigned Properties</div>
+                <div style={{border:'1px solid #EAECF0',borderRadius:8,maxHeight:160,overflowY:'auto',padding:4}}>
+                  {properties.length===0 && <div style={{padding:10,fontSize:12,color:'#98A2B3'}}>No properties on file.</div>}
+                  {properties.map(p=>{
+                    const checked = p.owner_id === editId
+                    return (
+                      <label key={p.id} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',fontSize:13,cursor:'pointer',borderRadius:6}}>
+                        <input type="checkbox" checked={checked} onChange={()=>{
+                          const currentIds = properties.filter(x=>x.owner_id===editId).map(x=>x.id)
+                          const nextIds = checked ? currentIds.filter(id=>id!==p.id) : [...currentIds,p.id]
+                          assignPropertiesToLandlord(editId, nextIds)
+                        }} />
+                        {p.name}{p.owner_id && p.owner_id!==editId ? <span style={{color:'#98A2B3',fontSize:11}}> (assigned to another landlord)</span> : ''}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <div style={{borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:4}}>
               <div style={{fontSize:13,fontWeight:600,color:'#344054',marginBottom:12}}>Bank Details</div>
               <div style={{display:'flex',flexDirection:'column',gap:12}}>
