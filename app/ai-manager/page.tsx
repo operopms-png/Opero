@@ -87,7 +87,7 @@ export default function Page() {
       const [agentsRes, propsRes, ownersRes] = await Promise.all([
         supabase.from('ai_agents').select('*').eq('user_id', user.id),
         supabase.from('properties').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('owner_profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('owner_profiles').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
       ])
       if (agentsRes.data?.length) {
         const loaded: Record<string,boolean> = {guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false}
@@ -105,9 +105,17 @@ export default function Page() {
   const toggleAgent = async (key:string) => {
     const next = !activeAgents[key]
     setActiveAgents({...activeAgents,[key]:next})
-    if (userId) await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
+    if (userId) {
+      const {error} = await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
+      if (error) { alert(error.message); setActiveAgents({...activeAgents,[key]:!next}); }
+    }
   }
   const activeCount = Object.values(activeAgents).filter(Boolean).length
+
+  async function authHeaders() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
+  }
 
   async function testGuestAgent() {
     if (!guestTest.property_id || !guestTest.message.trim() || !userId) return
@@ -115,8 +123,8 @@ export default function Page() {
     setGuestReply('')
     const res = await fetch('/api/ai/guest-reply', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...guestTest, user_id: userId }),
+      headers: await authHeaders(),
+      body: JSON.stringify(guestTest),
     })
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not get a reply'); setTesting(false); return }
@@ -128,7 +136,7 @@ export default function Page() {
   async function testMaintenanceAgent() {
     if (!maintTest.property_id || !maintTest.title.trim() || !userId) return
     setTesting(true); setMaintReply('')
-    const res = await fetch('/api/ai/maintenance-reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...maintTest, user_id: userId }) })
+    const res = await fetch('/api/ai/maintenance-reply', { method: 'POST', headers: await authHeaders(), body: JSON.stringify(maintTest) })
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not get a reply'); setTesting(false); return }
     setMaintReply(result.reply); await loadActivityLog(userId); setTesting(false)
@@ -137,7 +145,7 @@ export default function Page() {
   async function testCleaningAgent() {
     if (!cleanTest.property_id || !cleanTest.scheduled_date || !userId) return
     setTesting(true); setCleanReply('')
-    const res = await fetch('/api/ai/cleaning-reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...cleanTest, user_id: userId }) })
+    const res = await fetch('/api/ai/cleaning-reply', { method: 'POST', headers: await authHeaders(), body: JSON.stringify(cleanTest) })
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not get a reply'); setTesting(false); return }
     setCleanReply(result.reply); await loadActivityLog(userId); setTesting(false)
@@ -146,7 +154,7 @@ export default function Page() {
   async function testRevenueAgent() {
     if (!revTest.property_id || !userId) return
     setTesting(true); setRevReply(null)
-    const res = await fetch('/api/ai/revenue-suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...revTest, user_id: userId }) })
+    const res = await fetch('/api/ai/revenue-suggest', { method: 'POST', headers: await authHeaders(), body: JSON.stringify(revTest) })
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not get a suggestion'); setTesting(false); return }
     setRevReply(result); await loadActivityLog(userId); setTesting(false)
@@ -155,7 +163,7 @@ export default function Page() {
   async function testOwnerAgent() {
     if (!ownerTest.owner_id || !userId) return
     setTesting(true); setOwnerReply(null)
-    const res = await fetch('/api/ai/owner-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...ownerTest, user_id: userId }) })
+    const res = await fetch('/api/ai/owner-report', { method: 'POST', headers: await authHeaders(), body: JSON.stringify(ownerTest) })
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not draft a report'); setTesting(false); return }
     setOwnerReply(result); await loadActivityLog(userId); setTesting(false)
@@ -164,7 +172,7 @@ export default function Page() {
   async function testLeadAgent() {
     if (!leadTest.inquiry.trim() || !userId) return
     setTesting(true); setLeadReply('')
-    const res = await fetch('/api/ai/lead-qualify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...leadTest, user_id: userId }) })
+    const res = await fetch('/api/ai/lead-qualify', { method: 'POST', headers: await authHeaders(), body: JSON.stringify(leadTest) })
     const result = await res.json()
     if (!res.ok) { alert(result.error || 'Could not qualify this lead'); setTesting(false); return }
     setLeadReply(result.reply); await loadActivityLog(userId); setTesting(false)
@@ -350,7 +358,8 @@ export default function Page() {
             <div style={{display:'flex',gap:8}}>
               <button onClick={async ()=>{
                 if(!logForm.action || !userId) return
-                await supabase.from('ai_activity_log').insert({ user_id: userId, agent_key: logForm.agent, action: logForm.action, property_name: logForm.property || null, notes: logForm.notes || null })
+                const {error} = await supabase.from('ai_activity_log').insert({ user_id: userId, agent_key: logForm.agent, action: logForm.action, property_name: logForm.property || null, notes: logForm.notes || null })
+                if (error) { alert(error.message); return }
                 await loadActivityLog(userId)
                 setLogForm({agent:'guest',action:'',property:'',notes:''});setShowLogForm(false)
               }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
@@ -369,7 +378,7 @@ export default function Page() {
                   <span style={{fontSize:13,color:'#101828'}}>{l.action}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{l.property||'—'}</span>
                   <span style={{fontSize:11,color:'#98A2B3'}}>{l.createdAt}</span>
-                  <button onClick={async ()=>{ await supabase.from('ai_activity_log').delete().eq('id', l.id); setActivityLog(activityLog.filter((x:any)=>x.id!==l.id)) }} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                  <button onClick={async ()=>{ const {error} = await supabase.from('ai_activity_log').delete().eq('id', l.id); if (error) { alert(error.message); return } setActivityLog(activityLog.filter((x:any)=>x.id!==l.id)) }} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
                 </div>
               )
             })}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from '@/lib/claude'
+import { requireUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,10 +9,13 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { property_id, user_id } = await req.json()
+  const user_id = await requireUser(req)
+  if (!user_id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { property_id } = await req.json()
   if (!property_id) return NextResponse.json({ error: 'property_id is required' }, { status: 400 })
 
-  const { data: property } = await supabase.from('properties').select('name, nightly_rate, max_guests, city, country').eq('id', property_id).single()
+  const { data: property } = await supabase.from('properties').select('name, nightly_rate, max_guests, city, country').eq('id', property_id).eq('user_id', user_id).single()
   if (!property) return NextResponse.json({ error: 'Property not found' }, { status: 404 })
 
   const ninetyAgo = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from '@/lib/claude'
+import { requireUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +9,10 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { lead_name, source, inquiry, user_id } = await req.json()
+  const user_id = await requireUser(req)
+  if (!user_id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { lead_name, source, inquiry } = await req.json()
   if (!inquiry?.trim()) return NextResponse.json({ error: 'inquiry is required' }, { status: 400 })
 
   const systemPrompt = `You are an AI lead qualification assistant for Sangsters Group, a property management and short-term rental co-hosting business (Airbnb co-hosting, guaranteed rent, estate agency, property development). Given a landlord/property-owner inquiry, do three things, clearly labeled:

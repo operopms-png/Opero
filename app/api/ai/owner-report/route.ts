@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from '@/lib/claude'
+import { requireStaff } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,9 +9,15 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { owner_id, user_id } = await req.json()
+  const staffId = await requireStaff(req)
+  if (!staffId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { owner_id } = await req.json()
   if (!owner_id) return NextResponse.json({ error: 'owner_id is required' }, { status: 400 })
 
+  // Note: owner_profiles.user_id is the OWNER's own account id (they can log
+  // in themselves), not the managing business's id — so we can't filter by
+  // staffId here. requireStaff() above already confirms the caller is staff.
   const { data: owner } = await supabase.from('owner_profiles').select('*').eq('id', owner_id).single()
   if (!owner) return NextResponse.json({ error: 'Owner not found' }, { status: 404 })
 
@@ -41,7 +48,7 @@ Nights booked: ${nights}`
   if (error) return NextResponse.json({ error }, { status: 500 })
 
   await supabase.from('ai_activity_log').insert({
-    user_id, agent_key: 'owner', action: `Drafted monthly report for ${owner.name}`, property_name: (properties ?? []).map((p: any) => p.name).join(', '),
+    user_id: staffId, agent_key: 'owner', action: `Drafted monthly report for ${owner.name}`, property_name: (properties ?? []).map((p: any) => p.name).join(', '),
   })
 
   return NextResponse.json({ reply, revenue, ownerShare, nights })

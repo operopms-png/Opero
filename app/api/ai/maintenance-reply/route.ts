@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from '@/lib/claude'
+import { requireUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,15 +9,19 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { property_id, title, description, priority, user_id } = await req.json()
+  const user_id = await requireUser(req)
+  if (!user_id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { property_id, title, description, priority } = await req.json()
   if (!property_id || !title?.trim()) {
     return NextResponse.json({ error: 'property_id and title are required' }, { status: 400 })
   }
 
   const [{ data: property }, { data: team }] = await Promise.all([
-    supabase.from('properties').select('name, address, city').eq('id', property_id).single(),
+    supabase.from('properties').select('name, address, city').eq('id', property_id).eq('user_id', user_id).single(),
     supabase.from('team_members').select('name, role').eq('user_id', user_id),
   ])
+  if (!property) return NextResponse.json({ error: 'Property not found' }, { status: 404 })
 
   const teamList = (team ?? []).map((t: any) => `${t.name} (${t.role})`).join(', ') || 'No team members on file'
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from '@/lib/claude'
+import { requireUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +9,10 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const { property_id, guest_name, message, user_id } = await req.json()
+  const user_id = await requireUser(req)
+  if (!user_id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { property_id, guest_name, message } = await req.json()
   if (!property_id || !message?.trim()) {
     return NextResponse.json({ error: 'property_id and message are required' }, { status: 400 })
   }
@@ -17,6 +21,7 @@ export async function POST(req: NextRequest) {
     .from('properties')
     .select('name, address, city, country, wifi_name, wifi_password, house_rules, checkin_instructions, checkout_instructions')
     .eq('id', property_id)
+    .eq('user_id', user_id)
     .single()
 
   if (propError || !property) return NextResponse.json({ error: 'Property not found' }, { status: 404 })

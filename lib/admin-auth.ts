@@ -7,6 +7,23 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export const serviceClient = createClient(url, serviceKey)
 
+// Verifies the request's bearer token belongs to a real, logged-in user,
+// with no restriction on staff vs owner. Returns the verified user's id,
+// or null if the token is missing/invalid. Callers MUST use this id (not
+// any user_id sent in the request body) for every subsequent query.
+export async function requireUser(req: NextRequest): Promise<string | null> {
+  const authHeader = req.headers.get('authorization') ?? ''
+  const token = authHeader.replace('Bearer ', '')
+  if (!token) return null
+
+  const asUser = createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  })
+  const { data: { user }, error } = await asUser.auth.getUser(token)
+  if (error || !user) return null
+  return user.id
+}
+
 // Verifies the request's bearer token belongs to a real, logged-in user who
 // has no owner_profiles row — i.e. staff/admin, same rule the client uses.
 // Returns the staff user's id, or null if the request should be rejected.
