@@ -779,12 +779,22 @@ export default function PMPage() {
           </div>
         )}
 
-        {tab==='Reports'&&(
+        {tab==='Reports'&&(() => {
+          const year = new Date().getFullYear()
+          const thisMonthKey = new Date().toISOString().slice(0,7)
+          const pnlByMonth = Array.from({length:12},(_,i)=>{
+            const monthKey = `${year}-${String(i+1).padStart(2,'0')}`
+            const income = payments.filter((p:any)=>p.status==='paid' && p.due_date?.startsWith(monthKey)).reduce((s:number,p:any)=>s+(parseFloat(p.amount)||0),0)
+            const costs = expenses.filter((e:any)=>e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+            return { month: monthKey, income, costs, net: income-costs }
+          })
+          const thisMonth = pnlByMonth.find(m=>m.month===thisMonthKey) ?? { income:0, costs:0, net:0 }
+          return (
           <div>
             <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
-              <div style={{fontSize:36,fontWeight:800}}>£{(0-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
-              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£0 income · £{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()} costs</div>
+              <div style={{fontSize:36,fontWeight:800}}>£{thisMonth.net.toLocaleString()}</div>
+              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{thisMonth.income.toLocaleString()} income · £{thisMonth.costs.toLocaleString()} costs</div>
             </div>
             <div style={{display:'flex',gap:8,marginBottom:20}}>
               {['P&L','Cash Flow','Forecast'].map(t=>(
@@ -795,14 +805,19 @@ export default function PMPage() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
                 <span>Month</span><span>Income</span><span>Costs</span><span>Expenses</span><span>Net Profit</span>
               </div>
-              {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>(
-                <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                  <span>{m} {new Date().getFullYear()}</span><span style={{color:'#10B981'}}>£0</span><span style={{color:'#EF4444'}}>£0</span><span style={{color:'#F59E0B'}}>£0</span><span style={{fontWeight:600}}>£0</span>
+              {pnlByMonth.map((row,i)=>(
+                <div key={row.month} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
+                  <span>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]} {year}</span>
+                  <span style={{color:'#10B981'}}>£{row.income.toLocaleString()}</span>
+                  <span style={{color:'#EF4444'}}>£{row.costs.toLocaleString()}</span>
+                  <span style={{color:'#F59E0B'}}>£{row.costs.toLocaleString()}</span>
+                  <span style={{fontWeight:600}}>£{row.net.toLocaleString()}</span>
                 </div>
               ))}
             </div>
           </div>
-        )}
+          )
+        })()}
 
 
         {tab==='Owner Reports'&&(
