@@ -599,7 +599,7 @@ export default function Page() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
               {[
-                {l:'Insurance Paid',v:'£0'},
+                {l:'Monthly Insurance',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.insurance||0)),0).toLocaleString()},
                 {l:'Already Refunded',v:'£0'},
                 {l:'Remaining to Pay',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaid_capital||0)),0).toLocaleString()},
               ].map((s:any)=>(
@@ -714,8 +714,8 @@ export default function Page() {
                   <span style={{fontSize:12,color:'#667085'}}>{r.frequency}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:r.status==='Paid'?'#ECFDF5':r.status==='Overdue'?'#FEE2E2':'#FEF3C7',color:r.status==='Paid'?'#10B981':r.status==='Overdue'?'#EF4444':'#F59E0B'}}>{r.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    {r.status!=='Paid'&&<button onClick={()=>setRentSchedules(rentSchedules.map(x=>x.id===r.id?{...x,status:'Paid'}:x))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#ECFDF5',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#10B981',fontWeight:600}}>✓ Paid</button>}
-                    {r.status==='Paid'&&<button onClick={()=>setRentSchedules(rentSchedules.map(x=>x.id===r.id?{...x,status:'Pending'}:x))} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#667085'}}>Undo</button>}
+                    {r.status!=='Paid'&&<button onClick={()=>saveRecord('estate_rent_schedules',{status:'Paid'},r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#ECFDF5',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#10B981',fontWeight:600}}>✓ Paid</button>}
+                    {r.status==='Paid'&&<button onClick={()=>saveRecord('estate_rent_schedules',{status:'Pending'},r.id)} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#667085'}}>Undo</button>}
                     <button onClick={()=>delRecord('estate_rent_schedules',r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
@@ -876,12 +876,17 @@ export default function Page() {
             </div>
           )}
 
-          {section==='Reports'&&(
+          {section==='Reports'&&(() => {
+            const year = new Date().getFullYear()
+            const thisMonthIdx = new Date().getMonth()
+            const collectedRent = rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0)
+            const totalExpenses = expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+            return (
             <div>
               <div style={{background:'linear-gradient(135deg,'+ACCENT+',#1B4332)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.7,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
-                <div style={{fontSize:36,fontWeight:800}}>£{(annualRent/12-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
-                <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{(annualRent/12).toLocaleString()} income · £{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()} costs</div>
+                <div style={{fontSize:36,fontWeight:800}}>£{(collectedRent-totalExpenses).toLocaleString()}</div>
+                <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{collectedRent.toLocaleString()} income · £{totalExpenses.toLocaleString()} costs</div>
               </div>
               <div style={{display:'flex',gap:8,marginBottom:20}}>
                 {['P&L','Cash Flow','Forecast'].map(t=>(
@@ -892,14 +897,21 @@ export default function Page() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
                   <span>Month</span><span>Income</span><span>Costs</span><span>Expenses</span><span>Net Profit</span>
                 </div>
-                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>(
+                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>{
+                  const isCurrent = i===thisMonthIdx
+                  const income = isCurrent ? collectedRent : 0
+                  const costs = isCurrent ? totalExpenses : 0
+                  return (
                   <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                    <span>{m} {new Date().getFullYear()}</span><span style={{color:'#10B981'}}>£0</span><span style={{color:'#EF4444'}}>£0</span><span style={{color:'#F59E0B'}}>£0</span><span style={{fontWeight:600}}>£0</span>
+                    <span>{m} {year}</span><span style={{color:'#10B981'}}>£{income.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{costs.toLocaleString()}</span><span style={{color:'#F59E0B'}}>£{costs.toLocaleString()}</span><span style={{fontWeight:600}}>£{(income-costs).toLocaleString()}</span>
                   </div>
-                ))}
+                  )
+                })}
               </div>
+              <div style={{fontSize:12,color:'#98A2B3',marginTop:8}}>Rent schedules don't yet record which month a payment covers, so historical months show £0 until schedules include payment dates.</div>
             </div>
-          )}
+            )
+          })()}
 
 
           {section==='Owner Reports'&&(
