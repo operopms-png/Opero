@@ -2,30 +2,63 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 const ACCENT = '#3B4AFF'
+const MODULE = 'str'
+const LABEL = 'VACATION RENTALS'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
+const REPORT_TYPES = ['Revenue','Occupancy','Bookings','Expenses','P&L','Cash Flow','Owner Statement','Custom']
 
 export default function Page() {
   const [section, setSection] = useState('Reports')
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [reports, setReports] = useState<any[]>([])
   const [showReportForm, setShowReportForm] = useState(false)
   const [reportForm, setReportForm] = useState({name:'',type:'Revenue',period:'This Month',format:'PDF',notes:''})
   const [scheduled, setScheduled] = useState<any[]>([])
   const [showScheduleForm, setShowScheduleForm] = useState(false)
-  const [scheduleForm, setScheduleForm] = useState({name:'',type:'Revenue',frequency:'Weekly',recipients:'',nextRun:'',format:'PDF'})
+  const [scheduleForm, setScheduleForm] = useState({name:'',type:'Revenue',frequency:'Weekly',recipients:'',next_run:'',format:'PDF'})
 
-  useEffect(()=>{ supabase.auth.getUser().then(({data:{user}})=>{ if(!user){window.location.href='/login';return}; setLoading(false) }) },[])
+  useEffect(()=>{
+    supabase.auth.getUser().then(async ({data:{user}})=>{
+      if(!user){window.location.href='/login';return}
+      await loadAll(user.id)
+      setLoading(false)
+    })
+  },[])
+
+  async function loadAll(userId: string) {
+    const [r,s] = await Promise.all([
+      supabase.from('reporting_reports').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('reporting_scheduled').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+    ])
+    setReports(r.data??[]); setScheduled(s.data??[])
+  }
+
+  async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
+    setSaving(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+    setSaving(false)
+    if(error){alert(error.message);return}
+    clearForm(); closeForm(); await loadAll(user!.id)
+  }
+
+  async function del(table: string, id: string, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).delete().eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.filter((x:any)=>x.id!==id))
+  }
+
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
   const SECTIONS = ['Reports','Scheduled','Analytics']
-  const REPORT_TYPES = ['Revenue','Occupancy','Bookings','Expenses','P&L','Cash Flow','Owner Statement','Custom']
 
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>VACATION RENTALS</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>{LABEL}</div>
           <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Reporting</div>
         </div>
         <div style={{display:'flex',gap:8}}>
@@ -57,7 +90,7 @@ export default function Page() {
               <div><label style={lbl}>Format</label><select value={reportForm.format} onChange={e=>setReportForm({...reportForm,format:e.target.value})} style={inp}>{['PDF','Excel','CSV'].map(f=><option key={f}>{f}</option>)}</select></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!reportForm.name)return;setReports([...reports,{id:Date.now(),...reportForm,createdAt:new Date().toLocaleDateString()}]);setReportForm({name:'',type:'Revenue',period:'This Month',format:'PDF',notes:''});setShowReportForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Generate Report</button>
+              <button onClick={()=>{if(!reportForm.name)return;save('reporting_reports',reportForm,()=>setReportForm({name:'',type:'Revenue',period:'This Month',format:'PDF',notes:''}),()=>setShowReportForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Generate Report'}</button>
               <button onClick={()=>setShowReportForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -71,8 +104,8 @@ export default function Page() {
                 <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{r.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.period}</span>
                 <span style={{fontSize:11,fontWeight:600,color:'#667085'}}>{r.format}</span>
-                <span style={{fontSize:11,color:'#98A2B3'}}>{r.createdAt}</span>
-                <button onClick={()=>setReports(reports.filter((x:any)=>x.id!==r.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                <span style={{fontSize:11,color:'#98A2B3'}}>{new Date(r.created_at).toLocaleDateString()}</span>
+                <button onClick={()=>del('reporting_reports',r.id,setReports)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
             ))}
           </div>
@@ -86,11 +119,11 @@ export default function Page() {
               <div><label style={lbl}>Type</label><select value={scheduleForm.type} onChange={e=>setScheduleForm({...scheduleForm,type:e.target.value})} style={inp}>{REPORT_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
               <div><label style={lbl}>Frequency</label><select value={scheduleForm.frequency} onChange={e=>setScheduleForm({...scheduleForm,frequency:e.target.value})} style={inp}>{['Daily','Weekly','Monthly','Quarterly'].map(f=><option key={f}>{f}</option>)}</select></div>
               <div><label style={lbl}>Recipients</label><input value={scheduleForm.recipients} onChange={e=>setScheduleForm({...scheduleForm,recipients:e.target.value})} placeholder="email@example.com" style={inp}/></div>
-              <div><label style={lbl}>Next Run</label><input value={scheduleForm.nextRun} onChange={e=>setScheduleForm({...scheduleForm,nextRun:e.target.value})} type="date" style={inp}/></div>
+              <div><label style={lbl}>Next Run</label><input value={scheduleForm.next_run} onChange={e=>setScheduleForm({...scheduleForm,next_run:e.target.value})} type="date" style={inp}/></div>
               <div><label style={lbl}>Format</label><select value={scheduleForm.format} onChange={e=>setScheduleForm({...scheduleForm,format:e.target.value})} style={inp}>{['PDF','Excel','CSV'].map(f=><option key={f}>{f}</option>)}</select></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!scheduleForm.name)return;setScheduled([...scheduled,{id:Date.now(),...scheduleForm,status:'Active'}]);setScheduleForm({name:'',type:'Revenue',frequency:'Weekly',recipients:'',nextRun:'',format:'PDF'});setShowScheduleForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Schedule</button>
+              <button onClick={()=>{if(!scheduleForm.name)return;save('reporting_scheduled',{...scheduleForm,next_run:scheduleForm.next_run||null},()=>setScheduleForm({name:'',type:'Revenue',frequency:'Weekly',recipients:'',next_run:'',format:'PDF'}),()=>setShowScheduleForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
               <button onClick={()=>setShowScheduleForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -104,8 +137,8 @@ export default function Page() {
                 <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{r.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.frequency}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.recipients||'—'}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{r.nextRun||'—'}</span>
-                <button onClick={()=>setScheduled(scheduled.filter((x:any)=>x.id!==r.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                <span style={{fontSize:12,color:'#667085'}}>{r.next_run||'—'}</span>
+                <button onClick={()=>del('reporting_scheduled',r.id,setScheduled)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
             ))}
           </div>

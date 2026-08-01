@@ -2,12 +2,15 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 const ACCENT = '#3B4AFF'
+const MODULE = 'pm'
+const LABEL = 'PROPERTY MANAGEMENT'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
 export default function Page() {
   const [section, setSection] = useState('Tickets')
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [tickets, setTickets] = useState<any[]>([])
   const [showTicketForm, setShowTicketForm] = useState(false)
   const [ticketForm, setTicketForm] = useState({title:'',type:'Complaint',priority:'Medium',status:'Open',contact:'',property:'',description:''})
@@ -15,7 +18,43 @@ export default function Page() {
   const [showFaqForm, setShowFaqForm] = useState(false)
   const [faqForm, setFaqForm] = useState({question:'',answer:'',category:'General'})
 
-  useEffect(()=>{ supabase.auth.getUser().then(({data:{user}})=>{ if(!user){window.location.href='/login';return}; setLoading(false) }) },[])
+  useEffect(()=>{
+    supabase.auth.getUser().then(async ({data:{user}})=>{
+      if(!user){window.location.href='/login';return}
+      await loadAll(user.id)
+      setLoading(false)
+    })
+  },[])
+
+  async function loadAll(userId: string) {
+    const [t,f] = await Promise.all([
+      supabase.from('service_tickets').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('service_faqs').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+    ])
+    setTickets(t.data??[]); setFaqs(f.data??[])
+  }
+
+  async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
+    setSaving(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+    setSaving(false)
+    if(error){alert(error.message);return}
+    clearForm(); closeForm(); await loadAll(user!.id)
+  }
+
+  async function updateField(table: string, id: string, field: string, value: any, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).update({[field]:value}).eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.map((x:any)=>x.id===id?{...x,[field]:value}:x))
+  }
+
+  async function del(table: string, id: string, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).delete().eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.filter((x:any)=>x.id!==id))
+  }
+
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
   const SECTIONS = ['Tickets','FAQs','Analytics']
@@ -27,7 +66,7 @@ export default function Page() {
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>PROPERTY MANAGEMENT</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>{LABEL}</div>
           <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Service</div>
         </div>
         <div style={{display:'flex',gap:8}}>
@@ -62,7 +101,7 @@ export default function Page() {
               <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Description</label><textarea value={ticketForm.description} onChange={e=>setTicketForm({...ticketForm,description:e.target.value})} placeholder="Describe the issue..." rows={3} style={{...inp,resize:'vertical' as const}}/></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!ticketForm.title)return;setTickets([...tickets,{id:Date.now(),...ticketForm,createdAt:new Date().toLocaleDateString()}]);setTicketForm({title:'',type:'Complaint',priority:'Medium',status:'Open',contact:'',property:'',description:''});setShowTicketForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create Ticket</button>
+              <button onClick={()=>{if(!ticketForm.title)return;save('service_tickets',ticketForm,()=>setTicketForm({title:'',type:'Complaint',priority:'Medium',status:'Open',contact:'',property:'',description:''}),()=>setShowTicketForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Create Ticket'}</button>
               <button onClick={()=>setShowTicketForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -75,10 +114,10 @@ export default function Page() {
                 <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.title}</div>{t.description&&<div style={{fontSize:11,color:'#98A2B3'}}>{t.description.substring(0,40)}...</div>}</div>
                 <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{t.type}</span>
                 <span style={{fontSize:11,fontWeight:600,padding:'3px 6px',borderRadius:4,background:t.priority==='Urgent'?'#FEE2E2':t.priority==='High'?'#FEF3C7':'#F9FAFB',color:t.priority==='Urgent'?'#EF4444':t.priority==='High'?'#F59E0B':'#667085'}}>{t.priority}</span>
-                <select value={t.status} onChange={e=>setTickets(tickets.map((x:any)=>x.id===t.id?{...x,status:e.target.value}:x))} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Open','In Progress','Resolved','Closed'].map(s=><option key={s}>{s}</option>)}</select>
+                <select value={t.status} onChange={e=>updateField('service_tickets',t.id,'status',e.target.value,setTickets)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Open','In Progress','Resolved','Closed'].map(s=><option key={s}>{s}</option>)}</select>
                 <span style={{fontSize:12,color:'#667085'}}>{t.contact||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{t.property||'—'}</span>
-                <button onClick={()=>setTickets(tickets.filter((x:any)=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                <button onClick={()=>del('service_tickets',t.id,setTickets)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
             ))}
           </div>
@@ -94,7 +133,7 @@ export default function Page() {
               <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Answer *</label><textarea value={faqForm.answer} onChange={e=>setFaqForm({...faqForm,answer:e.target.value})} placeholder="Enter answer..." rows={3} style={{...inp,resize:'vertical' as const}}/></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!faqForm.question||!faqForm.answer)return;setFaqs([...faqs,{id:Date.now(),...faqForm}]);setFaqForm({question:'',answer:'',category:'General'});setShowFaqForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add FAQ</button>
+              <button onClick={()=>{if(!faqForm.question||!faqForm.answer)return;save('service_faqs',faqForm,()=>setFaqForm({question:'',answer:'',category:'General'}),()=>setShowFaqForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add FAQ'}</button>
               <button onClick={()=>setShowFaqForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -103,7 +142,7 @@ export default function Page() {
               <div key={f.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
                   <div><span style={{fontSize:10,fontWeight:600,color:ACCENT,background:'#EEF1FF',padding:'2px 8px',borderRadius:4,marginRight:8}}>{f.category}</span><span style={{fontSize:14,fontWeight:600,color:'#101828'}}>{f.question}</span></div>
-                  <button onClick={()=>setFaqs(faqs.filter((x:any)=>x.id!==f.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444',flexShrink:0}}>×</button>
+                  <button onClick={()=>del('service_faqs',f.id,setFaqs)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444',flexShrink:0}}>×</button>
                 </div>
                 <p style={{fontSize:13,color:'#667085',lineHeight:1.6,margin:0}}>{f.answer}</p>
               </div>

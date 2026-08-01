@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 const ACCENT = '#3B4AFF'
+const MODULE = 'estate'
 const LABEL = 'ESTATE AGENCY'
-const SECTIONS = ['Pipeline','Leads','Quotes','Documents','Meetings','Analytics']
+const SECTIONS = ['Pipeline','Leads','Quotes','Meetings','Analytics']
 const STAGES = ['Enquiry','Qualified','Proposal','Negotiation','Won','Lost']
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
@@ -11,20 +12,59 @@ const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'
 export default function Page() {
   const [section, setSection] = useState('Pipeline')
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [leads, setLeads] = useState<any[]>([])
   const [showLeadForm, setShowLeadForm] = useState(false)
   const [leadForm, setLeadForm] = useState({name:'',email:'',phone:'',source:'Direct',status:'New',value:'',notes:''})
   const [deals, setDeals] = useState<any[]>([])
   const [showDealForm, setShowDealForm] = useState(false)
-  const [dealForm, setDealForm] = useState({name:'',contact:'',value:'',stage:'Enquiry',closeDate:'',notes:''})
+  const [dealForm, setDealForm] = useState({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:''})
   const [quotes, setQuotes] = useState<any[]>([])
   const [showQuoteForm, setShowQuoteForm] = useState(false)
-  const [quoteForm, setQuoteForm] = useState({client:'',property:'',amount:'',validUntil:'',status:'Draft',notes:''})
+  const [quoteForm, setQuoteForm] = useState({client:'',property:'',amount:'',valid_until:'',status:'Draft',notes:''})
   const [meetings, setMeetings] = useState<any[]>([])
   const [showMeetingForm, setShowMeetingForm] = useState(false)
-  const [meetingForm, setMeetingForm] = useState({title:'',contact:'',date:'',time:'',type:'Call',notes:''})
+  const [meetingForm, setMeetingForm] = useState({title:'',contact:'',meeting_date:'',meeting_time:'',type:'Call',notes:''})
 
-  useEffect(()=>{ supabase.auth.getUser().then(({data:{user}})=>{ if(!user){window.location.href='/login';return}; setLoading(false) }) },[])
+  useEffect(()=>{
+    supabase.auth.getUser().then(async ({data:{user}})=>{
+      if(!user){window.location.href='/login';return}
+      await loadAll(user.id)
+      setLoading(false)
+    })
+  },[])
+
+  async function loadAll(userId: string) {
+    const [l,d,q,m] = await Promise.all([
+      supabase.from('sales_leads').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('sales_deals').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('sales_quotes').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('sales_meetings').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+    ])
+    setLeads(l.data??[]); setDeals(d.data??[]); setQuotes(q.data??[]); setMeetings(m.data??[])
+  }
+
+  async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
+    setSaving(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+    setSaving(false)
+    if(error){alert(error.message);return}
+    clearForm(); closeForm(); await loadAll(user!.id)
+  }
+
+  async function updateField(table: string, id: string, field: string, value: any, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).update({[field]:value}).eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.map((x:any)=>x.id===id?{...x,[field]:value}:x))
+  }
+
+  async function del(table: string, id: string, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).delete().eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.filter((x:any)=>x.id!==id))
+  }
+
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
   const totalPipeline = deals.filter(d=>!['Won','Lost'].includes(d.stage)).reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)
@@ -49,7 +89,6 @@ export default function Page() {
       </div>
       <div style={{padding:24}}>
 
-        {/* Stats */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
           {[{l:'Pipeline Value',v:'£'+totalPipeline.toLocaleString(),c:ACCENT},{l:'Won',v:'£'+wonDeals.toLocaleString(),c:'#10B981'},{l:'Total Leads',v:leads.length,c:'#101828'},{l:'Open Deals',v:deals.filter(d=>!['Won','Lost'].includes(d.stage)).length,c:'#F59E0B'}].map((s:any)=>(
             <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
@@ -59,7 +98,6 @@ export default function Page() {
           ))}
         </div>
 
-        {/* PIPELINE */}
         {section==='Pipeline'&&(<div>
           {showDealForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
             <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add Deal</h3>
@@ -68,11 +106,11 @@ export default function Page() {
               <div><label style={lbl}>Contact</label><input value={dealForm.contact} onChange={e=>setDealForm({...dealForm,contact:e.target.value})} placeholder="Contact name" style={inp}/></div>
               <div><label style={lbl}>Value (£)</label><input value={dealForm.value} onChange={e=>setDealForm({...dealForm,value:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
               <div><label style={lbl}>Stage</label><select value={dealForm.stage} onChange={e=>setDealForm({...dealForm,stage:e.target.value})} style={inp}>{STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
-              <div><label style={lbl}>Close Date</label><input value={dealForm.closeDate} onChange={e=>setDealForm({...dealForm,closeDate:e.target.value})} type="date" style={inp}/></div>
+              <div><label style={lbl}>Close Date</label><input value={dealForm.close_date} onChange={e=>setDealForm({...dealForm,close_date:e.target.value})} type="date" style={inp}/></div>
               <div><label style={lbl}>Notes</label><input value={dealForm.notes} onChange={e=>setDealForm({...dealForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!dealForm.name)return;setDeals([...deals,{id:Date.now(),...dealForm}]);setDealForm({name:'',contact:'',value:'',stage:'Enquiry',closeDate:'',notes:''});setShowDealForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add Deal</button>
+              <button onClick={()=>{if(!dealForm.name)return;save('sales_deals',{...dealForm,value:dealForm.value?parseFloat(dealForm.value):null,close_date:dealForm.close_date||null},()=>setDealForm({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:''}),()=>setShowDealForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add Deal'}</button>
               <button onClick={()=>setShowDealForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -86,8 +124,8 @@ export default function Page() {
                     {d.contact&&<div style={{fontSize:11,color:'#667085',marginBottom:4}}>{d.contact}</div>}
                     <div style={{fontSize:13,fontWeight:700,color:ACCENT}}>£{parseFloat(d.value||0).toLocaleString()}</div>
                     <div style={{display:'flex',gap:4,marginTop:8}}>
-                      <select value={d.stage} onChange={e=>setDeals(deals.map((x:any)=>x.id===d.id?{...x,stage:e.target.value}:x))} style={{fontSize:10,border:'1px solid #E4E7EC',borderRadius:4,padding:'2px 4px',fontFamily:'inherit',flex:1}}>{STAGES.map(s=><option key={s}>{s}</option>)}</select>
-                      <button onClick={()=>setDeals(deals.filter((x:any)=>x.id!==d.id))} style={{padding:'2px 6px',borderRadius:4,border:'none',background:'#FEE2E2',fontSize:10,cursor:'pointer',color:'#EF4444'}}>×</button>
+                      <select value={d.stage} onChange={e=>updateField('sales_deals',d.id,'stage',e.target.value,setDeals)} style={{fontSize:10,border:'1px solid #E4E7EC',borderRadius:4,padding:'2px 4px',fontFamily:'inherit',flex:1}}>{STAGES.map(s=><option key={s}>{s}</option>)}</select>
+                      <button onClick={()=>del('sales_deals',d.id,setDeals)} style={{padding:'2px 6px',borderRadius:4,border:'none',background:'#FEE2E2',fontSize:10,cursor:'pointer',color:'#EF4444'}}>×</button>
                     </div>
                   </div>
                 ))}
@@ -96,7 +134,6 @@ export default function Page() {
           </div>
         </div>)}
 
-        {/* LEADS */}
         {section==='Leads'&&(<div>
           {showLeadForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
             <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add Lead</h3>
@@ -110,7 +147,7 @@ export default function Page() {
               <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={leadForm.notes} onChange={e=>setLeadForm({...leadForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!leadForm.name)return;setLeads([...leads,{id:Date.now(),...leadForm}]);setLeadForm({name:'',email:'',phone:'',source:'Direct',status:'New',value:'',notes:''});setShowLeadForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add Lead</button>
+              <button onClick={()=>{if(!leadForm.name)return;save('sales_leads',{...leadForm,value:leadForm.value?parseFloat(leadForm.value):null},()=>setLeadForm({name:'',email:'',phone:'',source:'Direct',status:'New',value:'',notes:''}),()=>setShowLeadForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add Lead'}</button>
               <button onClick={()=>setShowLeadForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -124,14 +161,13 @@ export default function Page() {
                 <span style={{fontSize:12,color:'#667085'}}>{l.email||'—'}</span>
                 <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{l.source}</span>
                 <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{l.value?'£'+parseFloat(l.value).toLocaleString():'—'}</span>
-                <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:l.status==='New'?'#FEF3C7':l.status==='Qualified'?'#ECFDF5':'#F9FAFB',color:l.status==='New'?'#F59E0B':l.status==='Qualified'?'#10B981':'#667085'}}>{l.status}</span>
-                <button onClick={()=>setLeads(leads.filter((x:any)=>x.id!==l.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                <select value={l.status} onChange={e=>updateField('sales_leads',l.id,'status',e.target.value,setLeads)} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,border:'1px solid #E4E7EC',fontFamily:'inherit'}}>{['New','Contacted','Qualified','Unqualified'].map(s=><option key={s}>{s}</option>)}</select>
+                <button onClick={()=>del('sales_leads',l.id,setLeads)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
             ))}
           </div>
         </div>)}
 
-        {/* QUOTES */}
         {section==='Quotes'&&(<div>
           {showQuoteForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
             <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Create Quote</h3>
@@ -139,12 +175,12 @@ export default function Page() {
               <div><label style={lbl}>Client *</label><input value={quoteForm.client} onChange={e=>setQuoteForm({...quoteForm,client:e.target.value})} placeholder="Client name" style={inp}/></div>
               <div><label style={lbl}>Property</label><input value={quoteForm.property} onChange={e=>setQuoteForm({...quoteForm,property:e.target.value})} placeholder="Property name" style={inp}/></div>
               <div><label style={lbl}>Amount (£)</label><input value={quoteForm.amount} onChange={e=>setQuoteForm({...quoteForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
-              <div><label style={lbl}>Valid Until</label><input value={quoteForm.validUntil} onChange={e=>setQuoteForm({...quoteForm,validUntil:e.target.value})} type="date" style={inp}/></div>
+              <div><label style={lbl}>Valid Until</label><input value={quoteForm.valid_until} onChange={e=>setQuoteForm({...quoteForm,valid_until:e.target.value})} type="date" style={inp}/></div>
               <div><label style={lbl}>Status</label><select value={quoteForm.status} onChange={e=>setQuoteForm({...quoteForm,status:e.target.value})} style={inp}>{['Draft','Sent','Accepted','Declined'].map(s=><option key={s}>{s}</option>)}</select></div>
               <div><label style={lbl}>Notes</label><input value={quoteForm.notes} onChange={e=>setQuoteForm({...quoteForm,notes:e.target.value})} placeholder="Optional" style={inp}/></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!quoteForm.client)return;setQuotes([...quotes,{id:Date.now(),...quoteForm}]);setQuoteForm({client:'',property:'',amount:'',validUntil:'',status:'Draft',notes:''});setShowQuoteForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create Quote</button>
+              <button onClick={()=>{if(!quoteForm.client)return;save('sales_quotes',{...quoteForm,amount:quoteForm.amount?parseFloat(quoteForm.amount):null,valid_until:quoteForm.valid_until||null},()=>setQuoteForm({client:'',property:'',amount:'',valid_until:'',status:'Draft',notes:''}),()=>setShowQuoteForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Create Quote'}</button>
               <button onClick={()=>setShowQuoteForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -157,28 +193,27 @@ export default function Page() {
                 <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{q.client}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{q.property||'—'}</span>
                 <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(q.amount||0).toLocaleString()}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{q.validUntil||'—'}</span>
-                <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:q.status==='Accepted'?'#ECFDF5':q.status==='Declined'?'#FEE2E2':'#FEF3C7',color:q.status==='Accepted'?'#10B981':q.status==='Declined'?'#EF4444':'#F59E0B'}}>{q.status}</span>
-                <button onClick={()=>setQuotes(quotes.filter((x:any)=>x.id!==q.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                <span style={{fontSize:12,color:'#667085'}}>{q.valid_until||'—'}</span>
+                <select value={q.status} onChange={e=>updateField('sales_quotes',q.id,'status',e.target.value,setQuotes)} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,border:'1px solid #E4E7EC',fontFamily:'inherit'}}>{['Draft','Sent','Accepted','Declined'].map(s=><option key={s}>{s}</option>)}</select>
+                <button onClick={()=>del('sales_quotes',q.id,setQuotes)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
             ))}
           </div>
         </div>)}
 
-        {/* MEETINGS */}
         {section==='Meetings'&&(<div>
           {showMeetingForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
             <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Schedule Meeting</h3>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
               <div><label style={lbl}>Title *</label><input value={meetingForm.title} onChange={e=>setMeetingForm({...meetingForm,title:e.target.value})} placeholder="e.g. Property viewing" style={inp}/></div>
               <div><label style={lbl}>Contact</label><input value={meetingForm.contact} onChange={e=>setMeetingForm({...meetingForm,contact:e.target.value})} placeholder="Contact name" style={inp}/></div>
-              <div><label style={lbl}>Date</label><input value={meetingForm.date} onChange={e=>setMeetingForm({...meetingForm,date:e.target.value})} type="date" style={inp}/></div>
-              <div><label style={lbl}>Time</label><input value={meetingForm.time} onChange={e=>setMeetingForm({...meetingForm,time:e.target.value})} type="time" style={inp}/></div>
+              <div><label style={lbl}>Date</label><input value={meetingForm.meeting_date} onChange={e=>setMeetingForm({...meetingForm,meeting_date:e.target.value})} type="date" style={inp}/></div>
+              <div><label style={lbl}>Time</label><input value={meetingForm.meeting_time} onChange={e=>setMeetingForm({...meetingForm,meeting_time:e.target.value})} type="time" style={inp}/></div>
               <div><label style={lbl}>Type</label><select value={meetingForm.type} onChange={e=>setMeetingForm({...meetingForm,type:e.target.value})} style={inp}>{['Call','Video Call','In Person','Property Viewing'].map(t=><option key={t}>{t}</option>)}</select></div>
               <div><label style={lbl}>Notes</label><input value={meetingForm.notes} onChange={e=>setMeetingForm({...meetingForm,notes:e.target.value})} placeholder="Optional" style={inp}/></div>
             </div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!meetingForm.title)return;setMeetings([...meetings,{id:Date.now(),...meetingForm}]);setMeetingForm({title:'',contact:'',date:'',time:'',type:'Call',notes:''});setShowMeetingForm(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Schedule</button>
+              <button onClick={()=>{if(!meetingForm.title)return;save('sales_meetings',{...meetingForm,meeting_date:meetingForm.meeting_date||null},()=>setMeetingForm({title:'',contact:'',meeting_date:'',meeting_time:'',type:'Call',notes:''}),()=>setShowMeetingForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
               <button onClick={()=>setShowMeetingForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -190,16 +225,15 @@ export default function Page() {
               <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 100px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.title}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{m.contact||'—'}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{m.date||'—'}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{m.time||'—'}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{m.meeting_date||'—'}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{m.meeting_time||'—'}</span>
                 <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT}}>{m.type}</span>
-                <button onClick={()=>setMeetings(meetings.filter((x:any)=>x.id!==m.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                <button onClick={()=>del('sales_meetings',m.id,setMeetings)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
             ))}
           </div>
         </div>)}
 
-        {/* ANALYTICS */}
         {section==='Analytics'&&(<div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
             {[{l:'Conversion Rate',v:leads.length>0?Math.round(deals.filter(d=>d.stage==='Won').length/leads.length*100)+'%':'0%',c:'#10B981'},{l:'Avg Deal Value',v:deals.length>0?'£'+Math.round(deals.reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)/deals.length).toLocaleString():'£0',c:ACCENT},{l:'Total Revenue',v:'£'+wonDeals.toLocaleString(),c:'#101828'}].map((s:any)=>(
@@ -221,13 +255,6 @@ export default function Page() {
               </div>)
             })}
           </div>
-        </div>)}
-
-        {/* DOCUMENTS */}
-        {section==='Documents'&&(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>
-          <div style={{fontSize:40,marginBottom:12}}>📁</div>
-          <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>Sales Documents</div>
-          <div style={{fontSize:13}}>Upload proposals, contracts and presentations here.</div>
         </div>)}
 
       </div>

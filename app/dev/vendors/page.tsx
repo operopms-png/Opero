@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#8B5CF6'
+const ACCENT = '#3B4AFF'
 const MODULE = 'dev'
 const LABEL = 'Developments'
-const VENDOR_TYPES = ['Contractor','Maintenance','Plumber','Electrician','Handyman','Landscaper','Other']
+const VENDOR_TYPES = ['Cleaner','Maintenance','Plumber','Electrician','Handyman','Landscaper','Other']
 const STATUS_COLORS: any = {'Open':'#F59E0B','In Progress':'#3B4AFF','Completed':'#10B981','Approved':'#10B981','Rejected':'#EF4444','Pending':'#F59E0B'}
 const NAV = [
   {group:'VENDORS',items:[
@@ -17,38 +17,70 @@ const NAV = [
 export default function Page() {
   const [section, setSection] = useState('Work Orders')
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [workOrders, setWorkOrders] = useState<any[]>([])
   const [contractors, setContractors] = useState<any[]>([])
   const [showWO, setShowWO] = useState(false)
   const [showContractor, setShowContractor] = useState(false)
-  const [wo, setWo] = useState({title:'',description:'',contractor:'',priority:'Medium',property:''})
-  const [con, setCon] = useState({name:'',email:'',phone:'',type:'Contractor',company:''})
+  const [wo, setWo] = useState({title:'',description:'',contractor_id:'',priority:'Medium',property:''})
+  const [con, setCon] = useState({name:'',email:'',phone:'',type:'Cleaner',company:''})
 
   useEffect(()=>{
-    supabase.auth.getUser().then(({data:{user}})=>{
+    supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
+      await loadAll(user.id)
       setLoading(false)
     })
   },[])
 
-  const addWO = () => {
-    if(!wo.title) return
-    setWorkOrders([...workOrders,{id:Date.now(),...wo,status:'Open',created:new Date().toLocaleDateString('en-GB'),invoiceAmount:''}])
-    setWo({title:'',description:'',contractor:'',priority:'Medium',property:''})
-    setShowWO(false)
+  async function loadAll(userId: string) {
+    const [w,c] = await Promise.all([
+      supabase.from('vendor_work_orders').select('*, vendor_contractors(name)').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('vendor_contractors').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+    ])
+    setWorkOrders(w.data??[]); setContractors(c.data??[])
   }
 
-  const addContractor = () => {
+  async function addWO() {
+    if(!wo.title) return
+    setSaving(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from('vendor_work_orders').insert([{...wo,contractor_id:wo.contractor_id||null,user_id:user?.id,module:MODULE,status:'Open'}])
+    setSaving(false)
+    if(error){alert(error.message);return}
+    setWo({title:'',description:'',contractor_id:'',priority:'Medium',property:''})
+    setShowWO(false)
+    await loadAll(user!.id)
+  }
+
+  async function addContractor() {
     if(!con.name) return
-    setContractors([...contractors,{id:Date.now(),...con,status:'Active',workOrders:0}])
-    setCon({name:'',email:'',phone:'',type:'Contractor',company:''})
+    setSaving(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from('vendor_contractors').insert([{...con,user_id:user?.id,module:MODULE,status:'Active'}])
+    setSaving(false)
+    if(error){alert(error.message);return}
+    setCon({name:'',email:'',phone:'',type:'Cleaner',company:''})
     setShowContractor(false)
+    await loadAll(user!.id)
+  }
+
+  async function updateWOField(id: string, field: string, value: any) {
+    const {error} = await supabase.from('vendor_work_orders').update({[field]:value}).eq('id',id)
+    if(error){alert(error.message);return}
+    setWorkOrders(prev=>prev.map((x:any)=>x.id===id?{...x,[field]:value}:x))
+  }
+
+  async function delRow(table: string, id: string, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).delete().eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.filter((x:any)=>x.id!==id))
   }
 
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
-  const pendingInvoices = workOrders.filter(w=>w.invoiceAmount&&w.status!=='Approved'&&w.status!=='Rejected')
-  const totalSpend = workOrders.filter(w=>w.status==='Approved').reduce((s,w)=>s+(parseFloat(w.invoiceAmount)||0),0)
+  const pendingInvoices = workOrders.filter(w=>w.invoice_amount&&w.status!=='Approved'&&w.status!=='Rejected')
+  const totalSpend = workOrders.filter(w=>w.status==='Approved').reduce((s,w)=>s+(parseFloat(w.invoice_amount)||0),0)
 
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
@@ -95,11 +127,11 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Title *</div><input value={wo.title} onChange={e=>setWo({...wo,title:e.target.value})} placeholder="e.g. Fix leaking tap in unit 3" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><input value={wo.property} onChange={e=>setWo({...wo,property:e.target.value})} placeholder="e.g. Sangsters Aurevo C1-12" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/></div>
-                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Assign to contractor</div><select value={wo.contractor} onChange={e=>setWo({...wo,contractor:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',background:'#fff',boxSizing:'border-box'}}><option value="">Select contractor</option>{contractors.map(c=><option key={c.id}>{c.name}</option>)}</select></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Assign to contractor</div><select value={wo.contractor_id} onChange={e=>setWo({...wo,contractor_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',background:'#fff',boxSizing:'border-box'}}><option value="">Select contractor</option>{contractors.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Priority</div><select value={wo.priority} onChange={e=>setWo({...wo,priority:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',background:'#fff',boxSizing:'border-box'}}>{['Low','Medium','High','Urgent'].map(p=><option key={p}>{p}</option>)}</select></div>
               </div>
               <div style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Description</div><textarea value={wo.description} onChange={e=>setWo({...wo,description:e.target.value})} placeholder="Describe the work needed..." rows={3} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',resize:'vertical',boxSizing:'border-box'}}/></div>
-              <div style={{display:'flex',gap:8}}><button onClick={addWO} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create work order</button><button onClick={()=>setShowWO(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button></div>
+              <div style={{display:'flex',gap:8}}><button onClick={addWO} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Create work order'}</button><button onClick={()=>setShowWO(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button></div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 160px 100px 100px 120px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
@@ -108,13 +140,13 @@ export default function Page() {
               {workOrders.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🔧</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No work orders yet</div><div style={{fontSize:13}}>Create a work order to assign to a contractor.</div></div>):workOrders.map(w=>(
                 <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 100px 100px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{w.title}</div>{w.property&&<div style={{fontSize:11,color:'#667085'}}>{w.property}</div>}</div>
-                  <span style={{fontSize:13,color:'#344054'}}>{w.contractor||'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{w.vendor_contractors?.name||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:w.priority==='Urgent'?'#FEE2E2':w.priority==='High'?'#FEF3C7':'#F2F4F7',color:w.priority==='Urgent'?'#EF4444':w.priority==='High'?'#F59E0B':'#667085',display:'inline-block'}}>{w.priority}</span>
-                  <select value={w.status} onChange={e=>setWorkOrders(workOrders.map(x=>x.id===w.id?{...x,status:e.target.value}:x))} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #E4E7EC',fontSize:12,fontFamily:'inherit',outline:'none',background:'#fff',color:STATUS_COLORS[w.status]||'#344054',fontWeight:600}}>
+                  <select value={w.status} onChange={e=>updateWOField(w.id,'status',e.target.value)} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #E4E7EC',fontSize:12,fontFamily:'inherit',outline:'none',background:'#fff',color:STATUS_COLORS[w.status]||'#344054',fontWeight:600}}>
                     {['Open','In Progress','Completed','Approved','Rejected'].map(s=><option key={s}>{s}</option>)}
                   </select>
-                  <span style={{fontSize:12,color:'#667085'}}>{w.created}</span>
-                  <button onClick={()=>setWorkOrders(workOrders.filter(x=>x.id!==w.id))} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
+                  <span style={{fontSize:12,color:'#667085'}}>{new Date(w.created_at).toLocaleDateString('en-GB')}</span>
+                  <button onClick={()=>delRow('vendor_work_orders',w.id,setWorkOrders)} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
                 </div>
               ))}
             </div>
@@ -138,7 +170,7 @@ export default function Page() {
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Phone</div><input value={con.phone} onChange={e=>setCon({...con,phone:e.target.value})} placeholder="+44 7700 900000" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Type</div><select value={con.type} onChange={e=>setCon({...con,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',background:'#fff',boxSizing:'border-box'}}>{VENDOR_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
               </div>
-              <div style={{display:'flex',gap:8}}><button onClick={addContractor} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add contractor</button><button onClick={()=>setShowContractor(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button></div>
+              <div style={{display:'flex',gap:8}}><button onClick={addContractor} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add contractor'}</button><button onClick={()=>setShowContractor(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button></div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 140px 140px 120px 80px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
@@ -151,7 +183,7 @@ export default function Page() {
                   <span style={{fontSize:13,color:'#667085'}}>{c.company||'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{c.phone||'—'}</span>
                   <span style={{fontSize:12,color:'#10B981',fontWeight:500}}>● Active</span>
-                  <button onClick={()=>setContractors(contractors.filter(x=>x.id!==c.id))} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
+                  <button onClick={()=>delRow('vendor_contractors',c.id,setContractors)} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
                 </div>
               ))}
             </div>
@@ -173,10 +205,10 @@ export default function Page() {
               {workOrders.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No invoices yet</div><div style={{fontSize:13}}>Invoices will appear here once work orders are submitted.</div></div>):workOrders.map(w=>(
                 <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 120px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{w.title}</div>{w.property&&<div style={{fontSize:11,color:'#667085'}}>{w.property}</div>}</div>
-                  <span style={{fontSize:13,color:'#344054'}}>{w.contractor||'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{w.vendor_contractors?.name||'—'}</span>
                   <div style={{display:'flex',gap:4,alignItems:'center'}}>
                     <span style={{fontSize:12,color:'#667085'}}>£</span>
-                    <input value={w.invoiceAmount||''} onChange={e=>setWorkOrders(workOrders.map(x=>x.id===w.id?{...x,invoiceAmount:e.target.value}:x))} placeholder="0.00" style={{width:80,padding:'4px 8px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:12,fontFamily:'inherit',outline:'none'}}/>
+                    <input value={w.invoice_amount||''} onChange={e=>updateWOField(w.id,'invoice_amount',e.target.value)} placeholder="0.00" style={{width:80,padding:'4px 8px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:12,fontFamily:'inherit',outline:'none'}}/>
                   </div>
                   <span style={{fontSize:12,fontWeight:600,color:STATUS_COLORS[w.status]||'#344054'}}>{w.status}</span>
                   <button onClick={()=>setSection('Approvals')} style={{padding:'5px 10px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>Review</button>
@@ -194,13 +226,13 @@ export default function Page() {
               {pendingInvoices.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No invoices pending approval.</div></div>):pendingInvoices.map(w=>(
                 <div key={w.id} style={{padding:'20px',borderBottom:'1px solid #F2F4F7'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
-                    <div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:2}}>{w.title}</div><div style={{fontSize:12,color:'#667085'}}>{w.contractor} · {w.property} · {w.created}</div></div>
-                    <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>£{parseFloat(w.invoiceAmount||0).toLocaleString()}</div>
+                    <div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:2}}>{w.title}</div><div style={{fontSize:12,color:'#667085'}}>{w.vendor_contractors?.name} · {w.property} · {new Date(w.created_at).toLocaleDateString('en-GB')}</div></div>
+                    <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</div>
                   </div>
                   {w.description&&<div style={{fontSize:13,color:'#667085',marginBottom:12,background:'#F9FAFB',padding:'10px 12px',borderRadius:8}}>{w.description}</div>}
                   <div style={{display:'flex',gap:8}}>
-                    <button onClick={()=>setWorkOrders(workOrders.map(x=>x.id===w.id?{...x,status:'Approved'}:x))} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'#10B981',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Approve</button>
-                    <button onClick={()=>setWorkOrders(workOrders.map(x=>x.id===w.id?{...x,status:'Rejected'}:x))} style={{padding:'8px 20px',borderRadius:8,border:'1px solid #EF4444',background:'#fff',color:'#EF4444',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✕ Reject</button>
+                    <button onClick={()=>updateWOField(w.id,'status','Approved')} style={{padding:'8px 20px',borderRadius:8,border:'none',background:'#10B981',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Approve</button>
+                    <button onClick={()=>updateWOField(w.id,'status','Rejected')} style={{padding:'8px 20px',borderRadius:8,border:'1px solid #EF4444',background:'#fff',color:'#EF4444',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✕ Reject</button>
                   </div>
                 </div>
               ))}
@@ -208,9 +240,9 @@ export default function Page() {
                 <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:12}}>Completed</div>
                 {workOrders.filter(w=>w.status==='Approved'||w.status==='Rejected').map(w=>(
                   <div key={w.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #F9FAFB'}}>
-                    <div><div style={{fontSize:13,color:'#344054'}}>{w.title}</div><div style={{fontSize:11,color:'#667085'}}>{w.contractor}</div></div>
+                    <div><div style={{fontSize:13,color:'#344054'}}>{w.title}</div><div style={{fontSize:11,color:'#667085'}}>{w.vendor_contractors?.name}</div></div>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
-                      <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(w.invoiceAmount||0).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</span>
                       <span style={{fontSize:12,fontWeight:600,color:STATUS_COLORS[w.status]}}>{w.status}</span>
                     </div>
                   </div>
