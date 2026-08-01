@@ -89,6 +89,7 @@ export default function OwnerPortalPage() {
   const [financeRecords, setFinanceRecords] = useState<any[]>([])
   const [messages, setMessages] = useState<any[]>([])
   const [allOwners, setAllOwners] = useState<any[]>([])
+  const [allStatements, setAllStatements] = useState<any[]>([])
   const [contactInfo, setContactInfo] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [calMonth, setCalMonth] = useState(new Date())
@@ -190,13 +191,15 @@ export default function OwnerPortalPage() {
     const { data: props } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     const ids = (props ?? []).map(p => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-    const [b, t] = await Promise.all([
+    const [b, t, allStmts] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
+      supabase.from('owner_statements').select('owner_id, owner_amount, status'),
     ])
     setProperties(props ?? [])
     setBookings(b.data ?? [])
     setTickets(t.data ?? [])
+    setAllStatements(allStmts.data ?? [])
   }
 
   // Staff clicks "View Portal" on an owner — loads that owner's data into the
@@ -1474,7 +1477,7 @@ export default function OwnerPortalPage() {
                 { label: 'TOTAL REVENUE', value: `£${totalRevenue.toLocaleString()}` },
                 { label: 'OPEN MAINTENANCE', value: tickets.filter(t => t.status === 'open').length },
                 { label: 'TOTAL BOOKINGS', value: activeBookings.length },
-                { label: 'TOTAL PAID OUT', value: '£0' },
+                { label: 'TOTAL PAID OUT', value: `£${allStatements.filter((s: any) => s.status === 'paid').reduce((sum: number, s: any) => sum + (Number(s.owner_amount) || 0), 0).toLocaleString()}` },
               ].map(s => (
                 <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 8, padding: '12px 14px', textAlign: 'center' }}>
                   <div style={{ fontSize: 10, color: '#667085', textTransform: 'uppercase', fontWeight: 600, marginBottom: 6 }}>{s.label}</div>
@@ -1482,7 +1485,15 @@ export default function OwnerPortalPage() {
                 </div>
               ))}
             </div>
-            {allOwners.map(owner => (
+            {allOwners.map(owner => {
+              const ids: string[] = owner.property_ids ?? []
+              const ownerBookings = bookings.filter(b => b.status !== 'cancelled' && ids.includes(b.property_id))
+              const ownerRevenue = ownerBookings.reduce((s, b) => s + (Number(b.total_amount) || 0), 0)
+              const ownerShareAmt = ownerRevenue * ((owner.split_percentage ?? 60) / 100)
+              const ownerPaidOut = allStatements.filter((s: any) => s.owner_id === owner.id && s.status === 'paid').reduce((sum: number, s: any) => sum + (Number(s.owner_amount) || 0), 0)
+              const ownerInvested = Number(owner.invested) || 0
+              const ownerRoi = ownerInvested > 0 ? ((ownerShareAmt / ownerInvested) * 100).toFixed(1) : '0.0'
+              return (
               <div key={owner.id} style={{ border: '1px solid #EAECF0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F9FAFB' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1497,13 +1508,14 @@ export default function OwnerPortalPage() {
                   </div>
                 </div>
                 <div style={{ padding: '12px 20px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Revenue</div><div style={{ fontWeight: 600 }}>—</div></div>
-                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Paid Out</div><div style={{ fontWeight: 600 }}>—</div></div>
-                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>ROI</div><div style={{ fontWeight: 600 }}>—</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Revenue</div><div style={{ fontWeight: 600 }}>£{ownerRevenue.toLocaleString()}</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Paid Out</div><div style={{ fontWeight: 600 }}>£{ownerPaidOut.toLocaleString()}</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>ROI</div><div style={{ fontWeight: 600 }}>{ownerRoi}%</div></div>
                   <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Properties</div><div style={{ fontWeight: 600 }}>{(owner.property_ids ?? []).length}</div></div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
