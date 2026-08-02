@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { normalizeRole } from '../../lib/useRole'
 
 const ACCENT = '#5B7CFA'
 
@@ -23,6 +24,7 @@ export default function StaffDashboard() {
         .limit(1)
       const m = rows?.[0]
       if (!m) { window.location.href = '/login'; return }
+      m.role = normalizeRole(m.role)
       setMember(m)
 
       const businessId = m.user_id

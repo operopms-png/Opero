@@ -42,6 +42,18 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
   return RESTRICTED_TABS[role]?.[moduleKey] ?? null
 }
 
+const KNOWN_ROLES: UserRole[] = ['Admin', 'Airbnb Agent', 'Property Manager', 'Dev', 'Cleaner', 'Maintenance', 'Viewer', 'Estate Agent']
+
+// Matches a raw role string (whatever casing it was stored in) against
+// the canonical role names, case-insensitively. Falls back to 'Admin'
+// only if there's genuinely no match — a typo'd/lowercased role should
+// never silently grant full access.
+export function normalizeRole(raw: string | null | undefined): UserRole {
+  if (!raw) return 'Admin'
+  const match = KNOWN_ROLES.find(r => r.toLowerCase() === raw.trim().toLowerCase())
+  return match ?? 'Admin'
+}
+
 export function useRole() {
   const [role, setRole] = useState<UserRole>('Admin')
   const [propertyIds, setPropertyIds] = useState<string[]>([])
@@ -60,8 +72,9 @@ export function useRole() {
         .eq('email', user.email)
         .order('created_at', { ascending: false })
         .limit(1)
-      // Not in team_members = owner = Admin
-      setRole((data?.[0]?.role as UserRole) ?? 'Admin')
+      // Not in team_members = owner = Admin. Otherwise normalize
+      // whatever casing was stored against the canonical role names.
+      setRole(normalizeRole(data?.[0]?.role))
       setPropertyIds(data?.[0]?.property_ids ?? [])
       setLoading(false)
     })

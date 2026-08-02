@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { normalizeRole } from '../../lib/useRole'
 
 
 const PLANS = [
@@ -89,7 +90,7 @@ function LoginForm() {
         const { data: landlordProfile } = await supabase.from('pm_landlords').select('id').eq('portal_user_id', session.user.id).single()
         if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
         const { data: teamRows } = await supabase.from('team_members').select('role').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
-        const staffRole = teamRows?.[0]?.role
+        const staffRole = normalizeRole(teamRows?.[0]?.role)
         window.location.href = (staffRole === 'Cleaner' || staffRole === 'Maintenance') ? '/staff-dashboard' : redirect
       } else {
         setCheckingSession(false)
@@ -128,7 +129,7 @@ function LoginForm() {
           .eq('email', email)
           .order('created_at', { ascending: false })
           .limit(1)
-        const staffRole = teamRows?.[0]?.role
+        const staffRole = normalizeRole(teamRows?.[0]?.role)
         window.location.href = (staffRole === 'Cleaner' || staffRole === 'Maintenance') ? '/staff-dashboard' : redirect
       }
     } else if (mode === 'signup') {

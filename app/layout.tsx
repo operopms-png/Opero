@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
+import { normalizeRole } from '@/lib/useRole'
 import './globals.css'
 
 const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/staff-dashboard']
@@ -26,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         .eq('email', user.email)
         .order('created_at', { ascending: false })
         .limit(1)
-      const role = rows?.[0]?.role
+      const role = normalizeRole(rows?.[0]?.role)
       if (role === 'Cleaner' || role === 'Maintenance') {
         window.location.href = '/staff-dashboard'
         return
