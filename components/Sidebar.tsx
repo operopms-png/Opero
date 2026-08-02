@@ -27,7 +27,6 @@ const NAV_GROUPS = [
     modulePrice: '£99/mo',
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
-      { href: '/pm?tab=Landlords', label: 'Owners', key: 'pm', icon: 'users' },
       { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'contacts' },
       { href: '/pm/marketing', label: 'Marketing', key: 'pm', icon: 'sparkles' },
       { href: '/pm/sales', label: 'Sales', key: 'pm', icon: 'trendingup' },
