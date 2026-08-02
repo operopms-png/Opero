@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useRole } from '@/lib/useRole'
 const ACCENT = '#3B4AFF'
 const NAV = [
   {group:'ACCOUNT',items:[
@@ -15,6 +16,7 @@ const NAV = [
 const ROLES = ['Admin','Airbnb Agent','Property Manager','Cleaner','Maintenance','Viewer','Estate Agent']
 
 export default function Page() {
+  const { role: myRole, hasSettings, loading: roleLoading } = useRole()
   const [section, setSection] = useState('My Account')
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
@@ -36,6 +38,11 @@ export default function Page() {
   const [copied, setCopied] = useState(false)
   const [plan, setPlan] = useState('Professional')
   const [messages, setMessages] = useState<any[]>([])
+
+  useEffect(() => {
+    if(roleLoading) return
+    if(!hasSettings){ window.location.href='/'; return }
+  }, [roleLoading, hasSettings])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({data:{user}})=>{
@@ -281,7 +288,7 @@ export default function Page() {
                   <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{user?.email?.split('@')[0]}</span>
                 </div>
                 <span style={{fontSize:13,color:'#667085'}}>{user?.email}</span>
-                <span style={{fontSize:12,fontWeight:600,color:ACCENT,background:ACCENT+'18',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>Admin</span>
+                <span style={{fontSize:12,fontWeight:600,color:ACCENT,background:ACCENT+'18',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>{myRole}</span>
                 <span style={{fontSize:12,color:'#10B981',fontWeight:500}}>● Active</span>
                 <span style={{fontSize:12,color:'#98A2B3'}}>You</span>
               </div>
@@ -311,7 +318,7 @@ export default function Page() {
               ))}
               {team.length===0&&(<div style={{textAlign:'center',padding:40,color:'#98A2B3'}}>
                 <div style={{fontSize:32,marginBottom:8}}>👥</div>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No team members yet</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No additional team members yet</div>
                 <div style={{fontSize:13}}>Invite cleaners, admins and managers to get started.</div>
               </div>)}
             </div>

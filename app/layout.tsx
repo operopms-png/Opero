@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
-import { normalizeRole } from '@/lib/useRole'
+import { normalizeRole, ROLE_SETTINGS } from '@/lib/useRole'
 import './globals.css'
 
 const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/staff-dashboard']
@@ -30,6 +30,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       const role = normalizeRole(rows?.[0]?.role)
       if (role === 'Cleaner' || role === 'Maintenance') {
         window.location.href = '/staff-dashboard'
+        return
+      }
+      // Belt-and-suspenders: any role not entitled to Settings (per
+      // ROLE_SETTINGS) gets bounced from it specifically, even if it's
+      // not Cleaner/Maintenance (e.g. Airbnb Agent, Property Manager,
+      // Estate Agent) — those roles still use the rest of the app fine.
+      if (pathname?.startsWith('/settings') && !ROLE_SETTINGS[role]) {
+        window.location.href = '/'
         return
       }
       setChecked(true)
