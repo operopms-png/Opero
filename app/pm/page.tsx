@@ -167,6 +167,7 @@ function PMPageInner() {
   const [landlordPayments, setLandlordPayments] = useState<any[]>([])
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})
+  const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
   const [portalLandlord, setPortalLandlord] = useState<any>(null)
   const [portalPassword, setPortalPassword] = useState('')
   const [creatingPortal, setCreatingPortal] = useState(false)
@@ -1000,12 +1001,12 @@ function PMPageInner() {
             </div>
 
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-              <button onClick={()=>setShowAddLandlordPayment(true)} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Payment to Landlord</button>
+              <button onClick={()=>{setEditingPaymentId(null);setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setShowAddLandlordPayment(true)}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Payment to Landlord</button>
             </div>
 
             {showAddLandlordPayment&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
-                <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add Payment to Landlord</h3>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editingPaymentId?'Edit Payment':'Add Payment to Landlord'}</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={lbl}>Landlord</label><select style={inp} value={lpForm.landlord_id} onChange={e=>setLpForm({...lpForm,landlord_id:e.target.value})}><option value="">Select landlord…</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
                   <div><label style={lbl}>Property</label><select style={inp} value={lpForm.property_id} onChange={e=>setLpForm({...lpForm,property_id:e.target.value})}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
@@ -1020,23 +1021,26 @@ function PMPageInner() {
                   <button onClick={async ()=>{
                     if(!lpForm.landlord_id||!lpForm.amount)return
                     const {data:{user}}=await supabase.auth.getUser()
-                    const {error}=await supabase.from('pm_landlord_payments').insert([{...lpForm,amount:parseFloat(lpForm.amount),due_date:lpForm.due_date||null,paid_date:lpForm.paid_date||null,receipt_url:lpForm.receipt_url||null,user_id:user?.id}])
+                    const payload={...lpForm,amount:parseFloat(lpForm.amount),due_date:lpForm.due_date||null,paid_date:lpForm.paid_date||null,receipt_url:lpForm.receipt_url||null}
+                    const {error}=editingPaymentId
+                      ? await supabase.from('pm_landlord_payments').update(payload).eq('id',editingPaymentId)
+                      : await supabase.from('pm_landlord_payments').insert([{...payload,user_id:user?.id}])
                     if(error){alert(error.message);return}
-                    setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setShowAddLandlordPayment(false);await loadAll()
+                    setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setEditingPaymentId(null);setShowAddLandlordPayment(false);await loadAll()
                   }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
-                  <button onClick={()=>setShowAddLandlordPayment(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                  <button onClick={()=>{setShowAddLandlordPayment(false);setEditingPaymentId(null);setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
             )}
 
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 90px 90px 90px 120px 60px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 90px 90px 90px 120px 60px 90px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Landlord</span><span>Property</span><span>Category</span><span>Amount</span><span>Due</span><span>Paid</span><span>Status</span><span>Receipt</span><span></span>
               </div>
               {landlordPayments.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No landlord payments logged yet</div><div style={{fontSize:13}}>Track rent shares and bills you pay to each landlord.</div></div>):landlordPayments.map((p:any)=>{
                 const s=statusFor(p)
                 return (
-                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 90px 90px 90px 120px 60px 30px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 90px 90px 90px 120px 60px 90px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{p.pm_landlords?.name??'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{p.pm_properties?.name??'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{p.category}</span>
@@ -1050,7 +1054,14 @@ function PMPageInner() {
                       <span style={{display:'none',fontSize:11,color:'#5B7CFA',textDecoration:'underline'}}>View</span>
                     </a>
                   ):<span style={{fontSize:11,color:'#D0D5DD'}}>—</span>}
-                  <button onClick={async ()=>{await supabase.from('pm_landlord_payments').delete().eq('id',p.id);await loadAll()}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                  <div style={{display:'flex',gap:6}}>
+                    <button onClick={()=>{
+                      setLpForm({landlord_id:p.landlord_id??'',property_id:p.property_id??'',category:p.category??'Rent Share',amount:String(p.amount??''),due_date:p.due_date??'',paid_date:p.paid_date??'',notes:p.notes??'',receipt_url:p.receipt_url??''})
+                      setEditingPaymentId(p.id)
+                      setShowAddLandlordPayment(true)
+                    }} style={{fontSize:11,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={async ()=>{await supabase.from('pm_landlord_payments').delete().eq('id',p.id);await loadAll()}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                  </div>
                 </div>
                 )
               })}
