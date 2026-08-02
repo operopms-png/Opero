@@ -60,7 +60,7 @@ const PLANS = [
     id: 'bundle',
     label: 'All Modules Bundle',
     price: '£175.50',
-    period: '/mo',
+    period: ' one-time',
     color: '#1a1a2e',
     features: ['Every module included', '10% off vs buying separately', 'Unlimited properties', 'Priority support'],
   },
@@ -213,7 +213,7 @@ function LoginForm() {
           </div>
 
           <div style={{ marginTop: 'auto', paddingTop: 24, fontSize: 12, color: '#98A2B3', textAlign: 'center' }}>
-            All plans include a 14-day free trial. Cancel anytime.
+            Monthly plans include a 14-day free trial, cancel anytime. The bundle is a one-time purchase.
           </div>
         </div>
       )}
@@ -225,8 +225,17 @@ function LoginForm() {
           {/* Success plan banner */}
           {success && (
             <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 16px', marginBottom: 24 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>✅ Plan selected!</div>
-              <div style={{ fontSize: 12, color: '#6B7280' }}>14-day free trial active · No credit card charged yet</div>
+              {initialPlan === 'bundle' ? (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>✅ Payment successful!</div>
+                  <div style={{ fontSize: 12, color: '#6B7280' }}>Full access to every module is now unlocked</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>✅ Plan selected!</div>
+                  <div style={{ fontSize: 12, color: '#6B7280' }}>14-day free trial active · No credit card charged yet</div>
+                </>
+              )}
             </div>
           )}
 
@@ -237,7 +246,7 @@ function LoginForm() {
             </div>
             {mode === 'signup' && selectedPlan && (
               <div style={{ fontSize: 13, color: '#667085', marginTop: 4 }}>
-                {PLANS.find(p => p.id === selectedPlan)?.label} plan · {PLANS.find(p => p.id === selectedPlan)?.price}/mo
+                {PLANS.find(p => p.id === selectedPlan)?.label} plan · {PLANS.find(p => p.id === selectedPlan)?.price}{PLANS.find(p => p.id === selectedPlan)?.period}
               </div>
             )}
           </div>
@@ -256,7 +265,7 @@ function LoginForm() {
             {error && <div style={{ fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
             {successMsg && <div style={{ fontSize: 13, color: '#12B76A', background: '#F6FEF9', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}
             <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#3B4AFF', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
-              {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? `Start free trial →` : 'Send Reset Email'}
+              {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? (selectedPlan === 'bundle' ? 'Purchase bundle →' : 'Start free trial →') : 'Send Reset Email'}
             </button>
           </div>
 

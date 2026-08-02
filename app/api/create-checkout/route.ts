@@ -19,11 +19,12 @@ export async function POST(request: NextRequest) {
     const { plan, priceId } = body
     const finalPriceId = priceId || PRICE_IDS[plan]
     if (!finalPriceId) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
+    const isOneTime = plan === 'bundle'
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      mode: isOneTime ? 'payment' : 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: finalPriceId, quantity: 1 }],
-      subscription_data: { trial_period_days: 14 },
+      ...(isOneTime ? {} : { subscription_data: { trial_period_days: 14 } }),
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/login?plan=${plan}&success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing.html#pricing`,
       allow_promotion_codes: true,

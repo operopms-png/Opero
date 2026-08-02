@@ -49,24 +49,38 @@ export async function POST(request: NextRequest) {
     const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
     const plan = PLAN_MAP[priceId] ?? 'starter'
     const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
+    const isOneTime = fullSession.mode === 'payment'
     if (email) {
       const { data: users } = await supabase.auth.admin.listUsers()
       const user = users?.users?.find((u) => u.email === email)
       if (user) {
-        // Pull the actual subscription object for its real trial_end —
-        // the checkout session itself doesn't carry it.
-        let trialEnd: string | null = null
-        if (fullSession.subscription) {
-          const stripeSub = await stripe.subscriptions.retrieve(fullSession.subscription as string)
-          trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null
+        if (isOneTime) {
+          // One-time purchase (the bundle) — no subscription object exists,
+          // no trial, and access doesn't expire on its own the way a
+          // subscription would.
+          await supabase.from('subscriptions').upsert({
+            user_id: user.id, plan, billing_period: billingPeriod, status: 'active',
+            stripe_customer_id: fullSession.customer as string,
+            stripe_subscription_id: null,
+            trial_end: null,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' })
+        } else {
+          // Pull the actual subscription object for its real trial_end —
+          // the checkout session itself doesn't carry it.
+          let trialEnd: string | null = null
+          if (fullSession.subscription) {
+            const stripeSub = await stripe.subscriptions.retrieve(fullSession.subscription as string)
+            trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null
+          }
+          await supabase.from('subscriptions').upsert({
+            user_id: user.id, plan, billing_period: billingPeriod, status: 'trialing',
+            stripe_customer_id: fullSession.customer as string,
+            stripe_subscription_id: fullSession.subscription as string,
+            trial_end: trialEnd,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' })
         }
-        await supabase.from('subscriptions').upsert({
-          user_id: user.id, plan, billing_period: billingPeriod, status: 'trialing',
-          stripe_customer_id: fullSession.customer as string,
-          stripe_subscription_id: fullSession.subscription as string,
-          trial_end: trialEnd,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' })
       }
     }
   }
