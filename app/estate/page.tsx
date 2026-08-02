@@ -1024,19 +1024,38 @@ export default function Page() {
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:12,color:'#667085'}}>Annual Rent Roll</span></div>
                   <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{annualRent.toLocaleString()}</div>
                   <div style={{fontSize:12,color:'#98A2B3'}}>{tenancies.filter((t:any)=>t.status==='Active').length} active tenancies</div>
-                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,38 75,35 110,22 145,18 175,10 195,6" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="195" cy="6" r="3" fill="#10B981"/></svg>
+                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
+                    const sorted=[...tenancies].filter((t:any)=>t.status==='Active').sort((a:any,b:any)=>(a.created_at||'').localeCompare(b.created_at||''))
+                    const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
+                    const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).reduce((s:number,t:any)=>s+(parseFloat(t.rent)||0)*12,0);return cum})
+                    const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${45-(v/max)*39}`).join(' ')
+                    const [lastX,lastY]=pts.split(' ').pop()!.split(',')
+                    return (<><polyline points={pts} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx={lastX} cy={lastY} r="3" fill="#10B981"/></>)
+                  })()}</svg>
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>🏘️</span><span style={{fontSize:12,color:'#667085'}}>Properties</span></div>
                   <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>{properties.length}</div>
                   <div style={{fontSize:12,color:'#98A2B3'}}>{tenants.length} tenants</div>
-                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,40 75,42 110,28 145,24 175,14 195,10" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
+                    const sorted=[...properties].sort((a:any,b:any)=>(a.created_at||'').localeCompare(b.created_at||''))
+                    const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
+                    const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).length;return cum})
+                    const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${45-(v/max)*39}`).join(' ')
+                    return <polyline points={pts} fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  })()}</svg>
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>🏠</span><span style={{fontSize:12,color:'#667085'}}>Vacancies</span></div>
                   <div style={{fontSize:32,fontWeight:800,color:'#F59E0B',marginBottom:4}}>{vacancies.filter((v:any)=>v.status==='Available').length}</div>
                   <div style={{fontSize:12,color:'#98A2B3'}}>units available</div>
-                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,20 40,22 75,18 110,25 145,20 175,28 195,24" fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/></svg>
+                  <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
+                    const sorted=[...vacancies].filter((v:any)=>v.status==='Available').sort((a:any,b:any)=>(a.created_at||'').localeCompare(b.created_at||''))
+                    const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
+                    const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).length;return cum})
+                    const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${25-(v/max)*20}`).join(' ')
+                    return <polyline points={pts} fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                  })()}</svg>
                 </div>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>

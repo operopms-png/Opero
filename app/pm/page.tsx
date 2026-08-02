@@ -391,8 +391,24 @@ export default function PMPage() {
                   <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:12,height:2,background:'#E4E7EC',display:'inline-block',borderRadius:2}}></span>Due</span>
                 </div>
                 <svg viewBox="0 0 300 80" style={{width:'100%'}}>
-                  <polyline points="10,70 60,55 110,60 160,35 210,40 260,20 290,15" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <polyline points="10,75 60,72 110,74 160,65 210,68 260,58 290,55" fill="none" stroke="#E4E7EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                  {(() => {
+                    const year = new Date().getFullYear()
+                    let cumRent = 0, cumExpense = 0
+                    const monthly = Array.from({length:7},(_,i)=>{
+                      const monthKey = `${year}-${String(i+1).padStart(2,'0')}`
+                      cumRent += payments.filter((p:any)=>p.status==='paid' && p.due_date?.startsWith(monthKey)).reduce((s:number,p:any)=>s+(parseFloat(p.amount)||0),0)
+                      cumExpense += expenses.filter((e:any)=>e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+                      return { cumRent, cumExpense }
+                    })
+                    const maxVal = Math.max(1, ...monthly.map(m=>m.cumRent), ...monthly.map(m=>m.cumExpense))
+                    const toY = (v:number) => 78 - (v/maxVal)*68
+                    const rentPts = monthly.map((m,i)=>`${10+i*47},${toY(m.cumRent).toFixed(1)}`).join(' ')
+                    const expPts = monthly.map((m,i)=>`${10+i*47},${toY(m.cumExpense).toFixed(1)}`).join(' ')
+                    return (<>
+                      <polyline points={rentPts} fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <polyline points={expPts} fill="none" stroke="#E4E7EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                    </>)
+                  })()}
                   {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
                 </svg>
               </div>
@@ -876,19 +892,38 @@ export default function PMPage() {
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:12,color:'#667085'}}>Rent Collected</span></div>
                 <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{totalCollected.toLocaleString()}</div>
                 <div style={{fontSize:12,color:'#98A2B3'}}>{payments.filter((p:any)=>p.status==='paid').length} payments</div>
-                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,38 75,35 110,22 145,18 175,10 195,6" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="195" cy="6" r="3" fill="#10B981"/></svg>
+                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
+                  const sorted=[...payments].filter((p:any)=>p.status==='paid').sort((a:any,b:any)=>(a.due_date||'').localeCompare(b.due_date||''))
+                  const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
+                  const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).reduce((s:number,p:any)=>s+(parseFloat(p.amount)||0),0);return cum})
+                  const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${45-(v/max)*39}`).join(' ')
+                  const [lastX,lastY]=pts.split(' ').pop()!.split(',')
+                  return (<><polyline points={pts} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx={lastX} cy={lastY} r="3" fill="#10B981"/></>)
+                })()}</svg>
               </div>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>🏠</span><span style={{fontSize:12,color:'#667085'}}>Properties</span></div>
                 <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>{properties.length}</div>
                 <div style={{fontSize:12,color:'#98A2B3'}}>{units.length} units</div>
-                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,45 40,40 75,42 110,28 145,24 175,14 195,10" fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
+                  const sorted=[...properties].sort((a:any,b:any)=>(a.created_at||'').localeCompare(b.created_at||''))
+                  const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
+                  const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).length;return cum})
+                  const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${45-(v/max)*39}`).join(' ')
+                  return <polyline points={pts} fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                })()}</svg>
               </div>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #FEE2E2',padding:24}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>⚠️</span><span style={{fontSize:12,color:'#667085'}}>Arrears</span></div>
                 <div style={{fontSize:32,fontWeight:800,color:'#EF4444',marginBottom:4}}>£{arrears.toLocaleString()}</div>
                 <div style={{fontSize:12,color:'#98A2B3'}}>{payments.filter((p:any)=>p.status==='overdue').length} overdue</div>
-                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}><polyline points="5,20 40,22 75,18 110,25 145,20 175,28 195,24" fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/></svg>
+                <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
+                  const sorted=[...payments].filter((p:any)=>p.status==='overdue').sort((a:any,b:any)=>(a.due_date||'').localeCompare(b.due_date||''))
+                  const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
+                  const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).reduce((s:number,p:any)=>s+(parseFloat(p.amount)||0),0);return cum})
+                  const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${25-(v/max)*20}`).join(' ')
+                  return <polyline points={pts} fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                })()}</svg>
               </div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>

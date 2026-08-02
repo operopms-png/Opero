@@ -511,11 +511,27 @@ export default function DevPage() {
                   <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#8B5CF6', display:'inline-block', borderRadius:2 }}></span>Budget</span>
                   <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#F59E0B', display:'inline-block', borderRadius:2 }}></span>Spent</span>
                 </div>
-                <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
-                  <polyline points="10,70 60,55 110,50 160,35 210,30 260,20 290,15" fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <polyline points="10,75 60,68 110,65 160,55 210,50 260,42 290,38" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
-                </svg>
+                {(() => {
+                  const year = new Date().getFullYear()
+                  let cumBudget = 0, cumSpent = 0
+                  const monthly = Array.from({length:6},(_,i)=>{
+                    const monthKey = `${year}-${String(i+1).padStart(2,'0')}`
+                    cumBudget += budgetItems.filter((b:any)=>b.created_at?.startsWith(monthKey)).reduce((s:number,b:any)=>s+(b.budgeted??0),0)
+                    cumSpent += budgetItems.filter((b:any)=>b.created_at?.startsWith(monthKey)).reduce((s:number,b:any)=>s+(b.actual??0),0)
+                    return { cumBudget, cumSpent }
+                  })
+                  const maxVal = Math.max(1, ...monthly.map(m=>m.cumBudget), ...monthly.map(m=>m.cumSpent))
+                  const toY = (v:number) => 78 - (v/maxVal)*68
+                  const budgetPts = monthly.map((m,i)=>`${10+i*56},${toY(m.cumBudget).toFixed(1)}`).join(' ')
+                  const spentPts = monthly.map((m,i)=>`${10+i*56},${toY(m.cumSpent).toFixed(1)}`).join(' ')
+                  return (
+                  <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
+                    <polyline points={budgetPts} fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <polyline points={spentPts} fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
+                    {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
+                  </svg>
+                  )
+                })()}
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Project Status</div>
