@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import WeatherWidget from '@/components/WeatherWidget'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
@@ -133,12 +134,17 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
     </div>
   )
 }
-export default function PMPage() {
+function PMPageInner() {
+  const searchParams = useSearchParams()
   const [tab, setTab] = useState('Dashboard')
   const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'pm')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t && TABS.includes(t)) setTab(t)
+  }, [searchParams])
   useEffect(() => { if (allowedTab) setTab(allowedTab) }, [allowedTab])
   const [hasModule, setHasModule] = useState<boolean|null>(null)
   const [properties, setProperties] = useState<any[]>([])
@@ -1419,5 +1425,13 @@ export default function PMPage() {
         </Modal>
       )}
     </div>
+  )
+}
+
+export default function PMPage() {
+  return (
+    <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>}>
+      <PMPageInner />
+    </Suspense>
   )
 }
