@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useRole } from '@/lib/useRole'
 const ACCENT = '#3B4AFF'
@@ -15,9 +16,11 @@ const NAV = [
 
 const ROLES = ['Admin','Dev','Airbnb Agent','Property Manager','Cleaner','Maintenance','Viewer','Estate Agent']
 
-export default function Page() {
+function SettingsInner() {
+  const searchParams = useSearchParams()
+  const billingRequired = searchParams.get('billing') === 'required'
   const { role: myRole, hasSettings, loading: roleLoading } = useRole()
-  const [section, setSection] = useState('My Account')
+  const [section, setSection] = useState(billingRequired ? 'Billing & Subscriptions' : 'My Account')
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [team, setTeam] = useState<any[]>([])
@@ -93,11 +96,14 @@ export default function Page() {
           {NAV.map(group=>(
             <div key={group.group}>
               <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px'}}>{group.group}</div>
-              {group.items.map(({s,i})=>(
-                <button key={s} onClick={()=>setSection(s)} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',borderRadius:7,border:'none',background:section===s?ACCENT+'18':'transparent',color:section===s?ACCENT:'#344054',fontSize:13,fontWeight:section===s?600:400,cursor:'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:1}}>
+              {group.items.map(({s,i})=>{
+                const locked = billingRequired && s!=='Billing & Subscriptions'
+                return (
+                <button key={s} onClick={()=>{if(!locked)setSection(s)}} disabled={locked} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',borderRadius:7,border:'none',background:section===s?ACCENT+'18':'transparent',color:locked?'#D0D5DD':section===s?ACCENT:'#344054',fontSize:13,fontWeight:section===s?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:1}}>
                   <span style={{display:'flex',alignItems:'center'}}>{i}</span>{s}
                 </button>
-              ))}
+                )
+              })}
             </div>
           ))}
         </nav>
@@ -107,6 +113,16 @@ export default function Page() {
           <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#101828'}}>{section}</h1>
         </div>
         <div style={{flex:1,padding:24,overflowY:'auto'}}>
+
+          {billingRequired && (
+            <div style={{background:'#FEF3C7',border:'1px solid #FCD34D',borderRadius:12,padding:'16px 20px',marginBottom:20,display:'flex',alignItems:'center',gap:12}}>
+              <span style={{fontSize:20}}>⚠️</span>
+              <div>
+                <div style={{fontSize:14,fontWeight:600,color:'#92400E'}}>Access restricted — payment required</div>
+                <div style={{fontSize:13,color:'#B45309',marginTop:2}}>Your trial has ended and we couldn't process payment. Update your billing details below to restore full access.</div>
+              </div>
+            </div>
+          )}
 
           {section==='My Account'&&(<div style={{maxWidth:600}}>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
@@ -458,5 +474,13 @@ export default function Page() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>}>
+      <SettingsInner />
+    </Suspense>
   )
 }

@@ -78,11 +78,18 @@ export default function DashboardPage() {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
-  // Trial countdown logic
+  // Trial countdown logic — reads Stripe's actual trial_end (captured by
+  // the webhook) rather than reconstructing it from updated_at, which
+  // gets rewritten by unrelated Stripe events and silently skews the
+  // countdown. Falls back to the old estimate only for rows created
+  // before trial_end existed.
   const isTrialing = subscription?.status === 'trialing'
   const isPaid = subscription?.status === 'active'
-  const trialStart = subscription?.updated_at ? new Date(subscription.updated_at) : null
-  const trialEnd = trialStart ? new Date(trialStart.getTime() + 14 * 24 * 60 * 60 * 1000) : null
+  const trialEnd = subscription?.trial_end
+    ? new Date(subscription.trial_end)
+    : subscription?.updated_at
+    ? new Date(new Date(subscription.updated_at).getTime() + 14 * 24 * 60 * 60 * 1000)
+    : null
   const daysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null
   const trialUrgent = daysLeft !== null && daysLeft <= 3
 

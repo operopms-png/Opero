@@ -9,6 +9,12 @@ import './globals.css'
 
 const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/staff-dashboard']
 
+// Statuses where Stripe has stopped billing successfully — trial expired
+// with no working payment method, a renewal failed, or it was cancelled.
+// 'cancelled' (double-l) is kept alongside Stripe's real 'canceled' value
+// since an earlier version of the webhook wrote the non-standard spelling.
+const BLOCKED_STATUSES = ['past_due', 'unpaid', 'incomplete_expired', 'canceled', 'cancelled', 'paused']
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route))
@@ -23,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       if (!user) { setChecked(true); return }
       const { data: rows } = await supabase
         .from('team_members')
-        .select('role')
+        .select('role, user_id')
         .eq('email', user.email)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -38,6 +44,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       // Estate Agent) — those roles still use the rest of the app fine.
       if (pathname?.startsWith('/settings') && !ROLE_SETTINGS[role]) {
         window.location.href = '/'
+        return
+      }
+      // Staff accounts don't have their own subscription — team_members
+      // rows are saved with user_id = the owning account, not the staff
+      // member's own auth id. Not being in team_members means this user
+      // IS the owner. Either way, this resolves to the account whose
+      // billing actually governs access.
+      const ownerId = rows?.[0]?.user_id ?? user.id
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', ownerId)
+        .single()
+      // No subscription row at all is left un-blocked deliberately —
+      // that covers accounts set up directly rather than through Stripe
+      // checkout, which should never be locked out by this check.
+      if (sub && BLOCKED_STATUSES.includes(sub.status) && !pathname?.startsWith('/settings')) {
+        window.location.href = '/settings?billing=required'
         return
       }
       setChecked(true)

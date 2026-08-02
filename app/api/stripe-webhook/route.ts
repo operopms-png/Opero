@@ -53,10 +53,18 @@ export async function POST(request: NextRequest) {
       const { data: users } = await supabase.auth.admin.listUsers()
       const user = users?.users?.find((u) => u.email === email)
       if (user) {
+        // Pull the actual subscription object for its real trial_end —
+        // the checkout session itself doesn't carry it.
+        let trialEnd: string | null = null
+        if (fullSession.subscription) {
+          const stripeSub = await stripe.subscriptions.retrieve(fullSession.subscription as string)
+          trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null
+        }
         await supabase.from('subscriptions').upsert({
           user_id: user.id, plan, billing_period: billingPeriod, status: 'trialing',
           stripe_customer_id: fullSession.customer as string,
           stripe_subscription_id: fullSession.subscription as string,
+          trial_end: trialEnd,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' })
       }
@@ -69,14 +77,16 @@ export async function POST(request: NextRequest) {
     const plan = PLAN_MAP[priceId] ?? 'starter'
     const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
     await supabase.from('subscriptions').update({
-      plan, billing_period: billingPeriod, status: sub.status, updated_at: new Date().toISOString(),
+      plan, billing_period: billingPeriod, status: sub.status,
+      trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+      updated_at: new Date().toISOString(),
     }).eq('stripe_subscription_id', sub.id)
   }
 
   if (event.type === 'customer.subscription.deleted') {
     const sub = event.data.object as any
     await supabase.from('subscriptions').update({
-      status: 'cancelled', updated_at: new Date().toISOString(),
+      status: 'canceled', updated_at: new Date().toISOString(),
     }).eq('stripe_subscription_id', sub.id)
   }
 
