@@ -111,7 +111,7 @@ function LoginForm() {
         const { data: landlordProfile } = await supabase
           .from('pm_landlords')
           .select('id')
-          .eq('user_id', data.user?.id)
+          .eq('portal_user_id', data.user?.id)
           .single()
         window.location.href = landlordProfile ? '/pm-owner-portal' : redirect
       }

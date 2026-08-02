@@ -539,8 +539,11 @@ function PMPageInner() {
                   <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[l.email,l.phone].filter(Boolean).join(' · ')}</div>
                 </div>
                 <div style={{fontSize:13,color:'#667085'}}>{properties.filter(p=>p.owner_id===l.id).length} properties</div>
-                {l.user_id?(
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Portal Active</span>
+                {l.portal_user_id?(
+                  <>
+                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Portal Active</span>
+                    <a href={`/pm-owner-portal?landlord_id=${l.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#5B7CFA',background:'none',border:'1px solid #5B7CFA',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
+                  </>
                 ):(
                   <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#5B7CFA',background:'none',border:'1px solid #5B7CFA',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
                 )}

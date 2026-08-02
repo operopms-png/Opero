@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   const { error: linkError } = await serviceClient
     .from('pm_landlords')
-    .update({ user_id: data.user.id, email })
+    .update({ portal_user_id: data.user.id, email })
     .eq('id', landlord_id)
 
   if (linkError) {

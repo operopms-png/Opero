@@ -1,11 +1,15 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 
 const ACCENT = '#5B7CFA'
 
-export default function PMOwnerPortal() {
+function PMOwnerPortalInner() {
+  const searchParams = useSearchParams()
+  const viewingLandlordId = searchParams.get('landlord_id')
   const [loading, setLoading] = useState(true)
+  const [isStaffView, setIsStaffView] = useState(false)
   const [tab, setTab] = useState('Dashboard')
   const [landlord, setLandlord] = useState<any>(null)
   const [properties, setProperties] = useState<any[]>([])
@@ -14,7 +18,19 @@ export default function PMOwnerPortal() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { window.location.href = '/login'; return }
-      const { data: ll } = await supabase.from('pm_landlords').select('*').eq('user_id', user.id).single()
+
+      let ll: any = null
+      if (viewingLandlordId) {
+        // Staff previewing a specific landlord's portal — works because
+        // staff already has full read access to their own business's data.
+        const { data } = await supabase.from('pm_landlords').select('*').eq('id', viewingLandlordId).single()
+        ll = data
+        setIsStaffView(true)
+      } else {
+        // The landlord viewing their own portal
+        const { data } = await supabase.from('pm_landlords').select('*').eq('portal_user_id', user.id).single()
+        ll = data
+      }
       if (!ll) { window.location.href = '/login'; return }
       setLandlord(ll)
       const [{ data: props }, { data: pays }] = await Promise.all([
@@ -25,7 +41,7 @@ export default function PMOwnerPortal() {
       setPayments(pays ?? [])
       setLoading(false)
     })
-  }, [])
+  }, [viewingLandlordId])
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
 
@@ -44,12 +60,20 @@ export default function PMOwnerPortal() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
+      {isStaffView && (
+        <div style={{ background: '#EEF1FF', borderBottom: '1px solid #C7D2FE', padding: '8px 28px', fontSize: 13, color: '#3B4AFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>👁️ Viewing as {landlord.name} (staff preview — read only)</span>
+          <a href="/pm?tab=Landlords" style={{ color: '#3B4AFF', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
+        </div>
+      )}
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Landlord Portal</div>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#101828' }}>Welcome, {landlord.name}</div>
         </div>
-        <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
+        {!isStaffView && (
+          <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
+        )}
       </div>
       <div style={{ display: 'flex', gap: 0, padding: '0 28px', background: '#fff', borderBottom: '1px solid #E4E7EC' }}>
         {TABS.map(t => (
@@ -117,5 +141,13 @@ export default function PMOwnerPortal() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function PMOwnerPortal() {
+  return (
+    <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>}>
+      <PMOwnerPortalInner />
+    </Suspense>
   )
 }
