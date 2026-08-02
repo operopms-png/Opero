@@ -158,6 +158,9 @@ export default function PMPage() {
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [showAddBank, setShowAddBank] = useState(false)
+  const [landlordPayments, setLandlordPayments] = useState<any[]>([])
+  const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
+  const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:''})
   const [showAddTx, setShowAddTx] = useState(false)
   const [bankForm, setBankForm] = useState({name:'',type:'Current',balance:'',currency:'GBP'})
   const [txForm, setTxForm] = useState({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'})
@@ -185,7 +188,7 @@ export default function PMPage() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,u,l,t,le,pay,m,ins,docs,ex,cl] = await Promise.all([
+    const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp] = await Promise.all([
       supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_units').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -197,6 +200,7 @@ export default function PMPage() {
       supabase.from('pm_documents').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('office_expenses').select('*').eq('user_id',userId).order('date',{ascending:false}),
       supabase.from('pm_cleaning_tasks').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
+      supabase.from('pm_landlord_payments').select('*,pm_landlords(name),pm_properties(name)').eq('user_id',userId).order('due_date',{ascending:false}),
     ])
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
@@ -206,7 +210,7 @@ export default function PMPage() {
     setProperties(restrictedProps); setUnits(u.data??[]); setLandlords(l.data??[])
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
-    setExpenses(ex.data??[]); setCleaning(cleanData)
+    setExpenses(ex.data??[]); setCleaning(cleanData); setLandlordPayments(lp.data??[])
   }
 
   async function addExpense() {
@@ -958,22 +962,78 @@ export default function PMPage() {
           </div>
         )}
 
-        {tab==='Statements'&&(
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-            {[
-              {title:'Owner Statement',desc:'Revenue, expenses and net income per property owner'},
-              {title:'Rent Statement',desc:'Full rent collection history with payment methods'},
-              {title:'Arrears Report',desc:'All outstanding and overdue payments'},
-              {title:'Occupancy Report',desc:'Unit occupancy rates and trends'},
-            ].map(s=>(
-              <div key={s.title} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'24px'}}>
-                <div style={{fontWeight:600,fontSize:15,color:'#101828',marginBottom:6}}>{s.title}</div>
-                <div style={{fontSize:13,color:'#667085',lineHeight:1.6,marginBottom:16}}>{s.desc}</div>
-                <button onClick={()=>alert('Statement generation coming soon')} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>Generate</button>
+        {tab==='Statements'&&(() => {
+          const today = new Date().toISOString().slice(0,10)
+          const totalPaid = landlordPayments.filter((p:any)=>p.paid_date).reduce((s:number,p:any)=>s+(parseFloat(p.amount)||0),0)
+          const overdueCount = landlordPayments.filter((p:any)=>!p.paid_date && p.due_date && p.due_date < today).length
+          const onTimeCount = landlordPayments.filter((p:any)=>p.paid_date && p.due_date && p.paid_date <= p.due_date).length
+          const lateCount = landlordPayments.filter((p:any)=>p.paid_date && p.due_date && p.paid_date > p.due_date).length
+          function statusFor(p:any) {
+            if (!p.paid_date) return p.due_date && p.due_date < today ? {label:'Overdue',bg:'#FEE2E2',color:'#EF4444'} : {label:'Pending',bg:'#FEF3C7',color:'#D97706'}
+            if (p.due_date && p.paid_date > p.due_date) return {label:'Paid Late',bg:'#FEF3C7',color:'#D97706'}
+            return {label:'Paid On Time',bg:'#D1FAE5',color:'#059669'}
+          }
+          return (
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#101828'}}>£{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#059669'}}>{onTimeCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid On Time</div></div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#D97706'}}>{lateCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid Late</div></div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #FEE2E2',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#EF4444'}}>{overdueCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Overdue</div></div>
+            </div>
+
+            <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
+              <button onClick={()=>setShowAddLandlordPayment(true)} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Payment to Landlord</button>
+            </div>
+
+            {showAddLandlordPayment&&(
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add Payment to Landlord</h3>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                  <div><label style={lbl}>Landlord</label><select style={inp} value={lpForm.landlord_id} onChange={e=>setLpForm({...lpForm,landlord_id:e.target.value})}><option value="">Select landlord…</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
+                  <div><label style={lbl}>Property</label><select style={inp} value={lpForm.property_id} onChange={e=>setLpForm({...lpForm,property_id:e.target.value})}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                  <div><label style={lbl}>Category</label><select style={inp} value={lpForm.category} onChange={e=>setLpForm({...lpForm,category:e.target.value})}>{['Rent Share','Utility Bill','Maintenance Reimbursement','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
+                  <div><label style={lbl}>Amount (£)</label><input type="number" style={inp} value={lpForm.amount} onChange={e=>setLpForm({...lpForm,amount:e.target.value})} placeholder="0.00"/></div>
+                  <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={lpForm.due_date} onChange={e=>setLpForm({...lpForm,due_date:e.target.value})}/></div>
+                  <div><label style={lbl}>Paid Date (leave blank if not yet paid)</label><input type="date" style={inp} value={lpForm.paid_date} onChange={e=>setLpForm({...lpForm,paid_date:e.target.value})}/></div>
+                  <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input style={inp} value={lpForm.notes} onChange={e=>setLpForm({...lpForm,notes:e.target.value})} placeholder="Optional"/></div>
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={async ()=>{
+                    if(!lpForm.landlord_id||!lpForm.amount)return
+                    const {data:{user}}=await supabase.auth.getUser()
+                    const {error}=await supabase.from('pm_landlord_payments').insert([{...lpForm,amount:parseFloat(lpForm.amount),due_date:lpForm.due_date||null,paid_date:lpForm.paid_date||null,user_id:user?.id}])
+                    if(error){alert(error.message);return}
+                    setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:''});setShowAddLandlordPayment(false);await loadAll()
+                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
+                  <button onClick={()=>setShowAddLandlordPayment(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                </div>
               </div>
-            ))}
+            )}
+
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 120px 100px 100px 100px 130px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                <span>Landlord</span><span>Property</span><span>Category</span><span>Amount</span><span>Due</span><span>Paid</span><span>Status</span><span></span>
+              </div>
+              {landlordPayments.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No landlord payments logged yet</div><div style={{fontSize:13}}>Track rent shares and bills you pay to each landlord.</div></div>):landlordPayments.map((p:any)=>{
+                const s=statusFor(p)
+                return (
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 120px 100px 100px 100px 130px 30px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{p.pm_landlords?.name??'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{p.pm_properties?.name??'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{p.category}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(p.amount).toLocaleString()}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{p.due_date??'—'}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{p.paid_date??'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:s.bg,color:s.color,display:'inline-block'}}>{s.label}</span>
+                  <button onClick={async ()=>{await supabase.from('pm_landlord_payments').delete().eq('id',p.id);await loadAll()}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                </div>
+                )
+              })}
+            </div>
           </div>
-        )}
+          )
+        })()}
       </div>
 
       {modal==='property'&&(
