@@ -26,6 +26,8 @@ const YEARLY_IDS = [
   'price_1Tfl2AGVqeDYuzWEjAuZlyCI',
 ]
 
+const ALL_MODULES = ['aipm', 'invest', 'str', 'pm', 'dev', 'ea']
+
 export async function POST(request: NextRequest) {
   const Stripe = (await import('stripe')).default
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' })
@@ -54,12 +56,20 @@ export async function POST(request: NextRequest) {
       const { data: users } = await supabase.auth.admin.listUsers()
       const user = users?.users?.find((u) => u.email === email)
       if (user) {
+        // Modules are sold à la carte — one checkout per module — so a new
+        // purchase must be ADDED to whatever the customer already has, not
+        // replace it, or buying a second module would silently revoke the
+        // first. The bundle is the one exception: it always grants everything.
+        const { data: existing } = await supabase.from('subscriptions').select('modules').eq('user_id', user.id).single()
+        const existingModules: string[] = (existing as any)?.modules ?? []
+        const newModules = plan === 'bundle' ? ALL_MODULES : Array.from(new Set([...existingModules, plan]))
         if (isOneTime) {
           // One-time purchase (the bundle) — no subscription object exists,
           // no trial, and access doesn't expire on its own the way a
           // subscription would.
           await supabase.from('subscriptions').upsert({
             user_id: user.id, plan, billing_period: billingPeriod, status: 'active',
+            modules: newModules,
             stripe_customer_id: fullSession.customer as string,
             stripe_subscription_id: null,
             trial_end: null,
@@ -75,6 +85,7 @@ export async function POST(request: NextRequest) {
           }
           await supabase.from('subscriptions').upsert({
             user_id: user.id, plan, billing_period: billingPeriod, status: 'trialing',
+            modules: newModules,
             stripe_customer_id: fullSession.customer as string,
             stripe_subscription_id: fullSession.subscription as string,
             trial_end: trialEnd,
