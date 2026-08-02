@@ -106,7 +106,14 @@ function LoginForm() {
           .select('id')
           .eq('user_id', data.user?.id)
           .single()
-        window.location.href = ownerProfile ? '/owner-portal' : redirect
+        if (ownerProfile) { window.location.href = '/owner-portal'; return }
+        // Check if this user is a PM landlord — if so, send to the landlord portal
+        const { data: landlordProfile } = await supabase
+          .from('pm_landlords')
+          .select('id')
+          .eq('user_id', data.user?.id)
+          .single()
+        window.location.href = landlordProfile ? '/pm-owner-portal' : redirect
       }
     } else if (mode === 'signup') {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })

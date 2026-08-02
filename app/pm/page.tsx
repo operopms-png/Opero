@@ -161,6 +161,9 @@ export default function PMPage() {
   const [landlordPayments, setLandlordPayments] = useState<any[]>([])
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})
+  const [portalLandlord, setPortalLandlord] = useState<any>(null)
+  const [portalPassword, setPortalPassword] = useState('')
+  const [creatingPortal, setCreatingPortal] = useState(false)
   const [showAddTx, setShowAddTx] = useState(false)
   const [bankForm, setBankForm] = useState({name:'',type:'Current',balance:'',currency:'GBP'})
   const [txForm, setTxForm] = useState({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'})
@@ -530,6 +533,11 @@ export default function PMPage() {
                   <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[l.email,l.phone].filter(Boolean).join(' · ')}</div>
                 </div>
                 <div style={{fontSize:13,color:'#667085'}}>{properties.filter(p=>p.owner_id===l.id).length} properties</div>
+                {l.user_id?(
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Portal Active</span>
+                ):(
+                  <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#5B7CFA',background:'none',border:'1px solid #5B7CFA',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
+                )}
                 <button onClick={()=>openEdit('landlord',l)} style={{fontSize:12,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_landlords',l.id,setLandlords)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
@@ -1383,6 +1391,30 @@ export default function PMPage() {
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
             <button onClick={()=>save('pm_documents',form)} disabled={saving||!form.name||!form.url} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name||!form.url?0.6:1}}>{saving?'Saving…':'Add Document'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {portalLandlord&&(
+        <Modal title={`Give ${portalLandlord.name} portal access`} onClose={()=>setPortalLandlord(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{fontSize:13,color:'#667085'}}>This creates a login for {portalLandlord.name} so they can see their own properties and payments (with receipts). Share the email/password with them yourself.</div>
+            <div><label style={lbl}>Email</label><input style={inp} value={portalLandlord.email??''} onChange={e=>setPortalLandlord({...portalLandlord,email:e.target.value})} placeholder="landlord@example.com"/></div>
+            <div><label style={lbl}>Password</label><input style={inp} value={portalPassword} onChange={e=>setPortalPassword(e.target.value)} placeholder="min. 6 characters"/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setPortalLandlord(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={async ()=>{
+              if(!portalLandlord.email||!portalPassword)return
+              setCreatingPortal(true)
+              const {data:{session}}=await supabase.auth.getSession()
+              const res=await fetch('/api/create-landlord-account',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify({landlord_id:portalLandlord.id,email:portalLandlord.email,password:portalPassword})})
+              const result=await res.json()
+              setCreatingPortal(false)
+              if(!res.ok){alert(result.error||'Could not create portal access');return}
+              alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: helloopero.com/login`)
+              setPortalLandlord(null);await loadAll()
+            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}
