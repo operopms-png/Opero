@@ -16,6 +16,23 @@ async function uploadFile(file: File, folder: string): Promise<string | null> {
   return data.publicUrl
 }
 
+function isVideoUrl(url: string) {
+  return /\.(mp4|mov|webm|m4v)$/i.test(url)
+}
+
+// attachment_url is stored as either a plain URL (legacy/single) or a
+// JSON-encoded array of URLs (multi-attachment). This normalizes both.
+function parseAttachments(val: string | null | undefined): string[] {
+  if (!val) return []
+  try {
+    const parsed = JSON.parse(val)
+    if (Array.isArray(parsed)) return parsed.filter(Boolean)
+  } catch {
+    // not JSON — treat as a single legacy URL
+  }
+  return val.startsWith('http') ? [val] : []
+}
+
 function FileUpload({ label, value, onChange, folder }: { label: string; value: string; onChange: (url: string) => void; folder: string }) {
   const [uploading, setUploading] = useState(false)
   async function handle(e: React.ChangeEvent<HTMLInputElement>) {
@@ -173,6 +190,8 @@ function PMPageInner() {
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
+  const [msgAttachments, setMsgAttachments] = useState<string[]>([])
+  const [uploadingMsg, setUploadingMsg] = useState(false)
   const [portalLandlord, setPortalLandlord] = useState<any>(null)
   const [portalPassword, setPortalPassword] = useState('')
   const [creatingPortal, setCreatingPortal] = useState(false)
@@ -261,20 +280,21 @@ function PMPageInner() {
   }
 
   async function sendLandlordMessage() {
-    if(!newMsg.trim()||!msgLandlord?.id)return
+    if((!newMsg.trim()&&msgAttachments.length===0)||!msgLandlord?.id)return
     setSendingMsg(true)
     const text=newMsg.trim()
-    setNewMsg('')
+    const attachmentJson=msgAttachments.length?JSON.stringify(msgAttachments):''
+    setNewMsg('');setMsgAttachments([])
     const {data:{session}}=await supabase.auth.getSession()
     const res=await fetch('/api/admin/send-landlord-message',{
       method:'POST',
       headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},
-      body:JSON.stringify({landlord_id:msgLandlord.id,message:text})
+      body:JSON.stringify({landlord_id:msgLandlord.id,message:text,attachment_url:attachmentJson})
     })
     const result=await res.json()
     setSendingMsg(false)
     if(!res.ok){alert(result.error||'Could not send message');return}
-    setMessages(prev=>[...prev,{landlord_id:msgLandlord.id,sender:'staff',message:text,created_at:new Date().toISOString()}])
+    setMessages(prev=>[...prev,{landlord_id:msgLandlord.id,sender:'staff',message:text,attachment_url:attachmentJson,created_at:new Date().toISOString()}])
   }
 
   async function duplicateToNextMonth(e: any) {
@@ -1134,6 +1154,15 @@ function PMPageInner() {
                   <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',justifyContent:isMine?'flex-end':'flex-start'}}>
                     <div style={{maxWidth:'70%',background:isMine?'#3B4AFF':'#F3F4F6',color:isMine?'#fff':'#101828',borderRadius:10,padding:'10px 14px',fontSize:13}}>
                       <div style={{fontSize:10,opacity:0.7,marginBottom:3,textTransform:'uppercase'}}>{isMine?'You':(msgLandlord?.name??'Landlord')}</div>
+                      {parseAttachments(m.attachment_url).length>0&&(
+                        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:m.message?8:4}}>
+                          {parseAttachments(m.attachment_url).map((url:string,ai:number)=>(
+                            isVideoUrl(url)
+                              ? <video key={ai} src={url} controls style={{width:220,maxWidth:'100%',borderRadius:8,display:'block'}}/>
+                              : <img key={ai} src={url} alt="attachment" style={{width:220,maxWidth:'100%',borderRadius:8,display:'block',cursor:'pointer',objectFit:'cover'}} onClick={()=>window.open(url,'_blank')}/>
+                          ))}
+                        </div>
+                      )}
                       {m.message&&<div>{m.message}</div>}
                       <div style={{fontSize:11,opacity:0.7,marginTop:4}}>{m.created_at?.slice(0,16)}</div>
                     </div>
@@ -1143,9 +1172,36 @@ function PMPageInner() {
               }
             </div>
             {msgLandlord&&(
-              <div style={{display:'flex',gap:8}}>
-                <input value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')sendLandlordMessage()}} placeholder="Type a message…" style={{flex:1,padding:'10px 14px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit'}}/>
-                <button onClick={sendLandlordMessage} disabled={sendingMsg} style={{padding:'10px 20px',background:'#3B4AFF',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer',opacity:sendingMsg?0.6:1}}>Send</button>
+              <div>
+                {msgAttachments.length>0&&(
+                  <div style={{marginBottom:8,display:'flex',flexWrap:'wrap',gap:10}}>
+                    {msgAttachments.map((url,ai)=>(
+                      <div key={ai} style={{position:'relative'}}>
+                        {isVideoUrl(url)
+                          ? <video src={url} style={{height:90,width:90,objectFit:'cover',borderRadius:6,display:'block'}}/>
+                          : <img src={url} alt="preview" style={{height:90,width:90,objectFit:'cover',borderRadius:6,display:'block'}}/>
+                        }
+                        <button onClick={()=>setMsgAttachments(prev=>prev.filter((_,idx)=>idx!==ai))} style={{position:'absolute',top:-6,right:-6,width:20,height:20,borderRadius:'50%',background:'#EF4444',color:'#fff',border:'2px solid #fff',fontSize:12,lineHeight:'16px',cursor:'pointer'}}>×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{display:'flex',gap:8}}>
+                  <label style={{display:'flex',alignItems:'center',justifyContent:'center',width:42,border:'1px solid #D0D5DD',borderRadius:8,cursor:'pointer',fontSize:16}}>
+                    {uploadingMsg?'…':'📎'}
+                    <input type="file" accept="image/*,video/*" multiple style={{display:'none'}} onChange={async e=>{
+                      const files=Array.from(e.target.files??[])
+                      if(!files.length)return
+                      setUploadingMsg(true)
+                      const urls=await Promise.all(files.map(f=>uploadFile(f,'landlord-messages')))
+                      setMsgAttachments(prev=>[...prev,...urls.filter((u):u is string=>!!u)])
+                      setUploadingMsg(false)
+                      e.target.value=''
+                    }}/>
+                  </label>
+                  <input value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')sendLandlordMessage()}} placeholder="Type a message…" style={{flex:1,padding:'10px 14px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit'}}/>
+                  <button onClick={sendLandlordMessage} disabled={sendingMsg||uploadingMsg} style={{padding:'10px 20px',background:'#3B4AFF',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer',opacity:sendingMsg||uploadingMsg?0.6:1}}>Send</button>
+                </div>
               </div>
             )}
           </div>

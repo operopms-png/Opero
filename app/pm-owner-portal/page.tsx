@@ -7,6 +7,30 @@ const ACCENT = '#5B7CFA'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
+async function uploadAttachment(file: File, folder: string): Promise<string | null> {
+  const ext = file.name.split('.').pop()
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('pm-files').upload(path, file)
+  if (error) { console.error(error); return null }
+  const { data } = supabase.storage.from('pm-files').getPublicUrl(path)
+  return data.publicUrl
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|mov|webm|m4v)$/i.test(url)
+}
+
+function parseAttachments(val: string | null | undefined): string[] {
+  if (!val) return []
+  try {
+    const parsed = JSON.parse(val)
+    if (Array.isArray(parsed)) return parsed.filter(Boolean)
+  } catch {
+    // not JSON — treat as a single legacy URL
+  }
+  return val.startsWith('http') ? [val] : []
+}
+
 function PMOwnerPortalInner() {
   const searchParams = useSearchParams()
   const viewingLandlordId = searchParams.get('landlord_id')
@@ -23,6 +47,8 @@ function PMOwnerPortalInner() {
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
   const [sendingMsg, setSendingMsg] = useState(false)
+  const [msgAttachments, setMsgAttachments] = useState<string[]>([])
+  const [uploadingMsg, setUploadingMsg] = useState(false)
 
   async function loadAll(ll: any) {
     const [{ data: props }, { data: pays }, { data: msgs }] = await Promise.all([
@@ -45,14 +71,16 @@ function PMOwnerPortalInner() {
   }, [tab, landlord?.id])
 
   async function sendLandlordMessage() {
-    if (!newMsg.trim() || !landlord?.id) return
+    if ((!newMsg.trim() && msgAttachments.length===0) || !landlord?.id) return
     setSendingMsg(true)
     const text = newMsg.trim()
+    const attachmentJson = msgAttachments.length ? JSON.stringify(msgAttachments) : ''
     setNewMsg('')
-    const { error } = await supabase.from('pm_landlord_messages').insert({ landlord_id: landlord.id, sender: 'landlord', message: text, created_at: new Date().toISOString() })
+    setMsgAttachments([])
+    const { error } = await supabase.from('pm_landlord_messages').insert({ landlord_id: landlord.id, sender: 'landlord', message: text, attachment_url: attachmentJson || null, created_at: new Date().toISOString() })
     setSendingMsg(false)
     if (error) { alert(error.message); return }
-    setMessages(prev => [...prev, { landlord_id: landlord.id, sender: 'landlord', message: text, created_at: new Date().toISOString() }])
+    setMessages(prev => [...prev, { landlord_id: landlord.id, sender: 'landlord', message: text, attachment_url: attachmentJson, created_at: new Date().toISOString() }])
   }
 
   useEffect(() => {
@@ -246,6 +274,15 @@ function PMOwnerPortalInner() {
                     <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                       <div style={{ maxWidth: '70%', background: isMine ? ACCENT : '#F3F4F6', color: isMine ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
                         <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{isMine ? (landlord?.name ?? 'You') : 'Property Manager'}</div>
+                        {parseAttachments(m.attachment_url).length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: m.message ? 8 : 4 }}>
+                            {parseAttachments(m.attachment_url).map((url: string, ai: number) => (
+                              isVideoUrl(url)
+                                ? <video key={ai} src={url} controls style={{ width: 220, maxWidth: '100%', borderRadius: 8, display: 'block' }} />
+                                : <img key={ai} src={url} alt="attachment" style={{ width: 220, maxWidth: '100%', borderRadius: 8, display: 'block', cursor: 'pointer', objectFit: 'cover' }} onClick={() => window.open(url, '_blank')} />
+                            ))}
+                          </div>
+                        )}
                         {m.message && <div>{m.message}</div>}
                         <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{m.created_at?.slice(0, 16)}</div>
                       </div>
@@ -257,9 +294,36 @@ function PMOwnerPortalInner() {
             {isStaffView ? (
               <div style={{ fontSize: 13, color: '#98A2B3', textAlign: 'center' }}>To reply as staff, use the Messages tab in Property Management instead of this preview.</div>
             ) : (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendLandlordMessage() }} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
-                <button onClick={sendLandlordMessage} disabled={sendingMsg} style={{ padding: '10px 20px', background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: sendingMsg ? 0.6 : 1 }}>Send</button>
+              <div>
+                {msgAttachments.length > 0 && (
+                  <div style={{ marginBottom: 8, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    {msgAttachments.map((url, ai) => (
+                      <div key={ai} style={{ position: 'relative' }}>
+                        {isVideoUrl(url)
+                          ? <video src={url} style={{ height: 90, width: 90, objectFit: 'cover', borderRadius: 6, display: 'block' }} />
+                          : <img src={url} alt="preview" style={{ height: 90, width: 90, objectFit: 'cover', borderRadius: 6, display: 'block' }} />
+                        }
+                        <button onClick={() => setMsgAttachments(prev => prev.filter((_, idx) => idx !== ai))} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#EF4444', color: '#fff', border: '2px solid #fff', fontSize: 12, lineHeight: '16px', cursor: 'pointer' }}>×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 42, border: '1px solid #D0D5DD', borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>
+                    {uploadingMsg ? '…' : '📎'}
+                    <input type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={async e => {
+                      const files = Array.from(e.target.files ?? [])
+                      if (!files.length) return
+                      setUploadingMsg(true)
+                      const urls = await Promise.all(files.map(f => uploadAttachment(f, 'landlord-messages')))
+                      setMsgAttachments(prev => [...prev, ...urls.filter((u): u is string => !!u)])
+                      setUploadingMsg(false)
+                      e.target.value = ''
+                    }} />
+                  </label>
+                  <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendLandlordMessage() }} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
+                  <button onClick={sendLandlordMessage} disabled={sendingMsg || uploadingMsg} style={{ padding: '10px 20px', background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: (sendingMsg || uploadingMsg) ? 0.6 : 1 }}>Send</button>
+                </div>
               </div>
             )}
           </div>
