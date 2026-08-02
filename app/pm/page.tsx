@@ -142,18 +142,6 @@ function PMPageInner() {
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
 
-  // Poll for new landlord messages every 4s while the Messages tab is
-  // open, mirroring the same pattern used on the Vacation Rentals
-  // owner portal (owner_messages).
-  useEffect(() => {
-    if (tab !== 'Messages' || !msgLandlord?.id) return
-    const interval = setInterval(async () => {
-      const { data } = await supabase.from('pm_landlord_messages').select('*').eq('landlord_id', msgLandlord.id).order('created_at', { ascending: true })
-      if (data) setMessages(data)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [tab, msgLandlord?.id])
-
   useEffect(() => {
     const t = searchParams.get('tab')
     if (t && TABS.includes(t)) setTab(t)
@@ -197,6 +185,18 @@ function PMPageInner() {
   const [form, setForm] = useState<any>({})
   const [saving, setSaving] = useState(false)
   const [editId, setEditId] = useState<string|null>(null)
+
+  // Poll for new landlord messages every 4s while the Messages tab is
+  // open, mirroring the same pattern used on the Vacation Rentals
+  // owner portal (owner_messages).
+  useEffect(() => {
+    if (tab !== 'Messages' || !msgLandlord?.id) return
+    const interval = setInterval(async () => {
+      const { data } = await supabase.from('pm_landlord_messages').select('*').eq('landlord_id', msgLandlord.id).order('created_at', { ascending: true })
+      if (data) setMessages(data)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [tab, msgLandlord?.id])
 
   useEffect(() => {
     if (roleLoading) return
