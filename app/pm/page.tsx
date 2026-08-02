@@ -5,7 +5,7 @@ import WeatherWidget from '@/components/WeatherWidget'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 
-const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements']
+const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
 
 async function uploadFile(file: File, folder: string): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -141,6 +141,19 @@ function PMPageInner() {
   const allowedTab = getAllowedTab(role, 'pm')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
+
+  // Poll for new landlord messages every 4s while the Messages tab is
+  // open, mirroring the same pattern used on the Vacation Rentals
+  // owner portal (owner_messages).
+  useEffect(() => {
+    if (tab !== 'Messages' || !msgLandlord?.id) return
+    const interval = setInterval(async () => {
+      const { data } = await supabase.from('pm_landlord_messages').select('*').eq('landlord_id', msgLandlord.id).order('created_at', { ascending: true })
+      if (data) setMessages(data)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [tab, msgLandlord?.id])
+
   useEffect(() => {
     const t = searchParams.get('tab')
     if (t && TABS.includes(t)) setTab(t)
@@ -168,6 +181,10 @@ function PMPageInner() {
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})
   const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
+  const [msgLandlord, setMsgLandlord] = useState<any>(null)
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMsg, setNewMsg] = useState('')
+  const [sendingMsg, setSendingMsg] = useState(false)
   const [portalLandlord, setPortalLandlord] = useState<any>(null)
   const [portalPassword, setPortalPassword] = useState('')
   const [creatingPortal, setCreatingPortal] = useState(false)
@@ -241,6 +258,23 @@ function PMPageInner() {
   async function toggleExpensePaid(id: string, status: string) {
     await supabase.from('office_expenses').update({ status }).eq('id', id)
     setExpenses(expenses.map((x:any)=>x.id===id?{...x,status}:x))
+  }
+
+  async function sendLandlordMessage() {
+    if(!newMsg.trim()||!msgLandlord?.id)return
+    setSendingMsg(true)
+    const text=newMsg.trim()
+    setNewMsg('')
+    const {data:{session}}=await supabase.auth.getSession()
+    const res=await fetch('/api/admin/send-landlord-message',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},
+      body:JSON.stringify({landlord_id:msgLandlord.id,message:text})
+    })
+    const result=await res.json()
+    setSendingMsg(false)
+    if(!res.ok){alert(result.error||'Could not send message');return}
+    setMessages(prev=>[...prev,{landlord_id:msgLandlord.id,sender:'staff',message:text,created_at:new Date().toISOString()}])
   }
 
   async function duplicateToNextMonth(e: any) {
@@ -1069,6 +1103,53 @@ function PMPageInner() {
           </div>
           )
         })()}
+
+        {tab==='Messages'&&(
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,maxWidth:700}}>
+            <div style={{fontSize:16,fontWeight:700,marginBottom:20}}>Messages</div>
+            <div style={{marginBottom:16}}>
+              <select
+                value={msgLandlord?.id??''}
+                onChange={async e=>{
+                  const ll=landlords.find((l:any)=>l.id===e.target.value)
+                  setMsgLandlord(ll??null)
+                  if(!ll){setMessages([]);return}
+                  const {data}=await supabase.from('pm_landlord_messages').select('*').eq('landlord_id',ll.id).order('created_at',{ascending:true})
+                  setMessages(data??[])
+                }}
+                style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit'}}
+              >
+                <option value="">Select a landlord to message…</option>
+                {landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:20,maxHeight:400,overflowY:'auto'}}>
+              {!msgLandlord
+                ? <div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:14}}>Pick a landlord above to see the conversation</div>
+                : messages.length===0
+                ? <div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:14}}>No messages yet</div>
+                : messages.map((m:any,i:number)=>{
+                  const isMine = m.sender==='staff'
+                  return (
+                  <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',justifyContent:isMine?'flex-end':'flex-start'}}>
+                    <div style={{maxWidth:'70%',background:isMine?'#3B4AFF':'#F3F4F6',color:isMine?'#fff':'#101828',borderRadius:10,padding:'10px 14px',fontSize:13}}>
+                      <div style={{fontSize:10,opacity:0.7,marginBottom:3,textTransform:'uppercase'}}>{isMine?'You':(msgLandlord?.name??'Landlord')}</div>
+                      {m.message&&<div>{m.message}</div>}
+                      <div style={{fontSize:11,opacity:0.7,marginTop:4}}>{m.created_at?.slice(0,16)}</div>
+                    </div>
+                  </div>
+                  )
+                })
+              }
+            </div>
+            {msgLandlord&&(
+              <div style={{display:'flex',gap:8}}>
+                <input value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')sendLandlordMessage()}} placeholder="Type a message…" style={{flex:1,padding:'10px 14px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit'}}/>
+                <button onClick={sendLandlordMessage} disabled={sendingMsg} style={{padding:'10px 20px',background:'#3B4AFF',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer',opacity:sendingMsg?0.6:1}}>Send</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {modal==='property'&&(

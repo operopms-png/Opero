@@ -20,14 +20,39 @@ function PMOwnerPortalInner() {
   const [contactForm, setContactForm] = useState<any>({})
   const [showAddPayment, setShowAddPayment] = useState(false)
   const [payForm, setPayForm] = useState({property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:''})
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMsg, setNewMsg] = useState('')
+  const [sendingMsg, setSendingMsg] = useState(false)
 
   async function loadAll(ll: any) {
-    const [{ data: props }, { data: pays }] = await Promise.all([
+    const [{ data: props }, { data: pays }, { data: msgs }] = await Promise.all([
       supabase.from('pm_properties').select('*').eq('owner_id', ll.id),
       supabase.from('pm_landlord_payments').select('*, pm_properties(name)').eq('landlord_id', ll.id).order('due_date', { ascending: false }),
+      supabase.from('pm_landlord_messages').select('*').eq('landlord_id', ll.id).order('created_at', { ascending: true }),
     ])
     setProperties(props ?? [])
     setPayments(pays ?? [])
+    setMessages(msgs ?? [])
+  }
+
+  useEffect(() => {
+    if (tab !== 'Messages' || !landlord?.id) return
+    const interval = setInterval(async () => {
+      const { data } = await supabase.from('pm_landlord_messages').select('*').eq('landlord_id', landlord.id).order('created_at', { ascending: true })
+      if (data) setMessages(data)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [tab, landlord?.id])
+
+  async function sendLandlordMessage() {
+    if (!newMsg.trim() || !landlord?.id) return
+    setSendingMsg(true)
+    const text = newMsg.trim()
+    setNewMsg('')
+    const { error } = await supabase.from('pm_landlord_messages').insert({ landlord_id: landlord.id, sender: 'landlord', message: text, created_at: new Date().toISOString() })
+    setSendingMsg(false)
+    if (error) { alert(error.message); return }
+    setMessages(prev => [...prev, { landlord_id: landlord.id, sender: 'landlord', message: text, created_at: new Date().toISOString() }])
   }
 
   useEffect(() => {
@@ -99,7 +124,7 @@ function PMOwnerPortalInner() {
     await loadAll(landlord)
   }
 
-  const TABS = ['Dashboard', 'Properties', 'Statements', 'Contact & Payment']
+  const TABS = ['Dashboard', 'Properties', 'Statements', 'Messages', 'Contact & Payment']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -206,6 +231,37 @@ function PMOwnerPortalInner() {
                 )
               })}
             </div>
+          </div>
+        )}
+
+        {tab === 'Messages' && (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24, maxWidth: 700 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Messages</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20, maxHeight: 400, overflowY: 'auto' }}>
+              {messages.length === 0
+                ? <div style={{ textAlign: 'center', padding: 40, color: '#98A2B3', fontSize: 14 }}>No messages yet</div>
+                : messages.map((m: any, i: number) => {
+                  const isMine = m.sender === 'landlord'
+                  return (
+                    <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
+                      <div style={{ maxWidth: '70%', background: isMine ? ACCENT : '#F3F4F6', color: isMine ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
+                        <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{isMine ? (landlord?.name ?? 'You') : 'Property Manager'}</div>
+                        {m.message && <div>{m.message}</div>}
+                        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{m.created_at?.slice(0, 16)}</div>
+                      </div>
+                    </div>
+                  )
+                })
+              }
+            </div>
+            {isStaffView ? (
+              <div style={{ fontSize: 13, color: '#98A2B3', textAlign: 'center' }}>To reply as staff, use the Messages tab in Property Management instead of this preview.</div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendLandlordMessage() }} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
+                <button onClick={sendLandlordMessage} disabled={sendingMsg} style={{ padding: '10px 20px', background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: sendingMsg ? 0.6 : 1 }}>Send</button>
+              </div>
+            )}
           </div>
         )}
 
