@@ -160,7 +160,7 @@ export default function PMPage() {
   const [showAddBank, setShowAddBank] = useState(false)
   const [landlordPayments, setLandlordPayments] = useState<any[]>([])
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
-  const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:''})
+  const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})
   const [showAddTx, setShowAddTx] = useState(false)
   const [bankForm, setBankForm] = useState({name:'',type:'Current',balance:'',currency:'GBP'})
   const [txForm, setTxForm] = useState({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'})
@@ -997,14 +997,15 @@ export default function PMPage() {
                   <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={lpForm.due_date} onChange={e=>setLpForm({...lpForm,due_date:e.target.value})}/></div>
                   <div><label style={lbl}>Paid Date (leave blank if not yet paid)</label><input type="date" style={inp} value={lpForm.paid_date} onChange={e=>setLpForm({...lpForm,paid_date:e.target.value})}/></div>
                   <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input style={inp} value={lpForm.notes} onChange={e=>setLpForm({...lpForm,notes:e.target.value})} placeholder="Optional"/></div>
+                  <div style={{gridColumn:'span 2'}}><FileUpload label="Receipt (photo or PDF)" value={lpForm.receipt_url} onChange={url=>setLpForm({...lpForm,receipt_url:url})} folder="landlord-payment-receipts" /></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
                   <button onClick={async ()=>{
                     if(!lpForm.landlord_id||!lpForm.amount)return
                     const {data:{user}}=await supabase.auth.getUser()
-                    const {error}=await supabase.from('pm_landlord_payments').insert([{...lpForm,amount:parseFloat(lpForm.amount),due_date:lpForm.due_date||null,paid_date:lpForm.paid_date||null,user_id:user?.id}])
+                    const {error}=await supabase.from('pm_landlord_payments').insert([{...lpForm,amount:parseFloat(lpForm.amount),due_date:lpForm.due_date||null,paid_date:lpForm.paid_date||null,receipt_url:lpForm.receipt_url||null,user_id:user?.id}])
                     if(error){alert(error.message);return}
-                    setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:''});setShowAddLandlordPayment(false);await loadAll()
+                    setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setShowAddLandlordPayment(false);await loadAll()
                   }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
                   <button onClick={()=>setShowAddLandlordPayment(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
@@ -1012,13 +1013,13 @@ export default function PMPage() {
             )}
 
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 120px 100px 100px 100px 130px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
-                <span>Landlord</span><span>Property</span><span>Category</span><span>Amount</span><span>Due</span><span>Paid</span><span>Status</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 90px 90px 90px 120px 60px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                <span>Landlord</span><span>Property</span><span>Category</span><span>Amount</span><span>Due</span><span>Paid</span><span>Status</span><span>Receipt</span><span></span>
               </div>
               {landlordPayments.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No landlord payments logged yet</div><div style={{fontSize:13}}>Track rent shares and bills you pay to each landlord.</div></div>):landlordPayments.map((p:any)=>{
                 const s=statusFor(p)
                 return (
-                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 120px 100px 100px 100px 130px 30px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 90px 90px 90px 120px 60px 30px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{p.pm_landlords?.name??'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{p.pm_properties?.name??'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{p.category}</span>
@@ -1026,6 +1027,12 @@ export default function PMPage() {
                   <span style={{fontSize:12,color:'#667085'}}>{p.due_date??'—'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{p.paid_date??'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:s.bg,color:s.color,display:'inline-block'}}>{s.label}</span>
+                  {p.receipt_url?(
+                    <a href={p.receipt_url} target="_blank" rel="noopener noreferrer">
+                      <img src={p.receipt_url} alt="Receipt" style={{width:32,height:32,objectFit:'cover',borderRadius:6,border:'1px solid #E4E7EC'}} onError={(e:any)=>{e.target.style.display='none';e.target.nextSibling.style.display='inline'}}/>
+                      <span style={{display:'none',fontSize:11,color:'#5B7CFA',textDecoration:'underline'}}>View</span>
+                    </a>
+                  ):<span style={{fontSize:11,color:'#D0D5DD'}}>—</span>}
                   <button onClick={async ()=>{await supabase.from('pm_landlord_payments').delete().eq('id',p.id);await loadAll()}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
                 </div>
                 )
