@@ -13,7 +13,7 @@ const NAV = [
   ]}
 ]
 
-const ROLES = ['Admin','Airbnb Agent','Property Manager','Cleaner','Maintenance','Viewer','Estate Agent']
+const ROLES = ['Admin','Dev','Airbnb Agent','Property Manager','Cleaner','Maintenance','Viewer','Estate Agent']
 
 export default function Page() {
   const { role: myRole, hasSettings, loading: roleLoading } = useRole()
@@ -57,15 +57,17 @@ export default function Page() {
       setMessages(msgs??[])
       const {data:teamData} = await supabase.from('team_members').select('*').eq('user_id',user.id).order('name')
       setTeam(teamData??[])
-      const [strP, pmP, eaP] = await Promise.all([
+      const [strP, pmP, eaP, devP] = await Promise.all([
         supabase.from('properties').select('id,name').eq('user_id',user.id),
         supabase.from('pm_properties').select('id,name').eq('user_id',user.id),
         supabase.from('estate_properties').select('id,name').eq('user_id',user.id),
+        supabase.from('dev_projects').select('id,name').eq('user_id',user.id),
       ])
       setAllProperties([
         ...(strP.data??[]).map((p:any)=>({...p,module:'Vacation Rentals'})),
         ...(pmP.data??[]).map((p:any)=>({...p,module:'Property Management'})),
         ...(eaP.data??[]).map((p:any)=>({...p,module:'Estate Agency'})),
+        ...(devP.data??[]).map((p:any)=>({...p,module:'Developments'})),
       ])
       setLoading(false)
     })
