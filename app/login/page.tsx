@@ -82,9 +82,15 @@ function LoginForm() {
   const [checkingSession, setCheckingSession] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        window.location.href = redirect
+        const { data: ownerProfile } = await supabase.from('owner_profiles').select('id').eq('user_id', session.user.id).single()
+        if (ownerProfile) { window.location.href = '/owner-portal'; return }
+        const { data: landlordProfile } = await supabase.from('pm_landlords').select('id').eq('portal_user_id', session.user.id).single()
+        if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
+        const { data: teamRows } = await supabase.from('team_members').select('role').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
+        const staffRole = teamRows?.[0]?.role
+        window.location.href = (staffRole === 'Cleaner' || staffRole === 'Maintenance') ? '/staff-dashboard' : redirect
       } else {
         setCheckingSession(false)
       }
@@ -113,7 +119,17 @@ function LoginForm() {
           .select('id')
           .eq('portal_user_id', data.user?.id)
           .single()
-        window.location.href = landlordProfile ? '/pm-owner-portal' : redirect
+        if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
+        // Check if this user is a Cleaner or Maintenance staff member — if
+        // so, send them to their focused task dashboard, not the full app
+        const { data: teamRows } = await supabase
+          .from('team_members')
+          .select('role')
+          .eq('email', email)
+          .order('created_at', { ascending: false })
+          .limit(1)
+        const staffRole = teamRows?.[0]?.role
+        window.location.href = (staffRole === 'Cleaner' || staffRole === 'Maintenance') ? '/staff-dashboard' : redirect
       }
     } else if (mode === 'signup') {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })
