@@ -200,7 +200,7 @@ export default function Sidebar() {
       {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #F2F4F7' }}>
         {plan !== 'professional' && (
-          <a href="/landing.html#pricing" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 7, background: '#3B4AFF', color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 6 }}>
+          <a href="/modules" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 7, background: '#3B4AFF', color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 6 }}>
             Upgrade plan
           </a>
         )}

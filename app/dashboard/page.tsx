@@ -332,9 +332,9 @@ export default function DashboardPage() {
             {/* Upsell */}
             {plan === 'starter' && (
               <div className="card" style={{ padding: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>🚀 Unlock Growth</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 16, lineHeight: 1.6 }}>Owner portal, analytics, calendar integrations and more.</div>
-                <a href="/landing.html#pricing" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#fff', color: '#764ba2', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Upgrade to Growth →</a>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>🚀 Add more modules</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 16, lineHeight: 1.6 }}>Property Management, Estate Agency, Developments and more.</div>
+                <a href="/modules" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#fff', color: '#764ba2', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>View modules →</a>
               </div>
             )}
             {plan === 'growth' && (

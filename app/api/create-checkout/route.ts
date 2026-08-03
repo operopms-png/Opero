@@ -16,16 +16,22 @@ export async function POST(request: NextRequest) {
     const Stripe = (await import('stripe')).default
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' })
     const body = await request.json()
-    const { plan, priceId } = body
+    const { plan, priceId, email, returnTo } = body
     const finalPriceId = priceId || PRICE_IDS[plan]
     if (!finalPriceId) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     const isOneTime = plan === 'bundle'
+    const successPath = returnTo || `/login?plan=${plan}&success=true`
     const session = await stripe.checkout.sessions.create({
       mode: isOneTime ? 'payment' : 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: finalPriceId, quantity: 1 }],
       ...(isOneTime ? {} : { subscription_data: { trial_period_days: 14 } }),
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/login?plan=${plan}&success=true`,
+      // Prefilling this ties the payment reliably to the right account —
+      // without it, Stripe just asks for an email fresh at checkout, and a
+      // typo or different email there means the webhook can't match it to
+      // any existing user.
+      ...(email ? { customer_email: email } : {}),
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}${successPath}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing.html#pricing`,
       allow_promotion_codes: true,
     })
