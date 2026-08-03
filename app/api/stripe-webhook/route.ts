@@ -47,7 +47,13 @@ export async function POST(request: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as any
     const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
-    const email = fullSession.customer_email
+    // customer_email is only set if we explicitly pass it at session
+    // creation (which only the /modules upgrade flow does). For normal
+    // signup checkout, the customer types their email into Stripe's own
+    // form, and that lands in customer_details.email instead — reading
+    // only customer_email meant this was silently null for every signup,
+    // so the user lookup below always failed with no error.
+    const email = fullSession.customer_details?.email ?? fullSession.customer_email
     const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
     const plan = PLAN_MAP[priceId] ?? 'starter'
     const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
