@@ -11,7 +11,7 @@ const NAV_GROUPS = [
   {
     label: 'Vacation Rentals',
     module: 'str',
-    modulePrice: '£29.99/mo',
+    modulePrice: '£29/mo',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
       { href: '/str/crm', label: 'CRM', key: 'str', icon: 'contacts' },
@@ -26,7 +26,7 @@ const NAV_GROUPS = [
   {
     label: 'Property Management',
     module: 'pm',
-    modulePrice: '£99/mo',
+    modulePrice: '£39/mo',
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
       { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'contacts' },
@@ -39,8 +39,8 @@ const NAV_GROUPS = [
   },
   {
     label: 'Estate Agency',
-    module: 'estate',
-    modulePrice: '£99/mo',
+    module: 'ea',
+    modulePrice: '£59/mo',
     items: [
       { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
       { href: '/estate/crm', label: 'CRM', key: 'estate', icon: 'contacts' },
@@ -51,8 +51,8 @@ const NAV_GROUPS = [
   },
   {
     label: 'AI Property Manager',
-    module: 'ai',
-    modulePrice: '£79/mo',
+    module: 'aipm',
+    modulePrice: '£9.99/mo',
     items: [
       { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles' },
     ]
@@ -60,7 +60,7 @@ const NAV_GROUPS = [
   {
     label: 'Invest',
     module: 'invest',
-    roleOnly: true,
+    modulePrice: '£19/mo',
     items: [
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark' },
@@ -69,7 +69,7 @@ const NAV_GROUPS = [
   {
     label: 'Developments',
     module: 'dev',
-    modulePrice: '£149/mo',
+    modulePrice: '£49/mo',
     items: [
       { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
       { href: '/dev/crm', label: 'CRM', key: 'dev', icon: 'contacts' },
@@ -169,7 +169,7 @@ export default function Sidebar() {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
           const hasModule = (group as any).roleOnly
             ? roleModules.includes((group as any).module)
-            : (!group.module || group.module === 'ai' || (modules.includes(group.module) && roleModules.includes(group.module)))
+            : (modules.includes(group.module) && roleModules.includes(group.module))
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#F2F4F7', margin: '6px 0' }} />}

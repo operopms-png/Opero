@@ -5,14 +5,14 @@ import { supabase } from '@/lib/supabase'
 export type UserRole = 'Admin' | 'Airbnb Agent' | 'Property Manager' | 'Dev' | 'Cleaner' | 'Maintenance' | 'Viewer' | 'Estate Agent'
 
 export const ROLE_MODULES: Record<string, string[]> = {
-  'Admin':            ['str', 'pm', 'dev', 'estate', 'invest'],
+  'Admin':            ['str', 'pm', 'dev', 'ea', 'invest', 'aipm'],
   'Airbnb Agent':     ['str'],
-  'Property Manager': ['str', 'pm', 'estate'],
-  'Dev':              ['str', 'pm', 'dev', 'estate'],
-  'Cleaner':          ['str', 'pm', 'estate'],
-  'Maintenance':      ['str', 'pm', 'estate'],
-  'Viewer':           ['str', 'pm', 'dev', 'estate'],
-  'Estate Agent':     ['estate'],
+  'Property Manager': ['str', 'pm', 'ea'],
+  'Dev':              ['str', 'pm', 'dev', 'ea'],
+  'Cleaner':          ['str', 'pm', 'ea'],
+  'Maintenance':      ['str', 'pm', 'ea'],
+  'Viewer':           ['str', 'pm', 'dev', 'ea'],
+  'Estate Agent':     ['ea'],
 }
 
 export const ROLE_SETTINGS: Record<string, boolean> = {
