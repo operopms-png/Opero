@@ -45,60 +45,55 @@ export async function POST(request: NextRequest) {
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as any
-    const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
-    // customer_email is only set if we explicitly pass it at session
-    // creation (which only the /modules upgrade flow does). For normal
-    // signup checkout, the customer types their email into Stripe's own
-    // form, and that lands in customer_details.email instead — reading
-    // only customer_email meant this was silently null for every signup,
-    // so the user lookup below always failed with no error.
-    const email = fullSession.customer_details?.email ?? fullSession.customer_email
-    const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
-    const plan = PLAN_MAP[priceId] ?? 'starter'
-    const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
-    const isOneTime = fullSession.mode === 'payment'
-    if (email) {
-      const { data: users } = await supabase.auth.admin.listUsers()
-      const user = users?.users?.find((u) => u.email === email)
-      if (user) {
-        // Modules are sold à la carte — one checkout per module — so a new
-        // purchase must be ADDED to whatever the customer already has, not
-        // replace it, or buying a second module would silently revoke the
-        // first. The bundle is the one exception: it always grants everything.
-        const { data: existing } = await supabase.from('subscriptions').select('modules').eq('user_id', user.id).single()
-        const existingModules: string[] = (existing as any)?.modules ?? []
-        const newModules = plan === 'bundle' ? ALL_MODULES : Array.from(new Set([...existingModules, plan]))
-        if (isOneTime) {
-          // One-time purchase (the bundle) — no subscription object exists,
-          // no trial, and access doesn't expire on its own the way a
-          // subscription would.
-          await supabase.from('subscriptions').upsert({
-            user_id: user.id, plan, billing_period: billingPeriod, status: 'active',
-            modules: newModules,
-            stripe_customer_id: fullSession.customer as string,
-            stripe_subscription_id: null,
-            trial_end: null,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' })
-        } else {
-          // Pull the actual subscription object for its real trial_end —
-          // the checkout session itself doesn't carry it.
-          let trialEnd: string | null = null
-          if (fullSession.subscription) {
-            const stripeSub = await stripe.subscriptions.retrieve(fullSession.subscription as string)
-            trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null
+    try {
+      const session = event.data.object as any
+      const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
+      const email = fullSession.customer_details?.email ?? fullSession.customer_email
+      const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
+      const plan = PLAN_MAP[priceId] ?? 'starter'
+      const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
+      const isOneTime = fullSession.mode === 'payment'
+      await supabase.from('webhook_debug_log').insert({ step: 'session_parsed', detail: { email, priceId, plan, isOneTime, sessionId: fullSession.id } })
+      if (email) {
+        const { data: users, error: listError } = await supabase.auth.admin.listUsers()
+        await supabase.from('webhook_debug_log').insert({ step: 'list_users', detail: { userCount: users?.users?.length ?? null, listError: listError?.message ?? null } })
+        const user = users?.users?.find((u) => u.email === email)
+        await supabase.from('webhook_debug_log').insert({ step: 'user_match', detail: { matchedUserId: user?.id ?? null, searchedEmail: email } })
+        if (user) {
+          const { data: existing } = await supabase.from('subscriptions').select('modules').eq('user_id', user.id).single()
+          const existingModules: string[] = (existing as any)?.modules ?? []
+          const newModules = plan === 'bundle' ? ALL_MODULES : Array.from(new Set([...existingModules, plan]))
+          if (isOneTime) {
+            const { error: upsertError } = await supabase.from('subscriptions').upsert({
+              user_id: user.id, plan, billing_period: billingPeriod, status: 'active',
+              modules: newModules,
+              stripe_customer_id: fullSession.customer as string,
+              stripe_subscription_id: null,
+              trial_end: null,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' })
+            await supabase.from('webhook_debug_log').insert({ step: 'upsert_onetime', detail: { upsertError: upsertError?.message ?? null } })
+          } else {
+            let trialEnd: string | null = null
+            if (fullSession.subscription) {
+              const stripeSub = await stripe.subscriptions.retrieve(fullSession.subscription as string)
+              trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null
+            }
+            const { error: upsertError } = await supabase.from('subscriptions').upsert({
+              user_id: user.id, plan, billing_period: billingPeriod, status: 'trialing',
+              modules: newModules,
+              stripe_customer_id: fullSession.customer as string,
+              stripe_subscription_id: fullSession.subscription as string,
+              trial_end: trialEnd,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' })
+            await supabase.from('webhook_debug_log').insert({ step: 'upsert_subscription', detail: { upsertError: upsertError?.message ?? null } })
           }
-          await supabase.from('subscriptions').upsert({
-            user_id: user.id, plan, billing_period: billingPeriod, status: 'trialing',
-            modules: newModules,
-            stripe_customer_id: fullSession.customer as string,
-            stripe_subscription_id: fullSession.subscription as string,
-            trial_end: trialEnd,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' })
         }
       }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      await supabase.from('webhook_debug_log').insert({ step: 'exception', detail: { message } })
     }
   }
 
