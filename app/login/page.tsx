@@ -139,10 +139,20 @@ function LoginForm() {
         // Go to Stripe checkout
         const priceId = searchParams.get('priceId')
         const body = priceId && selectedPlan === initialPlan ? { plan: selectedPlan, priceId } : { plan: selectedPlan }
-        const res = await fetch('/api/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-        const data = await res.json()
-        if (data.url) window.location.href = data.url
-        else setSuccessMsg('Account created! Check your email to confirm.')
+        try {
+          const res = await fetch('/api/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+          const data = await res.json()
+          if (data.url) {
+            window.location.href = data.url
+          } else {
+            // Checkout genuinely failed — never say "success" here. The
+            // account exists but has no paid access; make that explicit
+            // so nobody assumes they're set up when they aren't.
+            setError(data.error || 'Your account was created, but we couldn\'t start checkout. Please try signing in and contact support — do not assume you have access yet.')
+          }
+        } catch {
+          setError('Your account was created, but we couldn\'t reach checkout. Please try signing in and contact support — do not assume you have access yet.')
+        }
       }
     } else if (mode === 'reset') {
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` })
