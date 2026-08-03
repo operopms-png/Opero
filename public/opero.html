@@ -12,7 +12,7 @@ a{text-decoration:none;color:inherit}
 .btn-primary{background:#5B7CFA;color:#fff;border:none;padding:13px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .btn-outline{background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .tag{font-size:11px;font-weight:600;color:#5B7CFA;text-transform:uppercase;letter-spacing:0.08em}
-.section{padding:72px 64px}
+.section{padding:88px 64px}
 .card{background:#fff;border-radius:14px;border:1px solid #EAECF0;padding:28px;transition:box-shadow 0.2s ease,border-color 0.2s ease,transform 0.2s ease}
 .card:hover{box-shadow:0 4px 16px rgba(16,24,40,0.06);border-color:#D0D5DD;transform:translateY(-2px)}
 .card-icon{width:44px;height:44px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
@@ -32,7 +32,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:18px 6
 .pricing-grid-bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .pricing-card{background:#fff;border-radius:12px;border:1px solid #E4E7EC;padding:24px}
 .bundle-card{background:#5B7CFA;border-radius:12px;padding:24px;position:relative}
-.compare-row{background:#fff;border-radius:12px;border:1px solid #E4E7EC;padding:22px 28px;display:grid;grid-template-columns:180px 1fr 120px;gap:20px;align-items:center;margin-bottom:12px}
+.compare-row{background:#fff;border-radius:12px;border:1px solid #E4E7EC;padding:22px 28px;display:grid;grid-template-columns:180px 1fr 120px;gap:20px;align-items:center;margin-bottom:12px;transition:box-shadow 0.2s ease,border-color 0.2s ease,transform 0.2s ease}
+.compare-row:hover{box-shadow:0 4px 16px rgba(16,24,40,0.06);border-color:#D0D5DD;transform:translateY(-2px)}
+.step-card{background:#fff;border-radius:14px;border:1px solid #EAECF0;padding:28px 24px;transition:box-shadow 0.2s ease,border-color 0.2s ease,transform 0.2s ease}
+.step-card:hover{box-shadow:0 4px 16px rgba(16,24,40,0.06);border-color:#D0D5DD;transform:translateY(-2px)}
+#faq summary::-webkit-details-marker{display:none}
+#faq summary::marker{content:''}
+#faq details summary i{transition:transform 0.2s ease}
+#faq details[open] summary i{transform:rotate(180deg)}
 .testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .avatar{width:32px;height:32px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#5B7CFA;flex-shrink:0}
 .cta-section{padding:88px 64px;text-align:center;background:#5B7CFA}
@@ -52,6 +59,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')" style="display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px"><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div><div style="width:15px;height:2px;background:#101828;border-radius:2px"></div><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div></button><div class="nav-links">
     <a href="#features">Features</a>
     <a href="#ai-agents">AI Agents</a>
+    <a href="#pricing">Pricing</a>
     
     <a href="#compare">Compare</a>
     <a href="#reviews">Reviews</a>
@@ -60,7 +68,7 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     <button class="btn-outline" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Log in</button>
     <button class="btn-primary" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Start free trial <i class="ti ti-arrow-right"></i></button>
   </div>
-</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#ai-agents" onclick="document.getElementById('mobileMenu').classList.remove('open')">AI Agents</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
+</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#ai-agents" onclick="document.getElementById('mobileMenu').classList.remove('open')">AI Agents</a><a href="#pricing" onclick="document.getElementById('mobileMenu').classList.remove('open')">Pricing</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
 
 <section class="section" id="see-it-in-action" style="background:#F9FAFB">
   <div style="max-width:1100px;margin:0 auto">
@@ -569,22 +577,22 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
       <p style="font-size:15px;color:#667085;max-width:520px;margin:0 auto">No lengthy onboarding calls. Pick what you need and start using it the same day.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
-      <div style="position:relative">
+      <div class="step-card">
         <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">1</div>
         <div style="font-size:15px;font-weight:600;margin-bottom:6px">Create your account</div>
         <div style="font-size:13px;color:#667085;line-height:1.6">Sign up free, no card required. Tell us a little about your portfolio.</div>
       </div>
-      <div style="position:relative">
+      <div class="step-card">
         <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">2</div>
         <div style="font-size:15px;font-weight:600;margin-bottom:6px">Pick your modules</div>
         <div style="font-size:13px;color:#667085;line-height:1.6">STR, Property Management, Estate Agency, Developments, Invest — turn on only what you run.</div>
       </div>
-      <div style="position:relative">
+      <div class="step-card">
         <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">3</div>
         <div style="font-size:15px;font-weight:600;margin-bottom:6px">Connect your channels</div>
         <div style="font-size:13px;color:#667085;line-height:1.6">Sync calendars, link your bank, invite your team and contractors.</div>
       </div>
-      <div style="position:relative">
+      <div class="step-card">
         <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">4</div>
         <div style="font-size:15px;font-weight:600;margin-bottom:6px">Go live</div>
         <div style="font-size:13px;color:#667085;line-height:1.6">Bookings, rent, reporting and CRM all flow through one dashboard from day one.</div>
@@ -736,6 +744,132 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
   </div>
 </section>
 
+<section class="section" id="pricing" style="background:#F9FAFB">
+  <div style="text-align:center;margin-bottom:16px">
+    <span class="tag" style="display:block;margin-bottom:10px">Pricing</span>
+    <h2 style="font-size:36px;font-weight:700;margin-bottom:12px">More features. Lower price.</h2>
+    <p style="font-size:16px;color:#667085;max-width:520px;margin:0 auto">Add modules as your business grows — each one includes everything listed below, no hidden tiers.</p>
+  </div>
+  <p style="text-align:center;font-size:13px;color:#98A2B3;margin-bottom:44px">14-day free trial &middot; No credit card required</p>
+
+  <style>
+  .pricing-plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1180px;margin:0 auto 24px}
+  .pricing-plan-card{background:#fff;border-radius:14px;padding:28px 24px 22px;transition:box-shadow 0.2s ease,transform 0.2s ease}
+  .pricing-plan-card:hover{box-shadow:0 8px 24px rgba(16,24,40,0.08);transform:translateY(-2px)}
+  @media(max-width:900px){.pricing-plans-grid{grid-template-columns:1fr}}
+  </style>
+
+  <div class="pricing-plans-grid">
+    <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
+      
+      <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">AI Property Manager</div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£9.99<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <button onclick="startCheckout('aipm')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>6 AI agents: Guest, Maintenance, Cleaning, Revenue, Owner Relations, Lead Qualification</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>24/7 guest enquiry handling & check-in info</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Automated maintenance logging & contractor assignment</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Auto-scheduled cleaning after every checkout</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Dynamic pricing & revenue gap filling</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Automated monthly owner reports</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Landlord lead qualification & scoring</span></div>
+      </div>
+    </div>
+    <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
+      
+      <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Invest</div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£19<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <button onclick="startCheckout('invest')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>8 investment strategies: BTL, HMO, BRRR, R2R, Social Housing, Supported Living, Flip, Land</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Instant yield, cash flow & ROI calculations</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Deal analyser with full financial breakdown</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Watchlist for tracked opportunities</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Saved deals side-by-side comparison</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Postcode-level insight reports</span></div>
+      </div>
+    </div>
+    <div class="pricing-plan-card" style="border:2px solid #5B7CFA;position:relative">
+      <div style="position:absolute;top:0;left:24px;transform:translateY(-50%);background:#5B7CFA;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px">Most popular</div>
+      <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Vacation Rentals</div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£29<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <button onclick="startCheckout('str')" style="width:100%;background:#5B7CFA;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Direct booking engine + iCal sync across Airbnb & Vrbo</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Booking management & unified calendar</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Auto-scheduled cleaning after every checkout</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Maintenance ticketing & contractor portal</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Guest messaging & communications</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Owner reports with revenue & occupancy charts</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>CRM, marketing & sales tools</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Reporting dashboard</span></div>
+      </div>
+    </div>
+    <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
+      
+      <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Property Management</div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£39<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <button onclick="startCheckout('pm')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Tenant & lease management</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Rent collection tracking vs amounts due</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Lease expiry alerts, 60 days ahead</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Inspections scheduling & records</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Maintenance ticketing & contractor management</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Owner statements with split breakdown</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Banking & reconciliation</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>CRM, marketing & sales tools</span></div>
+      </div>
+    </div>
+    <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
+      
+      <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Developments</div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£49<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <button onclick="startCheckout('dev')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Project & budget tracking</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Multiple investors per project with equity breakdown</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Milestone timeline with budget allocation</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Contractor management integrated with budgets</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Document storage per project</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>CRM, marketing & sales tools</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Reporting dashboard</span></div>
+      </div>
+    </div>
+    <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
+      
+      <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Estate Agency</div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£59<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <button onclick="startCheckout('ea')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Vacancy management</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Rent collection tracking</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Landlord portal with live finance dashboard</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Tenancy & tenant tracking with archiving</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Compliance tracking</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Banking & reconciliation</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>CRM, marketing & sales tools</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Built-in real estate news & market updates</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1180px;margin:0 auto;background:#5B7CFA;border-radius:14px;padding:32px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
+    <div>
+      <div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px">Best value</div>
+      <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:6px">All Modules Bundle — <span style="text-decoration:line-through;font-weight:400;opacity:0.6">£195</span> £175.50/mo</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.85)">Every module included &middot; 10% off vs buying separately &middot; one login, one bill</div>
+    </div>
+    <button onclick="startCheckout('bundle')" style="background:#fff;color:#5B7CFA;border:none;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:8px">Get the bundle <i class="ti ti-arrow-right"></i></button>
+  </div>
+</section>
+
 <section class="section" id="compare" style="background:#F9FAFB">
   <div style="text-align:center;margin-bottom:52px">
     <span class="tag" style="display:block;margin-bottom:10px">The comparison</span>
@@ -804,51 +938,51 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">What's included in Vacation Rentals (STR)?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What's included in Vacation Rentals (STR)?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Bookings, CRM, cleaning and maintenance scheduling, banking and reports, guest messaging, a contractor portal, and direct iCal sync with Airbnb and Vrbo — everything you need to run short-term rentals in one place.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">What does Property Management cover?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What does Property Management cover?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Tenants and leases, rent collection, inspections, an owner reporting portal, and full banking and reports — built for landlords and managers running long-term lets.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">What's in the Estate Agency module?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What's in the Estate Agency module?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Vacancy management, rent collection, a landlord portal, a built-in CRM, and banking and reports — designed for agencies managing properties on behalf of landlords.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">What does the Developments module do?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What does the Developments module do?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Track projects and budgets, manage investors, hit milestones, and coordinate contractors and documents — purpose-built for property developers managing builds from start to finish.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">What can I do with the Invest (Deal Analyser) module?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What can I do with the Invest (Deal Analyser) module?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Run the numbers on a property before you buy. Eight investment strategies are covered — BTL, HMO, BRRR, R2R, Social Housing, Supported Living, Flip & Land — plus a watchlist, saved deals, and an ROI calculator.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Can I use multiple modules together, e.g. STR and PM?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Can I use multiple modules together, e.g. STR and PM?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes. Every module shares one login and one dashboard family, so you can run Vacation Rentals and Property Management side by side without juggling separate logins or tools. Add the bundle for all six modules at a 10% discount.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Can I use just one module?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Can I use just one module?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes. Every module — Vacation Rentals, Property Management, Estate Agency, Developments and Invest — can be activated on its own. Add more later as your business grows.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Is there a contract or minimum term?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Is there a contract or minimum term?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">No. Opero is billed monthly with no lock-in. Cancel any time from your account settings.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Do you take a commission on bookings?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Do you take a commission on bookings?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">No. Your subscription price is fixed — we don't take a cut of your booking revenue or rent collected.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Can I switch plans later?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Can I switch plans later?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes, you can upgrade, downgrade, or add/remove modules at any time. Changes apply from your next billing cycle.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">What happens to my data if I cancel?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What happens to my data if I cancel?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">You can export your bookings, tenants, and financial records at any time. We retain your data for a limited period after cancellation in case you want to return, then it's deleted.</p>
       </details>
       <details class="card" style="cursor:pointer">
-        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer">Is the AI Property Manager fully autonomous?</summary>
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Is the AI Property Manager fully autonomous?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
         <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">AI Property Manager is an actively developing feature. Today it gives you a central place to manage and log AI-assisted workflows across guest communication, maintenance, cleaning, pricing, owner reporting and lead qualification — with deeper automation rolling out over time.</p>
       </details>
     </div>
@@ -873,6 +1007,7 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
         <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Product</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <a href="#features" style="font-size:13px;color:#667085">Features</a>
+          <a href="#pricing" style="font-size:13px;color:#667085">Pricing</a>
           
           <a href="#compare" style="font-size:13px;color:#667085">Compare</a>
           <a href="#ai-agents" style="font-size:13px;color:#667085">AI Property Manager</a>
