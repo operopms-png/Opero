@@ -69,8 +69,11 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     .seia-grid{display:flex;gap:48px;align-items:center}
     .seia-text{text-align:left;flex:0 0 360px;max-width:360px}
     .seia-text .tag{display:inline-block}
-    .seia-text h2{font-size:36px;font-weight:700;margin:10px 0 12px}
-    .seia-text p{font-size:15px;color:#667085;margin:0}
+    .seia-text h2{font-size:60px;font-weight:800;line-height:1.05;margin:10px 0 16px;letter-spacing:-0.02em}
+    .seia-text p{font-size:15px;color:#667085;margin:0 0 20px}
+    .seia-signup-btn{background:#5B7CFA;color:#fff;border:none;padding:14px 26px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+    .seia-signup-note{font-size:12px;color:#98A2B3;margin:12px 0 0}
+    @media(max-width:900px){.seia-text h2{font-size:40px}}
     .seia-devices{flex:1;min-width:0}
     @media(max-width:900px){.seia-grid{flex-direction:column}.seia-text{flex:0 0 auto;max-width:100%;text-align:center}}
     </style>
@@ -80,6 +83,8 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
         <span class="tag">See it in action</span>
         <h2>One login. Every module.</h2>
         <p>Switch between Vacation Rentals, Property Management, Estate Agency, Developments and AI Agents — same login, same dashboard family.</p>
+        <button class="seia-signup-btn" onclick="window.location.href='/login'">Sign up for free <i class="ti ti-arrow-right"></i></button>
+        <p class="seia-signup-note">14-day free trial · no credit card required</p>
       </div>
 
       <div class="seia-devices">
