@@ -10,6 +10,8 @@ import NotificationBell from '@/components/NotificationBell'
 const NAV_GROUPS = [
   {
     label: 'Vacation Rentals',
+    module: 'str',
+    modulePrice: '£29.99/mo',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
       { href: '/str/crm', label: 'CRM', key: 'str', icon: 'contacts' },
