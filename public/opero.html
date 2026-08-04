@@ -750,21 +750,62 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
     <h2 style="font-size:36px;font-weight:700;margin-bottom:12px">More features. Lower price.</h2>
     <p style="font-size:16px;color:#667085;max-width:520px;margin:0 auto">Add modules as your business grows — each one includes everything listed below, no hidden tiers.</p>
   </div>
-  <p style="text-align:center;font-size:13px;color:#98A2B3;margin-bottom:44px">14-day free trial &middot; No credit card required</p>
+  <p style="text-align:center;font-size:13px;color:#98A2B3;margin-bottom:32px">14-day free trial &middot; No credit card required</p>
 
   <style>
   .pricing-plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1180px;margin:0 auto 24px}
   .pricing-plan-card{background:#fff;border-radius:14px;padding:28px 24px 22px;transition:box-shadow 0.2s ease,transform 0.2s ease}
   .pricing-plan-card:hover{box-shadow:0 8px 24px rgba(16,24,40,0.08);transform:translateY(-2px)}
   @media(max-width:900px){.pricing-plans-grid{grid-template-columns:1fr}}
+  .pricing-controls{display:flex;justify-content:center;align-items:center;gap:48px;flex-wrap:wrap;background:#fff;border:1px solid #E4E7EC;border-radius:14px;padding:22px 32px;max-width:820px;margin:0 auto 40px}
+  .pc-step{text-align:center}
+  .pc-label{font-size:11px;font-weight:600;color:#98A2B3;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+  .pc-stepper{display:flex;align-items:center;gap:14px;justify-content:center}
+  .pc-stepper button{width:30px;height:30px;border-radius:50%;border:1px solid #D0D5DD;background:#fff;font-size:15px;cursor:pointer;color:#101828;font-family:inherit;line-height:1}
+  .pc-stepper button:hover{border-color:#5B7CFA;color:#5B7CFA}
+  .pc-stepper span{font-size:15px;font-weight:700;min-width:20px;display:inline-block}
+  .pc-billing{display:flex;gap:4px;background:#F9FAFB;border-radius:10px;padding:4px}
+  .pc-bill-btn{border:none;background:transparent;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;color:#667085;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .pc-bill-btn.pc-bill-on{background:#fff;color:#101828;box-shadow:0 1px 2px rgba(16,24,40,0.08)}
+  .pc-save{background:#D1FADF;color:#05603A;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+  .pc-currency{border:1px solid #D0D5DD;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;color:#101828;background:#fff;cursor:pointer}
+  @media(max-width:700px){.pricing-controls{flex-direction:column;gap:20px}}
   </style>
+
+  <div class="pricing-controls">
+    <div class="pc-step">
+      <div class="pc-label">Properties (STR / PM / EA)</div>
+      <div class="pc-stepper">
+        <button type="button" onclick="peChangeUnits(-2)" aria-label="Decrease properties">&minus;</button>
+        <span id="pc-units">2</span>
+        <button type="button" onclick="peChangeUnits(2)" aria-label="Increase properties">+</button>
+      </div>
+    </div>
+    <div class="pc-step">
+      <div class="pc-label">Billing period</div>
+      <div class="pc-billing">
+        <button type="button" class="pc-bill-btn pc-bill-on" data-billing="monthly" onclick="peSetBilling('monthly')">Monthly</button>
+        <button type="button" class="pc-bill-btn" data-billing="yearly" onclick="peSetBilling('yearly')">Yearly <span class="pc-save">&minus;10%</span></button>
+        <button type="button" class="pc-bill-btn" data-billing="twoyear" onclick="peSetBilling('twoyear')">2-Year <span class="pc-save">&minus;20%</span></button>
+      </div>
+    </div>
+    <div class="pc-step">
+      <div class="pc-label">Currency</div>
+      <select class="pc-currency" onchange="peSetCurrency(this.value)">
+        <option value="GBP">GBP &pound;</option>
+        <option value="USD">USD $</option>
+        <option value="EUR">EUR &euro;</option>
+      </select>
+    </div>
+  </div>
 
   <div class="pricing-plans-grid">
     <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
       
       <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">AI Property Manager</div>
-      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£9.99<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
-      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <div id="orig-aipm" style="font-size:13px;color:#98A2B3;text-decoration:line-through;display:none;margin-bottom:2px"></div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px"><span id="price-aipm">£9.99</span><span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px" id="billed-note-aipm">Billed monthly &middot; cancel anytime</div>
       <button onclick="startCheckout('aipm')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
       <div style="display:flex;flex-direction:column">
 <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>6 AI agents: Guest, Maintenance, Cleaning, Revenue, Owner Relations, Lead Qualification</span></div>
@@ -779,8 +820,9 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
     <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
       
       <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Invest</div>
-      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£19<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
-      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <div id="orig-invest" style="font-size:13px;color:#98A2B3;text-decoration:line-through;display:none;margin-bottom:2px"></div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px"><span id="price-invest">£19</span><span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px" id="billed-note-invest">Billed monthly &middot; cancel anytime</div>
       <button onclick="startCheckout('invest')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
       <div style="display:flex;flex-direction:column">
 <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>8 investment strategies: BTL, HMO, BRRR, R2R, Social Housing, Supported Living, Flip, Land</span></div>
@@ -794,8 +836,10 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
     <div class="pricing-plan-card" style="border:2px solid #5B7CFA;position:relative">
       <div style="position:absolute;top:0;left:24px;transform:translateY(-50%);background:#5B7CFA;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px">Most popular</div>
       <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Vacation Rentals</div>
-      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£29<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
-      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <div id="orig-str" style="font-size:13px;color:#98A2B3;text-decoration:line-through;display:none;margin-bottom:2px"></div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px"><span id="price-str">£29</span><span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px" id="billed-note-str">Billed monthly &middot; cancel anytime</div>
+      <div style="font-size:11.5px;color:#5B7CFA;font-weight:600;margin-bottom:12px">Includes 2 properties &middot; +&pound;12 per 2 more</div>
       <button onclick="startCheckout('str')" style="width:100%;background:#5B7CFA;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
       <div style="display:flex;flex-direction:column">
 <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Direct booking engine + iCal sync across Airbnb & Vrbo</span></div>
@@ -811,8 +855,10 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
     <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
       
       <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Property Management</div>
-      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£39<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
-      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <div id="orig-pm" style="font-size:13px;color:#98A2B3;text-decoration:line-through;display:none;margin-bottom:2px"></div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px"><span id="price-pm">£39</span><span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px" id="billed-note-pm">Billed monthly &middot; cancel anytime</div>
+      <div style="font-size:11.5px;color:#5B7CFA;font-weight:600;margin-bottom:12px">Includes 2 properties &middot; +&pound;12 per 2 more</div>
       <button onclick="startCheckout('pm')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
       <div style="display:flex;flex-direction:column">
 <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Tenant & lease management</span></div>
@@ -828,8 +874,9 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
     <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
       
       <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Developments</div>
-      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£49<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
-      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <div id="orig-dev" style="font-size:13px;color:#98A2B3;text-decoration:line-through;display:none;margin-bottom:2px"></div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px"><span id="price-dev">£49</span><span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px" id="billed-note-dev">Billed monthly &middot; cancel anytime</div>
       <button onclick="startCheckout('dev')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
       <div style="display:flex;flex-direction:column">
 <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Project & budget tracking</span></div>
@@ -844,8 +891,10 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
     <div class="pricing-plan-card" style="border:1px solid #E4E7EC;position:relative">
       
       <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:10px">Estate Agency</div>
-      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px">£59<span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
-      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px">Billed monthly &middot; cancel anytime</div>
+      <div id="orig-ea" style="font-size:13px;color:#98A2B3;text-decoration:line-through;display:none;margin-bottom:2px"></div>
+      <div style="font-size:34px;font-weight:800;color:#5B7CFA;margin-bottom:2px"><span id="price-ea">£59</span><span style="font-size:14px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12px;color:#98A2B3;margin-bottom:16px" id="billed-note-ea">Billed monthly &middot; cancel anytime</div>
+      <div style="font-size:11.5px;color:#5B7CFA;font-weight:600;margin-bottom:12px">Includes 2 properties &middot; +&pound;12 per 2 more</div>
       <button onclick="startCheckout('ea')" style="width:100%;background:#101828;color:#fff;border:none;padding:12px 0;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:18px">Start free trial</button>
       <div style="display:flex;flex-direction:column">
 <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Vacancy management</span></div>
@@ -863,12 +912,89 @@ document.querySelectorAll('.prev-tab').forEach(function(btn){
   <div style="max-width:1180px;margin:0 auto;background:#5B7CFA;border-radius:14px;padding:32px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px">
     <div>
       <div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px">Best value</div>
-      <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:6px">All Modules Bundle — <span style="text-decoration:line-through;font-weight:400;opacity:0.6">£195</span> £175.50/mo</div>
+      <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:6px">All Modules Bundle — <span id="orig-bundle" style="text-decoration:line-through;font-weight:400;opacity:0.6">£195</span> <span id="price-bundle">£175.50</span>/mo</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.85)">Every module included &middot; 10% off vs buying separately &middot; one login, one bill</div>
     </div>
     <button onclick="startCheckout('bundle')" style="background:#fff;color:#5B7CFA;border:none;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:8px">Get the bundle <i class="ti ti-arrow-right"></i></button>
   </div>
 </section>
+
+
+<script>
+const PE_PLANS = {
+  aipm:{base:9.99, scalable:false},
+  invest:{base:19, scalable:false},
+  str:{base:29, scalable:true},
+  pm:{base:39, scalable:true},
+  dev:{base:49, scalable:false},
+  ea:{base:59, scalable:true},
+  bundle:{base:175.50, scalable:false}
+};
+const PE_CURRENCY = {GBP:{symbol:'£', rate:1}, USD:{symbol:'$', rate:1.27}, EUR:{symbol:'€', rate:1.16}};
+const PE_BILLING = {monthly:{mult:1, label:'Billed monthly'}, yearly:{mult:0.9, label:'Billed yearly'}, twoyear:{mult:0.8, label:'Billed every 2 years'}};
+let peState = {units:2, billing:'monthly', currency:'GBP'};
+
+function peFmt(n){
+  const r = Math.round(n*100)/100;
+  return Number.isInteger(r) ? r.toString() : r.toFixed(2);
+}
+function peComputeBaseGBP(plan){
+  const p = PE_PLANS[plan];
+  let base = p.base;
+  if(p.scalable){
+    const extra = Math.max(0, peState.units - 2);
+    const blocks = Math.ceil(extra/2);
+    base += blocks*12;
+  }
+  return base;
+}
+function peRenderAll(){
+  const cur = PE_CURRENCY[peState.currency];
+  const bill = PE_BILLING[peState.billing];
+  Object.keys(PE_PLANS).forEach(function(plan){
+    if(plan === 'bundle') return;
+    const monthlyGBP = peComputeBaseGBP(plan);
+    const displayedMonthly = monthlyGBP * bill.mult * cur.rate;
+    const priceEl = document.getElementById('price-'+plan);
+    const origEl = document.getElementById('orig-'+plan);
+    const noteEl = document.getElementById('billed-note-'+plan);
+    if(priceEl) priceEl.textContent = cur.symbol + peFmt(displayedMonthly);
+    if(origEl){
+      if(peState.billing==='monthly'){ origEl.style.display='none'; }
+      else { origEl.style.display='block'; origEl.textContent = cur.symbol + peFmt(monthlyGBP*cur.rate) + '/mo'; }
+    }
+    if(noteEl) noteEl.textContent = bill.label + ' · cancel anytime';
+  });
+  const bundlePriceEl = document.getElementById('price-bundle');
+  const bundleOrigEl = document.getElementById('orig-bundle');
+  if(bundlePriceEl){
+    const bundleMonthly = PE_PLANS.bundle.base * bill.mult * cur.rate;
+    bundlePriceEl.textContent = cur.symbol + peFmt(bundleMonthly);
+  }
+  if(bundleOrigEl){
+    const bundleFullPrice = 195 * bill.mult * cur.rate;
+    bundleOrigEl.textContent = cur.symbol + peFmt(bundleFullPrice);
+  }
+  const unitsEl = document.getElementById('pc-units');
+  if(unitsEl) unitsEl.textContent = peState.units;
+}
+function peChangeUnits(delta){
+  peState.units = Math.max(2, peState.units + delta);
+  peRenderAll();
+}
+function peSetBilling(b){
+  peState.billing = b;
+  document.querySelectorAll('.pc-bill-btn').forEach(function(btn){
+    btn.classList.toggle('pc-bill-on', btn.dataset.billing===b);
+  });
+  peRenderAll();
+}
+function peSetCurrency(c){
+  peState.currency = c;
+  peRenderAll();
+}
+peRenderAll();
+</script>
 
 <section class="section" id="compare" style="background:#F9FAFB">
   <div style="text-align:center;margin-bottom:52px">
