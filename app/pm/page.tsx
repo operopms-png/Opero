@@ -176,6 +176,10 @@ function PMPageInner() {
   const [inspections, setInspections] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [extraBlocks, setExtraBlocks] = useState(0)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
+  const propertyLimit = 2 + extraBlocks * 2
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
@@ -222,9 +226,10 @@ function PMPageInner() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
-      const { data: sub } = await supabase.from('subscriptions').select('modules').eq('user_id', user.id).single()
+      const { data: sub } = await supabase.from('subscriptions').select('modules, pm_extra_blocks').eq('user_id', user.id).single()
       const mods = (sub as any)?.modules ?? []
       setHasModule(mods.includes('pm') || mods.includes('dev'))
+      setExtraBlocks((sub as any)?.pm_extra_blocks ?? 0)
       await loadAll(user.id)
       setLoading(false)
     }
@@ -309,7 +314,24 @@ function PMPageInner() {
     await loadAll()
   }
 
+  async function purchaseBlock() {
+    setUpgrading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const res = await fetch('/api/add-property-block', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user?.id, module: 'pm' }),
+    })
+    const json = await res.json()
+    setUpgrading(false)
+    if (!res.ok) { alert(json.error || 'Could not add more properties'); return }
+    setShowUpgrade(false)
+    await loadAll()
+  }
+
   async function save(table: string, data: any) {
+    if (table === 'pm_properties' && !editId && properties.length >= propertyLimit) {
+      setModal(null); setShowUpgrade(true); return
+    }
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (editId) {
@@ -395,8 +417,11 @@ function PMPageInner() {
             <div style={{width:8,height:8,background:'#10B981',borderRadius:'50%'}}/>
             <h1 style={{fontSize:18,fontWeight:600,margin:0,color:'#101828'}}>Property Management</h1>
           </div>
-          <div style={{display:'flex',gap:8}}>
-            {tab==='Properties'&&<button onClick={()=>{setModal('property');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>}
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3'}}>{properties.length} / {propertyLimit} properties</span>}
+            {tab==='Properties'&&(properties.length >= propertyLimit
+              ? <button onClick={()=>setShowUpgrade(true)} style={{background:'#5B7CFA',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>Add more properties</button>
+              : <button onClick={()=>{setModal('property');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
             {tab==='Landlords'&&<button onClick={()=>{setModal('landlord');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Landlord</button>}
             {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
             {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
@@ -1228,6 +1253,18 @@ function PMPageInner() {
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
             <button onClick={()=>save('pm_properties',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {showUpgrade && (
+        <Modal title="Add more properties" onClose={()=>setShowUpgrade(false)}>
+          <div style={{fontSize:14,color:'#344054',lineHeight:1.6,marginBottom:20}}>
+            Your Property Management plan includes {propertyLimit} properties. Adding 2 more properties is <strong>£12/mo</strong>, billed on your existing subscription with proration for the rest of this cycle.
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={()=>setShowUpgrade(false)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={purchaseBlock} disabled={upgrading} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#5B7CFA',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
           </div>
         </Modal>
       )}

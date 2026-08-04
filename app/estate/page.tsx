@@ -90,6 +90,10 @@ export default function Page() {
   useEffect(() => { window.scrollTo(0, 0) }, [section])
   useEffect(() => { if (allowedTab) setSection(allowedTab) }, [allowedTab])
   const [loading, setLoading] = useState(true)
+  const [extraBlocks, setExtraBlocks] = useState(0)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  const [upgrading, setUpgrading] = useState(false)
+  const propertyLimit = 2 + extraBlocks * 2
   const [properties, setProperties] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])
   const [tenancies, setTenancies] = useState<any[]>([])
@@ -145,8 +149,9 @@ export default function Page() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,t,tn,v,m,e,ba,tx,r,mt,cl] = await Promise.all([
+    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl] = await Promise.all([
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('subscriptions').select('ea_extra_blocks').eq('user_id',userId).single(),
       supabase.from('estate_tenants').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_vacancies').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -163,6 +168,7 @@ export default function Page() {
     const restrictedIds = restrictedProps.map((x: any) => x.id)
     const maintData = propertyIds.length > 0 ? (mt.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (mt.data ?? [])
     const cleanData = propertyIds.length > 0 ? (cl.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (cl.data ?? [])
+    setExtraBlocks((sub.data as any)?.ea_extra_blocks ?? 0)
     setProperties(restrictedProps); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
     setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
@@ -215,10 +221,24 @@ export default function Page() {
 
   const addProperty = async () => {
     if(!prop.name) return
+    if(!editItem && properties.length >= propertyLimit) { setShowAddProperty(false); setShowUpgrade(true); return }
     await saveRecord('estate_properties', prop, editItem?.id)
     setEditItem(null)
     setProp({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})
     setShowAddProperty(false)
+  }
+  async function purchaseBlock() {
+    setUpgrading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const res = await fetch('/api/add-property-block', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user?.id, module: 'ea' }),
+    })
+    const json = await res.json()
+    setUpgrading(false)
+    if (!res.ok) { alert(json.error || 'Could not add more properties'); return }
+    setShowUpgrade(false)
+    await loadAll()
   }
   const addTenant = async () => {
     if(!ten.name) return
@@ -278,10 +298,13 @@ export default function Page() {
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
+            {section==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{properties.length} / {propertyLimit} properties</span>}
             {section!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#101828'}}>{section}</span></>}
           </div>
           <div style={{display:'flex',gap:8}}>
-            {section==='Properties'&&<button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>}
+            {section==='Properties'&&(properties.length >= propertyLimit
+              ? <button onClick={()=>setShowUpgrade(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#5B7CFA',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add more properties</button>
+              : <button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>)}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
             {section==='Vacancies'&&<button onClick={()=>setShowAddVacancy(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
             {section==='Maintenance'&&<button onClick={()=>setShowAddMaint(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New ticket</button>}
@@ -386,6 +409,14 @@ export default function Page() {
               <div style={{display:'flex',gap:8}}>
                 <button onClick={addProperty} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add property'}</button>
                 <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #5B7CFA',padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 10px'}}>Add more properties</h3>
+              <p style={{fontSize:14,color:'#344054',lineHeight:1.6,marginBottom:16}}>Your Estate Agency plan includes {propertyLimit} properties. Adding 2 more properties is <strong>£12/mo</strong>, billed on your existing subscription with proration for the rest of this cycle.</p>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={purchaseBlock} disabled={upgrading} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#5B7CFA',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+                <button onClick={()=>setShowUpgrade(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
