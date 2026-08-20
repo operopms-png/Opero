@@ -31,7 +31,7 @@ async function sendEmail(to: string, subject: string, html: string) {
   }
 }
 
-async function scanEstateAgency(supabase: ReturnType<typeof createClient>, userId: string) {
+async function scanEstateAgency(supabase: any, userId: string) {
   const now = Date.now()
   const [complianceRes, tenanciesRes, rentRes] = await Promise.all([
     supabase.from('estate_compliance').select('*,estate_properties(name)').eq('user_id', userId),
