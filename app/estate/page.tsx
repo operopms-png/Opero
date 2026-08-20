@@ -153,11 +153,18 @@ export default function Page() {
   const [showAddCompliance, setShowAddCompliance] = useState(false)
   const [complianceForm, setComplianceForm] = useState({property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
 
-  const [news] = useState([
-    {title:'New Tenant Verification Regulations for Landlords',tag:'LEGISLATION',body:'The Renters Rights Act has introduced restrictions on upfront rental payments, requiring landlords to adopt alternative affordability checks.'},
-    {title:'Mortgage Market Reforms Proposed by FCA',tag:'MORTGAGE',body:'The Financial Conduct Authority is proposing significant changes to the mortgage market aimed at providing more flexibility for lenders.'},
-    {title:'UK Housing Market Shows Signs of Stabilization',tag:'RENTING',body:'Data indicates that the property market may be stabilizing, with both buyers and sellers adjusting to the new landscape of higher borrowing costs.'},
+  const [news, setNews] = useState([
+    {title:'New Tenant Verification Regulations for Landlords',tag:'LEGISLATION',body:'The Renters Rights Act has introduced restrictions on upfront rental payments, requiring landlords to adopt alternative affordability checks.',link:null as string|null},
+    {title:'Mortgage Market Reforms Proposed by FCA',tag:'MORTGAGE',body:'The Financial Conduct Authority is proposing significant changes to the mortgage market aimed at providing more flexibility for lenders.',link:null as string|null},
+    {title:'UK Housing Market Shows Signs of Stabilization',tag:'RENTING',body:'Data indicates that the property market may be stabilizing, with both buyers and sellers adjusting to the new landscape of higher borrowing costs.',link:null as string|null},
   ])
+  const [newsLive, setNewsLive] = useState(false)
+
+  useEffect(()=>{
+    fetch('/api/estate-news').then(r=>r.json()).then(d=>{
+      if (d?.news?.length) { setNews(d.news); setNewsLive(!!d.live) }
+    }).catch(()=>{})
+  },[])
 
   useEffect(()=>{
     if (roleLoading) return
@@ -436,17 +443,22 @@ export default function Page() {
                 <div style={{fontSize:11,color:'#98A2B3',marginTop:6}}>Rent schedules don't yet record which month a payment covers, so only the current month shows real figures.</div>
               </div>
               <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Real estate news</div>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Real estate news</div>
+                  {newsLive&&<span style={{fontSize:9,fontWeight:700,color:'#10B981',background:'#ECFDF5',padding:'2px 6px',borderRadius:10,textTransform:'uppercase' as const}}>● Live</span>}
+                </div>
                 {news.map(n=>(
                   <div key={n.title} style={{marginBottom:16,paddingBottom:16,borderBottom:'1px solid #F2F4F7'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
-                      <div style={{fontSize:13,fontWeight:600,color:'#101828',flex:1,marginRight:8}}>{n.title}</div>
+                      {n.link
+                        ? <a href={n.link} target="_blank" rel="noopener noreferrer" style={{fontSize:13,fontWeight:600,color:'#101828',flex:1,marginRight:8,textDecoration:'none'}}>{n.title}</a>
+                        : <div style={{fontSize:13,fontWeight:600,color:'#101828',flex:1,marginRight:8}}>{n.title}</div>}
                       <span style={{fontSize:10,fontWeight:700,background:'#E4E7EC',color:'#344054',padding:'2px 6px',borderRadius:4,whiteSpace:'nowrap' as const}}>{n.tag}</span>
                     </div>
                     <div style={{fontSize:12,color:'#667085',lineHeight:1.5}}>{n.body}</div>
                   </div>
                 ))}
-                <button style={{width:'100%',padding:'8px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Show all</button>
+                <a href="https://propertyindustryeye.com" target="_blank" rel="noopener noreferrer" style={{display:'block',width:'100%',padding:'8px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054',textAlign:'center' as const,textDecoration:'none',boxSizing:'border-box' as const}}>Show all</a>
               </div>
             </div>
             {(complianceExpired>0||complianceExpiringSoon>0)&&(
