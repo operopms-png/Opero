@@ -9,6 +9,15 @@ import { supabase } from '../../lib/supabase'
 
 const integrations = [
   {
+    id: 'xero',
+    name: 'Xero',
+    description: 'Sync contacts and financial data with your Xero accounting. Connect your organisation to keep bookkeeping in sync automatically.',
+    logo: '📗',
+    color: '#13B5EA',
+    bg: '#E8FAFF',
+    type: 'oauth',
+  },
+  {
     id: 'pricelabs',
     name: 'PriceLabs',
     description: 'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.',
@@ -80,6 +89,7 @@ export default function IntegrationsPage() {
   const [loading, setLoading] = useState<Record<string, boolean>>({})
   const [messages, setMessages] = useState<Record<string, { type: 'success' | 'error'; text: string }>>({})
   const [pricelabsData, setPricelabsData] = useState<any[]>([])
+  const [xeroOrgName, setXeroOrgName] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -88,6 +98,17 @@ export default function IntegrationsPage() {
         loadIntegrations(data.user.id)
       }
     })
+
+    // Handle the redirect back from Xero's OAuth flow
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('xero_connected')) {
+      setMessages(prev => ({ ...prev, xero: { type: 'success', text: 'Xero connected!' } }))
+      window.history.replaceState({}, '', '/integrations')
+    }
+    if (params.get('xero_error')) {
+      setMessages(prev => ({ ...prev, xero: { type: 'error', text: 'Could not connect to Xero. Please try again.' } }))
+      window.history.replaceState({}, '', '/integrations')
+    }
   }, [])
 
   async function loadIntegrations(uid: string) {
@@ -104,6 +125,7 @@ export default function IntegrationsPage() {
       if (data.airbnb_ical_url) c.airbnb = true
       if (data.vrbo_ical_url) c.vrbo = true
       if (data.booking_ical_url) c.booking = true
+      if (data.xero_access_token) { c.xero = true; setXeroOrgName(data.xero_tenant_name ?? null) }
       setConnected(c)
       if (data.pricelabs_api_key) fetchPricelabs(uid)
     }
@@ -156,6 +178,15 @@ export default function IntegrationsPage() {
 
   async function handleDisconnect(id: string) {
     if (!userId) return
+    if (id === 'xero') {
+      await supabase.from('integrations').upsert(
+        { user_id: userId, xero_access_token: null, xero_refresh_token: null, xero_tenant_id: null, xero_tenant_name: null, xero_token_expires_at: null },
+        { onConflict: 'user_id' }
+      )
+      setConnected(prev => ({ ...prev, xero: false }))
+      setXeroOrgName(null)
+      return
+    }
     const col = id === 'pricelabs' ? 'pricelabs_api_key'
       : id === 'paypal' ? 'paypal_client_id'
       : id === 'airbnb' ? 'airbnb_ical_url'
@@ -192,7 +223,23 @@ export default function IntegrationsPage() {
               )}
             </div>
             <p style={{ fontSize: 12, color: '#666', lineHeight: 1.6 }}>{int.description}</p>
-            {int.type !== 'built_in' && !connected[int.id] && (
+            {int.type === 'oauth' && !connected[int.id] && (
+              <a
+                href={userId ? `/api/xero/connect?userId=${userId}` : '#'}
+                style={{ padding: '8px 14px', background: int.color, color: '#fff', border: 'none', borderRadius: 7, fontSize: 12, cursor: 'pointer', fontWeight: 600, textAlign: 'center', textDecoration: 'none', display: 'inline-block' }}
+              >
+                Connect to Xero
+              </a>
+            )}
+            {int.type === 'oauth' && connected[int.id] && (
+              <div style={{ fontSize: 12, color: '#16a34a', fontWeight: 500 }}>
+                ✓ {xeroOrgName ? `Connected to ${xeroOrgName}` : 'Connected'}
+              </div>
+            )}
+            {int.type === 'oauth' && messages[int.id] && (
+              <div style={{ fontSize: 11, color: messages[int.id].type === 'success' ? '#16a34a' : '#ef4444' }}>{messages[int.id].text}</div>
+            )}
+            {int.type !== 'built_in' && int.type !== 'oauth' && !connected[int.id] && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {int.docsUrl && (
                   <a href={int.docsUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: int.color, textDecoration: 'none' }}>{int.docsLabel}</a>
