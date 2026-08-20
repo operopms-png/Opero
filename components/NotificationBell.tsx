@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const TYPE_ICON: Record<string, string> = {
-  maintenance: '🔧', cleaning: '🧹', booking: '📅', guest_message: '💬',
+  maintenance: '🔧', cleaning: '🧹', booking: '📅', guest_message: '💬', reminder_digest: '⏰',
 }
 
 export default function NotificationBell() {
