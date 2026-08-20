@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
 import { normalizeRole, ROLE_SETTINGS } from '@/lib/useRole'
+import { SidebarCollapseProvider, useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import './globals.css'
 
 const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/staff-dashboard']
@@ -82,14 +83,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ) : !checked ? (
           <main style={{ flex: 1, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</main>
         ) : (
-          <>
-            <Sidebar />
-            <main className="app-main" style={{ marginLeft: 220, flex: 1, minHeight: '100vh' }}>
-              {children}
-            </main>
-          </>
+          <SidebarCollapseProvider>
+            <LayoutBody>{children}</LayoutBody>
+          </SidebarCollapseProvider>
         )}
       </body>
     </html>
+  )
+}
+
+function LayoutBody({ children }: { children: React.ReactNode }) {
+  const { collapsed } = useSidebarCollapse()
+  const width = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH
+  return (
+    <>
+      <Sidebar />
+      <main className="app-main" style={{ marginLeft: width, flex: 1, minHeight: '100vh', transition: 'margin-left 0.15s ease' }}>
+        {children}
+      </main>
+    </>
   )
 }

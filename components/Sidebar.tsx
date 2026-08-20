@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useRole, ROLE_MODULES } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
+import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 
 const NAV_GROUPS = [
   {
@@ -129,6 +130,7 @@ export default function Sidebar() {
   const [modules, setModules] = useState<string[]>([])
   const [userEmail, setUserEmail] = useState('')
   const { role, hasSettings } = useRole()
+  const { collapsed, toggle } = useSidebarCollapse()
 
   useEffect(() => {
     async function loadPlan() {
@@ -152,16 +154,26 @@ export default function Sidebar() {
 
   const features = PLAN_FEATURES[plan] ?? PLAN_FEATURES.starter
 
-  const nav = (
+  function buildNav(isCollapsed: boolean) {
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>Opero</span>
+          {!isCollapsed && <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>Opero</span>}
         </div>
-        <NotificationBell />
+        {!isCollapsed && <NotificationBell />}
       </div>
+      <button
+        onClick={toggle}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        className="desktop-sidebar"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-end', padding: isCollapsed ? '8px 0' : '6px 14px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#98A2B3', borderBottom: '1px solid #F2F4F7' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+      </button>
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
@@ -173,25 +185,28 @@ export default function Sidebar() {
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#F2F4F7', margin: '6px 0' }} />}
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {group.label}
-                {!hasModule && (group as any).modulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#F2F4F7', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{(group as any).modulePrice}</span>}
-              </div>
+              {!isCollapsed && (
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {group.label}
+                  {!hasModule && (group as any).modulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#F2F4F7', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{(group as any).modulePrice}</span>}
+                </div>
+              )}
               {group.items.map(({ href, icon, label, key, minPlan }: any) => {
                 const hasAccess = hasModule && features.includes(key)
                 const active = pathname === href.split('?')[0]
                 return (
                   <Link key={href} href={hasModule ? href : '#'}
+                    title={isCollapsed ? label : undefined}
                     onClick={(e: any) => { if (!hasModule || !hasAccess) e.preventDefault(); else setOpen(false) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#EEF0FF' : 'transparent', color: !hasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: hasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !hasModule ? 0.5 : 1 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#EEF0FF' : 'transparent', color: !hasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: hasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !hasModule ? 0.5 : 1 }}>
                     <Icon name={icon} size={16} color={!hasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#667085'} />
-                    <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>
-                    {!hasModule && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C1C9D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
-                    {hasModule && !hasAccess && minPlan && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: minPlan === 'professional' ? '#1D2939' : '#EEF0FF', color: minPlan === 'professional' ? '#fff' : '#3B4AFF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{minPlan === 'professional' ? 'Pro' : 'Growth'}</span>}
+                    {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
+                    {!isCollapsed && !hasModule && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C1C9D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
+                    {!isCollapsed && hasModule && !hasAccess && minPlan && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: minPlan === 'professional' ? '#1D2939' : '#EEF0FF', color: minPlan === 'professional' ? '#fff' : '#3B4AFF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{minPlan === 'professional' ? 'Pro' : 'Growth'}</span>}
                   </Link>
                 )
               })}
-              {!hasModule && (group as any).modulePrice && <a href="/modules" style={{ display: 'block', textAlign: 'center', fontSize: 11, fontWeight: 600, color: (group as any).module === 'dev' ? '#8B5CF6' : '#3B4AFF', background: (group as any).module === 'dev' ? '#EDE9FE' : '#EEF0FF', borderRadius: 6, padding: '5px 8px', textDecoration: 'none', margin: '4px 0 8px' }}>Unlock — {(group as any).modulePrice}</a>}
+              {!isCollapsed && !hasModule && (group as any).modulePrice && <a href="/modules" style={{ display: 'block', textAlign: 'center', fontSize: 11, fontWeight: 600, color: (group as any).module === 'dev' ? '#8B5CF6' : '#3B4AFF', background: (group as any).module === 'dev' ? '#EDE9FE' : '#EEF0FF', borderRadius: 6, padding: '5px 8px', textDecoration: 'none', margin: '4px 0 8px' }}>Unlock — {(group as any).modulePrice}</a>}
             </div>
           )
         })}
@@ -200,29 +215,36 @@ export default function Sidebar() {
       {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #F2F4F7' }}>
         {plan !== 'professional' && (
-          <a href="/modules" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 7, background: '#3B4AFF', color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 6 }}>
-            Upgrade plan
+          <a href="/modules" title={isCollapsed ? 'Upgrade plan' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 7, background: '#3B4AFF', color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 6 }}>
+            {isCollapsed ? '↑' : 'Upgrade plan'}
           </a>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#3B4AFF', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#3B4AFF', flexShrink: 0 }} title={isCollapsed ? userEmail : undefined}>
             {userEmail.charAt(0).toUpperCase()}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail.split('@')[0]}</div>
-            <div style={{ fontSize: 11, color: '#98A2B3', textTransform: 'capitalize' }}>{plan}</div>
-          </div>
-          <button onClick={handleSignOut} title="Sign out" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#98A2B3', display: 'flex' }}>
-            <Icon name="logout" size={14} color="#98A2B3" />
-          </button>
+          {!isCollapsed && (
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail.split('@')[0]}</div>
+              <div style={{ fontSize: 11, color: '#98A2B3', textTransform: 'capitalize' }}>{plan}</div>
+            </div>
+          )}
+          {!isCollapsed && (
+            <button onClick={handleSignOut} title="Sign out" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#98A2B3', display: 'flex' }}>
+              <Icon name="logout" size={14} color="#98A2B3" />
+            </button>
+          )}
         </div>
-        {hasSettings&&<a href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, textDecoration: 'none', fontSize: 13, color: '#667085', marginTop: 4 }}>
+        {hasSettings&&<a href="/settings" title={isCollapsed ? 'Settings' : undefined} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, textDecoration: 'none', fontSize: 13, color: '#667085', marginTop: 4 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Settings
+          {!isCollapsed && 'Settings'}
         </a>}
       </div>
     </div>
-  )
+    )
+  }
+  const nav = buildNav(collapsed)
+  const mobileNav = buildNav(false)
 
   return (
     <>
@@ -242,9 +264,9 @@ export default function Sidebar() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#fff', zIndex: 50, borderRight: '1px solid #F2F4F7', fontFamily: "'Inter', sans-serif" }}>
-        {nav}
+        {mobileNav}
       </aside>
-      <aside className="sidebar-nav desktop-sidebar" style={{ width: 220, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto' }}>
+      <aside className="sidebar-nav desktop-sidebar" style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto', transition: 'width 0.15s ease' }}>
         {nav}
       </aside>
     </>
