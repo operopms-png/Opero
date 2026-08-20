@@ -3,6 +3,55 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 const ACCENT = '#2D6A4F'
+
+async function uploadFile(file: File, folder: string): Promise<string | null> {
+  const ext = file.name.split('.').pop()
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('pm-files').upload(path, file)
+  if (error) { console.error(error); return null }
+  const { data } = supabase.storage.from('pm-files').getPublicUrl(path)
+  return data.publicUrl
+}
+
+function FileUpload({ label, value, onChange, folder }: { label: string; value: string; onChange: (url: string) => void; folder: string }) {
+  const [uploading, setUploading] = useState(false)
+  async function handle(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const url = await uploadFile(file, folder)
+    if (url) onChange(url)
+    setUploading(false)
+  }
+  return (
+    <div>
+      <label style={{ display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }}>{label}</label>
+      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+        <label style={{ flex:1, padding:'10px 12px', borderRadius:8, border:'2px dashed #D0D5DD', fontSize:13, color:'#667085', cursor:'pointer', display:'flex', alignItems:'center', gap:8, background:'#F9FAFB' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          {uploading ? 'Uploading…' : value ? 'Replace file' : 'Upload file (PDF, JPG, PNG)'}
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handle} style={{ display:'none' }} />
+        </label>
+        {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:ACCENT, fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
+      </div>
+      {value && <div style={{ fontSize:11, color:'#10B981', marginTop:4 }}>✓ File uploaded</div>}
+    </div>
+  )
+}
+
+function Modal({ title, onClose, children }: any) {
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50 }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background:'#fff', borderRadius:16, padding:32, width:'100%', maxWidth:500, margin:'0 16px', maxHeight:'90vh', overflowY:'auto' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
+          <h2 style={{ fontSize:18, fontWeight:600, margin:0 }}>{title}</h2>
+          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#667085' }}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
 const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Vacancies','Bookings'] },
@@ -120,7 +169,7 @@ export default function Page() {
   const [showAddTenancy, setShowAddTenancy] = useState(false)
   const [editItem, setEditItem] = useState<any>(null)
   const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})
-  const [ten, setTen] = useState({name:'',email:'',phone:'',dob:''})
+  const [ten, setTen] = useState({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active'})
   const [vacancies, setVacancies] = useState<any[]>([])
   const [showAddVacancy, setShowAddVacancy] = useState(false)
@@ -180,7 +229,7 @@ export default function Page() {
     const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp] = await Promise.all([
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('subscriptions').select('ea_extra_blocks').eq('user_id',userId).single(),
-      supabase.from('estate_tenants').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_tenants').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_vacancies').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_mortgages').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -274,7 +323,7 @@ export default function Page() {
     if(!ten.name) return
     await saveRecord('estate_tenants', ten, editItem?.id)
     setEditItem(null)
-    setTen({name:'',email:'',phone:'',dob:''})
+    setTen({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})
     setShowAddTenant(false)
   }
   const addTenancy = async () => {
@@ -543,33 +592,48 @@ export default function Page() {
           </div>)}
 
           {section==='Tenants'&&(<div>
-            {showAddTenant&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit tenant':'Add tenant'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={labelStyle}>Full name *</label><input value={ten.name} onChange={e=>setTen({...ten,name:e.target.value})} placeholder="Jane Smith" style={inputStyle}/></div>
-                <div><label style={labelStyle}>Email</label><input value={ten.email} onChange={e=>setTen({...ten,email:e.target.value})} placeholder="jane@example.com" style={inputStyle}/></div>
-                <div><label style={labelStyle}>Phone</label><input value={ten.phone} onChange={e=>setTen({...ten,phone:e.target.value})} placeholder="+44 7700 900000" style={inputStyle}/></div>
-                <div><label style={labelStyle}>Date of birth</label><input value={ten.dob} onChange={e=>setTen({...ten,dob:e.target.value})} type="date" style={inputStyle}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={addTenant} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add tenant'}</button>
-                <button onClick={()=>{setShowAddTenant(false);setEditItem(null);setTen({name:'',email:'',phone:'',dob:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>)}
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 100px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Name</span><span>Email</span><span>Phone</span><span>Date of birth</span><span></span>
-              </div>
-              {tenants.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>👥</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No tenants yet</div><div style={{fontSize:13}}>Add your first tenant to get started.</div></div>):tenants.map(t=>(
-                <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:ACCENT}}>{t.name.charAt(0)}</div><span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.name}</span></div>
-                  <span style={{fontSize:13,color:'#667085'}}>{t.email||'—'}</span>
-                  <span style={{fontSize:13,color:'#344054'}}>{t.phone||'—'}</span>
-                  <span style={{fontSize:13,color:'#344054'}}>{t.dob||'—'}</span>
-                  <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(t);setTen({name:t.name,email:t.email,phone:t.phone,dob:t.dob});setShowAddTenant(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
-                    <button onClick={()=>delRecord('estate_tenants',t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+            {showAddTenant&&(
+              <Modal title={editItem?'Edit tenant':'Add tenant'} onClose={()=>{setShowAddTenant(false);setEditItem(null);setTen({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})}}>
+                <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                  <div><label style={labelStyle}>Full name *</label><input value={ten.name} onChange={e=>setTen({...ten,name:e.target.value})} placeholder="Jane Smith" style={inputStyle}/></div>
+                  <div><label style={labelStyle}>Email</label><input value={ten.email} onChange={e=>setTen({...ten,email:e.target.value})} placeholder="jane@example.com" style={inputStyle}/></div>
+                  <div><label style={labelStyle}>Phone</label><input value={ten.phone} onChange={e=>setTen({...ten,phone:e.target.value})} placeholder="+44 7700 900000" style={inputStyle}/></div>
+                  <div><label style={labelStyle}>Date of birth</label><input value={ten.dob} onChange={e=>setTen({...ten,dob:e.target.value})} type="date" style={inputStyle}/></div>
+                  <div><label style={labelStyle}>Property</label>
+                    <select style={{...inputStyle,cursor:'pointer'}} value={ten.property_id} onChange={e=>setTen({...ten,property_id:e.target.value})}>
+                      <option value="">Select property…</option>
+                      {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
                   </div>
+                  <div><label style={labelStyle}>Unit</label><input value={ten.unit_label} onChange={e=>setTen({...ten,unit_label:e.target.value})} placeholder="e.g. Flat 2B" style={inputStyle}/></div>
+                  <div><label style={labelStyle}>ID type</label>
+                    <select style={{...inputStyle,cursor:'pointer'}} value={ten.id_type} onChange={e=>setTen({...ten,id_type:e.target.value})}>
+                      <option value="">Select…</option>
+                      <option value="passport">Passport</option>
+                      <option value="driving_licence">Driving licence</option>
+                      <option value="national_id">National ID</option>
+                    </select>
+                  </div>
+                  <FileUpload label="ID document" value={ten.id_url} onChange={url=>setTen({...ten,id_url:url})} folder="estate-tenant-ids" />
+                </div>
+                <div style={{display:'flex',gap:8,marginTop:24}}>
+                  <button onClick={()=>{setShowAddTenant(false);setEditItem(null);setTen({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                  <button onClick={addTenant} disabled={!ten.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:ten.name?1:0.6}}>{editItem?'Save changes':'Add tenant'}</button>
+                </div>
+              </Modal>
+            )}
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {tenants.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:40,marginBottom:12}}>👥</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No tenants yet</div><div style={{fontSize:13}}>Add your first tenant to get started.</div></div>):tenants.map((t:any)=>(
+                <div key={t.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+                  <div style={{width:40,height:40,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:ACCENT,flexShrink:0}}>{t.name.charAt(0)}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600,fontSize:14,color:'#101828'}}>{t.name}</div>
+                    <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[t.email,t.phone].filter(Boolean).join(' · ')||'—'}</div>
+                    <div style={{fontSize:12,color:'#98A2B3',marginTop:2}}>{t.estate_properties?.name}{t.unit_label?` — ${t.unit_label}`:''}</div>
+                  </div>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:t.status==='active'?'#D1FAE5':'#F3F4F6',color:t.status==='active'?'#059669':'#6B7280'}}>{t.status||'active'}</span>
+                  <button onClick={()=>{setEditItem(t);setTen({name:t.name,email:t.email||'',phone:t.phone||'',dob:t.dob||'',property_id:t.property_id||'',unit_label:t.unit_label||'',id_type:t.id_type||'',id_url:t.id_url||'',status:t.status||'active'});setShowAddTenant(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
+                  <button onClick={()=>delRecord('estate_tenants',t.id)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Delete</button>
                 </div>
               ))}
             </div>
