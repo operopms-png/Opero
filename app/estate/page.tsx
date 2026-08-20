@@ -60,7 +60,10 @@ const NAV_GROUPS = [
   { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
   { label: 'REPORTS', items: ['Reports','Owner Reports'] },
 ]
-const STUB_SECTIONS = ['Units','Buildings','Bookings','Inventories','Documents']
+const STUB_SECTIONS: string[] = []
+const DOCUMENT_CATEGORIES = ['Tenancy Agreement','ID Document','Certificate','Insurance','Inventory Report','Other']
+const BOOKING_STATUSES = ['Scheduled','Completed','Cancelled','No Show']
+const INVENTORY_TYPES = ['Check-in','Check-out','Mid-term Inspection']
 const COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 
 
@@ -201,6 +204,21 @@ export default function Page() {
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
   const [showAddCompliance, setShowAddCompliance] = useState(false)
   const [complianceForm, setComplianceForm] = useState({property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
+  const [buildings, setBuildings] = useState<any[]>([])
+  const [showAddBuilding, setShowAddBuilding] = useState(false)
+  const [buildingForm, setBuildingForm] = useState({name:'',address:'',total_units:'',notes:''})
+  const [units, setUnits] = useState<any[]>([])
+  const [showAddUnit, setShowAddUnit] = useState(false)
+  const [unitForm, setUnitForm] = useState({building_id:'',property_id:'',unit_number:'',floor:'',bedrooms:'',bathrooms:'',status:'Vacant',notes:''})
+  const [bookings, setBookings] = useState<any[]>([])
+  const [showAddBooking, setShowAddBooking] = useState(false)
+  const [bookingForm, setBookingForm] = useState({property_id:'',prospect_name:'',prospect_email:'',prospect_phone:'',scheduled_at:'',status:'Scheduled',notes:''})
+  const [inventories, setInventories] = useState<any[]>([])
+  const [showAddInventory, setShowAddInventory] = useState(false)
+  const [inventoryForm, setInventoryForm] = useState({property_id:'',tenancy_id:'',type:INVENTORY_TYPES[0],inspection_date:'',condition_summary:'',document_url:'',status:'Draft'})
+  const [documents, setDocuments] = useState<any[]>([])
+  const [showAddDocument, setShowAddDocument] = useState(false)
+  const [documentForm, setDocumentForm] = useState({property_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0],file_url:'',expiry_date:'',notes:''})
 
   const [news, setNews] = useState([
     {title:'New Tenant Verification Regulations for Landlords',tag:'LEGISLATION',body:'The Renters Rights Act has introduced restrictions on upfront rental payments, requiring landlords to adopt alternative affordability checks.',link:null as string|null},
@@ -226,7 +244,7 @@ export default function Page() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp] = await Promise.all([
+    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp,bl,un,bk,inv,doc] = await Promise.all([
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('subscriptions').select('ea_extra_blocks').eq('user_id',userId).single(),
       supabase.from('estate_tenants').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -240,6 +258,11 @@ export default function Page() {
       supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_cleaning_tasks').select('*,estate_properties(name)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
       supabase.from('estate_compliance').select('*,estate_properties(name)').eq('user_id',userId).order('expiry_date',{ascending:true}),
+      supabase.from('estate_buildings').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_units').select('*,estate_buildings(name),estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_bookings').select('*,estate_properties(name)').eq('user_id',userId).order('scheduled_at',{ascending:true}),
+      supabase.from('estate_inventories').select('*,estate_properties(name),estate_tenancies(estate_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}),
+      supabase.from('estate_documents').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
@@ -247,11 +270,17 @@ export default function Page() {
     const maintData = propertyIds.length > 0 ? (mt.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (mt.data ?? [])
     const cleanData = propertyIds.length > 0 ? (cl.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (cl.data ?? [])
     const complianceData = propertyIds.length > 0 ? (cp.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (cp.data ?? [])
+    const unitData = propertyIds.length > 0 ? (un.data ?? []).filter((x: any) => !x.property_id || restrictedIds.includes(x.property_id)) : (un.data ?? [])
+    const bookingData = propertyIds.length > 0 ? (bk.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (bk.data ?? [])
+    const inventoryData = propertyIds.length > 0 ? (inv.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (inv.data ?? [])
+    const documentData = propertyIds.length > 0 ? (doc.data ?? []).filter((x: any) => !x.property_id || restrictedIds.includes(x.property_id)) : (doc.data ?? [])
     setExtraBlocks((sub.data as any)?.ea_extra_blocks ?? 0)
     setProperties(restrictedProps); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
     setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
     setMaintenance(maintData); setCleaning(cleanData); setComplianceRecords(complianceData)
+    setBuildings(bl.data??[]); setUnits(unitData); setBookings(bookingData)
+    setInventories(inventoryData); setDocuments(documentData)
     setLoading(false)
   }
 
@@ -429,6 +458,11 @@ export default function Page() {
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
             {section==='Compliance'&&<button onClick={()=>setShowAddCompliance(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
+            {section==='Buildings'&&<button onClick={()=>{setEditItem(null);setShowAddBuilding(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add building</button>}
+            {section==='Units'&&<button onClick={()=>{setEditItem(null);setShowAddUnit(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add unit</button>}
+            {section==='Bookings'&&<button onClick={()=>{setEditItem(null);setShowAddBooking(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add booking</button>}
+            {section==='Inventories'&&<button onClick={()=>{setEditItem(null);setShowAddInventory(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add report</button>}
+            {section==='Documents'&&<button onClick={()=>{setEditItem(null);setShowAddDocument(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add document</button>}
           </div>
         </div>
 
@@ -706,6 +740,223 @@ export default function Page() {
                   <button onClick={()=>delRecord('estate_compliance',c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                 </div>
               )})}
+            </div>
+          </div>)}
+
+          {section==='Buildings'&&(<div>
+            {showAddBuilding&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit building':'Add building'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={labelStyle}>Building name *</label><input value={buildingForm.name} onChange={e=>setBuildingForm({...buildingForm,name:e.target.value})} placeholder="e.g. Crown Street Block" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Total units</label><input value={buildingForm.total_units} onChange={e=>setBuildingForm({...buildingForm,total_units:e.target.value})} type="number" style={inputStyle}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Address</label><input value={buildingForm.address} onChange={e=>setBuildingForm({...buildingForm,address:e.target.value})} style={inputStyle}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={buildingForm.notes} onChange={e=>setBuildingForm({...buildingForm,notes:e.target.value})} style={inputStyle}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={async()=>{if(!buildingForm.name)return;await saveRecord('estate_buildings',buildingForm,editItem?.id);setEditItem(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add building'}</button>
+                <button onClick={()=>{setShowAddBuilding(false);setEditItem(null);setBuildingForm({name:'',address:'',total_units:'',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 80px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Name</span><span>Address</span><span>Units</span><span></span>
+              </div>
+              {buildings.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏢</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No buildings yet</div><div style={{fontSize:13}}>Add a building to start grouping units.</div></div>):buildings.map((b:any)=>(
+                <div key={b.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 80px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{b.name}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{b.address||'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{b.total_units||'—'}</span>
+                  <button onClick={()=>delRecord('estate_buildings',b.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>)}
+
+          {section==='Units'&&(<div>
+            {showAddUnit&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit unit':'Add unit'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={labelStyle}>Unit number *</label><input value={unitForm.unit_number} onChange={e=>setUnitForm({...unitForm,unit_number:e.target.value})} placeholder="e.g. Flat 3" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Building</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={unitForm.building_id} onChange={e=>setUnitForm({...unitForm,building_id:e.target.value})}>
+                    <option value="">Select building…</option>
+                    {buildings.map((b:any)=><option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Linked property</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={unitForm.property_id} onChange={e=>setUnitForm({...unitForm,property_id:e.target.value})}>
+                    <option value="">Select property…</option>
+                    {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Status</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={unitForm.status} onChange={e=>setUnitForm({...unitForm,status:e.target.value})}>
+                    {['Vacant','Occupied','Maintenance'].map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Floor</label><input value={unitForm.floor} onChange={e=>setUnitForm({...unitForm,floor:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Bedrooms</label><input value={unitForm.bedrooms} onChange={e=>setUnitForm({...unitForm,bedrooms:e.target.value})} type="number" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Bathrooms</label><input value={unitForm.bathrooms} onChange={e=>setUnitForm({...unitForm,bathrooms:e.target.value})} type="number" style={inputStyle}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={unitForm.notes} onChange={e=>setUnitForm({...unitForm,notes:e.target.value})} style={inputStyle}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={async()=>{if(!unitForm.unit_number)return;await saveRecord('estate_units',unitForm,editItem?.id);setEditItem(null);setUnitForm({building_id:'',property_id:'',unit_number:'',floor:'',bedrooms:'',bathrooms:'',status:'Vacant',notes:''});setShowAddUnit(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add unit'}</button>
+                <button onClick={()=>{setShowAddUnit(false);setEditItem(null);setUnitForm({building_id:'',property_id:'',unit_number:'',floor:'',bedrooms:'',bathrooms:'',status:'Vacant',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Unit</span><span>Building</span><span>Property</span><span>Status</span><span></span>
+              </div>
+              {units.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🚪</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No units yet</div><div style={{fontSize:13}}>Add a unit within a building.</div></div>):units.map((u:any)=>(
+                <div key={u.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{u.unit_number}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{u.estate_buildings?.name||'—'}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{u.estate_properties?.name||'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:u.status==='Occupied'?'#D1FAE5':u.status==='Maintenance'?'#FEF3C7':'#F3F4F6',color:u.status==='Occupied'?'#059669':u.status==='Maintenance'?'#D97706':'#6B7280'}}>{u.status}</span>
+                  <button onClick={()=>delRecord('estate_units',u.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>)}
+
+          {section==='Bookings'&&(<div>
+            {showAddBooking&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit booking':'Add viewing booking'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={labelStyle}>Property *</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={bookingForm.property_id} onChange={e=>setBookingForm({...bookingForm,property_id:e.target.value})}>
+                    <option value="">Select property…</option>
+                    {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Prospect name *</label><input value={bookingForm.prospect_name} onChange={e=>setBookingForm({...bookingForm,prospect_name:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Email</label><input value={bookingForm.prospect_email} onChange={e=>setBookingForm({...bookingForm,prospect_email:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Phone</label><input value={bookingForm.prospect_phone} onChange={e=>setBookingForm({...bookingForm,prospect_phone:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Date and time</label><input value={bookingForm.scheduled_at} onChange={e=>setBookingForm({...bookingForm,scheduled_at:e.target.value})} type="datetime-local" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Status</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={bookingForm.status} onChange={e=>setBookingForm({...bookingForm,status:e.target.value})}>
+                    {BOOKING_STATUSES.map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={bookingForm.notes} onChange={e=>setBookingForm({...bookingForm,notes:e.target.value})} style={inputStyle}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={async()=>{if(!bookingForm.property_id||!bookingForm.prospect_name)return;await saveRecord('estate_bookings',bookingForm,editItem?.id);setEditItem(null);setBookingForm({property_id:'',prospect_name:'',prospect_email:'',prospect_phone:'',scheduled_at:'',status:'Scheduled',notes:''});setShowAddBooking(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add booking'}</button>
+                <button onClick={()=>{setShowAddBooking(false);setEditItem(null);setBookingForm({property_id:'',prospect_name:'',prospect_email:'',prospect_phone:'',scheduled_at:'',status:'Scheduled',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Prospect</span><span>Property</span><span>When</span><span>Status</span><span></span>
+              </div>
+              {bookings.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No bookings yet</div><div style={{fontSize:13}}>Schedule your first viewing.</div></div>):bookings.map((bk:any)=>(
+                <div key={bk.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{bk.prospect_name}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{bk.estate_properties?.name||'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{bk.scheduled_at?new Date(bk.scheduled_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:bk.status==='Completed'?'#D1FAE5':bk.status==='Cancelled'||bk.status==='No Show'?'#FEE2E2':'#DBEAFE',color:bk.status==='Completed'?'#059669':bk.status==='Cancelled'||bk.status==='No Show'?'#DC2626':'#2563EB'}}>{bk.status}</span>
+                  <button onClick={()=>delRecord('estate_bookings',bk.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>)}
+
+          {section==='Inventories'&&(<div>
+            {showAddInventory&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit report':'Add inventory report'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={labelStyle}>Property *</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={inventoryForm.property_id} onChange={e=>setInventoryForm({...inventoryForm,property_id:e.target.value})}>
+                    <option value="">Select property…</option>
+                    {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Tenancy</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={inventoryForm.tenancy_id} onChange={e=>setInventoryForm({...inventoryForm,tenancy_id:e.target.value})}>
+                    <option value="">Select tenancy…</option>
+                    {tenancies.map((t:any)=><option key={t.id} value={t.id}>{t.estate_properties?.name} — {t.estate_tenants?.name}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Type</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={inventoryForm.type} onChange={e=>setInventoryForm({...inventoryForm,type:e.target.value})}>
+                    {INVENTORY_TYPES.map(t=><option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Inspection date</label><input value={inventoryForm.inspection_date} onChange={e=>setInventoryForm({...inventoryForm,inspection_date:e.target.value})} type="date" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Status</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={inventoryForm.status} onChange={e=>setInventoryForm({...inventoryForm,status:e.target.value})}>
+                    {['Draft','Completed'].map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Condition summary</label><input value={inventoryForm.condition_summary} onChange={e=>setInventoryForm({...inventoryForm,condition_summary:e.target.value})} style={inputStyle}/></div>
+                <div style={{gridColumn:'span 2'}}><FileUpload label="Report document" value={inventoryForm.document_url} onChange={url=>setInventoryForm({...inventoryForm,document_url:url})} folder="estate-inventories" /></div>
+              </div>
+              <div style={{display:'flex',gap:8,marginTop:12}}>
+                <button onClick={async()=>{if(!inventoryForm.property_id)return;await saveRecord('estate_inventories',inventoryForm,editItem?.id);setEditItem(null);setInventoryForm({property_id:'',tenancy_id:'',type:INVENTORY_TYPES[0],inspection_date:'',condition_summary:'',document_url:'',status:'Draft'});setShowAddInventory(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add report'}</button>
+                <button onClick={()=>{setShowAddInventory(false);setEditItem(null);setInventoryForm({property_id:'',tenancy_id:'',type:INVENTORY_TYPES[0],inspection_date:'',condition_summary:'',document_url:'',status:'Draft'})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Property</span><span>Type</span><span>Date</span><span>Status</span><span></span>
+              </div>
+              {inventories.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📝</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No inventory reports yet</div><div style={{fontSize:13}}>Log a check-in or check-out report.</div></div>):inventories.map((inv:any)=>(
+                <div key={inv.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{inv.estate_properties?.name||'—'}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{inv.type}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{inv.inspection_date||'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:inv.status==='Completed'?'#D1FAE5':'#F3F4F6',color:inv.status==='Completed'?'#059669':'#6B7280'}}>{inv.status}</span>
+                  <button onClick={()=>delRecord('estate_inventories',inv.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>)}
+
+          {section==='Documents'&&(<div>
+            {showAddDocument&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit document':'Add document'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Document name *</label><input value={documentForm.name} onChange={e=>setDocumentForm({...documentForm,name:e.target.value})} placeholder="e.g. AST — 17 Ocean Drive" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Category</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.category} onChange={e=>setDocumentForm({...documentForm,category:e.target.value})}>
+                    {DOCUMENT_CATEGORIES.map(c=><option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Expiry date</label><input value={documentForm.expiry_date} onChange={e=>setDocumentForm({...documentForm,expiry_date:e.target.value})} type="date" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Property</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.property_id} onChange={e=>setDocumentForm({...documentForm,property_id:e.target.value})}>
+                    <option value="">Select property…</option>
+                    {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Tenant</label>
+                  <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.tenant_id} onChange={e=>setDocumentForm({...documentForm,tenant_id:e.target.value})}>
+                    <option value="">Select tenant…</option>
+                    {tenants.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                </div>
+                <div style={{gridColumn:'span 2'}}><FileUpload label="File" value={documentForm.file_url} onChange={url=>setDocumentForm({...documentForm,file_url:url})} folder="estate-documents" /></div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={documentForm.notes} onChange={e=>setDocumentForm({...documentForm,notes:e.target.value})} style={inputStyle}/></div>
+              </div>
+              <div style={{display:'flex',gap:8,marginTop:12}}>
+                <button onClick={async()=>{if(!documentForm.name)return;await saveRecord('estate_documents',documentForm,editItem?.id);setEditItem(null);setDocumentForm({property_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0],file_url:'',expiry_date:'',notes:''});setShowAddDocument(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add document'}</button>
+                <button onClick={()=>{setShowAddDocument(false);setEditItem(null);setDocumentForm({property_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0],file_url:'',expiry_date:'',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Name</span><span>Category</span><span>Linked to</span><span>Expiry</span><span></span>
+              </div>
+              {documents.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📁</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No documents yet</div><div style={{fontSize:13}}>Upload tenancy agreements, certificates and more.</div></div>):documents.map((d:any)=>(
+                <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.file_url?<a href={d.file_url} target="_blank" rel="noreferrer" style={{color:'#101828',textDecoration:'none'}}>{d.name}</a>:d.name}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{d.category}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{d.estate_properties?.name||d.estate_tenants?.name||'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{d.expiry_date||'—'}</span>
+                  <button onClick={()=>delRecord('estate_documents',d.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                </div>
+              ))}
             </div>
           </div>)}
 
