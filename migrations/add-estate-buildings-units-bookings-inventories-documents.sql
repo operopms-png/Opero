@@ -1,7 +1,19 @@
 -- Run this in Supabase SQL Editor (project mzjsxrlgnthelwwtfkke)
 -- Replaces the last five "coming soon" Estate Agency nav stubs with real
--- tables: Buildings, Units, Bookings (property viewings), Inventories
+-- tables: Buildings, Units, Viewings (property viewings), Inventories
 -- (check-in/check-out reports), Documents.
+--
+-- Safe to run whether or not you already ran an earlier version of this
+-- migration that created "estate_bookings" -- it renames that table to
+-- estate_viewings if found, rather than creating a duplicate.
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='estate_bookings')
+     AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='estate_viewings') THEN
+    ALTER TABLE estate_bookings RENAME TO estate_viewings;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS estate_buildings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -27,7 +39,7 @@ CREATE TABLE IF NOT EXISTS estate_units (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS estate_bookings (
+CREATE TABLE IF NOT EXISTS estate_viewings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
   property_id UUID REFERENCES estate_properties(id) ON DELETE SET NULL,
@@ -69,7 +81,7 @@ CREATE TABLE IF NOT EXISTS estate_documents (
 DO $$
 DECLARE
   tbl TEXT;
-  tables TEXT[] := ARRAY['estate_buildings','estate_units','estate_bookings','estate_inventories','estate_documents'];
+  tables TEXT[] := ARRAY['estate_buildings','estate_units','estate_viewings','estate_inventories','estate_documents'];
 BEGIN
   FOREACH tbl IN ARRAY tables LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', tbl);
@@ -80,7 +92,7 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS idx_estate_units_building ON estate_units(building_id);
 CREATE INDEX IF NOT EXISTS idx_estate_units_property ON estate_units(property_id);
-CREATE INDEX IF NOT EXISTS idx_estate_bookings_property ON estate_bookings(property_id);
+CREATE INDEX IF NOT EXISTS idx_estate_viewings_property ON estate_viewings(property_id);
 CREATE INDEX IF NOT EXISTS idx_estate_inventories_property ON estate_inventories(property_id);
 CREATE INDEX IF NOT EXISTS idx_estate_documents_property ON estate_documents(property_id);
 
