@@ -18,7 +18,7 @@ export default function Page() {
   const [showDealForm, setShowDealForm] = useState(false)
   const [editId, setEditId] = useState<any>(null)
   const [contactForm, setContactForm] = useState({name:'',email:'',phone:'',type:'Landlord',notes:''})
-  const [dealForm, setDealForm] = useState({name:'',contact_id:'',value:'',type:'Sale',stage:'Enquiry'})
+  const [dealForm, setDealForm] = useState({name:'',contact_id:'',value:'',stage:'Enquiry'})
 
   useEffect(()=>{
     supabase.auth.getUser().then(async ({data:{user}})=>{
@@ -64,7 +64,7 @@ export default function Page() {
       const {error}=await supabase.from('crm_deals').insert([{...payload,user_id:user?.id,module:MODULE}])
       if(error){alert(error.message);setSaving(false);return}
     }
-    setSaving(false); setDealForm({name:'',contact_id:'',value:'',type:'Sale',stage:'Enquiry'}); setShowDealForm(false); setEditId(null)
+    setSaving(false); setDealForm({name:'',contact_id:'',value:'',stage:'Enquiry'}); setShowDealForm(false); setEditId(null)
     await loadAll(user!.id)
   }
 
@@ -95,7 +95,7 @@ export default function Page() {
 
   function openEditDeal(d: any) {
     const {crm_contacts, ...clean} = d
-    setDealForm({name:clean.name,contact_id:clean.contact_id??'',value:clean.value??'',type:clean.type??'Sale',stage:clean.stage??'Enquiry'})
+    setDealForm({name:clean.name,contact_id:clean.contact_id??'',value:clean.value??'',stage:clean.stage??'Enquiry'})
     setEditId(d.id); setShowDealForm(true)
   }
 
@@ -107,7 +107,7 @@ export default function Page() {
         <div><div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>ESTATE AGENCY</div><div style={{fontSize:15,fontWeight:700,color:'#101828'}}>CRM</div></div>
         <div style={{display:'flex',gap:8}}>
           {section==='Contacts'&&<button onClick={()=>{setEditId(null);setContactForm({name:'',email:'',phone:'',type:'Landlord',notes:''});setShowContactForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Contact</button>}
-          {section==='Deals'&&<button onClick={()=>{setEditId(null);setDealForm({name:'',contact_id:'',value:'',type:'Sale',stage:'Enquiry'});setShowDealForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Deal</button>}
+          {section==='Deals'&&<button onClick={()=>{setEditId(null);setDealForm({name:'',contact_id:'',value:'',stage:'Enquiry'});setShowDealForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Deal</button>}
         </div>
       </div>
       <div style={{display:'flex',gap:0,padding:'0 28px',background:'#fff',borderBottom:'1px solid #E4E7EC'}}>
@@ -162,7 +162,6 @@ export default function Page() {
               <div><label style={lbl}>Deal Name *</label><input value={dealForm.name} onChange={e=>setDealForm({...dealForm,name:e.target.value})} placeholder="e.g. 3 bed sale" style={inp}/></div>
               <div><label style={lbl}>Contact</label><select value={dealForm.contact_id} onChange={e=>setDealForm({...dealForm,contact_id:e.target.value})} style={inp}><option value="">Select…</option>{contacts.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
               <div><label style={lbl}>Value (£)</label><input value={dealForm.value} onChange={e=>setDealForm({...dealForm,value:e.target.value})} type="number" style={inp}/></div>
-              <div><label style={lbl}>Type</label><select value={dealForm.type} onChange={e=>setDealForm({...dealForm,type:e.target.value})} style={inp}>{['Sale','Let','Management','Valuation'].map(t=><option key={t}>{t}</option>)}</select></div>
               <div><label style={lbl}>Stage</label><select value={dealForm.stage} onChange={e=>setDealForm({...dealForm,stage:e.target.value})} style={inp}>{DEAL_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
             </div>
             <div style={{display:'flex',gap:8}}>
@@ -171,13 +170,12 @@ export default function Page() {
             </div>
           </div>)}
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 100px 130px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Deal</span><span>Contact</span><span>Value</span><span>Type</span><span>Stage</span><span></span></div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 130px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Deal</span><span>Contact</span><span>Value</span><span>Stage</span><span></span></div>
             {deals.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🏠</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No deals yet</div></div>):deals.map((d:any)=>(
-              <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 100px 130px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+              <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 130px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.name}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{d.crm_contacts?.name||'—'}</span>
                 <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{d.value?'£'+parseFloat(d.value).toLocaleString():'—'}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT}}>{d.type}</span>
                 <select value={d.stage} onChange={e=>updateDealStage(d.id,e.target.value)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{DEAL_STAGES.map(s=><option key={s}>{s}</option>)}</select>
                 <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
                   <button onClick={()=>openEditDeal(d)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
