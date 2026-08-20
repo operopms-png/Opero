@@ -430,15 +430,29 @@ export default function Page() {
                   </div>
                 </div>
                 <div style={{fontSize:10,color:'#98A2B3',marginBottom:12,marginTop:-8}}>Gross income is total rent marked Paid to date; expenses are filtered to {periodTab==='CURRENT_MONTH'?'the current month':periodTab==='LAST_MONTH'?'last month':periodTab==='CURRENT_YEAR'?'the current year':'the trailing 12 months'}.</div>
-                <div style={{height:80,position:'relative',borderBottom:'1px solid #E4E7EC'}}>
-                  <div style={{display:'flex',alignItems:'flex-end',gap:2,height:'100%'}}>
-                    {revenueByMonth.map((m,i)=>(
-                      <div key={m.label+i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}} title={'£'+m.collected.toLocaleString()+' collected'}>
-                        <div style={{width:'100%',background:i===nowIdx?ACCENT:ACCENT+'40',borderRadius:'2px 2px 0 0',height:Math.max((m.collected/maxMonthRevenue*100),2)+'%'}}/>
-                        <div style={{fontSize:8,color:'#98A2B3'}}>{m.label}</div>
-                      </div>
+                <div style={{height:110,position:'relative'}}>
+                  <svg viewBox="0 0 400 110" style={{width:'100%',height:110,overflow:'visible'}}>
+                    {[0,0.5,1].map(p=>(
+                      <g key={p}>
+                        <line x1={28} y1={90-p*70} x2={400} y2={90-p*70} stroke="#F2F4F7" strokeWidth="1"/>
+                        <text x={0} y={90-p*70+3} fontSize="8" fill="#98A2B3">£{Math.round(maxMonthRevenue*p).toLocaleString()}</text>
+                      </g>
                     ))}
-                  </div>
+                    {revenueByMonth.map((m,i)=>{
+                      const barW = (400-32)/12*0.6
+                      const gap = (400-32)/12
+                      const x = 32 + i*gap
+                      const h = Math.max((m.collected/maxMonthRevenue)*70, 2)
+                      return (
+                        <g key={m.label+i}>
+                          <rect x={x} y={90-h} width={barW} height={h} rx={2} fill={i===nowIdx?ACCENT:ACCENT+'55'}>
+                            <title>£{m.collected.toLocaleString()} collected — {m.label}</title>
+                          </rect>
+                          <text x={x+barW/2} y={102} fontSize="8" fill="#98A2B3" textAnchor="middle">{m.label}</text>
+                        </g>
+                      )
+                    })}
+                  </svg>
                 </div>
                 <div style={{fontSize:11,color:'#98A2B3',marginTop:6}}>Rent schedules don't yet record which month a payment covers, so only the current month shows real figures.</div>
               </div>
