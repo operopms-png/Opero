@@ -17,7 +17,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       name, email, phone, postcode, bedrooms, source, module, type,
-      address1, town, county, status, priceRange, comments, marketingConsent
+      address1, town, county, status, priceRange, comments, marketingConsent,
+      issue, urgency, description, propertyName, accessNotes
     } = body
 
     const noteLines = [
@@ -27,6 +28,11 @@ export async function POST(req: NextRequest) {
       priceRange ? `Price range: ${priceRange}` : null,
       marketingConsent ? `Marketing opt-in: ${marketingConsent}` : null,
       comments ? `Comments: ${comments}` : null,
+      propertyName ? `Property / Unit: ${propertyName}` : null,
+      issue ? `Issue: ${issue}` : null,
+      urgency ? `Urgency: ${urgency}` : null,
+      description ? `Description: ${description}` : null,
+      accessNotes ? `Access notes: ${accessNotes}` : null,
     ].filter(Boolean)
 
     const { data: inserted, error: insertError } = await supabase.from('crm_contacts').insert([{
@@ -44,9 +50,10 @@ export async function POST(req: NextRequest) {
     if (insertError) throw insertError
 
     // Also drop a matching Deal into the Enquiry stage so Pipeline reflects new leads automatically
+    const dealLabel = issue ? `${name ?? 'Unknown'} — ${issue}` : `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`
     const { error: dealError } = await supabase.from('crm_deals').insert([{
       user_id: 'bd780fdd-15e3-4306-8c87-788b23647ee5',
-      name: `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`,
+      name: dealLabel,
       contact_id: inserted?.id ?? null,
       module: module ?? 'str',
       stage: 'Enquiry',
