@@ -15,9 +15,21 @@ const headers = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { name, email, phone, postcode, bedrooms, source, module, type } = body
+    const {
+      name, email, phone, postcode, bedrooms, source, module, type,
+      address1, town, county, status, priceRange, comments, marketingConsent
+    } = body
 
-    await supabase.from('crm_contacts').insert([{
+    const noteLines = [
+      address1 ? `Address: ${address1}${town ? `, ${town}` : ''}${county ? `, ${county}` : ''}${postcode ? `, ${postcode}` : ''}` : (postcode ? `Postcode: ${postcode}` : null),
+      bedrooms ? `Bedrooms: ${bedrooms}` : null,
+      status ? `Current status: ${status}` : null,
+      priceRange ? `Price range: ${priceRange}` : null,
+      marketingConsent ? `Marketing opt-in: ${marketingConsent}` : null,
+      comments ? `Comments: ${comments}` : null,
+    ].filter(Boolean)
+
+    const { data: inserted, error: insertError } = await supabase.from('crm_contacts').insert([{
       user_id: 'bd780fdd-15e3-4306-8c87-788b23647ee5',
       name: name ?? 'Unknown',
       email: email ?? null,
@@ -26,7 +38,20 @@ export async function POST(req: NextRequest) {
       module: module ?? 'str',
       type: type ?? 'guest',
       status: 'prospect',
-      notes: postcode ? `Postcode: ${postcode}${bedrooms ? `, Bedrooms: ${bedrooms}` : ''}` : null,
+      notes: noteLines.length ? noteLines.join('\n') : null,
+    }]).select().single()
+
+    if (insertError) throw insertError
+
+    // Also drop a matching Deal into the Enquiry stage so Pipeline reflects new leads automatically
+    await supabase.from('crm_deals').insert([{
+      user_id: 'bd780fdd-15e3-4306-8c87-788b23647ee5',
+      name: `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`,
+      contact_id: inserted?.id ?? null,
+      module: module ?? 'str',
+      type: (module === 'estate') ? 'Let' : 'Sale',
+      stage: 'Enquiry',
+      value: null,
     }])
 
     return NextResponse.json({ success: true }, { headers })
