@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     if (insertError) throw insertError
 
     // Also drop a matching Deal into the Enquiry stage so Pipeline reflects new leads automatically
-    await supabase.from('crm_deals').insert([{
+    const { error: dealError } = await supabase.from('crm_deals').insert([{
       user_id: 'bd780fdd-15e3-4306-8c87-788b23647ee5',
       name: `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`,
       contact_id: inserted?.id ?? null,
@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
       stage: 'Enquiry',
       value: null,
     }])
+    if (dealError) console.error('crm-enquiry: deal insert failed', dealError)
 
     return NextResponse.json({ success: true }, { headers })
   } catch (e) {
