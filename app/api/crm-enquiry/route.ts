@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
       name: `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`,
       contact_id: inserted?.id ?? null,
       module: module ?? 'str',
-      type: (module === 'estate') ? 'Let' : 'Sale',
       stage: 'Enquiry',
       value: null,
     }])
