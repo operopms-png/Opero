@@ -3,8 +3,16 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 const ACCENT = '#2D6A4F'
-const NAV_BASICS = ['Dashboard','Properties','Units','Buildings','Tenants','Tenancies','Bookings','Inventories','Maintenance','Cleaning','Finance','Loans & Mortgages','Rent Collection','Vacancies','Expenses','Banking','Reports','Owner Reports','Documents']
-const NAV_REST = ['Contacts','Maintenance','Tasks','Notes','Messages','Candidates','Tools','Community']
+const NAV_GROUPS = [
+  { label: 'OVERVIEW', items: ['Dashboard'] },
+  { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Vacancies','Bookings'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Inventories','Documents'] },
+  { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
+  { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
+  { label: 'REPORTS', items: ['Reports','Owner Reports'] },
+]
+const STUB_SECTIONS = ['Units','Buildings','Bookings','Inventories','Documents']
+const COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 
 
 function CashFlowTab({transactions}:{transactions:any[]}) {
@@ -82,6 +90,15 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
     </div>
   )
 }
+function complianceStatus(expiryDate?: string) {
+  if (!expiryDate) return 'No Expiry'
+  const days = Math.ceil((new Date(expiryDate).getTime() - Date.now()) / 86400000)
+  if (days < 0) return 'Expired'
+  if (days <= 60) return 'Expiring Soon'
+  return 'Valid'
+}
+const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Expiring Soon':'#F59E0B', 'Valid':'#10B981', 'No Expiry':'#98A2B3' }
+
 export default function Page() {
   const [section, setSection] = useState('Dashboard')
   const { role, propertyIds, loading: roleLoading } = useRole()
@@ -131,6 +148,9 @@ export default function Page() {
   const [cleaning, setCleaning] = useState<any[]>([])
   const [showAddCleaning, setShowAddCleaning] = useState(false)
   const [cleanForm, setCleanForm] = useState({property_id:'',scheduled_date:'',assigned_to:'',notes:''})
+  const [complianceRecords, setComplianceRecords] = useState<any[]>([])
+  const [showAddCompliance, setShowAddCompliance] = useState(false)
+  const [complianceForm, setComplianceForm] = useState({property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
 
   const [news] = useState([
     {title:'New Tenant Verification Regulations for Landlords',tag:'LEGISLATION',body:'The Renters Rights Act has introduced restrictions on upfront rental payments, requiring landlords to adopt alternative affordability checks.'},
@@ -149,7 +169,7 @@ export default function Page() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl] = await Promise.all([
+    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp] = await Promise.all([
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('subscriptions').select('ea_extra_blocks').eq('user_id',userId).single(),
       supabase.from('estate_tenants').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -162,17 +182,19 @@ export default function Page() {
       supabase.from('estate_rent_schedules').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_cleaning_tasks').select('*,estate_properties(name)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
+      supabase.from('estate_compliance').select('*,estate_properties(name)').eq('user_id',userId).order('expiry_date',{ascending:true}),
     ])
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
     const restrictedIds = restrictedProps.map((x: any) => x.id)
     const maintData = propertyIds.length > 0 ? (mt.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (mt.data ?? [])
     const cleanData = propertyIds.length > 0 ? (cl.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (cl.data ?? [])
+    const complianceData = propertyIds.length > 0 ? (cp.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (cp.data ?? [])
     setExtraBlocks((sub.data as any)?.ea_extra_blocks ?? 0)
     setProperties(restrictedProps); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
     setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
-    setMaintenance(maintData); setCleaning(cleanData)
+    setMaintenance(maintData); setCleaning(cleanData); setComplianceRecords(complianceData)
     setLoading(false)
   }
 
@@ -258,7 +280,23 @@ export default function Page() {
   const annualRent = tenancies.filter(t=>t.status==='Active').reduce((s,t)=>s+(parseFloat(t.rent)||0)*12,0)
   const monthlyRent = tenancies.filter(t=>t.status==='Active').reduce((s,t)=>s+(parseFloat(t.rent)||0),0)
   const rentedProps = properties.filter(p=>p.status==='Rented').length
-  const months = ['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun']
+  const totalExpenses = expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+  const rentPaidCount = rentSchedules.filter((r:any)=>r.status==='Paid').length
+  const lateRentCount = rentSchedules.filter((r:any)=>r.status==='Overdue').length
+  const netProfit = monthlyRent - totalExpenses
+  const complianceExpired = complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length
+  const complianceExpiringSoon = complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length
+  const collectedRentTotal = rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0)
+  // Rent schedules don't record which month a payment covers, so (as in the Reports tab)
+  // only the current month shows real collected/spent figures; prior months show £0
+  // rather than a fabricated trend, until schedules track a payment date.
+  const nowIdx = new Date().getMonth()
+  const revenueByMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((label,i)=>({
+    label,
+    collected: i===nowIdx ? collectedRentTotal : 0,
+    spent: i===nowIdx ? totalExpenses : 0,
+  }))
+  const maxMonthRevenue = Math.max(...revenueByMonth.map(m=>m.collected), 1)
 
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
@@ -280,15 +318,18 @@ export default function Page() {
           <span style={{fontSize:14,fontWeight:700,color:'#fff'}}>Estate Agency</span>
         </div>
         <div style={{padding:'8px 10px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px'}}>THE BASICS</div>
-          {NAV_BASICS.map(s=>{
-            const locked = !!(allowedTab && s !== allowedTab)
-            const badge = s==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : s==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : 0
-            return <button key={s} onClick={()=>!locked && setSection(s)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{...btnStyle(section===s && !locked), color:locked?'#C1C9D2':btnStyle(section===s).color, cursor:locked?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'space-between'}}><span>{s}</span>{badge>0&&!locked&&<span style={{background:s==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
-          })}
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>THE REST</div>
-          {NAV_REST.map(s=>(
-            <button key={s} onClick={()=>setSection(s)} style={btnStyle(section===s)}>{s}</button>
+          {NAV_GROUPS.map(group=>(
+            <div key={group.label}>
+              <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
+              {group.items.map(s=>{
+                const locked = !!(allowedTab && s !== allowedTab)
+                const badge = s==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length
+                  : s==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length
+                  : s==='Compliance' ? complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid').length
+                  : 0
+                return <button key={s} onClick={()=>!locked && setSection(s)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{...btnStyle(section===s && !locked), color:locked?'#C1C9D2':btnStyle(section===s).color, cursor:locked?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'space-between'}}><span>{s}</span>{badge>0&&!locked&&<span style={{background:s==='Maintenance'||s==='Compliance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+              })}
+            </div>
           ))}
         </div>
       </div>
@@ -314,6 +355,7 @@ export default function Page() {
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
+            {section==='Compliance'&&<button onClick={()=>setShowAddCompliance(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
           </div>
         </div>
 
@@ -351,11 +393,11 @@ export default function Page() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div style={{padding:16,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
                     <div style={{fontSize:11,color:'#667085',marginBottom:4,textTransform:'uppercase',fontWeight:600}}>Rent paid</div>
-                    <div style={{fontSize:28,fontWeight:700,color:ACCENT}}>{tenancies.filter(t=>t.status==='Active').length}</div>
+                    <div style={{fontSize:28,fontWeight:700,color:ACCENT}}>{rentPaidCount}</div>
                   </div>
                   <div style={{padding:16,background:'#FEF2F2',borderRadius:8,border:'1px solid #FCA5A5'}}>
                     <div style={{fontSize:11,color:'#667085',marginBottom:4,textTransform:'uppercase',fontWeight:600}}>Late rent</div>
-                    <div style={{fontSize:28,fontWeight:700,color:'#EF4444'}}>0</div>
+                    <div style={{fontSize:28,fontWeight:700,color:'#EF4444'}}>{lateRentCount}</div>
                   </div>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
@@ -365,19 +407,20 @@ export default function Page() {
                   </div>
                   <div style={{padding:12,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
                     <div style={{fontSize:11,color:'#667085',marginBottom:4}}>NET PROFIT</div>
-                    <div style={{fontSize:18,fontWeight:700,color:ACCENT}}>£{monthlyRent.toLocaleString()}</div>
+                    <div style={{fontSize:18,fontWeight:700,color:netProfit>=0?ACCENT:'#EF4444'}}>£{netProfit.toLocaleString()}</div>
                   </div>
                 </div>
                 <div style={{height:80,position:'relative',borderBottom:'1px solid #E4E7EC'}}>
                   <div style={{display:'flex',alignItems:'flex-end',gap:2,height:'100%'}}>
-                    {months.map((m,i)=>(
-                      <div key={m} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-                        <div style={{width:'100%',background:i===months.length-1?ACCENT:ACCENT+'40',borderRadius:'2px 2px 0 0',height:'70%'}}/>
-                        <div style={{fontSize:8,color:'#98A2B3'}}>{m}</div>
+                    {revenueByMonth.map((m,i)=>(
+                      <div key={m.label+i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}} title={'£'+m.collected.toLocaleString()+' collected'}>
+                        <div style={{width:'100%',background:i===nowIdx?ACCENT:ACCENT+'40',borderRadius:'2px 2px 0 0',height:Math.max((m.collected/maxMonthRevenue*100),2)+'%'}}/>
+                        <div style={{fontSize:8,color:'#98A2B3'}}>{m.label}</div>
                       </div>
                     ))}
                   </div>
                 </div>
+                <div style={{fontSize:11,color:'#98A2B3',marginTop:6}}>Rent schedules don't yet record which month a payment covers, so only the current month shows real figures.</div>
               </div>
               <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Real estate news</div>
@@ -393,6 +436,18 @@ export default function Page() {
                 <button style={{width:'100%',padding:'8px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Show all</button>
               </div>
             </div>
+            {(complianceExpired>0||complianceExpiringSoon>0)&&(
+              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <span style={{fontSize:20}}>🛡️</span>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>Compliance attention needed</div>
+                    <div style={{fontSize:12,color:'#667085'}}>{complianceExpired>0&&`${complianceExpired} expired`}{complianceExpired>0&&complianceExpiringSoon>0&&' · '}{complianceExpiringSoon>0&&`${complianceExpiringSoon} expiring within 60 days`}</div>
+                  </div>
+                </div>
+                <button onClick={()=>setSection('Compliance')} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#F59E0B',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Review</button>
+              </div>
+            )}
           </div>)}
 
           {section==='Properties'&&(<div>
@@ -478,6 +533,53 @@ export default function Page() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>)}
+
+          {section==='Compliance'&&(<div>
+            {showAddCompliance&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add compliance record</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={labelStyle}>Property *</label><select value={complianceForm.property_id} onChange={e=>setComplianceForm({...complianceForm,property_id:e.target.value})} style={inputStyle}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                <div><label style={labelStyle}>Certificate / licence type *</label><select value={complianceForm.type} onChange={e=>setComplianceForm({...complianceForm,type:e.target.value})} style={inputStyle}>{COMPLIANCE_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+                <div><label style={labelStyle}>Reference / provider</label><input value={complianceForm.reference} onChange={e=>setComplianceForm({...complianceForm,reference:e.target.value})} placeholder="e.g. issuing engineer or council ref" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Issued date</label><input value={complianceForm.issued_date} onChange={e=>setComplianceForm({...complianceForm,issued_date:e.target.value})} type="date" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Expiry date</label><input value={complianceForm.expiry_date} onChange={e=>setComplianceForm({...complianceForm,expiry_date:e.target.value})} type="date" style={inputStyle}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={complianceForm.notes} onChange={e=>setComplianceForm({...complianceForm,notes:e.target.value})} style={inputStyle}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={async()=>{if(!complianceForm.property_id||!complianceForm.type)return;await saveRecord('estate_compliance',complianceForm);setComplianceForm({property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
+                <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+              {[
+                {label:'Expired',value:complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length,color:'#EF4444',bg:'#FEF2F2',border:'#FCA5A5'},
+                {label:'Expiring within 60 days',value:complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#FDE68A'},
+                {label:'Valid',value:complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Valid').length,color:'#10B981',bg:'#F0FDF4',border:'#BBF7D0'},
+              ].map(s=>(
+                <div key={s.label} style={{padding:16,background:s.bg,borderRadius:10,border:'1px solid '+s.border}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>{s.label}</div>
+                  <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Property</span><span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
+              </div>
+              {complianceRecords.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No compliance records yet</div><div style={{fontSize:13}}>Track gas safety, EPC, EICR and other certificates here with automatic expiry alerts.</div></div>):complianceRecords.map((c:any)=>{
+                const status = complianceStatus(c.expiry_date)
+                return (
+                <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.estate_properties?.name??'—'}</span>
+                  <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:complianceStatusColor[status]+'18',color:complianceStatusColor[status],textAlign:'center' as const}}>{status}</span>
+                  <button onClick={()=>delRecord('estate_compliance',c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                </div>
+              )})}
             </div>
           </div>)}
 
@@ -1121,7 +1223,7 @@ export default function Page() {
             </div>
           )}
 
-          {(section==='Maintenance'||section==='Tasks'||section==='Messages'||section==='Documents'||section==='Notes'||section==='Contacts'||section==='Candidates'||section==='Bookings'||section==='Inventories'||section==='Units'||section==='Buildings'||section==='Tools'||section==='Community')&&(
+          {STUB_SECTIONS.includes(section)&&(
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center'}}>
               <div style={{fontSize:48,marginBottom:16}}>🏗️</div>
               <div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div>
