@@ -342,6 +342,11 @@ export default function Page() {
   const lateRentCount = rentSchedules.filter((r:any)=>r.status==='Overdue').length
   const complianceExpired = complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length
   const complianceExpiringSoon = complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length
+  const tenanciesEndingSoon = tenancies.filter((t:any)=>{
+    if(t.status!=='Active'||!t.end_date) return false
+    const days=(new Date(t.end_date).getTime()-Date.now())/86400000
+    return days>=0&&days<=30
+  }).length
   const collectedRentTotal = rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0)
   const nowDate = new Date()
   const expensesForPeriod = (() => {
@@ -434,6 +439,36 @@ export default function Page() {
               <div style={{fontSize:13,color:'#667085'}}>Sunday, {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long'})}</div>
               <div style={{fontSize:24,fontWeight:700,color:'#101828'}}>Hello Sangsters !</div>
             </div>
+            {(complianceExpired>0||complianceExpiringSoon>0||tenanciesEndingSoon>0||lateRentCount>0)&&(
+              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:'16px 20px',marginBottom:20}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <span style={{fontSize:20}}>⚠️</span>
+                    <span style={{fontSize:14,fontWeight:600,color:'#101828'}}>{complianceExpired+complianceExpiringSoon+tenanciesEndingSoon+lateRentCount} item{(complianceExpired+complianceExpiringSoon+tenanciesEndingSoon+lateRentCount)>1?'s':''} need attention</span>
+                  </div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:`repeat(${[complianceExpired+complianceExpiringSoon>0,tenanciesEndingSoon>0,lateRentCount>0].filter(Boolean).length||1},1fr)`,gap:10}}>
+                  {(complianceExpired+complianceExpiringSoon)>0&&(
+                    <button onClick={()=>setSection('Compliance')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #FDE68A',cursor:'pointer',fontFamily:'inherit'}}>
+                      <div style={{fontSize:11,color:'#92400E',fontWeight:600,marginBottom:2}}>🛡️ Compliance</div>
+                      <div style={{fontSize:13,color:'#344054'}}>{complianceExpired>0&&`${complianceExpired} expired`}{complianceExpired>0&&complianceExpiringSoon>0&&' · '}{complianceExpiringSoon>0&&`${complianceExpiringSoon} expiring soon`}</div>
+                    </button>
+                  )}
+                  {tenanciesEndingSoon>0&&(
+                    <button onClick={()=>setSection('Tenancies')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #FDE68A',cursor:'pointer',fontFamily:'inherit'}}>
+                      <div style={{fontSize:11,color:'#92400E',fontWeight:600,marginBottom:2}}>📋 Tenancies</div>
+                      <div style={{fontSize:13,color:'#344054'}}>{tenanciesEndingSoon} ending within 30 days</div>
+                    </button>
+                  )}
+                  {lateRentCount>0&&(
+                    <button onClick={()=>setSection('Rent Collection')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #FDE68A',cursor:'pointer',fontFamily:'inherit'}}>
+                      <div style={{fontSize:11,color:'#92400E',fontWeight:600,marginBottom:2}}>💷 Rent</div>
+                      <div style={{fontSize:13,color:'#344054'}}>{lateRentCount} overdue</div>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
               {[
                 {label:'Rented properties',value:rentedProps,total:properties.length,sub:`${properties.filter(p=>p.status==='Available').length} AVAILABLE`,color:ACCENT},
@@ -524,18 +559,6 @@ export default function Page() {
                 <a href="https://propertyindustryeye.com" target="_blank" rel="noopener noreferrer" style={{display:'block',width:'100%',padding:'8px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054',textAlign:'center' as const,textDecoration:'none',boxSizing:'border-box' as const}}>Show all</a>
               </div>
             </div>
-            {(complianceExpired>0||complianceExpiringSoon>0)&&(
-              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:'14px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-                <div style={{display:'flex',alignItems:'center',gap:10}}>
-                  <span style={{fontSize:20}}>🛡️</span>
-                  <div>
-                    <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>Compliance attention needed</div>
-                    <div style={{fontSize:12,color:'#667085'}}>{complianceExpired>0&&`${complianceExpired} expired`}{complianceExpired>0&&complianceExpiringSoon>0&&' · '}{complianceExpiringSoon>0&&`${complianceExpiringSoon} expiring within 60 days`}</div>
-                  </div>
-                </div>
-                <button onClick={()=>setSection('Compliance')} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#F59E0B',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Review</button>
-              </div>
-            )}
           </div>)}
 
           {section==='Properties'&&(<div>
