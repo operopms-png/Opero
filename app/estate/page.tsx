@@ -100,6 +100,7 @@ function complianceStatus(expiryDate?: string) {
 const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Expiring Soon':'#F59E0B', 'Valid':'#10B981', 'No Expiry':'#98A2B3' }
 
 export default function Page() {
+  const [periodTab, setPeriodTab] = useState<'CURRENT_MONTH'|'LAST_MONTH'|'CURRENT_YEAR'|'12_MONTHS'>('CURRENT_MONTH')
   const [section, setSection] = useState('Dashboard')
   const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'estate')
@@ -283,10 +284,21 @@ export default function Page() {
   const totalExpenses = expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
   const rentPaidCount = rentSchedules.filter((r:any)=>r.status==='Paid').length
   const lateRentCount = rentSchedules.filter((r:any)=>r.status==='Overdue').length
-  const netProfit = monthlyRent - totalExpenses
   const complianceExpired = complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length
   const complianceExpiringSoon = complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length
   const collectedRentTotal = rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0)
+  const nowDate = new Date()
+  const expensesForPeriod = (() => {
+    const inRange = (dateStr?: string) => {
+      if (!dateStr) return false
+      const d = new Date(dateStr)
+      if (periodTab==='CURRENT_MONTH') return d.getFullYear()===nowDate.getFullYear() && d.getMonth()===nowDate.getMonth()
+      if (periodTab==='LAST_MONTH') { const lm = new Date(nowDate.getFullYear(), nowDate.getMonth()-1, 1); return d.getFullYear()===lm.getFullYear() && d.getMonth()===lm.getMonth() }
+      if (periodTab==='CURRENT_YEAR') return d.getFullYear()===nowDate.getFullYear()
+      return (nowDate.getTime() - d.getTime()) <= 365*86400000 // 12_MONTHS
+    }
+    return expenses.filter((e:any)=>inRange(e.date)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+  })()
   // Rent schedules don't record which month a payment covers, so (as in the Reports tab)
   // only the current month shows real collected/spent figures; prior months show £0
   // rather than a fabricated trend, until schedules track a payment date.
@@ -386,8 +398,8 @@ export default function Page() {
               <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Revenues and Expenses</div>
                 <div style={{display:'flex',gap:8,marginBottom:16,borderBottom:'1px solid #E4E7EC',paddingBottom:12}}>
-                  {['CURRENT MONTH','LAST MONTH','CURRENT YEAR','12 MONTHS'].map((t,i)=>(
-                    <button key={t} style={{padding:'4px 10px',borderRadius:4,border:'none',background:i===0?ACCENT:'transparent',color:i===0?'#fff':'#667085',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+                  {[{k:'CURRENT_MONTH',l:'CURRENT MONTH'},{k:'LAST_MONTH',l:'LAST MONTH'},{k:'CURRENT_YEAR',l:'CURRENT YEAR'},{k:'12_MONTHS',l:'12 MONTHS'}].map(t=>(
+                    <button key={t.k} onClick={()=>setPeriodTab(t.k as any)} style={{padding:'4px 10px',borderRadius:4,border:'none',background:periodTab===t.k?ACCENT:'transparent',color:periodTab===t.k?'#fff':'#667085',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t.l}</button>
                   ))}
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
@@ -403,13 +415,14 @@ export default function Page() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
                   <div style={{padding:12,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
                     <div style={{fontSize:11,color:'#667085',marginBottom:4}}>GROSS INCOME</div>
-                    <div style={{fontSize:18,fontWeight:700,color:ACCENT}}>£{monthlyRent.toLocaleString()}</div>
+                    <div style={{fontSize:18,fontWeight:700,color:ACCENT}}>£{collectedRentTotal.toLocaleString()}</div>
                   </div>
                   <div style={{padding:12,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
                     <div style={{fontSize:11,color:'#667085',marginBottom:4}}>NET PROFIT</div>
-                    <div style={{fontSize:18,fontWeight:700,color:netProfit>=0?ACCENT:'#EF4444'}}>£{netProfit.toLocaleString()}</div>
+                    <div style={{fontSize:18,fontWeight:700,color:(collectedRentTotal-expensesForPeriod)>=0?ACCENT:'#EF4444'}}>£{(collectedRentTotal-expensesForPeriod).toLocaleString()}</div>
                   </div>
                 </div>
+                <div style={{fontSize:10,color:'#98A2B3',marginBottom:12,marginTop:-8}}>Gross income is total rent marked Paid to date; expenses are filtered to {periodTab==='CURRENT_MONTH'?'the current month':periodTab==='LAST_MONTH'?'last month':periodTab==='CURRENT_YEAR'?'the current year':'the trailing 12 months'}.</div>
                 <div style={{height:80,position:'relative',borderBottom:'1px solid #E4E7EC'}}>
                   <div style={{display:'flex',alignItems:'flex-end',gap:2,height:'100%'}}>
                     {revenueByMonth.map((m,i)=>(
