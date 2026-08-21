@@ -36,16 +36,23 @@ function PMTenantPortalInner() {
 
   async function payNow(paymentId: string) {
     setPayingId(paymentId)
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch('/api/pay-rent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-      body: JSON.stringify({ payment_id: paymentId }),
-    })
-    const data = await res.json()
-    setPayingId(null)
-    if (!res.ok) { alert(data.error || 'Could not start payment.'); return }
-    window.location.href = data.url
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/pay-rent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ payment_id: paymentId }),
+      })
+      const text = await res.text()
+      let data: any
+      try { data = JSON.parse(text) } catch { throw new Error(`Server returned an unexpected response (status ${res.status}).`) }
+      if (!res.ok) throw new Error(data.error || 'Could not start payment.')
+      window.location.href = data.url
+    } catch (err: any) {
+      alert(err.message || 'Could not start payment.')
+    } finally {
+      setPayingId(null)
+    }
   }
 
   async function loadAll(t: any) {

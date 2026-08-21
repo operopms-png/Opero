@@ -39,26 +39,30 @@ export async function POST(req: NextRequest) {
   const feePercent = parseFloat(process.env.STRIPE_CONNECT_FEE_PERCENT || '0')
   const applicationFeeAmount = Math.round(amountCents * (feePercent / 100))
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    payment_method_types: ['card'],
-    line_items: [{
-      price_data: {
-        currency: 'gbp',
-        product_data: { name: `${payment.category} payment${payment.due_date ? ` — due ${payment.due_date}` : ''}` },
-        unit_amount: amountCents,
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'gbp',
+          product_data: { name: `${payment.category} payment${payment.due_date ? ` — due ${payment.due_date}` : ''}` },
+          unit_amount: amountCents,
+        },
+        quantity: 1,
+      }],
+      payment_intent_data: {
+        transfer_data: { destination: businessSub.stripe_connect_account_id },
+        ...(applicationFeeAmount > 0 ? { application_fee_amount: applicationFeeAmount } : {}),
       },
-      quantity: 1,
-    }],
-    payment_intent_data: {
-      transfer_data: { destination: businessSub.stripe_connect_account_id },
-      ...(applicationFeeAmount > 0 ? { application_fee_amount: applicationFeeAmount } : {}),
-    },
-    metadata: { type: 'tenant_rent_payment', payment_id: payment.id, tenant_id: tenant.id },
-    ...(tenant.email ? { customer_email: tenant.email } : {}),
-    success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal?paid=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal`,
-  })
-
-  return NextResponse.json({ url: session.url })
+      metadata: { type: 'tenant_rent_payment', payment_id: payment.id, tenant_id: tenant.id },
+      ...(tenant.email ? { customer_email: tenant.email } : {}),
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal?paid=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal`,
+    })
+    return NextResponse.json({ url: session.url })
+  } catch (err: any) {
+    console.error('[pay-rent]', err)
+    return NextResponse.json({ error: err?.message || 'Could not start checkout.' }, { status: 500 })
+  }
 }

@@ -88,11 +88,18 @@ function SettingsInner() {
 
   async function connectStripe() {
     setConnectingStripe(true)
-    const res = await fetch('/api/stripe-connect/onboard', { method: 'POST', headers: await authHeaders() })
-    const data = await res.json()
-    setConnectingStripe(false)
-    if (!res.ok) { alert(data.error || 'Could not start Stripe onboarding.'); return }
-    window.location.href = data.url
+    try {
+      const res = await fetch('/api/stripe-connect/onboard', { method: 'POST', headers: await authHeaders() })
+      const text = await res.text()
+      let data: any
+      try { data = JSON.parse(text) } catch { throw new Error(`Server returned an unexpected response (status ${res.status}). This usually means Stripe Connect isn't enabled on the account yet — check the server logs.`) }
+      if (!res.ok) throw new Error(data.error || 'Could not start Stripe onboarding.')
+      window.location.href = data.url
+    } catch (err: any) {
+      alert(err.message || 'Could not start Stripe onboarding.')
+    } finally {
+      setConnectingStripe(false)
+    }
   }
 
   const copyKey = () => { navigator.clipboard.writeText(apiKey); setCopied(true); setTimeout(()=>setCopied(false),2000) }
