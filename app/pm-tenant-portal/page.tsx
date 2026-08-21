@@ -33,6 +33,10 @@ function PMTenantPortalInner() {
   const [submitting, setSubmitting] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [payingId, setPayingId] = useState<string | null>(null)
+  const [showMakePayment, setShowMakePayment] = useState(false)
+  const [payAmount, setPayAmount] = useState('')
+  const [payCategory, setPayCategory] = useState('Rent')
+  const [makingPayment, setMakingPayment] = useState(false)
 
   async function payNow(paymentId: string) {
     setPayingId(paymentId)
@@ -52,6 +56,28 @@ function PMTenantPortalInner() {
       alert(err.message || 'Could not start payment.')
     } finally {
       setPayingId(null)
+    }
+  }
+
+  async function makePayment() {
+    if (!payAmount || parseFloat(payAmount) <= 0) return
+    setMakingPayment(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/pay-rent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ amount: payAmount, category: payCategory }),
+      })
+      const text = await res.text()
+      let data: any
+      try { data = JSON.parse(text) } catch { throw new Error(`Server returned an unexpected response (status ${res.status}).`) }
+      if (!res.ok) throw new Error(data.error || 'Could not start payment.')
+      window.location.href = data.url
+    } catch (err: any) {
+      alert(err.message || 'Could not start payment.')
+    } finally {
+      setMakingPayment(false)
     }
   }
 
@@ -164,7 +190,28 @@ function PMTenantPortalInner() {
         )}
 
         {tab === 'Payments' && (
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
+          <div>
+            <button onClick={() => setShowMakePayment(true)} style={{ marginBottom: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Make a Payment</button>
+
+            {showMakePayment && (
+              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 20, maxWidth: 400 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 14 }}>Make a payment</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div><label style={lbl}>What's this for?</label>
+                    <select style={inp} value={payCategory} onChange={e => setPayCategory(e.target.value)}>
+                      <option value="Rent">Rent</option><option value="Utilities">Utilities</option><option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div><label style={lbl}>Amount (£) *</label><input type="number" style={inp} value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="e.g. 950" /></div>
+                </div>
+                <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                  <button onClick={() => setShowMakePayment(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                  <button onClick={makePayment} disabled={makingPayment || !payAmount || parseFloat(payAmount) <= 0} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: makingPayment || !payAmount || parseFloat(payAmount) <= 0 ? 0.6 : 1 }}>{makingPayment ? 'Redirecting…' : 'Continue to Payment'}</button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 100px', padding: '10px 20px', background: '#F9FAFB', borderBottom: '1px solid #E4E7EC', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase' }}>
               <span>Type</span><span>Amount</span><span>Due Date</span><span>Method</span><span>Status</span><span></span>
             </div>
@@ -181,6 +228,7 @@ function PMTenantPortalInner() {
                 )}
               </div>
             ))}
+            </div>
           </div>
         )}
 

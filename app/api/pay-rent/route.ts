@@ -1,23 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser, serviceClient } from '@/lib/admin-auth'
 
-// Creates a one-time Stripe Checkout session for a tenant to pay a specific
-// outstanding rent/utility charge. Verifies the payment row actually
-// belongs to the logged-in tenant before creating the session, so a
-// tenant can't pay (or be charged for) someone else's record.
+// Creates a one-time Stripe Checkout session for a tenant to pay either an
+// existing outstanding charge (payment_id) OR a brand new payment they're
+// initiating themselves (amount + category) — e.g. paying ahead, or
+// covering something that was never logged as a pending charge by staff.
 export async function POST(req: NextRequest) {
   const userId = await requireUser(req)
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { payment_id } = await req.json()
-  if (!payment_id) return NextResponse.json({ error: 'payment_id is required' }, { status: 400 })
+  const body = await req.json()
+  const { payment_id, amount, category } = body
 
-  const { data: tenant } = await serviceClient.from('pm_tenants').select('id, name, email').eq('portal_user_id', userId).single()
+  const { data: tenant } = await serviceClient.from('pm_tenants').select('id, name, email, property_id').eq('portal_user_id', userId).single()
   if (!tenant) return NextResponse.json({ error: 'No tenant profile found for this login' }, { status: 404 })
 
-  const { data: payment } = await serviceClient.from('pm_rent_payments').select('*').eq('id', payment_id).eq('tenant_id', tenant.id).single()
-  if (!payment) return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
-  if (payment.status === 'paid') return NextResponse.json({ error: 'This payment is already marked paid' }, { status: 400 })
+  let payment: any
+  if (payment_id) {
+    const { data } = await serviceClient.from('pm_rent_payments').select('*').eq('id', payment_id).eq('tenant_id', tenant.id).single()
+    if (!data) return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+    if (data.status === 'paid') return NextResponse.json({ error: 'This payment is already marked paid' }, { status: 400 })
+    payment = data
+  } else {
+    const numAmount = parseFloat(amount)
+    if (!numAmount || numAmount <= 0) return NextResponse.json({ error: 'Enter a valid amount' }, { status: 400 })
+    if (!tenant.property_id) return NextResponse.json({ error: 'No property on file for this tenant' }, { status: 400 })
+    const { data: created, error: createError } = await serviceClient.from('pm_rent_payments').insert({
+      tenant_id: tenant.id,
+      property_id: tenant.property_id,
+      amount: numAmount,
+      category: category || 'Rent',
+      status: 'pending',
+      due_date: new Date().toISOString().slice(0, 10),
+    }).select().single()
+    if (createError || !created) return NextResponse.json({ error: 'Could not create payment record: ' + (createError?.message || 'unknown error') }, { status: 500 })
+    payment = created
+  }
 
   // Find the business that manages this property, so the payment routes
   // to THEIR bank account (via their connected Stripe account), not
