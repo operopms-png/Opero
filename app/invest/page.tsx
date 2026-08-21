@@ -67,17 +67,34 @@ function calcHMO(d: any) {
 }
 
 function calcR2R(d: any) {
-  const rent = parseFloat(d.rent)||0
-  const subletRent = parseFloat(d.subletRent)||0
-  const rooms = parseInt(d.rooms)||1
-  const expenses = parseFloat(d.expenses)||15
-  const setupCost = parseFloat(d.setupCost)||2000
-  const totalIncome = subletRent * rooms
-  const monthlyExpenses = totalIncome * expenses / 100
-  const monthlyCashflow = totalIncome - rent - monthlyExpenses
+  const landlordRent = parseFloat(d.rent)||0
+  const units = parseInt(d.rooms)||1
+  const residentRent = parseFloat(d.subletRent)||0
+  const wifi = parseFloat(d.wifiCost)||0
+  const utilities = parseFloat(d.utilitiesCost)||0
+  const management = parseFloat(d.managementCost)||0
+  const insurance = parseFloat(d.insuranceCost)||0
+  const propertyTax = parseFloat(d.propertyTaxCost)||0
+  const cleaning = parseFloat(d.cleaningCost)||0
+  const maintenance = parseFloat(d.maintenanceCost)||0
+  const marketing = parseFloat(d.marketingCost)||0
+  const vacancy = parseFloat(d.vacancyCost)||0
+  const furnitureCost = parseFloat(d.setupCost)||0
+  const leaseMonths = parseInt(d.leaseMonths)||12
+
+  const totalIncome = residentRent * units
+  const fixedCosts = landlordRent + wifi + utilities + management + insurance + propertyTax + cleaning + maintenance + marketing + vacancy
+  const monthlyCashflow = totalIncome - fixedCosts
   const annualCashflow = monthlyCashflow * 12
-  const roi = setupCost > 0 ? (annualCashflow/setupCost*100) : 0
-  return { monthlyCashflow, annualCashflow, roi, totalIncome, monthlyExpenses }
+  const roi = furnitureCost > 0 ? (annualCashflow/furnitureCost*100) : 0
+  const paybackMonths = monthlyCashflow > 0 ? furnitureCost / monthlyCashflow : null
+  const withinLeaseTerm = paybackMonths !== null ? paybackMonths <= leaseMonths : null
+
+  return {
+    monthlyCashflow, annualCashflow, roi, totalIncome, monthlyExpenses: fixedCosts,
+    furnitureCost, paybackMonths, leaseMonths, withinLeaseTerm,
+    breakdown: { landlordRent, wifi, utilities, management, insurance, propertyTax, cleaning, maintenance, marketing, vacancy },
+  }
 }
 
 function calcFlip(d: any) {
@@ -239,7 +256,7 @@ export default function InvestPage() {
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="e.g. 12 High Street, London" style={inp}/></div>
-                    <div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>
+                    {strategy!=='r2r'&&<div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
 
                     {(strategy==='btl'||strategy==='brrr'||strategy==='hmo'||strategy==='social'||strategy==='supported')&&(<>
                       <div><label style={lbl}>Deposit (%)</label><input value={form.deposit||'25'} onChange={e=>setForm({...form,deposit:e.target.value})} type="number" placeholder="25" style={inp}/></div>
@@ -256,10 +273,20 @@ export default function InvestPage() {
                     </>)}
 
                     {strategy==='r2r'&&(<>
-                      <div><label style={lbl}>Rent You Pay Landlord (£/mo)</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="1000" style={inp}/></div>
-                      <div><label style={lbl}>Number of Rooms/Units</label><input value={form.rooms||'1'} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
-                      <div><label style={lbl}>Sublet Rent Per Room (£/mo)</label><input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="700" style={inp}/></div>
-                      <div><label style={lbl}>Setup Cost (£)</label><input value={form.setupCost||''} onChange={e=>setForm({...form,setupCost:e.target.value})} type="number" placeholder="2000" style={inp}/></div>
+                      <div><label style={lbl}>Rent You Pay Landlord (£/mo) *</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 480" style={inp}/></div>
+                      <div><label style={lbl}>Number of Units</label><input value={form.rooms||'1'} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
+                      <div><label style={lbl}>Resident Rent (£/mo, per unit)</label><input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="e.g. 950" style={inp}/></div>
+                      <div><label style={lbl}>Lease Term (months)</label><input value={form.leaseMonths||'24'} onChange={e=>setForm({...form,leaseMonths:e.target.value})} type="number" placeholder="24" style={inp}/></div>
+                      <div><label style={lbl}>Wi-Fi/Internet (£/mo)</label><input value={form.wifiCost||''} onChange={e=>setForm({...form,wifiCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
+                      <div><label style={lbl}>Utilities Allowance (£/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
+                      <div><label style={lbl}>Management/Operations (£/mo)</label><input value={form.managementCost||''} onChange={e=>setForm({...form,managementCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Insurance (£/mo)</label><input value={form.insuranceCost||''} onChange={e=>setForm({...form,insuranceCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Property Tax/Fees (£/mo)</label><input value={form.propertyTaxCost||''} onChange={e=>setForm({...form,propertyTaxCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Cleaning/Operations (£/mo)</label><input value={form.cleaningCost||''} onChange={e=>setForm({...form,cleaningCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
+                      <div><label style={lbl}>Maintenance Reserve (£/mo)</label><input value={form.maintenanceCost||''} onChange={e=>setForm({...form,maintenanceCost:e.target.value})} type="number" placeholder="e.g. 40" style={inp}/></div>
+                      <div><label style={lbl}>Platform/Marketing (£/mo)</label><input value={form.marketingCost||''} onChange={e=>setForm({...form,marketingCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Vacancy Allowance (£/mo)</label><input value={form.vacancyCost||''} onChange={e=>setForm({...form,vacancyCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
+                      <div><label style={lbl}>Furniture Investment (£)</label><input value={form.setupCost||''} onChange={e=>setForm({...form,setupCost:e.target.value})} type="number" placeholder="e.g. 3500" style={inp}/></div>
                     </>)}
 
                     {(strategy==='flip'||strategy==='brrr')&&(
@@ -329,6 +356,7 @@ export default function InvestPage() {
                       form.refurb&&{l:'Refurb Cost',v:'£'+parseFloat(form.refurb).toFixed(0)},
                       result.totalInvested!==undefined&&{l:'Total Invested',v:'£'+result.totalInvested.toFixed(0),bold:true},
                       result.setupCost!==undefined&&{l:'Setup Cost',v:'£'+(form.setupCost||0)},
+                      result.furnitureCost!==undefined&&{l:'Furniture Investment',v:'£'+result.furnitureCost.toFixed(0)},
                       result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:'£'+result.purchaseCosts.toFixed(0)},
                       result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:'£'+result.saleCosts.toFixed(0)},
                       result.totalCost!==undefined&&{l:'Total Cost',v:'£'+result.totalCost.toFixed(0),bold:true},
@@ -343,10 +371,11 @@ export default function InvestPage() {
                     <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Monthly P&L</div>
                     {[
                       result.totalRent!==undefined&&{l:'Total Rental Income',v:'£'+(result.totalRent||0).toFixed(0),c:'#10B981'},
-                      result.monthlyCashflow!==undefined&&!result.totalRent&&{l:'Monthly Rent',v:'£'+(parseFloat(form.rent)||0).toFixed(0),c:'#10B981'},
+                      result.totalIncome!==undefined&&{l:'Resident Rent Income',v:'£'+(result.totalIncome||0).toFixed(0),c:'#10B981'},
+                      result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:'£'+(parseFloat(form.rent)||0).toFixed(0),c:'#10B981'},
                       result.monthlyMortgage!==undefined&&{l:'Mortgage Payment',v:'-£'+result.monthlyMortgage.toFixed(0),c:'#EF4444'},
-                      result.monthlyExpenses!==undefined&&{l:'Expenses',v:'-£'+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
-                      result.monthlyCashflow!==undefined&&{l:'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+'£'+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
+                      result.monthlyExpenses!==undefined&&{l:strategy==='r2r'?'Total Fixed Costs':'Expenses',v:'-£'+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
+                      result.monthlyCashflow!==undefined&&{l:strategy==='r2r'?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+'£'+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>
                         <span style={{fontSize:13,color:'#667085'}}>{item.l}</span>
@@ -355,6 +384,54 @@ export default function InvestPage() {
                     ))}
                   </div>
                 </div>
+
+                {strategy==='r2r'&&result.breakdown&&(
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
+                    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                      <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Fixed Cost Breakdown</div>
+                      {[
+                        {l:'Landlord Rent',v:result.breakdown.landlordRent},
+                        {l:'Wi-Fi/Internet',v:result.breakdown.wifi},
+                        {l:'Utilities Allowance',v:result.breakdown.utilities},
+                        {l:'Management/Operations',v:result.breakdown.management},
+                        {l:'Insurance',v:result.breakdown.insurance},
+                        {l:'Property Tax/Fees',v:result.breakdown.propertyTax},
+                        {l:'Cleaning/Operations',v:result.breakdown.cleaning},
+                        {l:'Maintenance Reserve',v:result.breakdown.maintenance},
+                        {l:'Platform/Marketing',v:result.breakdown.marketing},
+                        {l:'Vacancy Allowance',v:result.breakdown.vacancy},
+                      ].filter(item=>item.v>0).map((item,i)=>(
+                        <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>
+                          <span style={{fontSize:13,color:'#667085'}}>{item.l}</span>
+                          <span style={{fontSize:13,fontWeight:500,color:'#EF4444'}}>-£{item.v.toFixed(0)}</span>
+                        </div>
+                      ))}
+                      <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0'}}>
+                        <span style={{fontSize:13,fontWeight:700,color:'#101828'}}>Total Fixed Costs</span>
+                        <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>-£{result.monthlyExpenses.toFixed(0)}</span>
+                      </div>
+                    </div>
+                    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                      <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Furniture Payback</div>
+                      {result.furnitureCost>0?(
+                        result.paybackMonths!==null?(<>
+                          <div style={{textAlign:'center',padding:'12px 0 20px'}}>
+                            <div style={{fontSize:32,fontWeight:800,color:'#101828'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#98A2B3'}}> months</span></div>
+                            <div style={{fontSize:12,color:'#667085',marginTop:4}}>to recover £{result.furnitureCost.toFixed(0)} of furniture investment</div>
+                          </div>
+                          <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
+                            <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>
+                            <div style={{fontSize:12,color:'#667085'}}>Your {result.leaseMonths}-month lease leaves {(result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after furniture is paid off.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
+                          </div>
+                        </>):(
+                          <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is £0 or negative — furniture investment will never be recovered at these numbers.</div>
+                        )
+                      ):(
+                        <div style={{fontSize:13,color:'#98A2B3'}}>Enter a furniture investment amount to see payback period.</div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div style={{display:'flex',gap:12}}>
                   <button onClick={saveDeal} style={{padding:'12px 24px',borderRadius:10,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>💾 Save Deal</button>
