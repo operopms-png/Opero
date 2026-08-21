@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
 
   let result: { success?: boolean; skipped?: boolean; error?: string }
   if (channel === 'email') {
-    result = await sendEmail(to, subject || 'Message from your property manager', `<p>${body.replace(/\n/g, '<br/>')}</p>`)
+    // Reply-to encodes user_id + contact_id so an inbound reply can be
+    // routed back to the right tenant's CRM without cross-tenant lookups.
+    const replyTo = contact_id ? `crm+${userId}.${contact_id}@helloopero.com` : `crm+${userId}@helloopero.com`
+    result = await sendEmail(to, subject || 'Message from your property manager', `<p>${body.replace(/\n/g, '<br/>')}</p>`, replyTo)
   } else if (channel === 'sms') {
     result = await sendSms(to, body)
   } else {
