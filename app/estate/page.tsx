@@ -172,7 +172,7 @@ export default function Page() {
   const [showAddTenant, setShowAddTenant] = useState(false)
   const [showAddTenancy, setShowAddTenancy] = useState(false)
   const [editItem, setEditItem] = useState<any>(null)
-  const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})
+  const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available'})
   const [ten, setTen] = useState({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active'})
   const [vacancies, setVacancies] = useState<any[]>([])
@@ -334,7 +334,7 @@ export default function Page() {
     if(!editItem && !isBundle && properties.length >= propertyLimit) { setShowAddProperty(false); setShowUpgrade(true); return }
     await saveRecord('estate_properties', prop, editItem?.id)
     setEditItem(null)
-    setProp({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})
+    setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available'})
     setShowAddProperty(false)
   }
   async function purchaseBlock() {
@@ -605,12 +605,13 @@ export default function Page() {
                 <div><label style={labelStyle}>Address</label><input value={prop.address} onChange={e=>setProp({...prop,address:e.target.value})} placeholder="Full address" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Type</label><select value={prop.type} onChange={e=>setProp({...prop,type:e.target.value})} style={inputStyle}>{['Apartment','House','Studio','Commercial','HMO','Other'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={labelStyle}>Bedrooms</label><select value={prop.bedrooms} onChange={e=>setProp({...prop,bedrooms:e.target.value})} style={inputStyle}>{['Studio','1','2','3','4','5','6+'].map(t=><option key={t}>{t}</option>)}</select></div>
+                <div><label style={labelStyle}>Bathrooms</label><select value={prop.bathrooms} onChange={e=>setProp({...prop,bathrooms:e.target.value})} style={inputStyle}>{['1','2','3','4','5','6+'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={labelStyle}>Monthly rent (£)</label><input value={prop.rent} onChange={e=>setProp({...prop,rent:e.target.value})} placeholder="0.00" type="number" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Status</label><select value={prop.status} onChange={e=>setProp({...prop,status:e.target.value})} style={inputStyle}>{['Available','Rented','Maintenance','Archived'].map(t=><option key={t}>{t}</option>)}</select></div>
               </div>
               <div style={{display:'flex',gap:8}}>
                 <button onClick={addProperty} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add property'}</button>
-                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available'})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available'})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #5B7CFA',padding:24,marginBottom:20}}>
@@ -630,19 +631,20 @@ export default function Page() {
               ))}
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 100px 100px 80px 100px 80px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Name</span><span>Type</span><span>Address</span><span>Beds</span><span>Rent/mo</span><span>Status</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 100px 100px 60px 60px 100px 80px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Name</span><span>Type</span><span>Address</span><span>Beds</span><span>Baths</span><span>Rent/mo</span><span>Status</span><span></span>
               </div>
               {properties.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏠</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No properties yet</div><div style={{fontSize:13}}>Add your first property to get started.</div></div>):properties.map(p=>(
-                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 100px 80px 100px 80px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 100px 60px 60px 100px 80px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{p.name}</div>
                   <span style={{fontSize:12,color:'#344054'}}>{p.type}</span>
                   <span style={{fontSize:12,color:'#667085',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.address||'—'}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{p.bedrooms}</span>
+                  <span style={{fontSize:12,color:'#344054'}}>{p.bathrooms||'—'}</span>
                   <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{p.rent?'£'+p.rent:'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:p.status==='Rented'?'#FEF3C7':p.status==='Available'?'#ECFDF5':'#F2F4F7',color:p.status==='Rented'?'#F59E0B':p.status==='Available'?'#10B981':'#667085',display:'inline-block'}}>{p.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,rent:p.rent,status:p.status});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_properties',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
