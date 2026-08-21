@@ -41,6 +41,9 @@ function SettingsInner() {
   const [copied, setCopied] = useState(false)
   const [plan, setPlan] = useState('Professional')
   const [messages, setMessages] = useState<any[]>([])
+  const [connectAccountId, setConnectAccountId] = useState<string|null>(null)
+  const [connectOnboarded, setConnectOnboarded] = useState(false)
+  const [connectingStripe, setConnectingStripe] = useState(false)
 
   useEffect(() => {
     if(roleLoading) return
@@ -55,6 +58,8 @@ function SettingsInner() {
       if(sub){
         setApiKey((sub as any).api_key??'')
         setPlan((sub as any).plan??'Professional')
+        setConnectAccountId((sub as any).stripe_connect_account_id??null)
+        setConnectOnboarded(!!(sub as any).stripe_connect_onboarded)
       }
       const {data:msgs} = await supabase.from('system_messages').select('*').eq('published',true).order('created_at',{ascending:false})
       setMessages(msgs??[])
@@ -79,6 +84,15 @@ function SettingsInner() {
   async function authHeaders() {
     const { data: { session } } = await supabase.auth.getSession()
     return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
+  }
+
+  async function connectStripe() {
+    setConnectingStripe(true)
+    const res = await fetch('/api/stripe-connect/onboard', { method: 'POST', headers: await authHeaders() })
+    const data = await res.json()
+    setConnectingStripe(false)
+    if (!res.ok) { alert(data.error || 'Could not start Stripe onboarding.'); return }
+    window.location.href = data.url
   }
 
   const copyKey = () => { navigator.clipboard.writeText(apiKey); setCopied(true); setTimeout(()=>setCopied(false),2000) }
@@ -400,6 +414,24 @@ function SettingsInner() {
                 <button style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Manage subscription</button>
                 <button style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>View invoices</button>
               </div>
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                <div>
+                  <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Tenant payment setup</h3>
+                  <div style={{fontSize:13,color:'#667085'}}>Connect your own Stripe account so rent and utility payments tenants make through their portal go directly to your bank, not Opero's.</div>
+                </div>
+              </div>
+              {connectOnboarded ? (
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:8,background:'#ECFDF5',border:'1px solid #A7F3D0'}}>
+                  <span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>✓ Connected — tenant payments route to your account</span>
+                </div>
+              ) : (
+                <div>
+                  {connectAccountId && <div style={{fontSize:12,color:'#F59E0B',marginBottom:10}}>Setup started but not finished — payments won't work until this is complete.</div>}
+                  <button onClick={connectStripe} disabled={connectingStripe} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:connectingStripe?0.6:1}}>{connectingStripe?'Redirecting…':connectAccountId?'Finish Stripe setup':'Connect Stripe account'}</button>
+                </div>
+              )}
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Modules</h3>

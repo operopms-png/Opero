@@ -133,5 +133,17 @@ export async function POST(request: NextRequest) {
     }).eq('stripe_subscription_id', sub.id)
   }
 
+  // Fires when a connected account's details change during/after Stripe
+  // Connect onboarding. Requires "Listen for events on Connected accounts"
+  // to be enabled on this webhook endpoint in the Stripe dashboard — no
+  // second endpoint/secret needed. charges_enabled flipping to true is
+  // what actually means onboarding is complete and payouts can flow.
+  if (event.type === 'account.updated') {
+    const account = event.data.object as any
+    await supabase.from('subscriptions').update({
+      stripe_connect_onboarded: !!account.charges_enabled,
+    }).eq('stripe_connect_account_id', account.id)
+  }
+
   return NextResponse.json({ received: true })
 }
