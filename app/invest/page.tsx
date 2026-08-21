@@ -125,6 +125,9 @@ export default function InvestPage() {
   const [strategy, setStrategy] = useState<string|null>(null)
   const [form, setForm] = useState<any>({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'})
   const [result, setResult] = useState<any>(null)
+  const [marketEstimate, setMarketEstimate] = useState<string|null>(null)
+  const [estimating, setEstimating] = useState(false)
+  const [estimateError, setEstimateError] = useState<string|null>(null)
   const [savedDeals, setSavedDeals] = useState<any[]>([])
   const [watchlist, setWatchlist] = useState<any[]>([])
   const [watchForm, setWatchForm] = useState({address:'',price:'',notes:'',status:'Watching'})
@@ -150,6 +153,38 @@ export default function InvestPage() {
   const inp = {width:'100%',padding:'10px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:14,fontFamily:'inherit',boxSizing:'border-box' as const}
   const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
   const BLUE = '#5B7CFA'
+
+  async function authHeaders() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
+  }
+
+  async function estimateMarketRent() {
+    if (!form.address?.trim()) { setEstimateError('Enter a property address/location first.'); return }
+    setEstimating(true)
+    setEstimateError(null)
+    setMarketEstimate(null)
+    try {
+      const res = await fetch('/api/market-rent-estimate', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          location: form.address,
+          propertyType: 'Apartment',
+          bedrooms: form.bedrooms,
+          bathrooms: form.bathrooms,
+          furnished: true,
+          termType: form.termType || 'long',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setEstimateError(data.error || 'Could not get an estimate.'); setEstimating(false); return }
+      setMarketEstimate(data.estimate)
+    } catch {
+      setEstimateError('Could not reach the estimate service — check your connection.')
+    }
+    setEstimating(false)
+  }
 
   function analyse() {
     if(!strategy) return
@@ -275,8 +310,20 @@ export default function InvestPage() {
                     {strategy==='r2r'&&(<>
                       <div><label style={lbl}>Rent You Pay Landlord (£/mo) *</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 480" style={inp}/></div>
                       <div><label style={lbl}>Number of Units</label><input value={form.rooms||'1'} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
-                      <div><label style={lbl}>Resident Rent (£/mo, per unit)</label><input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="e.g. 950" style={inp}/></div>
+                      <div>
+                        <label style={lbl}>Resident Rent (£/mo, per unit)</label>
+                        <input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="e.g. 950" style={inp}/>
+                        <button onClick={estimateMarketRent} disabled={estimating} style={{marginTop:6,padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054',opacity:estimating?0.6:1}}>{estimating?'Searching…':'🔍 Estimate market rent'}</button>
+                        {estimateError&&<div style={{fontSize:12,color:'#EF4444',marginTop:6}}>{estimateError}</div>}
+                        {marketEstimate&&(
+                          <div style={{marginTop:8,padding:'12px 14px',borderRadius:8,background:'#F9FAFB',border:'1px solid #E4E7EC',fontSize:12,color:'#344054',whiteSpace:'pre-wrap',lineHeight:1.6}}>
+                            {marketEstimate}
+                            <div style={{fontSize:11,color:'#98A2B3',marginTop:8,fontStyle:'italic'}}>AI-assisted estimate based on a live web search — verify against current listings before offering a lease.</div>
+                          </div>
+                        )}
+                      </div>
                       <div><label style={lbl}>Lease Term (months)</label><input value={form.leaseMonths||'24'} onChange={e=>setForm({...form,leaseMonths:e.target.value})} type="number" placeholder="24" style={inp}/></div>
+                      <div><label style={lbl}>Letting Type</label><select value={form.termType||'long'} onChange={e=>setForm({...form,termType:e.target.value})} style={inp}><option value="long">Long-term residential</option><option value="short">Short-term / serviced accommodation</option></select></div>
                       <div><label style={lbl}>Wi-Fi/Internet (£/mo)</label><input value={form.wifiCost||''} onChange={e=>setForm({...form,wifiCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
                       <div><label style={lbl}>Utilities Allowance (£/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
                       <div><label style={lbl}>Management/Operations (£/mo)</label><input value={form.managementCost||''} onChange={e=>setForm({...form,managementCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
