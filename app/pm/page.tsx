@@ -6,10 +6,23 @@ import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 
-const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
+const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
+const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
+const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
+
+function complianceStatus(expiryDate?: string) {
+  if (!expiryDate) return 'No Expiry'
+  const days = (new Date(expiryDate).getTime() - Date.now()) / 86400000
+  if (days < 0) return 'Expired'
+  if (days <= 60) return 'Expiring Soon'
+  return 'Valid'
+}
+const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Expiring Soon':'#F59E0B', 'Valid':'#10B981', 'No Expiry':'#98A2B3' }
+
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Landlords','Tenants','Leases'] },
+  { label: 'COMPLIANCE', items: ['Compliance'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'FINANCE', items: ['Rent','Expenses','Banking'] },
@@ -228,6 +241,10 @@ function PMPageInner() {
   const [cleaning, setCleaning] = useState<any[]>([])
   const [inspections, setInspections] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
+  const [complianceRecords, setComplianceRecords] = useState<any[]>([])
+  const [showAddCompliance, setShowAddCompliance] = useState(false)
+  const [complianceScope, setComplianceScope] = useState<'property'|'business'>('property')
+  const [complianceForm, setComplianceForm] = useState<any>({scope:'property',property_id:'',type:PROPERTY_COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
   const [loading, setLoading] = useState(true)
   const [extraBlocks, setExtraBlocks] = useState(0)
   const [isBundle, setIsBundle] = useState(false)
@@ -295,7 +312,7 @@ function PMPageInner() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp] = await Promise.all([
+    const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp,comp] = await Promise.all([
       supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_units').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -308,6 +325,7 @@ function PMPageInner() {
       supabase.from('office_expenses').select('*').eq('user_id',userId).order('date',{ascending:false}),
       supabase.from('pm_cleaning_tasks').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
       supabase.from('pm_landlord_payments').select('*,pm_landlords(name),pm_properties(name)').eq('user_id',userId).order('due_date',{ascending:false}),
+      supabase.from('pm_compliance').select('*,pm_properties(name)').eq('user_id',userId).order('expiry_date',{ascending:true}),
     ])
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
@@ -318,6 +336,7 @@ function PMPageInner() {
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
     setExpenses(ex.data??[]); setCleaning(cleanData); setLandlordPayments(lp.data??[])
+    setComplianceRecords(comp.data??[])
   }
 
   async function addExpense() {
@@ -479,7 +498,7 @@ function PMPageInner() {
               <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
               {group.items.map(t=>{
                 const locked = !!(allowedTab && t !== allowedTab)
-                const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : 0
+                const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
                 return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:'none',background:tab===t&&!locked?'#3B4AFF18':'transparent',color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
             </div>
@@ -507,6 +526,7 @@ function PMPageInner() {
             {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
             {tab==='Cleaning'&&<button onClick={()=>{setModal('cleaning');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule Cleaning</button>}
             {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
+            {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
             {tab==='Documents'&&<button onClick={()=>{setModal('document');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Document</button>}
             {tab==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Expense</button>}
             {tab==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Bank Account</button>}
@@ -842,6 +862,101 @@ function PMPageInner() {
                 <button onClick={()=>del('pm_inspections',i.id,setInspections)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
               </div>
             ))}
+          </div>
+        )}
+
+        {tab==='Compliance'&&(
+          <div>
+            <div style={{display:'flex',gap:8,marginBottom:20}}>
+              {(['property','business'] as const).map(s=>(
+                <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #3B4AFF':'1px solid #D0D5DD',background:complianceScope===s?'#3B4AFF18':'#fff',color:complianceScope===s?'#3B4AFF':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance (from landlords)':'Business Compliance (to operate)'}</button>
+              ))}
+            </div>
+
+            {showAddCompliance&&(
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #3B4AFF',padding:24,marginBottom:20}}>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
+                  <div><label style={lbl}>Scope</label>
+                    <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:(e.target.value==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0]})} style={inp}>
+                      <option value="property">Property (from landlord)</option>
+                      <option value="business">Business (to operate)</option>
+                    </select>
+                  </div>
+                  {complianceForm.scope==='property'&&<div><label style={lbl}>Property *</label>
+                    <select value={complianceForm.property_id} onChange={e=>setComplianceForm({...complianceForm,property_id:e.target.value})} style={inp}>
+                      <option value="">Select property</option>
+                      {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </div>}
+                  <div><label style={lbl}>Certificate / requirement type *</label>
+                    <select value={complianceForm.type} onChange={e=>setComplianceForm({...complianceForm,type:e.target.value})} style={inp}>
+                      {(complianceForm.scope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES).map(t=><option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div><label style={lbl}>Reference / provider</label><input style={inp} value={complianceForm.reference} onChange={e=>setComplianceForm({...complianceForm,reference:e.target.value})} placeholder="e.g. issuing engineer or scheme name"/></div>
+                  <div><label style={lbl}>Issued date</label><input style={inp} type="date" value={complianceForm.issued_date} onChange={e=>setComplianceForm({...complianceForm,issued_date:e.target.value})}/></div>
+                  <div><label style={lbl}>Expiry date</label><input style={inp} type="date" value={complianceForm.expiry_date} onChange={e=>setComplianceForm({...complianceForm,expiry_date:e.target.value})}/></div>
+                  <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input style={inp} value={complianceForm.notes} onChange={e=>setComplianceForm({...complianceForm,notes:e.target.value})}/></div>
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={async()=>{
+                    if(!complianceForm.type) return
+                    if(complianceForm.scope==='property'&&!complianceForm.property_id) return
+                    const { data: { user } } = await supabase.auth.getUser()
+                    const payload = complianceForm.scope==='business' ? {...complianceForm,property_id:null} : complianceForm
+                    const { error } = await supabase.from('pm_compliance').insert({...payload,user_id:user?.id})
+                    if(error){alert(error.message);return}
+                    setShowAddCompliance(false)
+                    await loadAll()
+                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
+                  <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {(()=>{
+              const scoped = complianceRecords.filter((c:any)=>c.scope===complianceScope)
+              return (<>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+                  {[
+                    {label:'Expired',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length,color:'#EF4444',bg:'#FEF2F2',border:'#FCA5A5'},
+                    {label:'Expiring within 60 days',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#FDE68A'},
+                    {label:'Valid',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Valid').length,color:'#10B981',bg:'#F0FDF4',border:'#BBF7D0'},
+                  ].map(s=>(
+                    <div key={s.label} style={{padding:16,background:s.bg,borderRadius:10,border:'1px solid '+s.border}}>
+                      <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>{s.label}</div>
+                      <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                  <div style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                    {complianceScope==='property'&&<span>Property</span>}
+                    <span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
+                  </div>
+                  {scoped.length===0?(
+                    <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
+                      <div style={{fontSize:40,marginBottom:12}}>🛡️</div>
+                      <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No {complianceScope} compliance records yet</div>
+                      <div style={{fontSize:13}}>{complianceScope==='property'?'Track certificates you collect from landlords for each property, with automatic expiry alerts.':'Track what your agency needs to legally operate — CMP, redress scheme, insurance, and more.'}</div>
+                    </div>
+                  ):scoped.map((c:any)=>{
+                    const status = complianceStatus(c.expiry_date)
+                    return (
+                      <div key={c.id} style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                        {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.pm_properties?.name??'—'}</span>}
+                        <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
+                        <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
+                        <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
+                        <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:complianceStatusColor[status]+'18',color:complianceStatusColor[status],textAlign:'center'}}>{status}</span>
+                        <button onClick={()=>del('pm_compliance',c.id,setComplianceRecords)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>)
+            })()}
           </div>
         )}
 
