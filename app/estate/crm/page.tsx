@@ -14,6 +14,7 @@ export default function Page() {
   const [saving, setSaving] = useState(false)
   const [contacts, setContacts] = useState<any[]>([])
   const [deals, setDeals] = useState<any[]>([])
+  const [properties, setProperties] = useState<any[]>([])
   const [showContactForm, setShowContactForm] = useState(false)
   const [showDealForm, setShowDealForm] = useState(false)
   const [editId, setEditId] = useState<any>(null)
@@ -29,12 +30,14 @@ export default function Page() {
   },[])
 
   async function loadAll(userId: string) {
-    const [c,d] = await Promise.all([
+    const [c,d,p] = await Promise.all([
       supabase.from('crm_contacts').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('crm_deals').select('*,crm_contacts(name)').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     setContacts(c.data??[])
     setDeals(d.data??[])
+    setProperties(p.data??[])
   }
 
   async function saveContact() {
@@ -111,7 +114,7 @@ export default function Page() {
         </div>
       </div>
       <div style={{display:'flex',gap:0,padding:'0 28px',background:'#fff',borderBottom:'1px solid #E4E7EC'}}>
-        {['Contacts','Deals','Pipeline'].map(s=><button key={s} onClick={()=>setSection(s)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:section===s?600:400,color:section===s?ACCENT:'#667085',borderBottom:section===s?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>{s}</button>)}
+        {['Contacts','Deals','Pipeline','Listings'].map(s=><button key={s} onClick={()=>setSection(s)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:section===s?600:400,color:section===s?ACCENT:'#667085',borderBottom:section===s?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>{s}</button>)}
       </div>
       <div style={{padding:24}}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
@@ -200,6 +203,37 @@ export default function Page() {
               </div>
             ))}
           </div>
+        </div>)}
+
+        {section==='Listings'&&(<div>
+          {(()=>{
+            const available = properties.filter((p:any)=>p.status==='Available')
+            const forRent = available.filter((p:any)=>p.listing_type!=='Sale')
+            const forSale = available.filter((p:any)=>p.listing_type==='Sale'||p.listing_type==='Both')
+            const Card = ({p,price}:{p:any,price:string}) => (
+              <div key={p.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:10}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>{p.name}</div>
+                  <span style={{fontSize:11,fontWeight:700,color:ACCENT}}>{price}</span>
+                </div>
+                <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{p.address||'—'}</div>
+                <div style={{fontSize:11,color:'#98A2B3'}}>{p.type} · {p.bedrooms} bed</div>
+              </div>
+            )
+            return (
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>For Rent ({forRent.length})</div>
+                  {forRent.length===0?<div style={{fontSize:13,color:'#98A2B3',padding:20,textAlign:'center' as const,background:'#F9FAFB',borderRadius:10}}>No properties currently available to rent.</div>:forRent.map((p:any)=><Card key={p.id} p={p} price={p.rent?`£${p.rent}/mo`:'—'}/>)}
+                </div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>For Sale ({forSale.length})</div>
+                  {forSale.length===0?<div style={{fontSize:13,color:'#98A2B3',padding:20,textAlign:'center' as const,background:'#F9FAFB',borderRadius:10}}>No properties currently listed for sale.</div>:forSale.map((p:any)=><Card key={p.id} p={p} price={p.sale_price?`£${parseFloat(p.sale_price).toLocaleString()}`:'—'}/>)}
+                </div>
+              </div>
+            )
+          })()}
+          <div style={{marginTop:16,fontSize:12,color:'#98A2B3'}}>To add or edit properties and set them for rent or sale, go to <a href="/estate" style={{color:ACCENT}}>Estate Agency → Properties</a>.</div>
         </div>)}
       </div>
     </div>
