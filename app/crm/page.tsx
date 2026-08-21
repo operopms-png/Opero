@@ -36,6 +36,48 @@ export default function CRMPage() {
   const [meetings, setMeetings] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [dragDeal, setDragDeal] = useState<string|null>(null)
+  const [sendModal, setSendModal] = useState<any|null>(null)
+  const [sendForm, setSendForm] = useState<any>({ channel: 'email', subject: '', body: '' })
+  const [sending, setSending] = useState(false)
+  const [sendResult, setSendResult] = useState<string|null>(null)
+
+  async function authHeaders() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
+  }
+
+  function openSend(contact: any) {
+    setSendModal(contact)
+    setSendForm({ channel: 'email', subject: '', body: '' })
+    setSendResult(null)
+  }
+
+  async function sendMessage() {
+    if (!sendModal || !sendForm.body.trim()) return
+    const to = sendForm.channel === 'email' ? sendModal.email : sendModal.phone
+    if (!to) { setSendResult(`This contact has no ${sendForm.channel === 'email' ? 'email' : 'phone number'} on file.`); return }
+    setSending(true)
+    setSendResult(null)
+    try {
+      const res = await fetch('/api/crm-send', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          channel: sendForm.channel, contact_id: sendModal.id, to,
+          subject: sendForm.subject, body: sendForm.body, module: sendModal.module,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setSendResult(data.error || 'Send failed.'); setSending(false); return }
+      if (data.skipped) { setSendResult(data.message); setSending(false); return }
+      setSending(false)
+      setSendModal(null)
+      loadAll()
+    } catch {
+      setSendResult('Send failed — check your connection and try again.')
+      setSending(false)
+    }
+  }
 
   useEffect(() => {
     async function init() {
@@ -161,6 +203,7 @@ export default function CRMPage() {
                     <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#EEF0FF', color:'#3B4AFF', textTransform:'capitalize' }}>{c.type}</span>
                     <span style={{ fontSize:11, color:'#98A2B3', textTransform:'uppercase' }}>{c.module}</span>
                     <div style={{ display:'flex', gap:6 }}>
+                      <button onClick={()=>openSend(c)} style={{ fontSize:11, color:'#fff', background:'#3B4AFF', border:'none', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Send</button>
                       <button onClick={()=>openEdit('contact',c)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                       <button onClick={()=>del('crm_contacts',c.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
                     </div>
@@ -466,6 +509,25 @@ export default function CRMPage() {
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
             <button onClick={()=>save('crm_activities',form)} disabled={saving||!form.subject} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.subject?0.6:1 }}>{saving?'Saving...':'Log Activity'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {sendModal&&(
+        <Modal title={`Send to ${sendModal.name}`} onClose={()=>setSendModal(null)}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ display:'flex', gap:8 }}>
+              {[{id:'email',label:'Email',avail:!!sendModal.email},{id:'sms',label:'SMS',avail:!!sendModal.phone},{id:'whatsapp',label:'WhatsApp',avail:!!sendModal.phone}].map(ch=>(
+                <button key={ch.id} onClick={()=>setSendForm({...sendForm,channel:ch.id})} style={{ flex:1, padding:'8px', borderRadius:8, border:sendForm.channel===ch.id?'2px solid #3B4AFF':'1px solid #D0D5DD', background:sendForm.channel===ch.id?'#EEF0FF':'#fff', fontSize:13, fontWeight:500, color:sendForm.channel===ch.id?'#3B4AFF':'#344054', cursor:'pointer', fontFamily:'inherit' }}>{ch.label}{!ch.avail&&<span style={{ display:'block', fontSize:10, color:'#98A2B3', fontWeight:400 }}>no contact info</span>}</button>
+              ))}
+            </div>
+            {sendForm.channel==='email'&&<div><label style={lbl}>Subject</label><input style={inp} value={sendForm.subject} onChange={e=>setSendForm({...sendForm,subject:e.target.value})} placeholder="e.g. Your certificate is ready"/></div>}
+            <div><label style={lbl}>Message *</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={5} value={sendForm.body} onChange={e=>setSendForm({...sendForm,body:e.target.value})} placeholder="Type your message..."/></div>
+            {sendResult&&<div style={{ fontSize:13, color:'#B93815', background:'#FEF3F2', border:'1px solid #FDA29B', borderRadius:8, padding:'10px 12px' }}>{sendResult}</div>}
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>setSendModal(null)} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={sendMessage} disabled={sending||!sendForm.body.trim()} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:sending||!sendForm.body.trim()?0.6:1 }}>{sending?'Sending...':'Send'}</button>
           </div>
         </Modal>
       )}
