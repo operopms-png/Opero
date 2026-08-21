@@ -330,8 +330,7 @@ export default function Page() {
   const addProperty = async () => {
     if(!prop.name) return
     if(!editItem && properties.length >= propertyLimit) { setShowAddProperty(false); setShowUpgrade(true); return }
-    const payload = { ...prop, sale_price: prop.sale_price === '' ? null : prop.sale_price }
-    await saveRecord('estate_properties', payload, editItem?.id)
+    await saveRecord('estate_properties', prop, editItem?.id)
     setEditItem(null)
     setProp({name:'',address:'',type:'Apartment',bedrooms:'1',rent:'',status:'Available',listing_type:'Rent',sale_price:''})
     setShowAddProperty(false)
