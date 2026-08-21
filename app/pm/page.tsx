@@ -7,6 +7,15 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 
 const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
+const PM_NAV_GROUPS = [
+  { label: 'OVERVIEW', items: ['Dashboard'] },
+  { label: 'PORTFOLIO', items: ['Properties','Units','Landlords','Tenants','Leases'] },
+  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections'] },
+  { label: 'DOCUMENTS', items: ['Documents'] },
+  { label: 'FINANCE', items: ['Rent','Expenses','Banking'] },
+  { label: 'REPORTS', items: ['Reports','Owner Reports','Statements'] },
+  { label: 'COMMS', items: ['Messages'] },
+]
 
 async function uploadFile(file: File, folder: string): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -457,15 +466,36 @@ function PMPageInner() {
   )
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
-      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 32px'}}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',height:64}}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:8,height:8,background:'#10B981',borderRadius:'50%'}}/>
-            <h1 style={{fontSize:18,fontWeight:600,margin:0,color:'#101828'}}>Property Management</h1>
+    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
+      {/* Sidebar */}
+      <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:'flex',flexDirection:'column',flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
+        <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'#101828'}}>
+          <div style={{width:8,height:8,background:'#10B981',borderRadius:'50%'}}/>
+          <span style={{fontSize:14,fontWeight:700,color:'#fff'}}>Property Management</span>
+        </div>
+        <div style={{padding:'8px 10px'}}>
+          {PM_NAV_GROUPS.map(group=>(
+            <div key={group.label}>
+              <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
+              {group.items.map(t=>{
+                const locked = !!(allowedTab && t !== allowedTab)
+                const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : 0
+                return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:'none',background:tab===t&&!locked?'#3B4AFF18':'transparent',color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{flex:1,display:'flex',flexDirection:'column'}}>
+        <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
+            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
+            {tab!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#101828'}}>{tab}</span></>}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
-            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3'}}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
             {tab==='Properties'&&(!isBundle&&properties.length >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{background:'#5B7CFA',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>Add more properties</button>
               : <button onClick={()=>{setModal('property');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
@@ -482,16 +512,8 @@ function PMPageInner() {
             {tab==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Bank Account</button>}
           </div>
         </div>
-        <div style={{display:'flex',gap:2,overflowX:'auto'}}>
-          {TABS.map(t=>{
-            const locked = !!(allowedTab && t !== allowedTab)
-            const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : 0
-            return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{padding:'10px 14px',background:'none',border:'none',cursor:locked?'not-allowed':'pointer',fontSize:13,fontWeight:500,color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#667085',borderBottom:tab===t&&!locked?'2px solid #3B4AFF':'2px solid transparent',fontFamily:'inherit',whiteSpace:'nowrap'}}>{t}{badge>0&&!locked&&<span style={{marginLeft:6,background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
-          })}
-        </div>
-      </div>
 
-      <div style={{maxWidth:1200,margin:'0 auto',padding:'28px 32px'}}>
+        <div style={{flex:1,padding:24,overflowY:'auto'}}>
 
         {tab==='Dashboard'&&(
           <div>
@@ -1676,6 +1698,7 @@ function PMPageInner() {
         </Modal>
       )}
       {viewingPhotos&&<PropertyImageSlideshow urls={viewingPhotos} onClose={()=>setViewingPhotos(null)}/>}
+      </div>
     </div>
   )
 }
