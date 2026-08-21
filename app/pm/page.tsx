@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import WeatherWidget from '@/components/WeatherWidget'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
+import { BedDouble, Bath } from 'lucide-react'
 
 const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Documents','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
 
@@ -31,6 +32,49 @@ function parseAttachments(val: string | null | undefined): string[] {
     // not JSON — treat as a single legacy URL
   }
   return val.startsWith('http') ? [val] : []
+}
+
+function PropertyImagePicker({ urls, onChange }: { urls: string[]; onChange: (urls: string[]) => void }) {
+  const [uploading, setUploading] = useState(false)
+  return (
+    <div>
+      {urls.length > 0 && (
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:8 }}>
+          {urls.map((url, i) => (
+            <div key={i} style={{ position:'relative' }}>
+              <img src={url} alt="" style={{ height:70, width:70, objectFit:'cover', borderRadius:6, display:'block' }} />
+              <button onClick={()=>onChange(urls.filter((_,idx)=>idx!==i))} style={{ position:'absolute', top:-6, right:-6, width:18, height:18, borderRadius:'50%', background:'#DC2626', color:'#fff', border:'2px solid #fff', fontSize:11, lineHeight:'14px', cursor:'pointer' }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <label style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 12px', border:'1px dashed #D0D5DD', borderRadius:8, cursor:'pointer', fontSize:13, color:'#667085' }}>
+        {uploading ? 'Uploading…' : '📎 Add photos'}
+        <input type="file" accept="image/*" multiple style={{ display:'none' }} onChange={async e=>{
+          const files = Array.from(e.target.files ?? [])
+          if (!files.length) return
+          setUploading(true)
+          const uploaded = await Promise.all(files.map(f=>uploadFile(f,'pm-properties')))
+          onChange([...urls, ...uploaded.filter((u): u is string => !!u)])
+          setUploading(false)
+          e.target.value = ''
+        }} />
+      </label>
+    </div>
+  )
+}
+
+function PropertyImageSlideshow({ urls, onClose }: { urls: string[]; onClose: () => void }) {
+  const [idx, setIdx] = useState(0)
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100 }} onClick={(e:any)=>e.target===e.currentTarget&&onClose()}>
+      <button onClick={onClose} style={{ position:'absolute', top:20, right:24, background:'none', border:'none', color:'#fff', fontSize:28, cursor:'pointer' }}>×</button>
+      {urls.length > 1 && <button onClick={()=>setIdx((idx-1+urls.length)%urls.length)} style={{ position:'absolute', left:24, background:'rgba(255,255,255,0.15)', border:'none', color:'#fff', fontSize:22, width:44, height:44, borderRadius:'50%', cursor:'pointer' }}>‹</button>}
+      <img src={urls[idx]} alt="" style={{ maxHeight:'80vh', maxWidth:'80vw', objectFit:'contain', borderRadius:8 }} />
+      {urls.length > 1 && <button onClick={()=>setIdx((idx+1)%urls.length)} style={{ position:'absolute', right:24, background:'rgba(255,255,255,0.15)', border:'none', color:'#fff', fontSize:22, width:44, height:44, borderRadius:'50%', cursor:'pointer' }}>›</button>}
+      {urls.length > 1 && <div style={{ position:'absolute', bottom:24, color:'#fff', fontSize:13 }}>{idx+1} / {urls.length}</div>}
+    </div>
+  )
 }
 
 function FileUpload({ label, value, onChange, folder }: { label: string; value: string; onChange: (url: string) => void; folder: string }) {
@@ -178,6 +222,7 @@ function PMPageInner() {
   const [loading, setLoading] = useState(true)
   const [extraBlocks, setExtraBlocks] = useState(0)
   const [isBundle, setIsBundle] = useState(false)
+  const [viewingPhotos, setViewingPhotos] = useState<string[]|null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
   const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
@@ -568,24 +613,32 @@ function PMPageInner() {
         {tab==='Properties'&&(
           <div>
             {properties.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No properties yet. Click + Add Property to get started.</div>:
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:16}}>
-              {properties.map(p=>(
-                <div key={p.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
-                    <div style={{fontWeight:600,fontSize:15,color:'#101828'}}>{p.name}</div>
-                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p.status==='active'?'#D1FAE5':'#F3F4F6',color:p.status==='active'?'#059669':'#6B7280'}}>{p.status}</span>
-                  </div>
-                  <div style={{fontSize:13,color:'#667085',marginBottom:12}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')}</div>
-                  <div style={{display:'flex',gap:16,fontSize:13,color:'#344054'}}>
-                    <span>{units.filter(u=>u.property_id===p.id).length} units</span>
-                    <span>£{(p.monthly_income??0).toLocaleString()}/mo</span>
-                  </div>
-                  <div style={{display:'flex',gap:8,marginTop:12}}>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'56px 1.3fr 1.3fr 60px 60px 90px 80px 130px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span></span><span>Name</span><span>Address</span><span>Beds</span><span>Baths</span><span>Rent/mo</span><span>Status</span><span></span>
+              </div>
+              {properties.map(p=>{
+                const photos = parseAttachments(p.image_urls)
+                return (
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'56px 1.3fr 1.3fr 60px 60px 90px 80px 130px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  {photos.length > 0
+                    ? <div onClick={()=>setViewingPhotos(photos)} style={{position:'relative',width:40,height:40,cursor:'pointer'}}>
+                        <img src={photos[0]} alt="" style={{width:40,height:40,objectFit:'cover',borderRadius:6,display:'block'}}/>
+                        {photos.length > 1 && <span style={{position:'absolute',bottom:-2,right:-2,background:'rgba(0,0,0,0.7)',color:'#fff',fontSize:9,fontWeight:600,padding:'1px 4px',borderRadius:4}}>+{photos.length-1}</span>}
+                      </div>
+                    : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
+                  <span style={{fontWeight:500,color:'#101828'}}>{p.name}</span>
+                  <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')||'—'}</span>
+                  <span style={{display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms||'—'}</span>
+                  <span style={{display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>{p.bathrooms||'—'}</span>
+                  <span>£{(p.monthly_income??0).toLocaleString()}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p.status==='active'?'#D1FAE5':'#F3F4F6',color:p.status==='active'?'#059669':'#6B7280',display:'inline-block',width:'fit-content'}}>{p.status}</span>
+                  <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('property',p)} style={{fontSize:12,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                     <button onClick={()=>del('pm_properties',p.id,setProperties)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>}
           </div>
         )}
@@ -1245,6 +1298,14 @@ function PMPageInner() {
               <div><label style={lbl}>Country</label><input style={inp} value={form.country??'United Kingdom'} onChange={e=>setForm({...form,country:e.target.value})}/></div>
             </div>
             <div><label style={lbl}>Monthly Income (£)</label><input type="number" style={inp} value={form.monthly_income??''} onChange={e=>setForm({...form,monthly_income:parseFloat(e.target.value)})} placeholder="0"/></div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={{...lbl,display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>Bedrooms</label><input style={inp} value={form.bedrooms??''} onChange={e=>setForm({...form,bedrooms:e.target.value})} placeholder="e.g. 2"/></div>
+              <div><label style={{...lbl,display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>Bathrooms</label><input style={inp} value={form.bathrooms??''} onChange={e=>setForm({...form,bathrooms:e.target.value})} placeholder="e.g. 1"/></div>
+            </div>
+            <div>
+              <label style={lbl}>Photos</label>
+              <PropertyImagePicker urls={parseAttachments(form.image_urls)} onChange={urls=>setForm({...form,image_urls:JSON.stringify(urls)})}/>
+            </div>
             <div><label style={lbl}>Landlord / Owner</label>
               <select style={{...inp,cursor:'pointer'}} value={form.owner_id??''} onChange={e=>setForm({...form,owner_id:e.target.value||null})}>
                 <option value="">Unassigned</option>
@@ -1614,6 +1675,7 @@ function PMPageInner() {
           </div>
         </Modal>
       )}
+      {viewingPhotos&&<PropertyImageSlideshow urls={viewingPhotos} onClose={()=>setViewingPhotos(null)}/>}
     </div>
   )
 }
