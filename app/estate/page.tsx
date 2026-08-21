@@ -4,6 +4,64 @@ import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 const ACCENT = '#2D6A4F'
 
+async function uploadPropertyImage(file: File): Promise<string | null> {
+  const ext = file.name.split('.').pop()
+  const path = `estate-properties/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('pm-files').upload(path, file)
+  if (error) { console.error(error); return null }
+  const { data } = supabase.storage.from('pm-files').getPublicUrl(path)
+  return data.publicUrl
+}
+
+function parsePropertyImages(val: string | null | undefined): string[] {
+  if (!val) return []
+  try { const parsed = JSON.parse(val); if (Array.isArray(parsed)) return parsed.filter(Boolean) } catch {}
+  return val.startsWith('http') ? [val] : []
+}
+
+function PropertyImagePicker({ urls, onChange }: { urls: string[]; onChange: (urls: string[]) => void }) {
+  const [uploading, setUploading] = useState(false)
+  return (
+    <div>
+      {urls.length > 0 && (
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:8 }}>
+          {urls.map((url, i) => (
+            <div key={i} style={{ position:'relative' }}>
+              <img src={url} alt="" style={{ height:70, width:70, objectFit:'cover', borderRadius:6, display:'block' }} />
+              <button onClick={()=>onChange(urls.filter((_,idx)=>idx!==i))} style={{ position:'absolute', top:-6, right:-6, width:18, height:18, borderRadius:'50%', background:'#DC2626', color:'#fff', border:'2px solid #fff', fontSize:11, lineHeight:'14px', cursor:'pointer' }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <label style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 12px', border:'1px dashed #D0D5DD', borderRadius:8, cursor:'pointer', fontSize:13, color:'#667085' }}>
+        {uploading ? 'Uploading…' : '📎 Add photos'}
+        <input type="file" accept="image/*" multiple style={{ display:'none' }} onChange={async e=>{
+          const files = Array.from(e.target.files ?? [])
+          if (!files.length) return
+          setUploading(true)
+          const uploaded = await Promise.all(files.map(uploadPropertyImage))
+          onChange([...urls, ...uploaded.filter((u): u is string => !!u)])
+          setUploading(false)
+          e.target.value = ''
+        }} />
+      </label>
+    </div>
+  )
+}
+
+function PropertyImageSlideshow({ urls, onClose }: { urls: string[]; onClose: () => void }) {
+  const [idx, setIdx] = useState(0)
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100 }} onClick={(e:any)=>e.target===e.currentTarget&&onClose()}>
+      <button onClick={onClose} style={{ position:'absolute', top:20, right:24, background:'none', border:'none', color:'#fff', fontSize:28, cursor:'pointer' }}>×</button>
+      {urls.length > 1 && <button onClick={()=>setIdx((idx-1+urls.length)%urls.length)} style={{ position:'absolute', left:24, background:'rgba(255,255,255,0.15)', border:'none', color:'#fff', fontSize:22, width:44, height:44, borderRadius:'50%', cursor:'pointer' }}>‹</button>}
+      <img src={urls[idx]} alt="" style={{ maxHeight:'80vh', maxWidth:'80vw', objectFit:'contain', borderRadius:8 }} />
+      {urls.length > 1 && <button onClick={()=>setIdx((idx+1)%urls.length)} style={{ position:'absolute', right:24, background:'rgba(255,255,255,0.15)', border:'none', color:'#fff', fontSize:22, width:44, height:44, borderRadius:'50%', cursor:'pointer' }}>›</button>}
+      {urls.length > 1 && <div style={{ position:'absolute', bottom:24, color:'#fff', fontSize:13 }}>{idx+1} / {urls.length}</div>}
+    </div>
+  )
+}
+
 async function uploadFile(file: File, folder: string): Promise<string | null> {
   const ext = file.name.split('.').pop()
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
@@ -169,10 +227,11 @@ export default function Page() {
   const [tenants, setTenants] = useState<any[]>([])
   const [tenancies, setTenancies] = useState<any[]>([])
   const [showAddProperty, setShowAddProperty] = useState(false)
+  const [viewingPhotos, setViewingPhotos] = useState<string[]|null>(null)
   const [showAddTenant, setShowAddTenant] = useState(false)
   const [showAddTenancy, setShowAddTenancy] = useState(false)
   const [editItem, setEditItem] = useState<any>(null)
-  const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available'})
+  const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:''})
   const [ten, setTen] = useState({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active'})
   const [vacancies, setVacancies] = useState<any[]>([])
@@ -334,7 +393,7 @@ export default function Page() {
     if(!editItem && !isBundle && properties.length >= propertyLimit) { setShowAddProperty(false); setShowUpgrade(true); return }
     await saveRecord('estate_properties', prop, editItem?.id)
     setEditItem(null)
-    setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available'})
+    setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:''})
     setShowAddProperty(false)
   }
   async function purchaseBlock() {
@@ -609,9 +668,13 @@ export default function Page() {
                 <div><label style={labelStyle}>Monthly rent (£)</label><input value={prop.rent} onChange={e=>setProp({...prop,rent:e.target.value})} placeholder="0.00" type="number" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Status</label><select value={prop.status} onChange={e=>setProp({...prop,status:e.target.value})} style={inputStyle}>{['Available','Rented','Maintenance','Archived'].map(t=><option key={t}>{t}</option>)}</select></div>
               </div>
+              <div style={{marginBottom:12}}>
+                <label style={labelStyle}>Photos</label>
+                <PropertyImagePicker urls={parsePropertyImages(prop.image_urls)} onChange={urls=>setProp({...prop,image_urls:JSON.stringify(urls)})}/>
+              </div>
               <div style={{display:'flex',gap:8}}>
                 <button onClick={addProperty} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add property'}</button>
-                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available'})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #5B7CFA',padding:24,marginBottom:20}}>
@@ -631,11 +694,19 @@ export default function Page() {
               ))}
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 100px 100px 60px 60px 100px 80px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Name</span><span>Type</span><span>Address</span><span>Beds</span><span>Baths</span><span>Rent/mo</span><span>Status</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'56px 1fr 100px 100px 60px 60px 100px 80px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span></span><span>Name</span><span>Type</span><span>Address</span><span>Beds</span><span>Baths</span><span>Rent/mo</span><span>Status</span><span></span>
               </div>
-              {properties.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏠</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No properties yet</div><div style={{fontSize:13}}>Add your first property to get started.</div></div>):properties.map(p=>(
-                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 100px 60px 60px 100px 80px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+              {properties.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏠</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No properties yet</div><div style={{fontSize:13}}>Add your first property to get started.</div></div>):properties.map(p=>{
+                const photos = parsePropertyImages(p.image_urls)
+                return (
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'56px 1fr 100px 100px 60px 60px 100px 80px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  {photos.length > 0
+                    ? <div onClick={()=>setViewingPhotos(photos)} style={{position:'relative',width:40,height:40,cursor:'pointer'}}>
+                        <img src={photos[0]} alt="" style={{width:40,height:40,objectFit:'cover',borderRadius:6,display:'block'}}/>
+                        {photos.length > 1 && <span style={{position:'absolute',bottom:-2,right:-2,background:'rgba(0,0,0,0.7)',color:'#fff',fontSize:9,fontWeight:600,padding:'1px 4px',borderRadius:4}}>+{photos.length-1}</span>}
+                      </div>
+                    : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
                   <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{p.name}</div>
                   <span style={{fontSize:12,color:'#344054'}}>{p.type}</span>
                   <span style={{fontSize:12,color:'#667085',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.address||'—'}</span>
@@ -644,11 +715,11 @@ export default function Page() {
                   <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{p.rent?'£'+p.rent:'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:p.status==='Rented'?'#FEF3C7':p.status==='Available'?'#ECFDF5':'#F2F4F7',color:p.status==='Rented'?'#F59E0B':p.status==='Available'?'#10B981':'#667085',display:'inline-block'}}>{p.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||''});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_properties',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>)}
 
@@ -1615,6 +1686,7 @@ export default function Page() {
 
         </div>
       </div>
+      {viewingPhotos&&<PropertyImageSlideshow urls={viewingPhotos} onClose={()=>setViewingPhotos(null)}/>}
     </div>
   )
 }
