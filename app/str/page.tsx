@@ -85,9 +85,10 @@ export default function STRPage() {
   const [saving, setSaving] = useState(false)
   const [stats, setStats] = useState({ properties:0, cleaning:0, maintenance:0, revenue:0 })
   const [extraBlocks, setExtraBlocks] = useState(0)
+  const [isBundle, setIsBundle] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
-  const propertyLimit = 2 + extraBlocks * 2
+  const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
   const [commTemplates, setCommTemplates] = useState<any[]>([])
   const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
   const [templateDraft, setTemplateDraft] = useState('')
@@ -165,8 +166,9 @@ export default function STRPage() {
     // business via property_id, so fetch properties first and filter
     // the rest by that (same fix as the owner-portal).
     const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-    const { data: subRow } = await supabase.from('subscriptions').select('str_extra_blocks').eq('user_id', userId).single()
+    const { data: subRow } = await supabase.from('subscriptions').select('str_extra_blocks,plan').eq('user_id', userId).single()
     setExtraBlocks((subRow as any)?.str_extra_blocks ?? 0)
+    setIsBundle((subRow as any)?.plan === 'bundle')
     let restrictedProps = propsData ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((p: any) => propertyIds.includes(p.id))
     const ids = restrictedProps.map((p: any) => p.id)
@@ -233,7 +235,7 @@ export default function STRPage() {
   }
 
   async function save(table: string, data: any) {
-    if (table === 'properties' && !editId && properties.length >= propertyLimit) {
+    if (table === 'properties' && !editId && !isBundle && properties.length >= propertyLimit) {
       setModal(null); setShowUpgrade(true); return
     }
     setSaving(true)
@@ -302,9 +304,9 @@ export default function STRPage() {
             <h1 style={{ fontSize:18, fontWeight:600, margin:0, color:'#101828' }}>Vacation Rentals</h1>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{properties.length} / {propertyLimit} properties</span>}
+            {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
             {tab==='Bookings' && <button onClick={()=>{setModal('booking');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Booking</button>}
-            {tab==='Properties' && (properties.length >= propertyLimit
+            {tab==='Properties' && (!isBundle && properties.length >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{ background:'#5B7CFA', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>Add more properties</button>
               : <button onClick={()=>{setModal('property');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Property</button>)}
             {tab==='Cleaning' && <button onClick={()=>{setModal('cleaning');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Task</button>}

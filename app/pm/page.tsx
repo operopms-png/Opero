@@ -177,9 +177,10 @@ function PMPageInner() {
   const [documents, setDocuments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [extraBlocks, setExtraBlocks] = useState(0)
+  const [isBundle, setIsBundle] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
-  const propertyLimit = 2 + extraBlocks * 2
+  const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
@@ -226,10 +227,11 @@ function PMPageInner() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
-      const { data: sub } = await supabase.from('subscriptions').select('modules, pm_extra_blocks').eq('user_id', user.id).single()
+      const { data: sub } = await supabase.from('subscriptions').select('modules, pm_extra_blocks, plan').eq('user_id', user.id).single()
       const mods = (sub as any)?.modules ?? []
       setHasModule(mods.includes('pm') || mods.includes('dev'))
       setExtraBlocks((sub as any)?.pm_extra_blocks ?? 0)
+      setIsBundle((sub as any)?.plan === 'bundle')
       await loadAll(user.id)
       setLoading(false)
     }
@@ -329,7 +331,7 @@ function PMPageInner() {
   }
 
   async function save(table: string, data: any) {
-    if (table === 'pm_properties' && !editId && properties.length >= propertyLimit) {
+    if (table === 'pm_properties' && !editId && !isBundle && properties.length >= propertyLimit) {
       setModal(null); setShowUpgrade(true); return
     }
     setSaving(true)
@@ -418,8 +420,8 @@ function PMPageInner() {
             <h1 style={{fontSize:18,fontWeight:600,margin:0,color:'#101828'}}>Property Management</h1>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
-            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3'}}>{properties.length} / {propertyLimit} properties</span>}
-            {tab==='Properties'&&(properties.length >= propertyLimit
+            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3'}}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
+            {tab==='Properties'&&(!isBundle&&properties.length >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{background:'#5B7CFA',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>Add more properties</button>
               : <button onClick={()=>{setModal('property');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
             {tab==='Landlords'&&<button onClick={()=>{setModal('landlord');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Landlord</button>}
