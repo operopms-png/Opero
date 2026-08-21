@@ -32,6 +32,21 @@ function PMTenantPortalInner() {
   const [ticketForm, setTicketForm] = useState({ title: '', description: '', priority: 'medium', photo: '' })
   const [submitting, setSubmitting] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [payingId, setPayingId] = useState<string | null>(null)
+
+  async function payNow(paymentId: string) {
+    setPayingId(paymentId)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/pay-rent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+      body: JSON.stringify({ payment_id: paymentId }),
+    })
+    const data = await res.json()
+    setPayingId(null)
+    if (!res.ok) { alert(data.error || 'Could not start payment.'); return }
+    window.location.href = data.url
+  }
 
   async function loadAll(t: any) {
     const [{ data: leases }, { data: pays }, { data: maint }] = await Promise.all([
@@ -143,16 +158,20 @@ function PMTenantPortalInner() {
 
         {tab === 'Payments' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', padding: '10px 20px', background: '#F9FAFB', borderBottom: '1px solid #E4E7EC', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase' }}>
-              <span>Amount</span><span>Due Date</span><span>Method</span><span>Status</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 100px', padding: '10px 20px', background: '#F9FAFB', borderBottom: '1px solid #E4E7EC', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase' }}>
+              <span>Type</span><span>Amount</span><span>Due Date</span><span>Method</span><span>Status</span><span></span>
             </div>
             {payments.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>No payment history yet</div> :
             payments.map(p => (
-              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', fontSize: 13, color: '#344054', alignItems: 'center' }}>
+              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 100px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', fontSize: 13, color: '#344054', alignItems: 'center' }}>
+                <span>{p.category ?? 'Rent'}</span>
                 <span>£{(p.amount ?? 0).toLocaleString()}</span>
                 <span>{p.due_date ?? '—'}</span>
                 <span style={{ textTransform: 'capitalize' }}>{(p.method ?? '').replace('_', ' ')}</span>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: p.status === 'paid' ? '#D1FAE5' : p.status === 'overdue' ? '#FEE2E2' : '#FEF3C7', color: p.status === 'paid' ? '#059669' : p.status === 'overdue' ? '#DC2626' : '#D97706', width: 'fit-content' }}>{p.status}</span>
+                {p.status !== 'paid' && (
+                  <button onClick={() => payNow(p.id)} disabled={payingId === p.id} style={{ fontSize: 12, fontWeight: 600, color: '#fff', background: ACCENT, border: 'none', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', opacity: payingId === p.id ? 0.6 : 1 }}>{payingId === p.id ? 'Redirecting…' : 'Pay Now'}</button>
+                )}
               </div>
             ))}
           </div>

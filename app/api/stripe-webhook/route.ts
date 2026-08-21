@@ -47,6 +47,23 @@ export async function POST(request: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     try {
       const session = event.data.object as any
+
+      // Tenant rent/utility payment — handled entirely separately from
+      // the module-subscription flow below. A tenant's checkout email is
+      // their tenant-portal login, not a business account, and must
+      // never touch the subscriptions table.
+      if (session.metadata?.type === 'tenant_rent_payment') {
+        const paymentId = session.metadata.payment_id
+        if (paymentId) {
+          await supabase.from('pm_rent_payments').update({
+            status: 'paid',
+            paid_date: new Date().toISOString().slice(0, 10),
+            method: 'card',
+          }).eq('id', paymentId)
+        }
+        return NextResponse.json({ received: true })
+      }
+
       const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
       const email = fullSession.customer_details?.email ?? fullSession.customer_email
       const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''

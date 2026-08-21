@@ -790,14 +790,15 @@ function PMPageInner() {
               ))}
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 90px 90px 100px 90px 80px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
-                <span>Tenant</span><span>Property</span><span>Amount</span><span>Due Date</span><span>Method</span><span>Status</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 80px 90px 90px 100px 90px 80px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Tenant</span><span>Property</span><span>Type</span><span>Amount</span><span>Due Date</span><span>Method</span><span>Status</span><span></span>
               </div>
               {payments.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No payments recorded</div>:
               payments.map(p=>(
-                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 90px 90px 100px 90px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 80px 90px 90px 100px 90px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
                   <span style={{fontWeight:500,color:'#101828'}}>{p.pm_tenants?.name??'—'}</span>
                   <span>{p.pm_properties?.name??'—'}</span>
+                  <span>{p.category??'Rent'}</span>
                   <span>£{(p.amount??0).toLocaleString()}</span>
                   <span>{p.due_date??'—'}</span>
                   <span style={{textTransform:'capitalize'}}>{(p.method??'').replace('_',' ')}</span>
@@ -1660,6 +1661,11 @@ function PMPageInner() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Amount (£) *</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.due_date??''} onChange={e=>setForm({...form,due_date:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Category</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.category??'Rent'} onChange={e=>setForm({...form,category:e.target.value})}>
+                <option value="Rent">Rent</option><option value="Utilities">Utilities</option><option value="Other">Other</option>
+              </select>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Method</label>
