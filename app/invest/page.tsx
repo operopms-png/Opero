@@ -323,7 +323,7 @@ export default function InvestPage() {
                         )}
                       </div>
                       <div><label style={lbl}>Lease Term (months)</label><input value={form.leaseMonths||'24'} onChange={e=>setForm({...form,leaseMonths:e.target.value})} type="number" placeholder="24" style={inp}/></div>
-                      <div><label style={lbl}>Letting Type</label><select value={form.termType||'long'} onChange={e=>setForm({...form,termType:e.target.value})} style={inp}><option value="long">Long-term residential</option><option value="short">Short-term / serviced accommodation</option></select></div>
+                      <div><label style={lbl}>Letting Type</label><select value={form.termType||'long'} onChange={e=>setForm({...form,termType:e.target.value})} style={inp}><option value="long">Long-term residential</option><option value="short">Short-term / serviced accommodation</option><option value="airbnb">Airbnb / short-let (nightly)</option></select></div>
                       <div><label style={lbl}>Wi-Fi/Internet (£/mo)</label><input value={form.wifiCost||''} onChange={e=>setForm({...form,wifiCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
                       <div><label style={lbl}>Utilities Allowance (£/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
                       <div><label style={lbl}>Management/Operations (£/mo)</label><input value={form.managementCost||''} onChange={e=>setForm({...form,managementCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
