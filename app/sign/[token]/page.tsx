@@ -3,22 +3,32 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useRef, useState } from 'react'
 
-type Lease = {
+// Handles both PM leases and Estate Agency tenancies through the same
+// public signing page -- the API tells us which "kind" it is and we
+// normalise the slightly different field names (monthly_rent vs rent,
+// pm_units vs no unit) into one shape for rendering.
+type Kind = 'pm_lease' | 'estate_tenancy'
+
+type RawRecord = {
   id: string
   start_date: string | null
   end_date: string | null
-  monthly_rent: number | null
+  monthly_rent?: number | null
+  rent?: number | null
   deposit: number | null
   tenant_signed_at: string | null
   landlord_signed_at: string | null
   document_url: string | null
-  pm_tenants: { name: string; email: string } | null
-  pm_properties: { name: string } | null
-  pm_units: { unit_number: string } | null
+  pm_tenants?: { name: string; email: string } | null
+  pm_properties?: { name: string } | null
+  pm_units?: { unit_number: string } | null
+  estate_tenants?: { name: string; email: string } | null
+  estate_properties?: { name: string } | null
 }
 
 export default function SignLeasePage({ params }: { params: { token: string } }) {
-  const [lease, setLease] = useState<Lease | null>(null)
+  const [kind, setKind] = useState<Kind | null>(null)
+  const [record, setRecord] = useState<RawRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [role, setRole] = useState<'tenant' | 'landlord'>('tenant')
@@ -37,8 +47,10 @@ export default function SignLeasePage({ params }: { params: { token: string } })
       .then(r => r.json())
       .then(data => {
         if (data.error) { setError(data.error); setLoading(false); return }
-        setLease(data.lease)
-        setSignerName(data.lease?.pm_tenants?.name || '')
+        setKind(data.kind)
+        setRecord(data.lease)
+        const tenantName = data.kind === 'pm_lease' ? data.lease?.pm_tenants?.name : data.lease?.estate_tenants?.name
+        setSignerName(tenantName || '')
         setLoading(false)
       })
       .catch(() => { setError('Could not load this document'); setLoading(false) })
@@ -91,7 +103,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
   }
 
   async function handleSign() {
-    if (!lease || !signerName.trim()) return
+    if (!record || !signerName.trim()) return
     setSubmitting(true)
     const signature_data = mode === 'typed' ? typedSig.trim() : canvasRef.current?.toDataURL() || ''
     const res = await fetch('/api/lease-sign', {
@@ -106,7 +118,13 @@ export default function SignLeasePage({ params }: { params: { token: string } })
   }
 
   const canSign = mode === 'typed' ? typedSig.trim().length > 1 : hasDrawn
-  const alreadySignedByRole = lease && (role === 'tenant' ? lease.tenant_signed_at : lease.landlord_signed_at)
+  const alreadySignedByRole = record && (role === 'tenant' ? record.tenant_signed_at : record.landlord_signed_at)
+
+  const tenantName = kind === 'pm_lease' ? record?.pm_tenants?.name : record?.estate_tenants?.name
+  const propertyName = kind === 'pm_lease' ? record?.pm_properties?.name : record?.estate_properties?.name
+  const unitLabel = kind === 'pm_lease' ? record?.pm_units?.unit_number : undefined
+  const rentAmount = kind === 'pm_lease' ? record?.monthly_rent : record?.rent
+  const docTitle = kind === 'estate_tenancy' ? 'Estate Agency Tenancy Agreement' : 'Tenancy Agreement'
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', sans-serif" }}>
@@ -116,7 +134,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
         <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: '#101828', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>O</div>
           <div style={{ fontWeight: 700, fontSize: 15, color: '#101828' }}>Opero</div>
-          <div style={{ fontSize: 13, color: '#667085', marginLeft: 6 }}>Lease Signing</div>
+          <div style={{ fontSize: 13, color: '#667085', marginLeft: 6 }}>Document Signing</div>
         </div>
       </div>
 
@@ -130,22 +148,22 @@ export default function SignLeasePage({ params }: { params: { token: string } })
           </div>
         )}
 
-        {!loading && !error && lease && !signedResult && (
+        {!loading && !error && record && !signedResult && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '36px 40px' }}>
-            <h1 style={{ fontSize: 19, margin: '0 0 4px', color: '#101828' }}>Tenancy Agreement</h1>
+            <h1 style={{ fontSize: 19, margin: '0 0 4px', color: '#101828' }}>{docTitle}</h1>
             <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>
-              {lease.pm_properties?.name}{lease.pm_units?.unit_number ? ` · Unit ${lease.pm_units.unit_number}` : ''}
+              {propertyName}{unitLabel ? ` · Unit ${unitLabel}` : ''}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24, fontSize: 13 }}>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Tenant</div><div style={{ color: '#101828', fontWeight: 500 }}>{lease.pm_tenants?.name ?? '—'}</div></div>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Term</div><div style={{ color: '#101828', fontWeight: 500 }}>{lease.start_date ?? '—'} → {lease.end_date ?? '—'}</div></div>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Monthly Rent</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(lease.monthly_rent ?? 0).toLocaleString()}</div></div>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Deposit</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(lease.deposit ?? 0).toLocaleString()}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Tenant</div><div style={{ color: '#101828', fontWeight: 500 }}>{tenantName ?? '—'}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Term</div><div style={{ color: '#101828', fontWeight: 500 }}>{record.start_date ?? '—'} → {record.end_date ?? '—'}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Monthly Rent</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(rentAmount ?? 0).toLocaleString()}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Deposit</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(record.deposit ?? 0).toLocaleString()}</div></div>
             </div>
 
-            {lease.document_url && (
-              <a href={lease.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 500 }}>View full lease document →</a>
+            {record.document_url && (
+              <a href={record.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 500 }}>View full lease document →</a>
             )}
 
             <div style={{ marginTop: 28, borderTop: '1px solid #E4E7EC', paddingTop: 24 }}>
@@ -161,7 +179,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
 
               {alreadySignedByRole ? (
                 <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: 16, fontSize: 13, color: '#166534' }}>
-                  This lease has already been signed as {role}.
+                  This document has already been signed as {role}.
                 </div>
               ) : (
                 <>
