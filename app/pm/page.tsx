@@ -760,14 +760,16 @@ function PMPageInner() {
 
         {tab==='Leases'&&(
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
-              <span>Tenant</span><span>Property</span><span>Unit</span><span>Start</span><span>End</span><span>Rent</span><span>Status</span>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px 150px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+              <span>Tenant</span><span>Property</span><span>Unit</span><span>Start</span><span>End</span><span>Rent</span><span>Status</span><span>Signature</span>
             </div>
             {leases.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No leases yet</div>:
             leases.map(l=>{
               const daysLeft=l.end_date?Math.round((new Date(l.end_date).getTime()-Date.now())/86400000):null
+              const fullySigned=l.tenant_signed_at&&l.landlord_signed_at
+              const partiallySigned=l.tenant_signed_at||l.landlord_signed_at
               return(
-                <div key={l.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                <div key={l.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
                   <span style={{fontWeight:500,color:'#101828'}}>{l.pm_tenants?.name??'—'}</span>
                   <span>{l.pm_properties?.name??'—'}</span>
                   <span>{l.pm_units?.unit_number??'—'}</span>
@@ -775,6 +777,14 @@ function PMPageInner() {
                   <span style={{color:daysLeft!==null&&daysLeft<=30?'#EF4444':'inherit'}}>{l.end_date??'—'}</span>
                   <span>£{(l.monthly_rent??0).toLocaleString()}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:l.status==='active'?'#D1FAE5':'#FEE2E2',color:l.status==='active'?'#059669':'#DC2626'}}>{l.status}</span>
+                  {fullySigned?(
+                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669',width:'fit-content'}}>Signed</span>
+                  ):(
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      {partiallySigned&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>Partial</span>}
+                      <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${l.sign_token}`);alert('Signing link copied')}} style={{fontSize:11.5,fontWeight:600,color:'#2563EB',background:'none',border:'1px solid #2563EB',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
+                    </div>
+                  )}
                 </div>
               )
             })}
