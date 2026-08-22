@@ -6,6 +6,16 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 
 const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms']
+const STR_NAV_GROUPS = [
+  { label: 'OVERVIEW', items: ['Home'] },
+  { label: 'PORTFOLIO', items: ['Properties','Bookings'] },
+  { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms'] },
+  { label: 'INSIGHTS', items: ['Analytics','Integrations'] },
+  { label: 'TEAM', items: ['Team'] },
+  { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
+  { label: 'FINANCE', items: ['Expenses','Banking'] },
+  { label: 'REPORTS', items: ['Reports'] },
+]
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
@@ -297,12 +307,33 @@ export default function STRPage() {
   if (loading) return <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Inter',sans-serif", color:'#98A2B3' }}>Loading...</div>
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif" }}>
-      <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 32px' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:64 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:8, height:8, background:'#3B4AFF', borderRadius:'50%' }} />
-            <h1 style={{ fontSize:18, fontWeight:600, margin:0, color:'#101828' }}>Vacation Rentals</h1>
+    <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
+      {/* Sidebar */}
+      <div style={{ width:200, background:'#fff', borderRight:'1px solid #E4E7EC', display:'flex', flexDirection:'column', flexShrink:0, minHeight:'100vh', overflowY:'auto' }}>
+        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'#101828' }}>
+          <div style={{ width:8, height:8, background:'#3B4AFF', borderRadius:'50%' }} />
+          <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}>Vacation Rentals</span>
+        </div>
+        <div style={{ padding:'8px 10px' }}>
+          {STR_NAV_GROUPS.map(group=>(
+            <div key={group.label}>
+              <div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'10px 10px 4px', marginTop:8 }}>{group.label}</div>
+              {group.items.map(t=>{
+                const locked = !!(allowedTab && t !== allowedTab)
+                const badge = t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : 0
+                return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t&&!locked?'#3B4AFF18':'transparent', color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
+        <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:13, color:'#667085' }}>Home</span>
+            {tab!=='Home'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#101828' }}>{tab}</span></>}
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
@@ -312,20 +343,11 @@ export default function STRPage() {
               : <button onClick={()=>{setModal('property');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Property</button>)}
             {tab==='Cleaning' && <button onClick={()=>{setModal('cleaning');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Task</button>}
             {tab==='Maintenance' && <button onClick={()=>{setModal('maintenance');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Ticket</button>}
-
             {tab==='Team' && <button onClick={()=>{setModal('team');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Member</button>}
           </div>
         </div>
-        <div style={{ display:'flex', gap:2, overflowX:'auto' }}>
-          {TABS.map(t => {
-            const locked = !!(allowedTab && t !== allowedTab)
-            const badge = t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : 0
-            return <button key={t} onClick={() => !locked && setTab(t)} disabled={locked} title={locked ? `Your role only has access to ${allowedTab}` : undefined} style={{ padding:'10px 14px', background:'none', border:'none', cursor: locked ? 'not-allowed' : 'pointer', fontSize:13, fontWeight:500, color: locked ? '#C1C9D2' : tab===t?'#3B4AFF':'#667085', borderBottom:tab===t && !locked?'2px solid #3B4AFF':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}{badge>0 && !locked && <span style={{marginLeft:6,background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked && <span style={{marginLeft:5}}>🔒</span>}</button>
-          })}
-        </div>
-      </div>
 
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'28px 32px' }}>
+        <div style={{ flex:1, padding:24, overflowY:'auto' }}>
 
         {tab==='Home' && (
           <div>
@@ -1115,6 +1137,7 @@ export default function STRPage() {
         </Modal>
       )}
 
+    </div>
     </div>
   )
 }

@@ -5,6 +5,14 @@ import { supabase } from '../../lib/supabase'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 
 const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones']
+const DEV_NAV_GROUPS = [
+  { label: 'OVERVIEW', items: ['Dashboard'] },
+  { label: 'PROJECTS', items: ['Projects','Checklist','Milestones'] },
+  { label: 'FINANCE', items: ['Budget','Investors','Expenses','Banking'] },
+  { label: 'DOCUMENTS', items: ['Documents'] },
+  { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
+  { label: 'REPORTS', items: ['Reports'] },
+]
 
 const CHECKLIST_TEMPLATE = [
   { phase: 'Pre-construction', tasks: ['Land title confirmed','Architectural drawings approved','Planning permission granted','Soil survey completed'] },
@@ -269,28 +277,42 @@ export default function DevPage() {
   if (loading) return <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Inter',sans-serif", color:'#98A2B3' }}>Loading...</div>
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif" }}>
-      <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 32px' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', height:64 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:8, height:8, background:'#8B5CF6', borderRadius:'50%' }} />
-            <h1 style={{ fontSize:18, fontWeight:600, margin:0, color:'#101828' }}>Developments</h1>
+    <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
+      {/* Sidebar */}
+      <div style={{ width:200, background:'#fff', borderRight:'1px solid #E4E7EC', display:'flex', flexDirection:'column', flexShrink:0, minHeight:'100vh', overflowY:'auto' }}>
+        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'#101828' }}>
+          <div style={{ width:8, height:8, background:'#8B5CF6', borderRadius:'50%' }} />
+          <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}>Developments</span>
+        </div>
+        <div style={{ padding:'8px 10px' }}>
+          {DEV_NAV_GROUPS.map(group=>(
+            <div key={group.label}>
+              <div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'10px 10px 4px', marginTop:8 }}>{group.label}</div>
+              {group.items.map(t=>(
+                <button key={t} onClick={()=>setTab(t)} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t?'#8B5CF618':'transparent', color:tab===t?'#8B5CF6':'#344054', fontSize:13, fontWeight:tab===t?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}>{t}</button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
+        <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:13, color:'#667085' }}>Dashboard</span>
+            {tab!=='Dashboard'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#101828' }}>{tab}</span></>}
           </div>
           <div style={{ display:'flex', gap:8 }}>
             {tab==='Projects' && <button onClick={()=>{setModal('project');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Project</button>}
             {tab==='Budget' && <button onClick={()=>{setModal('budget');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Budget Item</button>}
             {tab==='Investors' && <button onClick={()=>{setModal('investor');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Investor</button>}
             {tab==='Documents' && <button onClick={()=>{setModal('document');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Document</button>}
-    
-        {tab==='Milestones' && <button onClick={()=>{setModal('milestone');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Milestone</button>}
+            {tab==='Milestones' && <button onClick={()=>{setModal('milestone');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Milestone</button>}
           </div>
         </div>
-        <div style={{ display:'flex', gap:2, overflowX:'auto' }}>
-          {TABS.map(t => <button key={t} onClick={() => setTab(t)} style={{ padding:'10px 14px', background:'none', border:'none', cursor:'pointer', fontSize:13, fontWeight:500, color:tab===t?'#8B5CF6':'#667085', borderBottom:tab===t?'2px solid #8B5CF6':'2px solid transparent', fontFamily:'inherit', whiteSpace:'nowrap' }}>{t}</button>)}
-        </div>
-      </div>
 
-      <div style={{ maxWidth:1200, margin:'0 auto', padding:'28px 32px' }}>
+        <div style={{ flex:1, padding:24, overflowY:'auto' }}>
 
         {tab==='Expenses'&&(
           <div>
@@ -1026,6 +1048,7 @@ export default function DevPage() {
         </Modal>
       )}
 
+    </div>
     </div>
   )
 }
