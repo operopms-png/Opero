@@ -1,132 +1,207 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const MODULE = 'pm'
 const ACCENT = '#101828'
-const CONTACT_TYPES = ['landlord','tenant','vendor','contact']
-const DEAL_STAGES = ['Lead','Qualified','Proposal','Negotiation','Closed Won','Closed Lost']
-const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
-const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
-const IC:any = {
-  Contacts:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-  Companies:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
-  Deals:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
-  Tickets:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>,
-  Orders:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
-  Projects:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>,
-  Segments:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
-  Inbox:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>,
-  Calls:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
-  Meetings:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-  Tasks:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>,
-  Playbooks:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
-  Templates:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-  Snippets:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
-  'Activity Feed':<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-  Campaigns:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  Email:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
-  Social:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
-  Ads:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
-  Events:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>,
-  Forms:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>,
-  CTAs:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>,
-  'Lead Scoring':<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-  'Marketing Analytics':<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
-  Brand:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>,
-  'Sales Workspace':<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>,
-  Prospecting:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>,
-  Documents:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-  'Meetings Scheduler':<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-  Sequences:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
-  Forecast:<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
-  'Sales Analytics':<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-}
-const NAV_SECTIONS = [{group:'CRM',items:[{s:'Contacts',i:IC.Contacts},{s:'Companies',i:IC.Companies},{s:'Deals',i:IC.Deals},{s:'Tickets',i:IC.Tickets},{s:'Orders',i:IC.Orders},{s:'Projects',i:IC.Projects}]},{group:'COMMUNICATE',items:[{s:'Segments',i:IC.Segments},{s:'Inbox',i:IC.Inbox},{s:'Calls',i:IC.Calls},{s:'Meetings',i:IC.Meetings}]},{group:'MANAGE',items:[{s:'Tasks',i:IC.Tasks},{s:'Playbooks',i:IC.Playbooks},{s:'Templates',i:IC.Templates},{s:'Snippets',i:IC.Snippets},{s:'Activity Feed',i:IC['Activity Feed']}]}]
-function Modal({ title, onClose, children }: any) {
-  return <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50 }} onClick={(e:any)=>e.target===e.currentTarget&&onClose()}><div style={{ background:'#fff', borderRadius:16, padding:32, width:'100%', maxWidth:520, margin:'0 16px', maxHeight:'90vh', overflowY:'auto' }}><div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}><h2 style={{ fontSize:18, fontWeight:600, margin:0 }}>{title}</h2><button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer' }}>×</button></div>{children}</div></div>
-}
+const MODULE = 'pm'
+const CONTACT_TYPES = ['Landlord','Tenant','Buyer','Seller','Investor','Other']
+const DEAL_STAGES = ['Enquiry','Viewing','Offer','Negotiation','Won','Lost']
+const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
+const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
+
 export default function Page() {
   const [section, setSection] = useState('Contacts')
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState<string|null>(null)
-  const [form, setForm] = useState<any>({})
-  const [editId, setEditId] = useState<string|null>(null)
   const [saving, setSaving] = useState(false)
   const [contacts, setContacts] = useState<any[]>([])
-  const [companies, setCompanies] = useState<any[]>([])
   const [deals, setDeals] = useState<any[]>([])
-  const [tasks, setTasks] = useState<any[]>([])
-  const [activities, setActivities] = useState<any[]>([])
-  const [meetings, setMeetings] = useState<any[]>([])
-  const [search, setSearch] = useState('')
-  const [dragDeal, setDragDeal] = useState<string|null>(null)
-  const today = new Date().toISOString().split('T')[0]
-  useEffect(() => { supabase.auth.getUser().then(({data:{user}})=>{ if(!user){window.location.href='/login';return}; loadAll(user.id); setLoading(false) }) }, [])
-  async function loadAll(uid?: string) {
-    let userId = uid
-    if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [c,co,d,t,a,m] = await Promise.all([
+  const [showContactForm, setShowContactForm] = useState(false)
+  const [showDealForm, setShowDealForm] = useState(false)
+  const [editId, setEditId] = useState<any>(null)
+  const [contactForm, setContactForm] = useState({name:'',email:'',phone:'',type:'Landlord',notes:''})
+  const [dealForm, setDealForm] = useState({name:'',contact_id:'',value:'',stage:'Enquiry'})
+
+  useEffect(()=>{
+    supabase.auth.getUser().then(async ({data:{user}})=>{
+      if(!user){window.location.href='/login';return}
+      await loadAll(user.id)
+      setLoading(false)
+    })
+  },[])
+
+  async function loadAll(userId: string) {
+    const [c,d] = await Promise.all([
       supabase.from('crm_contacts').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
-      supabase.from('crm_companies').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('crm_deals').select('*,crm_contacts(name)').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
-      supabase.from('crm_tasks').select('*,crm_contacts(name)').eq('module',MODULE).eq('user_id',userId).order('due_date',{ascending:true}),
-      supabase.from('crm_activities').select('*,crm_contacts(name)').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
-      supabase.from('crm_meetings').select('*,crm_contacts(name)').eq('module',MODULE).eq('user_id',userId).order('date',{ascending:true}),
     ])
-    setContacts(c.data??[]); setCompanies(co.data??[]); setDeals(d.data??[]); setTasks(t.data??[]); setActivities(a.data??[]); setMeetings(m.data??[])
+    setContacts(c.data??[])
+    setDeals(d.data??[])
   }
-  async function save(table: string, data: any) {
+
+  async function saveContact() {
+    if(!contactForm.name) return
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
     if(editId){
-      const {error}=await supabase.from(table).update({...data}).eq('id',editId)
+      const {error}=await supabase.from('crm_contacts').update(contactForm).eq('id',editId)
       if(error){alert(error.message);setSaving(false);return}
     } else {
-      const {error}=await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+      const {error}=await supabase.from('crm_contacts').insert([{...contactForm,user_id:user?.id,module:MODULE}])
       if(error){alert(error.message);setSaving(false);return}
     }
-    setSaving(false); setModal(null); setForm({}); setEditId(null); await loadAll()
+    setSaving(false); setContactForm({name:'',email:'',phone:'',type:'Landlord',notes:''}); setShowContactForm(false); setEditId(null)
+    await loadAll(user!.id)
   }
-  async function del(table: string, id: string) { if(!confirm('Delete?'))return; await supabase.from(table).delete().eq('id',id); await loadAll() }
-  function openEdit(mn: string, r: any) { const {crm_contacts,...clean}=r; setForm(clean); setEditId(r.id); setModal(mn) }
-  const filtered = (arr: any[]) => arr.filter(x => search===''||JSON.stringify(x).toLowerCase().includes(search.toLowerCase()))
-  const overdueTasks = tasks.filter(t=>t.status==='pending'&&t.due_date<=today).length
-  if(loading) return <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', color:'#98A2B3' }}>Loading...</div>
-  const sideNav = <div style={{ width:210, background:'#fff', borderRight:'1px solid #F2F4F7', display:'flex', flexDirection:'column', paddingTop:16, flexShrink:0, minHeight:'100vh', overflowY:'auto' }}><div style={{ padding:'0 16px 14px', borderBottom:'1px solid #F2F4F7' }}><div style={{ fontSize:11, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:4 }}>Property Management</div><div style={{ fontSize:14, fontWeight:700, color:'#101828' }}>CRM</div></div><nav style={{ flex:1, padding:'8px 10px' }}>{NAV_SECTIONS.map(group=>(<div key={group.group}><div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'10px 10px 4px' }}>{group.group}</div>{group.items.map(({s,i})=>(<button key={s} onClick={()=>setSection(s)} style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'7px 10px', borderRadius:7, border:'none', background:section===s?ACCENT+'18':'transparent', color:section===s?ACCENT:'#344054', fontSize:13, fontWeight:section===s?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:1 }}><span style={{ display:'flex', alignItems:'center' }}>{i}</span>{s}{s==='Tasks'&&overdueTasks>0&&<span style={{ marginLeft:'auto', background:'#EF4444', color:'#fff', borderRadius:20, fontSize:10, fontWeight:700, padding:'1px 6px' }}>{overdueTasks}</span>}</button>))}</div>))}</nav></div>
-  const comingSoon = (s: string, icon: string) => <div style={{ textAlign:'center', padding:80 }}><div style={{ fontSize:40, marginBottom:16 }}>{icon}</div><div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:8 }}>{s}</div><div style={{ fontSize:14, color:'#667085' }}>Coming soon</div></div>
+
+  async function saveDeal() {
+    if(!dealForm.name) return
+    setSaving(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const payload = {...dealForm, value: dealForm.value ? parseFloat(dealForm.value as any) : null, contact_id: dealForm.contact_id || null}
+    if(editId){
+      const {error}=await supabase.from('crm_deals').update(payload).eq('id',editId)
+      if(error){alert(error.message);setSaving(false);return}
+    } else {
+      const {error}=await supabase.from('crm_deals').insert([{...payload,user_id:user?.id,module:MODULE}])
+      if(error){alert(error.message);setSaving(false);return}
+    }
+    setSaving(false); setDealForm({name:'',contact_id:'',value:'',stage:'Enquiry'}); setShowDealForm(false); setEditId(null)
+    await loadAll(user!.id)
+  }
+
+  async function delContact(id: string) {
+    if(!confirm('Delete this contact?')) return
+    await supabase.from('crm_contacts').delete().eq('id',id)
+    const {data:{user}} = await supabase.auth.getUser()
+    await loadAll(user!.id)
+  }
+
+  async function delDeal(id: string) {
+    if(!confirm('Delete this deal?')) return
+    await supabase.from('crm_deals').delete().eq('id',id)
+    const {data:{user}} = await supabase.auth.getUser()
+    await loadAll(user!.id)
+  }
+
+  async function updateDealStage(id: string, stage: string) {
+    const {error} = await supabase.from('crm_deals').update({stage}).eq('id',id)
+    if(error){alert(error.message);return}
+    setDeals(deals.map((d:any)=>d.id===id?{...d,stage}:d))
+  }
+
+  function openEditContact(c: any) {
+    setContactForm({name:c.name,email:c.email??'',phone:c.phone??'',type:c.type??'Landlord',notes:c.notes??''})
+    setEditId(c.id); setShowContactForm(true)
+  }
+
+  function openEditDeal(d: any) {
+    const {crm_contacts, ...clean} = d
+    setDealForm({name:clean.name,contact_id:clean.contact_id??'',value:clean.value??'',stage:clean.stage??'Enquiry'})
+    setEditId(d.id); setShowDealForm(true)
+  }
+
+  if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
+
   return (
-    <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
-      {sideNav}
-      <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
-        <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:60, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:16 }}><h1 style={{ fontSize:17, fontWeight:600, margin:0, color:'#101828' }}>{section}</h1><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{ padding:'7px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:13, fontFamily:'inherit', width:200, outline:'none' }}/></div>
-          <div>
-            {section==='Contacts'&&<button onClick={()=>{setModal('contact');setForm({module:MODULE});setEditId(null)}} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Contact</button>}
-            {section==='Companies'&&<button onClick={()=>{setModal('company');setForm({});setEditId(null)}} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Company</button>}
-            {section==='Deals'&&<button onClick={()=>{setModal('deal');setForm({module:MODULE,stage:'Lead'});setEditId(null)}} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Deal</button>}
-            {section==='Tasks'&&<button onClick={()=>{setModal('task');setForm({module:MODULE,status:'pending',priority:'medium'});setEditId(null)}} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Task</button>}
-            {section==='Meetings'&&<button onClick={()=>{setModal('meeting');setForm({module:MODULE,status:'scheduled'});setEditId(null)}} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Schedule</button>}
-            {(section==='Activity Feed'||section==='Calls')&&<button onClick={()=>{setModal('activity');setForm({module:MODULE,type:section==='Calls'?'call':'note'});setEditId(null)}} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>{section==='Calls'?'+ Log Call':'+ Log Activity'}</button>}
-          </div>
-        </div>
-        <div style={{ flex:1, padding:24, overflowY:'auto' }}>
-          {section==='Contacts'&&(<div><div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:20 }}>{[{l:'Total',v:filtered(contacts).length},{l:'Guests',v:filtered(contacts).filter(c=>c.type==='guest').length},{l:'Contacts',v:filtered(contacts).filter(c=>c.type==='contact').length},{l:'Vendors',v:filtered(contacts).filter(c=>c.type==='vendor').length}].map(s=>(<div key={s.l} style={{ background:'#fff', borderRadius:10, border:'1px solid #E4E7EC', padding:'16px 20px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', marginBottom:4 }}>{s.l}</div><div style={{ fontSize:24, fontWeight:700, color:'#101828' }}>{s.v}</div></div>))}</div><div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}><div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 80px 100px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase' }}><span>Name</span><span>Email</span><span>Phone</span><span>Type</span><span></span></div>{filtered(contacts).length===0?<div style={{ textAlign:'center', padding:60, color:'#98A2B3' }}>No contacts yet</div>:filtered(contacts).map(c=>(<div key={c.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 80px 100px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, alignItems:'center' }}><div style={{ display:'flex', alignItems:'center', gap:10 }}><div style={{ width:32, height:32, borderRadius:'50%', background:ACCENT+'18', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:12, color:ACCENT }}>{c.name.charAt(0)}</div><span style={{ fontWeight:500, color:'#101828' }}>{c.name}</span></div><span style={{ color:'#667085' }}>{c.email??'—'}</span><span style={{ color:'#667085' }}>{c.phone??'—'}</span><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:ACCENT+'18', color:ACCENT, textTransform:'capitalize' }}>{c.type}</span><div style={{ display:'flex', gap:6 }}><button onClick={()=>openEdit('contact',c)} style={{ fontSize:11, color:ACCENT, background:'none', border:`1px solid ${ACCENT}`, borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button><button onClick={()=>del('crm_contacts',c.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button></div></div>))}</div></div>)}
-          {section==='Companies'&&(<div style={{ display:'flex', flexDirection:'column', gap:8 }}>{filtered(companies).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3' }}>No companies yet</div>:filtered(companies).map(c=>(<div key={c.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}><div style={{ width:40, height:40, borderRadius:10, background:ACCENT+'18', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:15, color:ACCENT }}>{c.name.charAt(0)}</div><div style={{ flex:1 }}><div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{c.name}</div><div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{[c.industry,c.website].filter(Boolean).join(' · ')}</div></div><button onClick={()=>openEdit('company',c)} style={{ fontSize:12, color:ACCENT, background:'none', border:`1px solid ${ACCENT}`, borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button><button onClick={()=>del('crm_companies',c.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button></div>))}</div>)}
-          {section==='Deals'&&(<div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:16 }}>{DEAL_STAGES.map(stage=>{const sd=filtered(deals).filter(d=>d.stage===stage);return <div key={stage} style={{ minWidth:220, background:'#F7F8FA', borderRadius:12, border:'1px solid #E4E7EC', padding:12, flexShrink:0 }} onDragOver={e=>e.preventDefault()} onDrop={async()=>{if(dragDeal){await supabase.from('crm_deals').update({stage}).eq('id',dragDeal);setDragDeal(null);loadAll()}}}><div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}><span style={{ fontSize:12, fontWeight:600, color:'#344054' }}>{stage}</span><span style={{ fontSize:11, color:'#667085' }}>{sd.length} · £{sd.reduce((s,d)=>s+(d.value??0),0).toLocaleString()}</span></div><div style={{ display:'flex', flexDirection:'column', gap:8 }}>{sd.map(d=><div key={d.id} draggable onDragStart={()=>setDragDeal(d.id)} style={{ background:'#fff', borderRadius:8, border:'1px solid #E4E7EC', padding:'12px 14px', cursor:'grab' }}><div style={{ fontWeight:500, fontSize:13, color:'#101828', marginBottom:4 }}>{d.name}</div><div style={{ fontSize:11, color:'#667085', marginBottom:6 }}>{d.crm_contacts?.name??'—'}</div><div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:12, fontWeight:600, color:'#10B981' }}>£{(d.value??0).toLocaleString()}</span><button onClick={()=>openEdit('deal',d)} style={{ fontSize:10, color:ACCENT, background:'none', border:`1px solid ${ACCENT}`, borderRadius:5, padding:'2px 7px', cursor:'pointer' }}>Edit</button></div></div>)}<button onClick={()=>{setModal('deal');setForm({module:MODULE,stage});setEditId(null)}} style={{ width:'100%', padding:'8px', borderRadius:8, border:'1px dashed #D0D5DD', background:'none', fontSize:12, color:'#98A2B3', cursor:'pointer', fontFamily:'inherit' }}>+ Add</button></div></div>})}</div>)}
-          {section==='Tasks'&&(<div><div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginBottom:20 }}>{[{l:'Pending',v:filtered(tasks).filter(t=>t.status==='pending').length,c:'#F59E0B'},{l:'Overdue',v:filtered(tasks).filter(t=>t.status==='pending'&&t.due_date<today).length,c:'#EF4444'},{l:'Completed',v:filtered(tasks).filter(t=>t.status==='completed').length,c:'#10B981'}].map(s=>(<div key={s.l} style={{ background:'#fff', borderRadius:10, border:'1px solid #E4E7EC', padding:'16px 20px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', marginBottom:4 }}>{s.l}</div><div style={{ fontSize:24, fontWeight:700, color:s.c }}>{s.v}</div></div>))}</div>{filtered(tasks).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3' }}>No tasks yet</div>:filtered(tasks).map(t=>{const overdue=t.status==='pending'&&t.due_date<today;return <div key={t.id} style={{ background:'#fff', borderRadius:12, border:`1px solid ${overdue?'#FEE2E2':'#E4E7EC'}`, padding:'14px 20px', display:'grid', gridTemplateColumns:'auto 1fr auto auto auto', alignItems:'center', gap:14, marginBottom:8 }}><input type="checkbox" checked={t.status==='completed'} onChange={async()=>{await supabase.from('crm_tasks').update({status:t.status==='completed'?'pending':'completed'}).eq('id',t.id);loadAll()}} style={{ width:16, height:16, cursor:'pointer' }}/><div><div style={{ fontWeight:500, fontSize:14, color:t.status==='completed'?'#98A2B3':'#101828', textDecoration:t.status==='completed'?'line-through':'none' }}>{t.title}</div><div style={{ fontSize:11, color:'#667085' }}>{t.crm_contacts?.name}{t.due_date?` · Due: ${t.due_date}`:''}{overdue?' · Overdue':''}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.priority==='high'?'#FEE2E2':t.priority==='medium'?'#FEF3C7':'#F3F4F6', color:t.priority==='high'?'#DC2626':t.priority==='medium'?'#D97706':'#6B7280', textTransform:'uppercase' }}>{t.priority}</span><button onClick={()=>openEdit('task',t)} style={{ fontSize:11, color:ACCENT, background:'none', border:`1px solid ${ACCENT}`, borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button><button onClick={()=>del('crm_tasks',t.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button></div>})}</div>)}
-          {section==='Meetings'&&(<div style={{ display:'flex', flexDirection:'column', gap:8 }}>{filtered(meetings).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3' }}>No meetings scheduled</div>:filtered(meetings).map(m=>(<div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}><div style={{ width:44, height:44, borderRadius:10, background:ACCENT+'18', display:'flex', alignItems:'center', justifyContent:'center' }}>📅</div><div style={{ flex:1 }}><div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{m.title}</div><div style={{ fontSize:12, color:'#667085' }}>{m.crm_contacts?.name}{m.date?` · ${m.date}`:''}{m.time?` at ${m.time}`:''}</div></div><button onClick={()=>openEdit('meeting',m)} style={{ fontSize:12, color:ACCENT, background:'none', border:`1px solid ${ACCENT}`, borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button><button onClick={()=>del('crm_meetings',m.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button></div>))}</div>)}
-          {section==='Inbox'&&(<div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>{[{i:'✉️',t:'Team Email',d:'Manage and respond to team emails'},{i:'💬',t:'Chat',d:'Connect live chat on your website'},{i:'📘',t:'Facebook Messenger',d:'Receive Messenger conversations'},{i:'📱',t:'WhatsApp',d:'Receive WhatsApp conversations'},{i:'📞',t:'Calling',d:'Make and receive calls'},{i:'📋',t:'Forms',d:'Connect and respond to forms'}].map(c=>(<div key={c.t} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px', textAlign:'center' }}><div style={{ fontSize:32, marginBottom:12 }}>{c.i}</div><div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:6 }}>{c.t}</div><div style={{ fontSize:12, color:'#667085', lineHeight:1.5 }}>{c.d}</div><button style={{ marginTop:16, padding:'8px 20px', borderRadius:8, border:'1px solid #D0D5DD', background:'#fff', fontSize:13, cursor:'pointer', fontFamily:'inherit', color:'#344054' }}>Connect</button></div>))}</div>)}
-          {section==='Calls'&&(<div style={{ display:'flex', flexDirection:'column', gap:10 }}>{filtered(activities).filter(a=>a.type==='call').length===0?<div style={{ textAlign:'center', padding:80 }}><div style={{ fontSize:48, marginBottom:16 }}>📞</div><div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:8 }}>No calls logged yet</div><button onClick={()=>{setModal('activity');setForm({module:MODULE,type:'call'});setEditId(null)}} style={{ background:ACCENT, color:'#fff', border:'none', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>+ Log a Call</button></div>:filtered(activities).filter(a=>a.type==='call').map(a=>(<div key={a.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', gap:14 }}><div style={{ width:36, height:36, borderRadius:'50%', background:'#D1FAE5', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>📞</div><div style={{ flex:1 }}><div style={{ fontWeight:500, fontSize:14, color:'#101828' }}>{a.subject}</div><div style={{ fontSize:13, color:'#667085', marginTop:4 }}>{a.body}</div><div style={{ fontSize:11, color:'#98A2B3', marginTop:6 }}>{a.crm_contacts?.name} · {new Date(a.created_at).toLocaleDateString('en-GB')}</div></div></div>))}</div>)}
-          {section==='Activity Feed'&&(<div style={{ display:'flex', flexDirection:'column', gap:10 }}>{filtered(activities).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3' }}>No activity yet</div>:filtered(activities).map(a=>(<div key={a.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', gap:14 }}><div style={{ width:36, height:36, borderRadius:'50%', background:'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>{a.type==='call'?'📞':a.type==='email'?'✉️':a.type==='meeting'?'📅':'📝'}</div><div style={{ flex:1 }}><div style={{ fontWeight:500, fontSize:14, color:'#101828' }}>{a.subject}</div><div style={{ fontSize:13, color:'#667085', marginTop:4 }}>{a.body}</div><div style={{ fontSize:11, color:'#98A2B3', marginTop:6 }}>{a.crm_contacts?.name} · {new Date(a.created_at).toLocaleDateString('en-GB')}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#F3F4F6', color:'#6B7280', textTransform:'capitalize', alignSelf:'flex-start' }}>{a.type}</span></div>))}</div>)}
-          {['Tickets','Orders','Projects','Segments','Playbooks','Templates','Snippets'].includes(section)&&comingSoon(section,section==='Tickets'?'🎫':section==='Orders'?'📦':section==='Projects'?'📁':section==='Segments'?'◎':section==='Playbooks'?'📖':section==='Templates'?'📋':'✂️')}
+    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
+      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div><div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>PROPERTY MANAGEMENT</div><div style={{fontSize:15,fontWeight:700,color:'#101828'}}>CRM</div></div>
+        <div style={{display:'flex',gap:8}}>
+          {section==='Contacts'&&<button onClick={()=>{setEditId(null);setContactForm({name:'',email:'',phone:'',type:'Landlord',notes:''});setShowContactForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Contact</button>}
+          {section==='Deals'&&<button onClick={()=>{setEditId(null);setDealForm({name:'',contact_id:'',value:'',stage:'Enquiry'});setShowDealForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Deal</button>}
         </div>
       </div>
-      {modal==='contact'&&<Modal title={editId?'Edit Contact':'Add Contact'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}><div style={{ display:'flex', flexDirection:'column', gap:14 }}><div><label style={lbl}>Full Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="John Smith"/></div><div><label style={lbl}>Email</label><input type="email" style={inp} value={form.email??''} onChange={e=>setForm({...form,email:e.target.value})}/></div><div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})}/></div><div><label style={lbl}>Type</label><select style={{...inp,cursor:'pointer'}} value={form.type??'landlord'} onChange={e=>setForm({...form,type:e.target.value})}>{CONTACT_TYPES.map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}</select></div><div><label style={lbl}>Source</label><input style={inp} value={form.source??''} onChange={e=>setForm({...form,source:e.target.value})} placeholder="Airbnb, Referral..."/></div><div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div></div><div style={{ display:'flex', gap:10, marginTop:24 }}><button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button><button onClick={()=>save('crm_contacts',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:ACCENT, color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save':'Add Contact'}</button></div></Modal>}
-      {modal==='company'&&<Modal title={editId?'Edit Company':'Add Company'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}><div style={{ display:'flex', flexDirection:'column', gap:14 }}><div><label style={lbl}>Company Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Acme Ltd"/></div><div><label style={lbl}>Industry</label><input style={inp} value={form.industry??''} onChange={e=>setForm({...form,industry:e.target.value})}/></div><div><label style={lbl}>Website</label><input type="url" style={inp} value={form.website??''} onChange={e=>setForm({...form,website:e.target.value})} placeholder="https://..."/></div><div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})}/></div><div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div></div><div style={{ display:'flex', gap:10, marginTop:24 }}><button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button><button onClick={()=>save('crm_companies',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:ACCENT, color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save':'Add Company'}</button></div></Modal>}
-      {modal==='deal'&&<Modal title={editId?'Edit Deal':'Add Deal'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}><div style={{ display:'flex', flexDirection:'column', gap:14 }}><div><label style={lbl}>Deal Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})}/></div><div><label style={lbl}>Contact</label><select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}><option value="">Select...</option>{contacts.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div><div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}><div><label style={lbl}>Stage</label><select style={{...inp,cursor:'pointer'}} value={form.stage??'Lead'} onChange={e=>setForm({...form,stage:e.target.value})}>{DEAL_STAGES.map(s=><option key={s} value={s}>{s}</option>)}</select></div><div><label style={lbl}>Value (£)</label><input type="number" style={inp} value={form.value??''} onChange={e=>setForm({...form,value:parseFloat(e.target.value)})}/></div></div><div><label style={lbl}>Close Date</label><input type="date" style={inp} value={form.close_date??''} onChange={e=>setForm({...form,close_date:e.target.value})}/></div></div><div style={{ display:'flex', gap:10, marginTop:24 }}><button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button><button onClick={()=>save('crm_deals',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:ACCENT, color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save':'Add Deal'}</button></div></Modal>}
-      {modal==='task'&&<Modal title={editId?'Edit Task':'Add Task'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}><div style={{ display:'flex', flexDirection:'column', gap:14 }}><div><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})}/></div><div><label style={lbl}>Contact</label><select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}><option value="">Select...</option>{contacts.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div><div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}><div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.due_date??''} onChange={e=>setForm({...form,due_date:e.target.value})}/></div><div><label style={lbl}>Priority</label><select style={{...inp,cursor:'pointer'}} value={form.priority??'medium'} onChange={e=>setForm({...form,priority:e.target.value})}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div></div></div><div style={{ display:'flex', gap:10, marginTop:24 }}><button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button><button onClick={()=>save('crm_tasks',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:ACCENT, color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save':'Add Task'}</button></div></Modal>}
-      {modal==='meeting'&&<Modal title={editId?'Edit Meeting':'Schedule Meeting'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}><div style={{ display:'flex', flexDirection:'column', gap:14 }}><div><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})}/></div><div><label style={lbl}>Contact</label><select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}><option value="">Select...</option>{contacts.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div><div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}><div><label style={lbl}>Date</label><input type="date" style={inp} value={form.date??''} onChange={e=>setForm({...form,date:e.target.value})}/></div><div><label style={lbl}>Time</label><input type="time" style={inp} value={form.time??''} onChange={e=>setForm({...form,time:e.target.value})}/></div></div><div><label style={lbl}>Location</label><input style={inp} value={form.location??''} onChange={e=>setForm({...form,location:e.target.value})} placeholder="Zoom / Address"/></div></div><div style={{ display:'flex', gap:10, marginTop:24 }}><button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button><button onClick={()=>save('crm_meetings',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:ACCENT, color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save':'Schedule'}</button></div></Modal>}
-      {modal==='activity'&&<Modal title={form.type==='call'?'Log Call':'Log Activity'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}><div style={{ display:'flex', flexDirection:'column', gap:14 }}><div><label style={lbl}>Type</label><select style={{...inp,cursor:'pointer'}} value={form.type??'note'} onChange={e=>setForm({...form,type:e.target.value})}><option value="note">Note</option><option value="call">Call</option><option value="email">Email</option><option value="meeting">Meeting</option></select></div><div><label style={lbl}>Contact</label><select style={{...inp,cursor:'pointer'}} value={form.contact_id??''} onChange={e=>setForm({...form,contact_id:e.target.value})}><option value="">Select...</option>{contacts.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div><div><label style={lbl}>Subject *</label><input style={inp} value={form.subject??''} onChange={e=>setForm({...form,subject:e.target.value})}/></div><div><label style={lbl}>Details</label><textarea style={{...inp,resize:'vertical'} as React.CSSProperties} rows={3} value={form.body??''} onChange={e=>setForm({...form,body:e.target.value})}/></div></div><div style={{ display:'flex', gap:10, marginTop:24 }}><button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button><button onClick={()=>save('crm_activities',form)} disabled={saving||!form.subject} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:ACCENT, color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.subject?0.6:1 }}>{saving?'Saving...':'Save'}</button></div></Modal>}
+      <div style={{display:'flex',gap:0,padding:'0 28px',background:'#fff',borderBottom:'1px solid #E4E7EC'}}>
+        {['Contacts','Deals','Pipeline'].map(s=><button key={s} onClick={()=>setSection(s)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:section===s?600:400,color:section===s?ACCENT:'#667085',borderBottom:section===s?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>{s}</button>)}
+      </div>
+      <div style={{padding:24}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+          {[{l:'Contacts',v:contacts.length},{l:'Deals',v:deals.length},{l:'Landlords',v:contacts.filter((c:any)=>c.type==='Landlord').length},{l:'Won Deals',v:deals.filter((d:any)=>d.stage==='Won').length}].map((s:any)=>(
+            <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
+              <div style={{fontSize:26,fontWeight:700,color:ACCENT,marginBottom:4}}>{s.v}</div>
+              <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {section==='Contacts'&&(<div>
+          {showContactForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Contact':'Add Contact'}</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div><label style={lbl}>Name *</label><input value={contactForm.name} onChange={e=>setContactForm({...contactForm,name:e.target.value})} placeholder="Full name" style={inp}/></div>
+              <div><label style={lbl}>Email</label><input value={contactForm.email} onChange={e=>setContactForm({...contactForm,email:e.target.value})} type="email" style={inp}/></div>
+              <div><label style={lbl}>Phone</label><input value={contactForm.phone} onChange={e=>setContactForm({...contactForm,phone:e.target.value})} placeholder="+44..." style={inp}/></div>
+              <div><label style={lbl}>Type</label><select value={contactForm.type} onChange={e=>setContactForm({...contactForm,type:e.target.value})} style={inp}>{CONTACT_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+              <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><textarea value={contactForm.notes} onChange={e=>setContactForm({...contactForm,notes:e.target.value})} style={{...inp,resize:'vertical' as const}} rows={2}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={saveContact} disabled={saving||!contactForm.name} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving||!contactForm.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add'}</button>
+              <button onClick={()=>{setShowContactForm(false);setEditId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 180px 140px 100px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Name</span><span>Email</span><span>Phone</span><span>Type</span><span></span></div>
+            {contacts.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>👥</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No contacts yet</div></div>):contacts.map((c:any)=>(
+              <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 180px 140px 100px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.name}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{c.email||'—'}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{c.phone||'—'}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{c.type}</span>
+                <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+                  <button onClick={()=>openEditContact(c)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>delContact(c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>)}
+
+        {section==='Deals'&&(<div>
+          {showDealForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Deal':'Add Deal'}</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div><label style={lbl}>Deal Name *</label><input value={dealForm.name} onChange={e=>setDealForm({...dealForm,name:e.target.value})} placeholder="e.g. 3 bed sale" style={inp}/></div>
+              <div><label style={lbl}>Contact</label><select value={dealForm.contact_id} onChange={e=>setDealForm({...dealForm,contact_id:e.target.value})} style={inp}><option value="">Select…</option>{contacts.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+              <div><label style={lbl}>Value (£)</label><input value={dealForm.value} onChange={e=>setDealForm({...dealForm,value:e.target.value})} type="number" style={inp}/></div>
+              <div><label style={lbl}>Stage</label><select value={dealForm.stage} onChange={e=>setDealForm({...dealForm,stage:e.target.value})} style={inp}>{DEAL_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={saveDeal} disabled={saving||!dealForm.name} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving||!dealForm.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add'}</button>
+              <button onClick={()=>{setShowDealForm(false);setEditId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 130px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Deal</span><span>Contact</span><span>Value</span><span>Stage</span><span></span></div>
+            {deals.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🏠</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No deals yet</div></div>):deals.map((d:any)=>(
+              <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 130px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.name}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{d.crm_contacts?.name||'—'}</span>
+                <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{d.value?'£'+parseFloat(d.value).toLocaleString():'—'}</span>
+                <select value={d.stage} onChange={e=>updateDealStage(d.id,e.target.value)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{DEAL_STAGES.map(s=><option key={s}>{s}</option>)}</select>
+                <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+                  <button onClick={()=>openEditDeal(d)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>delDeal(d.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>)}
+
+        {section==='Pipeline'&&(<div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:10}}>
+            {DEAL_STAGES.map(stage=>(
+              <div key={stage} style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:12,minHeight:200}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:8}}>{stage} ({deals.filter((d:any)=>d.stage===stage).length})</div>
+                {deals.filter((d:any)=>d.stage===stage).map((d:any)=>(
+                  <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E4E7EC',padding:10,marginBottom:8}}>
+                    <div style={{fontSize:12,fontWeight:600,color:'#101828',marginBottom:2}}>{d.name}</div>
+                    <div style={{fontSize:11,color:ACCENT,fontWeight:600}}>£{parseFloat(d.value||0).toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>)}
+      </div>
     </div>
   )
 }
