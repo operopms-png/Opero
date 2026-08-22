@@ -1649,7 +1649,7 @@ function PMPageInner() {
               <div><label style={lbl}>Monthly Rent (£)</label><input type="number" style={inp} value={form.monthly_rent??''} onChange={e=>setForm({...form,monthly_rent:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Deposit (£)</label><input type="number" style={inp} value={form.deposit??''} onChange={e=>setForm({...form,deposit:parseFloat(e.target.value)})}/></div>
             </div>
-            <div><label style={lbl}>Document URL</label><input type="url" style={inp} value={form.document_url??''} onChange={e=>setForm({...form,document_url:e.target.value})} placeholder="https://..."/></div>
+            <FileUpload label="Tenancy Agreement (PDF)" value={form.document_url??''} onChange={url=>setForm({...form,document_url:url})} folder="lease-documents" />
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
