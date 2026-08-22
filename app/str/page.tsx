@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import WeatherWidget from '@/components/WeatherWidget'
 import { useRole, getAllowedTab } from '@/lib/useRole'
+import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 
-const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Reports','Expenses','Banking','Guest Comms']
+const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms']
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
 
@@ -482,6 +483,9 @@ export default function STRPage() {
             </div>))}
           </div>
         )}
+
+        {tab==='Company SOPs' && <CompanyDocsPanel category="sop" />}
+        {tab==='Contract Templates' && <CompanyDocsPanel category="contract_template" />}
 
         {tab==='Analytics' && (
           <div>

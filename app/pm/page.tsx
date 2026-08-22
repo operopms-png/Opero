@@ -2,11 +2,12 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import WeatherWidget from '@/components/WeatherWidget'
+import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 
-const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
+const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
@@ -25,6 +26,7 @@ const PM_NAV_GROUPS = [
   { label: 'COMPLIANCE', items: ['Compliance'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
+  { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'FINANCE', items: ['Rent','Expenses','Banking'] },
   { label: 'REPORTS', items: ['Reports','Owner Reports','Statements'] },
   { label: 'COMMS', items: ['Messages'] },
@@ -986,6 +988,9 @@ function PMPageInner() {
           </div>
         )}
 
+
+        {tab==='Company SOPs'&&<CompanyDocsPanel category="sop" />}
+        {tab==='Contract Templates'&&<CompanyDocsPanel category="contract_template" />}
 
         {tab==='Expenses'&&(
           <div>

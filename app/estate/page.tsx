@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
+import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 const ACCENT = '#2D6A4F'
 
 async function uploadPropertyImage(file: File): Promise<string | null> {
@@ -115,6 +116,7 @@ const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Vacancies','Viewings'] },
   { label: 'COMPLIANCE', items: ['Compliance','Inventories','Documents'] },
+  { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
   { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
   { label: 'REPORTS', items: ['Reports','Owner Reports'] },
@@ -1035,6 +1037,9 @@ export default function Page() {
               ))}
             </div>
           </div>)}
+
+          {section==='Company SOPs'&&<CompanyDocsPanel category="sop" />}
+          {section==='Contract Templates'&&<CompanyDocsPanel category="contract_template" />}
 
           {section==='Tenancies'&&(<div>
             {showAddTenancy&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>

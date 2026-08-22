@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react'
 import WeatherWidget from '@/components/WeatherWidget'
 import { supabase } from '../../lib/supabase'
+import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 
-const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Expenses','Banking','Reports','Milestones']
+const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones']
 
 const CHECKLIST_TEMPLATE = [
   { phase: 'Pre-construction', tasks: ['Land title confirmed','Architectural drawings approved','Planning permission granted','Soil survey completed'] },
@@ -764,6 +765,9 @@ export default function DevPage() {
             ))}
           </div>
         )}
+
+        {tab==='Company SOPs' && <CompanyDocsPanel category="sop" />}
+        {tab==='Contract Templates' && <CompanyDocsPanel category="contract_template" />}
 
         {/* MILESTONES */}
         {tab==='Milestones' && (
