@@ -38,6 +38,18 @@ function PMTenantPortalInner() {
   const [payCategory, setPayCategory] = useState('Rent')
   const [makingPayment, setMakingPayment] = useState(false)
 
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
+  const [documents, setDocuments] = useState<any[]>([])
+  const [announcements, setAnnouncements] = useState<any[]>([])
+  const [showRenewalForm, setShowRenewalForm] = useState(false)
+  const [renewalChoice, setRenewalChoice] = useState('renewal_requested')
+  const [renewalNotes, setRenewalNotes] = useState('')
+  const [submittingRenewal, setSubmittingRenewal] = useState(false)
+  const [profileForm, setProfileForm] = useState({ phone: '', email: '', emergency_contact_name: '', emergency_contact_phone: '', notify_email: true, notify_sms: false })
+  const [savingProfile, setSavingProfile] = useState(false)
+
   async function payNow(paymentId: string) {
     setPayingId(paymentId)
     try {
@@ -82,14 +94,28 @@ function PMTenantPortalInner() {
   }
 
   async function loadAll(t: any) {
-    const [{ data: leases }, { data: pays }, { data: maint }] = await Promise.all([
+    const [{ data: leases }, { data: pays }, { data: maint }, { data: msgs }, { data: docs }, { data: ann }] = await Promise.all([
       supabase.from('pm_leases').select('*').eq('tenant_id', t.id).order('start_date', { ascending: false }).limit(1),
       supabase.from('pm_rent_payments').select('*').eq('tenant_id', t.id).order('due_date', { ascending: false }),
       supabase.from('pm_maintenance').select('*').eq('property_id', t.property_id).order('created_at', { ascending: false }),
+      supabase.from('pm_tenant_messages').select('*').eq('tenant_id', t.id).order('created_at', { ascending: true }),
+      supabase.from('pm_documents').select('*').eq('tenant_id', t.id).order('created_at', { ascending: false }),
+      supabase.from('system_messages').select('*').eq('published', true).order('created_at', { ascending: false }).limit(10),
     ])
     setLease(leases?.[0] ?? null)
     setPayments(pays ?? [])
     setMaintenance(maint ?? [])
+    setMessages(msgs ?? [])
+    setDocuments(docs ?? [])
+    setAnnouncements(ann ?? [])
+    setProfileForm({
+      phone: t.phone ?? '',
+      email: t.email ?? '',
+      emergency_contact_name: t.emergency_contact_name ?? '',
+      emergency_contact_phone: t.emergency_contact_phone ?? '',
+      notify_email: t.notify_email ?? true,
+      notify_sms: t.notify_sms ?? false,
+    })
 
     if (t.property_id) {
       const { data: prop } = await supabase.from('pm_properties').select('*').eq('id', t.property_id).single()
@@ -99,6 +125,46 @@ function PMTenantPortalInner() {
       const { data: u } = await supabase.from('pm_units').select('*').eq('id', t.unit_id).single()
       setUnit(u)
     }
+  }
+
+  async function sendTenantMessage() {
+    if (!newMessage.trim() || !tenant?.id) return
+    setSendingMessage(true)
+    const { error } = await supabase.from('pm_tenant_messages').insert({
+      tenant_id: tenant.id,
+      sender: 'tenant',
+      message: newMessage.trim(),
+    })
+    setSendingMessage(false)
+    if (error) { alert(error.message); return }
+    setNewMessage('')
+    const { data: msgs } = await supabase.from('pm_tenant_messages').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: true })
+    setMessages(msgs ?? [])
+  }
+
+  async function submitRenewalRequest() {
+    if (!lease?.id) return
+    setSubmittingRenewal(true)
+    const { error } = await supabase.from('pm_leases').update({
+      renewal_status: renewalChoice,
+      renewal_notes: renewalNotes.trim() || null,
+      renewal_requested_at: new Date().toISOString(),
+    }).eq('id', lease.id)
+    setSubmittingRenewal(false)
+    if (error) { alert(error.message); return }
+    setShowRenewalForm(false)
+    setRenewalNotes('')
+    await loadAll(tenant)
+  }
+
+  async function saveProfile() {
+    if (!tenant?.id) return
+    setSavingProfile(true)
+    const { error } = await supabase.from('pm_tenants').update(profileForm).eq('id', tenant.id)
+    setSavingProfile(false)
+    if (error) { alert(error.message); return }
+    setTenant({ ...tenant, ...profileForm })
+    alert('Profile updated.')
   }
 
   async function submitTicket() {
@@ -153,7 +219,7 @@ function PMTenantPortalInner() {
       </div>
 
       <div style={{ display: 'flex', gap: 0, padding: '0 28px', background: '#fff', borderBottom: '1px solid #E4E7EC' }}>
-        {['My Lease', 'Payments', 'Maintenance'].map(s => (
+        {['My Lease', 'Payments', 'Maintenance', 'Documents', 'Messages', 'Announcements', 'Renewal', 'Amenities', 'Profile'].map(s => (
           <button key={s} onClick={() => setTab(s)} style={{ padding: '12px 16px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: tab === s ? 600 : 400, color: tab === s ? ACCENT : '#667085', borderBottom: tab === s ? '2px solid ' + ACCENT : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>
         ))}
       </div>
@@ -282,6 +348,125 @@ function PMTenantPortalInner() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {tab === 'Documents' && (
+          <div>
+            {documents.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>No documents shared yet</div> :
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {documents.map(d => (
+                <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#101828' }}>{d.name}</div>
+                    <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{d.category}{d.expiry_date ? ` · Expires ${d.expiry_date}` : ''}</div>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: ACCENT }}>View →</span>
+                </a>
+              ))}
+            </div>}
+          </div>
+        )}
+
+        {tab === 'Messages' && (
+          <div>
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 16, marginBottom: 12, maxHeight: 400, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {messages.length === 0 ? <div style={{ textAlign: 'center', padding: 30, color: '#98A2B3', fontSize: 13 }}>No messages yet — say hello to your property manager</div> :
+              messages.map(m => (
+                <div key={m.id} style={{ alignSelf: m.sender === 'tenant' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                  <div style={{ background: m.sender === 'tenant' ? ACCENT : '#F2F4F7', color: m.sender === 'tenant' ? '#fff' : '#101828', borderRadius: 12, padding: '8px 12px', fontSize: 13 }}>{m.message}</div>
+                  <div style={{ fontSize: 10, color: '#98A2B3', marginTop: 2, textAlign: m.sender === 'tenant' ? 'right' : 'left' }}>{m.sender === 'tenant' ? 'You' : 'Property Manager'}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input style={{ ...inp, flex: 1 }} value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message…" onKeyDown={e => e.key === 'Enter' && sendTenantMessage()} />
+              <button onClick={sendTenantMessage} disabled={sendingMessage || !newMessage.trim()} style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: sendingMessage || !newMessage.trim() ? 0.6 : 1 }}>Send</button>
+            </div>
+          </div>
+        )}
+
+        {tab === 'Announcements' && (
+          <div>
+            {announcements.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>No announcements right now</div> :
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {announcements.map((a: any) => (
+                <div key={a.id} style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#101828', marginBottom: 4 }}>{a.title}</div>
+                  <div style={{ fontSize: 12, color: '#667085' }}>{a.body}</div>
+                  <div style={{ fontSize: 10, color: '#98A2B3', marginTop: 6 }}>{new Date(a.created_at).toLocaleDateString()}</div>
+                </div>
+              ))}
+            </div>}
+          </div>
+        )}
+
+        {tab === 'Renewal' && (
+          <div>
+            {lease?.renewal_status && lease.renewal_status !== 'none' ? (
+              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, maxWidth: 460 }}>
+                <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', marginBottom: 6 }}>Request status</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#101828', textTransform: 'capitalize', marginBottom: 8 }}>{lease.renewal_status.replace(/_/g, ' ')}</div>
+                {lease.renewal_notes && <div style={{ fontSize: 13, color: '#667085' }}>{lease.renewal_notes}</div>}
+              </div>
+            ) : !showRenewalForm ? (
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={() => { setRenewalChoice('renewal_requested'); setShowRenewalForm(true) }} style={{ padding: '12px 20px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>I'd like to renew</button>
+                <button onClick={() => { setRenewalChoice('move_out_requested'); setShowRenewalForm(true) }} style={{ padding: '12px 20px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', color: '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>I'm planning to move out</button>
+              </div>
+            ) : (
+              <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, maxWidth: 460 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 14 }}>{renewalChoice === 'renewal_requested' ? 'Request a renewal' : 'Give notice to move out'}</div>
+                <label style={lbl}>Anything we should know? (optional)</label>
+                <textarea style={{ ...inp, resize: 'vertical' } as React.CSSProperties} rows={3} value={renewalNotes} onChange={e => setRenewalNotes(e.target.value)} placeholder={renewalChoice === 'renewal_requested' ? 'e.g. preferred new term length' : 'e.g. planned move-out date'} />
+                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                  <button onClick={() => setShowRenewalForm(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                  <button onClick={submitRenewalRequest} disabled={submittingRenewal} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submittingRenewal ? 0.6 : 1 }}>{submittingRenewal ? 'Submitting…' : 'Submit Request'}</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'Amenities' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
+              <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>WiFi Network</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginTop: 4 }}>{property?.wifi_ssid ?? '—'}</div>
+            </div>
+            <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
+              <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>WiFi Password</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginTop: 4 }}>{property?.wifi_password ?? '—'}</div>
+            </div>
+            <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16, gridColumn: '1 / -1' }}>
+              <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Bin Collection</div>
+              <div style={{ fontSize: 13, color: '#344054', marginTop: 4 }}>{property?.bin_collection_notes ?? 'Not set yet — check with your property manager.'}</div>
+            </div>
+            <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16, gridColumn: '1 / -1' }}>
+              <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Parking</div>
+              <div style={{ fontSize: 13, color: '#344054', marginTop: 4 }}>{property?.parking_notes ?? 'Not set yet — check with your property manager.'}</div>
+            </div>
+            {property?.house_rules_url && (
+              <a href={property.house_rules_url} target="_blank" rel="noreferrer" style={{ gridColumn: '1 / -1', display: 'inline-block', padding: '9px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, fontWeight: 500, color: '#344054', textDecoration: 'none', width: 'fit-content' }}>View House Rules PDF</a>
+            )}
+          </div>
+        )}
+
+        {tab === 'Profile' && (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, maxWidth: 460 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div><label style={lbl}>Phone</label><input style={inp} value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} /></div>
+              <div><label style={lbl}>Email</label><input style={inp} value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} /></div>
+              <div><label style={lbl}>Emergency Contact Name</label><input style={inp} value={profileForm.emergency_contact_name} onChange={e => setProfileForm({ ...profileForm, emergency_contact_name: e.target.value })} /></div>
+              <div><label style={lbl}>Emergency Contact Phone</label><input style={inp} value={profileForm.emergency_contact_phone} onChange={e => setProfileForm({ ...profileForm, emergency_contact_phone: e.target.value })} /></div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#344054' }}>
+                <input type="checkbox" checked={profileForm.notify_email} onChange={e => setProfileForm({ ...profileForm, notify_email: e.target.checked })} /> Email notifications
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#344054' }}>
+                <input type="checkbox" checked={profileForm.notify_sms} onChange={e => setProfileForm({ ...profileForm, notify_sms: e.target.checked })} /> SMS notifications
+              </label>
+            </div>
+            <button onClick={saveProfile} disabled={savingProfile} style={{ marginTop: 18, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: savingProfile ? 0.6 : 1 }}>{savingProfile ? 'Saving…' : 'Save Profile'}</button>
           </div>
         )}
       </div>
