@@ -120,6 +120,55 @@ function calcLand(d: any) {
   return { totalCost, profit, roi }
 }
 
+// Stress test: re-runs the same calc function with interest rate and/or
+// rent shocked, so an investor can see how cash flow and ROI hold up
+// under adverse conditions before committing -- the kind of check a
+// lender or serious investor does before funding a deal. Strategies
+// without recurring rental cash flow (flip, land) are one-off profit
+// plays, not "will this cash flow every month" plays, so they're
+// intentionally excluded rather than stress-tested for cash flow.
+function getStressScenarios(strategy: string) {
+  if (['btl','brrr','social','supported','hmo'].includes(strategy)) {
+    return [
+      { key:'base',  label:'Base Case',       ratePts:0, rentPct:0   },
+      { key:'rate',  label:'Interest +2%',    ratePts:2, rentPct:0   },
+      { key:'rent',  label:'Rent -10%',       ratePts:0, rentPct:-10 },
+      { key:'worst', label:'Worst Case',      ratePts:2, rentPct:-10 },
+    ]
+  }
+  if (strategy === 'r2r') {
+    return [
+      { key:'base',  label:'Base Case',        rentPct:0    },
+      { key:'rent10',label:'Resident Rent -10%',rentPct:-10 },
+      { key:'void',  label:'1 Month Void / Yr', rentPct:-8.3, note:'approximated as an equivalent income reduction' },
+      { key:'worst', label:'Worst Case',        rentPct:-18 },
+    ]
+  }
+  return null
+}
+
+function applyStress(strategy: string, form: any, scenario: { ratePts?: number; rentPct?: number }) {
+  const f = { ...form }
+  if (scenario.ratePts) {
+    const baseRate = parseFloat(f.mortgageRate) || (strategy==='hmo' ? 5.5 : 5)
+    f.mortgageRate = String(baseRate + scenario.ratePts)
+  }
+  if (scenario.rentPct) {
+    if (strategy === 'hmo') {
+      f.rentPerRoom = String((parseFloat(f.rentPerRoom)||600) * (1 + scenario.rentPct/100))
+    } else if (strategy === 'r2r') {
+      f.subletRent = String((parseFloat(f.subletRent)||0) * (1 + scenario.rentPct/100))
+    } else {
+      f.rent = String((parseFloat(f.rent)||0) * (1 + scenario.rentPct/100))
+    }
+  }
+  if (strategy==='btl'||strategy==='brrr') return calcBTL(f)
+  if (strategy==='social'||strategy==='supported') return calcBTL({ ...f, expenses: f.expenses||'10' })
+  if (strategy==='hmo') return calcHMO(f)
+  if (strategy==='r2r') return calcR2R(f)
+  return {}
+}
+
 export default function InvestPage() {
   const [section, setSection] = useState('Deal Analyser')
   const [strategy, setStrategy] = useState<string|null>(null)
@@ -392,6 +441,44 @@ export default function InvestPage() {
                     <div style={{fontSize:28,fontWeight:800,color:result.profit>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.profit).toFixed(0)}</div>
                   </div>}
                 </div>
+
+                {/* Stress Test */}
+                {getStressScenarios(strategy!)&&(
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:20}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Stress Test</div>
+                    <div style={{fontSize:12,color:'#98A2B3',marginBottom:16}}>How this deal holds up if interest rates rise or rent falls — the same checks a lender runs before funding.</div>
+                    <div style={{overflowX:'auto'}}>
+                      <div style={{display:'grid',gridTemplateColumns:'140px repeat('+getStressScenarios(strategy!)!.length+',1fr)',minWidth:560,gap:8}}>
+                        <div></div>
+                        {getStressScenarios(strategy!)!.map(sc=>(
+                          <div key={sc.key} style={{fontSize:11,fontWeight:700,color:sc.key==='worst'?'#EF4444':sc.key==='base'?'#101828':'#F59E0B',textAlign:'center',padding:'6px 4px',background:sc.key==='worst'?'#FEE2E2':sc.key==='base'?'#F9FAFB':'#FEF3C7',borderRadius:6}}>{sc.label}</div>
+                        ))}
+
+                        <div style={{fontSize:12,color:'#667085',display:'flex',alignItems:'center'}}>Monthly Cash Flow</div>
+                        {getStressScenarios(strategy!)!.map(sc=>{
+                          const r:any = applyStress(strategy!, form, sc)
+                          const v = r.monthlyCashflow
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:14,fontWeight:700,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+'£'+Math.abs(v).toFixed(0):'—'}</div>
+                        })}
+
+                        <div style={{fontSize:12,color:'#667085',display:'flex',alignItems:'center'}}>Annual Cash Flow</div>
+                        {getStressScenarios(strategy!)!.map(sc=>{
+                          const r:any = applyStress(strategy!, form, sc)
+                          const v = r.annualCashflow
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:13,fontWeight:600,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+'£'+Math.abs(v).toFixed(0):'—'}</div>
+                        })}
+
+                        <div style={{fontSize:12,color:'#667085',display:'flex',alignItems:'center'}}>ROI</div>
+                        {getStressScenarios(strategy!)!.map(sc=>{
+                          const r:any = applyStress(strategy!, form, sc)
+                          const v = r.roi
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px 14px',fontSize:13,fontWeight:600,color:'#101828'}}>{v!==undefined?v.toFixed(1)+'%':'—'}</div>
+                        })}
+                      </div>
+                    </div>
+                    {strategy==='r2r'&&<div style={{fontSize:10.5,color:'#98A2B3',marginTop:10}}>Void scenario is approximated as an equivalent income reduction, not a literal empty month.</div>}
+                  </div>
+                )}
 
                 {/* Breakdown */}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
