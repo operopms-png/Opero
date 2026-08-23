@@ -156,6 +156,9 @@ export default function STRPage() {
   const [bankingTab, setBankingTab] = useState('Overview')
   const [reportTab, setReportTab] = useState('P&L')
   const [integrationsRow, setIntegrationsRow] = useState<any>(null)
+  const [integrationInputs, setIntegrationInputs] = useState<Record<string,string>>({})
+  const [integrationLoading, setIntegrationLoading] = useState<Record<string,boolean>>({})
+  const [integrationMessages, setIntegrationMessages] = useState<Record<string,{type:'success'|'error',text:string}>>({})
 
   useEffect(() => {
     if (roleLoading) return
@@ -261,6 +264,31 @@ export default function STRPage() {
   async function setTransactionStatus(id: string, status: string) {
     await supabase.from('str_transactions').update({ status }).eq('id', id)
     setTransactions(transactions.map((x:any)=>x.id===id?{...x,status}:x))
+  }
+
+  // Connect/disconnect logic for the Integrations tab -- writes to the
+  // same shared `integrations` table the standalone /integrations page
+  // uses, so connecting here or there stays in sync rather than being
+  // two divergent copies of the same feature.
+  async function connectIntegration(id: string, column: string) {
+    const value = integrationInputs[id]
+    if (!value) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    setIntegrationLoading(prev => ({ ...prev, [id]: true }))
+    const { error } = await supabase.from('integrations').upsert({ user_id: user.id, [column]: value }, { onConflict: 'user_id' })
+    setIntegrationLoading(prev => ({ ...prev, [id]: false }))
+    if (error) { setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'error', text: error.message } })); return }
+    setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'success', text: 'Connected!' } }))
+    setIntegrationsRow((prev: any) => ({ ...prev, [column]: value }))
+  }
+
+  async function disconnectIntegration(id: string, column: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    await supabase.from('integrations').upsert({ user_id: user.id, [column]: null }, { onConflict: 'user_id' })
+    setIntegrationsRow((prev: any) => ({ ...prev, [column]: null }))
+    setIntegrationInputs(prev => ({ ...prev, [id]: '' }))
   }
 
   async function toggleOfficeExpensePaid(id: string, status: string) {
@@ -631,23 +659,51 @@ export default function STRPage() {
         )}
 
         {tab==='Integrations' && (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-            {[
-              {name:'Airbnb iCal',desc:'Sync bookings via iCal URL',color:'#FF5A5F',connected:!!integrationsRow?.airbnb_ical_url},
-              {name:'VRBO iCal',desc:'Sync VRBO bookings automatically',color:'#3D67FF',connected:!!integrationsRow?.vrbo_ical_url},
-              {name:'Booking.com iCal',desc:'Sync Booking.com reservations',color:'#003580',connected:!!integrationsRow?.booking_ical_url},
-              {name:'PriceLabs',desc:'Dynamic pricing recommendations',color:'#5B4EFF',connected:!!integrationsRow?.pricelabs_api_key},
-              {name:'Stripe',desc:'Process direct booking payments',color:'#635BFF',connected:true},
-              {name:'PayPal',desc:'Accept PayPal payments from guests',color:'#009CDE',connected:!!integrationsRow?.paypal_client_id},
-            ].map(i=>(
-              <div key={i.name} style={{ background:'#fff', borderRadius:12, border:`1px solid ${i.connected?'#BBF7D0':'#E4E7EC'}`, padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-                  <div style={{ width:40, height:40, borderRadius:10, background:i.color+'18', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:13, color:i.color }}>{i.name.charAt(0)}</div>
-                  <div><div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{i.name}</div><div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{i.desc}</div></div>
-                </div>
-                {i.connected ? <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>Connected</span> : <a href="/integrations" style={{ fontSize:12, fontWeight:600, padding:'6px 14px', borderRadius:8, background:'#101828', color:'#fff', textDecoration:'none' }}>Connect</a>}
-              </div>
-            ))}
+          <div>
+            <p style={{ color:'#667085', fontSize:14, marginBottom:20 }}>Connect your tools to get the most out of Opero.</p>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
+              {[
+                { id:'pricelabs', name:'PriceLabs', desc:'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.', logo:'📊', color:'#1a56db', bg:'#eff6ff', column:'pricelabs_api_key', placeholder:'Enter your PriceLabs API key', docsUrl:'https://pricelabs.co/users/api_keys', docsLabel:'Get your API key →' },
+                { id:'stripe', name:'Stripe', desc:'Process payments and subscriptions. Already configured for your Opero subscription.', logo:'💳', color:'#635bff', bg:'#f5f3ff', builtIn:true },
+                { id:'paypal', name:'PayPal', desc:'Accept PayPal and PayPal.me payments from guests and owners.', logo:'🅿️', color:'#003087', bg:'#eff6ff', column:'paypal_client_id', placeholder:'Enter your PayPal Client ID', docsUrl:'https://developer.paypal.com/dashboard/', docsLabel:'Get your Client ID →' },
+                { id:'airbnb', name:'Airbnb iCal', desc:'Sync your Airbnb bookings automatically via iCal URL.', logo:'🏠', color:'#ff5a5f', bg:'#fff1f2', column:'airbnb_ical_url', placeholder:'Paste your Airbnb iCal URL' },
+                { id:'vrbo', name:'VRBO iCal', desc:'Sync your VRBO bookings automatically via iCal URL.', logo:'🏡', color:'#1e6ef4', bg:'#eff6ff', column:'vrbo_ical_url', placeholder:'Paste your VRBO iCal URL' },
+                { id:'booking', name:'Booking.com iCal', desc:'Sync your Booking.com reservations automatically.', logo:'🌐', color:'#003580', bg:'#eff6ff', column:'booking_ical_url', placeholder:'Paste your Booking.com iCal URL' },
+              ].map(int => {
+                const isConnected = int.builtIn || (int.column ? !!integrationsRow?.[int.column] : false)
+                return (
+                  <div key={int.id} style={{ background:'#fff', border:`1px solid ${isConnected?'#22c55e':'#E4E7EC'}`, borderRadius:12, padding:'1.25rem', display:'flex', flexDirection:'column', gap:10 }}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                        <div style={{ width:40, height:40, background:int.bg, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{int.logo}</div>
+                        <div>
+                          <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{int.name}</div>
+                          {isConnected && !int.builtIn && <div style={{ fontSize:11, color:'#16a34a', fontWeight:500 }}>● Connected</div>}
+                        </div>
+                      </div>
+                      {isConnected && !int.builtIn && (
+                        <button onClick={()=>disconnectIntegration(int.id, int.column!)} style={{ fontSize:11, color:'#ef4444', background:'none', border:'1px solid #fca5a5', borderRadius:6, padding:'3px 10px', cursor:'pointer' }}>Disconnect</button>
+                      )}
+                    </div>
+                    <p style={{ fontSize:12, color:'#667085', lineHeight:1.6 }}>{int.desc}</p>
+                    {int.builtIn ? (
+                      <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Active on your account</div>
+                    ) : isConnected ? (
+                      <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Connected</div>
+                    ) : (
+                      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                        {int.docsUrl && <a href={int.docsUrl} target="_blank" rel="noreferrer" style={{ fontSize:11, color:int.color, textDecoration:'none' }}>{int.docsLabel}</a>}
+                        <div style={{ display:'flex', gap:6 }}>
+                          <input type="text" placeholder={int.placeholder} value={integrationInputs[int.id]||''} onChange={e=>setIntegrationInputs(prev=>({...prev,[int.id]:e.target.value}))} style={{ flex:1, padding:'7px 10px', borderRadius:7, border:'1px solid #e5e7eb', fontSize:12, fontFamily:'inherit' }}/>
+                          <button onClick={()=>connectIntegration(int.id, int.column!)} disabled={integrationLoading[int.id]||!integrationInputs[int.id]} style={{ padding:'7px 14px', background:int.color, color:'#fff', border:'none', borderRadius:7, fontSize:12, cursor:'pointer', fontWeight:500, opacity:integrationLoading[int.id]?0.7:1 }}>{integrationLoading[int.id]?'...':'Connect'}</button>
+                        </div>
+                        {integrationMessages[int.id] && <div style={{ fontSize:11, color:integrationMessages[int.id].type==='success'?'#16a34a':'#ef4444' }}>{integrationMessages[int.id].text}</div>}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
