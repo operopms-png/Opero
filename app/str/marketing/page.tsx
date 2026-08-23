@@ -16,7 +16,12 @@ export default function Page() {
   const [campaignForm, setCampaignForm] = useState({name:'',type:'Email',status:'Draft',audience:'',budget:'',start_date:'',end_date:'',notes:''})
   const [emails, setEmails] = useState<any[]>([])
   const [showEmailForm, setShowEmailForm] = useState(false)
-  const [emailForm, setEmailForm] = useState({subject:'',to_recipient:'',template:'',status:'Draft',scheduled_at:'',notes:''})
+  const [emailForm, setEmailForm] = useState({subject:'',to_recipient:'',template:'',status:'Draft',scheduled_at:'',notes:'',body:''})
+  const [sendingEmailId, setSendingEmailId] = useState<string|null>(null)
+  const [emailReplies, setEmailReplies] = useState<Record<string,any[]>>({})
+  const [showSendSettings, setShowSendSettings] = useState(false)
+  const [sendSettings, setSendSettings] = useState({marketing_from_email:'',marketing_from_name:'Sangsters Group'})
+  const [savingSendSettings, setSavingSendSettings] = useState(false)
   const [socials, setSocials] = useState<any[]>([])
   const [showSocialForm, setShowSocialForm] = useState(false)
   const [socialForm, setSocialForm] = useState({caption:'',platform:'Instagram',scheduled_at:'',status:'Draft',link:''})
@@ -28,9 +33,20 @@ export default function Page() {
     supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
       await loadAll(user.id)
+      const { data: settings } = await supabase.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id',user.id).single()
+      if (settings) setSendSettings({marketing_from_email:settings.marketing_from_email||'',marketing_from_name:settings.marketing_from_name||'Sangsters Group'})
       setLoading(false)
     })
   },[])
+
+  async function saveSendSettings() {
+    setSavingSendSettings(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from('integrations').upsert({user_id:user?.id, ...sendSettings}, {onConflict:'user_id'})
+    setSavingSendSettings(false)
+    if(error){alert(error.message);return}
+    setShowSendSettings(false)
+  }
 
   async function loadAll(userId: string) {
     const [c,e,s,a] = await Promise.all([
@@ -40,6 +56,30 @@ export default function Page() {
       supabase.from('marketing_ads').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     setCampaigns(c.data??[]); setEmails(e.data??[]); setSocials(s.data??[]); setAds(a.data??[])
+
+    const emailIds = (e.data??[]).map((x:any)=>x.id)
+    if (emailIds.length > 0) {
+      const { data: replies } = await supabase.from('marketing_email_replies').select('*').in('marketing_email_id', emailIds).order('created_at',{ascending:true})
+      const grouped: Record<string,any[]> = {}
+      for (const r of replies??[]) { (grouped[r.marketing_email_id] ??= []).push(r) }
+      setEmailReplies(grouped)
+    }
+  }
+
+  async function sendMarketingEmail(emailId: string) {
+    setSendingEmailId(emailId)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/marketing-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token??''}` },
+      body: JSON.stringify({ email_id: emailId }),
+    })
+    const result = await res.json()
+    setSendingEmailId(null)
+    if (!res.ok) { alert(result.error||'Could not send email'); return }
+    if (result.skipped) { alert(result.message); return }
+    const { data: { user } } = await supabase.auth.getUser()
+    await loadAll(user!.id)
   }
 
   async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
@@ -128,30 +168,63 @@ export default function Page() {
         </div>)}
 
         {section==='Email'&&(<div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+            <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#101828'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Opero <notifications@helloopero.com> (default — not set up yet)'}</strong></div>
+            <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit'}}>{sendSettings.marketing_from_email?'Change sending address':'Set sending address'}</button>
+          </div>
+          {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
+            <p style={{fontSize:12,color:'#98A2B3',marginBottom:16,lineHeight:1.5}}>This address's domain must be verified in Resend (SPF/DKIM records added to its DNS) or sends will fail or land in spam. If you haven't verified sangstersgroup.com in Resend yet, do that first — this setting alone won't make sends work on an unverified domain.</p>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+              <div><label style={lbl}>From Name</label><input value={sendSettings.marketing_from_name} onChange={e=>setSendSettings({...sendSettings,marketing_from_name:e.target.value})} placeholder="Sangsters Group" style={inp}/></div>
+              <div><label style={lbl}>From Email</label><input value={sendSettings.marketing_from_email} onChange={e=>setSendSettings({...sendSettings,marketing_from_email:e.target.value})} placeholder="info@sangstersgroup.com" style={inp}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={saveSendSettings} disabled={savingSendSettings} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingSendSettings?0.6:1}}>{savingSendSettings?'Saving…':'Save'}</button>
+              <button onClick={()=>setShowSendSettings(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
           {showEmailForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
             <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>New Email</h3>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
               <div><label style={lbl}>Subject *</label><input value={emailForm.subject} onChange={e=>setEmailForm({...emailForm,subject:e.target.value})} placeholder="Email subject" style={inp}/></div>
-              <div><label style={lbl}>To</label><input value={emailForm.to_recipient} onChange={e=>setEmailForm({...emailForm,to_recipient:e.target.value})} placeholder="Recipient or list" style={inp}/></div>
-              <div><label style={lbl}>Status</label><select value={emailForm.status} onChange={e=>setEmailForm({...emailForm,status:e.target.value})} style={inp}>{['Draft','Scheduled','Sent'].map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label style={lbl}>To *</label><input value={emailForm.to_recipient} onChange={e=>setEmailForm({...emailForm,to_recipient:e.target.value})} placeholder="recipient@example.com" style={inp}/></div>
+              <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Body *</label><textarea value={emailForm.body} onChange={e=>setEmailForm({...emailForm,body:e.target.value})} placeholder="Write your email…" rows={5} style={{...inp,resize:'vertical' as const}}/></div>
+              <div><label style={lbl}>Status</label><select value={emailForm.status} onChange={e=>setEmailForm({...emailForm,status:e.target.value})} style={inp}>{['Draft','Scheduled'].map(s=><option key={s}>{s}</option>)}</select></div>
               <div><label style={lbl}>Scheduled At</label><input value={emailForm.scheduled_at} onChange={e=>setEmailForm({...emailForm,scheduled_at:e.target.value})} type="datetime-local" style={inp}/></div>
             </div>
+            <div style={{fontSize:11,color:'#98A2B3',marginBottom:12}}>Saved as a draft first — use "Send Now" on the list below to actually send it.</div>
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!emailForm.subject)return;save('marketing_emails',{...emailForm,scheduled_at:emailForm.scheduled_at||null},()=>setEmailForm({subject:'',to_recipient:'',template:'',status:'Draft',scheduled_at:'',notes:''}),()=>setShowEmailForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Save'}</button>
+              <button onClick={()=>{if(!emailForm.subject||!emailForm.to_recipient||!emailForm.body)return;save('marketing_emails',{...emailForm,scheduled_at:emailForm.scheduled_at||null},()=>setEmailForm({subject:'',to_recipient:'',template:'',status:'Draft',scheduled_at:'',notes:'',body:''}),()=>setShowEmailForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Save'}</button>
               <button onClick={()=>setShowEmailForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 200px 120px 180px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-              <span>Subject</span><span>To</span><span>Status</span><span>Scheduled</span><span></span>
-            </div>
-            {emails.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>✉️</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No emails yet</div></div>):emails.map((e:any)=>(
-              <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 200px 120px 180px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.subject}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{e.to_recipient||'—'}</span>
-                <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:e.status==='Sent'?'#ECFDF5':e.status==='Scheduled'?'#EEF1FF':'#F9FAFB',color:e.status==='Sent'?'#10B981':e.status==='Scheduled'?ACCENT:'#667085'}}>{e.status}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{e.scheduled_at||'—'}</span>
-                <button onClick={()=>del('marketing_emails',e.id,setEmails)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {emails.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>✉️</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No emails yet</div></div>):emails.map((e:any)=>(
+              <div key={e.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:12}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.subject}</div>
+                    <div style={{fontSize:12,color:'#667085',marginTop:2}}>To: {e.to_recipient||'—'}{e.sent_at?` · Sent ${new Date(e.sent_at).toLocaleString()}`:''}</div>
+                  </div>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:e.status==='Sent'?'#ECFDF5':e.status==='Scheduled'?'#EEF1FF':'#F9FAFB',color:e.status==='Sent'?'#10B981':e.status==='Scheduled'?ACCENT:'#667085'}}>{e.status}</span>
+                  {e.status!=='Sent'&&(
+                    <button onClick={()=>sendMarketingEmail(e.id)} disabled={sendingEmailId===e.id} style={{fontSize:12,fontWeight:600,color:'#fff',background:ACCENT,border:'none',borderRadius:6,padding:'6px 12px',cursor:'pointer',opacity:sendingEmailId===e.id?0.6:1}}>{sendingEmailId===e.id?'Sending…':'Send Now'}</button>
+                  )}
+                  <button onClick={()=>del('marketing_emails',e.id,setEmails)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                </div>
+                {emailReplies[e.id]?.length>0 && (
+                  <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid #F2F4F7',display:'flex',flexDirection:'column',gap:8}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>Replies ({emailReplies[e.id].length})</div>
+                    {emailReplies[e.id].map((r:any)=>(
+                      <div key={r.id} style={{background:'#F9FAFB',borderRadius:8,padding:'10px 12px'}}>
+                        <div style={{fontSize:12,fontWeight:600,color:'#101828'}}>{r.from_address}</div>
+                        <div style={{fontSize:12,color:'#344054',marginTop:2,whiteSpace:'pre-wrap' as const}}>{r.body}</div>
+                        <div style={{fontSize:10,color:'#98A2B3',marginTop:4}}>{new Date(r.created_at).toLocaleString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
