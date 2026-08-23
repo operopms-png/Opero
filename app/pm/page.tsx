@@ -510,6 +510,29 @@ function PMPageInner() {
   const arrears = payments.filter(p=>p.status==='overdue').reduce((s,p)=>s+(p.amount??0),0)
   const occupiedUnits = units.filter(u=>u.status==='occupied').length
   const occupancyRate = units.length ? Math.round((occupiedUnits/units.length)*100) : 0
+
+  // Real 6-month occupancy trend for the Dashboard chart, replacing a
+  // hardcoded static bar shape. Occupancy for a given month = % of units
+  // covered by a lease active during that month (start_date on/before
+  // month end, end_date null or on/after month start) -- same
+  // "bucket by real records" approach used for STR's equivalent fix.
+  const occupancyTrend = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date()
+    d.setDate(1)
+    d.setMonth(d.getMonth() - (5 - i))
+    const monthStart = new Date(d.getFullYear(), d.getMonth(), 1)
+    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0)
+    const activeLeaseUnitIds = new Set(
+      leases.filter((l: any) => {
+        if (!l.start_date) return false
+        const start = new Date(l.start_date)
+        const end = l.end_date ? new Date(l.end_date) : null
+        return start <= monthEnd && (!end || end >= monthStart)
+      }).map((l: any) => l.unit_id)
+    )
+    const occupancyPct = units.length ? Math.round((activeLeaseUnitIds.size / units.length) * 100) : 0
+    return { label: d.toLocaleString('default', { month: 'short' }), occupancyPct }
+  })
   const in60 = new Date(Date.now()+60*24*60*60*1000).toISOString().split('T')[0]
   const today = new Date().toISOString().split('T')[0]
   const expiringLeases = leases.filter(l=>l.end_date&&l.end_date<=in60&&l.status==='active')
@@ -647,8 +670,12 @@ function PMPageInner() {
                   <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#3B4AFF',display:'inline-block',borderRadius:2}}></span>Current</span>
                 </div>
                 <svg viewBox="0 0 300 80" style={{width:'100%'}}>
-                  {([{x:10,h:40,p:true},{x:55,h:45,p:true},{x:100,h:35,p:true},{x:145,h:55,p:false},{x:190,h:58,p:false},{x:235,h:62,p:false}] as any[]).map((b,i)=>(<rect key={i} x={b.x} y={75-b.h} width={30} height={b.h} rx="3" fill={b.p?'#EEF0FF':'#3B4AFF'}/>))}
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={15+(i*45)} y={79} fontSize="8" fill="#98A2B3">{m}</text>))}
+                  {occupancyTrend.map((m,i)=>{
+                    const x = 10+(i*47)
+                    const h = Math.max(2,(m.occupancyPct/100)*60)
+                    return <rect key={m.label+i} x={x} y={75-h} width={30} height={h} rx="3" fill={i===occupancyTrend.length-1?'#3B4AFF':'#EEF0FF'}/>
+                  })}
+                  {occupancyTrend.map((m,i)=>(<text key={m.label+i} x={15+(i*47)} y={79} fontSize="8" fill="#98A2B3">{m.label}</text>))}
                 </svg>
               </div>
             </div>
