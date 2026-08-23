@@ -132,6 +132,7 @@ const DOCUMENT_CATEGORIES = [
 const VIEWING_STATUSES = ['Scheduled','Completed','Cancelled','No Show']
 const INVENTORY_TYPES = ['Check-in','Check-out','Mid-term Inspection']
 const COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
+const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
 
 function CashFlowTab({transactions}:{transactions:any[]}) {
@@ -281,7 +282,8 @@ export default function Page() {
   const [cleanForm, setCleanForm] = useState({property_id:'',unit_id:'',scheduled_date:'',assigned_to:'',notes:''})
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
   const [showAddCompliance, setShowAddCompliance] = useState(false)
-  const [complianceForm, setComplianceForm] = useState({property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
+  const [complianceForm, setComplianceForm] = useState({scope:'property',property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
+  const [complianceScope, setComplianceScope] = useState<'property'|'business'>('property')
   const [buildings, setBuildings] = useState<any[]>([])
   const [showAddBuilding, setShowAddBuilding] = useState(false)
   const [buildingForm, setBuildingForm] = useState({name:'',address:'',total_units:'',notes:''})
@@ -549,7 +551,7 @@ export default function Page() {
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
             {section==='Landlords'&&<button onClick={()=>{setEditItem(null);setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''});setShowAddLandlord(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add landlord</button>}
-            {section==='Compliance'&&<button onClick={()=>setShowAddCompliance(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
+            {section==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
             {section==='Buildings'&&<button onClick={()=>{setEditItem(null);setShowAddBuilding(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add building</button>}
             {section==='Units'&&<button onClick={()=>{setEditItem(null);setShowAddUnit(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add unit</button>}
             {section==='Viewings'&&<button onClick={()=>{setEditItem(null);setShowAddViewing(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add viewing</button>}
@@ -816,50 +818,76 @@ export default function Page() {
           </div>)}
 
           {section==='Compliance'&&(<div>
+            <div style={{display:'flex',gap:8,marginBottom:20}}>
+              {(['property','business'] as const).map(s=>(
+                <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid '+ACCENT:'1px solid #D0D5DD',background:complianceScope===s?ACCENT+'18':'#fff',color:complianceScope===s?ACCENT:'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance (from landlords)':'Business Compliance (to operate)'}</button>
+              ))}
+            </div>
+
             {showAddCompliance&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add compliance record</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={labelStyle}>Property *</label><select value={complianceForm.property_id} onChange={e=>setComplianceForm({...complianceForm,property_id:e.target.value})} style={inputStyle}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-                <div><label style={labelStyle}>Certificate / licence type *</label><select value={complianceForm.type} onChange={e=>setComplianceForm({...complianceForm,type:e.target.value})} style={inputStyle}>{COMPLIANCE_TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
-                <div><label style={labelStyle}>Reference / provider</label><input value={complianceForm.reference} onChange={e=>setComplianceForm({...complianceForm,reference:e.target.value})} placeholder="e.g. issuing engineer or council ref" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Scope</label>
+                  <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:(e.target.value==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0]})} style={inputStyle}>
+                    <option value="property">Property (from landlord)</option>
+                    <option value="business">Business (to operate)</option>
+                  </select>
+                </div>
+                {complianceForm.scope==='property'&&<div><label style={labelStyle}>Property *</label><select value={complianceForm.property_id} onChange={e=>setComplianceForm({...complianceForm,property_id:e.target.value})} style={inputStyle}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>}
+                <div><label style={labelStyle}>Certificate / requirement type *</label><select value={complianceForm.type} onChange={e=>setComplianceForm({...complianceForm,type:e.target.value})} style={inputStyle}>{(complianceForm.scope==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES).map(t=><option key={t}>{t}</option>)}</select></div>
+                <div><label style={labelStyle}>Reference / provider</label><input value={complianceForm.reference} onChange={e=>setComplianceForm({...complianceForm,reference:e.target.value})} placeholder="e.g. issuing engineer or scheme name" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Issued date</label><input value={complianceForm.issued_date} onChange={e=>setComplianceForm({...complianceForm,issued_date:e.target.value})} type="date" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Expiry date</label><input value={complianceForm.expiry_date} onChange={e=>setComplianceForm({...complianceForm,expiry_date:e.target.value})} type="date" style={inputStyle}/></div>
                 <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={complianceForm.notes} onChange={e=>setComplianceForm({...complianceForm,notes:e.target.value})} style={inputStyle}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={async()=>{if(!complianceForm.property_id||!complianceForm.type)return;await saveRecord('estate_compliance',complianceForm);setComplianceForm({property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
+                <button onClick={async()=>{
+                  if(!complianceForm.type)return
+                  if(complianceForm.scope==='property'&&!complianceForm.property_id)return
+                  const payload = complianceForm.scope==='business' ? {...complianceForm,property_id:null} : complianceForm
+                  await saveRecord('estate_compliance',payload)
+                  setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''})
+                  setShowAddCompliance(false)
+                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
                 <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
-              {[
-                {label:'Expired',value:complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length,color:'#EF4444',bg:'#FEF2F2',border:'#FCA5A5'},
-                {label:'Expiring within 60 days',value:complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#FDE68A'},
-                {label:'Valid',value:complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)==='Valid').length,color:'#10B981',bg:'#F0FDF4',border:'#BBF7D0'},
-              ].map(s=>(
-                <div key={s.label} style={{padding:16,background:s.bg,borderRadius:10,border:'1px solid '+s.border}}>
-                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>{s.label}</div>
-                  <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
+
+            {(()=>{
+              const scoped = complianceRecords.filter((c:any)=>(c.scope??'property')===complianceScope)
+              return (<>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+                  {[
+                    {label:'Expired',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length,color:'#EF4444',bg:'#FEF2F2',border:'#FCA5A5'},
+                    {label:'Expiring within 60 days',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#FDE68A'},
+                    {label:'Valid',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Valid').length,color:'#10B981',bg:'#F0FDF4',border:'#BBF7D0'},
+                  ].map(s=>(
+                    <div key={s.label} style={{padding:16,background:s.bg,borderRadius:10,border:'1px solid '+s.border}}>
+                      <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>{s.label}</div>
+                      <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Property</span><span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
-              </div>
-              {complianceRecords.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No compliance records yet</div><div style={{fontSize:13}}>Track gas safety, EPC, EICR and other certificates here with automatic expiry alerts.</div></div>):complianceRecords.map((c:any)=>{
-                const status = complianceStatus(c.expiry_date)
-                return (
-                <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.estate_properties?.name??'—'}</span>
-                  <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
-                  <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
-                  <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:complianceStatusColor[status]+'18',color:complianceStatusColor[status],textAlign:'center' as const}}>{status}</span>
-                  <button onClick={()=>delRecord('estate_compliance',c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                  <div style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                    {complianceScope==='property'&&<span>Property</span>}
+                    <span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
+                  </div>
+                  {scoped.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No {complianceScope} compliance records yet</div><div style={{fontSize:13}}>{complianceScope==='property'?'Track certificates you collect from landlords for each property, with automatic expiry alerts.':'Track what your agency needs to legally operate — CMP, redress scheme, insurance, and more.'}</div></div>):scoped.map((c:any)=>{
+                    const status = complianceStatus(c.expiry_date)
+                    return (
+                    <div key={c.id} style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                      {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.estate_properties?.name??'—'}</span>}
+                      <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
+                      <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
+                      <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
+                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:complianceStatusColor[status]+'18',color:complianceStatusColor[status],textAlign:'center' as const}}>{status}</span>
+                      <button onClick={()=>delRecord('estate_compliance',c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    </div>
+                  )})}
                 </div>
-              )})}
-            </div>
+              </>)
+            })()}
           </div>)}
 
           {section==='Buildings'&&(<div>
