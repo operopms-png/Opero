@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { serviceClient } from '@/lib/admin-auth'
 
-// Handles Resend's email.received webhook (inbound replies to CRM emails).
+// Handles Resend webhooks -- both inbound replies (email.received) and
+// delivery/engagement tracking (email.delivered/opened/clicked/bounced/
+// complained) for marketing_emails. One endpoint, subscribed to all of
+// these event types in the Resend dashboard, rather than a separate
+// webhook per event category.
 //
 // Setup required in Resend + Netlify before this does anything:
 //  1. Add an MX record for a subdomain (e.g. reply.helloopero.com — NOT the
@@ -51,6 +55,39 @@ export async function POST(req: NextRequest) {
   }
 
   const event = JSON.parse(rawBody)
+
+  // Delivery/engagement tracking for marketing_emails -- matched by
+  // resend_email_id (set when the email was sent, see
+  // app/api/marketing-send), not by a plus-alias, since these events
+  // aren't inbound mail and have no To: address to parse.
+  const TRACKED_EVENT_TYPES: Record<string, string> = {
+    'email.delivered': 'delivered',
+    'email.opened': 'opened',
+    'email.clicked': 'clicked',
+    'email.bounced': 'bounced',
+    'email.complained': 'complained',
+  }
+  if (event.type in TRACKED_EVENT_TYPES) {
+    const resendEmailId = event.data?.email_id
+    if (!resendEmailId) return NextResponse.json({ received: true, matched: false })
+
+    const { data: mktEmail } = await serviceClient.from('marketing_emails').select('id').eq('resend_email_id', resendEmailId).single()
+    if (!mktEmail) return NextResponse.json({ received: true, matched: false })
+
+    // Resend includes a parsed user-agent on open/click events where
+    // available; fall back to 'Other' rather than guessing.
+    const ua: string = event.data?.user_agent ?? event.data?.client?.name ?? ''
+    const deviceType = /mobile|android|iphone/i.test(ua) ? 'Mobile' : /mozilla|chrome|safari|firefox|edge/i.test(ua) ? 'Desktop' : 'Other'
+
+    await serviceClient.from('marketing_email_events').insert({
+      marketing_email_id: mktEmail.id,
+      type: TRACKED_EVENT_TYPES[event.type],
+      device_type: ['opened', 'clicked'].includes(TRACKED_EVENT_TYPES[event.type]) ? deviceType : null,
+    })
+
+    return NextResponse.json({ received: true, matched: true, type: 'tracking' })
+  }
+
   if (event.type !== 'email.received') return NextResponse.json({ received: true })
 
   const emailId = event.data?.email_id

@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   if (result.error) return NextResponse.json({ error: result.error }, { status: 502 })
   if (result.skipped) return NextResponse.json({ skipped: true, message: 'Email sending is not configured yet — nothing was actually sent.' })
 
-  await serviceClient.from('marketing_emails').update({ status: 'Sent', sent_at: new Date().toISOString() }).eq('id', email.id)
+  await serviceClient.from('marketing_emails').update({ status: 'Sent', sent_at: new Date().toISOString(), resend_email_id: result.id || null }).eq('id', email.id)
 
   return NextResponse.json({ success: true })
 }

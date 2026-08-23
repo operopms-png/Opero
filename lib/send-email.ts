@@ -26,6 +26,7 @@ export async function sendEmail(to: string, subject: string, html: string, reply
     console.error('[sendEmail] Resend error:', err)
     return { error: err }
   }
-  return { success: true }
+  const data = await res.json()
+  return { success: true, id: data.id as string | undefined }
 }
 

@@ -22,6 +22,14 @@ export default function Page() {
   const [showSendSettings, setShowSendSettings] = useState(false)
   const [sendSettings, setSendSettings] = useState({marketing_from_email:'',marketing_from_name:'Sangsters Group'})
   const [savingSendSettings, setSavingSendSettings] = useState(false)
+  const [emailSubTab, setEmailSubTab] = useState('Manage')
+  const [emailFilter, setEmailFilter] = useState('All emails')
+  const [emailEvents, setEmailEvents] = useState<any[]>([])
+  const [templates, setTemplates] = useState<any[]>([])
+  const [showTemplateForm, setShowTemplateForm] = useState(false)
+  const [templateForm, setTemplateForm] = useState({name:'',category:'Other',subject:'',body:''})
+  const [editingTemplateId, setEditingTemplateId] = useState<string|null>(null)
+  const [savingTemplate, setSavingTemplate] = useState(false)
   const [socials, setSocials] = useState<any[]>([])
   const [showSocialForm, setShowSocialForm] = useState(false)
   const [socialForm, setSocialForm] = useState({caption:'',platform:'Instagram',scheduled_at:'',status:'Draft',link:''})
@@ -49,20 +57,27 @@ export default function Page() {
   }
 
   async function loadAll(userId: string) {
-    const [c,e,s,a] = await Promise.all([
+    const [c,e,s,a,tpl] = await Promise.all([
       supabase.from('marketing_campaigns').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('marketing_emails').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('marketing_socials').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('marketing_ads').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('marketing_email_templates').select('*').eq('module',MODULE).eq('user_id',userId).order('created_at',{ascending:false}),
     ])
-    setCampaigns(c.data??[]); setEmails(e.data??[]); setSocials(s.data??[]); setAds(a.data??[])
+    setCampaigns(c.data??[]); setEmails(e.data??[]); setSocials(s.data??[]); setAds(a.data??[]); setTemplates(tpl.data??[])
 
     const emailIds = (e.data??[]).map((x:any)=>x.id)
     if (emailIds.length > 0) {
-      const { data: replies } = await supabase.from('marketing_email_replies').select('*').in('marketing_email_id', emailIds).order('created_at',{ascending:true})
+      const [{ data: replies }, { data: events }] = await Promise.all([
+        supabase.from('marketing_email_replies').select('*').in('marketing_email_id', emailIds).order('created_at',{ascending:true}),
+        supabase.from('marketing_email_events').select('*').in('marketing_email_id', emailIds),
+      ])
       const grouped: Record<string,any[]> = {}
       for (const r of replies??[]) { (grouped[r.marketing_email_id] ??= []).push(r) }
       setEmailReplies(grouped)
+      setEmailEvents(events??[])
+    } else {
+      setEmailEvents([])
     }
   }
 
@@ -80,6 +95,47 @@ export default function Page() {
     if (result.skipped) { alert(result.message); return }
     const { data: { user } } = await supabase.auth.getUser()
     await loadAll(user!.id)
+  }
+
+  function emailStats(emailId: string) {
+    const events = emailEvents.filter((x:any)=>x.marketing_email_id===emailId)
+    const delivered = events.some((x:any)=>x.type==='delivered')
+    const opened = events.filter((x:any)=>x.type==='opened').length
+    const clicked = events.filter((x:any)=>x.type==='clicked').length
+    const bounced = events.some((x:any)=>x.type==='bounced')
+    const complained = events.some((x:any)=>x.type==='complained')
+    return { delivered, opened, clicked, bounced, complained }
+  }
+
+  async function saveTemplate() {
+    if (!templateForm.name||!templateForm.subject||!templateForm.body) return
+    setSavingTemplate(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (editingTemplateId) {
+      const { error } = await supabase.from('marketing_email_templates').update(templateForm).eq('id', editingTemplateId)
+      setSavingTemplate(false)
+      if (error) { alert(error.message); return }
+    } else {
+      const { error } = await supabase.from('marketing_email_templates').insert([{...templateForm, user_id:user?.id, module:MODULE}])
+      setSavingTemplate(false)
+      if (error) { alert(error.message); return }
+    }
+    setTemplateForm({name:'',category:'Other',subject:'',body:''})
+    setEditingTemplateId(null)
+    setShowTemplateForm(false)
+    await loadAll(user!.id)
+  }
+
+  async function deleteTemplate(id: string) {
+    const { error } = await supabase.from('marketing_email_templates').delete().eq('id', id)
+    if (error) { alert(error.message); return }
+    setTemplates(prev=>prev.filter((t:any)=>t.id!==id))
+  }
+
+  function useTemplate(t: any) {
+    setEmailForm({subject:t.subject, to_recipient:'', template:t.name, status:'Draft', scheduled_at:'', notes:'', body:t.body})
+    setEmailSubTab('Manage')
+    setShowEmailForm(true)
   }
 
   async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
@@ -115,7 +171,8 @@ export default function Page() {
         </div>
         <div style={{display:'flex',gap:8}}>
           {section==='Campaigns'&&<button onClick={()=>setShowCampaignForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Campaign</button>}
-          {section==='Email'&&<button onClick={()=>setShowEmailForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Email</button>}
+          {section==='Email'&&emailSubTab==='Manage'&&<button onClick={()=>setShowEmailForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Email</button>}
+          {section==='Email'&&emailSubTab==='Templates'&&<button onClick={()=>{setEditingTemplateId(null);setTemplateForm({name:'',category:'Other',subject:'',body:''});setShowTemplateForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Template</button>}
           {section==='Social'&&<button onClick={()=>setShowSocialForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Post</button>}
           {section==='Ads'&&<button onClick={()=>setShowAdForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Ad</button>}
         </div>
@@ -168,66 +225,226 @@ export default function Page() {
         </div>)}
 
         {section==='Email'&&(<div>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-            <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#101828'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Opero <notifications@helloopero.com> (default — not set up yet)'}</strong></div>
-            <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit'}}>{sendSettings.marketing_from_email?'Change sending address':'Set sending address'}</button>
+          <div style={{display:'flex',gap:0,marginBottom:20,borderBottom:'1px solid #E4E7EC'}}>
+            {['Manage','Templates','Analyze'].map(t=>(
+              <button key={t} onClick={()=>setEmailSubTab(t)} style={{padding:'10px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:emailSubTab===t?600:400,color:emailSubTab===t?ACCENT:'#667085',borderBottom:emailSubTab===t?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit',marginBottom:-1}}>{t}</button>
+            ))}
           </div>
-          {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
-            <p style={{fontSize:12,color:'#98A2B3',marginBottom:16,lineHeight:1.5}}>This address's domain must be verified in Resend (SPF/DKIM records added to its DNS) or sends will fail or land in spam. If you haven't verified sangstersgroup.com in Resend yet, do that first — this setting alone won't make sends work on an unverified domain.</p>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
-              <div><label style={lbl}>From Name</label><input value={sendSettings.marketing_from_name} onChange={e=>setSendSettings({...sendSettings,marketing_from_name:e.target.value})} placeholder="Sangsters Group" style={inp}/></div>
-              <div><label style={lbl}>From Email</label><input value={sendSettings.marketing_from_email} onChange={e=>setSendSettings({...sendSettings,marketing_from_email:e.target.value})} placeholder="info@sangstersgroup.com" style={inp}/></div>
+
+          {emailSubTab==='Manage'&&(<div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#101828'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Opero <notifications@helloopero.com> (default — not set up yet)'}</strong></div>
+              <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit'}}>{sendSettings.marketing_from_email?'Change sending address':'Set sending address'}</button>
             </div>
-            <div style={{display:'flex',gap:8}}>
-              <button onClick={saveSendSettings} disabled={savingSendSettings} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingSendSettings?0.6:1}}>{savingSendSettings?'Saving…':'Save'}</button>
-              <button onClick={()=>setShowSendSettings(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-            </div>
-          </div>)}
-          {showEmailForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>New Email</h3>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-              <div><label style={lbl}>Subject *</label><input value={emailForm.subject} onChange={e=>setEmailForm({...emailForm,subject:e.target.value})} placeholder="Email subject" style={inp}/></div>
-              <div><label style={lbl}>To *</label><input value={emailForm.to_recipient} onChange={e=>setEmailForm({...emailForm,to_recipient:e.target.value})} placeholder="recipient@example.com" style={inp}/></div>
-              <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Body *</label><textarea value={emailForm.body} onChange={e=>setEmailForm({...emailForm,body:e.target.value})} placeholder="Write your email…" rows={5} style={{...inp,resize:'vertical' as const}}/></div>
-              <div><label style={lbl}>Status</label><select value={emailForm.status} onChange={e=>setEmailForm({...emailForm,status:e.target.value})} style={inp}>{['Draft','Scheduled'].map(s=><option key={s}>{s}</option>)}</select></div>
-              <div><label style={lbl}>Scheduled At</label><input value={emailForm.scheduled_at} onChange={e=>setEmailForm({...emailForm,scheduled_at:e.target.value})} type="datetime-local" style={inp}/></div>
-            </div>
-            <div style={{fontSize:11,color:'#98A2B3',marginBottom:12}}>Saved as a draft first — use "Send Now" on the list below to actually send it.</div>
-            <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!emailForm.subject||!emailForm.to_recipient||!emailForm.body)return;save('marketing_emails',{...emailForm,scheduled_at:emailForm.scheduled_at||null},()=>setEmailForm({subject:'',to_recipient:'',template:'',status:'Draft',scheduled_at:'',notes:'',body:''}),()=>setShowEmailForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Save'}</button>
-              <button onClick={()=>setShowEmailForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-            </div>
-          </div>)}
-          <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            {emails.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>✉️</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No emails yet</div></div>):emails.map((e:any)=>(
-              <div key={e.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
-                <div style={{display:'flex',alignItems:'center',gap:12}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.subject}</div>
-                    <div style={{fontSize:12,color:'#667085',marginTop:2}}>To: {e.to_recipient||'—'}{e.sent_at?` · Sent ${new Date(e.sent_at).toLocaleString()}`:''}</div>
-                  </div>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:e.status==='Sent'?'#ECFDF5':e.status==='Scheduled'?'#EEF1FF':'#F9FAFB',color:e.status==='Sent'?'#10B981':e.status==='Scheduled'?ACCENT:'#667085'}}>{e.status}</span>
-                  {e.status!=='Sent'&&(
-                    <button onClick={()=>sendMarketingEmail(e.id)} disabled={sendingEmailId===e.id} style={{fontSize:12,fontWeight:600,color:'#fff',background:ACCENT,border:'none',borderRadius:6,padding:'6px 12px',cursor:'pointer',opacity:sendingEmailId===e.id?0.6:1}}>{sendingEmailId===e.id?'Sending…':'Send Now'}</button>
-                  )}
-                  <button onClick={()=>del('marketing_emails',e.id,setEmails)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+            {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
+              <p style={{fontSize:12,color:'#98A2B3',marginBottom:16,lineHeight:1.5}}>This address's domain must be verified in Resend (SPF/DKIM records added to its DNS) or sends will fail or land in spam. If you haven't verified sangstersgroup.com in Resend yet, do that first — this setting alone won't make sends work on an unverified domain.</p>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+                <div><label style={lbl}>From Name</label><input value={sendSettings.marketing_from_name} onChange={e=>setSendSettings({...sendSettings,marketing_from_name:e.target.value})} placeholder="Sangsters Group" style={inp}/></div>
+                <div><label style={lbl}>From Email</label><input value={sendSettings.marketing_from_email} onChange={e=>setSendSettings({...sendSettings,marketing_from_email:e.target.value})} placeholder="info@sangstersgroup.com" style={inp}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={saveSendSettings} disabled={savingSendSettings} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingSendSettings?0.6:1}}>{savingSendSettings?'Saving…':'Save'}</button>
+                <button onClick={()=>setShowSendSettings(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            {showEmailForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>New Email</h3>
+              {templates.length>0&&(
+                <div style={{marginBottom:16}}>
+                  <label style={lbl}>Start from a template (optional)</label>
+                  <select value="" onChange={e=>{const t=templates.find((x:any)=>x.id===e.target.value);if(t)setEmailForm({...emailForm,subject:t.subject,body:t.body,template:t.name})}} style={inp}>
+                    <option value="">Blank email</option>
+                    {templates.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
                 </div>
-                {emailReplies[e.id]?.length>0 && (
-                  <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid #F2F4F7',display:'flex',flexDirection:'column',gap:8}}>
-                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>Replies ({emailReplies[e.id].length})</div>
-                    {emailReplies[e.id].map((r:any)=>(
-                      <div key={r.id} style={{background:'#F9FAFB',borderRadius:8,padding:'10px 12px'}}>
-                        <div style={{fontSize:12,fontWeight:600,color:'#101828'}}>{r.from_address}</div>
-                        <div style={{fontSize:12,color:'#344054',marginTop:2,whiteSpace:'pre-wrap' as const}}>{r.body}</div>
-                        <div style={{fontSize:10,color:'#98A2B3',marginTop:4}}>{new Date(r.created_at).toLocaleString()}</div>
+              )}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={lbl}>Subject *</label><input value={emailForm.subject} onChange={e=>setEmailForm({...emailForm,subject:e.target.value})} placeholder="Email subject" style={inp}/></div>
+                <div><label style={lbl}>To *</label><input value={emailForm.to_recipient} onChange={e=>setEmailForm({...emailForm,to_recipient:e.target.value})} placeholder="recipient@example.com" style={inp}/></div>
+                <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Body *</label><textarea value={emailForm.body} onChange={e=>setEmailForm({...emailForm,body:e.target.value})} placeholder="Write your email…" rows={5} style={{...inp,resize:'vertical' as const}}/></div>
+                <div><label style={lbl}>Status</label><select value={emailForm.status} onChange={e=>setEmailForm({...emailForm,status:e.target.value})} style={inp}>{['Draft','Scheduled'].map(s=><option key={s}>{s}</option>)}</select></div>
+                <div><label style={lbl}>Scheduled At</label><input value={emailForm.scheduled_at} onChange={e=>setEmailForm({...emailForm,scheduled_at:e.target.value})} type="datetime-local" style={inp}/></div>
+              </div>
+              <div style={{fontSize:11,color:'#98A2B3',marginBottom:12}}>Saved as a draft first — use "Send Now" on the list below to actually send it.</div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{if(!emailForm.subject||!emailForm.to_recipient||!emailForm.body)return;save('marketing_emails',{...emailForm,scheduled_at:emailForm.scheduled_at||null},()=>setEmailForm({subject:'',to_recipient:'',template:'',status:'Draft',scheduled_at:'',notes:'',body:''}),()=>setShowEmailForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Save'}</button>
+                <button onClick={()=>setShowEmailForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {['All emails','Drafts','Scheduled','Sent'].map(f=>(
+                <button key={f} onClick={()=>setEmailFilter(f)} style={{padding:'6px 14px',borderRadius:20,border:emailFilter===f?'1px solid '+ACCENT:'1px solid #E4E7EC',background:emailFilter===f?ACCENT+'12':'#fff',color:emailFilter===f?ACCENT:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{f}</button>
+              ))}
+            </div>
+
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.5fr 90px 90px 90px 140px 90px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Email Name</span><span>Delivered</span><span>Open Rate</span><span>Click Rate</span><span>Last Updated</span><span></span>
+              </div>
+              {(()=>{
+                const filtered = emails.filter((e:any)=>emailFilter==='All emails'||e.status===emailFilter.replace(/s$/,''))
+                if (filtered.length===0) return <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>✉️</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No emails here yet</div></div>
+                return filtered.map((e:any)=>{
+                  const stats = emailStats(e.id)
+                  const openRate = stats.delivered ? Math.round((stats.opened>0?1:0)*100) : 0
+                  const clickRate = stats.delivered ? Math.round((stats.clicked>0?1:0)*100) : 0
+                  return (
+                    <div key={e.id}>
+                      <div style={{display:'grid',gridTemplateColumns:'1.5fr 90px 90px 90px 140px 90px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.subject}</div>
+                          <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>To: {e.to_recipient||'—'}</div>
+                        </div>
+                        <span style={{fontSize:12,color:e.status==='Sent'?(stats.delivered?'#10B981':'#98A2B3'):'#98A2B3'}}>{e.status==='Sent'?(stats.delivered?'Yes':'Pending'):'—'}</span>
+                        <span style={{fontSize:12,color:'#344054'}}>{e.status==='Sent'?openRate+'%':'—'}</span>
+                        <span style={{fontSize:12,color:'#344054'}}>{e.status==='Sent'?clickRate+'%':'—'}</span>
+                        <span style={{fontSize:11,color:'#667085'}}>{new Date(e.sent_at||e.created_at).toLocaleString()}</span>
+                        <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+                          {e.status!=='Sent'&&(
+                            <button onClick={()=>sendMarketingEmail(e.id)} disabled={sendingEmailId===e.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:ACCENT,border:'none',borderRadius:6,padding:'5px 10px',cursor:'pointer',opacity:sendingEmailId===e.id?0.6:1}}>{sendingEmailId===e.id?'…':'Send'}</button>
+                          )}
+                          <button onClick={()=>del('marketing_emails',e.id,setEmails)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                        </div>
+                      </div>
+                      {emailReplies[e.id]?.length>0 && (
+                        <div style={{padding:'0 20px 16px',display:'flex',flexDirection:'column',gap:8,background:'#FAFBFC'}}>
+                          <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,paddingTop:12}}>Replies ({emailReplies[e.id].length})</div>
+                          {emailReplies[e.id].map((r:any)=>(
+                            <div key={r.id} style={{background:'#fff',border:'1px solid #F2F4F7',borderRadius:8,padding:'10px 12px'}}>
+                              <div style={{fontSize:12,fontWeight:600,color:'#101828'}}>{r.from_address}</div>
+                              <div style={{fontSize:12,color:'#344054',marginTop:2,whiteSpace:'pre-wrap' as const}}>{r.body}</div>
+                              <div style={{fontSize:10,color:'#98A2B3',marginTop:4}}>{new Date(r.created_at).toLocaleString()}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              })()}
+            </div>
+          </div>)}
+
+          {emailSubTab==='Templates'&&(<div>
+            <p style={{fontSize:12,color:'#98A2B3',marginBottom:16}}>Build reusable templates for common situations — staff pick one when composing instead of writing from scratch.</p>
+            {showTemplateForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editingTemplateId?'Edit Template':'New Template'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={lbl}>Template Name *</label><input value={templateForm.name} onChange={e=>setTemplateForm({...templateForm,name:e.target.value})} placeholder="e.g. Move-In Welcome" style={inp}/></div>
+                <div><label style={lbl}>Category</label><select value={templateForm.category} onChange={e=>setTemplateForm({...templateForm,category:e.target.value})} style={inp}>{['Onboarding','Rent & Payments','Maintenance','Renewals','Announcements','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
+                <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Subject *</label><input value={templateForm.subject} onChange={e=>setTemplateForm({...templateForm,subject:e.target.value})} placeholder="Email subject" style={inp}/></div>
+                <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Body *</label><textarea value={templateForm.body} onChange={e=>setTemplateForm({...templateForm,body:e.target.value})} placeholder="Write the template…" rows={6} style={{...inp,resize:'vertical' as const}}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={saveTemplate} disabled={savingTemplate} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingTemplate?0.6:1}}>{savingTemplate?'Saving…':'Save Template'}</button>
+                <button onClick={()=>{setShowTemplateForm(false);setEditingTemplateId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+              {templates.length===0?(<div style={{gridColumn:'span 3' as const,textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No templates yet</div><div style={{fontSize:13}}>Add your first one above.</div></div>):templates.map((t:any)=>(
+                <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT}}>{t.category}</span>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>{t.name}</div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:6}}>{t.subject}</div>
+                  <div style={{fontSize:12,color:'#98A2B3',lineHeight:1.5,marginBottom:12,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical' as const,overflow:'hidden'}}>{t.body}</div>
+                  <div style={{display:'flex',gap:6}}>
+                    <button onClick={()=>useTemplate(t)} style={{flex:1,padding:'7px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Use Template</button>
+                    <button onClick={()=>{setEditingTemplateId(t.id);setTemplateForm({name:t.name,category:t.category,subject:t.subject,body:t.body});setShowTemplateForm(true)}} style={{padding:'7px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>deleteTemplate(t.id)} style={{padding:'7px 10px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:12,cursor:'pointer',color:'#EF4444'}}>×</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>)}
+
+          {emailSubTab==='Analyze'&&(()=>{
+            const sent = emails.filter((e:any)=>e.status==='Sent')
+            const sentIds = sent.map((e:any)=>e.id)
+            const sentEvents = emailEvents.filter((ev:any)=>sentIds.includes(ev.marketing_email_id))
+            const delivered = sent.filter((e:any)=>sentEvents.some((ev:any)=>ev.marketing_email_id===e.id&&ev.type==='delivered')).length
+            const openedCount = new Set(sentEvents.filter((ev:any)=>ev.type==='opened').map((ev:any)=>ev.marketing_email_id)).size
+            const clickedCount = new Set(sentEvents.filter((ev:any)=>ev.type==='clicked').map((ev:any)=>ev.marketing_email_id)).size
+            const bouncedCount = new Set(sentEvents.filter((ev:any)=>ev.type==='bounced').map((ev:any)=>ev.marketing_email_id)).size
+            const complainedCount = new Set(sentEvents.filter((ev:any)=>ev.type==='complained').map((ev:any)=>ev.marketing_email_id)).size
+            const repliedCount = Object.keys(emailReplies).filter(id=>sentIds.includes(id)&&emailReplies[id].length>0).length
+            const pct = (n:number,d:number)=>d>0?Math.round((n/d)*100):0
+
+            const deviceCounts: Record<string,{opened:number,clicked:number}> = {Desktop:{opened:0,clicked:0},Mobile:{opened:0,clicked:0},Other:{opened:0,clicked:0}}
+            sentEvents.forEach((ev:any)=>{
+              if(!ev.device_type||!(ev.type==='opened'||ev.type==='clicked'))return
+              if(!deviceCounts[ev.device_type])deviceCounts[ev.device_type]={opened:0,clicked:0}
+              if(ev.type==='opened')deviceCounts[ev.device_type].opened++
+              if(ev.type==='clicked')deviceCounts[ev.device_type].clicked++
+            })
+            const maxDeviceVal = Math.max(1,...Object.values(deviceCounts).flatMap(d=>[d.opened,d.clicked]))
+
+            return (
+            <div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>Recipient Engagement</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12}}>
+                  {[
+                    {l:'Sent',v:sent.length,sub:sent.length+' Emails'},
+                    {l:'Open Rate',v:pct(openedCount,delivered)+'%',sub:openedCount+' Opened'},
+                    {l:'Click Rate',v:pct(clickedCount,delivered)+'%',sub:clickedCount+' Clicked'},
+                    {l:'Click-Through Rate',v:pct(clickedCount,openedCount)+'%',sub:'of opens'},
+                    {l:'Reply Rate',v:pct(repliedCount,sent.length)+'%',sub:repliedCount+' Replied'},
+                  ].map((s:any)=>(
+                    <div key={s.l} style={{textAlign:'center' as const}}>
+                      <div style={{fontSize:24,fontWeight:700,color:'#101828'}}>{s.v}</div>
+                      <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>{s.sub}</div>
+                      <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginTop:6}}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>Delivery</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+                  {[
+                    {l:'Delivery Rate',v:pct(delivered,sent.length)+'%'},
+                    {l:'Hard Bounce Rate',v:pct(bouncedCount,sent.length)+'%'},
+                    {l:'Spam Report Rate',v:pct(complainedCount,sent.length)+'%'},
+                  ].map((s:any)=>(
+                    <div key={s.l} style={{textAlign:'center' as const}}>
+                      <div style={{fontSize:24,fontWeight:700,color:'#101828'}}>{s.v}</div>
+                      <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginTop:6}}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:4}}>Performance by Device Type</div>
+                <div style={{fontSize:11,color:'#98A2B3',marginBottom:16}}>Based on opens/clicks with a detectable device — sends before this tracking existed won't be counted.</div>
+                {sentEvents.filter((ev:any)=>ev.device_type).length===0?(
+                  <div style={{textAlign:'center' as const,padding:30,color:'#98A2B3',fontSize:13}}>No device data yet.</div>
+                ):(
+                  <div style={{display:'flex',gap:24,alignItems:'flex-end',height:140,paddingTop:10}}>
+                    {Object.entries(deviceCounts).map(([device,counts])=>(
+                      <div key={device} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
+                        <div style={{display:'flex',gap:4,alignItems:'flex-end',height:100}}>
+                          <div style={{width:20,height:Math.max(2,(counts.opened/maxDeviceVal)*100),background:ACCENT,borderRadius:'3px 3px 0 0'}} title={`Opened: ${counts.opened}`}/>
+                          <div style={{width:20,height:Math.max(2,(counts.clicked/maxDeviceVal)*100),background:'#10B981',borderRadius:'3px 3px 0 0'}} title={`Clicked: ${counts.clicked}`}/>
+                        </div>
+                        <div style={{fontSize:12,fontWeight:600,color:'#344054'}}>{device}</div>
                       </div>
                     ))}
                   </div>
                 )}
+                <div style={{display:'flex',gap:16,marginTop:16,fontSize:11,color:'#667085'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:9,height:9,borderRadius:2,background:ACCENT}}/>Opened</div>
+                  <div style={{display:'flex',alignItems:'center',gap:5}}><div style={{width:9,height:9,borderRadius:2,background:'#10B981'}}/>Clicked</div>
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+            )
+          })()}
         </div>)}
 
         {section==='Social'&&(<div>
