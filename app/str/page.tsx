@@ -156,6 +156,7 @@ export default function STRPage() {
   const [bankingTab, setBankingTab] = useState('Overview')
   const [reportTab, setReportTab] = useState('P&L')
   const [integrationsRow, setIntegrationsRow] = useState<any>(null)
+  const [currentUserId, setCurrentUserId] = useState<string|null>(null)
   const [integrationInputs, setIntegrationInputs] = useState<Record<string,string>>({})
   const [integrationLoading, setIntegrationLoading] = useState<Record<string,boolean>>({})
   const [integrationMessages, setIntegrationMessages] = useState<Record<string,{type:'success'|'error',text:string}>>({})
@@ -165,10 +166,23 @@ export default function STRPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
+      setCurrentUserId(user.id)
       await loadAll(user.id)
       setLoading(false)
     }
     load()
+
+    // Handle the redirect back from Xero's OAuth flow, same params
+    // /integrations handles.
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('xero_connected')) {
+      setIntegrationMessages(prev => ({ ...prev, xero: { type: 'success', text: 'Xero connected!' } }))
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+    if (params.get('xero_error')) {
+      setIntegrationMessages(prev => ({ ...prev, xero: { type: 'error', text: 'Could not connect to Xero. Please try again.' } }))
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [roleLoading, propertyIds])
 
   useEffect(() => { selectTemplate(activeTemplateKey) }, [commTemplates])
@@ -289,6 +303,16 @@ export default function STRPage() {
     await supabase.from('integrations').upsert({ user_id: user.id, [column]: null }, { onConflict: 'user_id' })
     setIntegrationsRow((prev: any) => ({ ...prev, [column]: null }))
     setIntegrationInputs(prev => ({ ...prev, [id]: '' }))
+  }
+
+  async function disconnectXero() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    await supabase.from('integrations').upsert(
+      { user_id: user.id, xero_access_token: null, xero_refresh_token: null, xero_tenant_id: null, xero_tenant_name: null, xero_token_expires_at: null },
+      { onConflict: 'user_id' }
+    )
+    setIntegrationsRow((prev: any) => ({ ...prev, xero_access_token: null, xero_tenant_name: null }))
   }
 
   async function toggleOfficeExpensePaid(id: string, status: string) {
@@ -663,6 +687,7 @@ export default function STRPage() {
             <p style={{ color:'#667085', fontSize:14, marginBottom:20 }}>Connect your tools to get the most out of Opero.</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
               {[
+                { id:'xero', name:'Xero', desc:'Sync contacts and financial data with your Xero accounting. Connect your organisation to keep bookkeeping in sync automatically.', logo:'📗', color:'#13B5EA', bg:'#E8FAFF', oauth:true },
                 { id:'pricelabs', name:'PriceLabs', desc:'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.', logo:'📊', color:'#1a56db', bg:'#eff6ff', column:'pricelabs_api_key', placeholder:'Enter your PriceLabs API key', docsUrl:'https://pricelabs.co/users/api_keys', docsLabel:'Get your API key →' },
                 { id:'stripe', name:'Stripe', desc:'Process payments and subscriptions. Already configured for your Opero subscription.', logo:'💳', color:'#635bff', bg:'#f5f3ff', builtIn:true },
                 { id:'paypal', name:'PayPal', desc:'Accept PayPal and PayPal.me payments from guests and owners.', logo:'🅿️', color:'#003087', bg:'#eff6ff', column:'paypal_client_id', placeholder:'Enter your PayPal Client ID', docsUrl:'https://developer.paypal.com/dashboard/', docsLabel:'Get your Client ID →' },
@@ -670,7 +695,7 @@ export default function STRPage() {
                 { id:'vrbo', name:'VRBO iCal', desc:'Sync your VRBO bookings automatically via iCal URL.', logo:'🏡', color:'#1e6ef4', bg:'#eff6ff', column:'vrbo_ical_url', placeholder:'Paste your VRBO iCal URL' },
                 { id:'booking', name:'Booking.com iCal', desc:'Sync your Booking.com reservations automatically.', logo:'🌐', color:'#003580', bg:'#eff6ff', column:'booking_ical_url', placeholder:'Paste your Booking.com iCal URL' },
               ].map(int => {
-                const isConnected = int.builtIn || (int.column ? !!integrationsRow?.[int.column] : false)
+                const isConnected = int.builtIn || (int.oauth ? !!integrationsRow?.xero_access_token : (int.column ? !!integrationsRow?.[int.column] : false))
                 return (
                   <div key={int.id} style={{ background:'#fff', border:`1px solid ${isConnected?'#22c55e':'#E4E7EC'}`, borderRadius:12, padding:'1.25rem', display:'flex', flexDirection:'column', gap:10 }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -681,12 +706,21 @@ export default function STRPage() {
                           {isConnected && !int.builtIn && <div style={{ fontSize:11, color:'#16a34a', fontWeight:500 }}>● Connected</div>}
                         </div>
                       </div>
-                      {isConnected && !int.builtIn && (
+                      {isConnected && !int.builtIn && !int.oauth && (
                         <button onClick={()=>disconnectIntegration(int.id, int.column!)} style={{ fontSize:11, color:'#ef4444', background:'none', border:'1px solid #fca5a5', borderRadius:6, padding:'3px 10px', cursor:'pointer' }}>Disconnect</button>
+                      )}
+                      {isConnected && int.oauth && (
+                        <button onClick={()=>disconnectXero()} style={{ fontSize:11, color:'#ef4444', background:'none', border:'1px solid #fca5a5', borderRadius:6, padding:'3px 10px', cursor:'pointer' }}>Disconnect</button>
                       )}
                     </div>
                     <p style={{ fontSize:12, color:'#667085', lineHeight:1.6 }}>{int.desc}</p>
-                    {int.builtIn ? (
+                    {int.oauth ? (
+                      isConnected ? (
+                        <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ {integrationsRow?.xero_tenant_name ? `Connected to ${integrationsRow.xero_tenant_name}` : 'Connected'}</div>
+                      ) : (
+                        <a href={`/api/xero/connect?userId=${currentUserId||''}`} style={{ padding:'8px 14px', background:int.color, color:'#fff', border:'none', borderRadius:7, fontSize:12, cursor:'pointer', fontWeight:600, textAlign:'center', textDecoration:'none', display:'inline-block' }}>Connect to Xero</a>
+                      )
+                    ) : int.builtIn ? (
                       <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Active on your account</div>
                     ) : isConnected ? (
                       <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Connected</div>
