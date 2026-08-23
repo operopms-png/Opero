@@ -239,7 +239,7 @@ export default function Page() {
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
   const [landlords, setLandlords] = useState<any[]>([])
   const [showAddLandlord, setShowAddLandlord] = useState(false)
-  const [landlordForm, setLandlordForm] = useState({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''})
+  const [landlordForm, setLandlordForm] = useState({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})
   const [portalLandlord, setPortalLandlord] = useState<any>(null)
   const [portalPassword, setPortalPassword] = useState('')
   const [creatingPortal, setCreatingPortal] = useState(false)
@@ -371,6 +371,16 @@ export default function Page() {
 
   async function delRecord(table: string, id: any) {
     await supabase.from(table).delete().eq('id', id)
+    await loadAll()
+  }
+
+  async function assignPropertiesToLandlord(landlordId: string, selectedPropertyIds: string[]) {
+    const toAssign = properties.filter((p:any) => selectedPropertyIds.includes(p.id) && p.owner_id !== landlordId)
+    const toUnassign = properties.filter((p:any) => p.owner_id === landlordId && !selectedPropertyIds.includes(p.id))
+    await Promise.all([
+      ...toAssign.map((p:any) => supabase.from('estate_properties').update({ owner_id: landlordId }).eq('id', p.id)),
+      ...toUnassign.map((p:any) => supabase.from('estate_properties').update({ owner_id: null }).eq('id', p.id)),
+    ])
     await loadAll()
   }
 
@@ -529,7 +539,7 @@ export default function Page() {
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
-            {section==='Landlords'&&<button onClick={()=>{setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''});setShowAddLandlord(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add landlord</button>}
+            {section==='Landlords'&&<button onClick={()=>{setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''});setShowAddLandlord(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add landlord</button>}
             {section==='Compliance'&&<button onClick={()=>setShowAddCompliance(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
             {section==='Buildings'&&<button onClick={()=>{setEditItem(null);setShowAddBuilding(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add building</button>}
             {section==='Units'&&<button onClick={()=>{setEditItem(null);setShowAddUnit(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add unit</button>}
@@ -1102,23 +1112,6 @@ export default function Page() {
           </div>)}
 
           {section==='Landlords'&&(<div>
-            {showAddLandlord&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit landlord':'Add landlord'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={labelStyle}>Name *</label><input value={landlordForm.name} onChange={e=>setLandlordForm({...landlordForm,name:e.target.value})} placeholder="e.g. Marcus Whitfield" style={inputStyle}/></div>
-                <div><label style={labelStyle}>Email</label><input value={landlordForm.email} onChange={e=>setLandlordForm({...landlordForm,email:e.target.value})} style={inputStyle}/></div>
-                <div><label style={labelStyle}>Phone</label><input value={landlordForm.phone} onChange={e=>setLandlordForm({...landlordForm,phone:e.target.value})} style={inputStyle}/></div>
-                <div><label style={labelStyle}>Bank Name</label><input value={landlordForm.bank_name} onChange={e=>setLandlordForm({...landlordForm,bank_name:e.target.value})} style={inputStyle}/></div>
-                <div><label style={labelStyle}>Account Name</label><input value={landlordForm.account_name} onChange={e=>setLandlordForm({...landlordForm,account_name:e.target.value})} style={inputStyle}/></div>
-                <div><label style={labelStyle}>Account Number</label><input value={landlordForm.account_number} onChange={e=>setLandlordForm({...landlordForm,account_number:e.target.value})} style={inputStyle}/></div>
-                <div><label style={labelStyle}>Sort Code</label><input value={landlordForm.sort_code} onChange={e=>setLandlordForm({...landlordForm,sort_code:e.target.value})} style={inputStyle}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={landlordForm.notes} onChange={e=>setLandlordForm({...landlordForm,notes:e.target.value})} style={inputStyle}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={async()=>{if(!landlordForm.name)return;await saveRecord('estate_landlords',landlordForm,editItem?.id);setEditItem(null);setShowAddLandlord(false);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add landlord'}</button>
-                <button onClick={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>)}
             <div style={{display:'flex',flexDirection:'column',gap:8}}>
               {landlords.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No landlords yet</div>:
               landlords.map((l:any)=>(
@@ -1137,7 +1130,7 @@ export default function Page() {
                   ):(
                     <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
                   )}
-                  <button onClick={()=>{setEditItem(l);setLandlordForm({name:l.name,email:l.email||'',phone:l.phone||'',bank_name:l.bank_name||'',account_name:l.account_name||'',account_number:l.account_number||'',sort_code:l.sort_code||'',notes:l.notes||''});setShowAddLandlord(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>{setEditItem(l);setLandlordForm({name:l.name,email:l.email||'',phone:l.phone||'',bank_name:l.bank_name||'',account_name:l.account_name||'',account_number:l.account_number||'',sort_code:l.sort_code||'',notes:l.notes||'',id_type:l.id_type||'',id_url:l.id_url||'',iban:l.iban||'',swift_bic:l.swift_bic||''});setShowAddLandlord(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                   <button onClick={()=>delRecord('estate_landlords',l.id)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
                 </div>
               ))}
@@ -1758,6 +1751,67 @@ export default function Page() {
         </div>
       </div>
       {viewingPhotos&&<PropertyImageSlideshow urls={viewingPhotos} onClose={()=>setViewingPhotos(null)}/>}
+
+      {showAddLandlord&&(
+        <Modal title={editItem?'Edit Landlord':'Add Landlord'} onClose={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={labelStyle}>Full Name *</label><input style={inputStyle} value={landlordForm.name} onChange={e=>setLandlordForm({...landlordForm,name:e.target.value})} placeholder="e.g. Marcus Whitfield"/></div>
+            <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={landlordForm.email} onChange={e=>setLandlordForm({...landlordForm,email:e.target.value})} placeholder="john@example.com"/></div>
+            <div><label style={labelStyle}>Phone</label><input style={inputStyle} value={landlordForm.phone} onChange={e=>setLandlordForm({...landlordForm,phone:e.target.value})} placeholder="+44 7700 000000"/></div>
+            <div><label style={labelStyle}>Notes</label><textarea style={{...inputStyle,resize:'vertical' as const}} rows={3} value={landlordForm.notes} onChange={e=>setLandlordForm({...landlordForm,notes:e.target.value})}/></div>
+            <div><label style={labelStyle}>ID Type</label>
+              <select style={{...inputStyle,cursor:'pointer'}} value={landlordForm.id_type} onChange={e=>setLandlordForm({...landlordForm,id_type:e.target.value})}>
+                <option value="">Select…</option>
+                <option value="passport">Passport</option>
+                <option value="driving_licence">Driving Licence</option>
+                <option value="national_id">National ID</option>
+              </select>
+            </div>
+            <FileUpload label="ID Document" value={landlordForm.id_url} onChange={url=>setLandlordForm({...landlordForm,id_url:url})} folder="estate-landlord-ids" />
+
+            <div style={{fontSize:13,fontWeight:600,color:'#344054',borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:2}}>Bank Details</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div><label style={labelStyle}>Bank Name</label><input style={inputStyle} value={landlordForm.bank_name} onChange={e=>setLandlordForm({...landlordForm,bank_name:e.target.value})} placeholder="e.g. Barclays"/></div>
+              <div><label style={labelStyle}>Account Name</label><input style={inputStyle} value={landlordForm.account_name} onChange={e=>setLandlordForm({...landlordForm,account_name:e.target.value})} placeholder="Full name on account"/></div>
+              <div><label style={labelStyle}>Account Number</label><input style={inputStyle} value={landlordForm.account_number} onChange={e=>setLandlordForm({...landlordForm,account_number:e.target.value})} placeholder="12345678"/></div>
+              <div><label style={labelStyle}>Sort Code</label><input style={inputStyle} value={landlordForm.sort_code} onChange={e=>setLandlordForm({...landlordForm,sort_code:e.target.value})} placeholder="00-00-00"/></div>
+              <div><label style={labelStyle}>IBAN</label><input style={inputStyle} value={landlordForm.iban} onChange={e=>setLandlordForm({...landlordForm,iban:e.target.value})} placeholder="GB00 XXXX 0000 0000 00"/></div>
+              <div><label style={labelStyle}>SWIFT / BIC</label><input style={inputStyle} value={landlordForm.swift_bic} onChange={e=>setLandlordForm({...landlordForm,swift_bic:e.target.value})} placeholder="BARCGB22"/></div>
+            </div>
+
+            {editItem && (
+              <div style={{borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:4}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#344054',marginBottom:8}}>Assigned Properties</div>
+                <div style={{border:'1px solid #EAECF0',borderRadius:8,maxHeight:160,overflowY:'auto',padding:4}}>
+                  {properties.length===0 && <div style={{padding:10,fontSize:12,color:'#98A2B3'}}>No properties on file.</div>}
+                  {properties.map((p:any)=>{
+                    const checked = p.owner_id === editItem.id
+                    return (
+                      <label key={p.id} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',fontSize:13,cursor:'pointer',borderRadius:6}}>
+                        <input type="checkbox" checked={checked} onChange={()=>{
+                          const currentIds = properties.filter((x:any)=>x.owner_id===editItem.id).map((x:any)=>x.id)
+                          const nextIds = checked ? currentIds.filter((id:string)=>id!==p.id) : [...currentIds,p.id]
+                          assignPropertiesToLandlord(editItem.id, nextIds)
+                        }} />
+                        {p.name}{p.owner_id && p.owner_id!==editItem.id ? <span style={{color:'#98A2B3',fontSize:11}}> (assigned to another landlord)</span> : ''}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={async()=>{
+              if(!landlordForm.name)return
+              await saveRecord('estate_landlords',landlordForm,editItem?.id)
+              setEditItem(null);setShowAddLandlord(false)
+              setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})
+            }} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Landlord'}</button>
+          </div>
+        </Modal>
+      )}
 
       {portalLandlord&&(
         <Modal title={`Give ${portalLandlord.name} portal access`} onClose={()=>setPortalLandlord(null)}>
