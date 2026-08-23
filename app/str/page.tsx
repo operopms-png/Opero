@@ -155,6 +155,7 @@ export default function STRPage() {
   const [txForm, setTxForm] = useState({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'})
   const [bankingTab, setBankingTab] = useState('Overview')
   const [reportTab, setReportTab] = useState('P&L')
+  const [integrationsRow, setIntegrationsRow] = useState<any>(null)
 
   useEffect(() => {
     if (roleLoading) return
@@ -184,13 +185,16 @@ export default function STRPage() {
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((p: any) => propertyIds.includes(p.id))
     const ids = restrictedProps.map((p: any) => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-    const [b, c, m, tm, ex, ct] = await Promise.all([
+    const [b, c, m, tm, ex, ct, bk, tx, ig] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
       supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safeIds).order('scheduled_date', { ascending: true }),
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
       supabase.from('team_members').select('*').eq('user_id', userId),
       supabase.from('office_expenses').select('*').eq('user_id', userId).order('date', { ascending: false }),
       supabase.from('guest_comm_templates').select('*').eq('user_id', userId),
+      supabase.from('str_bank_accounts').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabase.from('str_transactions').select('*').eq('user_id', userId).order('date', { ascending: false }),
+      supabase.from('integrations').select('*').eq('user_id', userId).single(),
     ])
     setCommTemplates(ct.data ?? [])
     setProperties(restrictedProps)
@@ -199,6 +203,9 @@ export default function STRPage() {
     setMaintenance(m.data ?? [])
     setTeam(tm.data ?? [])
     setExpenses(ex.data ?? [])
+    setBankAccounts(bk.data ?? [])
+    setTransactions(tx.data ?? [])
+    setIntegrationsRow(ig.data ?? null)
     const rev = (b.data ?? []).filter((x:any) => x.status !== 'cancelled').reduce((s:number, x:any) => s + (x.total_amount ?? 0), 0)
     setStats({ properties:restrictedProps.length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
   }
@@ -216,6 +223,44 @@ export default function STRPage() {
   async function deleteOfficeExpense(id: string) {
     await supabase.from('office_expenses').delete().eq('id', id)
     setExpenses(expenses.filter((x:any)=>x.id!==id))
+  }
+
+  async function addBankAccount() {
+    if (!bankForm.name) return
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('str_bank_accounts').insert({ ...bankForm, balance: parseFloat(bankForm.balance)||0, user_id: user?.id })
+    if (error) { alert(error.message); return }
+    await loadAll()
+    setBankForm({name:'',type:'Current',balance:'',currency:'GBP'})
+    setShowAddBank(false)
+  }
+
+  async function deleteBankAccount(id: string) {
+    await supabase.from('str_bank_accounts').delete().eq('id', id)
+    await loadAll()
+  }
+
+  async function addTransaction() {
+    if (!txForm.description || !txForm.amount) return
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('str_transactions').insert({
+      account_id: txForm.account || null, description: txForm.description, amount: parseFloat(txForm.amount)||0,
+      type: txForm.type, date: txForm.date || null, category: txForm.category, status: 'Unreconciled', user_id: user?.id,
+    })
+    if (error) { alert(error.message); return }
+    await loadAll()
+    setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'})
+    setShowAddTx(false)
+  }
+
+  async function deleteTransaction(id: string) {
+    await supabase.from('str_transactions').delete().eq('id', id)
+    await loadAll()
+  }
+
+  async function setTransactionStatus(id: string, status: string) {
+    await supabase.from('str_transactions').update({ status }).eq('id', id)
+    setTransactions(transactions.map((x:any)=>x.id===id?{...x,status}:x))
   }
 
   async function toggleOfficeExpensePaid(id: string, status: string) {
@@ -304,6 +349,49 @@ export default function STRPage() {
 
   const today = new Date().toISOString().split('T')[0]
 
+  // Real last-6-months revenue + occupancy, replacing the hardcoded
+  // decorative charts that used to sit on Home and Analytics regardless
+  // of actual bookings. Revenue/nights are bucketed by check_in month —
+  // same simplification the existing P&L/Cash Flow tabs already use
+  // elsewhere in this file, so it's consistent rather than a new model.
+  const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date()
+    d.setDate(1)
+    d.setMonth(d.getMonth() - (5 - i))
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const monthBookings = bookings.filter((b: any) => b.status !== 'cancelled' && b.check_in?.startsWith(key))
+    const revenue = monthBookings.reduce((s: number, b: any) => s + (Number(b.total_amount) || 0), 0)
+    const nights = monthBookings.reduce((s: number, b: any) => {
+      if (!b.check_in || !b.check_out) return s
+      const n = (new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000
+      return s + Math.max(0, n)
+    }, 0)
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+    const availableNights = Math.max(1, properties.length) * daysInMonth
+    const occupancyPct = Math.min(100, Math.round((nights / availableNights) * 100))
+    return { key, label: d.toLocaleString('default', { month: 'short' }), revenue, nights, occupancyPct }
+  })
+  const currentOccupancyPct = monthlyTrend[monthlyTrend.length - 1]?.occupancyPct ?? 0
+
+  // Builds an SVG polyline's points attribute from a series of values,
+  // scaled into the given viewBox width/height with padding — used for
+  // every "real data" line chart below instead of a fixed points string.
+  function polylinePoints(values: number[], w: number, h: number, pad = 8) {
+    const max = Math.max(1, ...values)
+    const stepX = values.length > 1 ? (w - pad * 2) / (values.length - 1) : 0
+    return values.map((v, i) => `${pad + i * stepX},${h - pad - (v / max) * (h - pad * 2)}`).join(' ')
+  }
+
+  // Endpoint for a semicircle gauge arc (center 100,80 radius 80) at a
+  // given percentage — 0% = leftmost point, 100% = rightmost point.
+  function gaugeArcPath(pct: number) {
+    const theta = (180 * (1 - Math.min(100, Math.max(0, pct)) / 100)) * (Math.PI / 180)
+    const endX = 100 + 80 * Math.cos(theta)
+    const endY = 80 - 80 * Math.sin(theta)
+    const largeArc = pct > 50 ? 1 : 0
+    return `M 20 80 A 80 80 0 ${largeArc} 1 ${endX.toFixed(1)} ${endY.toFixed(1)}`
+  }
+
   if (loading) return <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Inter',sans-serif", color:'#98A2B3' }}>Loading...</div>
 
   return (
@@ -361,23 +449,27 @@ export default function STRPage() {
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Revenue Trends</div>
                 <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
-                  <polyline points="10,70 60,55 110,60 160,35 210,40 260,20 290,15" fill="none" stroke="#3B4AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
+                  <polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue), 300, 65)} fill="none" stroke="#3B4AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  {monthlyTrend.map((m,i)=>(<text key={m.key} x={8+(i*(284/(monthlyTrend.length-1||1)))} y={78} fontSize="8" fill="#98A2B3">{m.label}</text>))}
                 </svg>
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Occupancy Trends</div>
                 <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
-                  {([{x:10,h:40,p:true},{x:55,h:45,p:true},{x:100,h:35,p:true},{x:145,h:55,p:false},{x:190,h:58,p:false},{x:235,h:62,p:false}] as any[]).map((b,i)=>(<rect key={i} x={b.x} y={75-b.h} width={30} height={b.h} rx="3" fill={b.p?'#EEF0FF':'#3B4AFF'}/>))}
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={15+(i*45)} y={79} fontSize="8" fill="#98A2B3">{m}</text>))}
+                  {monthlyTrend.map((m,i)=>{
+                    const x = 10+(i*47)
+                    const h = Math.max(2,(m.occupancyPct/100)*60)
+                    return <rect key={m.key} x={x} y={75-h} width={30} height={h} rx="3" fill={i===monthlyTrend.length-1?'#3B4AFF':'#EEF0FF'}/>
+                  })}
+                  {monthlyTrend.map((m,i)=>(<text key={m.key} x={15+(i*47)} y={79} fontSize="8" fill="#98A2B3">{m.label}</text>))}
                 </svg>
               </div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Upcoming Check-ins</div>
-                {bookings.filter(b=>b.check_in>=today).slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No upcoming check-ins</div> :
-                bookings.filter(b=>b.check_in>=today).slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name} · {b.check_in}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>Check-in</span></div>))}
+                {bookings.filter(b=>b.check_in>=today && b.status!=='cancelled').slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No upcoming check-ins</div> :
+                bookings.filter(b=>b.check_in>=today && b.status!=='cancelled').slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name} · {b.check_in}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>Check-in</span></div>))}
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Recent Bookings</div>
@@ -512,26 +604,26 @@ export default function STRPage() {
         {tab==='Analytics' && (
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>£{stats.revenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points="5,45 40,35 75,38 110,20 145,25 175,10 195,8" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Bookings</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>{bookings.filter(b=>b.status!=='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points="5,45 40,38 75,40 110,28 145,30 175,18 195,15" fill="none" stroke="#3B4AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #FEE2E2', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Cancellations</div><div style={{ fontSize:24, fontWeight:800, color:'#EF4444' }}>{bookings.filter(b=>b.status==='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points="5,20 40,25 75,18 110,30 145,22 175,35 195,30" fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/></svg></div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>£{stats.revenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Bookings</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>{bookings.filter(b=>b.status!=='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.nights),200,50)} fill="none" stroke="#3B4AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #FEE2E2', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Cancellations</div><div style={{ fontSize:24, fontWeight:800, color:'#EF4444' }}>{bookings.filter(b=>b.status==='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(Array.from({length:6},(_,i)=>bookings.filter((b:any)=>b.status==='cancelled'&&b.check_in?.startsWith(monthlyTrend[i]?.key)).length),200,50)} fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/></svg></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
                 <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:16 }}>Occupancy</div>
                 <svg viewBox="0 0 200 110" style={{ width:'100%', maxWidth:240, display:'block', margin:'0 auto' }}>
                   <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#F3F4F6" strokeWidth="16" strokeLinecap="round"/>
-                  <path d="M 20 80 A 80 80 0 0 1 100 0" fill="none" stroke="#3B4AFF" strokeWidth="16" strokeLinecap="round"/>
+                  <path d={gaugeArcPath(currentOccupancyPct)} fill="none" stroke="#3B4AFF" strokeWidth="16" strokeLinecap="round"/>
                   <text x="18" y="98" fontSize="10" fill="#9CA3AF">0%</text><text x="88" y="18" fontSize="10" fill="#9CA3AF">50%</text><text x="172" y="98" fontSize="10" fill="#9CA3AF">100%</text>
-                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#101828" textAnchor="middle">0%</text>
+                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#101828" textAnchor="middle">{currentOccupancyPct}%</text>
                 </svg>
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
                 <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:16 }}>Revenue & Occupancy</div>
                 <svg viewBox="0 0 300 120" style={{ width:'100%' }}>
-                  <polyline points="10,110 60,90 110,95 160,60 210,65 260,40 290,30" fill="none" stroke="#3B4AFF" strokeWidth="2"/>
-                  <polyline points="10,100 60,85 110,88 160,70 210,72 260,55 290,48" fill="none" stroke="#10B981" strokeWidth="2" strokeDasharray="5 3"/>
-                  {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*52)} y={118} fontSize="8" fill="#9CA3AF" textAnchor="middle">{m}</text>))}
+                  <polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),300,120,10)} fill="none" stroke="#3B4AFF" strokeWidth="2"/>
+                  <polyline points={polylinePoints(monthlyTrend.map(m=>m.occupancyPct),300,120,10)} fill="none" stroke="#10B981" strokeWidth="2" strokeDasharray="5 3"/>
+                  {monthlyTrend.map((m,i)=>(<text key={m.key} x={10+(i*52)} y={118} fontSize="8" fill="#9CA3AF" textAnchor="middle">{m.label}</text>))}
                 </svg>
               </div>
             </div>
@@ -540,7 +632,14 @@ export default function STRPage() {
 
         {tab==='Integrations' && (
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-            {[{name:'Airbnb iCal',desc:'Sync bookings via iCal URL',color:'#FF5A5F',connected:false},{name:'VRBO iCal',desc:'Sync VRBO bookings automatically',color:'#3D67FF',connected:false},{name:'Booking.com iCal',desc:'Sync Booking.com reservations',color:'#003580',connected:false},{name:'PriceLabs',desc:'Dynamic pricing recommendations',color:'#5B4EFF',connected:false},{name:'Stripe',desc:'Process direct booking payments',color:'#635BFF',connected:true},{name:'PayPal',desc:'Accept PayPal payments from guests',color:'#009CDE',connected:false}].map(i=>(
+            {[
+              {name:'Airbnb iCal',desc:'Sync bookings via iCal URL',color:'#FF5A5F',connected:!!integrationsRow?.airbnb_ical_url},
+              {name:'VRBO iCal',desc:'Sync VRBO bookings automatically',color:'#3D67FF',connected:!!integrationsRow?.vrbo_ical_url},
+              {name:'Booking.com iCal',desc:'Sync Booking.com reservations',color:'#003580',connected:!!integrationsRow?.booking_ical_url},
+              {name:'PriceLabs',desc:'Dynamic pricing recommendations',color:'#5B4EFF',connected:!!integrationsRow?.pricelabs_api_key},
+              {name:'Stripe',desc:'Process direct booking payments',color:'#635BFF',connected:true},
+              {name:'PayPal',desc:'Accept PayPal payments from guests',color:'#009CDE',connected:!!integrationsRow?.paypal_client_id},
+            ].map(i=>(
               <div key={i.name} style={{ background:'#fff', borderRadius:12, border:`1px solid ${i.connected?'#BBF7D0':'#E4E7EC'}`, padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                   <div style={{ width:40, height:40, borderRadius:10, background:i.color+'18', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:13, color:i.color }}>{i.name.charAt(0)}</div>
@@ -572,13 +671,15 @@ export default function STRPage() {
                 const monthKey = `${year}-${String(i+1).padStart(2,'0')}`
                 const income = bookings.filter((b:any)=>b.status!=='cancelled' && b.check_in?.startsWith(monthKey)).reduce((s:number,b:any)=>s+(Number(b.total_amount)||0),0)
                 const costs = expenses.filter((e:any)=>e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
-                return { income, costs }
+                const llCosts = expenses.filter((e:any)=>e.category==='Property' && e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+                return { income, costs, llCosts }
               })
               const totalExpenses = expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+              const totalLLCosts = expenses.filter((e:any)=>e.category==='Property').reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
               return (
               <div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#101828'},{l:'YTD Costs',v:'£'+expenses.filter((e:any)=>e.category==='Property').reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
+                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#101828'},{l:'YTD Costs',v:'£'+totalLLCosts.toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                       <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                       <div style={{fontSize:11,color:'#667085',fontWeight:600,textTransform:'uppercase'}}>{s.l}</div>
@@ -593,7 +694,7 @@ export default function STRPage() {
                     <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
                       <span>{m} {year}</span>
                       <span style={{color:'#10B981'}}>£{pnlByMonth[i].income.toLocaleString()}</span>
-                      <span style={{color:'#EF4444'}}>£0</span>
+                      <span style={{color:'#EF4444'}}>£{pnlByMonth[i].llCosts.toLocaleString()}</span>
                       <span style={{color:'#F59E0B'}}>£{pnlByMonth[i].costs.toLocaleString()}</span>
                       <span style={{fontWeight:600}}>£{(pnlByMonth[i].income-pnlByMonth[i].costs).toLocaleString()}</span>
                     </div>
@@ -601,7 +702,7 @@ export default function STRPage() {
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828'}}>
                     <span>TOTAL {year}</span>
                     <span style={{color:'#10B981'}}>£{stats.revenue.toLocaleString()}</span>
-                    <span style={{color:'#EF4444'}}>£0</span>
+                    <span style={{color:'#EF4444'}}>£{totalLLCosts.toLocaleString()}</span>
                     <span style={{color:'#F59E0B'}}>£{totalExpenses.toLocaleString()}</span>
                     <span>£{(stats.revenue-totalExpenses).toLocaleString()}</span>
                   </div>
@@ -802,7 +903,7 @@ export default function STRPage() {
                       <div><label style={lbl}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={inp}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!bankForm.name)return;setBankAccounts([...bankAccounts,{id:Date.now(),...bankForm}]);setBankForm({name:'',type:'Current',balance:'',currency:'GBP'});setShowAddBank(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
+                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
                       <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
@@ -820,7 +921,7 @@ export default function STRPage() {
                       <div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                         <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
                           <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div>
-                          <button onClick={()=>setBankAccounts(bankAccounts.filter((x:any)=>x.id!==a.id))} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button>
+                          <button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button>
                         </div>
                         <div style={{fontSize:28,fontWeight:800,color:'#101828',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div>
                         <div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div>
@@ -847,14 +948,14 @@ export default function STRPage() {
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={lbl}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={inp}/></div>
-                      <div><label style={lbl}>Account</label><select value={txForm.account} onChange={e=>setTxForm({...txForm,account:e.target.value})} style={inp}><option value="">Select account</option>{bankAccounts.map((a:any)=><option key={a.id}>{a.name}</option>)}</select></div>
+                      <div><label style={lbl}>Account</label><select value={txForm.account} onChange={e=>setTxForm({...txForm,account:e.target.value})} style={inp}><option value="">Select account</option>{bankAccounts.map((a:any)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
                       <div><label style={lbl}>Amount (£)</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
                       <div><label style={lbl}>Type</label><select value={txForm.type} onChange={e=>setTxForm({...txForm,type:e.target.value})} style={inp}>{['Income','Expense'].map(t=><option key={t}>{t}</option>)}</select></div>
                       <div><label style={lbl}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={inp}/></div>
                       <div><label style={lbl}>Category</label><select value={txForm.category} onChange={e=>setTxForm({...txForm,category:e.target.value})} style={inp}>{['Rent','Maintenance','Utilities','Insurance','Marketing','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!txForm.description||!txForm.amount)return;setTransactions([...transactions,{id:Date.now(),...txForm,status:'Unreconciled'}]);setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'});setShowAddTx(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add transaction</button>
+                      <button onClick={addTransaction} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add transaction</button>
                       <button onClick={()=>setShowAddTx(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
@@ -870,12 +971,12 @@ export default function STRPage() {
                   {transactions.length===0?<div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet — add one above</div>:transactions.map((t:any)=>(
                     <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                      <span style={{fontSize:12,color:'#344054'}}>{t.account||'—'}</span>
+                      <span style={{fontSize:12,color:'#344054'}}>{bankAccounts.find((a:any)=>a.id===t.account_id)?.name||'—'}</span>
                       <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
                       <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600,display:'inline-block'}}>{t.type}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{t.category}</span>
-                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:x.status==='Reconciled'?'Unreconciled':'Reconciled'}:x))}>{t.status}</span>
-                      <button onClick={()=>setTransactions(transactions.filter((x:any)=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactionStatus(t.id, t.status==='Reconciled'?'Unreconciled':'Reconciled')}>{t.status}</span>
+                      <button onClick={()=>deleteTransaction(t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                     </div>
                   ))}
                 </div>
@@ -903,7 +1004,7 @@ export default function STRPage() {
                     <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date} · {t.category}</div></div>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
                       <span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
-                      <button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button>
+                      <button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button>
                     </div>
                   </div>
                 ))}
