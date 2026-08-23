@@ -62,8 +62,41 @@ export async function POST(req: NextRequest) {
     .map((addr) => addr.match(/crm\+([a-f0-9-]+)(?:\.([a-f0-9-]+))?@/i))
     .find((m) => m)
 
+  // Same idea as the crm+ alias above, but for marketing_emails --
+  // marketing+<user_id>.<marketing_email_id>@helloopero.com. Checked
+  // separately since it routes to a different table.
+  const marketingAliasMatch = toAddresses
+    .map((addr) => addr.match(/marketing\+([a-f0-9-]+)\.([a-f0-9-]+)@/i))
+    .find((m) => m)
+
+  if (marketingAliasMatch) {
+    const [, , marketingEmailId] = marketingAliasMatch
+
+    let mktBody = ''
+    if (process.env.RESEND_API_KEY && emailId) {
+      const res = await fetch(`https://api.resend.com/emails/receiving/${emailId}`, {
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      })
+      if (res.ok) {
+        const full = await res.json()
+        mktBody = full.text || full.html || ''
+      } else {
+        console.error('[email-inbound] Failed to fetch full email body:', await res.text())
+      }
+    }
+
+    await serviceClient.from('marketing_email_replies').insert({
+      marketing_email_id: marketingEmailId,
+      from_address: fromAddress,
+      subject: `Reply: ${subject}`,
+      body: mktBody || `(From ${fromAddress} — body unavailable)`,
+    })
+
+    return NextResponse.json({ received: true, matched: true, type: 'marketing' })
+  }
+
   if (!aliasMatch) {
-    console.log('[email-inbound] No crm+ alias match in to:', toAddresses, '- unmatched, not logged')
+    console.log('[email-inbound] No crm+ or marketing+ alias match in to:', toAddresses, '- unmatched, not logged')
     return NextResponse.json({ received: true, matched: false })
   }
 
