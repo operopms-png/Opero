@@ -114,7 +114,7 @@ function Modal({ title, onClose, children }: any) {
 }
 const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Vacancies','Viewings'] },
+  { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Landlords','Vacancies','Viewings'] },
   { label: 'COMPLIANCE', items: ['Compliance','Inventories','Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
@@ -234,9 +234,15 @@ export default function Page() {
   const [showAddTenant, setShowAddTenant] = useState(false)
   const [showAddTenancy, setShowAddTenancy] = useState(false)
   const [editItem, setEditItem] = useState<any>(null)
-  const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:''})
+  const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})
   const [ten, setTen] = useState({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
+  const [landlords, setLandlords] = useState<any[]>([])
+  const [showAddLandlord, setShowAddLandlord] = useState(false)
+  const [landlordForm, setLandlordForm] = useState({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''})
+  const [portalLandlord, setPortalLandlord] = useState<any>(null)
+  const [portalPassword, setPortalPassword] = useState('')
+  const [creatingPortal, setCreatingPortal] = useState(false)
   const [vacancies, setVacancies] = useState<any[]>([])
   const [showAddVacancy, setShowAddVacancy] = useState(false)
   const [vacForm, setVacForm] = useState({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''})
@@ -307,7 +313,7 @@ export default function Page() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp,bl,un,bk,inv,doc] = await Promise.all([
+    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp,bl,un,bk,inv,doc,ll] = await Promise.all([
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('subscriptions').select('ea_extra_blocks,plan,modules').eq('user_id',userId).single(),
       supabase.from('estate_tenants').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -326,6 +332,7 @@ export default function Page() {
       supabase.from('estate_viewings').select('*,estate_properties(name)').eq('user_id',userId).order('scheduled_at',{ascending:true}),
       supabase.from('estate_inventories').select('*,estate_properties(name),estate_tenancies(estate_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}),
       supabase.from('estate_documents').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
@@ -345,6 +352,7 @@ export default function Page() {
     setMaintenance(maintData); setCleaning(cleanData); setComplianceRecords(complianceData)
     setBuildings(bl.data??[]); setUnits(unitData); setViewings(viewingData)
     setInventories(inventoryData); setDocuments(documentData)
+    setLandlords(ll.data??[])
     setLoading(false)
   }
 
@@ -396,7 +404,7 @@ export default function Page() {
     if(!editItem && !isBundle && properties.length >= propertyLimit) { setShowAddProperty(false); setShowUpgrade(true); return }
     await saveRecord('estate_properties', prop, editItem?.id)
     setEditItem(null)
-    setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:''})
+    setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})
     setShowAddProperty(false)
   }
   async function purchaseBlock() {
@@ -521,6 +529,7 @@ export default function Page() {
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
+            {section==='Landlords'&&<button onClick={()=>{setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''});setShowAddLandlord(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add landlord</button>}
             {section==='Compliance'&&<button onClick={()=>setShowAddCompliance(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
             {section==='Buildings'&&<button onClick={()=>{setEditItem(null);setShowAddBuilding(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add building</button>}
             {section==='Units'&&<button onClick={()=>{setEditItem(null);setShowAddUnit(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add unit</button>}
@@ -670,6 +679,7 @@ export default function Page() {
                 <div><label style={{...labelStyle,display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>Bathrooms</label><select value={prop.bathrooms} onChange={e=>setProp({...prop,bathrooms:e.target.value})} style={inputStyle}>{['1','2','3','4','5','6+'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={labelStyle}>Monthly rent (£)</label><input value={prop.rent} onChange={e=>setProp({...prop,rent:e.target.value})} placeholder="0.00" type="number" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Status</label><select value={prop.status} onChange={e=>setProp({...prop,status:e.target.value})} style={inputStyle}>{['Available','Rented','Maintenance','Archived'].map(t=><option key={t}>{t}</option>)}</select></div>
+                <div><label style={labelStyle}>Owner</label><select value={prop.owner_id||''} onChange={e=>setProp({...prop,owner_id:e.target.value})} style={inputStyle}><option value="">No owner linked</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
               </div>
               <div style={{marginBottom:12}}>
                 <label style={labelStyle}>Photos</label>
@@ -677,7 +687,7 @@ export default function Page() {
               </div>
               <div style={{display:'flex',gap:8}}>
                 <button onClick={addProperty} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add property'}</button>
-                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #5B7CFA',padding:24,marginBottom:20}}>
@@ -718,7 +728,7 @@ export default function Page() {
                   <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{p.rent?'£'+p.rent:'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:p.status==='Rented'?'#FEF3C7':p.status==='Available'?'#ECFDF5':'#F2F4F7',color:p.status==='Rented'?'#F59E0B':p.status==='Available'?'#10B981':'#667085',display:'inline-block'}}>{p.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||''});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||'',owner_id:p.owner_id||''});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_properties',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
@@ -1088,6 +1098,49 @@ export default function Page() {
                   </div>
                 </div>
               )})}
+            </div>
+          </div>)}
+
+          {section==='Landlords'&&(<div>
+            {showAddLandlord&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit landlord':'Add landlord'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={labelStyle}>Name *</label><input value={landlordForm.name} onChange={e=>setLandlordForm({...landlordForm,name:e.target.value})} placeholder="e.g. Marcus Whitfield" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Email</label><input value={landlordForm.email} onChange={e=>setLandlordForm({...landlordForm,email:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Phone</label><input value={landlordForm.phone} onChange={e=>setLandlordForm({...landlordForm,phone:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Bank Name</label><input value={landlordForm.bank_name} onChange={e=>setLandlordForm({...landlordForm,bank_name:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Account Name</label><input value={landlordForm.account_name} onChange={e=>setLandlordForm({...landlordForm,account_name:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Account Number</label><input value={landlordForm.account_number} onChange={e=>setLandlordForm({...landlordForm,account_number:e.target.value})} style={inputStyle}/></div>
+                <div><label style={labelStyle}>Sort Code</label><input value={landlordForm.sort_code} onChange={e=>setLandlordForm({...landlordForm,sort_code:e.target.value})} style={inputStyle}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={landlordForm.notes} onChange={e=>setLandlordForm({...landlordForm,notes:e.target.value})} style={inputStyle}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={async()=>{if(!landlordForm.name)return;await saveRecord('estate_landlords',landlordForm,editItem?.id);setEditItem(null);setShowAddLandlord(false);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add landlord'}</button>
+                <button onClick={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {landlords.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No landlords yet</div>:
+              landlords.map((l:any)=>(
+                <div key={l.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+                  <div style={{width:40,height:40,borderRadius:'50%',background:'#EAF3EE',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:ACCENT,flexShrink:0}}>{l.name.charAt(0)}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600,fontSize:14,color:'#101828'}}>{l.name}</div>
+                    <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[l.email,l.phone].filter(Boolean).join(' · ')}</div>
+                  </div>
+                  <div style={{fontSize:13,color:'#667085'}}>{properties.filter((p:any)=>p.owner_id===l.id).length} properties</div>
+                  {l.portal_user_id?(
+                    <>
+                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Portal Active</span>
+                      <a href={`/estate-owner-portal?landlord_id=${l.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
+                    </>
+                  ):(
+                    <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
+                  )}
+                  <button onClick={()=>{setEditItem(l);setLandlordForm({name:l.name,email:l.email||'',phone:l.phone||'',bank_name:l.bank_name||'',account_name:l.account_name||'',account_number:l.account_number||'',sort_code:l.sort_code||'',notes:l.notes||''});setShowAddLandlord(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>delRecord('estate_landlords',l.id)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
+                </div>
+              ))}
             </div>
           </div>)}
 
@@ -1705,6 +1758,30 @@ export default function Page() {
         </div>
       </div>
       {viewingPhotos&&<PropertyImageSlideshow urls={viewingPhotos} onClose={()=>setViewingPhotos(null)}/>}
+
+      {portalLandlord&&(
+        <Modal title={`Give ${portalLandlord.name} portal access`} onClose={()=>setPortalLandlord(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{fontSize:13,color:'#667085'}}>This creates a login for {portalLandlord.name} so they can see their own properties, tenancies, and documents. Share the email/password with them yourself.</div>
+            <div><label style={labelStyle}>Email</label><input style={inputStyle} value={portalLandlord.email??''} onChange={e=>setPortalLandlord({...portalLandlord,email:e.target.value})} placeholder="landlord@example.com"/></div>
+            <div><label style={labelStyle}>Password</label><input style={inputStyle} value={portalPassword} onChange={e=>setPortalPassword(e.target.value)} placeholder="min. 6 characters"/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setPortalLandlord(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={async ()=>{
+              if(!portalLandlord.email||!portalPassword)return
+              setCreatingPortal(true)
+              const {data:{session}}=await supabase.auth.getSession()
+              const res=await fetch('/api/create-estate-landlord-account',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify({landlord_id:portalLandlord.id,email:portalLandlord.email,password:portalPassword})})
+              const result=await res.json()
+              setCreatingPortal(false)
+              if(!res.ok){alert(result.error||'Could not create portal access');return}
+              alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: helloopero.com/login`)
+              setPortalLandlord(null);await loadAll()
+            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
