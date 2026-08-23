@@ -89,6 +89,8 @@ function LoginForm() {
         if (ownerProfile) { window.location.href = '/owner-portal'; return }
         const { data: landlordProfile } = await supabase.from('pm_landlords').select('id').eq('portal_user_id', session.user.id).single()
         if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
+        const { data: estateLandlordProfile } = await supabase.from('estate_landlords').select('id').eq('portal_user_id', session.user.id).single()
+        if (estateLandlordProfile) { window.location.href = '/estate-owner-portal'; return }
         const { data: tenantProfile } = await supabase.from('pm_tenants').select('id').eq('portal_user_id', session.user.id).single()
         if (tenantProfile) { window.location.href = '/pm-tenant-portal'; return }
         const { data: teamRows } = await supabase.from('team_members').select('role').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
@@ -123,6 +125,14 @@ function LoginForm() {
           .eq('portal_user_id', data.user?.id)
           .single()
         if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
+        // Check if this user is an Estate Agency landlord — if so, send
+        // to the estate landlord portal
+        const { data: estateLandlordProfile } = await supabase
+          .from('estate_landlords')
+          .select('id')
+          .eq('portal_user_id', data.user?.id)
+          .single()
+        if (estateLandlordProfile) { window.location.href = '/estate-owner-portal'; return }
         // Check if this user is a tenant with portal access — if so, send
         // to the tenant portal
         const { data: tenantProfile } = await supabase
