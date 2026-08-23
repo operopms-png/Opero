@@ -30,6 +30,9 @@ export default function Page() {
   const [templateForm, setTemplateForm] = useState({name:'',category:'Other',subject:'',body:''})
   const [editingTemplateId, setEditingTemplateId] = useState<string|null>(null)
   const [savingTemplate, setSavingTemplate] = useState(false)
+  const [emailSearch, setEmailSearch] = useState('')
+  const [showColumns, setShowColumns] = useState({delivered:true,openRate:true,clickRate:true,lastUpdated:true})
+  const [showColumnsMenu, setShowColumnsMenu] = useState(false)
   const [socials, setSocials] = useState<any[]>([])
   const [showSocialForm, setShowSocialForm] = useState(false)
   const [socialForm, setSocialForm] = useState({caption:'',platform:'Instagram',scheduled_at:'',status:'Draft',link:''})
@@ -138,6 +141,30 @@ export default function Page() {
     setShowEmailForm(true)
   }
 
+  function exportEmailsCsv() {
+    const rows = emails.map((e:any)=>{
+      const stats = emailStats(e.id)
+      return {
+        'Email Name': e.subject,
+        'To': e.to_recipient||'',
+        'Status': e.status,
+        'Delivered': e.status==='Sent'?(stats.delivered?'Yes':'Pending'):'',
+        'Open Rate': e.status==='Sent'?(stats.delivered?(stats.opened>0?'100%':'0%'):''):'',
+        'Click Rate': e.status==='Sent'?(stats.delivered?(stats.clicked>0?'100%':'0%'):''):'',
+        'Last Updated': new Date(e.sent_at||e.created_at).toISOString(),
+      }
+    })
+    if (rows.length===0) { alert('No emails to export yet.'); return }
+    const headers = Object.keys(rows[0])
+    const csv = [headers.join(','), ...rows.map(r=>headers.map(h=>`"${String((r as any)[h]).replace(/"/g,'""')}"`).join(','))].join('\n')
+    const blob = new Blob([csv], {type:'text/csv'})
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `marketing-emails-${MODULE}-${new Date().toISOString().slice(0,10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
@@ -233,8 +260,11 @@ export default function Page() {
 
           {emailSubTab==='Manage'&&(<div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-              <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#101828'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Opero <notifications@helloopero.com> (default — not set up yet)'}</strong></div>
-              <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit'}}>{sendSettings.marketing_from_email?'Change sending address':'Set sending address'}</button>
+              <div>
+                <div style={{fontSize:20,fontWeight:700,color:'#101828'}}>Marketing Email</div>
+                <div style={{fontSize:12,color:'#667085',marginTop:2}}>{emails.length} marketing email{emails.length===1?'':'s'} · {emails.filter((e:any)=>e.status==='Sent').length} sent this month</div>
+              </div>
+              <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#101828'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Opero <notifications@helloopero.com> (default — not set up yet)'}</strong> <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',marginLeft:8}}>{sendSettings.marketing_from_email?'Change':'Set up'}</button></div>
             </div>
             {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
@@ -273,34 +303,80 @@ export default function Page() {
               </div>
             </div>)}
 
-            <div style={{display:'flex',gap:8,marginBottom:16}}>
-              {['All emails','Drafts','Scheduled','Sent'].map(f=>(
-                <button key={f} onClick={()=>setEmailFilter(f)} style={{padding:'6px 14px',borderRadius:20,border:emailFilter===f?'1px solid '+ACCENT:'1px solid #E4E7EC',background:emailFilter===f?ACCENT+'12':'#fff',color:emailFilter===f?ACCENT:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{f}</button>
+            <div style={{display:'flex',gap:20,marginBottom:16,borderBottom:'1px solid #E4E7EC',alignItems:'center'}}>
+              {[
+                {l:'All emails',dot:null},
+                {l:'Drafts',dot:'#98A2B3'},
+                {l:'Scheduled',dot:'#F59E0B'},
+                {l:'Sent',dot:'#10B981'},
+              ].map(f=>(
+                <button key={f.l} onClick={()=>setEmailFilter(f.l)} style={{display:'flex',alignItems:'center',gap:6,padding:'0 0 10px',border:'none',background:'transparent',fontSize:13,fontWeight:emailFilter===f.l?600:400,color:emailFilter===f.l?'#101828':'#667085',borderBottom:emailFilter===f.l?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>
+                  {f.dot&&<div style={{width:7,height:7,borderRadius:'50%',background:f.dot}}/>}
+                  {f.l}
+                </button>
               ))}
             </div>
 
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,gap:12}}>
+              <div style={{position:'relative',flex:1,maxWidth:340}}>
+                <input value={emailSearch} onChange={e=>setEmailSearch(e.target.value)} placeholder="Search email name or subject line" style={{...inp,paddingLeft:32}}/>
+                <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'#98A2B3',fontSize:13}}>🔍</span>
+              </div>
+              <div style={{display:'flex',gap:8,position:'relative'}}>
+                <button onClick={()=>setShowColumnsMenu(!showColumnsMenu)} style={{fontSize:12,fontWeight:600,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'7px 14px',cursor:'pointer',fontFamily:'inherit'}}>Edit columns</button>
+                {showColumnsMenu&&(
+                  <div style={{position:'absolute',top:'110%',right:90,background:'#fff',border:'1px solid #E4E7EC',borderRadius:8,padding:12,boxShadow:'0 4px 12px rgba(0,0,0,0.08)',zIndex:10,width:160}}>
+                    {[['delivered','Delivered'],['openRate','Open Rate'],['clickRate','Click Rate'],['lastUpdated','Last Updated']].map(([k,l])=>(
+                      <label key={k} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'#344054',padding:'4px 0',cursor:'pointer'}}>
+                        <input type="checkbox" checked={(showColumns as any)[k]} onChange={e=>setShowColumns({...showColumns,[k]:e.target.checked})}/>
+                        {l}
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <button onClick={exportEmailsCsv} style={{fontSize:12,fontWeight:600,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'7px 14px',cursor:'pointer',fontFamily:'inherit'}}>Export emails</button>
+              </div>
+            </div>
+
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1.5fr 90px 90px 90px 140px 90px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Email Name</span><span>Delivered</span><span>Open Rate</span><span>Click Rate</span><span>Last Updated</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:`1.5fr ${showColumns.delivered?'90px':''} ${showColumns.openRate?'90px':''} ${showColumns.clickRate?'90px':''} ${showColumns.lastUpdated?'140px':''} 90px`,padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Email Name</span>
+                {showColumns.delivered&&<span>Delivered</span>}
+                {showColumns.openRate&&<span>Open Rate</span>}
+                {showColumns.clickRate&&<span>Click Rate</span>}
+                {showColumns.lastUpdated&&<span>Last Updated</span>}
+                <span></span>
               </div>
               {(()=>{
-                const filtered = emails.filter((e:any)=>emailFilter==='All emails'||e.status===emailFilter.replace(/s$/,''))
+                const filtered = emails
+                  .filter((e:any)=>emailFilter==='All emails'||e.status===emailFilter.replace(/s$/,''))
+                  .filter((e:any)=>!emailSearch||e.subject?.toLowerCase().includes(emailSearch.toLowerCase())||e.to_recipient?.toLowerCase().includes(emailSearch.toLowerCase()))
                 if (filtered.length===0) return <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>✉️</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No emails here yet</div></div>
+                const statusDot: Record<string,string> = {Draft:'#98A2B3',Scheduled:'#F59E0B',Sent:'#10B981'}
                 return filtered.map((e:any)=>{
                   const stats = emailStats(e.id)
                   const openRate = stats.delivered ? Math.round((stats.opened>0?1:0)*100) : 0
                   const clickRate = stats.delivered ? Math.round((stats.clicked>0?1:0)*100) : 0
+                  const updated = new Date(e.sent_at||e.created_at)
                   return (
                     <div key={e.id}>
-                      <div style={{display:'grid',gridTemplateColumns:'1.5fr 90px 90px 90px 140px 90px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                        <div>
-                          <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.subject}</div>
-                          <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>To: {e.to_recipient||'—'}</div>
+                      <div style={{display:'grid',gridTemplateColumns:`1.5fr ${showColumns.delivered?'90px':''} ${showColumns.openRate?'90px':''} ${showColumns.clickRate?'90px':''} ${showColumns.lastUpdated?'140px':''} 90px`,padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                        <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
+                          <div style={{width:7,height:7,borderRadius:'50%',background:statusDot[e.status]||'#98A2B3',marginTop:5,flexShrink:0}}/>
+                          <div>
+                            <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>{e.subject}</div>
+                            <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>To: {e.to_recipient||'—'}</div>
+                          </div>
                         </div>
-                        <span style={{fontSize:12,color:e.status==='Sent'?(stats.delivered?'#10B981':'#98A2B3'):'#98A2B3'}}>{e.status==='Sent'?(stats.delivered?'Yes':'Pending'):'—'}</span>
-                        <span style={{fontSize:12,color:'#344054'}}>{e.status==='Sent'?openRate+'%':'—'}</span>
-                        <span style={{fontSize:12,color:'#344054'}}>{e.status==='Sent'?clickRate+'%':'—'}</span>
-                        <span style={{fontSize:11,color:'#667085'}}>{new Date(e.sent_at||e.created_at).toLocaleString()}</span>
+                        {showColumns.delivered&&<span style={{fontSize:12,color:e.status==='Sent'?(stats.delivered?'#10B981':'#98A2B3'):'#98A2B3'}}>{e.status==='Sent'?(stats.delivered?'Yes':'Pending'):'—'}</span>}
+                        {showColumns.openRate&&<span style={{fontSize:12,color:'#344054'}}>{e.status==='Sent'?openRate+'%':'—'}</span>}
+                        {showColumns.clickRate&&<span style={{fontSize:12,color:'#344054'}}>{e.status==='Sent'?clickRate+'%':'—'}</span>}
+                        {showColumns.lastUpdated&&(
+                          <span style={{fontSize:11,color:'#667085',lineHeight:1.4}}>
+                            {updated.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}<br/>
+                            {updated.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}
+                          </span>
+                        )}
                         <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
                           {e.status!=='Sent'&&(
                             <button onClick={()=>sendMarketingEmail(e.id)} disabled={sendingEmailId===e.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:ACCENT,border:'none',borderRadius:6,padding:'5px 10px',cursor:'pointer',opacity:sendingEmailId===e.id?0.6:1}}>{sendingEmailId===e.id?'…':'Send'}</button>
