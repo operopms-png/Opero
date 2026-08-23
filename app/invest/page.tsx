@@ -23,7 +23,7 @@ const STRATEGIES = [
   { id:'land', label:'Land Purchase', desc:'Buy land for development or planning gain' },
 ]
 
-const SECTIONS = ['Deal Analyser','Saved Deals','Watchlist','Postcode Insights']
+const SECTIONS = ['Deal Analyser','Saved Deals','Watchlist']
 
 function calcBTL(d: any) {
   const price = parseFloat(d.price)||0
@@ -181,7 +181,6 @@ export default function InvestPage() {
   const [watchlist, setWatchlist] = useState<any[]>([])
   const [watchForm, setWatchForm] = useState({address:'',price:'',notes:'',status:'Watching'})
   const [showAddWatch, setShowAddWatch] = useState(false)
-  const [postcode, setPostcode] = useState('')
   const [userId, setUserId] = useState<string|null>(null)
   const [loadingData, setLoadingData] = useState(true)
 
@@ -654,25 +653,6 @@ export default function InvestPage() {
                 ))}
               </div>
             )}
-          </div>
-        )}
-
-        {/* POSTCODE INSIGHTS */}
-        {section==='Postcode Insights'&&(
-          <div>
-            <div style={{fontSize:22,fontWeight:700,color:'#101828',marginBottom:8}}>Postcode Insights</div>
-            <div style={{fontSize:14,color:'#667085',marginBottom:24}}>Enter a UK postcode to get average rents, yields and market data.</div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:28,marginBottom:20}}>
-              <div style={{display:'flex',gap:12,marginBottom:20}}>
-                <input value={postcode} onChange={e=>setPostcode(e.target.value.toUpperCase())} placeholder="e.g. SW1A 1AA" style={{...inp,maxWidth:200}} />
-                <button style={{padding:'10px 20px',borderRadius:8,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Explore Area</button>
-              </div>
-              <div style={{textAlign:'center',padding:40,color:'#98A2B3'}}>
-                <div style={{fontSize:32,marginBottom:12}}>📍</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>Enter a postcode above</div>
-                <div style={{fontSize:13}}>Market data integration coming soon. For now, use the Deal Analyser with your own research.</div>
-              </div>
-            </div>
           </div>
         )}
 
