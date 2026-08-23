@@ -334,6 +334,16 @@ function PMPageInner() {
       supabase.from('pm_bank_accounts').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_transactions').select('*').eq('user_id',userId).order('date',{ascending:false}),
     ])
+    // None of these were ever checked for errors before -- a broken
+    // relationship (like the pm_cleaning_tasks/pm_units one above) or
+    // an RLS issue would fail a query completely, but the page would
+    // just silently show an empty list with no indication why. Logging
+    // here means that's now visible in the browser console instead of
+    // being invisible.
+    const results: Record<string, any> = { properties:p, units:u, landlords:l, tenants:t, leases:le, payments:pay, maintenance:m, inspections:ins, documents:docs, expenses:ex, cleaning:cl, landlordPayments:lp, compliance:comp, bankAccounts:bk, transactions:tx }
+    for (const [name, res] of Object.entries(results)) {
+      if (res.error) console.error(`[PM loadAll] ${name} failed to load:`, res.error.message)
+    }
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
     const restrictedIds = restrictedProps.map((x: any) => x.id)
