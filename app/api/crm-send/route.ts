@@ -21,9 +21,17 @@ export async function POST(req: NextRequest) {
 
   let result: { success?: boolean; skipped?: boolean; error?: string }
   if (channel === 'email') {
-    // Reply-to encodes user_id + contact_id so an inbound reply can be
-    // routed back to the right tenant's CRM without cross-tenant lookups.
-    const replyTo = contact_id ? `crm+${userId}.${contact_id}@helloopero.com` : `crm+${userId}@helloopero.com`
+    // Reply-to uses a short per-contact token instead of encoding
+    // user_id + contact_id directly -- two UUIDs pushed this over
+    // Resend's 64-character limit on the address's local part, which
+    // made Resend reject the whole send outright (see
+    // migrations/fix-crm-reply-token-length.sql). No token available
+    // (e.g. no contact_id) just means no Reply-To is set.
+    let replyTo: string | undefined
+    if (contact_id) {
+      const { data: contact } = await serviceClient.from('crm_contacts').select('reply_token').eq('id', contact_id).single()
+      if (contact?.reply_token) replyTo = `crm+${contact.reply_token}@helloopero.com`
+    }
     result = await sendEmail(to, subject || 'Message from your property manager', `<p>${body.replace(/\n/g, '<br/>')}</p>`, replyTo)
   } else if (channel === 'sms') {
     result = await sendSms(to, body)

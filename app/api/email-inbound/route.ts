@@ -58,8 +58,13 @@ export async function POST(req: NextRequest) {
   const fromAddress: string = event.data?.from ?? ''
   const subject: string = event.data?.subject ?? '(no subject)'
 
+  // Same pattern as the marketing+ handling below -- a short per-contact
+  // reply_token instead of encoding user_id + contact_id directly (see
+  // migrations/fix-crm-reply-token-length.sql). No-contact sends never
+  // set a Reply-To at all now (see app/api/crm-send), so there's no
+  // fallback "crm+<user_id> only" form to match anymore.
   const aliasMatch = toAddresses
-    .map((addr) => addr.match(/crm\+([a-f0-9-]+)(?:\.([a-f0-9-]+))?@/i))
+    .map((addr) => addr.match(/crm\+([a-zA-Z0-9]+)@/i))
     .find((m) => m)
 
   // Same idea as the crm+ alias above, but for marketing_emails.
@@ -108,7 +113,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true, matched: false })
   }
 
-  const [, userId, contactId] = aliasMatch
+  const [, replyToken] = aliasMatch
+  const { data: contact } = await serviceClient.from('crm_contacts').select('id,user_id').eq('reply_token', replyToken).single()
+
+  if (!contact) {
+    console.log('[email-inbound] crm+ alias matched but no contact found for token:', replyToken)
+    return NextResponse.json({ received: true, matched: false })
+  }
 
   let body = ''
   if (process.env.RESEND_API_KEY && emailId) {
@@ -124,8 +135,8 @@ export async function POST(req: NextRequest) {
   }
 
   await serviceClient.from('crm_activities').insert({
-    user_id: userId,
-    contact_id: contactId || null,
+    user_id: contact.user_id,
+    contact_id: contact.id,
     type: 'email',
     subject: `Reply: ${subject}`,
     body: body || `(From ${fromAddress} — body unavailable)`,
