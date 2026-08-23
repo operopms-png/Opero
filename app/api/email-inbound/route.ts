@@ -62,15 +62,23 @@ export async function POST(req: NextRequest) {
     .map((addr) => addr.match(/crm\+([a-f0-9-]+)(?:\.([a-f0-9-]+))?@/i))
     .find((m) => m)
 
-  // Same idea as the crm+ alias above, but for marketing_emails --
-  // marketing+<user_id>.<marketing_email_id>@helloopero.com. Checked
-  // separately since it routes to a different table.
+  // Same idea as the crm+ alias above, but for marketing_emails.
+  // Uses a short reply_token instead of encoding IDs directly in the
+  // address -- two UUIDs would exceed the 64-character limit on the
+  // local part of an email address (see
+  // fix-marketing-email-reply-token-length.sql).
   const marketingAliasMatch = toAddresses
-    .map((addr) => addr.match(/marketing\+([a-f0-9-]+)\.([a-f0-9-]+)@/i))
+    .map((addr) => addr.match(/marketing\+([a-zA-Z0-9]+)@/i))
     .find((m) => m)
 
   if (marketingAliasMatch) {
-    const [, , marketingEmailId] = marketingAliasMatch
+    const [, replyToken] = marketingAliasMatch
+    const { data: mktEmail } = await serviceClient.from('marketing_emails').select('id').eq('reply_token', replyToken).single()
+
+    if (!mktEmail) {
+      console.log('[email-inbound] marketing+ alias matched but no email found for token:', replyToken)
+      return NextResponse.json({ received: true, matched: false })
+    }
 
     let mktBody = ''
     if (process.env.RESEND_API_KEY && emailId) {
@@ -86,7 +94,7 @@ export async function POST(req: NextRequest) {
     }
 
     await serviceClient.from('marketing_email_replies').insert({
-      marketing_email_id: marketingEmailId,
+      marketing_email_id: mktEmail.id,
       from_address: fromAddress,
       subject: `Reply: ${subject}`,
       body: mktBody || `(From ${fromAddress} — body unavailable)`,

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!email.body) return NextResponse.json({ error: 'This email has no body to send' }, { status: 400 })
   if (email.status === 'Sent') return NextResponse.json({ error: 'This email has already been sent' }, { status: 400 })
 
-  const replyTo = `marketing+${userId}.${email.id}@helloopero.com`
+  const replyTo = `marketing+${email.reply_token}@helloopero.com`
   const result = await sendEmail(email.to_recipient, email.subject, `<p>${email.body.replace(/\n/g, '<br/>')}</p>`, replyTo)
 
   if (result.error) return NextResponse.json({ error: result.error }, { status: 502 })
