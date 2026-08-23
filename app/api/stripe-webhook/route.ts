@@ -64,6 +64,19 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true })
       }
 
+      // Same as above, for Estate Agency tenants paying via
+      // estate_rent_schedules instead of pm_rent_payments.
+      if (session.metadata?.type === 'estate_tenant_rent_payment') {
+        const scheduleId = session.metadata.schedule_id
+        if (scheduleId) {
+          await supabase.from('estate_rent_schedules').update({
+            status: 'Paid',
+            method: 'card',
+          }).eq('id', scheduleId)
+        }
+        return NextResponse.json({ received: true })
+      }
+
       const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
       const email = fullSession.customer_details?.email ?? fullSession.customer_email
       const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''

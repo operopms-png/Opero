@@ -93,6 +93,8 @@ function LoginForm() {
         if (estateLandlordProfile) { window.location.href = '/estate-owner-portal'; return }
         const { data: tenantProfile } = await supabase.from('pm_tenants').select('id').eq('portal_user_id', session.user.id).single()
         if (tenantProfile) { window.location.href = '/pm-tenant-portal'; return }
+        const { data: estateTenantProfile } = await supabase.from('estate_tenants').select('id').eq('portal_user_id', session.user.id).single()
+        if (estateTenantProfile) { window.location.href = '/estate-tenant-portal'; return }
         const { data: teamRows } = await supabase.from('team_members').select('role').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
         const staffRole = normalizeRole(teamRows?.[0]?.role)
         window.location.href = (staffRole === 'Cleaner' || staffRole === 'Maintenance') ? '/staff-dashboard' : redirect
@@ -141,6 +143,14 @@ function LoginForm() {
           .eq('portal_user_id', data.user?.id)
           .single()
         if (tenantProfile) { window.location.href = '/pm-tenant-portal'; return }
+        // Check if this user is an Estate Agency tenant with portal
+        // access — if so, send to the EA tenant portal
+        const { data: estateTenantProfile } = await supabase
+          .from('estate_tenants')
+          .select('id')
+          .eq('portal_user_id', data.user?.id)
+          .single()
+        if (estateTenantProfile) { window.location.href = '/estate-tenant-portal'; return }
         // Check if this user is a Cleaner or Maintenance staff member — if
         // so, send them to their focused task dashboard, not the full app
         const { data: teamRows } = await supabase

@@ -249,6 +249,9 @@ export default function Page() {
   const [portalLandlord, setPortalLandlord] = useState<any>(null)
   const [portalPassword, setPortalPassword] = useState('')
   const [creatingPortal, setCreatingPortal] = useState(false)
+  const [portalTenant, setPortalTenant] = useState<any>(null)
+  const [tenantPortalPassword, setTenantPortalPassword] = useState('')
+  const [creatingTenantPortal, setCreatingTenantPortal] = useState(false)
   const [vacancies, setVacancies] = useState<any[]>([])
   const [showAddVacancy, setShowAddVacancy] = useState(false)
   const [vacForm, setVacForm] = useState({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''})
@@ -797,6 +800,14 @@ export default function Page() {
                     <div style={{fontSize:12,color:'#98A2B3',marginTop:2}}>{t.estate_properties?.name}{t.unit_id?` — ${units.find((u:any)=>u.id===t.unit_id)?.unit_number??''}`:''}</div>
                   </div>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:t.status==='active'?'#D1FAE5':'#F3F4F6',color:t.status==='active'?'#059669':'#6B7280'}}>{t.status||'active'}</span>
+                  {t.portal_user_id?(
+                    <>
+                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Portal Active</span>
+                      <a href={`/estate-tenant-portal?tenant_id=${t.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
+                    </>
+                  ):(
+                    <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
+                  )}
                   <button onClick={()=>{setEditItem(t);setTen({name:t.name,email:t.email||'',phone:t.phone||'',property_id:t.property_id||'',unit_id:t.unit_id||'',id_type:t.id_type||'',id_url:t.id_url||'',status:t.status||'active'});setShowAddTenant(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
                   <button onClick={()=>delRecord('estate_tenants',t.id)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Delete</button>
                 </div>
@@ -1846,6 +1857,30 @@ export default function Page() {
               alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: helloopero.com/login`)
               setPortalLandlord(null);await loadAll()
             }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {portalTenant&&(
+        <Modal title={`Give ${portalTenant.name} portal access`} onClose={()=>setPortalTenant(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{fontSize:13,color:'#667085'}}>This creates a login for {portalTenant.name} so they can see their tenancy, payment history, and submit maintenance requests. Share the email/password with them yourself.</div>
+            <div><label style={labelStyle}>Email</label><input style={inputStyle} value={portalTenant.email??''} onChange={e=>setPortalTenant({...portalTenant,email:e.target.value})} placeholder="tenant@example.com"/></div>
+            <div><label style={labelStyle}>Password</label><input style={inputStyle} value={tenantPortalPassword} onChange={e=>setTenantPortalPassword(e.target.value)} placeholder="min. 6 characters"/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setPortalTenant(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={async ()=>{
+              if(!portalTenant.email||!tenantPortalPassword)return
+              setCreatingTenantPortal(true)
+              const {data:{session}}=await supabase.auth.getSession()
+              const res=await fetch('/api/create-estate-tenant-account',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify({tenant_id:portalTenant.id,email:portalTenant.email,password:tenantPortalPassword})})
+              const result=await res.json()
+              setCreatingTenantPortal(false)
+              if(!res.ok){alert(result.error||'Could not create portal access');return}
+              alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: helloopero.com/login`)
+              setPortalTenant(null);await loadAll()
+            }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}
