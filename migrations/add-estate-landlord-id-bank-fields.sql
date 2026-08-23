@@ -8,6 +8,6 @@ ALTER TABLE estate_landlords
   ADD COLUMN IF NOT EXISTS id_type TEXT,
   ADD COLUMN IF NOT EXISTS id_url TEXT,
   ADD COLUMN IF NOT EXISTS iban TEXT,
-  ADD COLUMN IF NOT EXISTS swift_bic TEXT;
+  ADD COLUMN IF NOT EXISTS swift TEXT;
 
 NOTIFY pgrst, 'reload schema';

@@ -239,7 +239,7 @@ export default function Page() {
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
   const [landlords, setLandlords] = useState<any[]>([])
   const [showAddLandlord, setShowAddLandlord] = useState(false)
-  const [landlordForm, setLandlordForm] = useState({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})
+  const [landlordForm, setLandlordForm] = useState({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''})
   const [portalLandlord, setPortalLandlord] = useState<any>(null)
   const [portalPassword, setPortalPassword] = useState('')
   const [creatingPortal, setCreatingPortal] = useState(false)
@@ -539,7 +539,7 @@ export default function Page() {
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
             {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
-            {section==='Landlords'&&<button onClick={()=>{setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''});setShowAddLandlord(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add landlord</button>}
+            {section==='Landlords'&&<button onClick={()=>{setEditItem(null);setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''});setShowAddLandlord(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add landlord</button>}
             {section==='Compliance'&&<button onClick={()=>setShowAddCompliance(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
             {section==='Buildings'&&<button onClick={()=>{setEditItem(null);setShowAddBuilding(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add building</button>}
             {section==='Units'&&<button onClick={()=>{setEditItem(null);setShowAddUnit(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add unit</button>}
@@ -1130,7 +1130,7 @@ export default function Page() {
                   ):(
                     <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
                   )}
-                  <button onClick={()=>{setEditItem(l);setLandlordForm({name:l.name,email:l.email||'',phone:l.phone||'',bank_name:l.bank_name||'',account_name:l.account_name||'',account_number:l.account_number||'',sort_code:l.sort_code||'',notes:l.notes||'',id_type:l.id_type||'',id_url:l.id_url||'',iban:l.iban||'',swift_bic:l.swift_bic||''});setShowAddLandlord(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>{setEditItem(l);setLandlordForm({name:l.name,email:l.email||'',phone:l.phone||'',address:l.address||'',bank_name:l.bank_name||'',account_name:l.account_name||'',account_number:l.account_number||'',sort_code:l.sort_code||'',notes:l.notes||'',id_type:l.id_type||'',id_url:l.id_url||'',iban:l.iban||'',swift:l.swift||''});setShowAddLandlord(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                   <button onClick={()=>delRecord('estate_landlords',l.id)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
                 </div>
               ))}
@@ -1753,11 +1753,12 @@ export default function Page() {
       {viewingPhotos&&<PropertyImageSlideshow urls={viewingPhotos} onClose={()=>setViewingPhotos(null)}/>}
 
       {showAddLandlord&&(
-        <Modal title={editItem?'Edit Landlord':'Add Landlord'} onClose={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})}}>
+        <Modal title={editItem?'Edit Landlord':'Add Landlord'} onClose={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''})}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={labelStyle}>Full Name *</label><input style={inputStyle} value={landlordForm.name} onChange={e=>setLandlordForm({...landlordForm,name:e.target.value})} placeholder="e.g. Marcus Whitfield"/></div>
             <div><label style={labelStyle}>Email</label><input type="email" style={inputStyle} value={landlordForm.email} onChange={e=>setLandlordForm({...landlordForm,email:e.target.value})} placeholder="john@example.com"/></div>
             <div><label style={labelStyle}>Phone</label><input style={inputStyle} value={landlordForm.phone} onChange={e=>setLandlordForm({...landlordForm,phone:e.target.value})} placeholder="+44 7700 000000"/></div>
+            <div><label style={labelStyle}>Address</label><input style={inputStyle} value={landlordForm.address} onChange={e=>setLandlordForm({...landlordForm,address:e.target.value})} placeholder="123 Main Street, London"/></div>
             <div><label style={labelStyle}>Notes</label><textarea style={{...inputStyle,resize:'vertical' as const}} rows={3} value={landlordForm.notes} onChange={e=>setLandlordForm({...landlordForm,notes:e.target.value})}/></div>
             <div><label style={labelStyle}>ID Type</label>
               <select style={{...inputStyle,cursor:'pointer'}} value={landlordForm.id_type} onChange={e=>setLandlordForm({...landlordForm,id_type:e.target.value})}>
@@ -1768,16 +1769,6 @@ export default function Page() {
               </select>
             </div>
             <FileUpload label="ID Document" value={landlordForm.id_url} onChange={url=>setLandlordForm({...landlordForm,id_url:url})} folder="estate-landlord-ids" />
-
-            <div style={{fontSize:13,fontWeight:600,color:'#344054',borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:2}}>Bank Details</div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-              <div><label style={labelStyle}>Bank Name</label><input style={inputStyle} value={landlordForm.bank_name} onChange={e=>setLandlordForm({...landlordForm,bank_name:e.target.value})} placeholder="e.g. Barclays"/></div>
-              <div><label style={labelStyle}>Account Name</label><input style={inputStyle} value={landlordForm.account_name} onChange={e=>setLandlordForm({...landlordForm,account_name:e.target.value})} placeholder="Full name on account"/></div>
-              <div><label style={labelStyle}>Account Number</label><input style={inputStyle} value={landlordForm.account_number} onChange={e=>setLandlordForm({...landlordForm,account_number:e.target.value})} placeholder="12345678"/></div>
-              <div><label style={labelStyle}>Sort Code</label><input style={inputStyle} value={landlordForm.sort_code} onChange={e=>setLandlordForm({...landlordForm,sort_code:e.target.value})} placeholder="00-00-00"/></div>
-              <div><label style={labelStyle}>IBAN</label><input style={inputStyle} value={landlordForm.iban} onChange={e=>setLandlordForm({...landlordForm,iban:e.target.value})} placeholder="GB00 XXXX 0000 0000 00"/></div>
-              <div><label style={labelStyle}>SWIFT / BIC</label><input style={inputStyle} value={landlordForm.swift_bic} onChange={e=>setLandlordForm({...landlordForm,swift_bic:e.target.value})} placeholder="BARCGB22"/></div>
-            </div>
 
             {editItem && (
               <div style={{borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:4}}>
@@ -1800,14 +1791,32 @@ export default function Page() {
                 </div>
               </div>
             )}
+
+            <div style={{borderTop:'1px solid #F2F4F7',paddingTop:14,marginTop:4}}>
+              <div style={{fontSize:13,fontWeight:600,color:'#344054',marginBottom:12}}>Bank Details</div>
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div><label style={labelStyle}>Bank Name</label><input style={inputStyle} value={landlordForm.bank_name} onChange={e=>setLandlordForm({...landlordForm,bank_name:e.target.value})} placeholder="e.g. Barclays"/></div>
+                  <div><label style={labelStyle}>Account Name</label><input style={inputStyle} value={landlordForm.account_name} onChange={e=>setLandlordForm({...landlordForm,account_name:e.target.value})} placeholder="Full name on account"/></div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div><label style={labelStyle}>Account Number</label><input style={inputStyle} value={landlordForm.account_number} onChange={e=>setLandlordForm({...landlordForm,account_number:e.target.value})} placeholder="12345678"/></div>
+                  <div><label style={labelStyle}>Sort Code</label><input style={inputStyle} value={landlordForm.sort_code} onChange={e=>setLandlordForm({...landlordForm,sort_code:e.target.value})} placeholder="00-00-00"/></div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div><label style={labelStyle}>IBAN</label><input style={inputStyle} value={landlordForm.iban} onChange={e=>setLandlordForm({...landlordForm,iban:e.target.value})} placeholder="GB00 XXXX 0000 0000 0000 00"/></div>
+                  <div><label style={labelStyle}>SWIFT / BIC</label><input style={inputStyle} value={landlordForm.swift} onChange={e=>setLandlordForm({...landlordForm,swift:e.target.value})} placeholder="BARCGB22"/></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
-            <button onClick={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>{setShowAddLandlord(false);setEditItem(null);setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
             <button onClick={async()=>{
               if(!landlordForm.name)return
               await saveRecord('estate_landlords',landlordForm,editItem?.id)
               setEditItem(null);setShowAddLandlord(false)
-              setLandlordForm({name:'',email:'',phone:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift_bic:''})
+              setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''})
             }} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Landlord'}</button>
           </div>
         </Modal>
