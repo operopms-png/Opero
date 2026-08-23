@@ -19,6 +19,9 @@ export default function Page() {
   const [emailForm, setEmailForm] = useState({subject:'',to_recipient:'',template:'',status:'Draft',scheduled_at:'',notes:'',body:''})
   const [sendingEmailId, setSendingEmailId] = useState<string|null>(null)
   const [emailReplies, setEmailReplies] = useState<Record<string,any[]>>({})
+  const [showSendSettings, setShowSendSettings] = useState(false)
+  const [sendSettings, setSendSettings] = useState({marketing_from_email:'',marketing_from_name:'Sangsters Group'})
+  const [savingSendSettings, setSavingSendSettings] = useState(false)
   const [socials, setSocials] = useState<any[]>([])
   const [showSocialForm, setShowSocialForm] = useState(false)
   const [socialForm, setSocialForm] = useState({caption:'',platform:'Instagram',scheduled_at:'',status:'Draft',link:''})
@@ -30,9 +33,20 @@ export default function Page() {
     supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
       await loadAll(user.id)
+      const { data: settings } = await supabase.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id',user.id).single()
+      if (settings) setSendSettings({marketing_from_email:settings.marketing_from_email||'',marketing_from_name:settings.marketing_from_name||'Sangsters Group'})
       setLoading(false)
     })
   },[])
+
+  async function saveSendSettings() {
+    setSavingSendSettings(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from('integrations').upsert({user_id:user?.id, ...sendSettings}, {onConflict:'user_id'})
+    setSavingSendSettings(false)
+    if(error){alert(error.message);return}
+    setShowSendSettings(false)
+  }
 
   async function loadAll(userId: string) {
     const [c,e,s,a] = await Promise.all([
@@ -154,6 +168,22 @@ export default function Page() {
         </div>)}
 
         {section==='Email'&&(<div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+            <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#101828'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Opero <notifications@helloopero.com> (default — not set up yet)'}</strong></div>
+            <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit'}}>{sendSettings.marketing_from_email?'Change sending address':'Set sending address'}</button>
+          </div>
+          {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
+            <p style={{fontSize:12,color:'#98A2B3',marginBottom:16,lineHeight:1.5}}>This address's domain must be verified in Resend (SPF/DKIM records added to its DNS) or sends will fail or land in spam. If you haven't verified sangstersgroup.com in Resend yet, do that first — this setting alone won't make sends work on an unverified domain.</p>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+              <div><label style={lbl}>From Name</label><input value={sendSettings.marketing_from_name} onChange={e=>setSendSettings({...sendSettings,marketing_from_name:e.target.value})} placeholder="Sangsters Group" style={inp}/></div>
+              <div><label style={lbl}>From Email</label><input value={sendSettings.marketing_from_email} onChange={e=>setSendSettings({...sendSettings,marketing_from_email:e.target.value})} placeholder="info@sangstersgroup.com" style={inp}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={saveSendSettings} disabled={savingSendSettings} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingSendSettings?0.6:1}}>{savingSendSettings?'Saving…':'Save'}</button>
+              <button onClick={()=>setShowSendSettings(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
           {showEmailForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
             <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>New Email</h3>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
