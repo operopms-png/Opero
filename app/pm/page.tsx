@@ -317,7 +317,7 @@ function PMPageInner() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp,comp] = await Promise.all([
+    const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp,comp,bk,tx] = await Promise.all([
       supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_units').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -331,6 +331,8 @@ function PMPageInner() {
       supabase.from('pm_cleaning_tasks').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('scheduled_date',{ascending:true}),
       supabase.from('pm_landlord_payments').select('*,pm_landlords(name),pm_properties(name)').eq('user_id',userId).order('due_date',{ascending:false}),
       supabase.from('pm_compliance').select('*,pm_properties(name)').eq('user_id',userId).order('expiry_date',{ascending:true}),
+      supabase.from('pm_bank_accounts').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_transactions').select('*').eq('user_id',userId).order('date',{ascending:false}),
     ])
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
@@ -342,6 +344,7 @@ function PMPageInner() {
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
     setExpenses(ex.data??[]); setCleaning(cleanData); setLandlordPayments(lp.data??[])
     setComplianceRecords(comp.data??[])
+    setBankAccounts(bk.data??[]); setTransactions(tx.data??[])
   }
 
   async function addExpense() {
@@ -357,6 +360,44 @@ function PMPageInner() {
   async function deleteExpense(id: string) {
     await supabase.from('office_expenses').delete().eq('id', id)
     setExpenses(expenses.filter((x:any)=>x.id!==id))
+  }
+
+  async function addBankAccount() {
+    if (!bankForm.name) return
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('pm_bank_accounts').insert({ ...bankForm, balance: parseFloat(bankForm.balance)||0, user_id: user?.id })
+    if (error) { alert(error.message); return }
+    await loadAll()
+    setBankForm({name:'',type:'Current',balance:'',currency:'GBP'})
+    setShowAddBank(false)
+  }
+
+  async function deleteBankAccount(id: string) {
+    await supabase.from('pm_bank_accounts').delete().eq('id', id)
+    await loadAll()
+  }
+
+  async function addTransaction() {
+    if (!txForm.description || !txForm.amount) return
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('pm_transactions').insert({
+      account_id: txForm.account || null, description: txForm.description, amount: parseFloat(txForm.amount)||0,
+      type: txForm.type, date: txForm.date || null, category: txForm.category, status: 'Unreconciled', user_id: user?.id,
+    })
+    if (error) { alert(error.message); return }
+    await loadAll()
+    setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'})
+    setShowAddTx(false)
+  }
+
+  async function deleteTransaction(id: string) {
+    await supabase.from('pm_transactions').delete().eq('id', id)
+    await loadAll()
+  }
+
+  async function setTransactionStatus(id: string, status: string) {
+    await supabase.from('pm_transactions').update({ status }).eq('id', id)
+    setTransactions(transactions.map((x:any)=>x.id===id?{...x,status}:x))
   }
 
   async function toggleExpensePaid(id: string, status: string) {
@@ -1098,14 +1139,14 @@ function PMPageInner() {
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!bankForm.name)return;setBankAccounts([...bankAccounts,{id:Date.now(),...bankForm}]);setBankForm({name:'',type:'Current',balance:'',currency:'GBP'});setShowAddBank(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
+                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
                       <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
                 )}
                 {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div><button onClick={()=>setBankAccounts(bankAccounts.filter((x:any)=>x.id!==a.id))} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:'#101828',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
+                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:'#101828',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                     <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
                   </div>
                 )}
@@ -1118,12 +1159,14 @@ function PMPageInner() {
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Account</label><select value={txForm.account} onChange={e=>setTxForm({...txForm,account:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}><option value="">Select account</option>{bankAccounts.map((a:any)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Type</label><select value={txForm.type} onChange={e=>setTxForm({...txForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Income','Expense'].map(t=><option key={t}>{t}</option>)}</select></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category</label><select value={txForm.category} onChange={e=>setTxForm({...txForm,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Rent','Maintenance','Utilities','Insurance','Marketing','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!txForm.description||!txForm.amount)return;setTransactions([...transactions,{id:Date.now(),...txForm,status:'Unreconciled'}]);setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'});setShowAddTx(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
+                      <button onClick={addTransaction} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
                       <button onClick={()=>setShowAddTx(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
@@ -1131,12 +1174,13 @@ function PMPageInner() {
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{transactions.length} transactions</div><button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button></div>
                   {transactions.length===0?<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.map((t:any)=>(
-                    <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                    <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 110px 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                      <span style={{fontSize:12,color:'#344054'}}>{bankAccounts.find((a:any)=>a.id===t.account_id)?.name||'—'}</span>
                       <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
                       <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600}}>{t.type}</span>
-                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:x.status==='Reconciled'?'Unreconciled':'Reconciled'}:x))}>{t.status}</span>
-                      <button onClick={()=>setTransactions(transactions.filter((x:any)=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactionStatus(t.id, t.status==='Reconciled'?'Unreconciled':'Reconciled')}>{t.status}</span>
+                      <button onClick={()=>deleteTransaction(t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                     </div>
                   ))}
                 </div>
@@ -1147,7 +1191,7 @@ function PMPageInner() {
                 {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No transactions waiting for review.</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                   <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                   </div>
                 ))}
               </div>
@@ -1165,16 +1209,17 @@ function PMPageInner() {
           const pnlByMonth = Array.from({length:12},(_,i)=>{
             const monthKey = `${year}-${String(i+1).padStart(2,'0')}`
             const income = payments.filter((p:any)=>p.status==='paid' && p.due_date?.startsWith(monthKey)).reduce((s:number,p:any)=>s+(parseFloat(p.amount)||0),0)
-            const costs = expenses.filter((e:any)=>e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
-            return { month: monthKey, income, costs, net: income-costs }
+            const propertyCosts = expenses.filter((e:any)=>e.category==='Property' && e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+            const allExpenses = expenses.filter((e:any)=>e.date?.startsWith(monthKey)).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+            return { month: monthKey, income, propertyCosts, allExpenses, net: income-allExpenses }
           })
-          const thisMonth = pnlByMonth.find(m=>m.month===thisMonthKey) ?? { income:0, costs:0, net:0 }
+          const thisMonth = pnlByMonth.find(m=>m.month===thisMonthKey) ?? { income:0, propertyCosts:0, allExpenses:0, net:0 }
           return (
           <div>
             <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
               <div style={{fontSize:36,fontWeight:800}}>£{thisMonth.net.toLocaleString()}</div>
-              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{thisMonth.income.toLocaleString()} income · £{thisMonth.costs.toLocaleString()} costs</div>
+              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{thisMonth.income.toLocaleString()} income · £{thisMonth.allExpenses.toLocaleString()} costs</div>
             </div>
             <div style={{display:'flex',gap:8,marginBottom:20}}>
               {['P&L','Cash Flow','Forecast'].map(t=>(
@@ -1183,14 +1228,14 @@ function PMPageInner() {
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
-                <span>Month</span><span>Income</span><span>Costs</span><span>Expenses</span><span>Net Profit</span>
+                <span>Month</span><span>Income</span><span>Property Costs</span><span>Expenses</span><span>Net Profit</span>
               </div>
               {pnlByMonth.map((row,i)=>(
                 <div key={row.month} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
                   <span>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]} {year}</span>
                   <span style={{color:'#10B981'}}>£{row.income.toLocaleString()}</span>
-                  <span style={{color:'#EF4444'}}>£{row.costs.toLocaleString()}</span>
-                  <span style={{color:'#F59E0B'}}>£{row.costs.toLocaleString()}</span>
+                  <span style={{color:'#EF4444'}}>£{row.propertyCosts.toLocaleString()}</span>
+                  <span style={{color:'#F59E0B'}}>£{row.allExpenses.toLocaleString()}</span>
                   <span style={{fontWeight:600}}>£{row.net.toLocaleString()}</span>
                 </div>
               ))}
@@ -1246,7 +1291,14 @@ function PMPageInner() {
                 <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:20,alignSelf:'flex-start'}}>Collection Rate</div>
                 <svg viewBox="0 0 200 120" style={{width:'100%',maxWidth:200}}>
                   <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#F3F4F6" strokeWidth="20" strokeLinecap="round"/>
-                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#10B981" strokeWidth="20" strokeLinecap="round"/>
+                  {(()=>{
+                    const pct = payments.length>0?Math.round(payments.filter((p:any)=>p.status==='paid').length/payments.length*100):0
+                    const theta = (180*(1-Math.min(100,Math.max(0,pct))/100))*(Math.PI/180)
+                    const endX = (100+80*Math.cos(theta)).toFixed(1)
+                    const endY = (100-80*Math.sin(theta)).toFixed(1)
+                    const largeArc = pct>50?1:0
+                    return <path d={`M 20 100 A 80 80 0 ${largeArc} 1 ${endX} ${endY}`} fill="none" stroke="#10B981" strokeWidth="20" strokeLinecap="round"/>
+                  })()}
                   <text x="100" y="95" fontSize="22" fontWeight="800" fill="#101828" textAnchor="middle">{payments.length>0?Math.round(payments.filter((p:any)=>p.status==='paid').length/payments.length*100):0}%</text>
                   <text x="100" y="115" fontSize="10" fill="#98A2B3" textAnchor="middle">collection rate</text>
                 </svg>
