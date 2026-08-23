@@ -122,7 +122,13 @@ const NAV_GROUPS = [
   { label: 'REPORTS', items: ['Reports','Owner Reports'] },
 ]
 const STUB_SECTIONS: string[] = []
-const DOCUMENT_CATEGORIES = ['Tenancy Agreement','ID Document','Certificate','Insurance','Inventory Report','Other']
+const DOCUMENT_CATEGORIES = [
+  { value:'lease', label:'Lease' },
+  { value:'id', label:'ID Document' },
+  { value:'inspection', label:'Inspection Report' },
+  { value:'statement', label:'Statement' },
+  { value:'other', label:'Other' },
+]
 const VIEWING_STATUSES = ['Scheduled','Completed','Cancelled','No Show']
 const INVENTORY_TYPES = ['Check-in','Check-out','Mid-term Inspection']
 const COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
@@ -235,7 +241,7 @@ export default function Page() {
   const [showAddTenancy, setShowAddTenancy] = useState(false)
   const [editItem, setEditItem] = useState<any>(null)
   const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})
-  const [ten, setTen] = useState({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})
+  const [ten, setTen] = useState({name:'',email:'',phone:'',property_id:'',unit_id:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
   const [landlords, setLandlords] = useState<any[]>([])
   const [showAddLandlord, setShowAddLandlord] = useState(false)
@@ -266,10 +272,10 @@ export default function Page() {
   const [rentForm, setRentForm] = useState({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
   const [maintenance, setMaintenance] = useState<any[]>([])
   const [showAddMaint, setShowAddMaint] = useState(false)
-  const [maintForm, setMaintForm] = useState({title:'',property_id:'',description:'',priority:'medium'})
+  const [maintForm, setMaintForm] = useState({title:'',property_id:'',description:'',priority:'medium',assigned_to:'',photos:[] as string[]})
   const [cleaning, setCleaning] = useState<any[]>([])
   const [showAddCleaning, setShowAddCleaning] = useState(false)
-  const [cleanForm, setCleanForm] = useState({property_id:'',scheduled_date:'',assigned_to:'',notes:''})
+  const [cleanForm, setCleanForm] = useState({property_id:'',unit_id:'',scheduled_date:'',assigned_to:'',notes:''})
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
   const [showAddCompliance, setShowAddCompliance] = useState(false)
   const [complianceForm, setComplianceForm] = useState({property_id:'',type:COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
@@ -287,7 +293,7 @@ export default function Page() {
   const [inventoryForm, setInventoryForm] = useState({property_id:'',tenancy_id:'',type:INVENTORY_TYPES[0],inspection_date:'',condition_summary:'',document_url:'',status:'Draft'})
   const [documents, setDocuments] = useState<any[]>([])
   const [showAddDocument, setShowAddDocument] = useState(false)
-  const [documentForm, setDocumentForm] = useState({property_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0],file_url:'',expiry_date:'',notes:''})
+  const [documentForm, setDocumentForm] = useState({property_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''})
 
   const [news, setNews] = useState([
     {title:'New Tenant Verification Regulations for Landlords',tag:'LEGISLATION',body:'The Renters Rights Act has introduced restrictions on upfront rental payments, requiring landlords to adopt alternative affordability checks.',link:null as string|null},
@@ -434,7 +440,7 @@ export default function Page() {
     if(!ten.name) return
     await saveRecord('estate_tenants', ten, editItem?.id)
     setEditItem(null)
-    setTen({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})
+    setTen({name:'',email:'',phone:'',property_id:'',unit_id:'',id_type:'',id_url:'',status:'active'})
     setShowAddTenant(false)
   }
   const addTenancy = async () => {
@@ -545,7 +551,7 @@ export default function Page() {
             {section==='Units'&&<button onClick={()=>{setEditItem(null);setShowAddUnit(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add unit</button>}
             {section==='Viewings'&&<button onClick={()=>{setEditItem(null);setShowAddViewing(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add viewing</button>}
             {section==='Inventories'&&<button onClick={()=>{setEditItem(null);setShowAddInventory(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add report</button>}
-            {section==='Documents'&&<button onClick={()=>{setEditItem(null);setShowAddDocument(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add document</button>}
+            {section==='Documents'&&<button onClick={()=>{setEditItem(null);setShowAddDocument(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Document</button>}
           </div>
         </div>
 
@@ -748,19 +754,23 @@ export default function Page() {
 
           {section==='Tenants'&&(<div>
             {showAddTenant&&(
-              <Modal title={editItem?'Edit tenant':'Add tenant'} onClose={()=>{setShowAddTenant(false);setEditItem(null);setTen({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})}}>
+              <Modal title={editItem?'Edit tenant':'Add tenant'} onClose={()=>{setShowAddTenant(false);setEditItem(null);setTen({name:'',email:'',phone:'',property_id:'',unit_id:'',id_type:'',id_url:'',status:'active'})}}>
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div><label style={labelStyle}>Full name *</label><input value={ten.name} onChange={e=>setTen({...ten,name:e.target.value})} placeholder="Jane Smith" style={inputStyle}/></div>
                   <div><label style={labelStyle}>Email</label><input value={ten.email} onChange={e=>setTen({...ten,email:e.target.value})} placeholder="jane@example.com" style={inputStyle}/></div>
                   <div><label style={labelStyle}>Phone</label><input value={ten.phone} onChange={e=>setTen({...ten,phone:e.target.value})} placeholder="+44 7700 900000" style={inputStyle}/></div>
-                  <div><label style={labelStyle}>Date of birth</label><input value={ten.dob} onChange={e=>setTen({...ten,dob:e.target.value})} type="date" style={inputStyle}/></div>
                   <div><label style={labelStyle}>Property</label>
                     <select style={{...inputStyle,cursor:'pointer'}} value={ten.property_id} onChange={e=>setTen({...ten,property_id:e.target.value})}>
                       <option value="">Select property…</option>
                       {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
-                  <div><label style={labelStyle}>Unit</label><input value={ten.unit_label} onChange={e=>setTen({...ten,unit_label:e.target.value})} placeholder="e.g. Flat 2B" style={inputStyle}/></div>
+                  <div><label style={labelStyle}>Unit</label>
+                    <select style={{...inputStyle,cursor:'pointer'}} value={ten.unit_id} onChange={e=>setTen({...ten,unit_id:e.target.value})}>
+                      <option value="">Select unit…</option>
+                      {units.filter((u:any)=>!ten.property_id||u.property_id===ten.property_id).map((u:any)=><option key={u.id} value={u.id}>{u.unit_number}</option>)}
+                    </select>
+                  </div>
                   <div><label style={labelStyle}>ID type</label>
                     <select style={{...inputStyle,cursor:'pointer'}} value={ten.id_type} onChange={e=>setTen({...ten,id_type:e.target.value})}>
                       <option value="">Select…</option>
@@ -772,7 +782,7 @@ export default function Page() {
                   <FileUpload label="ID document" value={ten.id_url} onChange={url=>setTen({...ten,id_url:url})} folder="estate-tenant-ids" />
                 </div>
                 <div style={{display:'flex',gap:8,marginTop:24}}>
-                  <button onClick={()=>{setShowAddTenant(false);setEditItem(null);setTen({name:'',email:'',phone:'',dob:'',property_id:'',unit_label:'',id_type:'',id_url:'',status:'active'})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                  <button onClick={()=>{setShowAddTenant(false);setEditItem(null);setTen({name:'',email:'',phone:'',property_id:'',unit_id:'',id_type:'',id_url:'',status:'active'})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                   <button onClick={addTenant} disabled={!ten.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:ten.name?1:0.6}}>{editItem?'Save changes':'Add tenant'}</button>
                 </div>
               </Modal>
@@ -784,10 +794,10 @@ export default function Page() {
                   <div style={{flex:1}}>
                     <div style={{fontWeight:600,fontSize:14,color:'#101828'}}>{t.name}</div>
                     <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[t.email,t.phone].filter(Boolean).join(' · ')||'—'}</div>
-                    <div style={{fontSize:12,color:'#98A2B3',marginTop:2}}>{t.estate_properties?.name}{t.unit_label?` — ${t.unit_label}`:''}</div>
+                    <div style={{fontSize:12,color:'#98A2B3',marginTop:2}}>{t.estate_properties?.name}{t.unit_id?` — ${units.find((u:any)=>u.id===t.unit_id)?.unit_number??''}`:''}</div>
                   </div>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:t.status==='active'?'#D1FAE5':'#F3F4F6',color:t.status==='active'?'#059669':'#6B7280'}}>{t.status||'active'}</span>
-                  <button onClick={()=>{setEditItem(t);setTen({name:t.name,email:t.email||'',phone:t.phone||'',dob:t.dob||'',property_id:t.property_id||'',unit_label:t.unit_label||'',id_type:t.id_type||'',id_url:t.id_url||'',status:t.status||'active'});setShowAddTenant(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
+                  <button onClick={()=>{setEditItem(t);setTen({name:t.name,email:t.email||'',phone:t.phone||'',property_id:t.property_id||'',unit_id:t.unit_id||'',id_type:t.id_type||'',id_url:t.id_url||'',status:t.status||'active'});setShowAddTenant(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
                   <button onClick={()=>delRecord('estate_tenants',t.id)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Delete</button>
                 </div>
               ))}
@@ -1013,45 +1023,36 @@ export default function Page() {
 
           {section==='Documents'&&(<div>
             {showAddDocument&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit document':'Add document'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Document name *</label><input value={documentForm.name} onChange={e=>setDocumentForm({...documentForm,name:e.target.value})} placeholder="e.g. AST — 17 Ocean Drive" style={inputStyle}/></div>
-                <div><label style={labelStyle}>Category</label>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit Document':'Add Document'}</h3>
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                <div><label style={labelStyle}>Document Name *</label><input value={documentForm.name} onChange={e=>setDocumentForm({...documentForm,name:e.target.value})} placeholder="e.g. Tenancy Agreement" style={inputStyle}/></div>
+                <FileUpload label="Upload File (PDF, Image) *" value={documentForm.file_url} onChange={url=>setDocumentForm({...documentForm,file_url:url})} folder="estate-documents" />
+                <div><label style={labelStyle}>Type</label>
                   <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.category} onChange={e=>setDocumentForm({...documentForm,category:e.target.value})}>
-                    {DOCUMENT_CATEGORIES.map(c=><option key={c}>{c}</option>)}
+                    {DOCUMENT_CATEGORIES.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
                 </div>
-                <div><label style={labelStyle}>Expiry date</label><input value={documentForm.expiry_date} onChange={e=>setDocumentForm({...documentForm,expiry_date:e.target.value})} type="date" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Property</label>
                   <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.property_id} onChange={e=>setDocumentForm({...documentForm,property_id:e.target.value})}>
-                    <option value="">Select property…</option>
+                    <option value="">All properties</option>
                     {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
-                <div><label style={labelStyle}>Tenant</label>
-                  <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.tenant_id} onChange={e=>setDocumentForm({...documentForm,tenant_id:e.target.value})}>
-                    <option value="">Select tenant…</option>
-                    {tenants.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
-                </div>
-                <div style={{gridColumn:'span 2'}}><FileUpload label="File" value={documentForm.file_url} onChange={url=>setDocumentForm({...documentForm,file_url:url})} folder="estate-documents" /></div>
-                <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input value={documentForm.notes} onChange={e=>setDocumentForm({...documentForm,notes:e.target.value})} style={inputStyle}/></div>
               </div>
-              <div style={{display:'flex',gap:8,marginTop:12}}>
-                <button onClick={async()=>{if(!documentForm.name)return;await saveRecord('estate_documents',documentForm,editItem?.id);setEditItem(null);setDocumentForm({property_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0],file_url:'',expiry_date:'',notes:''});setShowAddDocument(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add document'}</button>
-                <button onClick={()=>{setShowAddDocument(false);setEditItem(null);setDocumentForm({property_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0],file_url:'',expiry_date:'',notes:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              <div style={{display:'flex',gap:8,marginTop:24}}>
+                <button onClick={async()=>{if(!documentForm.name||!documentForm.file_url)return;await saveRecord('estate_documents',documentForm,editItem?.id);setEditItem(null);setDocumentForm({property_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''});setShowAddDocument(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Document'}</button>
+                <button onClick={()=>{setShowAddDocument(false);setEditItem(null);setDocumentForm({property_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Name</span><span>Category</span><span>Linked to</span><span>Expiry</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Name</span><span>Type</span><span>Property</span><span></span>
               </div>
               {documents.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📁</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No documents yet</div><div style={{fontSize:13}}>Upload tenancy agreements, certificates and more.</div></div>):documents.map((d:any)=>(
-                <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.file_url?<a href={d.file_url} target="_blank" rel="noreferrer" style={{color:'#101828',textDecoration:'none'}}>{d.name}</a>:d.name}</span>
-                  <span style={{fontSize:13,color:'#667085'}}>{d.category}</span>
-                  <span style={{fontSize:13,color:'#667085'}}>{d.estate_properties?.name||d.estate_tenants?.name||'—'}</span>
-                  <span style={{fontSize:13,color:'#344054'}}>{d.expiry_date||'—'}</span>
+                  <span style={{fontSize:13,color:'#667085',textTransform:'capitalize' as const}}>{DOCUMENT_CATEGORIES.find(c=>c.value===d.category)?.label||d.category}</span>
+                  <span style={{fontSize:13,color:'#667085'}}>{d.estate_properties?.name||'—'}</span>
                   <button onClick={()=>delRecord('estate_documents',d.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                 </div>
               ))}
@@ -1277,10 +1278,12 @@ export default function Page() {
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Title *</div><input value={maintForm.title} onChange={e=>setMaintForm({...maintForm,title:e.target.value})} placeholder="e.g. Boiler not working" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><select value={maintForm.property_id} onChange={e=>setMaintForm({...maintForm,property_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Priority</div><select value={maintForm.priority} onChange={e=>setMaintForm({...maintForm,priority:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Assigned To</div><input value={maintForm.assigned_to} onChange={e=>setMaintForm({...maintForm,assigned_to:e.target.value})} placeholder="Contractor name" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                 <div style={{gridColumn:'span 2'}}><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Description</div><textarea value={maintForm.description} onChange={e=>setMaintForm({...maintForm,description:e.target.value})} rows={2} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',resize:'vertical',boxSizing:'border-box'}}/></div>
+                <div style={{gridColumn:'span 2'}}><FileUpload label="Photo / Document" value={maintForm.photos[0]??''} onChange={url=>setMaintForm({...maintForm,photos:[url]})} folder="estate-maintenance-photos" /></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!maintForm.title)return;saveRecord('estate_maintenance',maintForm);setMaintForm({title:'',property_id:'',description:'',priority:'medium'});setShowAddMaint(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create ticket</button>
+                <button onClick={()=>{if(!maintForm.title)return;saveRecord('estate_maintenance',maintForm);setMaintForm({title:'',property_id:'',description:'',priority:'medium',assigned_to:'',photos:[]});setShowAddMaint(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create ticket</button>
                 <button onClick={()=>setShowAddMaint(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -1310,12 +1313,13 @@ export default function Page() {
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Schedule cleaning</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><select value={cleanForm.property_id} onChange={e=>setCleanForm({...cleanForm,property_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Unit</div><select value={cleanForm.unit_id} onChange={e=>setCleanForm({...cleanForm,unit_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select unit (optional)…</option>{units.filter((u:any)=>u.property_id===cleanForm.property_id).map((u:any)=><option key={u.id} value={u.id}>{u.unit_number}</option>)}</select></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Scheduled Date</div><input type="date" value={cleanForm.scheduled_date} onChange={e=>setCleanForm({...cleanForm,scheduled_date:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Assigned To</div><input value={cleanForm.assigned_to} onChange={e=>setCleanForm({...cleanForm,assigned_to:e.target.value})} placeholder="Cleaner name" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Notes</div><input value={cleanForm.notes} onChange={e=>setCleanForm({...cleanForm,notes:e.target.value})} placeholder="Optional" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!cleanForm.property_id)return;saveRecord('estate_cleaning_tasks',cleanForm);setCleanForm({property_id:'',scheduled_date:'',assigned_to:'',notes:''});setShowAddCleaning(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Schedule</button>
+                <button onClick={()=>{if(!cleanForm.property_id)return;saveRecord('estate_cleaning_tasks',cleanForm);setCleanForm({property_id:'',unit_id:'',scheduled_date:'',assigned_to:'',notes:''});setShowAddCleaning(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Schedule</button>
                 <button onClick={()=>setShowAddCleaning(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
