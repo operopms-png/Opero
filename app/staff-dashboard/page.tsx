@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { normalizeRole } from '../../lib/useRole'
 
@@ -12,9 +13,12 @@ function startOfWeek(d: Date) {
   return new Date(date.setDate(diff))
 }
 
-export default function StaffDashboard() {
+function StaffDashboardInner() {
+  const searchParams = useSearchParams()
+  const viewingStaffId = searchParams.get('staff_id')
   const [loading, setLoading] = useState(true)
   const [member, setMember] = useState<any>(null)
+  const [isStaffView, setIsStaffView] = useState(false)
   const [items, setItems] = useState<any[]>([])
   const [shifts, setShifts] = useState<any[]>([])
   const [myTasks, setMyTasks] = useState<any[]>([])
@@ -23,16 +27,30 @@ export default function StaffDashboard() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { window.location.href = '/login'; return }
 
-      // Same fix as useRole(): take the most recent matching row, not
-      // .single(), so a duplicate team_members row can't break this.
-      const { data: rows } = await supabase
-        .from('team_members')
-        .select('*')
-        .eq('email', user.email)
-        .order('created_at', { ascending: false })
-        .limit(1)
-      const m = rows?.[0]
-      if (!m) { window.location.href = '/login'; return }
+      let m: any = null
+
+      if (viewingStaffId) {
+        // Admin previewing a specific staff member's dashboard.
+        // Only allowed if the logged-in user actually owns that staff
+        // member's account (same business) -- prevents anyone guessing
+        // a staff_id and peeking into another business's team.
+        const { data } = await supabase.from('team_members').select('*').eq('id', viewingStaffId).eq('user_id', user.id).single()
+        if (!data) { window.location.href = '/settings'; return }
+        m = data
+        setIsStaffView(true)
+      } else {
+        // Same fix as useRole(): take the most recent matching row, not
+        // .single(), so a duplicate team_members row can't break this.
+        const { data: rows } = await supabase
+          .from('team_members')
+          .select('*')
+          .eq('email', user.email)
+          .order('created_at', { ascending: false })
+          .limit(1)
+        m = rows?.[0]
+        if (!m) { window.location.href = '/login'; return }
+      }
+
       m.role = normalizeRole(m.role)
       setMember(m)
 
@@ -104,7 +122,7 @@ export default function StaffDashboard() {
 
       setLoading(false)
     })
-  }, [])
+  }, [viewingStaffId])
 
   async function updateStatus(item: any, status: string) {
     await supabase.from(item.table).update({ status }).eq('id', item.id)
@@ -125,14 +143,24 @@ export default function StaffDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
+      {isStaffView && (
+        <div style={{ background: ACCENT, color: '#fff', padding: '8px 28px', fontSize: 12, fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>👁 Staff Preview — Viewing as {member.name}</span>
+          <a href="/settings" style={{ color: '#fff', textDecoration: 'underline' }}>Exit preview</a>
+        </div>
+      )}
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{member.role} Dashboard</div>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#101828' }}>Hi, {member.name}</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <a href="/team-chat" style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>💬 Team Chat</a>
-          <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
+          {!isStaffView && <a href="/team-chat" style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>💬 Team Chat</a>}
+          {isStaffView ? (
+            <a href="/settings" style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054', textDecoration: 'none' }}>Exit preview</a>
+          ) : (
+            <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
+          )}
         </div>
       </div>
 
@@ -218,5 +246,13 @@ export default function StaffDashboard() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function StaffDashboard() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>}>
+      <StaffDashboardInner />
+    </Suspense>
   )
 }

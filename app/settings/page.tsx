@@ -388,10 +388,10 @@ function SettingsInner() {
               </div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Name</span><span>Email</span><span>Role</span><span>Status</span><span></span>
               </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>
                   <div style={{width:32,height:32,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:ACCENT}}>{user?.email?.charAt(0).toUpperCase()}</div>
                   <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{user?.email?.split('@')[0]}</span>
@@ -402,7 +402,7 @@ function SettingsInner() {
                 <span style={{fontSize:12,color:'#98A2B3'}}>You</span>
               </div>
               {team.map(m=>(
-                <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
                     <div style={{width:32,height:32,borderRadius:'50%',background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#344054'}}>{m.name.charAt(0).toUpperCase()}</div>
                     <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.name}</span>
@@ -411,6 +411,7 @@ function SettingsInner() {
                   <span style={{fontSize:12,fontWeight:600,color:'#344054',background:'#F2F4F7',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>{m.role}</span>
                   <span style={{fontSize:12,color:'#F59E0B',fontWeight:500}}>● {m.status}</span>
                   <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+                    <a href={`/staff-dashboard?staff_id=${m.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit',textDecoration:'none',whiteSpace:'nowrap' as const}}>👁 View as</a>
                     <button onClick={()=>{
                       setEditingMemberId(m.id)
                       setInviteName(m.name??'')
