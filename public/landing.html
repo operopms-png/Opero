@@ -63,12 +63,13 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     
     <a href="#compare">Compare</a>
     <a href="#reviews">Reviews</a>
+    <a href="#demo">Book a demo</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <button class="btn-outline" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Log in</button>
     <button class="btn-primary" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Start free trial <i class="ti ti-arrow-right"></i></button>
   </div>
-</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#ai-agents" onclick="document.getElementById('mobileMenu').classList.remove('open')">AI Agents</a><a href="#pricing" onclick="document.getElementById('mobileMenu').classList.remove('open')">Pricing</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
+</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#ai-agents" onclick="document.getElementById('mobileMenu').classList.remove('open')">AI Agents</a><a href="#pricing" onclick="document.getElementById('mobileMenu').classList.remove('open')">Pricing</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><a href="#demo" onclick="document.getElementById('mobileMenu').classList.remove('open')">Book a demo</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
 
 <section class="section" id="see-it-in-action" style="background:#F9FAFB">
   <div style="max-width:1100px;margin:0 auto">
@@ -1121,6 +1122,77 @@ peRenderAll();
   <button onclick="window.location.href='/login'" style="background:#fff;color:#5B7CFA;border:none;padding:16px 36px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-bottom:14px">Get started free <i class="ti ti-arrow-right" style="color:#5B7CFA"></i></button>
   <p style="font-size:13px;color:rgba(255,255,255,0.6)">14-day free trial &middot; No credit card required &middot; Cancel anytime</p>
 </section>
+
+<section id="demo" style="background:#101828;padding:96px 64px;">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(91,124,250,0.16);border:1px solid rgba(91,124,250,0.35);border-radius:20px;padding:6px 14px;margin-bottom:24px">
+        <i class="ti ti-calendar" style="color:#8BA1FF;font-size:13px"></i>
+        <span style="font-size:12px;font-weight:600;color:#8BA1FF">Book a demo</span>
+      </div>
+      <h2 style="font-size:38px;font-weight:700;color:#fff;line-height:1.2;margin:0 0 18px">See Opero running your own portfolio</h2>
+      <p style="font-size:16px;color:#98A2B3;line-height:1.6;margin:0">Tell us a bit about your business and we'll walk you through exactly how Opero fits — no generic sales pitch, a real look at your own properties, tenants, and bookings.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:36px;box-shadow:0 24px 70px rgba(0,0,0,0.35)">
+      <img src="/logo.PNG" alt="Opero" style="height:28px;width:auto;margin-bottom:24px"/>
+      <form id="demoRequestForm" onsubmit="submitDemoRequest(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <input required name="first_name" placeholder="First name*" style="padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          <input required name="last_name" placeholder="Last name*" style="padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+        </div>
+        <input required name="company_name" placeholder="Company name*" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <input required name="email" type="email" placeholder="Email*" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <input name="phone" type="tel" placeholder="Phone number" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <select name="portfolio_type" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:20px;background:#fff;color:#101828">
+          <option value="">What are you managing?</option>
+          <option value="STR">Vacation Rentals</option>
+          <option value="PM">Property Management</option>
+          <option value="Estate Agency">Estate Agency</option>
+          <option value="Developments">Developments</option>
+          <option value="Multiple">More than one of these</option>
+        </select>
+        <button type="submit" id="demoRequestSubmit" style="width:100%;background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Book my demo</button>
+        <p id="demoRequestError" style="display:none;color:#EF4444;font-size:12px;margin:10px 0 0"></p>
+      </form>
+      <div id="demoRequestSuccess" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:32px;margin-bottom:10px">✅</div>
+        <div style="font-size:16px;font-weight:600;color:#101828;margin-bottom:6px">Thanks — request sent</div>
+        <div style="font-size:13px;color:#667085">We'll be in touch shortly to set up your demo.</div>
+      </div>
+      <p style="font-size:11px;color:#98A2B3;margin:14px 0 0;text-align:center">By submitting you agree to us contacting you about Opero.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+async function submitDemoRequest(e) {
+  e.preventDefault()
+  var form = document.getElementById('demoRequestForm')
+  var btn = document.getElementById('demoRequestSubmit')
+  var errorEl = document.getElementById('demoRequestError')
+  errorEl.style.display = 'none'
+  btn.disabled = true
+  btn.textContent = 'Sending…'
+  var data = Object.fromEntries(new FormData(form).entries())
+  try {
+    var res = await fetch('/api/demo-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    var result = await res.json()
+    if (!res.ok) throw new Error(result.error || 'Something went wrong.')
+    form.style.display = 'none'
+    document.getElementById('demoRequestSuccess').style.display = 'block'
+  } catch (err) {
+    errorEl.textContent = err.message
+    errorEl.style.display = 'block'
+    btn.disabled = false
+    btn.textContent = 'Book my demo'
+  }
+}
+</script>
 
 <footer style="flex-direction:column;align-items:stretch;gap:0;padding:56px 64px 28px">
   <div style="display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap;padding-bottom:36px;border-bottom:1px solid #F2F4F7;margin-bottom:24px">
