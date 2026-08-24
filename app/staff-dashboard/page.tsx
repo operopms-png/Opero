@@ -5,10 +5,18 @@ import { normalizeRole } from '../../lib/useRole'
 
 const ACCENT = '#5B7CFA'
 
+function startOfWeek(d: Date) {
+  const date = new Date(d)
+  const day = date.getDay()
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1) // Monday start
+  return new Date(date.setDate(diff))
+}
+
 export default function StaffDashboard() {
   const [loading, setLoading] = useState(true)
   const [member, setMember] = useState<any>(null)
   const [items, setItems] = useState<any[]>([])
+  const [shifts, setShifts] = useState<any[]>([])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -72,6 +80,19 @@ export default function StaffDashboard() {
         )
       }
       setItems(results)
+
+      const weekStart = startOfWeek(new Date())
+      const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6)
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const { data: shiftRows } = await supabase
+        .from('staff_shifts')
+        .select('*')
+        .eq('staff_id', m.id)
+        .gte('date', fmt(weekStart))
+        .lte('date', fmt(weekEnd))
+        .order('date', { ascending: true })
+      setShifts(shiftRows ?? [])
+
       setLoading(false)
     })
   }, [])
@@ -98,6 +119,34 @@ export default function StaffDashboard() {
       </div>
 
       <div style={{ padding: 28, maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#101828' }}>My Schedule — This Week</div>
+          <div style={{ display: 'flex', overflowX: 'auto' as const }}>
+            {Array.from({ length: 7 }, (_, i) => {
+              const d = startOfWeek(new Date())
+              d.setDate(d.getDate() + i)
+              const dateStr = d.toISOString().slice(0, 10)
+              const shift = shifts.find(s => s.date === dateStr)
+              const isToday = dateStr === new Date().toISOString().slice(0, 10)
+              const type = shift?.type ?? 'Off'
+              const colors: Record<string, { bg: string; fg: string }> = {
+                Working: { bg: '#ECFDF5', fg: '#10B981' },
+                Leave: { bg: '#FFFBEB', fg: '#F59E0B' },
+                Off: { bg: '#F2F4F7', fg: '#98A2B3' },
+              }
+              const c = colors[type] ?? colors.Off
+              return (
+                <div key={dateStr} style={{ flex: '1 0 110px', padding: '14px 8px', textAlign: 'center' as const, borderRight: '1px solid #F2F4F7', background: isToday ? '#FAFBFF' : '#fff' }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: isToday ? ACCENT : '#98A2B3', textTransform: 'uppercase' as const, marginBottom: 8 }}>{d.toLocaleDateString('en-GB', { weekday: 'short' })} {d.getDate()}</div>
+                  <div style={{ background: c.bg, color: c.fg, fontSize: 12, fontWeight: 600, padding: '6px 4px', borderRadius: 6 }}>
+                    {type === 'Working' && shift?.start_time ? `${shift.start_time.slice(0,5)}–${shift.end_time?.slice(0,5) ?? ''}` : type}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 24 }}>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 26, fontWeight: 700, color: '#F59E0B' }}>{open}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Open</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 26, fontWeight: 700, color: ACCENT }}>{inProgress}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>In Progress</div></div>

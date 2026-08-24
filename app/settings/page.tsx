@@ -8,6 +8,7 @@ const NAV = [
   {group:'ACCOUNT',items:[
     {s:'My Account',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>},
     {s:'Team Management',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>},
+    {s:'Schedule',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>},
     {s:'Referrals',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>},
     {s:'Billing & Subscriptions',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>},
     {s:'System Messages',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>},
@@ -44,6 +45,14 @@ function SettingsInner() {
   const [connectAccountId, setConnectAccountId] = useState<string|null>(null)
   const [connectOnboarded, setConnectOnboarded] = useState(false)
   const [connectingStripe, setConnectingStripe] = useState(false)
+  const [shifts, setShifts] = useState<any[]>([])
+  const [scheduleWeekStart, setScheduleWeekStart] = useState(() => {
+    const d = new Date()
+    const day = d.getDay()
+    d.setDate(d.getDate() - day + (day === 0 ? -6 : 1))
+    d.setHours(0,0,0,0)
+    return d
+  })
 
   useEffect(() => {
     if(roleLoading) return
@@ -80,6 +89,28 @@ function SettingsInner() {
       setLoading(false)
     })
   },[])
+
+  useEffect(() => {
+    if (!user) return
+    loadShifts()
+  }, [user, scheduleWeekStart])
+
+  async function loadShifts() {
+    if (!user) return
+    const weekEnd = new Date(scheduleWeekStart); weekEnd.setDate(weekEnd.getDate() + 6)
+    const fmt = (d: Date) => d.toISOString().slice(0, 10)
+    const { data } = await supabase.from('staff_shifts').select('*').eq('user_id', user.id).gte('date', fmt(scheduleWeekStart)).lte('date', fmt(weekEnd))
+    setShifts(data ?? [])
+  }
+
+  async function setShift(staffId: string, date: string, type: string, startTime?: string, endTime?: string) {
+    const { error } = await supabase.from('staff_shifts').upsert(
+      { user_id: user.id, staff_id: staffId, date, type, start_time: startTime || null, end_time: endTime || null },
+      { onConflict: 'staff_id,date' }
+    )
+    if (error) { alert(error.message); return }
+    await loadShifts()
+  }
 
   async function authHeaders() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -361,6 +392,83 @@ function SettingsInner() {
                 <div style={{fontSize:13}}>Invite cleaners, admins and managers to get started.</div>
               </div>)}
             </div>
+          </div>)}
+
+          {section==='Schedule'&&(<div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>Staff Schedule</h2>
+                <p style={{fontSize:13,color:'#667085',margin:0}}>Set who's working, on leave, or off each day. Each staff member sees their own week on their staff dashboard.</p>
+              </div>
+            </div>
+
+            <div style={{display:'flex',gap:10,marginBottom:20,alignItems:'center'}}>
+              <button onClick={()=>{const d=new Date(scheduleWeekStart);d.setDate(d.getDate()-7);setScheduleWeekStart(d)}} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:8,padding:'8px 14px',fontSize:13,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>←</button>
+              <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:8,padding:'8px 16px',fontSize:13,fontWeight:600,color:'#344054'}}>
+                {scheduleWeekStart.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – {(()=>{const e=new Date(scheduleWeekStart);e.setDate(e.getDate()+6);return e.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})})()}
+              </div>
+              <button onClick={()=>{const d=new Date(scheduleWeekStart);d.setDate(d.getDate()+7);setScheduleWeekStart(d)}} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:8,padding:'8px 14px',fontSize:13,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>→</button>
+              <div style={{flex:1}}/>
+              <div style={{display:'flex',alignItems:'center',gap:14,fontSize:12,color:'#667085'}}>
+                <span><span style={{width:9,height:9,borderRadius:2,background:'#10B981',display:'inline-block',marginRight:5}}/>Working</span>
+                <span><span style={{width:9,height:9,borderRadius:2,background:'#F59E0B',display:'inline-block',marginRight:5}}/>Leave</span>
+                <span><span style={{width:9,height:9,borderRadius:2,background:'#D0D5DD',display:'inline-block',marginRight:5}}/>Off</span>
+              </div>
+            </div>
+
+            {team.length===0?(
+              <div style={{textAlign:'center',padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>
+                <div style={{fontSize:32,marginBottom:8}}>📅</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No team members yet</div>
+                <div style={{fontSize:13}}>Add staff in Team Management first, then schedule their shifts here.</div>
+              </div>
+            ):(
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'auto' as const}}>
+                <table style={{borderCollapse:'collapse' as const,width:'100%',minWidth:800}}>
+                  <thead>
+                    <tr>
+                      <th style={{padding:'10px 14px',fontSize:11,fontWeight:600,color:'#667085',textAlign:'left' as const,background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',textTransform:'uppercase' as const}}>Staff</th>
+                      {Array.from({length:7},(_,i)=>{
+                        const d=new Date(scheduleWeekStart); d.setDate(d.getDate()+i)
+                        return <th key={i} style={{padding:'10px 8px',fontSize:11,fontWeight:600,color:'#667085',textAlign:'center' as const,background:'#F9FAFB',borderBottom:'1px solid #E4E7EC'}}>{d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()} {d.getDate()}</th>
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {team.map((m:any)=>(
+                      <tr key={m.id}>
+                        <td style={{padding:'12px 14px',fontSize:13,fontWeight:500,color:'#101828',borderBottom:'1px solid #F2F4F7',whiteSpace:'nowrap' as const}}>{m.name}</td>
+                        {Array.from({length:7},(_,i)=>{
+                          const d=new Date(scheduleWeekStart); d.setDate(d.getDate()+i)
+                          const dateStr=d.toISOString().slice(0,10)
+                          const shift=shifts.find((s:any)=>s.staff_id===m.id&&s.date===dateStr)
+                          const type=shift?.type??'Off'
+                          const colors:Record<string,{bg:string,fg:string}>={Working:{bg:'#ECFDF5',fg:'#10B981'},Leave:{bg:'#FFFBEB',fg:'#F59E0B'},Off:{bg:'#F2F4F7',fg:'#98A2B3'}}
+                          const c=colors[type]??colors.Off
+                          return (
+                            <td key={i} style={{padding:8,borderBottom:'1px solid #F2F4F7',textAlign:'center' as const}}>
+                              <select
+                                value={type}
+                                onChange={e=>{
+                                  const newType=e.target.value
+                                  if(newType==='Working') setShift(m.id,dateStr,'Working','09:00','17:00')
+                                  else setShift(m.id,dateStr,newType)
+                                }}
+                                style={{background:c.bg,color:c.fg,fontSize:12,fontWeight:600,padding:'6px 4px',borderRadius:6,border:'none',cursor:'pointer',fontFamily:'inherit',width:'100%'}}
+                              >
+                                <option value="Working">{type==='Working'&&shift?.start_time?`${shift.start_time.slice(0,5)}–${shift.end_time?.slice(0,5)??''}`:'Working'}</option>
+                                <option value="Leave">Leave</option>
+                                <option value="Off">Off</option>
+                              </select>
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>)}
 
           {section==='Referrals'&&(<div style={{maxWidth:600}}>
