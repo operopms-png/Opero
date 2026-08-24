@@ -14,7 +14,7 @@ const NAV = [
   ]}
 ]
 
-const ROLES = ['Admin','Dev','Airbnb Agent','Property Manager','Cleaner','Maintenance','Viewer','Estate Agent']
+const ROLES = ['Admin','Vacation Rental Team','Property Management Team','Estate Agency Team','Development Team','Cleaning Team','Maintenance Team','Viewer']
 
 function SettingsInner() {
   const searchParams = useSearchParams()
@@ -31,7 +31,7 @@ function SettingsInner() {
   const [showInvite, setShowInvite] = useState(false)
   const [inviteName, setInviteName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('Cleaner')
+  const [inviteRole, setInviteRole] = useState('Cleaning Team')
   const [invitePhone, setInvitePhone] = useState('')
   const [inviting, setInviting] = useState(false)
   const [addMode, setAddMode] = useState<'invite'|'create'>('invite')
@@ -225,7 +225,7 @@ function SettingsInner() {
               <button onClick={()=>{setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setShowInvite(true)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>+ Invite member</button>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1+team.filter(t=>t.role==='Admin').length,c:'#101828'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaner').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaner'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
+              {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1+team.filter(t=>t.role==='Admin').length,c:'#101828'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaning Team').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaning Team'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>

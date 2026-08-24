@@ -29,8 +29,8 @@ export default function StaffDashboard() {
 
       const businessId = m.user_id
       const propertyIds: string[] = m.property_ids ?? []
-      const isMaintenance = m.role === 'Maintenance'
-      const isCleaner = m.role === 'Cleaner'
+      const isMaintenance = m.role === 'Maintenance Team'
+      const isCleaner = m.role === 'Cleaning Team'
 
       // Figure out which properties (across STR/PM/Estate) this person
       // can see, then pull the matching tickets/tasks from each module's
@@ -108,7 +108,7 @@ export default function StaffDashboard() {
           <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#101828' }}>Your Tasks</div>
           {items.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{member.role === 'Cleaner' ? '🧹' : '🔧'}</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>{member.role === 'Cleaning Team' ? '🧹' : '🔧'}</div>
               <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 6 }}>Nothing assigned yet</div>
               <div style={{ fontSize: 13 }}>Ask your manager to assign you properties or tasks.</div>
             </div>
@@ -119,7 +119,7 @@ export default function StaffDashboard() {
                 <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{item.property ?? '—'}{item.priority ? ` · ${item.priority} priority` : ''}</div>
               </div>
               <select value={item.status} onChange={e => updateStatus(item, e.target.value)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E4E7EC', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer' }}>
-                {member.role === 'Cleaner' ? (
+                {member.role === 'Cleaning Team' ? (
                   <><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option></>
                 ) : (
                   <><option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option></>
