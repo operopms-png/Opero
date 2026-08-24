@@ -9,6 +9,8 @@ const NAV = [
     {s:'My Account',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>},
     {s:'Team Management',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>},
     {s:'Schedule',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>},
+    {s:'Tasks',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>},
+    {s:'Team Chat',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>},
     {s:'Referrals',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>},
     {s:'Billing & Subscriptions',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>},
     {s:'System Messages',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>},
@@ -53,6 +55,10 @@ function SettingsInner() {
     d.setHours(0,0,0,0)
     return d
   })
+  const [tasks, setTasks] = useState<any[]>([])
+  const [showTaskForm, setShowTaskForm] = useState(false)
+  const [taskForm, setTaskForm] = useState({title:'',assigned_to:'',status:'On track',due_date:'',notes:''})
+  const [savingTask, setSavingTask] = useState(false)
 
   useEffect(() => {
     if(roleLoading) return
@@ -95,6 +101,11 @@ function SettingsInner() {
     loadShifts()
   }, [user, scheduleWeekStart])
 
+  useEffect(() => {
+    if (!user) return
+    loadTasks()
+  }, [user])
+
   async function loadShifts() {
     if (!user) return
     const weekEnd = new Date(scheduleWeekStart); weekEnd.setDate(weekEnd.getDate() + 6)
@@ -110,6 +121,34 @@ function SettingsInner() {
     )
     if (error) { alert(error.message); return }
     await loadShifts()
+  }
+
+  async function loadTasks() {
+    if (!user) return
+    const { data } = await supabase.from('staff_tasks').select('*').eq('user_id', user.id).order('due_date', { ascending: true })
+    setTasks(data ?? [])
+  }
+
+  async function saveTask() {
+    if (!taskForm.title) return
+    setSavingTask(true)
+    const { error } = await supabase.from('staff_tasks').insert({ ...taskForm, user_id: user.id, assigned_to: taskForm.assigned_to || null, due_date: taskForm.due_date || null })
+    setSavingTask(false)
+    if (error) { alert(error.message); return }
+    setTaskForm({title:'',assigned_to:'',status:'On track',due_date:'',notes:''})
+    setShowTaskForm(false)
+    await loadTasks()
+  }
+
+  async function updateTaskStatus(id: string, status: string) {
+    const { error } = await supabase.from('staff_tasks').update({ status }).eq('id', id)
+    if (error) { alert(error.message); return }
+    setTasks(prev => prev.map((t:any) => t.id === id ? { ...t, status } : t))
+  }
+
+  async function deleteTask(id: string) {
+    await supabase.from('staff_tasks').delete().eq('id', id)
+    setTasks(prev => prev.filter((t:any) => t.id !== id))
   }
 
   async function authHeaders() {
@@ -151,7 +190,7 @@ function SettingsInner() {
               {group.items.map(({s,i})=>{
                 const locked = billingRequired && s!=='Billing & Subscriptions'
                 return (
-                <button key={s} onClick={()=>{if(!locked)setSection(s)}} disabled={locked} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',borderRadius:7,border:'none',background:section===s?ACCENT+'18':'transparent',color:locked?'#D0D5DD':section===s?ACCENT:'#344054',fontSize:13,fontWeight:section===s?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:1}}>
+                <button key={s} onClick={()=>{if(locked)return; if(s==='Team Chat'){window.location.href='/team-chat';return;} setSection(s)}} disabled={locked} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',borderRadius:7,border:'none',background:section===s?ACCENT+'18':'transparent',color:locked?'#D0D5DD':section===s?ACCENT:'#344054',fontSize:13,fontWeight:section===s?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:1}}>
                   <span style={{display:'flex',alignItems:'center'}}>{i}</span>{s}
                 </button>
                 )
@@ -469,6 +508,71 @@ function SettingsInner() {
                 </table>
               </div>
             )}
+          </div>)}
+
+          {section==='Tasks'&&(<div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>Staff Tasks</h2>
+                <p style={{fontSize:13,color:'#667085',margin:0}}>Assign tasks to your team and track progress. Each staff member sees their own on their staff dashboard.</p>
+              </div>
+              <button onClick={()=>{setTaskForm({title:'',assigned_to:'',status:'On track',due_date:'',notes:''});setShowTaskForm(true)}} style={{padding:'9px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap' as const}}>+ New Task</button>
+            </div>
+
+            {showTaskForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>New Task</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div style={{gridColumn:'span 2' as const}}><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Title *</label><input value={taskForm.title} onChange={e=>setTaskForm({...taskForm,title:e.target.value})} placeholder="e.g. Landlord Onboarding — 12 Ocean Drive" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Assign To</label>
+                  <select value={taskForm.assigned_to} onChange={e=>setTaskForm({...taskForm,assigned_to:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>
+                    <option value="">Unassigned</option>
+                    {team.map((m:any)=><option key={m.id} value={m.id}>{m.name}</option>)}
+                  </select>
+                </div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Due Date</label><input type="date" value={taskForm.due_date} onChange={e=>setTaskForm({...taskForm,due_date:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Status</label>
+                  <select value={taskForm.status} onChange={e=>setTaskForm({...taskForm,status:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>
+                    {['On track','At risk','Off track','Done'].map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div style={{gridColumn:'span 2' as const}}><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Notes</label><textarea value={taskForm.notes} onChange={e=>setTaskForm({...taskForm,notes:e.target.value})} rows={2} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',resize:'vertical' as const,boxSizing:'border-box' as const}}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={saveTask} disabled={savingTask||!taskForm.title} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingTask||!taskForm.title?0.6:1}}>{savingTask?'Saving…':'Create Task'}</button>
+                <button onClick={()=>setShowTaskForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'2fr 1.2fr 1fr 1fr 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Task</span><span>Assigned To</span><span>Status</span><span>Due Date</span><span></span>
+              </div>
+              {tasks.length===0?(
+                <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
+                  <div style={{fontSize:32,marginBottom:8}}>✅</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No tasks yet</div>
+                  <div style={{fontSize:13}}>Create your first task above.</div>
+                </div>
+              ):tasks.map((t:any)=>{
+                const assignee = team.find((m:any)=>m.id===t.assigned_to)
+                const statusColors:Record<string,{bg:string,fg:string}>={'On track':{bg:'#ECFDF5',fg:'#10B981'},'At risk':{bg:'#FFFBEB',fg:'#F59E0B'},'Off track':{bg:'#FEF2F2',fg:'#EF4444'},'Done':{bg:'#F2F4F7',fg:'#667085'}}
+                const c=statusColors[t.status]??statusColors['On track']
+                return (
+                  <div key={t.id} style={{display:'grid',gridTemplateColumns:'2fr 1.2fr 1fr 1fr 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                    <div>
+                      <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.title}</div>
+                      {t.notes&&<div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>{t.notes}</div>}
+                    </div>
+                    <span style={{fontSize:13,color:'#344054'}}>{assignee?.name??'Unassigned'}</span>
+                    <select value={t.status} onChange={e=>updateTaskStatus(t.id,e.target.value)} style={{background:c.bg,color:c.fg,fontSize:12,fontWeight:600,padding:'6px 8px',borderRadius:6,border:'none',cursor:'pointer',fontFamily:'inherit',width:'fit-content'}}>
+                      {['On track','At risk','Off track','Done'].map(s=><option key={s}>{s}</option>)}
+                    </select>
+                    <span style={{fontSize:13,color:'#667085'}}>{t.due_date??'—'}</span>
+                    <button onClick={()=>deleteTask(t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                  </div>
+                )
+              })}
+            </div>
           </div>)}
 
           {section==='Referrals'&&(<div style={{maxWidth:600}}>

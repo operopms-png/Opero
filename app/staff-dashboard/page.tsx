@@ -17,6 +17,7 @@ export default function StaffDashboard() {
   const [member, setMember] = useState<any>(null)
   const [items, setItems] = useState<any[]>([])
   const [shifts, setShifts] = useState<any[]>([])
+  const [myTasks, setMyTasks] = useState<any[]>([])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -93,6 +94,14 @@ export default function StaffDashboard() {
         .order('date', { ascending: true })
       setShifts(shiftRows ?? [])
 
+      const { data: taskRows } = await supabase
+        .from('staff_tasks')
+        .select('*')
+        .eq('assigned_to', m.id)
+        .neq('status', 'Done')
+        .order('due_date', { ascending: true })
+      setMyTasks(taskRows ?? [])
+
       setLoading(false)
     })
   }, [])
@@ -100,6 +109,12 @@ export default function StaffDashboard() {
   async function updateStatus(item: any, status: string) {
     await supabase.from(item.table).update({ status }).eq('id', item.id)
     setItems(prev => prev.map(i => i === item ? { ...i, status } : i))
+  }
+
+  async function updateMyTaskStatus(id: string, status: string) {
+    await supabase.from('staff_tasks').update({ status }).eq('id', id)
+    if (status === 'Done') setMyTasks(prev => prev.filter(t => t.id !== id))
+    else setMyTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t))
   }
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
@@ -115,7 +130,10 @@ export default function StaffDashboard() {
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{member.role} Dashboard</div>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#101828' }}>Hi, {member.name}</div>
         </div>
-        <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <a href="/team-chat" style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>💬 Team Chat</a>
+          <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
+        </div>
       </div>
 
       <div style={{ padding: 28, maxWidth: 900, margin: '0 auto' }}>
@@ -146,6 +164,27 @@ export default function StaffDashboard() {
             })}
           </div>
         </div>
+
+        {myTasks.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden', marginBottom: 24 }}>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#101828' }}>My Tasks</div>
+            {myTasks.map((t: any) => {
+              const statusColors: Record<string, { bg: string; fg: string }> = { 'On track': { bg: '#ECFDF5', fg: '#10B981' }, 'At risk': { bg: '#FFFBEB', fg: '#F59E0B' }, 'Off track': { bg: '#FEF2F2', fg: '#EF4444' } }
+              const c = statusColors[t.status] ?? statusColors['On track']
+              return (
+                <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #F2F4F7' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: '#101828' }}>{t.title}</div>
+                    <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{t.due_date ? `Due ${t.due_date}` : 'No due date'}{t.notes ? ` · ${t.notes}` : ''}</div>
+                  </div>
+                  <select value={t.status} onChange={e => updateMyTaskStatus(t.id, e.target.value)} style={{ background: c.bg, color: c.fg, fontSize: 12, fontWeight: 600, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {['On track', 'At risk', 'Off track', 'Done'].map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 24 }}>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 26, fontWeight: 700, color: '#F59E0B' }}>{open}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Open</div></div>
