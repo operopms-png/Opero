@@ -43,11 +43,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       if (!user) { setChecked(true); return }
       const { data: rows } = await supabase
         .from('team_members')
-        .select('role, user_id')
+        .select('role, user_id, custom_modules')
         .eq('email', user.email)
         .order('created_at', { ascending: false })
         .limit(1)
       const role = normalizeRole(rows?.[0]?.role)
+      const customModules = rows?.[0]?.custom_modules?.length ? rows[0].custom_modules : null
       if (role === 'Cleaning Team' || role === 'Maintenance Team') {
         window.location.href = '/staff-dashboard'
         return
@@ -67,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       const pathPrefix = Object.keys(PATH_MODULE).find(p => pathname?.startsWith(p))
       if (pathPrefix) {
         const requiredModule = PATH_MODULE[pathPrefix]
-        const allowedModules = ROLE_MODULES[role] ?? []
+        const allowedModules = customModules ?? (ROLE_MODULES[role] ?? [])
         if (!allowedModules.includes(requiredModule)) {
           const fallbackModule = allowedModules[0]
           const fallbackPath = fallbackModule ? Object.keys(PATH_MODULE).find(p => PATH_MODULE[p] === fallbackModule) : null

@@ -29,6 +29,7 @@ function SettingsInner() {
   const [team, setTeam] = useState<any[]>([])
   const [allProperties, setAllProperties] = useState<any[]>([])
   const [assignedPropertyIds, setAssignedPropertyIds] = useState<string[]>([])
+  const [customModules, setCustomModules] = useState<string[]>([])
   const [showPropertyPicker, setShowPropertyPicker] = useState(false)
   const [editingMemberId, setEditingMemberId] = useState<string|null>(null)
   const [showInvite, setShowInvite] = useState(false)
@@ -292,7 +293,7 @@ function SettingsInner() {
                 <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>Team Management</h2>
                 <div style={{fontSize:13,color:'#667085'}}>Add unlimited cleaners and admins. Assign multiple cleaners per property. Everyone gets their own account.</div>
               </div>
-              <button onClick={()=>{setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setShowInvite(true)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>+ Invite member</button>
+              <button onClick={()=>{setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setCustomModules([]);setShowInvite(true)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>+ Invite member</button>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
               {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1+team.filter(t=>t.role==='Admin').length,c:'#101828'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaning Team').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaning Team'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
@@ -337,6 +338,18 @@ function SettingsInner() {
                   </select>
                 </div>
               </div>
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Custom module access (optional)</div>
+                <div style={{fontSize:11,color:'#98A2B3',marginBottom:6}}>Leave none checked to use whatever their role normally grants. Check specific modules to override it for just this person — e.g. a Property Manager who also needs Vacation Rentals and the Deal Analyser.</div>
+                <div style={{display:'flex',flexWrap:'wrap' as const,gap:8}}>
+                  {[{k:'str',l:'Vacation Rentals'},{k:'pm',l:'Property Management'},{k:'ea',l:'Estate Agency'},{k:'dev',l:'Developments'},{k:'invest',l:'Invest (Deal Analyser)'},{k:'aipm',l:'AI Property Manager'}].map(mod=>(
+                    <label key={mod.k} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,cursor:'pointer',border:'1px solid '+(customModules.includes(mod.k)?ACCENT:'#E4E7EC'),borderRadius:20,background:customModules.includes(mod.k)?ACCENT+'10':'#fff',color:customModules.includes(mod.k)?ACCENT:'#344054'}}>
+                      <input type="checkbox" checked={customModules.includes(mod.k)} onChange={()=>setCustomModules(prev=>prev.includes(mod.k)?prev.filter(k=>k!==mod.k):[...prev,mod.k])} style={{display:'none'}} />
+                      {mod.l}
+                    </label>
+                  ))}
+                </div>
+              </div>
               {allProperties.length>0 && (
                 <div style={{marginBottom:16}}>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Assigned properties</div>
@@ -356,35 +369,35 @@ function SettingsInner() {
                   <button onClick={async ()=>{
                     if(!inviteName)return
                     setInviting(true)
-                    const {error} = await supabase.from('team_members').update({name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds}).eq('id',editingMemberId)
+                    const {error} = await supabase.from('team_members').update({name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null}).eq('id',editingMemberId)
                     setInviting(false)
                     if(error){alert(error.message);return}
-                    setTeam(team.map(t=>t.id===editingMemberId?{...t,name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds}:t))
-                    setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setAssignedPropertyIds([]);setShowInvite(false)
+                    setTeam(team.map(t=>t.id===editingMemberId?{...t,name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null}:t))
+                    setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setAssignedPropertyIds([]);setCustomModules([]);setShowInvite(false)
                   }} disabled={inviting} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:inviting?0.6:1}}>{inviting?'Saving…':'Save changes'}</button>
                 ):addMode==='invite'?(
                   <button onClick={async ()=>{
                     if(!inviteName||!inviteEmail)return
                     setInviting(true)
-                    const res = await fetch('/api/invite',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,property_ids:assignedPropertyIds})})
+                    const res = await fetch('/api/invite',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,property_ids:assignedPropertyIds,custom_modules:customModules})})
                     const result = await res.json()
                     setInviting(false)
                     if(!res.ok){alert(result.error||'Could not send invite');return}
-                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setAssignedPropertyIds([]);setShowInvite(false)
+                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setAssignedPropertyIds([]);setCustomModules([]);setShowInvite(false)
                   }} disabled={inviting} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:inviting?0.6:1}}>{inviting?'Sending…':'Send invite'}</button>
                 ):(
                   <button onClick={async ()=>{
                     if(!inviteName||!inviteEmail||!staffPassword)return
                     setCreating(true)
-                    const res = await fetch('/api/create-staff-account',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,password:staffPassword,property_ids:assignedPropertyIds})})
+                    const res = await fetch('/api/create-staff-account',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,password:staffPassword,property_ids:assignedPropertyIds,custom_modules:customModules})})
                     const result = await res.json()
                     setCreating(false)
                     if(!res.ok){alert(result.error||'Could not create account');return}
-                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setStaffPassword('');setAssignedPropertyIds([]);setShowInvite(false)
+                    setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setStaffPassword('');setAssignedPropertyIds([]);setCustomModules([]);setShowInvite(false)
                     alert(`Account created. Share these details with ${inviteName}:\n\nEmail: ${inviteEmail}\nPassword: ${staffPassword}\nLogin at: helloopero.com/login`)
                   }} disabled={creating} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:creating?0.6:1}}>{creating?'Creating…':'Create account'}</button>
                 )}
-                <button onClick={()=>{setShowInvite(false);setEditingMemberId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                <button onClick={()=>{setShowInvite(false);setEditingMemberId(null);setCustomModules([])}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
@@ -419,6 +432,7 @@ function SettingsInner() {
                       setInvitePhone(m.phone??'')
                       setInviteRole(m.role??ROLES[0])
                       setAssignedPropertyIds(m.property_ids??[])
+                      setCustomModules(m.custom_modules??[])
                       setAddMode('invite')
                       setShowInvite(true)
                     }} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>

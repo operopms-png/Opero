@@ -86,6 +86,7 @@ export function normalizeRole(raw: string | null | undefined): UserRole {
 export function useRole() {
   const [role, setRole] = useState<UserRole>('Admin')
   const [propertyIds, setPropertyIds] = useState<string[]>([])
+  const [customModules, setCustomModules] = useState<string[] | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export function useRole() {
       // accidental full access.
       const { data } = await supabase
         .from('team_members')
-        .select('role, property_ids')
+        .select('role, property_ids, custom_modules')
         .eq('email', user.email)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -105,10 +106,11 @@ export function useRole() {
       // whatever casing was stored against the canonical role names.
       setRole(normalizeRole(data?.[0]?.role))
       setPropertyIds(data?.[0]?.property_ids ?? [])
+      setCustomModules(data?.[0]?.custom_modules?.length ? data[0].custom_modules : null)
       setLoading(false)
     })
   }, [])
 
-  return { role, propertyIds, loading, modules: ROLE_MODULES[role] ?? [], hasSettings: ROLE_SETTINGS[role] ?? false, readOnly: ROLE_READONLY[role] ?? false }
+  return { role, propertyIds, loading, modules: customModules ?? (ROLE_MODULES[role] ?? []), hasSettings: ROLE_SETTINGS[role] ?? false, readOnly: ROLE_READONLY[role] ?? false }
 }
 
