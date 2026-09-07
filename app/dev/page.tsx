@@ -8,8 +8,9 @@ import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones']
 const DEV_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PROJECTS', items: ['Projects','Checklist','Milestones'] },
-  { label: 'OPERATIONS', items: ['Contractors','Service'] },
+  { label: 'PROJECTS', items: ['Projects','Units','Checklist','Milestones'] },
+  { label: 'OPERATIONS', items: ['Contractors','Service','Snagging'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Health & Safety'] },
   { label: 'FINANCE', items: ['Budget','Investors','Expenses','Banking'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
@@ -28,6 +29,41 @@ const CHECKLIST_TEMPLATE = [
 ]
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
+
+async function uploadFile(file: File, folder: string): Promise<string | null> {
+  const ext = file.name.split('.').pop()
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('pm-files').upload(path, file)
+  if (error) { console.error(error); return null }
+  const { data } = supabase.storage.from('pm-files').getPublicUrl(path)
+  return data.publicUrl
+}
+
+function FileUpload({ label, value, onChange, folder }: { label: string; value: string; onChange: (url: string) => void; folder: string }) {
+  const [uploading, setUploading] = useState(false)
+  async function handle(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const url = await uploadFile(file, folder)
+    if (url) onChange(url)
+    setUploading(false)
+  }
+  return (
+    <div>
+      <label style={lbl}>{label}</label>
+      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+        <label style={{ flex:1, padding:'10px 12px', borderRadius:8, border:'2px dashed #D0D5DD', fontSize:13, color:'#667085', cursor:'pointer', display:'flex', alignItems:'center', gap:8, background:'#F9FAFB' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          {uploading ? 'Uploading…' : value ? 'Replace file' : 'Upload file (PDF, JPG, PNG)'}
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handle} style={{ display:'none' }} />
+        </label>
+        {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#8B5CF6', fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
+      </div>
+      {value && <div style={{ fontSize:11, color:'#10B981', marginTop:4 }}>✓ File uploaded</div>}
+    </div>
+  )
+}
 
 function Modal({ title, onClose, children }: any) {
   return (
@@ -151,6 +187,10 @@ export default function DevPage() {
   const [editId, setEditId] = useState<string|null>(null)
   const [saving, setSaving] = useState(false)
   const [projects, setProjects] = useState<any[]>([])
+  const [units, setUnits] = useState<any[]>([])
+  const [compliance, setCompliance] = useState<any[]>([])
+  const [snags, setSnags] = useState<any[]>([])
+  const [healthSafety, setHealthSafety] = useState<any[]>([])
   const [budgetItems, setBudgetItems] = useState<any[]>([])
   const [investors, setInvestors] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
@@ -172,13 +212,17 @@ export default function DevPage() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p, b, i, d, m, ex] = await Promise.all([
+    const [p, b, i, d, m, ex, un, cp, sn, hs] = await Promise.all([
       supabase.from('dev_projects').select('*').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_budget_items').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_investors').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_documents').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_milestones').select('*, dev_projects(name)').eq('user_id',userId).order('due_date', { ascending: true }),
       supabase.from('office_expenses').select('*').eq('user_id',userId).order('date', { ascending: false }),
+      supabase.from('dev_units').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_compliance').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_snagging').select('*, dev_projects(name), dev_units(unit_number)').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_health_safety').select('*, dev_projects(name)').eq('user_id',userId).order('date', { ascending: false }),
     ])
     setProjects(p.data ?? [])
     setBudgetItems(b.data ?? [])
@@ -186,6 +230,10 @@ export default function DevPage() {
     setDocuments(d.data ?? [])
     setMilestones(m.data ?? [])
     setExpenses(ex.data ?? [])
+    setUnits(un.data ?? [])
+    setCompliance(cp.data ?? [])
+    setSnags(sn.data ?? [])
+    setHealthSafety(hs.data ?? [])
   }
 
   async function addExpense() {
@@ -244,13 +292,18 @@ export default function DevPage() {
   }
 
   async function save(table: string, data: any) {
+    // Same fix applied to Estate Agency: an empty <input type="date">
+    // produces '', but Postgres needs NULL for an empty DATE/NUMERIC
+    // column. Sanitizing here (rather than per-form) covers every
+    // save in this file, present and future.
+    const sanitized = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v === '' ? null : v]))
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (editId) {
-      const { error } = await supabase.from(table).update({ ...data }).eq('id', editId)
+      const { error } = await supabase.from(table).update(sanitized).eq('id', editId)
       if (error) { alert(error.message); setSaving(false); return }
     } else {
-      const { error } = await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+      const { error } = await supabase.from(table).insert([{ ...sanitized, user_id: user?.id }])
       if (error) { alert(error.message); setSaving(false); return }
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
@@ -307,6 +360,10 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:8 }}>
             {tab==='Projects' && <button onClick={()=>{setModal('project');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Project</button>}
+            {tab==='Units' && <button onClick={()=>{setModal('unit');setForm({status:'Available'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Unit</button>}
+            {tab==='Compliance' && <button onClick={()=>{setModal('compliance');setForm({status:'Pending'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Record</button>}
+            {tab==='Snagging' && <button onClick={()=>{setModal('snag');setForm({priority:'Medium',status:'Open'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Report Snag</button>}
+            {tab==='Health & Safety' && <button onClick={()=>{setModal('healthsafety');setForm({record_type:'Site Diary'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Record</button>}
             {tab==='Budget' && <button onClick={()=>{setModal('budget');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Budget Item</button>}
             {tab==='Investors' && <button onClick={()=>{setModal('investor');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Investor</button>}
             {tab==='Documents' && <button onClick={()=>{setModal('document');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Document</button>}
@@ -921,6 +978,152 @@ export default function DevPage() {
             })()}
           </div>
         )}
+
+        {/* UNITS / PLOTS */}
+        {tab==='Units' && (() => {
+          const UNIT_STATUS_COLORS: Record<string,{bg:string,color:string}> = {
+            Available: { bg:'#D1FAE5', color:'#059669' },
+            Reserved: { bg:'#FEF3C7', color:'#D97706' },
+            Exchanged: { bg:'#EEF0FF', color:'#3B4AFF' },
+            Completed: { bg:'#F3F4F6', color:'#6B7280' },
+          }
+          const soldValue = units.filter(u=>u.status==='Completed').reduce((s,u)=>s+(parseFloat(u.price)||0),0)
+          return (
+          <div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:24 }}>
+              {[
+                { label:'Total Units', value:units.length },
+                { label:'Available', value:units.filter(u=>u.status==='Available').length, green:true },
+                { label:'Reserved / Exchanged', value:units.filter(u=>['Reserved','Exchanged'].includes(u.status)).length },
+                { label:'Completed Sales Value', value:`£${soldValue.toLocaleString()}`, green:true },
+              ].map((c:any)=>(
+                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase' as const, letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#101828' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', flexDirection:'column' as const, gap:8 }}>
+              {units.length===0 ? <div style={{ textAlign:'center' as const, padding:80, color:'#98A2B3', fontSize:14 }}>No units yet — add the individual plots/units that make up a project.</div> :
+              units.map((u:any)=>(
+                <div key={u.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ width:44, height:44, borderRadius:10, background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:14, color:'#8B5CF6', flexShrink:0 }}>{u.unit_number?.slice(0,3)}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>Plot {u.unit_number} {u.unit_type?`· ${u.unit_type}`:''}</div>
+                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{u.dev_projects?.name??'—'} {u.size_sqft?`· ${u.size_sqft} sqft`:''}</div>
+                    {u.buyer_name && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>Buyer: {u.buyer_name} {u.buyer_solicitor?`· ${u.buyer_solicitor}`:''}</div>}
+                  </div>
+                  <div style={{ textAlign:'right' as const }}>
+                    <div style={{ fontSize:16, fontWeight:700, color:'#101828' }}>£{(u.price??0).toLocaleString()}</div>
+                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:UNIT_STATUS_COLORS[u.status]?.bg??'#F3F4F6', color:UNIT_STATUS_COLORS[u.status]?.color??'#6B7280' }}>{u.status}</span>
+                  </div>
+                  <button onClick={()=>{const{dev_projects,...clean}=u;setForm(clean);setEditId(u.id);setModal('unit')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>del('dev_units',u.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
+
+        {/* COMPLIANCE */}
+        {tab==='Compliance' && (() => {
+          const COMPLIANCE_STATUS_COLORS: Record<string,{bg:string,color:string}> = {
+            Pending: { bg:'#FEF3C7', color:'#D97706' },
+            Approved: { bg:'#D1FAE5', color:'#059669' },
+            Expired: { bg:'#FEE2E2', color:'#DC2626' },
+          }
+          const soonCutoff = new Date(); soonCutoff.setDate(soonCutoff.getDate()+30)
+          const expiringSoon = compliance.filter((c:any)=>c.expiry_date && new Date(c.expiry_date) <= soonCutoff && new Date(c.expiry_date) >= new Date())
+          return (
+          <div>
+            {expiringSoon.length>0 && (
+              <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:13, color:'#92400E' }}>
+                ⚠ {expiringSoon.length} record{expiringSoon.length===1?'':'s'} expiring within 30 days
+              </div>
+            )}
+            <div style={{ display:'flex', flexDirection:'column' as const, gap:8 }}>
+              {compliance.length===0 ? <div style={{ textAlign:'center' as const, padding:80, color:'#98A2B3', fontSize:14 }}>No compliance records yet — track planning permission, building control, and warranty status here.</div> :
+              compliance.map((c:any)=>(
+                <div key={c.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{c.type}</div>
+                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{c.dev_projects?.name??'—'} {c.reference_number?`· Ref: ${c.reference_number}`:''}</div>
+                    {c.expiry_date && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>Expires {c.expiry_date}</div>}
+                    {c.document_url && <a href={c.document_url} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#8B5CF6' }}>View document</a>}
+                  </div>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:COMPLIANCE_STATUS_COLORS[c.status]?.bg??'#F3F4F6', color:COMPLIANCE_STATUS_COLORS[c.status]?.color??'#6B7280' }}>{c.status}</span>
+                  <button onClick={()=>{const{dev_projects,...clean}=c;setForm(clean);setEditId(c.id);setModal('compliance')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>del('dev_compliance',c.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
+
+        {/* SNAGGING */}
+        {tab==='Snagging' && (() => {
+          const SNAG_STATUS_COLORS: Record<string,{bg:string,color:string}> = {
+            Open: { bg:'#FEE2E2', color:'#DC2626' },
+            'In Progress': { bg:'#FEF3C7', color:'#D97706' },
+            Resolved: { bg:'#D1FAE5', color:'#059669' },
+          }
+          const PRIORITY_COLORS: Record<string,string> = { Low:'#6B7280', Medium:'#D97706', High:'#DC2626' }
+          return (
+          <div>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:24 }}>
+              {[
+                { label:'Open', value:snags.filter((s:any)=>s.status==='Open').length },
+                { label:'In Progress', value:snags.filter((s:any)=>s.status==='In Progress').length },
+                { label:'Resolved', value:snags.filter((s:any)=>s.status==='Resolved').length, green:true },
+              ].map((c:any)=>(
+                <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
+                  <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase' as const, letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
+                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#101828' }}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', flexDirection:'column' as const, gap:8 }}>
+              {snags.length===0 ? <div style={{ textAlign:'center' as const, padding:80, color:'#98A2B3', fontSize:14 }}>No snags reported yet.</div> :
+              snags.map((s:any)=>(
+                <div key={s.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{s.title} <span style={{ fontSize:11, fontWeight:700, color:PRIORITY_COLORS[s.priority] }}>· {s.priority}</span></div>
+                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{s.dev_projects?.name??'—'} {s.dev_units?.unit_number?`· Plot ${s.dev_units.unit_number}`:''} {s.assigned_to?`· Assigned: ${s.assigned_to}`:''}</div>
+                    {s.description && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{s.description}</div>}
+                  </div>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:SNAG_STATUS_COLORS[s.status]?.bg??'#F3F4F6', color:SNAG_STATUS_COLORS[s.status]?.color??'#6B7280' }}>{s.status}</span>
+                  <button onClick={()=>{const{dev_projects,dev_units,...clean}=s;setForm(clean);setEditId(s.id);setModal('snag')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>del('dev_snagging',s.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
+
+        {/* HEALTH & SAFETY */}
+        {tab==='Health & Safety' && (
+          <div>
+            <div style={{ display:'flex', flexDirection:'column' as const, gap:8 }}>
+              {healthSafety.length===0 ? <div style={{ textAlign:'center' as const, padding:80, color:'#98A2B3', fontSize:14 }}>No records yet — log site diary entries, RAMS, site inductions, and incident reports here.</div> :
+              healthSafety.map((h:any)=>(
+                <div key={h.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{h.title} <span style={{ fontSize:11, fontWeight:600, color:'#8B5CF6' }}>· {h.record_type}</span></div>
+                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{h.dev_projects?.name??'—'} {h.date?`· ${h.date}`:''} {h.logged_by?`· Logged by ${h.logged_by}`:''}</div>
+                    {h.record_type==='Site Diary' && (h.weather||h.workers_on_site) && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{h.weather?`${h.weather}`:''}{h.weather&&h.workers_on_site?' · ':''}{h.workers_on_site?`${h.workers_on_site} workers on site`:''}</div>}
+                    {h.description && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{h.description}</div>}
+                    {h.document_url && <a href={h.document_url} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#8B5CF6' }}>View document</a>}
+                  </div>
+                  <button onClick={()=>{const{dev_projects,...clean}=h;setForm(clean);setEditId(h.id);setModal('healthsafety')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>del('dev_health_safety',h.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODALS */}
@@ -1055,6 +1258,166 @@ export default function DevPage() {
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
             <button onClick={()=>save('dev_documents',form)} disabled={saving||!form.name||!form.url} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name||!form.url?0.6:1 }}>{saving?'Saving…':'Add Document'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='unit' && (
+        <Modal title={editId?'Edit Unit':'Add Unit'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Project *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.project_id??''} onChange={e=>setForm({...form,project_id:e.target.value})}>
+                <option value="">Select project…</option>
+                {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Plot/Unit Number *</label><input style={inp} value={form.unit_number??''} onChange={e=>setForm({...form,unit_number:e.target.value})} placeholder="e.g. Plot 14"/></div>
+              <div><label style={lbl}>Type</label><input style={inp} value={form.unit_type??''} onChange={e=>setForm({...form,unit_type:e.target.value})} placeholder="e.g. 2-Bed Apartment"/></div>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Size (sqft)</label><input type="number" style={inp} value={form.size_sqft??''} onChange={e=>setForm({...form,size_sqft:e.target.value?parseFloat(e.target.value):null})}/></div>
+              <div><label style={lbl}>Price (£)</label><input type="number" style={inp} value={form.price??''} onChange={e=>setForm({...form,price:e.target.value?parseFloat(e.target.value):null})}/></div>
+            </div>
+            <div><label style={lbl}>Status</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.status??'Available'} onChange={e=>setForm({...form,status:e.target.value})}>
+                <option>Available</option><option>Reserved</option><option>Exchanged</option><option>Completed</option>
+              </select>
+            </div>
+            {form.status && form.status!=='Available' && (<>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+                <div><label style={lbl}>Buyer Name</label><input style={inp} value={form.buyer_name??''} onChange={e=>setForm({...form,buyer_name:e.target.value})}/></div>
+                <div><label style={lbl}>Buyer Email</label><input type="email" style={inp} value={form.buyer_email??''} onChange={e=>setForm({...form,buyer_email:e.target.value})}/></div>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+                <div><label style={lbl}>Buyer Solicitor</label><input style={inp} value={form.buyer_solicitor??''} onChange={e=>setForm({...form,buyer_solicitor:e.target.value})}/></div>
+                <div><label style={lbl}>Deposit Paid (£)</label><input type="number" style={inp} value={form.deposit_amount??''} onChange={e=>setForm({...form,deposit_amount:e.target.value?parseFloat(e.target.value):null})}/></div>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
+                <div><label style={lbl}>Reserved Date</label><input type="date" style={inp} value={form.reservation_date??''} onChange={e=>setForm({...form,reservation_date:e.target.value})}/></div>
+                <div><label style={lbl}>Exchange Date</label><input type="date" style={inp} value={form.exchange_date??''} onChange={e=>setForm({...form,exchange_date:e.target.value})}/></div>
+                <div><label style={lbl}>Completion Date</label><input type="date" style={inp} value={form.completion_date??''} onChange={e=>setForm({...form,completion_date:e.target.value})}/></div>
+              </div>
+            </>)}
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('dev_units',form)} disabled={saving||!form.unit_number||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.unit_number||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Unit'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='compliance' && (
+        <Modal title={editId?'Edit Compliance Record':'Add Compliance Record'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Project *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.project_id??''} onChange={e=>setForm({...form,project_id:e.target.value})}>
+                <option value="">Select project…</option>
+                {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Type *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.type??''} onChange={e=>setForm({...form,type:e.target.value})}>
+                <option value="">Select type…</option>
+                <option>Planning Permission</option><option>Building Control</option><option>NHBC Warranty</option><option>Fire Safety</option><option>Other</option>
+              </select>
+            </div>
+            <div><label style={lbl}>Reference Number</label><input style={inp} value={form.reference_number??''} onChange={e=>setForm({...form,reference_number:e.target.value})}/></div>
+            <div><label style={lbl}>Status</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.status??'Pending'} onChange={e=>setForm({...form,status:e.target.value})}>
+                <option>Pending</option><option>Approved</option><option>Expired</option>
+              </select>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Issue Date</label><input type="date" style={inp} value={form.issue_date??''} onChange={e=>setForm({...form,issue_date:e.target.value})}/></div>
+              <div><label style={lbl}>Expiry Date</label><input type="date" style={inp} value={form.expiry_date??''} onChange={e=>setForm({...form,expiry_date:e.target.value})}/></div>
+            </div>
+            <FileUpload label="Document" value={form.document_url??''} onChange={url=>setForm({...form,document_url:url})} folder="dev-compliance" />
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('dev_compliance',form)} disabled={saving||!form.type||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.type||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Record'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='snag' && (
+        <Modal title={editId?'Edit Snag':'Report Snag'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Project *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.project_id??''} onChange={e=>setForm({...form,project_id:e.target.value,unit_id:''})}>
+                <option value="">Select project…</option>
+                {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Unit (optional)</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.unit_id??''} onChange={e=>setForm({...form,unit_id:e.target.value})}>
+                <option value="">Whole project / not unit-specific</option>
+                {units.filter((u:any)=>u.project_id===form.project_id).map((u:any)=><option key={u.id} value={u.id}>Plot {u.unit_number}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})} placeholder="e.g. Cracked tile in bathroom"/></div>
+            <div><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})}/></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Priority</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.priority??'Medium'} onChange={e=>setForm({...form,priority:e.target.value})}>
+                  <option>Low</option><option>Medium</option><option>High</option>
+                </select>
+              </div>
+              <div><label style={lbl}>Status</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.status??'Open'} onChange={e=>setForm({...form,status:e.target.value})}>
+                  <option>Open</option><option>In Progress</option><option>Resolved</option>
+                </select>
+              </div>
+            </div>
+            <div><label style={lbl}>Assigned To</label><input style={inp} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})}/></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Reported Date</label><input type="date" style={inp} value={form.reported_date??''} onChange={e=>setForm({...form,reported_date:e.target.value})}/></div>
+              <div><label style={lbl}>Resolved Date</label><input type="date" style={inp} value={form.resolved_date??''} onChange={e=>setForm({...form,resolved_date:e.target.value})}/></div>
+            </div>
+            <FileUpload label="Photo" value={form.photo_url??''} onChange={url=>setForm({...form,photo_url:url})} folder="dev-snags" />
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('dev_snagging',form)} disabled={saving||!form.title||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Report Snag'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='healthsafety' && (
+        <Modal title={editId?'Edit Record':'Add Health & Safety Record'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Project *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.project_id??''} onChange={e=>setForm({...form,project_id:e.target.value})}>
+                <option value="">Select project…</option>
+                {projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Record Type</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.record_type??'Site Diary'} onChange={e=>setForm({...form,record_type:e.target.value})}>
+                <option>Site Diary</option><option>RAMS</option><option>Site Induction</option><option>Incident Report</option><option>Toolbox Talk</option>
+              </select>
+            </div>
+            <div><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})} placeholder={form.record_type==='Site Diary'?'e.g. Daily log — 8 Sep':'e.g. Working at Height RAMS'}/></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.date??''} onChange={e=>setForm({...form,date:e.target.value})}/></div>
+              <div><label style={lbl}>Logged By</label><input style={inp} value={form.logged_by??''} onChange={e=>setForm({...form,logged_by:e.target.value})}/></div>
+            </div>
+            {form.record_type==='Site Diary' && (
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+                <div><label style={lbl}>Weather</label><input style={inp} value={form.weather??''} onChange={e=>setForm({...form,weather:e.target.value})} placeholder="e.g. Dry, 18°C"/></div>
+                <div><label style={lbl}>Workers on Site</label><input type="number" style={inp} value={form.workers_on_site??''} onChange={e=>setForm({...form,workers_on_site:e.target.value?parseInt(e.target.value):null})}/></div>
+              </div>
+            )}
+            <div><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})} placeholder={form.record_type==='Site Diary'?'Work completed today, any incidents...':'Details...'}/></div>
+            <FileUpload label="Document" value={form.document_url??''} onChange={url=>setForm({...form,document_url:url})} folder="dev-health-safety" />
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('dev_health_safety',form)} disabled={saving||!form.title||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Record'}</button>
           </div>
         </Modal>
       )}
