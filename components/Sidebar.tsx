@@ -19,8 +19,6 @@ const NAV_GROUPS = [
       { href: '/str/marketing', label: 'Marketing', key: 'str', icon: 'sparkles' },
       { href: '/str/sales', label: 'Sales', key: 'str', icon: 'trendingup' },
       { href: '/str/reporting', label: 'Reporting', key: 'str', icon: 'report' },
-      { href: '/str/vendors', label: 'Contractors', key: 'str', icon: 'wrench' },
-      { href: '/str/service', label: 'Service', key: 'str', icon: 'headset' },
       { href: '/owner-portal', label: 'Owners', key: 'str', icon: 'users' },
     ]
   },
@@ -34,8 +32,6 @@ const NAV_GROUPS = [
       { href: '/pm/marketing', label: 'Marketing', key: 'pm', icon: 'sparkles' },
       { href: '/pm/sales', label: 'Sales', key: 'pm', icon: 'trendingup' },
       { href: '/pm/reporting', label: 'Reporting', key: 'pm', icon: 'report' },
-      { href: '/pm/vendors', label: 'Contractors', key: 'pm', icon: 'wrench' },
-      { href: '/pm/service', label: 'Service', key: 'pm', icon: 'headset' },
     ]
   },
   {
