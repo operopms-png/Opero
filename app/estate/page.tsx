@@ -1916,12 +1916,14 @@ export default function Page() {
                     <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?ACCENT:'#E4E7EC'),background:reportTab===t?ACCENT:'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
                   ))}
                 </div>
-                <button onClick={()=>downloadCsv(`estate-agency-pl-${year}.csv`, ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>{
+                {reportTab==='P&L'&&<button onClick={()=>downloadCsv(`estate-agency-pl-${year}.csv`, ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>{
                   const income = i===thisMonthIdx ? collectedRent : 0
                   const costs = expensesForMonth(i)
                   return { Month: `${m} ${year}`, Income: income, Costs: costs, Expenses: costs, 'Net Profit': income-costs }
-                }))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
+                }))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>}
               </div>
+
+              {reportTab==='P&L'&&(<>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
                   <span>Month</span><span>Income</span><span>Costs</span><span>Expenses</span><span>Net Profit</span>
@@ -1938,6 +1940,59 @@ export default function Page() {
                 })}
               </div>
               <div style={{fontSize:12,color:'#98A2B3',marginTop:8}}>Costs/Expenses above are real per-month totals (each expense has its own date). Income only shows for the current month — rent schedules don't yet record which month a specific payment covers, so historical months can't be split out yet.</div>
+              </>)}
+
+              {reportTab==='Cash Flow'&&(() => {
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                let cumulative = 0
+                const cfData = months.map((m,i) => {
+                  const monthTx = transactions.filter((t:any) => {
+                    if (!t.date) return false
+                    const d = new Date(t.date)
+                    return d.getMonth() === i && d.getFullYear() === year
+                  })
+                  const moneyIn = monthTx.filter((t:any)=>t.type==='Income').reduce((s:number,t:any)=>s+(parseFloat(t.amount)||0),0)
+                  const moneyOut = monthTx.filter((t:any)=>t.type==='Expense').reduce((s:number,t:any)=>s+(parseFloat(t.amount)||0),0)
+                  const net = moneyIn - moneyOut
+                  cumulative += net
+                  return { m, moneyIn, moneyOut, net, cumulative }
+                })
+                const maxVal = Math.max(1, ...cfData.map(d=>d.moneyIn))
+                return (
+                <div>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Cash Flow ({year})</div>
+                    <div style={{fontSize:11,color:'#98A2B3',marginBottom:16}}>Real money in/out, from Banking transactions dated this year — not the same income figure as the P&L tab, which only has current-month rent to go on.</div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(12,1fr)',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
+                      {cfData.map(d=>(
+                        <div key={d.m} style={{display:'flex',flexDirection:'column' as const,alignItems:'center',gap:4}}>
+                          <div style={{width:'100%',background:ACCENT+'33',borderRadius:'4px 4px 0 0',height:Math.max(4,(d.moneyIn/maxVal)*80),minHeight:4}}/>
+                          <div style={{fontSize:10,color:'#98A2B3'}}>{d.m}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
+                      <span>Month</span><span>Money In</span><span>Money Out</span><span>Net</span><span>Cumulative</span>
+                    </div>
+                    {cfData.map(d=>(
+                      <div key={d.m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
+                        <span>{d.m} {year}</span><span style={{color:'#10B981'}}>£{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{d.moneyOut.toLocaleString()}</span><span>£{d.net.toLocaleString()}</span><span>£{d.cumulative.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                )
+              })()}
+
+              {reportTab==='Forecast'&&(
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center' as const,color:'#98A2B3'}}>
+                  <div style={{fontSize:32,marginBottom:12}}>🔮</div>
+                  <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>Revenue Forecast</div>
+                  <div style={{fontSize:13}}>Add more transaction history to generate a 12-month forecast.</div>
+                </div>
+              )}
             </div>
             )
           })()}
