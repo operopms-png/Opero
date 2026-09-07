@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import WeatherWidget from '@/components/WeatherWidget'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { supabase } from '../../lib/supabase'
+import { downloadCsv } from '@/lib/export-csv'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 
@@ -1258,10 +1259,15 @@ function PMPageInner() {
               <div style={{fontSize:36,fontWeight:800}}>£{thisMonth.net.toLocaleString()}</div>
               <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{thisMonth.income.toLocaleString()} income · £{thisMonth.allExpenses.toLocaleString()} costs</div>
             </div>
-            <div style={{display:'flex',gap:8,marginBottom:20}}>
-              {['P&L','Cash Flow','Forecast'].map(t=>(
-                <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?'#101828':'#E4E7EC'),background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
-              ))}
+            <div style={{display:'flex',gap:8,marginBottom:20,justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{display:'flex',gap:8}}>
+                {['P&L','Cash Flow','Forecast'].map(t=>(
+                  <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?'#101828':'#E4E7EC'),background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+                ))}
+              </div>
+              <button onClick={()=>downloadCsv(`property-management-pl-${year}.csv`, pnlByMonth.map(row=>({
+                Month: row.month, Income: row.income, 'Property Costs': row.propertyCosts, Expenses: row.allExpenses, 'Net Profit': row.net,
+              })))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>

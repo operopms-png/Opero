@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useRole, getAllowedTab } from '@/lib/useRole'
+import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 const ACCENT = '#2D6A4F'
@@ -1683,10 +1684,17 @@ export default function Page() {
                 <div style={{fontSize:36,fontWeight:800}}>£{(collectedRent-totalExpenses).toLocaleString()}</div>
                 <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{collectedRent.toLocaleString()} income · £{totalExpenses.toLocaleString()} costs</div>
               </div>
-              <div style={{display:'flex',gap:8,marginBottom:20}}>
-                {['P&L','Cash Flow','Forecast'].map(t=>(
-                  <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?ACCENT:'#E4E7EC'),background:reportTab===t?ACCENT:'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
-                ))}
+              <div style={{display:'flex',gap:8,marginBottom:20,justifyContent:'space-between',alignItems:'center'}}>
+                <div style={{display:'flex',gap:8}}>
+                  {['P&L','Cash Flow','Forecast'].map(t=>(
+                    <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?ACCENT:'#E4E7EC'),background:reportTab===t?ACCENT:'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+                  ))}
+                </div>
+                <button onClick={()=>downloadCsv(`estate-agency-pl-${year}.csv`, ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>{
+                  const income = i===thisMonthIdx ? collectedRent : 0
+                  const costs = i===thisMonthIdx ? totalExpenses : 0
+                  return { Month: `${m} ${year}`, Income: income, Costs: costs, Expenses: costs, 'Net Profit': income-costs }
+                }))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
               </div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>

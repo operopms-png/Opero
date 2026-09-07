@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import WeatherWidget from '@/components/WeatherWidget'
 import { useRole, getAllowedTab } from '@/lib/useRole'
+import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 
 const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms']
@@ -768,6 +769,12 @@ export default function STRPage() {
               const totalLLCosts = expenses.filter((e:any)=>e.category==='Property').reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
               return (
               <div>
+                <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
+                  <button onClick={()=>downloadCsv(`vacation-rentals-pl-${year}.csv`, pnlByMonth.map((row,i)=>({
+                    Month: `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]} ${year}`,
+                    Income: row.income, 'LL Costs': row.llCosts, Expenses: row.costs, 'Net Profit': row.income-row.costs,
+                  })))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
+                </div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
                   {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#101828'},{l:'YTD Costs',v:'£'+totalLLCosts.toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>

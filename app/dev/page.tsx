@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import WeatherWidget from '@/components/WeatherWidget'
 import { supabase } from '../../lib/supabase'
+import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 
 const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones']
@@ -482,30 +483,68 @@ export default function DevPage() {
           </div>
         )}
 
-        {tab==='Reports'&&(
+        {tab==='Reports'&&(() => {
+          // Developments has no per-month data to report against --
+          // budget items and investor contributions don't carry a
+          // transaction date, only a category/status. A fabricated
+          // monthly breakdown (previously hardcoded to £0 every month,
+          // including the current one) would just be inventing numbers.
+          // This reports on the real dimensions that DO exist instead:
+          // budget by category, and investment raised.
+          const categories = Array.from(new Set(budgetItems.map((b:any)=>b.category || 'other')))
+          const byCategory = categories.map(cat => {
+            const items = budgetItems.filter((b:any)=>(b.category||'other')===cat)
+            return {
+              category: cat,
+              budgeted: items.reduce((s:number,b:any)=>s+(parseFloat(b.budgeted)||0),0),
+              actual: items.reduce((s:number,b:any)=>s+(parseFloat(b.actual)||0),0),
+            }
+          }).sort((a,b)=>b.budgeted-a.budgeted)
+          return (
           <div>
             <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
-              <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
-              <div style={{fontSize:36,fontWeight:800}}>£{(0-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
-              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£0 income · £{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()} costs</div>
+              <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>BUDGET VS ACTUAL · ALL PROJECTS</div>
+              <div style={{fontSize:36,fontWeight:800}}>£{totalSpent.toLocaleString()} <span style={{fontSize:18,opacity:0.6,fontWeight:600}}>of £{totalBudget.toLocaleString()}</span></div>
+              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{totalInvestment.toLocaleString()} raised from {investors.length} investor{investors.length===1?'':'s'}</div>
             </div>
-            <div style={{display:'flex',gap:8,marginBottom:20}}>
-              {['P&L','Cash Flow','Forecast'].map(t=>(
-                <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?'#101828':'#E4E7EC'),background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
-              ))}
+
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+              <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Budget by Category</div>
+              <button onClick={()=>downloadCsv(`developments-budget-${new Date().getFullYear()}.csv`, byCategory.map(c=>({
+                Category: c.category, Budgeted: c.budgeted, Actual: c.actual, Variance: c.budgeted-c.actual,
+              })))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
             </div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
-                <span>Month</span><span>Income</span><span>Costs</span><span>Expenses</span><span>Net Profit</span>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden',marginBottom:20}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
+                <span>Category</span><span>Budgeted</span><span>Actual</span><span>Variance</span>
               </div>
-              {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>(
-                <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                  <span>{m} {new Date().getFullYear()}</span><span style={{color:'#10B981'}}>£0</span><span style={{color:'#EF4444'}}>£0</span><span style={{color:'#F59E0B'}}>£0</span><span style={{fontWeight:600}}>£0</span>
+              {byCategory.length===0?(
+                <div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No budget items yet.</div>
+              ):byCategory.map(c=>(
+                <div key={c.category} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',textTransform:'capitalize' as const}}>
+                  <span>{c.category.replace('_',' ')}</span>
+                  <span>£{c.budgeted.toLocaleString()}</span>
+                  <span style={{color:c.actual>c.budgeted?'#EF4444':'#344054'}}>£{c.actual.toLocaleString()}</span>
+                  <span style={{fontWeight:600,color:c.budgeted-c.actual<0?'#EF4444':'#10B981'}}>£{(c.budgeted-c.actual).toLocaleString()}</span>
+                </div>
+              ))}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828'}}>
+                <span>TOTAL</span><span>£{totalBudget.toLocaleString()}</span><span>£{totalSpent.toLocaleString()}</span><span>£{(totalBudget-totalSpent).toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Investment Summary</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+              {[{l:'Total Raised',v:'£'+totalInvestment.toLocaleString(),c:'#10B981'},{l:'Investors',v:investors.length,c:'#101828'},{l:'Active Projects',v:activeProjects,c:'#8B5CF6'}].map((s:any)=>(
+                <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
+                  <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
+                  <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
                 </div>
               ))}
             </div>
           </div>
-        )}
+          )
+        })()}
 
 
         {/* DASHBOARD */}

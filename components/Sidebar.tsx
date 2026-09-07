@@ -15,7 +15,6 @@ const NAV_GROUPS = [
     modulePrice: '£29/mo',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
-      { href: '/str/reporting', label: 'Reporting', key: 'str', icon: 'report' },
       { href: '/owner-portal', label: 'Owners', key: 'str', icon: 'users' },
     ]
   },
@@ -25,7 +24,6 @@ const NAV_GROUPS = [
     modulePrice: '£39/mo',
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
-      { href: '/pm/reporting', label: 'Reporting', key: 'pm', icon: 'report' },
     ]
   },
   {
@@ -34,7 +32,6 @@ const NAV_GROUPS = [
     modulePrice: '£59/mo',
     items: [
       { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
-      { href: '/estate/reporting', label: 'Reporting', key: 'estate', icon: 'report' },
     ]
   },
   {
@@ -60,7 +57,6 @@ const NAV_GROUPS = [
     modulePrice: '£49/mo',
     items: [
       { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
-      { href: '/dev/reporting', label: 'Reporting', key: 'dev', icon: 'report' },
       { href: '/dev/vendors', label: 'Contractors', key: 'dev', icon: 'wrench' },
       { href: '/dev/service', label: 'Service', key: 'dev', icon: 'headset' },
     ]
