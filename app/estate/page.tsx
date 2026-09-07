@@ -116,7 +116,7 @@ function Modal({ title, onClose, children }: any) {
 const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Landlords','Vacancies','Viewings'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Inventories','Documents'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Inventories','Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
   { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
@@ -252,6 +252,12 @@ export default function Page() {
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
   const [editableContractText, setEditableContractText] = useState('')
   const [landlordPayments, setLandlordPayments] = useState<any[]>([])
+  const [rtrChecks, setRtrChecks] = useState<any[]>([])
+  const [bankChecks, setBankChecks] = useState<any[]>([])
+  const [editingChecksTenancyId, setEditingChecksTenancyId] = useState<string|null>(null)
+  const [rtrForm, setRtrForm] = useState({full_name:'',date_of_birth:'',current_address:'',check_type:'Online',document_type:'',share_code:'',ni_number:'',status:'Unlimited',check_date:'',checked_by:'',recheck_date:'',document_url:'',notes:''})
+  const [bankCheckForm, setBankCheckForm] = useState({statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:''})
+  const [savingChecks, setSavingChecks] = useState(false)
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
   const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})
@@ -380,6 +386,12 @@ export default function Page() {
     if (currentUser) {
       const { data: templates } = await supabase.from('company_documents').select('*').eq('user_id',currentUser.id).eq('category','contract_template').order('created_at',{ascending:false})
       setContractTemplates(templates ?? [])
+      const [{ data: rtr }, { data: bank }] = await Promise.all([
+        supabase.from('estate_right_to_rent_checks').select('*').eq('user_id',currentUser.id),
+        supabase.from('estate_bank_statement_checks').select('*').eq('user_id',currentUser.id),
+      ])
+      setRtrChecks(rtr ?? [])
+      setBankChecks(bank ?? [])
     }
     setLoading(false)
   }
@@ -472,6 +484,70 @@ export default function Page() {
     if (result.skipped) { alert(result.message); return }
     alert('Signing link emailed to the tenant.')
     await loadAll()
+  }
+
+  function openEditChecks(tenancyId: string) {
+    const existingRtr = rtrChecks.find((r:any)=>r.tenancy_id===tenancyId)
+    const existingBank = bankChecks.find((b:any)=>b.tenancy_id===tenancyId)
+    const tenancy = tenancies.find((t:any)=>t.id===tenancyId)
+    setRtrForm(existingRtr ? {
+      full_name:existingRtr.full_name??'', date_of_birth:existingRtr.date_of_birth??'', current_address:existingRtr.current_address??'',
+      check_type:existingRtr.check_type??'Online', document_type:existingRtr.document_type??'', share_code:existingRtr.share_code??'',
+      ni_number:existingRtr.ni_number??'', status:existingRtr.status??'Unlimited', check_date:existingRtr.check_date??'',
+      checked_by:existingRtr.checked_by??'', recheck_date:existingRtr.recheck_date??'', document_url:existingRtr.document_url??'', notes:existingRtr.notes??'',
+    } : {full_name:tenancy?.estate_tenants?.name??'',date_of_birth:'',current_address:'',check_type:'Online',document_type:'',share_code:'',ni_number:'',status:'Unlimited',check_date:'',checked_by:'',recheck_date:'',document_url:'',notes:''})
+    setBankCheckForm(existingBank ? {
+      statement_start:existingBank.statement_start??'', statement_end:existingBank.statement_end??'', declared_income:existingBank.declared_income!=null?String(existingBank.declared_income):'',
+      income_regular:existingBank.income_regular??false, no_overdraft:existingBank.no_overdraft??false, no_bounced_payments:existingBank.no_bounced_payments??false,
+      no_gambling_flags:existingBank.no_gambling_flags??false, status:existingBank.status??'Passed', document_url:existingBank.document_url??'', notes:existingBank.notes??'',
+      checked_by:existingBank.checked_by??'', check_date:existingBank.check_date??'',
+    } : {statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:''})
+    setEditingChecksTenancyId(tenancyId)
+  }
+
+  async function saveChecks(tenancyId: string) {
+    setSavingChecks(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const rtrPayload = {
+      ...rtrForm,
+      date_of_birth: rtrForm.date_of_birth || null,
+      check_date: rtrForm.check_date || null,
+      recheck_date: rtrForm.recheck_date || null,
+      // NI number only ever makes sense for the birth-certificate
+      // combination route -- never stored for Manual or Online checks,
+      // even if something was typed in before switching check type.
+      ni_number: rtrForm.check_type === 'Birth Certificate + NI' ? rtrForm.ni_number || null : null,
+      share_code: rtrForm.check_type === 'Online' ? rtrForm.share_code || null : null,
+      updated_at: new Date().toISOString(),
+    }
+    const bankPayload = {
+      ...bankCheckForm,
+      declared_income: bankCheckForm.declared_income ? parseFloat(bankCheckForm.declared_income) : null,
+      statement_start: bankCheckForm.statement_start || null,
+      statement_end: bankCheckForm.statement_end || null,
+      check_date: bankCheckForm.check_date || null,
+      updated_at: new Date().toISOString(),
+    }
+    const [rtrRes, bankRes] = await Promise.all([
+      supabase.from('estate_right_to_rent_checks').upsert({ ...rtrPayload, user_id: user?.id, tenancy_id: tenancyId }, { onConflict: 'tenancy_id' }),
+      supabase.from('estate_bank_statement_checks').upsert({ ...bankPayload, user_id: user?.id, tenancy_id: tenancyId }, { onConflict: 'tenancy_id' }),
+    ])
+    setSavingChecks(false)
+    if (rtrRes.error) { alert(rtrRes.error.message); return }
+    if (bankRes.error) { alert(bankRes.error.message); return }
+    setEditingChecksTenancyId(null)
+    await loadAll()
+  }
+
+  // Standard UK affordability guideline: rent shouldn't exceed roughly
+  // 35-40% of net income. Used to color the ratio bar correctly --
+  // a ratio ABOVE the guideline is a real affordability concern, not
+  // something to show green.
+  function rentToIncomeRatio(rent: number, income: number) {
+    if (!income) return null
+    const pct = Math.round((rent / income) * 100)
+    const withinGuideline = pct <= 40
+    return { pct, withinGuideline }
   }
 
   function notifyIfRelevant(table: string, data: any, userId?: string) {
@@ -1973,6 +2049,113 @@ export default function Page() {
                   )
                 })}
               </div>
+            </div>
+            )
+          })()}
+
+          {section==='Tenant Checks'&&(() => {
+            const CHECK_TYPES = ['Manual','Online','Birth Certificate + NI']
+            const rtrStatusColor: Record<string,{bg:string,fg:string}> = {'Unlimited':{bg:'#ECFDF5',fg:'#10B981'},'Time-limited':{bg:'#FFFBEB',fg:'#F59E0B'},'No Right to Rent':{bg:'#FEF2F2',fg:'#EF4444'}}
+            const bankStatusColor: Record<string,{bg:string,fg:string}> = {'Passed':{bg:'#ECFDF5',fg:'#10B981'},'Flagged':{bg:'#FFFBEB',fg:'#F59E0B'},'Failed':{bg:'#FEF2F2',fg:'#EF4444'}}
+            const editingTenancy = tenancies.find((t:any)=>t.id===editingChecksTenancyId)
+            const ratio = editingTenancy ? rentToIncomeRatio(parseFloat(editingTenancy.rent)||0, parseFloat(bankCheckForm.declared_income)||0) : null
+
+            return (
+            <div>
+              <div style={{fontSize:13,color:'#667085',marginBottom:20}}>Right to Rent (Immigration Act 2014) and Bank Statement affordability checks, per tenancy. Bank statement review is a manual record of what staff checked — it doesn't connect to any bank automatically.</div>
+
+              {!editingChecksTenancyId ? (
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1.3fr 1fr 130px 130px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                    <span>Tenant</span><span>Property</span><span>Right to Rent</span><span>Bank Check</span><span></span>
+                  </div>
+                  {tenancies.length===0?(
+                    <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🛂</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No tenancies yet</div></div>
+                  ):tenancies.map((t:any)=>{
+                    const rtr = rtrChecks.find((r:any)=>r.tenancy_id===t.id)
+                    const bank = bankChecks.find((b:any)=>b.tenancy_id===t.id)
+                    return (
+                      <div key={t.id} style={{display:'grid',gridTemplateColumns:'1.3fr 1fr 130px 130px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                        <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.estate_tenants?.name??'—'}</span>
+                        <span style={{fontSize:12,color:'#667085'}}>{t.estate_properties?.name??'—'}</span>
+                        {rtr ? <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:rtrStatusColor[rtr.status]?.bg,color:rtrStatusColor[rtr.status]?.fg,width:'fit-content'}}>{rtr.status}</span> : <span style={{fontSize:12,color:'#98A2B3'}}>Not checked</span>}
+                        {bank ? <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:bankStatusColor[bank.status]?.bg,color:bankStatusColor[bank.status]?.fg,width:'fit-content'}}>{bank.status}</span> : <span style={{fontSize:12,color:'#98A2B3'}}>Not checked</span>}
+                        <button onClick={()=>openEditChecks(t.id)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>{rtr||bank?'Edit':'Add Checks'}</button>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+              <div>
+                <button onClick={()=>setEditingChecksTenancyId(null)} style={{fontSize:12,color:'#667085',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',marginBottom:14}}>&larr; Back to list</button>
+                <div style={{fontSize:15,fontWeight:700,color:'#101828',marginBottom:2}}>Tenant Checks — {editingTenancy?.estate_tenants?.name}</div>
+                <div style={{fontSize:12,color:'#98A2B3',marginBottom:20}}>{editingTenancy?.estate_properties?.name}</div>
+
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22,marginBottom:16}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:16}}>🛂 Right to Rent</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:12}}>
+                    <div><label style={labelStyle}>Full Name</label><input style={inputStyle} value={rtrForm.full_name} onChange={e=>setRtrForm({...rtrForm,full_name:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Date of Birth</label><input type="date" style={inputStyle} value={rtrForm.date_of_birth} onChange={e=>setRtrForm({...rtrForm,date_of_birth:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Current Address</label><input style={inputStyle} value={rtrForm.current_address} onChange={e=>setRtrForm({...rtrForm,current_address:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Check Type</label><select style={inputStyle} value={rtrForm.check_type} onChange={e=>setRtrForm({...rtrForm,check_type:e.target.value})}>{CHECK_TYPES.map(c=><option key={c}>{c}</option>)}</select></div>
+                    {rtrForm.check_type==='Manual'&&<div><label style={labelStyle}>Document Type</label><input style={inputStyle} placeholder="e.g. Passport, BRP, Visa" value={rtrForm.document_type} onChange={e=>setRtrForm({...rtrForm,document_type:e.target.value})}/></div>}
+                    {rtrForm.check_type==='Online'&&<div><label style={labelStyle}>Share Code</label><input style={inputStyle} placeholder="e.g. W2G 4Q7 R2X" value={rtrForm.share_code} onChange={e=>setRtrForm({...rtrForm,share_code:e.target.value})}/></div>}
+                    {rtrForm.check_type==='Birth Certificate + NI'&&<div><label style={labelStyle}>National Insurance Number</label><input style={inputStyle} value={rtrForm.ni_number} onChange={e=>setRtrForm({...rtrForm,ni_number:e.target.value})}/></div>}
+                    <div><label style={labelStyle}>Status</label><select style={inputStyle} value={rtrForm.status} onChange={e=>setRtrForm({...rtrForm,status:e.target.value})}><option>Unlimited</option><option>Time-limited</option><option>No Right to Rent</option></select></div>
+                    <div><label style={labelStyle}>Check Date</label><input type="date" style={inputStyle} value={rtrForm.check_date} onChange={e=>setRtrForm({...rtrForm,check_date:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Checked By</label><input style={inputStyle} value={rtrForm.checked_by} onChange={e=>setRtrForm({...rtrForm,checked_by:e.target.value})}/></div>
+                    {rtrForm.status==='Time-limited'&&<div><label style={labelStyle}>Re-check Due Date *</label><input type="date" style={inputStyle} value={rtrForm.recheck_date} onChange={e=>setRtrForm({...rtrForm,recheck_date:e.target.value})}/></div>}
+                    <div style={{gridColumn:'span 2'}}><FileUpload label="Document / Check Evidence" value={rtrForm.document_url} onChange={url=>setRtrForm({...rtrForm,document_url:url})} folder="estate-rtr-checks" /></div>
+                  </div>
+                  {rtrForm.status==='Time-limited'&&!rtrForm.recheck_date&&<div style={{fontSize:12,color:'#F59E0B',marginBottom:8}}>⚠ Time-limited right to rent requires a re-check date before this permission expires.</div>}
+                  <div><label style={labelStyle}>Notes</label><textarea style={{...inputStyle,minHeight:60,resize:'vertical' as const}} value={rtrForm.notes} onChange={e=>setRtrForm({...rtrForm,notes:e.target.value})}/></div>
+                </div>
+
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22,marginBottom:16}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:16}}>🏦 Bank Statement Check</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:14}}>
+                    <div><label style={labelStyle}>Statement Start</label><input type="date" style={inputStyle} value={bankCheckForm.statement_start} onChange={e=>setBankCheckForm({...bankCheckForm,statement_start:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Statement End</label><input type="date" style={inputStyle} value={bankCheckForm.statement_end} onChange={e=>setBankCheckForm({...bankCheckForm,statement_end:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Declared Monthly Income (£)</label><input type="number" style={inputStyle} value={bankCheckForm.declared_income} onChange={e=>setBankCheckForm({...bankCheckForm,declared_income:e.target.value})}/></div>
+                  </div>
+
+                  {ratio && (
+                    <div style={{marginBottom:16}}>
+                      <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                        <span style={{fontSize:12,color:'#667085'}}>Rent-to-Income Ratio (rent £{editingTenancy?.rent})</span>
+                        <span style={{fontSize:12,fontWeight:600,color:ratio.withinGuideline?'#10B981':'#EF4444'}}>{ratio.pct}% — {ratio.withinGuideline?'within guideline (max ~40%)':'above guideline (max ~40%)'}</span>
+                      </div>
+                      <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',width:Math.min(ratio.pct,100)+'%',background:ratio.withinGuideline?'#10B981':'#EF4444'}}/></div>
+                    </div>
+                  )}
+
+                  <div style={{marginBottom:14}}>
+                    <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:8}}>Red Flags Checked</div>
+                    <div style={{display:'flex',flexDirection:'column' as const,gap:6}}>
+                      {[['income_regular','Income deposits regular and matching declared employer'],['no_overdraft','No unauthorized overdraft usage'],['no_bounced_payments','No bounced payments / returned direct debits'],['no_gambling_flags','No excessive gambling transactions']].map(([key,label])=>(
+                        <label key={key} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'#344054',cursor:'pointer'}}>
+                          <input type="checkbox" checked={(bankCheckForm as any)[key]} onChange={e=>setBankCheckForm({...bankCheckForm,[key]:e.target.checked})}/>
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:14}}>
+                    <div><label style={labelStyle}>Status</label><select style={inputStyle} value={bankCheckForm.status} onChange={e=>setBankCheckForm({...bankCheckForm,status:e.target.value})}><option>Passed</option><option>Flagged</option><option>Failed</option></select></div>
+                    <div><label style={labelStyle}>Check Date</label><input type="date" style={inputStyle} value={bankCheckForm.check_date} onChange={e=>setBankCheckForm({...bankCheckForm,check_date:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Checked By</label><input style={inputStyle} value={bankCheckForm.checked_by} onChange={e=>setBankCheckForm({...bankCheckForm,checked_by:e.target.value})}/></div>
+                  </div>
+                  <div style={{marginBottom:14}}><FileUpload label="Bank Statement" value={bankCheckForm.document_url} onChange={url=>setBankCheckForm({...bankCheckForm,document_url:url})} folder="estate-bank-checks" /></div>
+                  <div><label style={labelStyle}>Notes</label><textarea style={{...inputStyle,minHeight:60,resize:'vertical' as const}} value={bankCheckForm.notes} onChange={e=>setBankCheckForm({...bankCheckForm,notes:e.target.value})}/></div>
+                </div>
+
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={()=>saveChecks(editingChecksTenancyId)} disabled={savingChecks} style={{padding:'10px 24px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingChecks?0.6:1}}>{savingChecks?'Saving…':'Save Checks'}</button>
+                  <button onClick={()=>setEditingChecksTenancyId(null)} style={{padding:'10px 24px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                </div>
+              </div>
+              )}
             </div>
             )
           })()}
