@@ -35,14 +35,6 @@ const NAV_GROUPS = [
     ]
   },
   {
-    label: 'AI Property Manager',
-    module: 'aipm',
-    modulePrice: '£9.99/mo',
-    items: [
-      { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles' },
-    ]
-  },
-  {
     label: 'Invest',
     module: 'invest',
     modulePrice: '£19/mo',
@@ -71,6 +63,7 @@ const NAV_GROUPS = [
     module: 'staffcentre',
     staffCentre: true,
     items: [
+      { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles', requiresModule: 'aipm', requiresModulePrice: '£9.99/mo' },
       { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts' },
       { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles' },
       { href: '/staff-centre/sales', label: 'Sales', key: 'staffcentre', icon: 'trendingup' },
@@ -193,18 +186,29 @@ export default function Sidebar() {
                   {!hasModule && (group as any).modulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#F2F4F7', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{(group as any).modulePrice}</span>}
                 </div>
               )}
-              {group.items.map(({ href, icon, label, key, minPlan }: any) => {
-                const hasAccess = hasModule && features.includes(key)
+              {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice }: any) => {
+                // Most items just inherit their group's access check. A
+                // few (like AI Property Manager, living inside the
+                // shared Staff Centre group but still a real £9.99/mo
+                // module) need their own module requirement so moving
+                // them into a shared group doesn't accidentally waive
+                // their paywall for anyone with any other module.
+                const itemHasModule = requiresModule
+                  ? (modules.includes(requiresModule) && roleModules.includes(requiresModule))
+                  : hasModule
+                const hasAccess = itemHasModule && features.includes(key)
                 const active = pathname === href.split('?')[0]
+                const linkHref = itemHasModule ? href : (requiresModule ? '/modules' : '#')
                 return (
-                  <Link key={href} href={hasModule ? href : '#'}
+                  <Link key={href} href={linkHref}
                     title={isCollapsed ? label : undefined}
-                    onClick={(e: any) => { if (!hasModule || !hasAccess) e.preventDefault(); else setOpen(false) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#EEF0FF' : 'transparent', color: !hasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: hasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !hasModule ? 0.5 : 1 }}>
-                    <Icon name={icon} size={16} color={!hasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#667085'} />
+                    onClick={(e: any) => { if (!itemHasModule && !requiresModule) e.preventDefault(); else if (itemHasModule && !hasAccess) e.preventDefault(); else setOpen(false) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#EEF0FF' : 'transparent', color: !itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
+                    <Icon name={icon} size={16} color={!itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#667085'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
-                    {!isCollapsed && !hasModule && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C1C9D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
-                    {!isCollapsed && hasModule && !hasAccess && minPlan && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: minPlan === 'professional' ? '#1D2939' : '#EEF0FF', color: minPlan === 'professional' ? '#fff' : '#3B4AFF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{minPlan === 'professional' ? 'Pro' : 'Growth'}</span>}
+                    {!isCollapsed && !itemHasModule && requiresModulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#F2F4F7', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{requiresModulePrice}</span>}
+                    {!isCollapsed && !itemHasModule && !requiresModulePrice && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C1C9D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
+                    {!isCollapsed && itemHasModule && !hasAccess && minPlan && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: minPlan === 'professional' ? '#1D2939' : '#EEF0FF', color: minPlan === 'professional' ? '#fff' : '#3B4AFF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{minPlan === 'professional' ? 'Pro' : 'Growth'}</span>}
                   </Link>
                 )
               })}
