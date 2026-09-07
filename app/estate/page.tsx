@@ -124,8 +124,9 @@ const NAV_GROUPS = [
 ]
 const STUB_SECTIONS: string[] = []
 const DOCUMENT_CATEGORIES = [
-  { value:'lease', label:'Lease' },
+  { value:'lease', label:'Lease / Tenancy Agreement' },
   { value:'id', label:'ID Document' },
+  { value:'landlord_agreement', label:'Landlord Agreement' },
   { value:'inspection', label:'Inspection Report' },
   { value:'statement', label:'Statement' },
   { value:'other', label:'Other' },
@@ -319,7 +320,9 @@ export default function Page() {
   const [inventoryForm, setInventoryForm] = useState({property_id:'',tenancy_id:'',type:INVENTORY_TYPES[0],inspection_date:'',condition_summary:'',document_url:'',status:'Draft'})
   const [documents, setDocuments] = useState<any[]>([])
   const [showAddDocument, setShowAddDocument] = useState(false)
-  const [documentForm, setDocumentForm] = useState({property_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''})
+  const [documentForm, setDocumentForm] = useState({property_id:'',landlord_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''})
+  const [documentLinkType, setDocumentLinkType] = useState('property')
+  const [documentFilter, setDocumentFilter] = useState('All')
 
   const [news, setNews] = useState([
     {title:'New Tenant Verification Regulations for Landlords',tag:'LEGISLATION',body:'The Renters Rights Act has introduced restrictions on upfront rental payments, requiring landlords to adopt alternative affordability checks.',link:null as string|null},
@@ -363,7 +366,7 @@ export default function Page() {
       supabase.from('estate_units').select('*,estate_buildings(name),estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_viewings').select('*,estate_properties(name)').eq('user_id',userId).order('scheduled_at',{ascending:true}),
       supabase.from('estate_inventories').select('*,estate_properties(name),estate_tenancies(estate_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}),
-      supabase.from('estate_documents').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_documents').select('*,estate_properties(name),estate_tenants(name),estate_landlords(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_landlord_payments').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
@@ -1270,38 +1273,80 @@ export default function Page() {
           {section==='Documents'&&(<div>
             {showAddDocument&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit Document':'Add Document'}</h3>
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                <div><label style={labelStyle}>Document Name *</label><input value={documentForm.name} onChange={e=>setDocumentForm({...documentForm,name:e.target.value})} placeholder="e.g. Tenancy Agreement" style={inputStyle}/></div>
+              <div style={{display:'flex',flexDirection:'column' as const,gap:14}}>
+                <div><label style={labelStyle}>Document Name *</label><input value={documentForm.name} onChange={e=>setDocumentForm({...documentForm,name:e.target.value})} placeholder="e.g. Passport, Tenancy Agreement" style={inputStyle}/></div>
                 <FileUpload label="Upload File (PDF, Image) *" value={documentForm.file_url} onChange={url=>setDocumentForm({...documentForm,file_url:url})} folder="estate-documents" />
                 <div><label style={labelStyle}>Type</label>
                   <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.category} onChange={e=>setDocumentForm({...documentForm,category:e.target.value})}>
                     {DOCUMENT_CATEGORIES.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
                 </div>
-                <div><label style={labelStyle}>Property</label>
-                  <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.property_id} onChange={e=>setDocumentForm({...documentForm,property_id:e.target.value})}>
-                    <option value="">All properties</option>
-                    {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
+                <div>
+                  <label style={labelStyle}>Linked To</label>
+                  <div style={{display:'flex',gap:8,marginBottom:10}}>
+                    {[['landlord','Landlord'],['tenant','Tenant'],['property','Property']].map(([key,label])=>(
+                      <button key={key} onClick={()=>{setDocumentLinkType(key);setDocumentForm({...documentForm,landlord_id:'',tenant_id:'',property_id:''})}} style={{flex:1,padding:'8px',borderRadius:8,border:'1px solid '+(documentLinkType===key?ACCENT:'#E4E7EC'),background:documentLinkType===key?ACCENT+'12':'#fff',color:documentLinkType===key?ACCENT:'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{label}</button>
+                    ))}
+                  </div>
+                  {documentLinkType==='landlord'&&(
+                    <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.landlord_id} onChange={e=>setDocumentForm({...documentForm,landlord_id:e.target.value})}>
+                      <option value="">Select landlord…</option>
+                      {landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                  )}
+                  {documentLinkType==='tenant'&&(
+                    <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.tenant_id} onChange={e=>setDocumentForm({...documentForm,tenant_id:e.target.value})}>
+                      <option value="">Select tenant…</option>
+                      {tenants.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  )}
+                  {documentLinkType==='property'&&(
+                    <select style={{...inputStyle,cursor:'pointer'}} value={documentForm.property_id} onChange={e=>setDocumentForm({...documentForm,property_id:e.target.value})}>
+                      <option value="">All properties</option>
+                      {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  )}
                 </div>
               </div>
               <div style={{display:'flex',gap:8,marginTop:24}}>
-                <button onClick={async()=>{if(!documentForm.name||!documentForm.file_url)return;await saveRecord('estate_documents',documentForm,editItem?.id);setEditItem(null);setDocumentForm({property_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''});setShowAddDocument(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Document'}</button>
-                <button onClick={()=>{setShowAddDocument(false);setEditItem(null);setDocumentForm({property_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                <button onClick={async()=>{if(!documentForm.name||!documentForm.file_url)return;await saveRecord('estate_documents',documentForm,editItem?.id);setEditItem(null);setDocumentForm({property_id:'',landlord_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''});setDocumentLinkType('property');setShowAddDocument(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Document'}</button>
+                <button onClick={()=>{setShowAddDocument(false);setEditItem(null);setDocumentForm({property_id:'',landlord_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''});setDocumentLinkType('property')}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
-                <span>Name</span><span>Type</span><span>Property</span><span></span>
-              </div>
-              {documents.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📁</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No documents yet</div><div style={{fontSize:13}}>Upload tenancy agreements, certificates and more.</div></div>):documents.map((d:any)=>(
-                <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.file_url?<a href={d.file_url} target="_blank" rel="noreferrer" style={{color:'#101828',textDecoration:'none'}}>{d.name}</a>:d.name}</span>
-                  <span style={{fontSize:13,color:'#667085',textTransform:'capitalize' as const}}>{DOCUMENT_CATEGORIES.find(c=>c.value===d.category)?.label||d.category}</span>
-                  <span style={{fontSize:13,color:'#667085'}}>{d.estate_properties?.name||'—'}</span>
-                  <button onClick={()=>delRecord('estate_documents',d.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
-                </div>
+
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {['All','Landlord Documents','Tenant Documents','Property Documents'].map(f=>(
+                <button key={f} onClick={()=>setDocumentFilter(f)} style={{padding:'6px 14px',borderRadius:20,border:documentFilter===f?'1px solid '+ACCENT:'1px solid #E4E7EC',background:documentFilter===f?ACCENT+'12':'#fff',color:documentFilter===f?ACCENT:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{f}</button>
               ))}
+            </div>
+
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 160px 1fr 110px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                <span>Name</span><span>Type</span><span>Linked To</span><span>Uploaded</span><span></span>
+              </div>
+              {(()=>{
+                const filtered = documents.filter((d:any)=>{
+                  if(documentFilter==='Landlord Documents') return !!d.landlord_id
+                  if(documentFilter==='Tenant Documents') return !!d.tenant_id
+                  if(documentFilter==='Property Documents') return !!d.property_id && !d.landlord_id && !d.tenant_id
+                  return true
+                })
+                if(filtered.length===0) return <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📁</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No documents yet</div><div style={{fontSize:13}}>Upload tenancy agreements, certificates and more.</div></div>
+                return filtered.map((d:any)=>(
+                  <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 1fr 110px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                    <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.file_url?<a href={d.file_url} target="_blank" rel="noreferrer" style={{color:'#101828',textDecoration:'none'}}>{d.name}</a>:d.name}</span>
+                    <span style={{fontSize:12,color:'#667085'}}>{DOCUMENT_CATEGORIES.find(c=>c.value===d.category)?.label||d.category}</span>
+                    <div>
+                      {d.landlord_id?(<><div style={{fontSize:13,color:'#344054'}}>👤 {d.estate_landlords?.name??'—'}</div><div style={{fontSize:11,color:'#98A2B3'}}>Landlord</div></>)
+                      :d.tenant_id?(<><div style={{fontSize:13,color:'#344054'}}>🧍 {d.estate_tenants?.name??'—'}</div><div style={{fontSize:11,color:'#98A2B3'}}>Tenant</div></>)
+                      :d.property_id?(<><div style={{fontSize:13,color:'#344054'}}>🏠 {d.estate_properties?.name??'—'}</div><div style={{fontSize:11,color:'#98A2B3'}}>Property</div></>)
+                      :<span style={{fontSize:13,color:'#98A2B3'}}>—</span>}
+                    </div>
+                    <span style={{fontSize:12,color:'#667085'}}>{d.created_at?new Date(d.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'}</span>
+                    <button onClick={()=>delRecord('estate_documents',d.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                  </div>
+                ))
+              })()}
             </div>
           </div>)}
 
