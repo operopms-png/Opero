@@ -5,7 +5,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
-const ACCENT = '#2D6A4F'
+const ACCENT = '#3B4AFF'
 
 async function uploadPropertyImage(file: File): Promise<string | null> {
   const ext = file.name.split('.').pop()
