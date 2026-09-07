@@ -408,14 +408,22 @@ export default function Page() {
   }
 
   async function saveRecord(table: string, data: any, id?: any) {
+    // Postgres rejects an empty string '' for DATE/TIMESTAMPTZ/NUMERIC/
+    // UUID columns (must be NULL for "no value"), but a blank
+    // <input type="date"> or number field naturally produces ''. Every
+    // save in this file goes through here, so sanitizing once at this
+    // choke point fixes the whole class of bug everywhere at once,
+    // rather than needing every individual form to remember to guard
+    // its own optional date/number fields with `|| null`.
+    const sanitized = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v === '' ? null : v]))
     const { data: { user } } = await supabase.auth.getUser()
     if (id) {
-      const { error } = await supabase.from(table).update(data).eq('id', id)
+      const { error } = await supabase.from(table).update(sanitized).eq('id', id)
       if (error) { alert(error.message); return }
     } else {
-      const { error } = await supabase.from(table).insert([{ ...data, user_id: user?.id }])
+      const { error } = await supabase.from(table).insert([{ ...sanitized, user_id: user?.id }])
       if (error) { alert(error.message); return }
-      notifyIfRelevant(table, data, user?.id)
+      notifyIfRelevant(table, sanitized, user?.id)
     }
     await loadAll()
   }
@@ -648,7 +656,7 @@ export default function Page() {
   }
   const addTenancy = async () => {
     if(!tenancy.property) return
-    await saveRecord('estate_tenancies', {property_id:tenancy.property,tenant_id:tenancy.tenant,start_date:tenancy.start,end_date:tenancy.end,rent:tenancy.rent,deposit:tenancy.deposit,status:tenancy.status,document_url:tenancy.document_url}, editItem?.id)
+    await saveRecord('estate_tenancies', {property_id:tenancy.property,tenant_id:tenancy.tenant,start_date:tenancy.start||null,end_date:tenancy.end||null,rent:tenancy.rent,deposit:tenancy.deposit,status:tenancy.status,document_url:tenancy.document_url}, editItem?.id)
     setEditItem(null)
     setTenancy({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
     setShowAddTenancy(false)
@@ -1619,7 +1627,7 @@ export default function Page() {
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Insurance (£)</label><input value={mortgageForm.insurance} onChange={e=>setMortgageForm({...mortgageForm,insurance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!mortgageForm.property||!mortgageForm.amount)return;saveRecord('estate_mortgages',{property_id:mortgageForm.property,bank:mortgageForm.bank,amount:mortgageForm.amount,rate:mortgageForm.rate,start_date:mortgageForm.startDate,end_date:mortgageForm.endDate,duration:mortgageForm.duration,monthly_payment:mortgageForm.monthlyPayment,insurance:mortgageForm.insurance,type:mortgageForm.type});setMortgageForm({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'});setShowAddMortgage(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add Loan</button>
+                <button onClick={()=>{if(!mortgageForm.property||!mortgageForm.amount)return;saveRecord('estate_mortgages',{property_id:mortgageForm.property,bank:mortgageForm.bank,amount:mortgageForm.amount,rate:mortgageForm.rate,start_date:mortgageForm.startDate||null,end_date:mortgageForm.endDate||null,duration:mortgageForm.duration,monthly_payment:mortgageForm.monthlyPayment,insurance:mortgageForm.insurance,type:mortgageForm.type});setMortgageForm({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'});setShowAddMortgage(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add Loan</button>
                 <button onClick={()=>setShowAddMortgage(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
