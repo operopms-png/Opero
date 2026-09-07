@@ -120,7 +120,7 @@ const NAV_GROUPS = [
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
   { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
-  { label: 'REPORTS', items: ['Reports','Owner Reports'] },
+  { label: 'REPORTS', items: ['Reports','Owner Reports','Landlord Statements'] },
 ]
 const STUB_SECTIONS: string[] = []
 const DOCUMENT_CATEGORIES = [
@@ -246,6 +246,10 @@ export default function Page() {
   const [ten, setTen] = useState({name:'',email:'',phone:'',property_id:'',unit_id:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
   const [landlords, setLandlords] = useState<any[]>([])
+  const [landlordPayments, setLandlordPayments] = useState<any[]>([])
+  const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
+  const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
+  const [lpForm, setLpForm] = useState({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})
   const [showAddLandlord, setShowAddLandlord] = useState(false)
   const [landlordForm, setLandlordForm] = useState({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''})
   const [portalLandlord, setPortalLandlord] = useState<any>(null)
@@ -325,7 +329,7 @@ export default function Page() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp,bl,un,bk,inv,doc,ll] = await Promise.all([
+    const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp,bl,un,bk,inv,doc,ll,lp] = await Promise.all([
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('subscriptions').select('ea_extra_blocks,plan,modules').eq('user_id',userId).single(),
       supabase.from('estate_tenants').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -345,6 +349,7 @@ export default function Page() {
       supabase.from('estate_inventories').select('*,estate_properties(name),estate_tenancies(estate_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}),
       supabase.from('estate_documents').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_landlord_payments').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     let restrictedProps = p.data ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((x: any) => propertyIds.includes(x.id))
@@ -365,6 +370,7 @@ export default function Page() {
     setBuildings(bl.data??[]); setUnits(unitData); setViewings(viewingData)
     setInventories(inventoryData); setDocuments(documentData)
     setLandlords(ll.data??[])
+    setLandlordPayments(lp.data??[])
     setLoading(false)
   }
 
@@ -1789,6 +1795,115 @@ export default function Page() {
               </div>
             </div>
           )}
+
+          {section==='Landlord Statements'&&(() => {
+            const today = new Date().toISOString().slice(0,10)
+            const totalPaid = landlordPayments.filter((p:any)=>p.paid_date).reduce((s:number,p:any)=>s+(parseFloat(p.amount)||0),0)
+            const overdueCount = landlordPayments.filter((p:any)=>!p.paid_date && p.due_date && p.due_date < today).length
+            const onTimeCount = landlordPayments.filter((p:any)=>p.paid_date && p.due_date && p.paid_date <= p.due_date).length
+            const lateCount = landlordPayments.filter((p:any)=>p.paid_date && p.due_date && p.paid_date > p.due_date).length
+            function statusFor(p:any) {
+              if (!p.paid_date) return p.due_date && p.due_date < today ? {label:'Overdue',bg:'#FEE2E2',color:'#EF4444'} : {label:'Pending',bg:'#FEF3C7',color:'#D97706'}
+              if (p.due_date && p.paid_date > p.due_date) return {label:'Paid Late',bg:'#FEF3C7',color:'#D97706'}
+              return {label:'Paid On Time',bg:'#D1FAE5',color:'#059669'}
+            }
+            // Suggested rent for the selected landlord -- sum of active
+            // tenancy rent on properties they own (estate_properties.owner_id).
+            // Genuinely computed from real data, but still just a suggestion
+            // staff confirm before saving -- the saved record is what's real,
+            // same honest pattern as PM's existing Statements tab.
+            const selectedLandlord = landlords.find((l:any)=>l.id===lpForm.landlord_id)
+            const landlordPropertyIds = properties.filter((p:any)=>p.owner_id===lpForm.landlord_id).map((p:any)=>p.id)
+            const suggestedRent = tenancies.filter((t:any)=>t.status==='Active' && landlordPropertyIds.includes(t.property_id)).reduce((s:number,t:any)=>s+(parseFloat(t.rent)||0),0)
+            const commissionRate = selectedLandlord?.commission_rate ?? 12
+            const suggestedFee = Math.round(suggestedRent * (commissionRate/100) * 100) / 100
+            const suggestedNet = suggestedRent - suggestedFee
+
+            return (
+            <div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#101828'}}>£{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#059669'}}>{onTimeCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid On Time</div></div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#D97706'}}>{lateCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid Late</div></div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #FEE2E2',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#EF4444'}}>{overdueCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Overdue</div></div>
+              </div>
+
+              <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginBottom:16}}>
+                <button onClick={()=>downloadCsv(`landlord-statements-${today}.csv`, landlordPayments.map((p:any)=>{
+                  const l = landlords.find((x:any)=>x.id===p.landlord_id)
+                  const prop = properties.find((x:any)=>x.id===p.property_id)
+                  return { Landlord: l?.name??'—', Property: prop?.name??'—', Category: p.category, Amount: p.amount, 'Due Date': p.due_date??'', 'Paid Date': p.paid_date??'', Status: statusFor(p).label }
+                }))} style={{background:'#fff',border:'1px solid #D0D5DD',color:'#344054',borderRadius:8,padding:'9px 18px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
+                <button onClick={()=>{setEditingPaymentId(null);setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setShowAddLandlordPayment(true)}} style={{background:ACCENT,color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Generate Statement</button>
+              </div>
+
+              {showAddLandlordPayment&&(
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+                  <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editingPaymentId?'Edit Statement Line':'Generate Statement'}</h3>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                    <div><label style={labelStyle}>Landlord</label><select style={inputStyle} value={lpForm.landlord_id} onChange={e=>setLpForm({...lpForm,landlord_id:e.target.value,property_id:''})}><option value="">Select landlord…</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name} ({l.commission_rate??12}% fee)</option>)}</select></div>
+                    <div><label style={labelStyle}>Property</label><select style={inputStyle} value={lpForm.property_id} onChange={e=>setLpForm({...lpForm,property_id:e.target.value})}><option value="">Select property…</option>{properties.filter((p:any)=>!lpForm.landlord_id||p.owner_id===lpForm.landlord_id).map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                  </div>
+                  {lpForm.landlord_id && suggestedRent>0 && (
+                    <div style={{background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:8,padding:'12px 16px',marginBottom:12,fontSize:12,color:'#166534'}}>
+                      Suggested from active tenancies: £{suggestedRent.toLocaleString()} rent − £{suggestedFee.toLocaleString()} fee ({commissionRate}%) = <strong>£{suggestedNet.toLocaleString()} net</strong>
+                      <button onClick={()=>setLpForm({...lpForm,category:'Rent Share',amount:String(suggestedNet)})} style={{marginLeft:10,fontSize:11,fontWeight:600,color:'#166534',background:'#DCFCE7',border:'none',borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Use this amount</button>
+                    </div>
+                  )}
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                    <div><label style={labelStyle}>Category</label><select style={inputStyle} value={lpForm.category} onChange={e=>setLpForm({...lpForm,category:e.target.value})}>{['Rent Share','Utility Bill','Maintenance Reimbursement','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
+                    <div><label style={labelStyle}>Amount (£)</label><input type="number" style={inputStyle} value={lpForm.amount} onChange={e=>setLpForm({...lpForm,amount:e.target.value})} placeholder="0.00"/></div>
+                    <div><label style={labelStyle}>Due Date</label><input type="date" style={inputStyle} value={lpForm.due_date} onChange={e=>setLpForm({...lpForm,due_date:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Paid Date (leave blank if not yet paid)</label><input type="date" style={inputStyle} value={lpForm.paid_date} onChange={e=>setLpForm({...lpForm,paid_date:e.target.value})}/></div>
+                    <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input style={inputStyle} value={lpForm.notes} onChange={e=>setLpForm({...lpForm,notes:e.target.value})} placeholder="Optional"/></div>
+                    <div style={{gridColumn:'span 2'}}><FileUpload label="Receipt (photo or PDF)" value={lpForm.receipt_url} onChange={url=>setLpForm({...lpForm,receipt_url:url})} folder="estate-landlord-payment-receipts" /></div>
+                  </div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={async ()=>{
+                      if(!lpForm.landlord_id||!lpForm.amount)return
+                      const {data:{user}}=await supabase.auth.getUser()
+                      const payload={...lpForm,amount:parseFloat(lpForm.amount),due_date:lpForm.due_date||null,paid_date:lpForm.paid_date||null,receipt_url:lpForm.receipt_url||null}
+                      const {error}=editingPaymentId
+                        ? await supabase.from('estate_landlord_payments').update(payload).eq('id',editingPaymentId)
+                        : await supabase.from('estate_landlord_payments').insert([{...payload,user_id:user?.id}])
+                      if(error){alert(error.message);return}
+                      setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setEditingPaymentId(null);setShowAddLandlordPayment(false);await loadAll()
+                    }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
+                    <button onClick={()=>{setShowAddLandlordPayment(false);setEditingPaymentId(null);setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 100px 110px 110px 110px 90px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                  <span>Landlord</span><span>Property</span><span>Category</span><span>Amount</span><span>Due</span><span>Paid</span><span>Status</span><span></span>
+                </div>
+                {landlordPayments.length===0?(
+                  <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No statements yet</div><div style={{fontSize:13}}>Generate your first landlord statement above.</div></div>
+                ):landlordPayments.map((p:any)=>{
+                  const l = landlords.find((x:any)=>x.id===p.landlord_id)
+                  const prop = properties.find((x:any)=>x.id===p.property_id)
+                  const st = statusFor(p)
+                  return (
+                    <div key={p.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 100px 110px 110px 110px 90px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                      <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{l?.name??'—'}</span>
+                      <span style={{fontSize:12,color:'#667085'}}>{prop?.name??'—'}</span>
+                      <span style={{fontSize:12,color:'#667085'}}>{p.category}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(p.amount).toLocaleString()}</span>
+                      <span style={{fontSize:12,color:'#667085'}}>{p.due_date??'—'}</span>
+                      <span style={{fontSize:12,color:'#667085'}}>{p.paid_date??'—'}</span>
+                      <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:st.bg,color:st.color,width:'fit-content'}}>{st.label}</span>
+                      <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+                        <button onClick={()=>{setEditingPaymentId(p.id);setLpForm({landlord_id:p.landlord_id??'',property_id:p.property_id??'',category:p.category,amount:String(p.amount),due_date:p.due_date??'',paid_date:p.paid_date??'',notes:p.notes??'',receipt_url:p.receipt_url??''});setShowAddLandlordPayment(true)}} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                        <button onClick={()=>delRecord('estate_landlord_payments',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            )
+          })()}
 
           {STUB_SECTIONS.includes(section)&&(
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center'}}>
