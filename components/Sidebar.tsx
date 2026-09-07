@@ -15,7 +15,6 @@ const NAV_GROUPS = [
     modulePrice: '£29/mo',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
-      { href: '/owner-portal', label: 'Owners', key: 'str', icon: 'users' },
     ]
   },
   {

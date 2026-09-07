@@ -12,7 +12,7 @@ const STR_NAV_GROUPS = [
   { label: 'PORTFOLIO', items: ['Properties','Bookings'] },
   { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms'] },
   { label: 'INSIGHTS', items: ['Analytics','Integrations'] },
-  { label: 'TEAM', items: ['Team'] },
+  { label: 'TEAM', items: ['Team','Owners'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'FINANCE', items: ['Expenses','Banking'] },
   { label: 'REPORTS', items: ['Reports'] },
@@ -462,7 +462,7 @@ export default function STRPage() {
               {group.items.map(t=>{
                 const locked = !!(allowedTab && t !== allowedTab)
                 const badge = t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : 0
-                return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t&&!locked?'#3B4AFF18':'transparent', color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+                return <button key={t} onClick={()=>{if(locked)return; if(t==='Owners'){window.location.href='/owner-portal';return;} setTab(t)}} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t&&!locked?'#3B4AFF18':'transparent', color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
             </div>
           ))}
