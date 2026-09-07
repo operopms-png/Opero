@@ -15,9 +15,6 @@ const NAV_GROUPS = [
     modulePrice: '£29/mo',
     items: [
       { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
-      { href: '/str/crm', label: 'CRM', key: 'str', icon: 'contacts' },
-      { href: '/str/marketing', label: 'Marketing', key: 'str', icon: 'sparkles' },
-      { href: '/str/sales', label: 'Sales', key: 'str', icon: 'trendingup' },
       { href: '/str/reporting', label: 'Reporting', key: 'str', icon: 'report' },
       { href: '/owner-portal', label: 'Owners', key: 'str', icon: 'users' },
     ]
@@ -28,9 +25,6 @@ const NAV_GROUPS = [
     modulePrice: '£39/mo',
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
-      { href: '/pm/crm', label: 'CRM', key: 'pm', icon: 'contacts' },
-      { href: '/pm/marketing', label: 'Marketing', key: 'pm', icon: 'sparkles' },
-      { href: '/pm/sales', label: 'Sales', key: 'pm', icon: 'trendingup' },
       { href: '/pm/reporting', label: 'Reporting', key: 'pm', icon: 'report' },
     ]
   },
@@ -40,9 +34,6 @@ const NAV_GROUPS = [
     modulePrice: '£59/mo',
     items: [
       { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
-      { href: '/estate/crm', label: 'CRM', key: 'estate', icon: 'contacts' },
-      { href: '/estate/marketing', label: 'Marketing', key: 'estate', icon: 'sparkles' },
-      { href: '/estate/sales', label: 'Sales', key: 'estate', icon: 'trendingup' },
       { href: '/estate/reporting', label: 'Reporting', key: 'estate', icon: 'report' },
     ]
   },
@@ -69,20 +60,37 @@ const NAV_GROUPS = [
     modulePrice: '£49/mo',
     items: [
       { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
-      { href: '/dev/crm', label: 'CRM', key: 'dev', icon: 'contacts' },
-      { href: '/dev/marketing', label: 'Marketing', key: 'dev', icon: 'sparkles' },
-      { href: '/dev/sales', label: 'Sales', key: 'dev', icon: 'trendingup' },
       { href: '/dev/reporting', label: 'Reporting', key: 'dev', icon: 'report' },
       { href: '/dev/vendors', label: 'Contractors', key: 'dev', icon: 'wrench' },
       { href: '/dev/service', label: 'Service', key: 'dev', icon: 'headset' },
     ]
   },
+  {
+    label: 'Staff Centre',
+    // Not a purchasable module like the others above -- it's a shared
+    // home for tools that used to be duplicated inside every module
+    // (CRM/Marketing/Sales) plus staff-specific tools. Visible to
+    // anyone who has at least one real module unlocked, not gated
+    // behind its own separate price/lock.
+    module: 'staffcentre',
+    staffCentre: true,
+    items: [
+      { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts' },
+      { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles' },
+      { href: '/staff-centre/sales', label: 'Sales', key: 'staffcentre', icon: 'trendingup' },
+      { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file' },
+      { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },
+      { href: '/settings?section=Schedule', label: 'Schedule', key: 'staffcentre', icon: 'calendar' },
+      { href: '/settings?section=Tasks', label: 'Tasks', key: 'staffcentre', icon: 'file' },
+      { href: '/team-chat', label: 'Team Chat', key: 'staffcentre', icon: 'users' },
+    ]
+  },
 ]
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate','invest','ai','ai'],
-  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai'],
-  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai'],
+  starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate','invest','ai','ai','staffcentre'],
+  growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
+  professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
 }
 
 function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
@@ -175,7 +183,9 @@ export default function Sidebar() {
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
-          const hasModule = (group as any).roleOnly
+          const hasModule = (group as any).staffCentre
+            ? modules.length > 0
+            : (group as any).roleOnly
             ? roleModules.includes((group as any).module)
             : (modules.includes(group.module) && roleModules.includes(group.module))
           return (

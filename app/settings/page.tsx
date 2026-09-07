@@ -22,8 +22,9 @@ const ROLES = ['Admin','Vacation Rental Team','Property Management Team','Estate
 function SettingsInner() {
   const searchParams = useSearchParams()
   const billingRequired = searchParams.get('billing') === 'required'
+  const sectionParam = searchParams.get('section')
   const { role: myRole, hasSettings, loading: roleLoading } = useRole()
-  const [section, setSection] = useState(billingRequired ? 'Billing & Subscriptions' : 'My Account')
+  const [section, setSection] = useState(billingRequired ? 'Billing & Subscriptions' : (sectionParam || 'My Account'))
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [team, setTeam] = useState<any[]>([])

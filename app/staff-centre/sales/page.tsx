@@ -1,0 +1,301 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../../lib/supabase'
+const ACCENT = '#3B4AFF'
+const SECTIONS = ['Pipeline','Leads','Quotes','Meetings','Analytics']
+const STAGES = ['Enquiry','Qualified','Proposal','Negotiation','Won','Lost']
+const MODULES = [
+  { key:'str', label:'Vacation Rentals', color:'#3B4AFF', bg:'#EEF1FF' },
+  { key:'pm', label:'Property Management', color:'#3B4AFF', bg:'#EEF1FF' },
+  { key:'estate', label:'Estate Agency', color:'#2D6A4F', bg:'#EAF3EE' },
+  { key:'dev', label:'Developments', color:'#8B5CF6', bg:'#F3EEFF' },
+]
+const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
+const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
+
+function moduleBadge(m: string) {
+  const found = MODULES.find(x=>x.key===m)
+  if (!found) return <span style={{fontSize:10,padding:'2px 7px',borderRadius:4,background:'#F2F4F7',color:'#667085',fontWeight:600}}>—</span>
+  return <span style={{fontSize:10,padding:'2px 7px',borderRadius:4,background:found.bg,color:found.color,fontWeight:600}}>{found.label}</span>
+}
+
+export default function Page() {
+  const [section, setSection] = useState('Pipeline')
+  const [moduleFilter, setModuleFilter] = useState('All')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [leads, setLeads] = useState<any[]>([])
+  const [showLeadForm, setShowLeadForm] = useState(false)
+  const [leadForm, setLeadForm] = useState({name:'',email:'',phone:'',source:'Direct',status:'New',value:'',notes:'',module:'pm'})
+  const [deals, setDeals] = useState<any[]>([])
+  const [showDealForm, setShowDealForm] = useState(false)
+  const [dealForm, setDealForm] = useState({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:'',module:'pm'})
+  const [quotes, setQuotes] = useState<any[]>([])
+  const [showQuoteForm, setShowQuoteForm] = useState(false)
+  const [quoteForm, setQuoteForm] = useState({client:'',property:'',amount:'',valid_until:'',status:'Draft',notes:'',module:'pm'})
+  const [meetings, setMeetings] = useState<any[]>([])
+  const [showMeetingForm, setShowMeetingForm] = useState(false)
+  const [meetingForm, setMeetingForm] = useState({title:'',contact:'',meeting_date:'',meeting_time:'',type:'Call',notes:'',module:'pm'})
+
+  useEffect(()=>{
+    supabase.auth.getUser().then(async ({data:{user}})=>{
+      if(!user){window.location.href='/login';return}
+      await loadAll(user.id)
+      setLoading(false)
+    })
+  },[])
+
+  async function loadAll(userId: string) {
+    const [l,d,q,m] = await Promise.all([
+      supabase.from('sales_leads').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('sales_deals').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('sales_quotes').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('sales_meetings').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+    ])
+    setLeads(l.data??[]); setDeals(d.data??[]); setQuotes(q.data??[]); setMeetings(m.data??[])
+  }
+
+  const fLeads = moduleFilter==='All'?leads:leads.filter((x:any)=>x.module===moduleFilter)
+  const fDeals = moduleFilter==='All'?deals:deals.filter((x:any)=>x.module===moduleFilter)
+  const fQuotes = moduleFilter==='All'?quotes:quotes.filter((x:any)=>x.module===moduleFilter)
+  const fMeetings = moduleFilter==='All'?meetings:meetings.filter((x:any)=>x.module===moduleFilter)
+
+  async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
+    setSaving(true)
+    const {data:{user}} = await supabase.auth.getUser()
+    const {error} = await supabase.from(table).insert([{...data,user_id:user?.id}])
+    setSaving(false)
+    if(error){alert(error.message);return}
+    clearForm(); closeForm(); await loadAll(user!.id)
+  }
+
+  async function updateField(table: string, id: string, field: string, value: any, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).update({[field]:value}).eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.map((x:any)=>x.id===id?{...x,[field]:value}:x))
+  }
+
+  async function del(table: string, id: string, setter: (fn:(prev:any[])=>any[])=>void) {
+    const {error} = await supabase.from(table).delete().eq('id',id)
+    if(error){alert(error.message);return}
+    setter(prev=>prev.filter((x:any)=>x.id!==id))
+  }
+
+  if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
+
+  const totalPipeline = fDeals.filter(d=>!['Won','Lost'].includes(d.stage)).reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)
+  const wonDeals = fDeals.filter(d=>d.stage==='Won').reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)
+
+  const ModuleFilterBar = (
+    <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap' as const}}>
+      <button onClick={()=>setModuleFilter('All')} style={{padding:'7px 14px',borderRadius:20,border:moduleFilter==='All'?'1px solid '+ACCENT:'1px solid #E4E7EC',background:moduleFilter==='All'?ACCENT+'12':'#fff',color:moduleFilter==='All'?ACCENT:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>All</button>
+      {MODULES.map(m=>(
+        <button key={m.key} onClick={()=>setModuleFilter(m.key)} style={{padding:'7px 14px',borderRadius:20,border:moduleFilter===m.key?'1px solid '+m.color:'1px solid #E4E7EC',background:moduleFilter===m.key?m.bg:'#fff',color:moduleFilter===m.key?m.color:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{m.label}</button>
+      ))}
+    </div>
+  )
+
+  const ModuleSelect = ({value,onChange}:{value:string,onChange:(v:string)=>void}) => (
+    <div><label style={lbl}>Which part of the business?</label><select value={value} onChange={e=>onChange(e.target.value)} style={inp}>{MODULES.map(m=><option key={m.key} value={m.key}>{m.label}</option>)}</select></div>
+  )
+
+  return (
+    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
+      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div>
+          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Sales</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          {section==='Pipeline'&&<button onClick={()=>setShowDealForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Deal</button>}
+          {section==='Leads'&&<button onClick={()=>setShowLeadForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Lead</button>}
+          {section==='Quotes'&&<button onClick={()=>setShowQuoteForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Create Quote</button>}
+          {section==='Meetings'&&<button onClick={()=>setShowMeetingForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Schedule Meeting</button>}
+        </div>
+      </div>
+      <div style={{display:'flex',gap:0,padding:'0 28px',background:'#fff',borderBottom:'1px solid #E4E7EC'}}>
+        {SECTIONS.map(s=><button key={s} onClick={()=>setSection(s)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:section===s?600:400,color:section===s?ACCENT:'#667085',borderBottom:section===s?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>{s}</button>)}
+      </div>
+      <div style={{padding:24}}>
+        {ModuleFilterBar}
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+          {[{l:'Pipeline Value',v:'£'+totalPipeline.toLocaleString(),c:ACCENT},{l:'Won',v:'£'+wonDeals.toLocaleString(),c:'#10B981'},{l:'Total Leads',v:fLeads.length,c:'#101828'},{l:'Open Deals',v:fDeals.filter(d=>!['Won','Lost'].includes(d.stage)).length,c:'#F59E0B'}].map((s:any)=>(
+            <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
+              <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
+              <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {section==='Pipeline'&&(<div>
+          {showDealForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add Deal</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div><label style={lbl}>Deal Name *</label><input value={dealForm.name} onChange={e=>setDealForm({...dealForm,name:e.target.value})} placeholder="e.g. Summer Booking Package" style={inp}/></div>
+              <div><label style={lbl}>Contact</label><input value={dealForm.contact} onChange={e=>setDealForm({...dealForm,contact:e.target.value})} placeholder="Contact name" style={inp}/></div>
+              <div><label style={lbl}>Value (£)</label><input value={dealForm.value} onChange={e=>setDealForm({...dealForm,value:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+              <div><label style={lbl}>Stage</label><select value={dealForm.stage} onChange={e=>setDealForm({...dealForm,stage:e.target.value})} style={inp}>{STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label style={lbl}>Close Date</label><input value={dealForm.close_date} onChange={e=>setDealForm({...dealForm,close_date:e.target.value})} type="date" style={inp}/></div>
+              <ModuleSelect value={dealForm.module} onChange={v=>setDealForm({...dealForm,module:v})}/>
+              <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={dealForm.notes} onChange={e=>setDealForm({...dealForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>{if(!dealForm.name)return;save('sales_deals',{...dealForm,value:dealForm.value?parseFloat(dealForm.value):null,close_date:dealForm.close_date||null},()=>setDealForm({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:'',module:'pm'}),()=>setShowDealForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add Deal'}</button>
+              <button onClick={()=>setShowDealForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:12}}>
+            {STAGES.map(stage=>(
+              <div key={stage} style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:12,minHeight:200}}>
+                <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:10}}>{stage} <span style={{background:'#E4E7EC',borderRadius:10,padding:'1px 6px',fontSize:10}}>{fDeals.filter(d=>d.stage===stage).length}</span></div>
+                {fDeals.filter(d=>d.stage===stage).map((d:any)=>(
+                  <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E4E7EC',padding:12,marginBottom:8}}>
+                    <div style={{fontSize:12,fontWeight:600,color:'#101828',marginBottom:4}}>{d.name}</div>
+                    {d.contact&&<div style={{fontSize:11,color:'#667085',marginBottom:4}}>{d.contact}</div>}
+                    <div style={{fontSize:13,fontWeight:700,color:ACCENT,marginBottom:6}}>£{parseFloat(d.value||0).toLocaleString()}</div>
+                    {moduleBadge(d.module)}
+                    <div style={{display:'flex',gap:4,marginTop:8}}>
+                      <select value={d.stage} onChange={e=>updateField('sales_deals',d.id,'stage',e.target.value,setDeals)} style={{fontSize:10,border:'1px solid #E4E7EC',borderRadius:4,padding:'2px 4px',fontFamily:'inherit',flex:1}}>{STAGES.map(s=><option key={s}>{s}</option>)}</select>
+                      <button onClick={()=>del('sales_deals',d.id,setDeals)} style={{padding:'2px 6px',borderRadius:4,border:'none',background:'#FEE2E2',fontSize:10,cursor:'pointer',color:'#EF4444'}}>×</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>)}
+
+        {section==='Leads'&&(<div>
+          {showLeadForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add Lead</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div><label style={lbl}>Name *</label><input value={leadForm.name} onChange={e=>setLeadForm({...leadForm,name:e.target.value})} placeholder="Full name" style={inp}/></div>
+              <div><label style={lbl}>Email</label><input value={leadForm.email} onChange={e=>setLeadForm({...leadForm,email:e.target.value})} type="email" placeholder="email@example.com" style={inp}/></div>
+              <div><label style={lbl}>Phone</label><input value={leadForm.phone} onChange={e=>setLeadForm({...leadForm,phone:e.target.value})} placeholder="+44..." style={inp}/></div>
+              <div><label style={lbl}>Source</label><select value={leadForm.source} onChange={e=>setLeadForm({...leadForm,source:e.target.value})} style={inp}>{['Direct','Airbnb','VRBO','Referral','Instagram','Website','Other'].map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label style={lbl}>Status</label><select value={leadForm.status} onChange={e=>setLeadForm({...leadForm,status:e.target.value})} style={inp}>{['New','Contacted','Qualified','Unqualified'].map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label style={lbl}>Est. Value (£)</label><input value={leadForm.value} onChange={e=>setLeadForm({...leadForm,value:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+              <ModuleSelect value={leadForm.module} onChange={v=>setLeadForm({...leadForm,module:v})}/>
+              <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={leadForm.notes} onChange={e=>setLeadForm({...leadForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>{if(!leadForm.name)return;save('sales_leads',{...leadForm,value:leadForm.value?parseFloat(leadForm.value):null},()=>setLeadForm({name:'',email:'',phone:'',source:'Direct',status:'New',value:'',notes:'',module:'pm'}),()=>setShowLeadForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add Lead'}</button>
+              <button onClick={()=>setShowLeadForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 100px 130px 120px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+              <span>Name</span><span>Email</span><span>Source</span><span>Value</span><span>Module</span><span>Status</span><span></span>
+            </div>
+            {fLeads.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🎯</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No leads yet</div><div style={{fontSize:13}}>Add your first lead to start tracking.</div></div>):fLeads.map((l:any)=>(
+              <div key={l.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 100px 130px 120px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{l.name}</div>{l.phone&&<div style={{fontSize:11,color:'#98A2B3'}}>{l.phone}</div>}</div>
+                <span style={{fontSize:12,color:'#667085'}}>{l.email||'—'}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600,width:'fit-content'}}>{l.source}</span>
+                <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{l.value?'£'+parseFloat(l.value).toLocaleString():'—'}</span>
+                <span>{moduleBadge(l.module)}</span>
+                <select value={l.status} onChange={e=>updateField('sales_leads',l.id,'status',e.target.value,setLeads)} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,border:'1px solid #E4E7EC',fontFamily:'inherit'}}>{['New','Contacted','Qualified','Unqualified'].map(s=><option key={s}>{s}</option>)}</select>
+                <button onClick={()=>del('sales_leads',l.id,setLeads)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>)}
+
+        {section==='Quotes'&&(<div>
+          {showQuoteForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Create Quote</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div><label style={lbl}>Client *</label><input value={quoteForm.client} onChange={e=>setQuoteForm({...quoteForm,client:e.target.value})} placeholder="Client name" style={inp}/></div>
+              <div><label style={lbl}>Property</label><input value={quoteForm.property} onChange={e=>setQuoteForm({...quoteForm,property:e.target.value})} placeholder="Property name" style={inp}/></div>
+              <div><label style={lbl}>Amount (£)</label><input value={quoteForm.amount} onChange={e=>setQuoteForm({...quoteForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+              <div><label style={lbl}>Valid Until</label><input value={quoteForm.valid_until} onChange={e=>setQuoteForm({...quoteForm,valid_until:e.target.value})} type="date" style={inp}/></div>
+              <div><label style={lbl}>Status</label><select value={quoteForm.status} onChange={e=>setQuoteForm({...quoteForm,status:e.target.value})} style={inp}>{['Draft','Sent','Accepted','Declined'].map(s=><option key={s}>{s}</option>)}</select></div>
+              <ModuleSelect value={quoteForm.module} onChange={v=>setQuoteForm({...quoteForm,module:v})}/>
+              <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={quoteForm.notes} onChange={e=>setQuoteForm({...quoteForm,notes:e.target.value})} placeholder="Optional" style={inp}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>{if(!quoteForm.client)return;save('sales_quotes',{...quoteForm,amount:quoteForm.amount?parseFloat(quoteForm.amount):null,valid_until:quoteForm.valid_until||null},()=>setQuoteForm({client:'',property:'',amount:'',valid_until:'',status:'Draft',notes:'',module:'pm'}),()=>setShowQuoteForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Create Quote'}</button>
+              <button onClick={()=>setShowQuoteForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 140px 110px 110px 130px 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+              <span>Client</span><span>Property</span><span>Amount</span><span>Valid Until</span><span>Module</span><span>Status</span><span></span>
+            </div>
+            {fQuotes.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📋</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No quotes yet</div></div>):fQuotes.map((q:any)=>(
+              <div key={q.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 110px 110px 130px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{q.client}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{q.property||'—'}</span>
+                <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(q.amount||0).toLocaleString()}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{q.valid_until||'—'}</span>
+                <span>{moduleBadge(q.module)}</span>
+                <select value={q.status} onChange={e=>updateField('sales_quotes',q.id,'status',e.target.value,setQuotes)} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,border:'1px solid #E4E7EC',fontFamily:'inherit'}}>{['Draft','Sent','Accepted','Declined'].map(s=><option key={s}>{s}</option>)}</select>
+                <button onClick={()=>del('sales_quotes',q.id,setQuotes)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>)}
+
+        {section==='Meetings'&&(<div>
+          {showMeetingForm&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Schedule Meeting</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div><label style={lbl}>Title *</label><input value={meetingForm.title} onChange={e=>setMeetingForm({...meetingForm,title:e.target.value})} placeholder="e.g. Property viewing" style={inp}/></div>
+              <div><label style={lbl}>Contact</label><input value={meetingForm.contact} onChange={e=>setMeetingForm({...meetingForm,contact:e.target.value})} placeholder="Contact name" style={inp}/></div>
+              <div><label style={lbl}>Date</label><input value={meetingForm.meeting_date} onChange={e=>setMeetingForm({...meetingForm,meeting_date:e.target.value})} type="date" style={inp}/></div>
+              <div><label style={lbl}>Time</label><input value={meetingForm.meeting_time} onChange={e=>setMeetingForm({...meetingForm,meeting_time:e.target.value})} type="time" style={inp}/></div>
+              <div><label style={lbl}>Type</label><select value={meetingForm.type} onChange={e=>setMeetingForm({...meetingForm,type:e.target.value})} style={inp}>{['Call','Video Call','In Person','Property Viewing'].map(t=><option key={t}>{t}</option>)}</select></div>
+              <ModuleSelect value={meetingForm.module} onChange={v=>setMeetingForm({...meetingForm,module:v})}/>
+              <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={meetingForm.notes} onChange={e=>setMeetingForm({...meetingForm,notes:e.target.value})} placeholder="Optional" style={inp}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>{if(!meetingForm.title)return;save('sales_meetings',{...meetingForm,meeting_date:meetingForm.meeting_date||null},()=>setMeetingForm({title:'',contact:'',meeting_date:'',meeting_time:'',type:'Call',notes:'',module:'pm'}),()=>setShowMeetingForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
+              <button onClick={()=>setShowMeetingForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 140px 110px 90px 130px 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+              <span>Title</span><span>Contact</span><span>Date</span><span>Time</span><span>Module</span><span>Type</span><span></span>
+            </div>
+            {fMeetings.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📅</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No meetings scheduled</div></div>):fMeetings.map((m:any)=>(
+              <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 110px 90px 130px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.title}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{m.contact||'—'}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{m.meeting_date||'—'}</span>
+                <span style={{fontSize:12,color:'#667085'}}>{m.meeting_time||'—'}</span>
+                <span>{moduleBadge(m.module)}</span>
+                <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,width:'fit-content'}}>{m.type}</span>
+                <button onClick={()=>del('sales_meetings',m.id,setMeetings)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>)}
+
+        {section==='Analytics'&&(<div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
+            {[{l:'Conversion Rate',v:fLeads.length>0?Math.round(fDeals.filter(d=>d.stage==='Won').length/fLeads.length*100)+'%':'0%',c:'#10B981'},{l:'Avg Deal Value',v:fDeals.length>0?'£'+Math.round(fDeals.reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)/fDeals.length).toLocaleString():'£0',c:ACCENT},{l:'Total Revenue',v:'£'+wonDeals.toLocaleString(),c:'#101828'}].map((s:any)=>(
+              <div key={s.l} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
+                <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
+                <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+            <div style={{fontSize:14,fontWeight:600,marginBottom:16}}>Pipeline by Stage</div>
+            {STAGES.map(stage=>{
+              const count = fDeals.filter(d=>d.stage===stage).length
+              const val = fDeals.filter(d=>d.stage===stage).reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)
+              const max = Math.max(...STAGES.map(s=>fDeals.filter(d=>d.stage===s).reduce((sv:number,d:any)=>sv+parseFloat(d.value||0),0)),1)
+              return(<div key={stage} style={{marginBottom:12}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#344054'}}>{stage} ({count})</span><span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{val.toLocaleString()}</span></div>
+                <div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:stage==='Won'?'#10B981':stage==='Lost'?'#EF4444':ACCENT,borderRadius:4,width:(val/max*100)+'%'}}></div></div>
+              </div>)
+            })}
+          </div>
+        </div>)}
+
+      </div>
+    </div>
+  )
+}
