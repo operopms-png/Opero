@@ -258,6 +258,10 @@ export default function Page() {
   const [rtrForm, setRtrForm] = useState({full_name:'',date_of_birth:'',current_address:'',check_type:'Online',document_type:'',share_code:'',ni_number:'',status:'Unlimited',check_date:'',checked_by:'',recheck_date:'',document_url:'',notes:''})
   const [bankCheckForm, setBankCheckForm] = useState({statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:'',ai_assessment:'',ai_assessment_generated_at:''})
   const [generatingAssessment, setGeneratingAssessment] = useState(false)
+  const [sendingAddresses, setSendingAddresses] = useState<any[]>([])
+  const [selectedSendFrom, setSelectedSendFrom] = useState('')
+  const [showAddSendAddress, setShowAddSendAddress] = useState(false)
+  const [newSendAddress, setNewSendAddress] = useState({name:'',email:''})
   const [savingChecks, setSavingChecks] = useState(false)
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
@@ -393,6 +397,12 @@ export default function Page() {
       ])
       setRtrChecks(rtr ?? [])
       setBankChecks(bank ?? [])
+      const { data: addresses } = await supabase.from('sending_addresses').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:true})
+      setSendingAddresses(addresses ?? [])
+      if (!selectedSendFrom) {
+        const def = addresses?.find((a:any)=>a.is_default) ?? addresses?.[0]
+        if (def) setSelectedSendFrom(def.id)
+      }
     }
     setLoading(false)
   }
@@ -471,10 +481,11 @@ export default function Page() {
       await supabase.from('estate_tenancies').update(updates).eq('id', tenancyId)
     }
     const { data: { session } } = await supabase.auth.getSession()
+    const fromAddress = sendingAddresses.find((a:any)=>a.id===selectedSendFrom)
     const res = await fetch('/api/send-signing-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token??''}` },
-      body: JSON.stringify({ tenancy_id: tenancyId }),
+      body: JSON.stringify({ tenancy_id: tenancyId, from_email: fromAddress?.email, from_name: fromAddress?.name }),
     })
     const result = await res.json()
     setSendingSignLink(null)
@@ -569,6 +580,17 @@ export default function Page() {
     const pct = Math.round((rent / income) * 100)
     const withinGuideline = pct <= 40
     return { pct, withinGuideline }
+  }
+
+  async function saveSendAddress() {
+    if (!newSendAddress.name || !newSendAddress.email) return
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data, error } = await supabase.from('sending_addresses').insert([{ user_id: user?.id, name: newSendAddress.name, email: newSendAddress.email, is_default: sendingAddresses.length===0 }]).select().single()
+    if (error) { alert(error.message); return }
+    setSendingAddresses(prev => [...prev, data])
+    setSelectedSendFrom(data.id)
+    setNewSendAddress({name:'',email:''})
+    setShowAddSendAddress(false)
   }
 
   function notifyIfRelevant(table: string, data: any, userId?: string) {
@@ -2340,6 +2362,27 @@ export default function Page() {
                 {contractTemplates.map((ct:any)=><option key={ct.id} value={ct.id}>{ct.name}{ct.body?' (editable)':''}</option>)}
               </select>
               {contractTemplates.length===0&&<div style={{fontSize:12,color:'#98A2B3',marginTop:6}}>No contract templates yet — add master versions under Company &gt; Contract Templates.</div>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Send From</label>
+              {sendingAddresses.length>0 ? (
+                <select style={inputStyle} value={selectedSendFrom} onChange={e=>setSelectedSendFrom(e.target.value)}>
+                  {sendingAddresses.map((a:any)=><option key={a.id} value={a.id}>{a.name} &lt;{a.email}&gt;</option>)}
+                </select>
+              ) : (
+                <div style={{fontSize:12,color:'#98A2B3'}}>No sending addresses saved yet — will send from Opero's default address.</div>
+              )}
+              {!showAddSendAddress ? (
+                <button onClick={()=>setShowAddSendAddress(true)} style={{fontSize:11,color:ACCENT,background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',marginTop:6,padding:0}}>+ Add a sending address</button>
+              ) : (
+                <div style={{display:'flex',gap:8,marginTop:8,alignItems:'flex-end'}}>
+                  <div style={{flex:1}}><label style={{...labelStyle,fontSize:11}}>Name</label><input style={inputStyle} placeholder="e.g. Lettings Team" value={newSendAddress.name} onChange={e=>setNewSendAddress({...newSendAddress,name:e.target.value})}/></div>
+                  <div style={{flex:1}}><label style={{...labelStyle,fontSize:11}}>Email</label><input style={inputStyle} placeholder="lettings@sangstersgroup.com" value={newSendAddress.email} onChange={e=>setNewSendAddress({...newSendAddress,email:e.target.value})}/></div>
+                  <button onClick={saveSendAddress} style={{padding:'9px 14px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap' as const}}>Save</button>
+                  <button onClick={()=>{setShowAddSendAddress(false);setNewSendAddress({name:'',email:''})}} style={{padding:'9px 12px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>×</button>
+                </div>
+              )}
             </div>
 
             {selectedTemplate?.body && (
