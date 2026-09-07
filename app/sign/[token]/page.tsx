@@ -19,6 +19,7 @@ type RawRecord = {
   tenant_signed_at: string | null
   landlord_signed_at: string | null
   document_url: string | null
+  contract_text?: string | null
   pm_tenants?: { name: string; email: string } | null
   pm_properties?: { name: string } | null
   pm_units?: { unit_number: string } | null
@@ -161,6 +162,12 @@ export default function SignLeasePage({ params }: { params: { token: string } })
               <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Monthly Rent</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(rentAmount ?? 0).toLocaleString()}</div></div>
               <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Deposit</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(record.deposit ?? 0).toLocaleString()}</div></div>
             </div>
+
+            {record.contract_text && (
+              <div style={{ background: '#F9FAFB', border: '1px solid #E4E7EC', borderRadius: 10, padding: 20, marginBottom: 20, fontSize: 13.5, color: '#344054', lineHeight: 1.7, whiteSpace: 'pre-wrap', maxHeight: 340, overflowY: 'auto' }}>
+                {record.contract_text}
+              </div>
+            )}
 
             {record.document_url && (
               <a href={record.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 500 }}>View full lease document →</a>

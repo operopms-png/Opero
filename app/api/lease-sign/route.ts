@@ -20,14 +20,14 @@ type Kind = 'pm_lease' | 'estate_tenancy'
 async function findByToken(token: string): Promise<{ kind: Kind; record: any } | null> {
   const { data: lease } = await serviceClient
     .from('pm_leases')
-    .select('id,start_date,end_date,monthly_rent,deposit,tenant_signed_at,landlord_signed_at,document_url,pm_tenants(name,email),pm_properties(name),pm_units(unit_number)')
+    .select('id,start_date,end_date,monthly_rent,deposit,tenant_signed_at,landlord_signed_at,document_url,contract_text,pm_tenants(name,email),pm_properties(name),pm_units(unit_number)')
     .eq('sign_token', token)
     .maybeSingle()
   if (lease) return { kind: 'pm_lease', record: lease }
 
   const { data: tenancy } = await serviceClient
     .from('estate_tenancies')
-    .select('id,start_date,end_date,rent,deposit,tenant_signed_at,landlord_signed_at,document_url,estate_tenants(name,email),estate_properties(name)')
+    .select('id,start_date,end_date,rent,deposit,tenant_signed_at,landlord_signed_at,document_url,contract_text,estate_tenants(name,email),estate_properties(name)')
     .eq('sign_token', token)
     .maybeSingle()
   if (tenancy) return { kind: 'estate_tenancy', record: tenancy }
@@ -49,6 +49,7 @@ function hashTerms(kind: Kind, record: any) {
     rent: kind === 'pm_lease' ? record.monthly_rent : record.rent,
     deposit: record.deposit,
     document_url: record.document_url,
+    contract_text: record.contract_text,
   })
   return createHash('sha256').update(basis).digest('hex')
 }

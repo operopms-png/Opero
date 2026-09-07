@@ -17,6 +17,11 @@ const COPY: Record<Category, { empty: string; addLabel: string; namePlaceholder:
   },
 }
 
+// Available in text templates -- merged with the real tenancy when a
+// template is picked to send, so names/dates/rent are correct without
+// staff retyping them, then still editable before sending.
+const MERGE_FIELDS = ['tenant_name', 'property_name', 'start_date', 'end_date', 'rent', 'deposit', 'today']
+
 async function uploadCompanyFile(file: File): Promise<string | null> {
   const ext = file.name.split('.').pop()
   const path = `company-documents/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
@@ -32,8 +37,11 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
   const [showAdd, setShowAdd] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [mode, setMode] = useState<'file' | 'text'>('file')
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
+  const [body, setBody] = useState('')
   const [notes, setNotes] = useState('')
 
   useEffect(() => { load() }, [category])
@@ -61,15 +69,24 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
     setUploading(false)
   }
 
-  function resetForm() { setName(''); setUrl(''); setNotes(''); setShowAdd(false) }
+  function resetForm() { setName(''); setUrl(''); setBody(''); setNotes(''); setMode('file'); setEditId(null); setShowAdd(false) }
+
+  function openEdit(d: any) {
+    setEditId(d.id); setName(d.name); setUrl(d.url ?? ''); setBody(d.body ?? ''); setNotes(d.notes ?? '')
+    setMode(d.body ? 'text' : 'file')
+    setShowAdd(true)
+  }
 
   async function save() {
-    if (!name || !url) return
+    if (!name || (mode === 'file' && !url) || (mode === 'text' && !body.trim())) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('company_documents').insert([
-      { user_id: user?.id, category, name, url, notes: notes || null },
-    ])
+    const payload = mode === 'text'
+      ? { user_id: user?.id, category, name, url: null, body, notes: notes || null }
+      : { user_id: user?.id, category, name, url, body: null, notes: notes || null }
+    const { error } = editId
+      ? await supabase.from('company_documents').update(payload).eq('id', editId)
+      : await supabase.from('company_documents').insert([payload])
     setSaving(false)
     if (error) { alert(error.message); return }
     resetForm()
@@ -103,9 +120,14 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 14, color: '#101828' }}>{d.name}</div>
+                <div style={{ fontSize: 11, color: d.body ? '#3B4AFF' : '#98A2B3', marginTop: 2, fontWeight: 600 }}>{d.body ? 'Editable text template' : 'Uploaded file'}</div>
                 {d.notes && <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{d.notes}</div>}
               </div>
-              <a href={d.url} target="_blank" rel="noreferrer" style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 13, fontWeight: 500, textDecoration: 'none', color: '#344054', whiteSpace: 'nowrap' }}>View</a>
+              {d.body ? (
+                <button onClick={() => openEdit(d)} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 13, fontWeight: 500, background: '#fff', color: '#344054', whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+              ) : (
+                <a href={d.url} target="_blank" rel="noreferrer" style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 13, fontWeight: 500, textDecoration: 'none', color: '#344054', whiteSpace: 'nowrap' }}>View</a>
+              )}
               <button onClick={() => del(d.id)} style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #FEE2E2', background: '#FFF5F5', color: '#EF4444', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
             </div>
           ))}
@@ -114,9 +136,9 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e => e.target === e.currentTarget && resetForm()}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 480, margin: '0 16px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 560, margin: '0 16px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{copy.addLabel.replace('+ ', '')}</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{editId ? 'Edit Template' : copy.addLabel.replace('+ ', '')}</h2>
               <button onClick={resetForm} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#667085' }}>×</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -124,26 +146,49 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Name *</label>
                 <input style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} value={name} onChange={e => setName(e.target.value)} placeholder={copy.namePlaceholder} />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>File *</label>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <label style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '2px dashed #D0D5DD', fontSize: 13, color: '#667085', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, background: '#F9FAFB' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                    {uploading ? 'Uploading…' : url ? 'Replace file' : 'Upload file (PDF, DOC, JPG, PNG)'}
-                    <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFile} style={{ display: 'none' }} />
-                  </label>
-                  {url && <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#3B4AFF', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>View file</a>}
-                </div>
-                {url && <div style={{ fontSize: 11, color: '#10B981', marginTop: 4 }}>✓ File uploaded</div>}
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setMode('file')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid ' + (mode === 'file' ? '#101828' : '#E4E7EC'), background: mode === 'file' ? '#101828' : '#fff', color: mode === 'file' ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Upload File</button>
+                <button onClick={() => setMode('text')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid ' + (mode === 'text' ? '#101828' : '#E4E7EC'), background: mode === 'text' ? '#101828' : '#fff', color: mode === 'text' ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Write Template (editable)</button>
               </div>
+
+              {mode === 'file' ? (
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>File *</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <label style={{ flex: 1, padding: '10px 12px', borderRadius: 8, border: '2px dashed #D0D5DD', fontSize: 13, color: '#667085', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, background: '#F9FAFB' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                      {uploading ? 'Uploading…' : url ? 'Replace file' : 'Upload file (PDF, DOC, JPG, PNG)'}
+                      <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFile} style={{ display: 'none' }} />
+                    </label>
+                    {url && <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#3B4AFF', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>View file</a>}
+                  </div>
+                  {url && <div style={{ fontSize: 11, color: '#10B981', marginTop: 4 }}>✓ File uploaded</div>}
+                  <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 8 }}>A fixed file — can't have names/dates changed per tenant from inside Opero. Use "Write Template" instead if you need that.</div>
+                </div>
+              ) : (
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Template Text *</label>
+                  <textarea
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 220, resize: 'vertical' as const, lineHeight: 1.6 }}
+                    value={body}
+                    onChange={e => setBody(e.target.value)}
+                    placeholder={`Dear {{tenant_name}},\n\nThis confirms your tenancy at {{property_name}} beginning {{start_date}} and ending {{end_date}}, at a monthly rent of £{{rent}} with a deposit of £{{deposit}}.\n\n...`}
+                  />
+                  <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 6 }}>
+                    Use these placeholders — they'll fill in automatically from the real tenancy when this template is picked to send, and staff can still edit the result before sending: {MERGE_FIELDS.map(f => `{{${f}}}`).join(', ')}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Notes</label>
-                <textarea style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 70, resize: 'vertical' }} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional context for staff" />
+                <textarea style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 70, resize: 'vertical' as const }} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional context for staff" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={resetForm} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={save} disabled={saving || !name || !url} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !name || !url ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>
+              <button onClick={save} disabled={saving || !name || (mode === 'file' ? !url : !body.trim())} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !name || (mode === 'file' ? !url : !body.trim()) ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>
             </div>
           </div>
         </div>

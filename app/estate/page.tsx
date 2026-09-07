@@ -249,7 +249,8 @@ export default function Page() {
   const [sendingSignLink, setSendingSignLink] = useState<string|null>(null)
   const [contractTemplates, setContractTemplates] = useState<any[]>([])
   const [showContractPicker, setShowContractPicker] = useState<string|null>(null)
-  const [selectedTemplateUrl, setSelectedTemplateUrl] = useState('')
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const [editableContractText, setEditableContractText] = useState('')
   const [landlordPayments, setLandlordPayments] = useState<any[]>([])
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
@@ -411,14 +412,50 @@ export default function Page() {
     await loadAll()
   }
 
-  async function emailSigningLink(tenancyId: string, documentUrl?: string) {
+  // {{tenant_name}}, {{property_name}}, {{start_date}}, {{end_date}},
+  // {{rent}}, {{deposit}}, {{today}} -- filled from the real tenancy,
+  // simple string replacement rather than a full templating engine so
+  // it stays predictable and easy for staff to read/edit afterward.
+  function mergeTemplate(templateBody: string, t: any) {
+    if (!t) return templateBody
+    const fields: Record<string,string> = {
+      tenant_name: t.estate_tenants?.name ?? '',
+      property_name: t.estate_properties?.name ?? '',
+      start_date: t.start_date ?? '',
+      end_date: t.end_date ?? '',
+      rent: t.rent != null ? String(t.rent) : '',
+      deposit: t.deposit != null ? String(t.deposit) : '',
+      today: new Date().toISOString().slice(0,10),
+    }
+    return Object.entries(fields).reduce((text, [key, val]) => text.replaceAll(`{{${key}}}`, val), templateBody)
+  }
+
+  function openContractPicker(t: any) {
+    setSelectedTemplateId('')
+    setEditableContractText(t.contract_text || '')
+    setShowContractPicker(t.id)
+  }
+
+  function pickTemplate(templateId: string, tenancy: any) {
+    setSelectedTemplateId(templateId)
+    const template = contractTemplates.find((ct:any)=>ct.id===templateId)
+    if (!template) { setEditableContractText(''); return }
+    if (template.body) setEditableContractText(mergeTemplate(template.body, tenancy))
+    else setEditableContractText('') // file-based template -- no text to edit, document_url is used instead
+  }
+
+  async function emailSigningLink(tenancyId: string) {
     setSendingSignLink(tenancyId)
-    // If staff picked a contract template, save it onto the tenancy
-    // first -- so it's not just what THIS email references, it becomes
-    // the tenancy's real document_url, the same one the signing page
-    // itself links to ("View full lease document").
-    if (documentUrl) {
-      await supabase.from('estate_tenancies').update({ document_url: documentUrl }).eq('id', tenancyId)
+    const template = contractTemplates.find((ct:any)=>ct.id===selectedTemplateId)
+    // Save whatever was picked/edited onto the tenancy first -- so it's
+    // not just what THIS email references, it becomes the tenancy's
+    // real document going forward, the same one the signing page links
+    // to / displays.
+    const updates: any = {}
+    if (template?.body) updates.contract_text = editableContractText
+    else if (template?.url) updates.document_url = template.url
+    if (Object.keys(updates).length > 0) {
+      await supabase.from('estate_tenancies').update(updates).eq('id', tenancyId)
     }
     const { data: { session } } = await supabase.auth.getSession()
     const res = await fetch('/api/send-signing-link', {
@@ -429,7 +466,8 @@ export default function Page() {
     const result = await res.json()
     setSendingSignLink(null)
     setShowContractPicker(null)
-    setSelectedTemplateUrl('')
+    setSelectedTemplateId('')
+    setEditableContractText('')
     if (!res.ok) { alert(result.error || 'Could not send email'); return }
     if (result.skipped) { alert(result.message); return }
     alert('Signing link emailed to the tenant.')
@@ -1181,7 +1219,7 @@ export default function Page() {
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       {partiallySigned&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>Partial</span>}
                       <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${t.sign_token}`);alert('Signing link copied')}} style={{fontSize:11,fontWeight:600,color:'#2563EB',background:'none',border:'1px solid #2563EB',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
-                      <button onClick={()=>{setSelectedTemplateUrl(t.document_url||'');setShowContractPicker(t.id)}} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2563EB',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
+                      <button onClick={()=>openContractPicker(t)} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2563EB',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
                     </div>
                   )}
                   <div style={{display:'flex',gap:4}}>
@@ -2071,25 +2109,44 @@ export default function Page() {
         </Modal>
       )}
 
-      {showContractPicker&&(
-        <Modal title="Email Signing Link" onClose={()=>{setShowContractPicker(null);setSelectedTemplateUrl('')}}>
+      {showContractPicker&&(() => {
+        const pickerTenancy = tenancies.find((t:any)=>t.id===showContractPicker)
+        const selectedTemplate = contractTemplates.find((ct:any)=>ct.id===selectedTemplateId)
+        return (
+        <Modal title="Email Signing Link" onClose={()=>{setShowContractPicker(null);setSelectedTemplateId('');setEditableContractText('')}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
-            <div style={{fontSize:13,color:'#667085'}}>Pick which contract this tenant is signing. This sets it as the tenancy's official document — the same one the signing page links to.</div>
+            <div style={{fontSize:13,color:'#667085'}}>Pick which contract this tenant is signing. This becomes the tenancy's official document — the same one the signing page shows.</div>
             <div>
               <label style={labelStyle}>Contract</label>
-              <select style={inputStyle} value={selectedTemplateUrl} onChange={e=>setSelectedTemplateUrl(e.target.value)}>
+              <select style={inputStyle} value={selectedTemplateId} onChange={e=>pickTemplate(e.target.value, pickerTenancy)}>
                 <option value="">No document attached (signature only)</option>
-                {contractTemplates.map((ct:any)=><option key={ct.id} value={ct.url}>{ct.name}</option>)}
+                {contractTemplates.map((ct:any)=><option key={ct.id} value={ct.id}>{ct.name}{ct.body?' (editable)':''}</option>)}
               </select>
               {contractTemplates.length===0&&<div style={{fontSize:12,color:'#98A2B3',marginTop:6}}>No contract templates yet — add master versions under Company &gt; Contract Templates.</div>}
             </div>
+
+            {selectedTemplate?.body && (
+              <div>
+                <label style={labelStyle}>Review &amp; edit before sending</label>
+                <textarea
+                  value={editableContractText}
+                  onChange={e=>setEditableContractText(e.target.value)}
+                  style={{...inputStyle,minHeight:260,resize:'vertical' as const,lineHeight:1.6,fontSize:13}}
+                />
+                <div style={{fontSize:11,color:'#98A2B3',marginTop:6}}>Pre-filled from {pickerTenancy?.estate_tenants?.name}'s real tenancy dates and rent — change anything before sending.</div>
+              </div>
+            )}
+            {selectedTemplate && !selectedTemplate.body && (
+              <div style={{fontSize:12,color:'#667085',background:'#F9FAFB',borderRadius:8,padding:'10px 14px'}}>This is an uploaded file, not an editable template — it'll be attached as-is. <a href={selectedTemplate.url} target="_blank" rel="noreferrer" style={{color:ACCENT}}>View file</a></div>
+            )}
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
-            <button onClick={()=>{setShowContractPicker(null);setSelectedTemplateUrl('')}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>emailSigningLink(showContractPicker,selectedTemplateUrl)} disabled={sendingSignLink===showContractPicker} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===showContractPicker?0.6:1}}>{sendingSignLink===showContractPicker?'Sending…':'Send Email'}</button>
+            <button onClick={()=>{setShowContractPicker(null);setSelectedTemplateId('');setEditableContractText('')}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>emailSigningLink(showContractPicker)} disabled={sendingSignLink===showContractPicker} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===showContractPicker?0.6:1}}>{sendingSignLink===showContractPicker?'Sending…':'Send Email'}</button>
           </div>
         </Modal>
-      )}
+        )
+      })()}
     </div>
   )
 }
