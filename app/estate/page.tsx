@@ -1890,13 +1890,25 @@ export default function Page() {
             const year = new Date().getFullYear()
             const thisMonthIdx = new Date().getMonth()
             const collectedRent = rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0)
-            const totalExpenses = expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+            // Unlike rent (no per-payment date exists yet -- see the
+            // note below the table), office_expenses DOES have a real
+            // date on every record, so these are genuinely bucketed by
+            // the month they actually happened in, not lumped together
+            // under whichever month is "now".
+            function expensesForMonth(monthIdx: number) {
+              return expenses.filter((e:any) => {
+                if (!e.date) return false
+                const d = new Date(e.date)
+                return d.getMonth() === monthIdx && d.getFullYear() === year
+              }).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)
+            }
+            const thisMonthExpenses = expensesForMonth(thisMonthIdx)
             return (
             <div>
               <div style={{background:'linear-gradient(135deg,'+ACCENT+',#1B4332)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.7,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
-                <div style={{fontSize:36,fontWeight:800}}>£{(collectedRent-totalExpenses).toLocaleString()}</div>
-                <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{collectedRent.toLocaleString()} income · £{totalExpenses.toLocaleString()} costs</div>
+                <div style={{fontSize:36,fontWeight:800}}>£{(collectedRent-thisMonthExpenses).toLocaleString()}</div>
+                <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{collectedRent.toLocaleString()} income (all-time collected rent — see note below) · £{thisMonthExpenses.toLocaleString()} costs this month</div>
               </div>
               <div style={{display:'flex',gap:8,marginBottom:20,justifyContent:'space-between',alignItems:'center'}}>
                 <div style={{display:'flex',gap:8}}>
@@ -1906,7 +1918,7 @@ export default function Page() {
                 </div>
                 <button onClick={()=>downloadCsv(`estate-agency-pl-${year}.csv`, ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>{
                   const income = i===thisMonthIdx ? collectedRent : 0
-                  const costs = i===thisMonthIdx ? totalExpenses : 0
+                  const costs = expensesForMonth(i)
                   return { Month: `${m} ${year}`, Income: income, Costs: costs, Expenses: costs, 'Net Profit': income-costs }
                 }))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
               </div>
@@ -1917,7 +1929,7 @@ export default function Page() {
                 {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>{
                   const isCurrent = i===thisMonthIdx
                   const income = isCurrent ? collectedRent : 0
-                  const costs = isCurrent ? totalExpenses : 0
+                  const costs = expensesForMonth(i)
                   return (
                   <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
                     <span>{m} {year}</span><span style={{color:'#10B981'}}>£{income.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{costs.toLocaleString()}</span><span style={{color:'#F59E0B'}}>£{costs.toLocaleString()}</span><span style={{fontWeight:600}}>£{(income-costs).toLocaleString()}</span>
@@ -1925,7 +1937,7 @@ export default function Page() {
                   )
                 })}
               </div>
-              <div style={{fontSize:12,color:'#98A2B3',marginTop:8}}>Rent schedules don't yet record which month a payment covers, so historical months show £0 until schedules include payment dates.</div>
+              <div style={{fontSize:12,color:'#98A2B3',marginTop:8}}>Costs/Expenses above are real per-month totals (each expense has its own date). Income only shows for the current month — rent schedules don't yet record which month a specific payment covers, so historical months can't be split out yet.</div>
             </div>
             )
           })()}
