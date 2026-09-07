@@ -9,6 +9,7 @@ const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents
 const DEV_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PROJECTS', items: ['Projects','Checklist','Milestones'] },
+  { label: 'OPERATIONS', items: ['Contractors','Service'] },
   { label: 'FINANCE', items: ['Budget','Investors','Expenses','Banking'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
@@ -290,7 +291,7 @@ export default function DevPage() {
             <div key={group.label}>
               <div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'10px 10px 4px', marginTop:8 }}>{group.label}</div>
               {group.items.map(t=>(
-                <button key={t} onClick={()=>setTab(t)} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t?'#8B5CF618':'transparent', color:tab===t?'#8B5CF6':'#344054', fontSize:13, fontWeight:tab===t?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}>{t}</button>
+                <button key={t} onClick={()=>{if(t==='Contractors'){window.location.href='/dev/vendors';return;} if(t==='Service'){window.location.href='/dev/service';return;} setTab(t)}} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t?'#8B5CF618':'transparent', color:tab===t?'#8B5CF6':'#344054', fontSize:13, fontWeight:tab===t?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}>{t}</button>
               ))}
             </div>
           ))}

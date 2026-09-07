@@ -39,8 +39,6 @@ const NAV_GROUPS = [
     modulePrice: '£49/mo',
     items: [
       { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
-      { href: '/dev/vendors', label: 'Contractors', key: 'dev', icon: 'wrench' },
-      { href: '/dev/service', label: 'Service', key: 'dev', icon: 'headset' },
     ]
   },
   {
