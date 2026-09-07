@@ -283,7 +283,7 @@ export default function Page() {
   const [bankingTab, setBankingTab] = useState('Overview')
   const [reportTab, setReportTab] = useState('P&L')
   const [showAddRent, setShowAddRent] = useState(false)
-  const [rentForm, setRentForm] = useState({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
+  const [rentForm, setRentForm] = useState({tenancy:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
   const [maintenance, setMaintenance] = useState<any[]>([])
   const [showAddMaint, setShowAddMaint] = useState(false)
   const [maintForm, setMaintForm] = useState({title:'',property_id:'',description:'',priority:'medium',assigned_to:'',photos:[] as string[]})
@@ -1565,14 +1565,13 @@ export default function Page() {
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add rent schedule</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Tenancy *</label><select value={rentForm.tenancy} onChange={e=>setRentForm({...rentForm,tenancy:e.target.value})} style={inputStyle}><option value=''>Select tenancy</option>{tenancies.map((t:any)=><option key={t.id} value={t.id}>{t.estate_properties?.name} — {t.estate_tenants?.name}</option>)}</select></div>
-                <div><label style={labelStyle}>Tenant name</label><input value={rentForm.tenant} onChange={e=>setRentForm({...rentForm,tenant:e.target.value})} placeholder='e.g. Jane Smith' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Amount (£)</label><input value={rentForm.amount} onChange={e=>setRentForm({...rentForm,amount:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Due day</label><select value={rentForm.dueDay} onChange={e=>setRentForm({...rentForm,dueDay:e.target.value})} style={inputStyle}>{Array.from({length:28},(_,i)=>String(i+1)).map(d=><option key={d}>{d}</option>)}</select></div>
                 <div><label style={labelStyle}>Frequency</label><select value={rentForm.frequency} onChange={e=>setRentForm({...rentForm,frequency:e.target.value})} style={inputStyle}>{['Monthly','Weekly','Quarterly'].map(f=><option key={f}>{f}</option>)}</select></div>
                 <div><label style={labelStyle}>Method</label><select value={rentForm.method} onChange={e=>setRentForm({...rentForm,method:e.target.value})} style={inputStyle}>{['Bank Transfer','Direct Debit','Standing Order','Cash','Cheque'].map(m=><option key={m}>{m}</option>)}</select></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!rentForm.tenancy||!rentForm.amount)return;const today=new Date();const due=new Date(today.getFullYear(),today.getMonth(),parseInt(rentForm.dueDay));saveRecord('estate_rent_schedules',{tenancy_id:rentForm.tenancy,tenant_id:rentForm.tenant,amount:rentForm.amount,due_day:rentForm.dueDay,frequency:rentForm.frequency,method:rentForm.method,status:due<today?'Overdue':'Pending'});setRentForm({tenancy:'',tenant:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'});setShowAddRent(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add schedule</button>
+                <button onClick={()=>{if(!rentForm.tenancy||!rentForm.amount)return;const today=new Date();const due=new Date(today.getFullYear(),today.getMonth(),parseInt(rentForm.dueDay));const selectedTenancy=tenancies.find((t:any)=>t.id===rentForm.tenancy);saveRecord('estate_rent_schedules',{tenancy_id:rentForm.tenancy,tenant_id:selectedTenancy?.tenant_id??null,amount:rentForm.amount,due_day:rentForm.dueDay,frequency:rentForm.frequency,method:rentForm.method,status:due<today?'Overdue':'Pending'});setRentForm({tenancy:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'});setShowAddRent(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add schedule</button>
                 <button onClick={()=>setShowAddRent(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
