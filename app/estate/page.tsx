@@ -247,6 +247,9 @@ export default function Page() {
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
   const [landlords, setLandlords] = useState<any[]>([])
   const [sendingSignLink, setSendingSignLink] = useState<string|null>(null)
+  const [contractTemplates, setContractTemplates] = useState<any[]>([])
+  const [showContractPicker, setShowContractPicker] = useState<string|null>(null)
+  const [selectedTemplateUrl, setSelectedTemplateUrl] = useState('')
   const [landlordPayments, setLandlordPayments] = useState<any[]>([])
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
@@ -372,6 +375,11 @@ export default function Page() {
     setInventories(inventoryData); setDocuments(documentData)
     setLandlords(ll.data??[])
     setLandlordPayments(lp.data??[])
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    if (currentUser) {
+      const { data: templates } = await supabase.from('company_documents').select('*').eq('user_id',currentUser.id).eq('category','contract_template').order('created_at',{ascending:false})
+      setContractTemplates(templates ?? [])
+    }
     setLoading(false)
   }
 
@@ -403,8 +411,15 @@ export default function Page() {
     await loadAll()
   }
 
-  async function emailSigningLink(tenancyId: string) {
+  async function emailSigningLink(tenancyId: string, documentUrl?: string) {
     setSendingSignLink(tenancyId)
+    // If staff picked a contract template, save it onto the tenancy
+    // first -- so it's not just what THIS email references, it becomes
+    // the tenancy's real document_url, the same one the signing page
+    // itself links to ("View full lease document").
+    if (documentUrl) {
+      await supabase.from('estate_tenancies').update({ document_url: documentUrl }).eq('id', tenancyId)
+    }
     const { data: { session } } = await supabase.auth.getSession()
     const res = await fetch('/api/send-signing-link', {
       method: 'POST',
@@ -413,9 +428,12 @@ export default function Page() {
     })
     const result = await res.json()
     setSendingSignLink(null)
+    setShowContractPicker(null)
+    setSelectedTemplateUrl('')
     if (!res.ok) { alert(result.error || 'Could not send email'); return }
     if (result.skipped) { alert(result.message); return }
     alert('Signing link emailed to the tenant.')
+    await loadAll()
   }
 
   function notifyIfRelevant(table: string, data: any, userId?: string) {
@@ -1163,7 +1181,7 @@ export default function Page() {
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       {partiallySigned&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>Partial</span>}
                       <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${t.sign_token}`);alert('Signing link copied')}} style={{fontSize:11,fontWeight:600,color:'#2563EB',background:'none',border:'1px solid #2563EB',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
-                      <button onClick={()=>emailSigningLink(t.id)} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2563EB',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
+                      <button onClick={()=>{setSelectedTemplateUrl(t.document_url||'');setShowContractPicker(t.id)}} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2563EB',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
                     </div>
                   )}
                   <div style={{display:'flex',gap:4}}>
@@ -2049,6 +2067,26 @@ export default function Page() {
               alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: helloopero.com/login`)
               setPortalTenant(null);await loadAll()
             }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {showContractPicker&&(
+        <Modal title="Email Signing Link" onClose={()=>{setShowContractPicker(null);setSelectedTemplateUrl('')}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{fontSize:13,color:'#667085'}}>Pick which contract this tenant is signing. This sets it as the tenancy's official document — the same one the signing page links to.</div>
+            <div>
+              <label style={labelStyle}>Contract</label>
+              <select style={inputStyle} value={selectedTemplateUrl} onChange={e=>setSelectedTemplateUrl(e.target.value)}>
+                <option value="">No document attached (signature only)</option>
+                {contractTemplates.map((ct:any)=><option key={ct.id} value={ct.url}>{ct.name}</option>)}
+              </select>
+              {contractTemplates.length===0&&<div style={{fontSize:12,color:'#98A2B3',marginTop:6}}>No contract templates yet — add master versions under Company &gt; Contract Templates.</div>}
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setShowContractPicker(null);setSelectedTemplateUrl('')}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>emailSigningLink(showContractPicker,selectedTemplateUrl)} disabled={sendingSignLink===showContractPicker} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===showContractPicker?0.6:1}}>{sendingSignLink===showContractPicker?'Sending…':'Send Email'}</button>
           </div>
         </Modal>
       )}
