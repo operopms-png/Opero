@@ -256,7 +256,8 @@ export default function Page() {
   const [bankChecks, setBankChecks] = useState<any[]>([])
   const [editingChecksTenancyId, setEditingChecksTenancyId] = useState<string|null>(null)
   const [rtrForm, setRtrForm] = useState({full_name:'',date_of_birth:'',current_address:'',check_type:'Online',document_type:'',share_code:'',ni_number:'',status:'Unlimited',check_date:'',checked_by:'',recheck_date:'',document_url:'',notes:''})
-  const [bankCheckForm, setBankCheckForm] = useState({statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:''})
+  const [bankCheckForm, setBankCheckForm] = useState({statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:'',ai_assessment:'',ai_assessment_generated_at:''})
+  const [generatingAssessment, setGeneratingAssessment] = useState(false)
   const [savingChecks, setSavingChecks] = useState(false)
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
@@ -501,7 +502,8 @@ export default function Page() {
       income_regular:existingBank.income_regular??false, no_overdraft:existingBank.no_overdraft??false, no_bounced_payments:existingBank.no_bounced_payments??false,
       no_gambling_flags:existingBank.no_gambling_flags??false, status:existingBank.status??'Passed', document_url:existingBank.document_url??'', notes:existingBank.notes??'',
       checked_by:existingBank.checked_by??'', check_date:existingBank.check_date??'',
-    } : {statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:''})
+      ai_assessment:existingBank.ai_assessment??'', ai_assessment_generated_at:existingBank.ai_assessment_generated_at??'',
+    } : {statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:'',ai_assessment:'',ai_assessment_generated_at:''})
     setEditingChecksTenancyId(tenancyId)
   }
 
@@ -537,6 +539,25 @@ export default function Page() {
     if (bankRes.error) { alert(bankRes.error.message); return }
     setEditingChecksTenancyId(null)
     await loadAll()
+  }
+
+  async function generateAssessment(rent: number) {
+    setGeneratingAssessment(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/assess-affordability', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token??''}` },
+      body: JSON.stringify({
+        rent, declared_income: bankCheckForm.declared_income,
+        income_regular: bankCheckForm.income_regular, no_overdraft: bankCheckForm.no_overdraft,
+        no_bounced_payments: bankCheckForm.no_bounced_payments, no_gambling_flags: bankCheckForm.no_gambling_flags,
+        notes: bankCheckForm.notes,
+      }),
+    })
+    const result = await res.json()
+    setGeneratingAssessment(false)
+    if (!res.ok) { alert(result.error || 'Could not generate assessment'); return }
+    setBankCheckForm(prev => ({ ...prev, ai_assessment: result.assessment, ai_assessment_generated_at: result.generated_at }))
   }
 
   // Standard UK affordability guideline: rent shouldn't exceed roughly
@@ -2139,6 +2160,20 @@ export default function Page() {
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  <div style={{marginBottom:14,background:'#F5F6FF',border:'1px solid #DCE0FF',borderRadius:10,padding:16}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:bankCheckForm.ai_assessment?10:0}}>
+                      <div style={{fontSize:12,fontWeight:600,color:'#344054'}}>🤖 AI Affordability Opinion <span style={{fontWeight:400,color:'#98A2B3'}}>— advisory only, not a decision</span></div>
+                      <button onClick={()=>generateAssessment(parseFloat(editingTenancy?.rent)||0)} disabled={generatingAssessment||!bankCheckForm.declared_income} style={{fontSize:11,fontWeight:600,color:'#fff',background:ACCENT,border:'none',borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit',opacity:generatingAssessment||!bankCheckForm.declared_income?0.6:1}}>{generatingAssessment?'Thinking…':bankCheckForm.ai_assessment?'Regenerate':'Generate Opinion'}</button>
+                    </div>
+                    {!bankCheckForm.declared_income&&<div style={{fontSize:11,color:'#98A2B3'}}>Add declared monthly income above first.</div>}
+                    {bankCheckForm.ai_assessment&&(
+                      <div>
+                        <div style={{fontSize:12,color:'#344054',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{bankCheckForm.ai_assessment}</div>
+                        <div style={{fontSize:10,color:'#98A2B3',marginTop:8}}>Generated {bankCheckForm.ai_assessment_generated_at?new Date(bankCheckForm.ai_assessment_generated_at).toLocaleString():''} — staff makes the final call, this doesn't set Status automatically.</div>
+                      </div>
+                    )}
                   </div>
 
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:14}}>
