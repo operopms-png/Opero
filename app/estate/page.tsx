@@ -246,6 +246,7 @@ export default function Page() {
   const [ten, setTen] = useState({name:'',email:'',phone:'',property_id:'',unit_id:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
   const [landlords, setLandlords] = useState<any[]>([])
+  const [sendingSignLink, setSendingSignLink] = useState<string|null>(null)
   const [landlordPayments, setLandlordPayments] = useState<any[]>([])
   const [showAddLandlordPayment, setShowAddLandlordPayment] = useState(false)
   const [editingPaymentId, setEditingPaymentId] = useState<string|null>(null)
@@ -333,7 +334,7 @@ export default function Page() {
       supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('subscriptions').select('ea_extra_blocks,plan,modules').eq('user_id',userId).single(),
       supabase.from('estate_tenants').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
-      supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name,email)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_vacancies').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_mortgages').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('office_expenses').select('*').eq('user_id',userId).order('date',{ascending:false}),
@@ -400,6 +401,21 @@ export default function Page() {
       ...toUnassign.map((p:any) => supabase.from('estate_properties').update({ owner_id: null }).eq('id', p.id)),
     ])
     await loadAll()
+  }
+
+  async function emailSigningLink(tenancyId: string) {
+    setSendingSignLink(tenancyId)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/send-signing-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token??''}` },
+      body: JSON.stringify({ tenancy_id: tenancyId }),
+    })
+    const result = await res.json()
+    setSendingSignLink(null)
+    if (!res.ok) { alert(result.error || 'Could not send email'); return }
+    if (result.skipped) { alert(result.message); return }
+    alert('Signing link emailed to the tenant.')
   }
 
   function notifyIfRelevant(table: string, data: any, userId?: string) {
@@ -1147,6 +1163,7 @@ export default function Page() {
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       {partiallySigned&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>Partial</span>}
                       <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${t.sign_token}`);alert('Signing link copied')}} style={{fontSize:11,fontWeight:600,color:'#2563EB',background:'none',border:'1px solid #2563EB',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
+                      <button onClick={()=>emailSigningLink(t.id)} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2563EB',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
                     </div>
                   )}
                   <div style={{display:'flex',gap:4}}>
