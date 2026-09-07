@@ -1695,24 +1695,29 @@ export default function Page() {
               </div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 100px 140px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 140px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Tenancy</span><span>Tenant</span><span>Amount</span><span>Due</span><span>Frequency</span><span>Status</span><span>Actions</span>
               </div>
-              {rentSchedules.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No rent schedules yet</div><div style={{fontSize:13}}>Add a schedule to track rent collection.</div></div>):rentSchedules.map((r:any)=>(
-                <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 100px 140px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{r.tenancy_id||'—'}</span>
-                  <span style={{fontSize:12,color:'#344054'}}>{r.tenant_id||'—'}</span>
+              {rentSchedules.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No rent schedules yet</div><div style={{fontSize:13}}>Add a schedule to track rent collection.</div></div>):rentSchedules.map((r:any)=>{
+                const scheduleTenancy = tenancies.find((t:any)=>t.id===r.tenancy_id)
+                return (
+                <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 140px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{scheduleTenancy?.estate_properties?.name??'—'}</span>
+                  <span style={{fontSize:12,color:'#344054'}}>{scheduleTenancy?.estate_tenants?.name??'—'}</span>
                   <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(r.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{r.due_day}{['st','nd','rd'][parseInt(r.due_day)-1]||'th'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{r.frequency}</span>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:r.status==='Paid'?'#ECFDF5':r.status==='Overdue'?'#FEE2E2':'#FEF3C7',color:r.status==='Paid'?'#10B981':r.status==='Overdue'?'#EF4444':'#F59E0B'}}>{r.status}</span>
-                  <div style={{display:'flex',gap:4}}>
-                    {r.status!=='Paid'&&<button onClick={()=>saveRecord('estate_rent_schedules',{status:'Paid'},r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#ECFDF5',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#10B981',fontWeight:600}}>✓ Paid</button>}
-                    {r.status==='Paid'&&<button onClick={()=>saveRecord('estate_rent_schedules',{status:'Pending'},r.id)} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#667085'}}>Undo</button>}
+                  <select value={r.status} onChange={e=>saveRecord('estate_rent_schedules',{status:e.target.value},r.id)} style={{fontSize:11,fontWeight:600,padding:'4px 8px',borderRadius:4,border:'1px solid #E4E7EC',background:r.status==='Paid'?'#ECFDF5':r.status==='Overdue'?'#FEE2E2':'#FEF3C7',color:r.status==='Paid'?'#10B981':r.status==='Overdue'?'#EF4444':'#F59E0B',cursor:'pointer',fontFamily:'inherit'}}>
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Overdue">Overdue</option>
+                  </select>
+                  <div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
                     <button onClick={()=>delRecord('estate_rent_schedules',r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>)}
 
