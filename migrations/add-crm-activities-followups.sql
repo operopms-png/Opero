@@ -3,33 +3,42 @@
 -- Staff Centre CRM was missing an activity history (Notes was one
 -- static text box, not a timeline) and follow-up reminders (no due
 -- dates tied to a contact or deal at all).
+--
+-- Written defensively: CREATE TABLE IF NOT EXISTS is a no-op if a
+-- table with that name already exists in any form, even with a
+-- different/incomplete set of columns -- which is what happened on
+-- the first run of this migration (crm_activities already existed
+-- without deal_id, so the CREATE TABLE was skipped and the later
+-- CREATE INDEX on deal_id failed). Using ALTER TABLE ADD COLUMN IF
+-- NOT EXISTS for every column instead fixes that regardless of
+-- whatever state the table is currently in.
 
 CREATE TABLE IF NOT EXISTS crm_activities (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  contact_id UUID REFERENCES crm_contacts(id) ON DELETE CASCADE,
-  deal_id UUID REFERENCES crm_deals(id) ON DELETE CASCADE,
-  type TEXT NOT NULL DEFAULT 'Note', -- Call/Email/Meeting/Note
-  content TEXT NOT NULL,
-  logged_by TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS contact_id UUID REFERENCES crm_contacts(id) ON DELETE CASCADE;
+ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS deal_id UUID REFERENCES crm_deals(id) ON DELETE CASCADE;
+ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'Note';
+ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS content TEXT;
+ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS logged_by TEXT;
+ALTER TABLE crm_activities ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS idx_crm_activities_contact_id ON crm_activities(contact_id);
 CREATE INDEX IF NOT EXISTS idx_crm_activities_deal_id ON crm_activities(deal_id);
 
 CREATE TABLE IF NOT EXISTS crm_followups (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  contact_id UUID REFERENCES crm_contacts(id) ON DELETE CASCADE,
-  deal_id UUID REFERENCES crm_deals(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  due_date DATE NOT NULL,
-  status TEXT NOT NULL DEFAULT 'Pending', -- Pending/Done
-  assigned_to TEXT,
-  notes TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS user_id UUID;
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS contact_id UUID REFERENCES crm_contacts(id) ON DELETE CASCADE;
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS deal_id UUID REFERENCES crm_deals(id) ON DELETE CASCADE;
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS due_date DATE;
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'Pending';
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS assigned_to TEXT;
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE crm_followups ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS idx_crm_followups_contact_id ON crm_followups(contact_id);
 CREATE INDEX IF NOT EXISTS idx_crm_followups_due_date ON crm_followups(due_date);
