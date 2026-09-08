@@ -13,7 +13,7 @@ const STR_NAV_GROUPS = [
   { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms'] },
   { label: 'COMPLIANCE', items: ['Compliance'] },
   { label: 'REPUTATION', items: ['Reviews'] },
-  { label: 'INSIGHTS', items: ['Analytics','Integrations'] },
+  { label: 'INSIGHTS', items: ['Analytics','Channels','Integrations'] },
   { label: 'TEAM', items: ['Team','Owners'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'FINANCE', items: ['Expenses','Banking'] },
@@ -166,6 +166,12 @@ export default function STRPage() {
   const [showAddReview, setShowAddReview] = useState(false)
   const [reviewForm, setReviewForm] = useState({property_id:'',guest_name:'',platform:'Airbnb',rating:'',review_text:'',review_date:'',response_text:'',responded:false})
   const [editingReviewId, setEditingReviewId] = useState<string|null>(null)
+  const [guestMessages, setGuestMessages] = useState<any[]>([])
+  const [openBookingThread, setOpenBookingThread] = useState<any>(null)
+  const [guestReply, setGuestReply] = useState('')
+  const [sendingGuestReply, setSendingGuestReply] = useState(false)
+  const [syncingChannels, setSyncingChannels] = useState(false)
+  const [lastSyncResult, setLastSyncResult] = useState<any>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
@@ -223,7 +229,7 @@ export default function STRPage() {
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((p: any) => propertyIds.includes(p.id))
     const ids = restrictedProps.map((p: any) => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-    const [b, c, m, tm, ex, ct, bk, tx, ig, comp, revData] = await Promise.all([
+    const [b, c, m, tm, ex, ct, bk, tx, ig, comp, revData, gm] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
       supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safeIds).order('scheduled_date', { ascending: true }),
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
@@ -235,6 +241,7 @@ export default function STRPage() {
       supabase.from('integrations').select('*').eq('user_id', userId).single(),
       supabase.from('str_compliance').select('*, properties(name)').eq('user_id', userId).order('expiry_date', { ascending: true }),
       supabase.from('str_reviews').select('*, properties(name)').eq('user_id', userId).order('review_date', { ascending: false }),
+      supabase.from('str_guest_messages').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
     ])
     setCommTemplates(ct.data ?? [])
     setProperties(restrictedProps)
@@ -247,6 +254,7 @@ export default function STRPage() {
     setTransactions(tx.data ?? [])
     setComplianceRecords(comp.data ?? [])
     setReviews(revData.data ?? [])
+    setGuestMessages(gm.data ?? [])
     setIntegrationsRow(ig.data ?? null)
     const rev = (b.data ?? []).filter((x:any) => x.status !== 'cancelled').reduce((s:number, x:any) => s + (x.total_amount ?? 0), 0)
     setStats({ properties:restrictedProps.length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
@@ -365,6 +373,36 @@ export default function STRPage() {
   function teamName(id: string | null | undefined) {
     if (!id) return null
     return team.find((m: any) => m.id === id)?.name ?? null
+  }
+
+  async function sendGuestReply() {
+    if (!guestReply.trim() || !openBookingThread) return
+    setSendingGuestReply(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/guest-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+      body: JSON.stringify({ booking_id: openBookingThread.id, body: guestReply.trim() }),
+    })
+    const result = await res.json()
+    setSendingGuestReply(false)
+    if (!res.ok) { alert(result.error || 'Could not send'); return }
+    if (result.skipped) { alert(result.message); return }
+    setGuestReply('')
+    await loadAll()
+  }
+
+  async function runChannelSync() {
+    setSyncingChannels(true)
+    try {
+      const res = await fetch('/api/sync-ical')
+      const result = await res.json()
+      setLastSyncResult(result)
+    } catch (e) {
+      setLastSyncResult({ error: String(e) })
+    }
+    setSyncingChannels(false)
+    await loadAll()
   }
 
   async function save(table: string, data: any) {
@@ -708,6 +746,98 @@ export default function STRPage() {
             </div>
           </div>
         )}
+
+        {tab==='Channels' && (() => {
+          const CHANNEL_DEFS = [
+            { key:'airbnb_ical_url', name:'Airbnb', logo:'🏠', color:'#ff5a5f', bg:'#fff1f2' },
+            { key:'vrbo_ical_url', name:'VRBO', logo:'🏡', color:'#1e6ef4', bg:'#eff6ff' },
+            { key:'booking_ical_url', name:'Booking.com', logo:'🌐', color:'#003580', bg:'#eff6ff' },
+          ]
+          const threads = bookings.filter((b:any)=>guestMessages.some((m:any)=>m.booking_id===b.id))
+            .map((b:any)=>{
+              const msgs = guestMessages.filter((m:any)=>m.booking_id===b.id)
+              const last = msgs[0]
+              return { booking:b, lastMessage:last?.message, lastAt:last?.created_at, unread: last?.sender==='guest' }
+            })
+            .sort((a:any,b:any)=>new Date(b.lastAt).getTime()-new Date(a.lastAt).getTime())
+          const unreadCount = threads.filter((t:any)=>t.unread).length
+
+          return (
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:12}}>Channel Status</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:16}}>
+              {CHANNEL_DEFS.map(ch=>{
+                const connectedCount = properties.filter((p:any)=>p[ch.key]).length
+                return (
+                  <div key={ch.key} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 20px',display:'flex',alignItems:'center',gap:14}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:ch.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>{ch.logo}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>{ch.name}</div>
+                      <div style={{fontSize:12,color:connectedCount>0?'#10B981':'#98A2B3'}}>{connectedCount>0?`${connectedCount} propert${connectedCount===1?'y':'ies'} connected`:'Not connected'}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginBottom:24}}>
+              {lastSyncResult&&!lastSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>Last sync: {lastSyncResult.synced?.length ?? 0} property/channel pairs checked</span>}
+              {lastSyncResult?.error&&<span style={{fontSize:12,color:'#DC2626'}}>Sync failed: {lastSyncResult.error}</span>}
+              <button onClick={runChannelSync} disabled={syncingChannels} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingChannels?0.6:1}}>{syncingChannels?'Syncing…':'⟳ Sync Now'}</button>
+            </div>
+            <div style={{fontSize:11,color:'#98A2B3',marginBottom:24,marginTop:-14}}>Runs automatically every 2 hours. Pulls booking dates in only — doesn't push your prices or availability out to these platforms.</div>
+
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
+              <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>Guest Messages {unreadCount>0&&<span style={{marginLeft:6,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
+              <select onChange={e=>{ if(!e.target.value)return; const b=bookings.find((bk:any)=>bk.id===e.target.value); if(b)setOpenBookingThread(b); e.target.value='' }} style={{...inp,width:220,fontSize:12,padding:'6px 10px'}} defaultValue="">
+                <option value="" disabled>+ Message a guest…</option>
+                {bookings.filter((b:any)=>b.guest_email).map((b:any)=><option key={b.id} value={b.id}>{b.guest_name||'Guest'} — {b.properties?.name}</option>)}
+              </select>
+            </div>
+            <div style={{fontSize:12,color:'#98A2B3',marginBottom:16}}>Real email to/from each guest's own address — not synced with Airbnb/Booking.com's own in-app messaging, which needs official platform partner access.</div>
+
+            <div style={{display:'flex',gap:16,height:480}}>
+              <div style={{width:320,background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,overflowY:'auto' as const}}>
+                {threads.length===0?(
+                  <div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No guest messages yet.</div>
+                ):threads.map((t:any)=>(
+                  <div key={t.booking.id} onClick={()=>setOpenBookingThread(t.booking)} style={{padding:'12px 16px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openBookingThread?.id===t.booking.id?'#F5F6FF':'transparent'}}>
+                    <div style={{display:'flex',justifyContent:'space-between'}}>
+                      <span style={{fontSize:13,fontWeight:t.unread?700:500,color:'#101828'}}>{t.booking.guest_name||'Guest'}</span>
+                      {t.unread&&<div style={{width:7,height:7,borderRadius:'50%',background:'#3B4AFF',marginTop:4}}/>}
+                    </div>
+                    <div style={{fontSize:11,color:'#667085'}}>{t.booking.properties?.name??'—'}</div>
+                    <div style={{fontSize:12,color:t.unread?'#344054':'#98A2B3',whiteSpace:'nowrap' as const,overflow:'hidden',textOverflow:'ellipsis',marginTop:2}}>{t.lastMessage}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{flex:1,background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,display:'flex',flexDirection:'column' as const}}>
+                {!openBookingThread?(
+                  <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3',fontSize:13}}>Select a conversation</div>
+                ):(
+                  <>
+                    <div style={{padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}>
+                      <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>{openBookingThread.guest_name||'Guest'}</div>
+                      <div style={{fontSize:12,color:'#667085'}}>{openBookingThread.properties?.name??'—'} · {openBookingThread.guest_email}</div>
+                    </div>
+                    <div style={{flex:1,overflowY:'auto' as const,padding:20,display:'flex',flexDirection:'column' as const,gap:10}}>
+                      {guestMessages.filter((m:any)=>m.booking_id===openBookingThread.id).slice().reverse().map((m:any)=>(
+                        <div key={m.id} style={{alignSelf:m.sender==='staff'?'flex-end':'flex-start',maxWidth:'65%'}}>
+                          <div style={{background:m.sender==='staff'?'#3B4AFF':'#F2F4F7',color:m.sender==='staff'?'#fff':'#101828',borderRadius:12,padding:'10px 14px',fontSize:13}}>{m.message}</div>
+                          <div style={{fontSize:10,color:'#98A2B3',marginTop:3,textAlign:m.sender==='staff'?'right' as const:'left' as const}}>{m.sender==='staff'?'You':openBookingThread.guest_name} · {new Date(m.created_at).toLocaleString()}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{borderTop:'1px solid #E4E7EC',padding:14,display:'flex',gap:10}}>
+                      <input value={guestReply} onChange={e=>setGuestReply(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendGuestReply()} placeholder="Type a reply…" style={{...inp,flex:1}}/>
+                      <button onClick={sendGuestReply} disabled={sendingGuestReply||!guestReply.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#3B4AFF',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:sendingGuestReply||!guestReply.trim()?0.6:1}}>Send</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          )
+        })()}
 
         {tab==='Integrations' && (
           <div>

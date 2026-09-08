@@ -113,6 +113,48 @@ export async function POST(req: NextRequest) {
     .map((addr) => addr.match(/marketing\+([a-zA-Z0-9]+)@/i))
     .find((m) => m)
 
+  // Same reply_token pattern as marketing+/crm+ above, but for guest
+  // messages on a booking (see app/api/guest-send and
+  // migrations/add-str-guest-messages.sql). Guests don't have a
+  // portal login, so this is the only way a reply routes back
+  // automatically.
+  const guestAliasMatch = toAddresses
+    .map((addr) => addr.match(/guest\+([a-zA-Z0-9]+)@/i))
+    .find((m) => m)
+
+  if (guestAliasMatch) {
+    const [, replyToken] = guestAliasMatch
+    const { data: booking } = await serviceClient.from('bookings').select('id,user_id').eq('reply_token', replyToken).single()
+
+    if (!booking) {
+      console.log('[email-inbound] guest+ alias matched but no booking found for token:', replyToken)
+      return NextResponse.json({ received: true, matched: false })
+    }
+
+    let guestBody = ''
+    if (process.env.RESEND_API_KEY && emailId) {
+      const res = await fetch(`https://api.resend.com/emails/receiving/${emailId}`, {
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+      })
+      if (res.ok) {
+        const full = await res.json()
+        guestBody = full.text || full.html || ''
+      } else {
+        console.error('[email-inbound] Failed to fetch full email body:', await res.text())
+      }
+    }
+
+    await serviceClient.from('str_guest_messages').insert({
+      user_id: booking.user_id,
+      booking_id: booking.id,
+      sender: 'guest',
+      subject: `Reply: ${subject}`,
+      message: guestBody || `(From ${fromAddress} — body unavailable)`,
+    })
+
+    return NextResponse.json({ received: true, matched: true, type: 'guest' })
+  }
+
   if (marketingAliasMatch) {
     const [, replyToken] = marketingAliasMatch
     const { data: mktEmail } = await serviceClient.from('marketing_emails').select('id').eq('reply_token', replyToken).single()
@@ -146,7 +188,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!aliasMatch) {
-    console.log('[email-inbound] No crm+ or marketing+ alias match in to:', toAddresses, '- unmatched, not logged')
+    console.log('[email-inbound] No crm+, marketing+, or guest+ alias match in to:', toAddresses, '- unmatched, not logged')
     return NextResponse.json({ received: true, matched: false })
   }
 
