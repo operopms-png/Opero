@@ -98,6 +98,7 @@ export async function runSmoobuSync() {
       let messagesSynced = 0
 
       let threadsSkippedNoBooking = 0
+      const threadErrors: string[] = []
       for (const thread of threads) {
         const propertyId = apartmentToProperty.get(String(thread.apartment?.id))
         if (!propertyId) continue
@@ -117,15 +118,15 @@ export async function runSmoobuSync() {
         if (!booking && thread.booking?.id) {
           try {
             const fullBooking = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}`)
-            const { data: inserted } = await supabase
+            const { data: inserted, error: upsertError } = await supabase
               .from('bookings')
               .upsert(bookingUpsertPayload(fullBooking, propertyId), { onConflict: 'external_id' })
               .select('id')
               .single()
+            if (upsertError) throw upsertError
             booking = inserted
-          } catch {
-            // Booking fetch failed (e.g. deleted on Smoobu's side) --
-            // fall through to the skip-and-count below.
+          } catch (e) {
+            if (threadErrors.length < 5) threadErrors.push(`booking ${thread.booking.id}: ${e instanceof Error ? e.message : String(e)}`)
           }
         }
 
@@ -158,6 +159,7 @@ export async function runSmoobuSync() {
           apartmentIdsSeenInResponse: Array.from(seenApartmentIds),
           totalThreadsFromSmoobu: threads.length,
           threadsSkippedNoBooking,
+          threadErrors,
         },
       })
     } catch (e) {
