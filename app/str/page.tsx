@@ -11,6 +11,8 @@ const STR_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Home'] },
   { label: 'PORTFOLIO', items: ['Properties','Bookings'] },
   { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms'] },
+  { label: 'COMPLIANCE', items: ['Compliance'] },
+  { label: 'REPUTATION', items: ['Reviews'] },
   { label: 'INSIGHTS', items: ['Analytics','Integrations'] },
   { label: 'TEAM', items: ['Team','Owners'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
@@ -19,6 +21,16 @@ const STR_NAV_GROUPS = [
 ]
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
+const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
+const STR_BUSINESS_COMPLIANCE_TYPES = ['Public Liability Insurance','Business/Trading Licence','ICO Data Protection Registration','Health & Safety Policy','Other']
+function strComplianceStatus(expiryDate?: string) {
+  if (!expiryDate) return 'No Expiry'
+  const days = Math.ceil((new Date(expiryDate).getTime() - Date.now()) / 86400000)
+  if (days < 0) return 'Expired'
+  if (days <= 60) return 'Expiring Soon'
+  return 'Valid'
+}
+const strComplianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Expiring Soon':'#F59E0B', 'Valid':'#10B981', 'No Expiry':'#98A2B3' }
 
 async function uploadAttachment(file: File, folder: string): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -146,6 +158,14 @@ export default function STRPage() {
   const [maintenance, setMaintenance] = useState<any[]>([])
   const [team, setTeam] = useState<any[]>([])
   const [expenses, setExpenses] = useState<any[]>([])
+  const [complianceRecords, setComplianceRecords] = useState<any[]>([])
+  const [complianceScope, setComplianceScope] = useState<'property'|'business'>('property')
+  const [showAddCompliance, setShowAddCompliance] = useState(false)
+  const [complianceForm, setComplianceForm] = useState({scope:'property',property_id:'',type:STR_COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
+  const [reviews, setReviews] = useState<any[]>([])
+  const [showAddReview, setShowAddReview] = useState(false)
+  const [reviewForm, setReviewForm] = useState({property_id:'',guest_name:'',platform:'Airbnb',rating:'',review_text:'',review_date:'',response_text:'',responded:false})
+  const [editingReviewId, setEditingReviewId] = useState<string|null>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
@@ -203,7 +223,7 @@ export default function STRPage() {
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((p: any) => propertyIds.includes(p.id))
     const ids = restrictedProps.map((p: any) => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-    const [b, c, m, tm, ex, ct, bk, tx, ig] = await Promise.all([
+    const [b, c, m, tm, ex, ct, bk, tx, ig, comp, revData] = await Promise.all([
       supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false }),
       supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safeIds).order('scheduled_date', { ascending: true }),
       supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safeIds).order('created_at', { ascending: false }),
@@ -213,6 +233,8 @@ export default function STRPage() {
       supabase.from('str_bank_accounts').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       supabase.from('str_transactions').select('*').eq('user_id', userId).order('date', { ascending: false }),
       supabase.from('integrations').select('*').eq('user_id', userId).single(),
+      supabase.from('str_compliance').select('*, properties(name)').eq('user_id', userId).order('expiry_date', { ascending: true }),
+      supabase.from('str_reviews').select('*, properties(name)').eq('user_id', userId).order('review_date', { ascending: false }),
     ])
     setCommTemplates(ct.data ?? [])
     setProperties(restrictedProps)
@@ -223,6 +245,8 @@ export default function STRPage() {
     setExpenses(ex.data ?? [])
     setBankAccounts(bk.data ?? [])
     setTransactions(tx.data ?? [])
+    setComplianceRecords(comp.data ?? [])
+    setReviews(revData.data ?? [])
     setIntegrationsRow(ig.data ?? null)
     const rev = (b.data ?? []).filter((x:any) => x.status !== 'cancelled').reduce((s:number, x:any) => s + (x.total_amount ?? 0), 0)
     setStats({ properties:restrictedProps.length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
@@ -484,6 +508,8 @@ export default function STRPage() {
               : <button onClick={()=>{setModal('property');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Property</button>)}
             {tab==='Cleaning' && <button onClick={()=>{setModal('cleaning');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Task</button>}
             {tab==='Maintenance' && <button onClick={()=>{setModal('maintenance');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Ticket</button>}
+            {tab==='Compliance' && <button onClick={()=>{setEditId(null);setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add record</button>}
+            {tab==='Reviews' && <button onClick={()=>{setEditingReviewId(null);setReviewForm({property_id:'',guest_name:'',platform:'Airbnb',rating:'',review_text:'',review_date:'',response_text:'',responded:false});setShowAddReview(true)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Log Review</button>}
             {tab==='Team' && <button onClick={()=>{setModal('team');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Member</button>}
           </div>
         </div>
@@ -1192,6 +1218,158 @@ export default function STRPage() {
             })()}
           </div>
         )}
+
+        {tab==='Compliance' && (<div>
+          <div style={{display:'flex',gap:8,marginBottom:20}}>
+            {(['property','business'] as const).map(s=>(
+              <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #3B4AFF':'1px solid #D0D5DD',background:complianceScope===s?'#3B4AFF18':'#fff',color:complianceScope===s?'#3B4AFF':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance':'Business Compliance'}</button>
+            ))}
+          </div>
+
+          {showAddCompliance&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #3B4AFF',padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+              <div><label style={lbl}>Scope</label>
+                <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:(e.target.value==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES)[0]})} style={inp}>
+                  <option value="property">Property</option>
+                  <option value="business">Business</option>
+                </select>
+              </div>
+              {complianceForm.scope==='property'&&<div><label style={lbl}>Property *</label><select value={complianceForm.property_id} onChange={e=>setComplianceForm({...complianceForm,property_id:e.target.value})} style={inp}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>}
+              <div><label style={lbl}>Certificate / requirement type *</label><select value={complianceForm.type} onChange={e=>setComplianceForm({...complianceForm,type:e.target.value})} style={inp}>{(complianceForm.scope==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES).map(t=><option key={t}>{t}</option>)}</select></div>
+              <div><label style={lbl}>Reference / licence number</label><input value={complianceForm.reference} onChange={e=>setComplianceForm({...complianceForm,reference:e.target.value})} placeholder="e.g. licence or scheme reference" style={inp}/></div>
+              <div><label style={lbl}>Issued date</label><input value={complianceForm.issued_date} onChange={e=>setComplianceForm({...complianceForm,issued_date:e.target.value})} type="date" style={inp}/></div>
+              <div><label style={lbl}>Expiry date</label><input value={complianceForm.expiry_date} onChange={e=>setComplianceForm({...complianceForm,expiry_date:e.target.value})} type="date" style={inp}/></div>
+              <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={complianceForm.notes} onChange={e=>setComplianceForm({...complianceForm,notes:e.target.value})} style={inp}/></div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={async()=>{
+                if(!complianceForm.type)return
+                if(complianceForm.scope==='property'&&!complianceForm.property_id)return
+                const payload = complianceForm.scope==='business' ? {...complianceForm,property_id:null} : complianceForm
+                await save('str_compliance',payload)
+                setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''})
+                setShowAddCompliance(false)
+              }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#3B4AFF',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
+              <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+            </div>
+          </div>)}
+
+          {(()=>{
+            const scoped = complianceRecords.filter((c:any)=>(c.scope??'property')===complianceScope)
+            return (<>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
+                {[
+                  {label:'Expired',value:scoped.filter((c:any)=>strComplianceStatus(c.expiry_date)==='Expired').length,color:'#EF4444',bg:'#FEF2F2',border:'#FCA5A5'},
+                  {label:'Expiring within 60 days',value:scoped.filter((c:any)=>strComplianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#FDE68A'},
+                  {label:'Valid',value:scoped.filter((c:any)=>strComplianceStatus(c.expiry_date)==='Valid').length,color:'#10B981',bg:'#F0FDF4',border:'#BBF7D0'},
+                ].map(s=>(
+                  <div key={s.label} style={{padding:16,background:s.bg,borderRadius:10,border:'1px solid '+s.border}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>{s.label}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:s.color}}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                <div style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
+                  {complianceScope==='property'&&<span>Property</span>}
+                  <span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
+                </div>
+                {scoped.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No {complianceScope} compliance records yet</div><div style={{fontSize:13}}>{complianceScope==='property'?'Track STL licences, fire/gas safety, and EPC per property, with automatic expiry alerts.':'Track what your business needs to legally operate.'}</div></div>):scoped.map((c:any)=>{
+                  const status = strComplianceStatus(c.expiry_date)
+                  return (
+                  <div key={c.id} style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                    {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.properties?.name??'—'}</span>}
+                    <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
+                    <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
+                    <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:strComplianceStatusColor[status]+'18',color:strComplianceStatusColor[status],textAlign:'center' as const}}>{status}</span>
+                    <button onClick={()=>del('str_compliance',c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                  </div>
+                )})}
+              </div>
+            </>)
+          })()}
+        </div>)}
+
+        {tab==='Reviews' && (() => {
+          const avgRating = reviews.length ? (reviews.reduce((s:number,r:any)=>s+(parseFloat(r.rating)||0),0)/reviews.length) : 0
+          const needsResponse = reviews.filter((r:any)=>!r.responded && parseFloat(r.rating) <= 3)
+          const platformColor: Record<string,{bg:string,fg:string}> = {
+            'Airbnb': {bg:'#FEF2F2',fg:'#FF5A5F'}, 'Booking.com': {bg:'#EEF1FF',fg:'#003580'}, 'VRBO': {bg:'#F0FDF4',fg:'#1E88E5'}, 'Direct': {bg:'#F3F4F6',fg:'#6B7280'}, 'Other': {bg:'#F3F4F6',fg:'#6B7280'},
+          }
+          return (
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
+              <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
+                <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Average Rating</div>
+                <div style={{fontSize:26,fontWeight:800,color:'#101828'}}>{avgRating?avgRating.toFixed(1):'—'} <span style={{fontSize:14,color:'#98A2B3',fontWeight:500}}>/ 5</span></div>
+              </div>
+              <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
+                <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Total Reviews</div>
+                <div style={{fontSize:26,fontWeight:800,color:'#101828'}}>{reviews.length}</div>
+              </div>
+              <div style={{background:'#fff',border:needsResponse.length>0?'1px solid #FEE2E2':'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
+                <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Needs Response</div>
+                <div style={{fontSize:26,fontWeight:800,color:needsResponse.length>0?'#DC2626':'#101828'}}>{needsResponse.length}</div>
+              </div>
+            </div>
+
+            {showAddReview&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #3B4AFF',padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editingReviewId?'Edit Review':'Log Review'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div><label style={lbl}>Property</label><select value={reviewForm.property_id} onChange={e=>setReviewForm({...reviewForm,property_id:e.target.value})} style={inp}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                <div><label style={lbl}>Guest Name</label><input value={reviewForm.guest_name} onChange={e=>setReviewForm({...reviewForm,guest_name:e.target.value})} style={inp}/></div>
+                <div><label style={lbl}>Platform</label><select value={reviewForm.platform} onChange={e=>setReviewForm({...reviewForm,platform:e.target.value})} style={inp}><option>Airbnb</option><option>Booking.com</option><option>VRBO</option><option>Direct</option><option>Other</option></select></div>
+                <div><label style={lbl}>Rating (out of 5)</label><input type="number" min="1" max="5" step="0.5" value={reviewForm.rating} onChange={e=>setReviewForm({...reviewForm,rating:e.target.value})} style={inp}/></div>
+                <div><label style={lbl}>Review Date</label><input type="date" value={reviewForm.review_date} onChange={e=>setReviewForm({...reviewForm,review_date:e.target.value})} style={inp}/></div>
+                <div><label style={lbl}>Responded?</label><select value={reviewForm.responded?'yes':'no'} onChange={e=>setReviewForm({...reviewForm,responded:e.target.value==='yes'})} style={inp}><option value="no">Not yet</option><option value="yes">Yes</option></select></div>
+                <div style={{gridColumn:'span 2'}}><label style={lbl}>What the guest said</label><textarea value={reviewForm.review_text} onChange={e=>setReviewForm({...reviewForm,review_text:e.target.value})} rows={2} style={{...inp,resize:'vertical'}}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={lbl}>Your response (if any)</label><textarea value={reviewForm.response_text} onChange={e=>setReviewForm({...reviewForm,response_text:e.target.value})} rows={2} style={{...inp,resize:'vertical'}}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={async()=>{
+                  if(!reviewForm.guest_name&&!reviewForm.review_text)return
+                  const payload = {...reviewForm, rating: reviewForm.rating?parseFloat(reviewForm.rating as any):null, property_id: reviewForm.property_id||null}
+                  if(editingReviewId){
+                    await supabase.from('str_reviews').update(payload).eq('id',editingReviewId)
+                  } else {
+                    const {data:{user}} = await supabase.auth.getUser()
+                    await supabase.from('str_reviews').insert([{...payload,user_id:user?.id}])
+                  }
+                  setReviewForm({property_id:'',guest_name:'',platform:'Airbnb',rating:'',review_text:'',review_date:'',response_text:'',responded:false})
+                  setEditingReviewId(null)
+                  setShowAddReview(false)
+                  await loadAll()
+                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#3B4AFF',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editingReviewId?'Save Changes':'Log Review'}</button>
+                <button onClick={()=>{setShowAddReview(false);setEditingReviewId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+
+            <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
+              {reviews.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>⭐</div><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>No reviews logged yet</div></div>):reviews.map((r:any)=>(
+                <div key={r.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <span style={{fontSize:14,fontWeight:700,color:'#101828'}}>{'★'.repeat(Math.round(r.rating||0))}<span style={{color:'#E4E7EC'}}>{'★'.repeat(5-Math.round(r.rating||0))}</span></span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>{r.guest_name||'Guest'}</span>
+                      <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:4,background:platformColor[r.platform]?.bg,color:platformColor[r.platform]?.fg}}>{r.platform}</span>
+                      {!r.responded&&parseFloat(r.rating)<=3&&<span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:'#FEE2E2',color:'#DC2626'}}>NEEDS RESPONSE</span>}
+                    </div>
+                    <div style={{display:'flex',gap:6}}>
+                      <button onClick={()=>{setEditingReviewId(r.id);setReviewForm({property_id:r.property_id??'',guest_name:r.guest_name??'',platform:r.platform??'Airbnb',rating:r.rating!=null?String(r.rating):'',review_text:r.review_text??'',review_date:r.review_date??'',response_text:r.response_text??'',responded:r.responded??false});setShowAddReview(true)}} style={{fontSize:11,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                      <button onClick={()=>del('str_reviews',r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+                    </div>
+                  </div>
+                  <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{r.properties?.name??'—'} {r.review_date?`· ${r.review_date}`:''}</div>
+                  {r.review_text&&<div style={{fontSize:13,color:'#344054',marginBottom:r.response_text?8:0}}>{r.review_text}</div>}
+                  {r.response_text&&<div style={{fontSize:12,color:'#667085',background:'#F9FAFB',borderRadius:8,padding:'8px 12px',borderLeft:'2px solid #3B4AFF'}}><strong>Your response:</strong> {r.response_text}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
 
         {tab==='Guest Comms' && (
           <div style={{ display:'grid', gridTemplateColumns:'260px 1fr', gap:24 }}>
