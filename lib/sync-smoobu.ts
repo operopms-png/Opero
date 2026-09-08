@@ -118,21 +118,38 @@ export async function runSmoobuSync() {
         if (!booking && thread.booking?.id) {
           try {
             const fullBooking = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}`)
-            const { data: inserted, error: upsertError } = await supabase
+            const externalId = `smoobu-${thread.booking.id}`
+            const { error: upsertError } = await supabase
               .from('bookings')
               .upsert(bookingUpsertPayload(fullBooking, propertyId), { onConflict: 'external_id' })
-              .select('id')
-              .single()
             if (upsertError) throw upsertError
-            booking = inserted
+            // Re-fetch by external_id rather than trusting the upsert's
+            // own return value -- .select().single() chained onto an
+            // upsert is fragile (throws if PostgREST doesn't hand back
+            // exactly one row, which isn't guaranteed here), and a
+            // plain re-select afterward is a strictly safer way to get
+            // the row's real id.
+            const { data: refetched, error: refetchError } = await supabase
+              .from('bookings')
+              .select('id')
+              .eq('external_id', externalId)
+              .maybeSingle()
+            if (refetchError) throw refetchError
+            booking = refetched
           } catch (e) {
-            if (threadErrors.length < 5) threadErrors.push(`booking ${thread.booking.id}: ${e instanceof Error ? e.message : String(e)}`)
+            if (threadErrors.length < 5) threadErrors.push(`booking ${thread.booking.id}: ${e instanceof Error ? e.message : JSON.stringify(e)}`)
           }
         }
 
         if (!booking) { threadsSkippedNoBooking++; continue }
 
-        const msgsRes = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}/messages`)
+        let msgsRes: any
+        try {
+          msgsRes = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}/messages`)
+        } catch (e) {
+          if (threadErrors.length < 5) threadErrors.push(`messages ${thread.booking.id}: ${e instanceof Error ? e.message : String(e)}`)
+          continue
+        }
         for (const m of msgsRes.messages ?? []) {
           const smoobuMsgId = `smoobu-${thread.booking.id}-${m.id}`
           await supabase.from('str_guest_messages').upsert({
