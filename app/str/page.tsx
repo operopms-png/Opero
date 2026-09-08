@@ -172,6 +172,8 @@ export default function STRPage() {
   const [sendingGuestReply, setSendingGuestReply] = useState(false)
   const [syncingChannels, setSyncingChannels] = useState(false)
   const [lastSyncResult, setLastSyncResult] = useState<any>(null)
+  const [syncingSmoobu, setSyncingSmoobu] = useState(false)
+  const [lastSmoobuSyncResult, setLastSmoobuSyncResult] = useState<any>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
@@ -402,6 +404,19 @@ export default function STRPage() {
       setLastSyncResult({ error: String(e) })
     }
     setSyncingChannels(false)
+    await loadAll()
+  }
+
+  async function runSmoobuSyncNow() {
+    setSyncingSmoobu(true)
+    try {
+      const res = await fetch('/api/sync-smoobu')
+      const result = await res.json()
+      setLastSmoobuSyncResult(result)
+    } catch (e) {
+      setLastSmoobuSyncResult({ error: String(e) })
+    }
+    setSyncingSmoobu(false)
     await loadAll()
   }
 
@@ -765,7 +780,7 @@ export default function STRPage() {
           return (
           <div>
             <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:12}}>Channel Status</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:16}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:16}}>
               {CHANNEL_DEFS.map(ch=>{
                 const connectedCount = properties.filter((p:any)=>p[ch.key]).length
                 return (
@@ -778,13 +793,31 @@ export default function STRPage() {
                   </div>
                 )
               })}
+              {(()=>{
+                const smoobuConnected = !!integrationsRow?.smoobu_api_key
+                const smoobuMapped = properties.filter((p:any)=>p.smoobu_apartment_id).length
+                return (
+                  <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 20px',display:'flex',alignItems:'center',gap:14}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:'#E6F5FC',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>🗓️</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>Smoobu</div>
+                      <div style={{fontSize:12,color:smoobuConnected&&smoobuMapped>0?'#10B981':'#98A2B3'}}>{!smoobuConnected?'Not connected (see Integrations)':smoobuMapped>0?`${smoobuMapped} propert${smoobuMapped===1?'y':'ies'} mapped`:'Connected, no properties mapped yet'}</div>
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+            <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginBottom:8}}>
+              {lastSyncResult&&!lastSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>iCal: {lastSyncResult.synced?.length ?? 0} property/channel pairs checked</span>}
+              {lastSyncResult?.error&&<span style={{fontSize:12,color:'#DC2626'}}>iCal sync failed: {lastSyncResult.error}</span>}
+              <button onClick={runChannelSync} disabled={syncingChannels} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingChannels?0.6:1}}>{syncingChannels?'Syncing…':'⟳ Sync iCal Now'}</button>
             </div>
             <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginBottom:24}}>
-              {lastSyncResult&&!lastSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>Last sync: {lastSyncResult.synced?.length ?? 0} property/channel pairs checked</span>}
-              {lastSyncResult?.error&&<span style={{fontSize:12,color:'#DC2626'}}>Sync failed: {lastSyncResult.error}</span>}
-              <button onClick={runChannelSync} disabled={syncingChannels} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingChannels?0.6:1}}>{syncingChannels?'Syncing…':'⟳ Sync Now'}</button>
+              {lastSmoobuSyncResult&&!lastSmoobuSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>Smoobu: {lastSmoobuSyncResult.synced?.reduce((s:number,r:any)=>s+(r.bookings??0),0) ?? 0} bookings, {lastSmoobuSyncResult.synced?.reduce((s:number,r:any)=>s+(r.messages??0),0) ?? 0} messages checked</span>}
+              {lastSmoobuSyncResult?.error&&<span style={{fontSize:12,color:'#DC2626'}}>Smoobu sync failed: {lastSmoobuSyncResult.error}</span>}
+              <button onClick={runSmoobuSyncNow} disabled={syncingSmoobu} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#0084C7',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingSmoobu?0.6:1}}>{syncingSmoobu?'Syncing…':'⟳ Sync Smoobu Now'}</button>
             </div>
-            <div style={{fontSize:11,color:'#98A2B3',marginBottom:24,marginTop:-14}}>Runs automatically every 2 hours. Pulls booking dates in only — doesn't push your prices or availability out to these platforms.</div>
+            <div style={{fontSize:11,color:'#98A2B3',marginBottom:24,marginTop:-14}}>iCal runs automatically every 2 hours (booking dates only). Smoobu runs every 30 minutes (real bookings + guest messages that relay into their actual Airbnb/Booking.com chat).</div>
 
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
               <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>Guest Messages {unreadCount>0&&<span style={{marginLeft:6,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
@@ -842,12 +875,13 @@ export default function STRPage() {
         {tab==='Integrations' && (
           <div>
             <p style={{ color:'#667085', fontSize:14, marginBottom:8 }}>Connect your tools to get the most out of Opero.</p>
-            <p style={{ color:'#98A2B3', fontSize:13, marginBottom:20 }}>Looking for Airbnb/VRBO/Booking.com calendar sync? That's now set per-property — open a property under <strong>Properties</strong> and scroll to Channel Sync, since each listing has its own iCal link.</p>
+            <p style={{ color:'#98A2B3', fontSize:13, marginBottom:20 }}>Looking for Airbnb/VRBO/Booking.com calendar sync, or linking a property to Smoobu? Both are set per-property now — open a property under <strong>Properties</strong> and scroll down, since each listing/apartment has its own iCal link or Smoobu ID.</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
               {[
                 { id:'xero', name:'Xero', desc:'Sync contacts and financial data with your Xero accounting. Connect your organisation to keep bookkeeping in sync automatically.', logo:'📗', color:'#13B5EA', bg:'#E8FAFF', oauth:true },
                 { id:'pricelabs', name:'PriceLabs', desc:'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.', logo:'📊', color:'#1a56db', bg:'#eff6ff', column:'pricelabs_api_key', placeholder:'Enter your PriceLabs API key', docsUrl:'https://pricelabs.co/users/api_keys', docsLabel:'Get your API key →' },
                 { id:'stripe', name:'Stripe', desc:'Process payments and subscriptions. Already configured for your Opero subscription.', logo:'💳', color:'#635bff', bg:'#f5f3ff', builtIn:true },
+                { id:'smoobu', name:'Smoobu', desc:'Pull real bookings and guest messages from your Smoobu account — messages relay into the guest\'s actual Airbnb/Booking.com chat, not just email.', logo:'🗓️', color:'#0084C7', bg:'#E6F5FC', column:'smoobu_api_key', placeholder:'Enter your Smoobu API key', docsUrl:'https://login.smoobu.com/en/settings/api', docsLabel:'Get your API key →' },
                 { id:'paypal', name:'PayPal', desc:'Accept PayPal and PayPal.me payments from guests and owners.', logo:'🅿️', color:'#003087', bg:'#eff6ff', column:'paypal_client_id', placeholder:'Enter your PayPal Client ID', docsUrl:'https://developer.paypal.com/dashboard/', docsLabel:'Get your Client ID →' },
               ].map(int => {
                 const isConnected = int.builtIn || (int.oauth ? !!integrationsRow?.xero_access_token : (int.column ? !!integrationsRow?.[int.column] : false))
@@ -1575,6 +1609,9 @@ export default function STRPage() {
             <div><label style={lbl}>Airbnb iCal URL</label><input style={inp} value={form.airbnb_ical_url??''} onChange={e=>setForm({...form,airbnb_ical_url:e.target.value})} placeholder="https://www.airbnb.com/calendar/ical/..."/></div>
             <div><label style={lbl}>VRBO iCal URL</label><input style={inp} value={form.vrbo_ical_url??''} onChange={e=>setForm({...form,vrbo_ical_url:e.target.value})} placeholder="https://www.vrbo.com/icalendar/..."/></div>
             <div><label style={lbl}>Booking.com iCal URL</label><input style={inp} value={form.booking_ical_url??''} onChange={e=>setForm({...form,booking_ical_url:e.target.value})} placeholder="https://admin.booking.com/hotel/hoteladmin/ical..."/></div>
+            <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:8 }}>Smoobu</div>
+            <div style={{ fontSize:11, color:'#98A2B3', marginTop:-8 }}>If this property is also managed in Smoobu, link it here for real two-way bookings and guest messaging (relays into the guest's actual Airbnb/Booking.com chat). Find the Apartment ID under Smoobu &gt; Settings &gt; Apartments.</div>
+            <div><label style={lbl}>Smoobu Apartment ID</label><input style={inp} value={form.smoobu_apartment_id??''} onChange={e=>setForm({...form,smoobu_apartment_id:e.target.value})} placeholder="e.g. 123456"/></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
