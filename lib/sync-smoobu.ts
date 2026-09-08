@@ -27,6 +27,21 @@ async function smoobuFetch(apiKey: string, path: string) {
   return res.json()
 }
 
+function bookingUpsertPayload(b: any, propertyId: string) {
+  return {
+    property_id: propertyId,
+    check_in: b.arrival,
+    check_out: b.departure,
+    guest_name: b['guest-name'],
+    guest_email: b.email || null,
+    guest_phone: b.phone || null,
+    platform: b.channel?.name || 'Smoobu',
+    source: 'smoobu',
+    external_id: `smoobu-${b.id}`,
+    status: b.type === 'cancellation' ? 'cancelled' : 'confirmed',
+  }
+}
+
 export async function runSmoobuSync() {
   const supabase = getServiceClient()
   const results: any[] = []
@@ -71,18 +86,7 @@ export async function runSmoobuSync() {
         const propertyId = apartmentToProperty.get(apartmentId)
         if (!propertyId) continue
 
-        await supabase.from('bookings').upsert({
-          property_id: propertyId,
-          check_in: b.arrival,
-          check_out: b.departure,
-          guest_name: b['guest-name'],
-          guest_email: b.email || null,
-          guest_phone: b.phone || null,
-          platform: b.channel?.name || 'Smoobu',
-          source: 'smoobu',
-          external_id: `smoobu-${b.id}`,
-          status: b.type === 'cancellation' ? 'cancelled' : 'confirmed',
-        }, { onConflict: 'external_id' })
+        await supabase.from('bookings').upsert(bookingUpsertPayload(b, propertyId), { onConflict: 'external_id' })
         bookingsSynced++
       }
 
@@ -93,16 +97,39 @@ export async function runSmoobuSync() {
       const threads = threadsRes.threads ?? []
       let messagesSynced = 0
 
+      let threadsSkippedNoBooking = 0
       for (const thread of threads) {
         const propertyId = apartmentToProperty.get(String(thread.apartment?.id))
         if (!propertyId) continue
 
-        const { data: booking } = await supabase
+        let { data: booking } = await supabase
           .from('bookings')
           .select('id')
           .eq('external_id', `smoobu-${thread.booking?.id}`)
           .maybeSingle()
-        if (!booking) continue
+
+        // Message threads aren't bound by the arrivalFrom window
+        // above -- a thread can reference a booking that's outside
+        // it (e.g. a past stay, or a booking made before that window
+        // and never re-modified). Rather than silently dropping the
+        // thread's messages, fetch that one booking directly from
+        // Smoobu and upsert it, same as the main loop does.
+        if (!booking && thread.booking?.id) {
+          try {
+            const fullBooking = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}`)
+            const { data: inserted } = await supabase
+              .from('bookings')
+              .upsert(bookingUpsertPayload(fullBooking, propertyId), { onConflict: 'external_id' })
+              .select('id')
+              .single()
+            booking = inserted
+          } catch {
+            // Booking fetch failed (e.g. deleted on Smoobu's side) --
+            // fall through to the skip-and-count below.
+          }
+        }
+
+        if (!booking) { threadsSkippedNoBooking++; continue }
 
         const msgsRes = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}/messages`)
         for (const m of msgsRes.messages ?? []) {
@@ -130,6 +157,7 @@ export async function runSmoobuSync() {
           totalItemsAccordingToSmoobu: bookingsRes.total_items,
           apartmentIdsSeenInResponse: Array.from(seenApartmentIds),
           totalThreadsFromSmoobu: threads.length,
+          threadsSkippedNoBooking,
         },
       })
     } catch (e) {

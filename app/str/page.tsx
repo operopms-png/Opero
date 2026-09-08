@@ -828,6 +828,7 @@ export default function STRPage() {
                     <div>Total bookings Smoobu returned: <strong>{r.debug.totalBookingsFromSmoobu}</strong> (Smoobu says total_items: {r.debug.totalItemsAccordingToSmoobu})</div>
                     <div>Apartment ID(s) actually seen in those bookings: <strong>{r.debug.apartmentIdsSeenInResponse.join(', ')||'(none — Smoobu returned zero bookings)'}</strong></div>
                     <div>Message threads Smoobu returned: <strong>{r.debug.totalThreadsFromSmoobu}</strong></div>
+                    {r.debug.threadsSkippedNoBooking>0&&<div>Threads skipped (no matching booking, even after direct fetch): <strong>{r.debug.threadsSkippedNoBooking}</strong></div>}
                   </div>
                 ))}
               </div>
