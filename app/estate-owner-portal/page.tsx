@@ -4,11 +4,11 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 
 // Mirrors app/pm-owner-portal closely -- same layout, same staff-preview
-// pattern via ?landlord_id=. Messages and a payments/statements ledger
-// (pm_landlord_messages / pm_landlord_payments equivalents) aren't built
-// for Estate Agency yet -- this covers Dashboard, Properties, Tenancies,
-// Documents, and Contact & Payment, which is everything estate_landlords/
-// estate_properties/estate_tenancies/estate_documents already support.
+// pattern via ?landlord_id=. Messages now use estate_landlord_messages
+// (mirroring pm_landlord_messages). A payments/statements ledger
+// (pm_landlord_payments equivalent) still isn't built for Estate
+// Agency -- this covers Dashboard, Properties, Tenancies, Documents,
+// Messages, and Contact & Payment.
 
 const ACCENT = '#5B7CFA'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -26,6 +26,9 @@ function EstateOwnerPortalInner() {
   const [documents, setDocuments] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const [contactForm, setContactForm] = useState<any>({})
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   async function loadAll(ll: any) {
     const { data: props } = await supabase.from('estate_properties').select('*').eq('owner_id', ll.id)
@@ -64,6 +67,37 @@ function EstateOwnerPortalInner() {
     })
   }, [viewingLandlordId])
 
+  useEffect(() => {
+    if (tab !== 'Messages' || !landlord?.id) return
+    supabase.from('estate_landlord_messages').select('*').eq('landlord_id', landlord.id).order('created_at', { ascending: true }).then(({ data }) => setMessages(data ?? []))
+    const interval = setInterval(() => {
+      supabase.from('estate_landlord_messages').select('*').eq('landlord_id', landlord.id).order('created_at', { ascending: true }).then(({ data }) => setMessages(data ?? []))
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [tab, landlord?.id])
+
+  async function sendMessage() {
+    const text = newMessage.trim()
+    if (!text) return
+    setSendingMessage(true)
+    setNewMessage('')
+    if (isStaffView) {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/send-estate-landlord-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ landlord_id: landlord.id, message: text }),
+      })
+      if (!res.ok) { const r = await res.json(); alert(r.error || 'Could not send'); setSendingMessage(false); return }
+    } else {
+      const { error } = await supabase.from('estate_landlord_messages').insert({ landlord_id: landlord.id, sender: 'landlord', message: text })
+      if (error) { alert(error.message); setSendingMessage(false); return }
+    }
+    const { data } = await supabase.from('estate_landlord_messages').select('*').eq('landlord_id', landlord.id).order('created_at', { ascending: true })
+    setMessages(data ?? [])
+    setSendingMessage(false)
+  }
+
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
 
   async function saveContact() {
@@ -80,7 +114,7 @@ function EstateOwnerPortalInner() {
   const monthlyRentTotal = activeTenancies.reduce((s, t) => s + (parseFloat(t.rent) || 0), 0)
   const expiringDocs = documents.filter(d => d.expiry_date && d.expiry_date < today).length
 
-  const TABS = ['Dashboard', 'Properties', 'Tenancies', 'Documents', 'Contact & Payment']
+  const TABS = ['Dashboard', 'Properties', 'Tenancies', 'Documents', 'Messages', 'Contact & Payment']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -169,6 +203,23 @@ function EstateOwnerPortalInner() {
                 <span style={{ fontSize: 13, color: d.expiry_date && d.expiry_date < today ? '#EF4444' : '#344054' }}>{d.expiry_date ?? '—'}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {tab === 'Messages' && (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', display: 'flex', flexDirection: 'column' as const, height: 500 }}>
+            <div style={{ flex: 1, overflowY: 'auto' as const, padding: 20, display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+              {messages.length === 0 ? <div style={{ textAlign: 'center' as const, color: '#98A2B3', fontSize: 13, padding: 40 }}>No messages yet — send one to get started.</div> : messages.map(m => (
+                <div key={m.id} style={{ alignSelf: m.sender === 'landlord' ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
+                  <div style={{ background: m.sender === 'landlord' ? ACCENT : '#F2F4F7', color: m.sender === 'landlord' ? '#fff' : '#101828', borderRadius: 12, padding: '10px 14px', fontSize: 13 }}>{m.message}</div>
+                  <div style={{ fontSize: 10, color: '#98A2B3', marginTop: 3, textAlign: m.sender === 'landlord' ? 'right' as const : 'left' as const }}>{m.sender === 'landlord' ? 'You' : 'Staff'} · {new Date(m.created_at).toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ borderTop: '1px solid #E4E7EC', padding: 14, display: 'flex', gap: 10 }}>
+              <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ ...inp, flex: 1 }} />
+              <button onClick={sendMessage} disabled={sendingMessage || !newMessage.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: sendingMessage || !newMessage.trim() ? 0.6 : 1 }}>Send</button>
+            </div>
           </div>
         )}
 
