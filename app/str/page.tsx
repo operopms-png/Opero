@@ -819,6 +819,20 @@ export default function STRPage() {
             </div>
             <div style={{fontSize:11,color:'#98A2B3',marginBottom:24,marginTop:-14}}>iCal runs automatically every 2 hours (booking dates only). Smoobu runs every 30 minutes (real bookings + guest messages that relay into their actual Airbnb/Booking.com chat).</div>
 
+            {lastSmoobuSyncResult?.synced?.some((r:any)=>r.debug)&&(
+              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:16,marginBottom:24,fontSize:12,color:'#92400E'}}>
+                <div style={{fontWeight:700,marginBottom:8}}>Smoobu sync details (temporary, for debugging)</div>
+                {lastSmoobuSyncResult.synced.filter((r:any)=>r.debug).map((r:any,i:number)=>(
+                  <div key={i} style={{marginBottom:8}}>
+                    <div>Property mapped to Smoobu apartment ID(s): <strong>{r.debug.mappedApartmentIds.join(', ')||'(none)'}</strong></div>
+                    <div>Total bookings Smoobu returned: <strong>{r.debug.totalBookingsFromSmoobu}</strong> (Smoobu says total_items: {r.debug.totalItemsAccordingToSmoobu})</div>
+                    <div>Apartment ID(s) actually seen in those bookings: <strong>{r.debug.apartmentIdsSeenInResponse.join(', ')||'(none — Smoobu returned zero bookings)'}</strong></div>
+                    <div>Message threads Smoobu returned: <strong>{r.debug.totalThreadsFromSmoobu}</strong></div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
               <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>Guest Messages {unreadCount>0&&<span style={{marginLeft:6,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
               <select onChange={e=>{ if(!e.target.value)return; const b=bookings.find((bk:any)=>bk.id===e.target.value); if(b)setOpenBookingThread(b); e.target.value='' }} style={{...inp,width:220,fontSize:12,padding:'6px 10px'}} defaultValue="">

@@ -52,21 +52,23 @@ export async function runSmoobuSync() {
 
       if (!mappedProps?.length) continue
       const apartmentToProperty = new Map(mappedProps.map((p: any) => [String(p.smoobu_apartment_id), p.id]))
+      const mappedApartmentIds = mappedProps.map((p: any) => String(p.smoobu_apartment_id))
 
-      // arrivalFrom, not modifiedFrom -- a booking made months ago and
-      // never touched since (the normal case) has an old modified-at
-      // date and would be silently missed by a "recently modified"
-      // filter. arrivalFrom instead pulls anything currently staying
-      // or arriving soon, which is what actually matters here,
-      // regardless of when it was originally booked. Starts 7 days
-      // back to still catch a guest who's mid-stay right now.
       const arrivalFrom = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
       const bookingsRes = await smoobuFetch(apiKey, `/reservations?arrivalFrom=${arrivalFrom}&pageSize=100&showCancellation=true`)
       const bookings = bookingsRes.bookings ?? []
       let bookingsSynced = 0
+      // Diagnostic: every distinct apartment ID Smoobu actually
+      // returned, vs the ones we're mapped to -- if these two lists
+      // don't overlap, the ID entered in the property's Smoobu field
+      // doesn't match what Smoobu itself is sending, which is a much
+      // more useful thing to see than a silent '0 bookings'.
+      const seenApartmentIds = new Set<string>()
 
       for (const b of bookings) {
-        const propertyId = apartmentToProperty.get(String(b.apartment?.id))
+        const apartmentId = String(b.apartment?.id)
+        seenApartmentIds.add(apartmentId)
+        const propertyId = apartmentToProperty.get(apartmentId)
         if (!propertyId) continue
 
         await supabase.from('bookings').upsert({
@@ -117,7 +119,19 @@ export async function runSmoobuSync() {
         }
       }
 
-      results.push({ user_id: userId, bookings: bookingsSynced, messages: messagesSynced })
+      results.push({
+        user_id: userId,
+        bookings: bookingsSynced,
+        messages: messagesSynced,
+        // Diagnostics -- remove once this is confirmed working.
+        debug: {
+          mappedApartmentIds,
+          totalBookingsFromSmoobu: bookings.length,
+          totalItemsAccordingToSmoobu: bookingsRes.total_items,
+          apartmentIdsSeenInResponse: Array.from(seenApartmentIds),
+          totalThreadsFromSmoobu: threads.length,
+        },
+      })
     } catch (e) {
       results.push({ user_id: userId, error: String(e) })
     }
