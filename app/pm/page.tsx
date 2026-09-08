@@ -23,7 +23,7 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PORTFOLIO', items: ['Properties','Units','Landlords','Tenants','Leases'] },
+  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
@@ -236,6 +236,10 @@ function PMPageInner() {
   const [hasModule, setHasModule] = useState<boolean|null>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [units, setUnits] = useState<any[]>([])
+  const [buildings, setBuildings] = useState<any[]>([])
+  const [showAddBuilding, setShowAddBuilding] = useState(false)
+  const [buildingForm, setBuildingForm] = useState({name:'',address:'',total_units:'',notes:''})
+  const [editingBuildingId, setEditingBuildingId] = useState<string|null>(null)
   const [landlords, setLandlords] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])
   const [leases, setLeases] = useState<any[]>([])
@@ -325,9 +329,9 @@ function PMPageInner() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user?.id }
-    const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp,comp,bk,tx,rtr,bank] = await Promise.all([
+    const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp,comp,bk,tx,rtr,bank,bldg] = await Promise.all([
       supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
-      supabase.from('pm_units').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_units').select('*,pm_properties(name),pm_buildings(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_tenants').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_leases').select('*,pm_tenants(name),pm_units(unit_number),pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -343,9 +347,11 @@ function PMPageInner() {
       supabase.from('pm_transactions').select('*').eq('user_id',userId).order('date',{ascending:false}),
       supabase.from('pm_right_to_rent_checks').select('*').eq('user_id',userId),
       supabase.from('pm_bank_statement_checks').select('*').eq('user_id',userId),
+      supabase.from('pm_buildings').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
     ])
     setRtrChecks(rtr.data ?? [])
     setBankChecks(bank.data ?? [])
+    setBuildings(bldg.data ?? [])
     // None of these were ever checked for errors before -- a broken
     // relationship (like the pm_cleaning_tasks/pm_units one above) or
     // an RLS issue would fail a query completely, but the page would
@@ -688,6 +694,7 @@ function PMPageInner() {
             {tab==='Landlords'&&<button onClick={()=>{setModal('landlord');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Landlord</button>}
             {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
             {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
+            {tab==='Buildings'&&<button onClick={()=>{setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(true)}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Building</button>}
             {tab==='Leases'&&<button onClick={()=>{setModal('lease');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Lease</button>}
             {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
             {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#101828',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
@@ -858,14 +865,15 @@ function PMPageInner() {
 
         {tab==='Units'&&(
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 70px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
-              <span>Unit</span><span>Property</span><span>Tenant</span><span>Rent/mo</span><span>Lease End</span><span>Status</span><span></span>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 90px 90px 80px 70px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+              <span>Unit</span><span>Property</span><span>Building</span><span>Tenant</span><span>Rent/mo</span><span>Lease End</span><span>Status</span><span></span>
             </div>
             {units.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No units yet</div>:
             units.map(u=>(
-              <div key={u.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 70px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+              <div key={u.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 90px 90px 80px 70px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
                 <span style={{fontWeight:500,color:'#101828'}}>{u.unit_number}</span>
                 <span>{u.pm_properties?.name??'—'}</span>
+                <span>{u.pm_buildings?.name??'—'}</span>
                 <span>{tenants.find(t=>t.unit_id===u.id)?.name??'—'}</span>
                 <span>£{(u.monthly_rent??0).toLocaleString()}</span>
                 <span>{u.lease_end??'—'}</span>
@@ -873,6 +881,48 @@ function PMPageInner() {
                 <button onClick={()=>del('pm_units',u.id,setUnits)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
             ))}
+          </div>
+        )}
+
+        {tab==='Buildings'&&(
+          <div>
+            {showAddBuilding&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #3B4AFF',padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editingBuildingId?'Edit Building':'Add Building'}</h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
+                <div><label style={lbl}>Name *</label><input style={inp} value={buildingForm.name} onChange={e=>setBuildingForm({...buildingForm,name:e.target.value})} placeholder="e.g. Riverside Court"/></div>
+                <div><label style={lbl}>Total Units</label><input type="number" style={inp} value={buildingForm.total_units} onChange={e=>setBuildingForm({...buildingForm,total_units:e.target.value})}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={lbl}>Address</label><input style={inp} value={buildingForm.address} onChange={e=>setBuildingForm({...buildingForm,address:e.target.value})}/></div>
+                <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input style={inp} value={buildingForm.notes} onChange={e=>setBuildingForm({...buildingForm,notes:e.target.value})}/></div>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={async()=>{
+                  if(!buildingForm.name)return
+                  const {data:{user}} = await supabase.auth.getUser()
+                  if(editingBuildingId){
+                    await supabase.from('pm_buildings').update(buildingForm).eq('id',editingBuildingId)
+                  } else {
+                    await supabase.from('pm_buildings').insert([{...buildingForm,user_id:user?.id}])
+                  }
+                  setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(false)
+                  await loadAll()
+                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#3B4AFF',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editingBuildingId?'Save Changes':'Add Building'}</button>
+                <button onClick={()=>{setShowAddBuilding(false);setEditingBuildingId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+              </div>
+            </div>)}
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {buildings.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No buildings yet — group units under a physical block to track building-level info.</div>:
+              buildings.map((b:any)=>(
+                <div key={b.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600,fontSize:14,color:'#101828'}}>{b.name}</div>
+                    <div style={{fontSize:12,color:'#667085',marginTop:2}}>{b.address||'—'}</div>
+                  </div>
+                  <span style={{fontSize:13,color:'#667085'}}>{units.filter((u:any)=>u.building_id===b.id).length}{b.total_units?` / ${b.total_units}`:''} units</span>
+                  <button onClick={()=>{setEditingBuildingId(b.id);setBuildingForm({name:b.name??'',address:b.address??'',total_units:b.total_units!=null?String(b.total_units):'',notes:b.notes??''});setShowAddBuilding(true)}} style={{fontSize:12,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>del('pm_buildings',b.id,setBuildings)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -926,16 +976,28 @@ function PMPageInner() {
 
         {tab==='Leases'&&(
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px 150px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
-              <span>Tenant</span><span>Property</span><span>Unit</span><span>Start</span><span>End</span><span>Rent</span><span>Status</span><span>Signature</span>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px 110px 150px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+              <span>Tenant</span><span>Property</span><span>Unit</span><span>Start</span><span>End</span><span>Rent</span><span>Status</span><span>Deposit</span><span>Signature</span>
             </div>
             {leases.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No leases yet</div>:
             leases.map(l=>{
               const daysLeft=l.end_date?Math.round((new Date(l.end_date).getTime()-Date.now())/86400000):null
               const fullySigned=l.tenant_signed_at&&l.landlord_signed_at
               const partiallySigned=l.tenant_signed_at||l.landlord_signed_at
+              const deposit=parseFloat(l.deposit)||0
+              let depositBadge=null
+              if(deposit>0){
+                if(l.deposit_protected_date){
+                  depositBadge=<span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Protected</span>
+                } else {
+                  const daysSinceStart=l.start_date?Math.round((Date.now()-new Date(l.start_date).getTime())/86400000):0
+                  depositBadge=daysSinceStart>30
+                    ? <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:20,background:'#FEE2E2',color:'#DC2626'}}>Overdue</span>
+                    : <span style={{fontSize:10,fontWeight:600,padding:'2px 7px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>{30-daysSinceStart}d left</span>
+                }
+              }
               return(
-                <div key={l.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                <div key={l.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px 110px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
                   <span style={{fontWeight:500,color:'#101828'}}>{l.pm_tenants?.name??'—'}</span>
                   <span>{l.pm_properties?.name??'—'}</span>
                   <span>{l.pm_units?.unit_number??'—'}</span>
@@ -943,6 +1005,7 @@ function PMPageInner() {
                   <span style={{color:daysLeft!==null&&daysLeft<=30?'#EF4444':'inherit'}}>{l.end_date??'—'}</span>
                   <span>£{(l.monthly_rent??0).toLocaleString()}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:l.status==='active'?'#D1FAE5':'#FEE2E2',color:l.status==='active'?'#059669':'#DC2626'}}>{l.status}</span>
+                  <span>{depositBadge??<span style={{fontSize:11,color:'#98A2B3'}}>—</span>}</span>
                   {fullySigned?(
                     <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669',width:'fit-content'}}>Signed</span>
                   ):(
@@ -1956,6 +2019,12 @@ function PMPageInner() {
                 {properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
+            <div><label style={lbl}>Building (optional)</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.building_id??''} onChange={e=>setForm({...form,building_id:e.target.value})}>
+                <option value="">None</option>
+                {buildings.map((b:any)=><option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
             <div><label style={lbl}>Unit Number *</label><input style={inp} value={form.unit_number??''} onChange={e=>setForm({...form,unit_number:e.target.value})} placeholder="e.g. 1A, Unit 4, Flat 2"/></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Monthly Rent (£)</label><input type="number" style={inp} value={form.monthly_rent??''} onChange={e=>setForm({...form,monthly_rent:parseFloat(e.target.value)})}/></div>
@@ -2008,6 +2077,33 @@ function PMPageInner() {
               <div><label style={lbl}>Deposit (£)</label><input type="number" style={inp} value={form.deposit??''} onChange={e=>setForm({...form,deposit:parseFloat(e.target.value)})}/></div>
             </div>
             <FileUpload label="Tenancy Agreement (PDF)" value={form.document_url??''} onChange={url=>setForm({...form,document_url:url})} folder="lease-documents" />
+
+            {parseFloat(form.deposit)>0 && (
+              <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:2}}>🛡️ Deposit Protection</div>
+                <div style={{fontSize:11,color:'#98A2B3',marginBottom:12}}>Legally required within 30 days of receiving the deposit.</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:12}}>
+                  <div><label style={lbl}>Scheme</label>
+                    <select style={{...inp,cursor:'pointer'}} value={form.deposit_scheme??''} onChange={e=>setForm({...form,deposit_scheme:e.target.value})}>
+                      <option value="">Not protected yet</option>
+                      <option value="DPS">Deposit Protection Service (DPS)</option>
+                      <option value="MyDeposits">MyDeposits</option>
+                      <option value="TDS">Tenancy Deposit Scheme (TDS)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div><label style={lbl}>Scheme Reference</label><input style={inp} value={form.deposit_scheme_ref??''} onChange={e=>setForm({...form,deposit_scheme_ref:e.target.value})}/></div>
+                  <div><label style={lbl}>Date Protected</label><input type="date" style={inp} value={form.deposit_protected_date??''} onChange={e=>setForm({...form,deposit_protected_date:e.target.value})}/></div>
+                  <div><label style={lbl}>Prescribed Info Given</label>
+                    <select style={{...inp,cursor:'pointer'}} value={form.prescribed_info_given?'yes':'no'} onChange={e=>setForm({...form,prescribed_info_given:e.target.value==='yes'})}>
+                      <option value="no">Not yet</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+                  {form.prescribed_info_given&&<div><label style={lbl}>Date Given</label><input type="date" style={inp} value={form.prescribed_info_date??''} onChange={e=>setForm({...form,prescribed_info_date:e.target.value})}/></div>}
+                </div>
+              </div>
+            )}
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
