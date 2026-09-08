@@ -53,11 +53,15 @@ export async function runSmoobuSync() {
       if (!mappedProps?.length) continue
       const apartmentToProperty = new Map(mappedProps.map((p: any) => [String(p.smoobu_apartment_id), p.id]))
 
-      // Bookings -- last 90 days modified, forward-looking arrivals
-      // covers new/changed reservations without re-pulling the whole
-      // history every run.
-      const modifiedFrom = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)
-      const bookingsRes = await smoobuFetch(apiKey, `/reservations?modifiedFrom=${modifiedFrom}&pageSize=100&showCancellation=true`)
+      // arrivalFrom, not modifiedFrom -- a booking made months ago and
+      // never touched since (the normal case) has an old modified-at
+      // date and would be silently missed by a "recently modified"
+      // filter. arrivalFrom instead pulls anything currently staying
+      // or arriving soon, which is what actually matters here,
+      // regardless of when it was originally booked. Starts 7 days
+      // back to still catch a guest who's mid-stay right now.
+      const arrivalFrom = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+      const bookingsRes = await smoobuFetch(apiKey, `/reservations?arrivalFrom=${arrivalFrom}&pageSize=100&showCancellation=true`)
       const bookings = bookingsRes.bookings ?? []
       let bookingsSynced = 0
 
