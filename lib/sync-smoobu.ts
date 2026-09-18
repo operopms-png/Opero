@@ -10,21 +10,13 @@
 // 2026-09-25, and HMAC's per-request signing is meaningfully more
 // complex to get right. Worth migrating before that date.
 import { createClient } from '@supabase/supabase-js'
-
-const SMOOBU_BASE = 'https://login.smoobu.com/api'
+import { smoobuFetch, sendSmoobuGuestMessage } from './smoobu-client'
+import { maybeAutoReplyToGuest } from './ai-guest-receptionist'
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
   return createClient(url, serviceKey)
-}
-
-async function smoobuFetch(apiKey: string, path: string) {
-  const res = await fetch(`${SMOOBU_BASE}${path}`, {
-    headers: { 'Api-Key': apiKey, 'Cache-Control': 'no-cache' },
-  })
-  if (!res.ok) throw new Error(`Smoobu ${path} returned ${res.status}`)
-  return res.json()
 }
 
 function bookingUpsertPayload(b: any, propertyId: string) {
@@ -152,15 +144,31 @@ export async function runSmoobuSync() {
         }
         for (const m of msgsRes.messages ?? []) {
           const smoobuMsgId = `smoobu-${thread.booking.id}-${m.id}`
+          const isGuestMessage = m.type === 1 // 1 = inbox (from guest), 2 = outbox (from host)
+
+          // Only trigger the AI auto-reply for a message that's
+          // genuinely new this run -- otherwise every 30-minute
+          // re-sync would re-process the same already-answered
+          // message and could reply to it again.
+          const { data: existing } = await supabase.from('str_guest_messages').select('id').eq('smoobu_message_id', smoobuMsgId).maybeSingle()
+
           await supabase.from('str_guest_messages').upsert({
             user_id: userId,
             booking_id: booking.id,
-            sender: m.type === 1 ? 'guest' : 'staff', // 1 = inbox (from guest), 2 = outbox (from host)
+            sender: isGuestMessage ? 'guest' : 'staff',
             subject: m.subject || null,
             message: m.message || m.messageHtml || '',
             smoobu_message_id: smoobuMsgId,
           }, { onConflict: 'smoobu_message_id' })
           messagesSynced++
+
+          if (!existing && isGuestMessage) {
+            try {
+              await maybeAutoReplyToGuest(userId, booking.id, m.message || m.messageHtml || '')
+            } catch (e) {
+              console.error('[sync-smoobu] auto-reply failed:', e)
+            }
+          }
         }
       }
 
@@ -185,17 +193,4 @@ export async function runSmoobuSync() {
   }
 
   return { synced: results }
-}
-
-export async function sendSmoobuGuestMessage(apiKey: string, smoobuReservationId: string, subject: string | undefined, body: string) {
-  const res = await fetch(`${SMOOBU_BASE}/reservations/${smoobuReservationId}/messages/send-message-to-guest`, {
-    method: 'POST',
-    headers: { 'Api-Key': apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subject: subject || undefined, messageBody: body }),
-  })
-  if (!res.ok) {
-    const detail = await res.json().catch(() => ({}))
-    throw new Error(detail?.detail ? JSON.stringify(detail.detail) : `Smoobu send failed with ${res.status}`)
-  }
-  return true
 }

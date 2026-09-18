@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { serviceClient } from '@/lib/admin-auth'
+import { maybeAutoReplyToGuest } from '@/lib/ai-guest-receptionist'
 
 // Handles Resend webhooks -- both inbound replies (email.received) and
 // delivery/engagement tracking (email.delivered/opened/clicked/bounced/
@@ -151,6 +152,14 @@ export async function POST(req: NextRequest) {
       subject: `Reply: ${subject}`,
       message: guestBody || `(From ${fromAddress} — body unavailable)`,
     })
+
+    if (guestBody) {
+      try {
+        await maybeAutoReplyToGuest(booking.user_id, booking.id, guestBody)
+      } catch (e) {
+        console.error('[email-inbound] auto-reply failed:', e)
+      }
+    }
 
     return NextResponse.json({ received: true, matched: true, type: 'guest' })
   }

@@ -869,12 +869,15 @@ export default function STRPage() {
                       <div style={{fontSize:12,color:'#667085'}}>{openBookingThread.properties?.name??'—'} · {openBookingThread.guest_email}</div>
                     </div>
                     <div style={{flex:1,overflowY:'auto' as const,padding:20,display:'flex',flexDirection:'column' as const,gap:10}}>
-                      {guestMessages.filter((m:any)=>m.booking_id===openBookingThread.id).slice().reverse().map((m:any)=>(
-                        <div key={m.id} style={{alignSelf:m.sender==='staff'?'flex-end':'flex-start',maxWidth:'65%'}}>
-                          <div style={{background:m.sender==='staff'?'#3B4AFF':'#F2F4F7',color:m.sender==='staff'?'#fff':'#101828',borderRadius:12,padding:'10px 14px',fontSize:13}}>{m.message}</div>
-                          <div style={{fontSize:10,color:'#98A2B3',marginTop:3,textAlign:m.sender==='staff'?'right' as const:'left' as const}}>{m.sender==='staff'?'You':openBookingThread.guest_name} · {new Date(m.created_at).toLocaleString()}</div>
+                      {guestMessages.filter((m:any)=>m.booking_id===openBookingThread.id).slice().reverse().map((m:any)=>{
+                        const isOutbound = m.sender==='staff'||m.sender==='ai'
+                        return (
+                        <div key={m.id} style={{alignSelf:isOutbound?'flex-end':'flex-start',maxWidth:'65%'}}>
+                          <div style={{background:m.sender==='ai'?'#EEF1FF':isOutbound?'#3B4AFF':'#F2F4F7',color:m.sender==='ai'?'#3B4AFF':isOutbound?'#fff':'#101828',border:m.sender==='ai'?'1px solid #3B4AFF':'none',borderRadius:12,padding:'10px 14px',fontSize:13}}>{m.message}</div>
+                          <div style={{fontSize:10,color:'#98A2B3',marginTop:3,textAlign:isOutbound?'right' as const:'left' as const}}>{m.sender==='ai'?'🤖 AI Receptionist':m.sender==='staff'?'You':openBookingThread.guest_name} · {new Date(m.created_at).toLocaleString()}</div>
                         </div>
-                      ))}
+                        )
+                      })}
                     </div>
                     <div style={{borderTop:'1px solid #E4E7EC',padding:14,display:'flex',gap:10}}>
                       <input value={guestReply} onChange={e=>setGuestReply(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendGuestReply()} placeholder="Type a reply…" style={{...inp,flex:1}}/>
