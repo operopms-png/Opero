@@ -62,6 +62,7 @@ const NAV_GROUPS = [
       { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file' },
       { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },
       { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup' },
+      { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users' },
       { href: '/settings?section=Schedule', label: 'Schedule', key: 'staffcentre', icon: 'calendar' },
       { href: '/settings?section=Tasks', label: 'Tasks', key: 'staffcentre', icon: 'file' },
       { href: '/team-chat', label: 'Team Chat', key: 'staffcentre', icon: 'users' },
