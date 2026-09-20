@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, applyStress } from '../../lib/dealCalculators'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
   btl:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -25,148 +26,19 @@ const STRATEGIES = [
 
 const SECTIONS = ['Deal Analyser','Saved Deals','Watchlist']
 
-function calcBTL(d: any) {
-  const price = parseFloat(d.price)||0
-  const deposit = parseFloat(d.deposit)||25
-  const rent = parseFloat(d.rent)||0
-  const mortgage = parseFloat(d.mortgageRate)||5
-  const expenses = parseFloat(d.expenses)||20
-  const refurb = parseFloat(d.refurb)||0
-  const depositAmt = price * deposit / 100
-  const loanAmt = price - depositAmt
-  const monthlyMortgage = loanAmt * (mortgage/100/12) / (1 - Math.pow(1+mortgage/100/12, -300))
-  const monthlyExpenses = rent * expenses / 100
-  const monthlyCashflow = rent - monthlyMortgage - monthlyExpenses
-  const annualCashflow = monthlyCashflow * 12
-  const totalInvested = depositAmt + refurb
-  const grossYield = price > 0 ? (rent*12/price*100) : 0
-  const netYield = totalInvested > 0 ? (annualCashflow/totalInvested*100) : 0
-  const roi = totalInvested > 0 ? (annualCashflow/totalInvested*100) : 0
-  return { depositAmt, loanAmt, monthlyMortgage, monthlyExpenses, monthlyCashflow, annualCashflow, grossYield, netYield, roi, totalInvested }
+const VERDICT_COLORS: Record<string,{color:string;bg:string;border:string}> = {
+  PASS:   { color:'#10B981', bg:'#ECFDF5', border:'#A7F3D0' },
+  REVIEW: { color:'#F59E0B', bg:'#FEF3C7', border:'#FDE68A' },
+  REJECT: { color:'#EF4444', bg:'#FEE2E2', border:'#FDA29B' },
 }
-
-function calcHMO(d: any) {
-  const price = parseFloat(d.price)||0
-  const deposit = parseFloat(d.deposit)||25
-  const rooms = parseInt(d.rooms)||4
-  const rentPerRoom = parseFloat(d.rentPerRoom)||600
-  const mortgage = parseFloat(d.mortgageRate)||5.5
-  const expenses = parseFloat(d.expenses)||35
-  const refurb = parseFloat(d.refurb)||0
-  const totalRent = rooms * rentPerRoom
-  const depositAmt = price * deposit / 100
-  const loanAmt = price - depositAmt
-  const monthlyMortgage = loanAmt * (mortgage/100/12) / (1 - Math.pow(1+mortgage/100/12, -300))
-  const monthlyExpenses = totalRent * expenses / 100
-  const monthlyCashflow = totalRent - monthlyMortgage - monthlyExpenses
-  const annualCashflow = monthlyCashflow * 12
-  const totalInvested = depositAmt + refurb
-  const grossYield = price > 0 ? (totalRent*12/price*100) : 0
-  const roi = totalInvested > 0 ? (annualCashflow/totalInvested*100) : 0
-  return { depositAmt, loanAmt, monthlyMortgage, monthlyExpenses, monthlyCashflow, annualCashflow, grossYield, roi, totalInvested, totalRent }
+const RULE_STATUS_COLORS: Record<string,string> = {
+  PASS:'#10B981', FAIL:'#EF4444', REVIEW:'#F59E0B', MISSING:'#98A2B3',
 }
-
-function calcR2R(d: any) {
-  const landlordRent = parseFloat(d.rent)||0
-  const units = parseInt(d.rooms)||1
-  const residentRent = parseFloat(d.subletRent)||0
-  const wifi = parseFloat(d.wifiCost)||0
-  const utilities = parseFloat(d.utilitiesCost)||0
-  const management = parseFloat(d.managementCost)||0
-  const insurance = parseFloat(d.insuranceCost)||0
-  const propertyTax = parseFloat(d.propertyTaxCost)||0
-  const cleaning = parseFloat(d.cleaningCost)||0
-  const maintenance = parseFloat(d.maintenanceCost)||0
-  const marketing = parseFloat(d.marketingCost)||0
-  const vacancy = parseFloat(d.vacancyCost)||0
-  const furnitureCost = parseFloat(d.setupCost)||0
-  const leaseMonths = parseInt(d.leaseMonths)||12
-
-  const totalIncome = residentRent * units
-  const fixedCosts = landlordRent + wifi + utilities + management + insurance + propertyTax + cleaning + maintenance + marketing + vacancy
-  const monthlyCashflow = totalIncome - fixedCosts
-  const annualCashflow = monthlyCashflow * 12
-  const roi = furnitureCost > 0 ? (annualCashflow/furnitureCost*100) : 0
-  const paybackMonths = monthlyCashflow > 0 ? furnitureCost / monthlyCashflow : null
-  const withinLeaseTerm = paybackMonths !== null ? paybackMonths <= leaseMonths : null
-
-  return {
-    monthlyCashflow, annualCashflow, roi, totalIncome, monthlyExpenses: fixedCosts,
-    furnitureCost, paybackMonths, leaseMonths, withinLeaseTerm,
-    breakdown: { landlordRent, wifi, utilities, management, insurance, propertyTax, cleaning, maintenance, marketing, vacancy },
-  }
-}
-
-function calcFlip(d: any) {
-  const purchase = parseFloat(d.price)||0
-  const refurb = parseFloat(d.refurb)||0
-  const salePrice = parseFloat(d.salePrice)||0
-  const purchaseCosts = purchase * 0.05
-  const saleCosts = salePrice * 0.03
-  const totalCost = purchase + refurb + purchaseCosts + saleCosts
-  const profit = salePrice - totalCost
-  const roi = totalCost > 0 ? (profit/totalCost*100) : 0
-  return { totalCost, profit, roi, purchaseCosts, saleCosts }
-}
-
-function calcLand(d: any) {
-  const purchase = parseFloat(d.price)||0
-  const planningCost = parseFloat(d.planningCost)||5000
-  const gdv = parseFloat(d.gdv)||0
-  const buildCost = parseFloat(d.buildCost)||0
-  const totalCost = purchase + planningCost + buildCost
-  const profit = gdv - totalCost
-  const roi = totalCost > 0 ? (profit/totalCost*100) : 0
-  return { totalCost, profit, roi }
-}
-
-// Stress test: re-runs the same calc function with interest rate and/or
-// rent shocked, so an investor can see how cash flow and ROI hold up
-// under adverse conditions before committing -- the kind of check a
-// lender or serious investor does before funding a deal. Strategies
-// without recurring rental cash flow (flip, land) are one-off profit
-// plays, not "will this cash flow every month" plays, so they're
-// intentionally excluded rather than stress-tested for cash flow.
-function getStressScenarios(strategy: string) {
-  if (['btl','brrr','social','supported','hmo'].includes(strategy)) {
-    return [
-      { key:'base',  label:'Base Case',       ratePts:0, rentPct:0   },
-      { key:'rate',  label:'Interest +2%',    ratePts:2, rentPct:0   },
-      { key:'rent',  label:'Rent -10%',       ratePts:0, rentPct:-10 },
-      { key:'worst', label:'Worst Case',      ratePts:2, rentPct:-10 },
-    ]
-  }
-  if (strategy === 'r2r') {
-    return [
-      { key:'base',  label:'Base Case',        rentPct:0    },
-      { key:'rent10',label:'Resident Rent -10%',rentPct:-10 },
-      { key:'void',  label:'1 Month Void / Yr', rentPct:-8.3, note:'approximated as an equivalent income reduction' },
-      { key:'worst', label:'Worst Case',        rentPct:-18 },
-    ]
-  }
-  return null
-}
-
-function applyStress(strategy: string, form: any, scenario: { ratePts?: number; rentPct?: number }) {
-  const f = { ...form }
-  if (scenario.ratePts) {
-    const baseRate = parseFloat(f.mortgageRate) || (strategy==='hmo' ? 5.5 : 5)
-    f.mortgageRate = String(baseRate + scenario.ratePts)
-  }
-  if (scenario.rentPct) {
-    if (strategy === 'hmo') {
-      f.rentPerRoom = String((parseFloat(f.rentPerRoom)||600) * (1 + scenario.rentPct/100))
-    } else if (strategy === 'r2r') {
-      f.subletRent = String((parseFloat(f.subletRent)||0) * (1 + scenario.rentPct/100))
-    } else {
-      f.rent = String((parseFloat(f.rent)||0) * (1 + scenario.rentPct/100))
-    }
-  }
-  if (strategy==='btl'||strategy==='brrr') return calcBTL(f)
-  if (strategy==='social'||strategy==='supported') return calcBTL({ ...f, expenses: f.expenses||'10' })
-  if (strategy==='hmo') return calcHMO(f)
-  if (strategy==='r2r') return calcR2R(f)
-  return {}
+const CONFIDENCE_COLORS: Record<string,{color:string;bg:string}> = {
+  VERIFIED:     { color:'#10B981', bg:'#ECFDF5' },
+  USER_PROVIDED:{ color:'#3B82F6', bg:'#EFF6FF' },
+  ESTIMATED:    { color:'#F59E0B', bg:'#FEF3C7' },
+  MISSING:      { color:'#98A2B3', bg:'#F2F4F7' },
 }
 
 export default function InvestPage() {
@@ -183,6 +55,14 @@ export default function InvestPage() {
   const [showAddWatch, setShowAddWatch] = useState(false)
   const [userId, setUserId] = useState<string|null>(null)
   const [loadingData, setLoadingData] = useState(true)
+
+  // Deal Decision Engine state
+  const [savedDealId, setSavedDealId] = useState<string|null>(null)
+  const [verdict, setVerdict] = useState<any>(null)
+  const [verdictLoading, setVerdictLoading] = useState(false)
+  const [verdictError, setVerdictError] = useState<string|null>(null)
+  const [overrideReason, setOverrideReason] = useState('')
+  const [overrideSaving, setOverrideSaving] = useState<string|null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -248,6 +128,9 @@ export default function InvestPage() {
     r.address = form.address
     r.price = form.price
     setResult(r)
+    setSavedDealId(null)
+    setVerdict(null)
+    setVerdictError(null)
   }
 
   async function saveDeal() {
@@ -258,7 +141,45 @@ export default function InvestPage() {
     }).select().single()
     if (error) { alert(error.message); return }
     setSavedDeals([{ id: data.id, strategy: data.strategy, address: data.address, savedAt: new Date(data.created_at).toLocaleDateString(), ...dealData }, ...savedDeals])
+    setSavedDealId(data.id)
     alert('Deal saved!')
+  }
+
+  async function getVerdict() {
+    if (!savedDealId) return
+    setVerdictLoading(true)
+    setVerdictError(null)
+    try {
+      const res = await fetch('/api/deal-decision-engine', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ dealId: savedDealId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setVerdictError(data.error || 'Could not run the AI verdict.'); setVerdictLoading(false); return }
+      setVerdict(data)
+    } catch {
+      setVerdictError('Could not reach the AI verdict service — check your connection.')
+    }
+    setVerdictLoading(false)
+  }
+
+  async function submitOverride(overrideStatus: 'APPROVED'|'DUE_DILIGENCE'|'REJECTED') {
+    if (!verdict?.id) return
+    setOverrideSaving(overrideStatus)
+    try {
+      const res = await fetch('/api/deal-decision-engine/override', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ analysisId: verdict.id, overrideStatus, overrideReason: overrideReason || null }),
+      })
+      const data = await res.json()
+      if (!res.ok) { alert(data.error || 'Could not save the decision.'); setOverrideSaving(null); return }
+      setVerdict(data)
+    } catch {
+      alert('Could not reach the server — check your connection.')
+    }
+    setOverrideSaving(null)
   }
 
   async function deleteDeal(id: string) {
@@ -411,7 +332,7 @@ export default function InvestPage() {
             {result&&(
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
-                  <button onClick={()=>setResult(null)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
+                  <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#101828'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
                 </div>
@@ -566,10 +487,112 @@ export default function InvestPage() {
                   </div>
                 )}
 
-                <div style={{display:'flex',gap:12}}>
+                <div style={{display:'flex',gap:12,marginBottom:24}}>
                   <button onClick={saveDeal} style={{padding:'12px 24px',borderRadius:10,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>💾 Save Deal</button>
-                  <button onClick={()=>{setResult(null);setStrategy(null);setForm({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'})}} style={{padding:'12px 24px',borderRadius:10,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Start New Analysis</button>
+                  <button onClick={getVerdict} disabled={!savedDealId||verdictLoading} style={{padding:'12px 24px',borderRadius:10,border:'1px solid '+(savedDealId?BLUE:'#D0D5DD'),background:'#fff',color:savedDealId?BLUE:'#98A2B3',fontSize:14,fontWeight:600,cursor:savedDealId&&!verdictLoading?'pointer':'not-allowed',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Analysing…':'🤖 Get AI Verdict'}</button>
+                  <button onClick={()=>{setResult(null);setStrategy(null);setForm({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'});setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'12px 24px',borderRadius:10,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Start New Analysis</button>
                 </div>
+                {!savedDealId&&<div style={{fontSize:12,color:'#98A2B3',marginTop:-16,marginBottom:20}}>Save the deal first to unlock the AI verdict.</div>}
+                {verdictError&&<div style={{fontSize:13,color:'#EF4444',marginBottom:20}}>{verdictError}</div>}
+
+                {/* AI Deal Decision Engine verdict panel */}
+                {verdict&&(()=>{
+                  const vc = VERDICT_COLORS[verdict.status] || VERDICT_COLORS.REVIEW
+                  return (
+                  <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:28,marginBottom:24}}>
+                    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+                      <span style={{padding:'6px 16px',borderRadius:20,background:vc.bg,color:vc.color,border:'1px solid '+vc.border,fontSize:14,fontWeight:800,letterSpacing:0.5}}>{verdict.status}</span>
+                      <div style={{fontSize:16,fontWeight:700,color:'#101828'}}>AI Deal Verdict</div>
+                      {verdict.override_status&&(
+                        <span style={{marginLeft:'auto',fontSize:12,fontWeight:600,color:'#667085'}}>Human decision: <b style={{color:'#101828'}}>{verdict.override_status.replace('_',' ')}</b></span>
+                      )}
+                    </div>
+
+                    {verdict.ai_summary&&(
+                      <div style={{padding:'14px 16px',borderRadius:8,background:'#F9FAFB',border:'1px solid #E4E7EC',fontSize:13,color:'#344054',whiteSpace:'pre-wrap',lineHeight:1.7,marginBottom:20}}>{verdict.ai_summary}</div>
+                    )}
+                    {verdict.ai_error&&<div style={{fontSize:12,color:'#F59E0B',marginBottom:16}}>AI narration unavailable ({verdict.ai_error}) — the deterministic result below is still valid.</div>}
+
+                    {/* Rule-by-rule table */}
+                    <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Rule Checks</div>
+                    <div style={{border:'1px solid #E4E7EC',borderRadius:8,overflow:'hidden',marginBottom:20}}>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'8px 14px',background:'#F9FAFB',fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase'}}>
+                        <span>Rule</span><span>Result</span><span>Value</span><span>Threshold</span>
+                      </div>
+                      {(verdict.rule_results||[]).map((r:any,i:number)=>(
+                        <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'10px 14px',borderTop:'1px solid #F2F4F7',fontSize:12.5,alignItems:'center'}}>
+                          <span style={{color:'#344054'}}>{r.rule}</span>
+                          <span style={{fontWeight:700,color:RULE_STATUS_COLORS[r.result]||'#667085'}}>{r.result}</span>
+                          <span style={{color:'#101828'}}>{r.value}</span>
+                          <span style={{color:'#98A2B3'}}>{r.threshold}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Break-even occupancy */}
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
+                      <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:18}}>
+                        <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:6}}>Break-even Occupancy</div>
+                        <div style={{fontSize:22,fontWeight:800,color:'#101828'}}>{verdict.break_even!==null&&verdict.break_even!==undefined?verdict.break_even+'%':'N/A'}</div>
+                      </div>
+                      <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:18}}>
+                        <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:6}}>Missing Fields</div>
+                        <div style={{fontSize:22,fontWeight:800,color:(verdict.missing_fields||[]).length>0?'#F59E0B':'#10B981'}}>{(verdict.missing_fields||[]).length}</div>
+                      </div>
+                    </div>
+
+                    {/* Data confidence tags */}
+                    <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Data Confidence</div>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
+                      {(verdict.inputs_confidence||[]).map((f:any,i:number)=>{
+                        const cc = CONFIDENCE_COLORS[f.confidence]||CONFIDENCE_COLORS.MISSING
+                        return (
+                          <span key={i} title={f.note||''} style={{padding:'5px 10px',borderRadius:6,background:cc.bg,color:cc.color,fontSize:11.5,fontWeight:600}}>{f.field}: {f.value} · {f.confidence}</span>
+                        )
+                      })}
+                    </div>
+
+                    {/* Risk flags */}
+                    {(verdict.risk_flags||[]).length>0&&(
+                      <div style={{marginBottom:20}}>
+                        <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Risk Flags</div>
+                        {(verdict.risk_flags||[]).map((r:string,i:number)=>(
+                          <div key={i} style={{padding:'10px 14px',borderRadius:8,background:'#FEF3C7',border:'1px solid #FDE68A',fontSize:12.5,color:'#92400E',marginBottom:6}}>⚠ {r}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Due-diligence checklist */}
+                    <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Due-Diligence Checklist</div>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
+                      {Object.entries(verdict.checklist||{}).map(([group,items]:any)=>(
+                        <div key={group} style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
+                          <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:10}}>{group}</div>
+                          {items.map((it:any,i:number)=>(
+                            <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 0',fontSize:12.5,color:'#344054'}}>
+                              <span style={{width:14,height:14,borderRadius:3,border:'1.5px solid #D0D5DD',flexShrink:0}}></span>
+                              {it.item}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Human override */}
+                    <div style={{borderTop:'1px solid #E4E7EC',paddingTop:20}}>
+                      <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Human Decision</div>
+                      <textarea value={overrideReason} onChange={e=>setOverrideReason(e.target.value)} placeholder="Optional reason for your decision..." style={{...inp,minHeight:60,marginBottom:12,resize:'vertical' as const}}/>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
+                        <button onClick={()=>submitOverride('APPROVED')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#10B981',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='APPROVED'?'Saving…':'✓ Approve for Next Stage'}</button>
+                        <button onClick={()=>submitOverride('DUE_DILIGENCE')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#F59E0B',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='DUE_DILIGENCE'?'Saving…':'🔍 Send to Due Diligence'}</button>
+                        <button onClick={()=>submitOverride('REJECTED')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#EF4444',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='REJECTED'?'Saving…':'✕ Reject'}</button>
+                        <button onClick={()=>setResult(null)} style={{padding:'10px 18px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',color:'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✎ Edit Assumptions</button>
+                        <button onClick={getVerdict} disabled={verdictLoading} style={{padding:'10px 18px',borderRadius:8,border:'1px solid '+BLUE,background:'#fff',color:BLUE,fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Re-running…':'↻ Re-run Analysis'}</button>
+                      </div>
+                    </div>
+                  </div>
+                  )
+                })()}
               </div>
             )}
           </div>
