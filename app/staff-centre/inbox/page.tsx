@@ -22,10 +22,12 @@ const SMS_BG = '#FFF4E5'
 const SMS_FG = '#B45309'
 const TEAM_BG = '#F5F3FF'
 const TEAM_FG = '#7C3AED'
+const CALLS_BG = '#FFF1F2'
+const CALLS_FG = '#E11D48'
 const NON_STAFF_SENDER: Record<string,string> = { str_owner:'owner', pm_landlord:'landlord', pm_tenant:'tenant', estate_tenant:'tenant', estate_landlord:'landlord', whatsapp:'contact', sms:'contact' }
 
 const TABS = ['Unread', 'All'] as const
-const CHANNEL_PILLS = [{ key:'team', label:'Team Chat', bg:TEAM_BG, fg:TEAM_FG }, ...CHANNELS]
+const CHANNEL_PILLS = [{ key:'team', label:'Team Chat', bg:TEAM_BG, fg:TEAM_FG }, { key:'calls', label:'Calls', bg:CALLS_BG, fg:CALLS_FG }, ...CHANNELS]
 
 function initials(name: string) {
   return (name||'?').split(' ').filter(Boolean).slice(0,2).map((w:string)=>w[0]?.toUpperCase()).join('')
@@ -41,6 +43,14 @@ function relativeTime(iso: string) {
   const days = Math.floor(hours/24)
   return `${days} day${days===1?'':'s'} ago`
 }
+
+function fmtDuration(s: number | null) {
+  if (!s) return '—'
+  const m = Math.floor(s/60), sec = s%60
+  return `${m}:${String(sec).padStart(2,'0')}`
+}
+
+const CALL_STATUS_LABEL: Record<string,string> = { 'completed':'Completed', 'in-progress':'In progress', 'missed':'Missed', 'no-answer':'No answer', 'failed':'Failed' }
 
 export default function Page() {
   const [loading, setLoading] = useState(true)
@@ -87,8 +97,22 @@ export default function Page() {
       setTeam(teamRows ?? [])
     }
 
-    await Promise.all([loadExternal(id), loadTeamConversations(id), loadWaConnections()])
+    await Promise.all([loadExternal(id), loadTeamConversations(id), loadWaConnections(), loadCallLogs()])
     setLoading(false)
+  }
+
+  async function loadCallLogs() {
+    const res = await fetch('/api/voice/log', { headers: await authHeaders() })
+    if (!res.ok) return
+    const result = await res.json()
+    const callConvos = (result.calls ?? []).map((c:any) => ({
+      channel: 'calls', channelLabel: 'Calls', channelBg: CALLS_BG, channelFg: CALLS_FG,
+      recipientId: c.id, recipientName: c.contact_name || c.contact_phone || 'Unknown',
+      lastMessage: `${c.direction === 'outbound' ? 'Outgoing' : 'Incoming'} · ${CALL_STATUS_LABEL[c.status] ?? c.status} · ${fmtDuration(c.duration_seconds)}`,
+      lastAt: c.created_at, unread: false,
+      callDirection: c.direction, callStatus: c.status, callDuration: c.duration_seconds, callPhone: c.contact_phone,
+    }))
+    setConversations(prev => [...prev.filter(c=>c.channel!=='calls'), ...callConvos])
   }
 
   async function loadWaConnections() {
@@ -183,6 +207,7 @@ export default function Page() {
 
   async function openThread(convo: any) {
     setOpenConvo(convo)
+    if (convo.channel === 'calls') { setThread([]); return }
     if (convo.channel === 'whatsapp' || convo.channel === 'sms') {
       const base = convo.channel === 'whatsapp' ? '/api/whatsapp/messages' : '/api/sms/messages'
       const res = await fetch(`${base}?connection_id=${convo.connectionId}&contact_phone=${encodeURIComponent(convo.recipientId)}`, { headers: await authHeaders() })
@@ -276,13 +301,14 @@ export default function Page() {
   const unreadCount = conversations.filter(c=>c.unread).length
   const isOpenTeam = openConvo?.channel === 'team'
   const canCallOpenTeam = isOpenTeam && !!openConvo?.teamMemberEmail
+  const isOpenCalls = openConvo?.channel === 'calls'
 
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Inbox {unreadCount>0&&<span style={{marginLeft:8,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Conversations {unreadCount>0&&<span style={{marginLeft:8,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
         </div>
         {identity.isAdmin && (
           <button onClick={()=>setShowNewConvo(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:12.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Team Conversation</button>
@@ -329,7 +355,7 @@ export default function Page() {
               <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',fontSize:13}}>{tab==='Unread' ? 'All caught up.' : 'No conversations yet.'}</div>
             ):sorted.map((c:any)=>(
               <div key={c.channel+c.recipientId} onClick={()=>openThread(c)} style={{padding:'14px 18px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openConvo?.recipientId===c.recipientId&&openConvo?.channel===c.channel?'#F5F6FF':'transparent',display:'flex',gap:10}}>
-                <div style={{width:36,height:36,borderRadius:'50%',background:c.channelBg,color:c.channelFg,fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{initials(c.recipientName)}</div>
+                <div style={{width:36,height:36,borderRadius:'50%',background:c.channelBg,color:c.channelFg,fontSize:c.channel==='calls'?16:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{c.channel==='calls' ? '📞' : initials(c.recipientName)}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <span style={{fontSize:13,fontWeight:c.unread?700:500,color:'#101828'}}>{c.recipientName}</span>
@@ -347,6 +373,17 @@ export default function Page() {
         <div style={{flex:1,display:'flex',flexDirection:'column' as const}}>
           {!openConvo?(
             <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3',fontSize:13}}>Select a conversation</div>
+          ):isOpenCalls?(
+            <div style={{flex:1,display:'flex',flexDirection:'column' as const,alignItems:'center',justifyContent:'center',gap:16,padding:24}}>
+              <div style={{width:64,height:64,borderRadius:'50%',background:CALLS_BG,color:CALLS_FG,fontSize:26,display:'flex',alignItems:'center',justifyContent:'center'}}>📞</div>
+              <div style={{textAlign:'center' as const}}>
+                <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>{openConvo.recipientName}</div>
+                <div style={{fontSize:13,color:'#667085',marginTop:4}}>{openConvo.callDirection==='outbound'?'Outgoing call':'Incoming call'} · {CALL_STATUS_LABEL[openConvo.callStatus] ?? openConvo.callStatus}</div>
+                <div style={{fontSize:13,color:'#667085',marginTop:2}}>Duration: {fmtDuration(openConvo.callDuration)}</div>
+                <div style={{fontSize:12,color:'#98A2B3',marginTop:8}}>{new Date(openConvo.lastAt).toLocaleString()}</div>
+              </div>
+              {openConvo.callPhone && <CallButton phone={openConvo.callPhone} name={openConvo.recipientName} size={22}/>}
+            </div>
           ):(
             <>
               <div style={{padding:'16px 24px',borderBottom:'1px solid #E4E7EC',background:'#fff',display:'flex',alignItems:'center',gap:10}}>
@@ -384,7 +421,7 @@ export default function Page() {
           )}
         </div>
 
-        {openConvo && (
+        {openConvo && !isOpenCalls && (
           <div style={{width:280,borderLeft:'1px solid #E4E7EC',background:'#fff',padding:24,overflowY:'auto' as const}}>
             <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:16}}>Details</div>
             <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',marginBottom:20}}>
