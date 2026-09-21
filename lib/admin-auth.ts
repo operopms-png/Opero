@@ -7,10 +7,6 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export const serviceClient = createClient(url, serviceKey)
 
-// Verifies the request's bearer token belongs to a real, logged-in user,
-// with no restriction on staff vs owner. Returns the verified user's id,
-// or null if the token is missing/invalid. Callers MUST use this id (not
-// any user_id sent in the request body) for every subsequent query.
 export async function requireUser(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get('authorization') ?? ''
   const token = authHeader.replace('Bearer ', '')
@@ -24,9 +20,6 @@ export async function requireUser(req: NextRequest): Promise<string | null> {
   return user.id
 }
 
-// Verifies the request's bearer token belongs to a real, logged-in user who
-// has no owner_profiles row — i.e. staff/admin, same rule the client uses.
-// Returns the staff user's id, or null if the request should be rejected.
 export async function requireStaff(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get('authorization') ?? ''
   const token = authHeader.replace('Bearer ', '')
@@ -44,6 +37,47 @@ export async function requireStaff(req: NextRequest): Promise<string | null> {
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (profile) return null // this user IS an owner, not staff
+  if (profile) return null
   return user.id
+}
+
+// Resolves a verified staff/business id (from requireStaff/requireUser) to
+// the actual business's user_id -- the id every business-scoped table
+// (crm_*, whatsapp_*, call_logs, etc.) is keyed on. For the business's own
+// direct login these are the same id. For a team member with their own
+// separate login, team_members.email maps them to the business owner's
+// user_id -- same lookup the RLS policies use client-side, mirrored here
+// for server routes that need it before querying.
+export async function resolveBusinessUserId(staffId: string, email: string | null | undefined): Promise<string> {
+  if (email) {
+    const { data: member } = await serviceClient
+      .from('team_members')
+      .select('user_id')
+      .eq('email', email)
+      .maybeSingle()
+    if (member?.user_id) return member.user_id
+  }
+  return staffId
+}
+
+export async function requireStaffWithBusiness(req: NextRequest): Promise<{ staffId: string; email: string | null; businessId: string } | null> {
+  const authHeader = req.headers.get('authorization') ?? ''
+  const token = authHeader.replace('Bearer ', '')
+  if (!token) return null
+
+  const asUser = createClient(url, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  })
+  const { data: { user }, error } = await asUser.auth.getUser(token)
+  if (error || !user) return null
+
+  const { data: profile } = await serviceClient
+    .from('owner_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (profile) return null
+
+  const businessId = await resolveBusinessUserId(user.id, user.email)
+  return { staffId: user.id, email: user.email ?? null, businessId }
 }
