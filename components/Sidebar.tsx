@@ -219,11 +219,6 @@ export default function Sidebar() {
 
       {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #F2F4F7' }}>
-        {plan !== 'professional' && (
-          <a href="/modules" title={isCollapsed ? 'Upgrade plan' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 7, background: '#3B4AFF', color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 6 }}>
-            {isCollapsed ? '↑' : 'Upgrade plan'}
-          </a>
-        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#3B4AFF', flexShrink: 0 }} title={isCollapsed ? userEmail : undefined}>
             {userEmail.charAt(0).toUpperCase()}
