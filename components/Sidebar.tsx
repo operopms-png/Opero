@@ -43,11 +43,6 @@ const NAV_GROUPS = [
   },
   {
     label: 'Staff Centre',
-    // Not a purchasable module like the others above -- it's a shared
-    // home for tools that used to be duplicated inside every module
-    // (CRM/Marketing/Sales) plus staff-specific tools. Visible to
-    // anyone who has at least one real module unlocked, not gated
-    // behind its own separate price/lock.
     module: 'staffcentre',
     staffCentre: true,
     items: [
@@ -156,7 +151,7 @@ export default function Sidebar() {
     return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Logo */}
-      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #DCE4FA', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           {!isCollapsed && <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>Opero</span>}
@@ -168,7 +163,7 @@ export default function Sidebar() {
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         className="desktop-sidebar"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-end', padding: isCollapsed ? '8px 0' : '6px 14px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#98A2B3', borderBottom: '1px solid #F2F4F7' }}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: isCollapsed ? 'center' : 'flex-end', padding: isCollapsed ? '8px 0' : '6px 14px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#6B7A99', borderBottom: '1px solid #DCE4FA' }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
       </button>
@@ -184,11 +179,11 @@ export default function Sidebar() {
             : (modules.includes(group.module) && roleModules.includes(group.module))
           return (
             <div key={group.label}>
-              {gi > 0 && <div style={{ height: 1, background: '#F2F4F7', margin: '6px 0' }} />}
+              {gi > 0 && <div style={{ height: 1, background: '#DCE4FA', margin: '6px 0' }} />}
               {!isCollapsed && (
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {group.label}
-                  {!hasModule && (group as any).modulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#F2F4F7', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{(group as any).modulePrice}</span>}
+                  {!hasModule && (group as any).modulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#DCE4FA', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{(group as any).modulePrice}</span>}
                 </div>
               )}
               {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice }: any) => {
@@ -202,7 +197,7 @@ export default function Sidebar() {
                   <Link key={href} href={linkHref}
                     title={isCollapsed ? label : undefined}
                     onClick={(e: any) => { if (!itemHasModule && !requiresModule) e.preventDefault(); else if (itemHasModule && !hasAccess) e.preventDefault(); else setOpen(false) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#EEF0FF' : 'transparent', color: !itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#D7E0FF' : 'transparent', color: !itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
                     <Icon name={icon} size={16} color={!itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#667085'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
                     {!isCollapsed && !itemHasModule && requiresModulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#F2F4F7', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{requiresModulePrice}</span>}
@@ -218,7 +213,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div style={{ padding: '10px', borderTop: '1px solid #F2F4F7' }}>
+      <div style={{ padding: '10px', borderTop: '1px solid #DCE4FA' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#3B4AFF', flexShrink: 0 }} title={isCollapsed ? userEmail : undefined}>
             {userEmail.charAt(0).toUpperCase()}
@@ -252,7 +247,7 @@ export default function Sidebar() {
         @media(max-width:768px){.desktop-sidebar{display:none!important}.mobile-trigger{display:flex!important}}
         @media(min-width:769px){.mobile-trigger{display:none!important}.mobile-overlay{display:none!important}}
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        .sidebar-nav a:hover { background: #F9FAFB !important; }
+        .sidebar-nav a:hover { background: #DCE4FA !important; }
       `}</style>
       {open && <div className="mobile-overlay" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />}
       <button
@@ -263,10 +258,10 @@ export default function Sidebar() {
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#fff', zIndex: 50, borderRight: '1px solid #F2F4F7', fontFamily: "'Inter', sans-serif" }}>
+      <aside style={{ display: open ? 'block' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 240, background: '#EAF0FF', zIndex: 50, borderRight: '1px solid #DCE4FA', fontFamily: "'Inter', sans-serif" }}>
         {mobileNav}
       </aside>
-      <aside className="sidebar-nav desktop-sidebar" style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH, height: '100vh', background: '#fff', borderRight: '1px solid #F2F4F7', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto', transition: 'width 0.15s ease' }}>
+      <aside className="sidebar-nav desktop-sidebar" style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH, height: '100vh', background: '#EAF0FF', borderRight: '1px solid #DCE4FA', position: 'fixed', top: 0, left: 0, zIndex: 40, fontFamily: "'Inter', sans-serif", overflowY: 'auto', transition: 'width 0.15s ease' }}>
         {nav}
       </aside>
     </>
