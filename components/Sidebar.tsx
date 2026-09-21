@@ -60,7 +60,7 @@ const NAV_GROUPS = [
       { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users' },
       { href: '/staff-centre/training', label: 'Staff Training', key: 'staffcentre', icon: 'graduation' },
       { href: '/settings?section=Schedule', label: 'Schedule', key: 'staffcentre', icon: 'calendar' },
-      { href: '/settings?section=Tasks', label: 'Tasks', key: 'staffcentre', icon: 'file' },
+      { href: '/staff-centre/tasks', label: 'Tasks', key: 'staffcentre', icon: 'file' },
       { href: '/staff-centre/calls', label: 'Calls', key: 'staffcentre', icon: 'phone' },
     ]
   },
