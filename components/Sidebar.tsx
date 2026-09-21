@@ -43,6 +43,11 @@ const NAV_GROUPS = [
   },
   {
     label: 'Staff Centre',
+    // Not a purchasable module like the others above -- it's a shared
+    // home for tools that used to be duplicated inside every module
+    // (CRM/Marketing/Sales) plus staff-specific tools. Visible to
+    // anyone who has at least one real module unlocked, not gated
+    // behind its own separate price/lock.
     module: 'staffcentre',
     staffCentre: true,
     items: [
@@ -50,6 +55,7 @@ const NAV_GROUPS = [
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message' },
+      { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe' },
       { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench' },
       { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts' },
       { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles' },
@@ -101,6 +107,7 @@ function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?
     calculator: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>,
     phone:    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>,
     graduation: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>,
+    globe:    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
   }
   return icons[name] ?? <span style={{ width: size, height: size, display: 'block' }} />
 }
@@ -148,6 +155,7 @@ export default function Sidebar() {
   function buildNav(isCollapsed: boolean) {
     return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
@@ -165,6 +173,7 @@ export default function Sidebar() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
       </button>
 
+      {/* Nav */}
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
@@ -208,6 +217,7 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #F2F4F7' }}>
         {plan !== 'professional' && (
           <a href="/modules" title={isCollapsed ? 'Upgrade plan' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 7, background: '#3B4AFF', color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 6 }}>
