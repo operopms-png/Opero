@@ -58,6 +58,7 @@ function SettingsInner() {
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskForm, setTaskForm] = useState({title:'',assigned_to:'',status:'On track',due_date:'',notes:''})
   const [savingTask, setSavingTask] = useState(false)
+  const [buyingPlan, setBuyingPlan] = useState<string|null>(null)
 
   useEffect(() => {
     if(roleLoading) return
@@ -94,6 +95,14 @@ function SettingsInner() {
       setLoading(false)
     })
   },[])
+
+  async function buyPlan(planKey: string) {
+    setBuyingPlan(planKey)
+    const res = await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:planKey,email:user?.email})})
+    const result = await res.json()
+    if(result.url) window.location.href = result.url
+    else { alert(result.error || 'Could not start checkout'); setBuyingPlan(null) }
+  }
 
   useEffect(() => {
     if (!user) return
@@ -485,14 +494,16 @@ function SettingsInner() {
                   <div style={{fontSize:13,color:'#667085'}}>Your subscription details</div>
                 </div>
                 <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>{({aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency',bundle:'All Modules Bundle'} as any)[plan] ?? plan}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>{({aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency',bundle:'All Modules (one-time)',all_monthly:'All Modules (monthly)'} as any)[plan] ?? plan}</div>
                   <div style={{fontSize:12,color:'#667085'}}>Active</div>
                 </div>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
                 {(plan==='bundle'
                   ? [{l:'All modules included',icon:'✅'},{l:'One-time payment',icon:'💳'},{l:'No recurring fees',icon:'⚡'}]
-                  : [{l:{aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency'}[plan] ?? plan,icon:'📦'},{l:'Billed monthly',icon:'🗓️'},{l:'Add more modules anytime',icon:'➕'}]
+                  : plan==='all_monthly'
+                  ? [{l:'All modules included',icon:'✅'},{l:'Billed monthly',icon:'🗓️'},{l:'Cancel anytime',icon:'✋'}]
+                  : [{l:{aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency'}[plan] ?? plan,icon:'📦'},{l:'Billed monthly',icon:'🗓️'},{l:'Legacy module plan',icon:'📌'}]
                 ).map(f=>(
                   <div key={f.l} style={{padding:16,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8}}>
                     <span style={{fontSize:18}}>{f.icon}</span>
@@ -524,44 +535,21 @@ function SettingsInner() {
               )}
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Modules</h3>
-              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>Opero is priced à la carte — add only the modules you need, or take the full bundle.</div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                {[
-                  {key:'aipm',name:'AI Property Manager',price:'£9.99',period:'/mo'},
-                  {key:'invest',name:'Deal Analyser',price:'£19',period:'/mo'},
-                  {key:'str',name:'Vacation Rentals (STR)',price:'£29',period:'/mo'},
-                  {key:'pm',name:'Property Management',price:'£39',period:'/mo'},
-                  {key:'dev',name:'Developments',price:'£49',period:'/mo'},
-                  {key:'ea',name:'Estate Agency',price:'£59',period:'/mo'},
-                ].map(p=>(
-                  <div key={p.key} style={{border:'2px solid '+(p.key===plan?ACCENT:'#E4E7EC'),borderRadius:10,padding:20,background:p.key===plan?ACCENT+'08':'#fff'}}>
-                    <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>{p.name}</div>
-                    <div style={{fontSize:22,fontWeight:700,color:ACCENT,marginBottom:12}}>{p.price}<span style={{fontSize:12,color:'#667085',fontWeight:400}}>{p.period}</span></div>
-                    <button onClick={async ()=>{
-                      const res = await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:p.key})})
-                      const result = await res.json()
-                      if(result.url) window.location.href = result.url
-                      else alert(result.error || 'Could not start checkout')
-                    }} style={{width:'100%',marginTop:12,padding:'8px',borderRadius:8,border:'none',background:p.key===plan?ACCENT:'#F2F4F7',color:p.key===plan?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{p.key===plan?'Current plan':'Add module'}</button>
-                  </div>
-                ))}
-                <div style={{border:'2px solid '+(plan==='bundle'?ACCENT:'#C9A84C'),borderRadius:10,padding:20,background:plan==='bundle'?ACCENT+'08':'#FBF4E6',gridColumn:'span 3'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <div>
-                      <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>All Modules Bundle</div>
-                      <div style={{fontSize:12,color:'#667085'}}>Every module above, one-time payment — no recurring per-module fees.</div>
-                    </div>
-                    <div style={{display:'flex',alignItems:'center',gap:16}}>
-                      <div style={{fontSize:22,fontWeight:700,color:'#C9A84C'}}>£175.50</div>
-                      <button onClick={async ()=>{
-                        const res = await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:'bundle'})})
-                        const result = await res.json()
-                        if(result.url) window.location.href = result.url
-                        else alert(result.error || 'Could not start checkout')
-                      }} style={{padding:'10px 20px',borderRadius:8,border:'none',background:plan==='bundle'?ACCENT:'#C9A84C',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{plan==='bundle'?'Current plan':'Get the bundle'}</button>
-                    </div>
-                  </div>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Plans</h3>
+              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>One plan unlocks every module — Vacation Rentals, Property Management, Estate Agency, Developments, AI Property Manager, Deal Analyser and the whole Staff Centre.</div>
+
+              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16}}>
+                <div style={{border:'2px solid '+(plan==='all_monthly'?ACCENT:'#E4E7EC'),borderRadius:12,padding:24,background:plan==='all_monthly'?ACCENT+'08':'#fff'}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>Monthly</div>
+                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, billed every month. Cancel anytime.</div>
+                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£79<span style={{fontSize:14,color:'#98A2B3',fontWeight:400}}>/mo</span></div>
+                  <button onClick={()=>buyPlan('all_monthly')} disabled={buyingPlan==='all_monthly'||plan==='all_monthly'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='all_monthly'?'#F2F4F7':ACCENT,color:plan==='all_monthly'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='all_monthly'?0.6:1}}>{plan==='all_monthly'?'Current plan':buyingPlan==='all_monthly'?'Redirecting…':'Choose monthly'}</button>
+                </div>
+                <div style={{border:'2px solid '+(plan==='bundle'?ACCENT:'#C9A84C'),borderRadius:12,padding:24,background:plan==='bundle'?ACCENT+'08':'#FBF4E6'}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>One-time payment</div>
+                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, pay once, keep it forever — no recurring fees.</div>
+                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£175.50</div>
+                  <button onClick={()=>buyPlan('bundle')} disabled={buyingPlan==='bundle'||plan==='bundle'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='bundle'?'#F2F4F7':'#C9A84C',color:plan==='bundle'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='bundle'?0.6:1}}>{plan==='bundle'?'Current plan':buyingPlan==='bundle'?'Redirecting…':'Pay once'}</button>
                 </div>
               </div>
             </div>
