@@ -27,7 +27,7 @@ const NAV_GROUPS = [
   },
   {
     label: 'Estate Agency',
-    module: 'estate',
+    module: 'ea',
     modulePrice: '£59/mo',
     items: [
       { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
@@ -49,7 +49,7 @@ const NAV_GROUPS = [
       { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles', requiresModule: 'aipm', requiresModulePrice: '£9.99/mo' },
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
-      { href: '/staff-centre/inbox', label: 'Inbox', key: 'staffcentre', icon: 'message' },
+      { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message' },
       { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench' },
       { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts' },
       { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles' },
@@ -59,9 +59,8 @@ const NAV_GROUPS = [
       { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup' },
       { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users' },
       { href: '/staff-centre/training', label: 'Staff Training', key: 'staffcentre', icon: 'graduation' },
-      { href: '/settings?section=Schedule', label: 'Schedule', key: 'staffcentre', icon: 'calendar' },
+      { href: '/staff-centre/calendar', label: 'Calendar', key: 'staffcentre', icon: 'calendar' },
       { href: '/staff-centre/tasks', label: 'Tasks', key: 'staffcentre', icon: 'file' },
-      { href: '/staff-centre/calls', label: 'Calls', key: 'staffcentre', icon: 'phone' },
     ]
   },
 ]
