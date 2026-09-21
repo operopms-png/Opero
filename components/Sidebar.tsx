@@ -27,7 +27,7 @@ const NAV_GROUPS = [
   },
   {
     label: 'Estate Agency',
-    module: 'ea',
+    module: 'estate',
     modulePrice: '£59/mo',
     items: [
       { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
@@ -43,11 +43,6 @@ const NAV_GROUPS = [
   },
   {
     label: 'Staff Centre',
-    // Not a purchasable module like the others above -- it's a shared
-    // home for tools that used to be duplicated inside every module
-    // (CRM/Marketing/Sales) plus staff-specific tools. Visible to
-    // anyone who has at least one real module unlocked, not gated
-    // behind its own separate price/lock.
     module: 'staffcentre',
     staffCentre: true,
     items: [
@@ -63,9 +58,10 @@ const NAV_GROUPS = [
       { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },
       { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup' },
       { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users' },
+      { href: '/staff-centre/training', label: 'Staff Training', key: 'staffcentre', icon: 'graduation' },
       { href: '/settings?section=Schedule', label: 'Schedule', key: 'staffcentre', icon: 'calendar' },
       { href: '/settings?section=Tasks', label: 'Tasks', key: 'staffcentre', icon: 'file' },
-      { href: '/team-chat', label: 'Team Chat', key: 'staffcentre', icon: 'users' },
+      { href: '/staff-centre/calls', label: 'Calls', key: 'staffcentre', icon: 'phone' },
     ]
   },
 ]
@@ -104,6 +100,8 @@ function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?
     contacts: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
     trendingup: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
     calculator: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>,
+    phone:    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>,
+    graduation: <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>,
   }
   return icons[name] ?? <span style={{ width: size, height: size, display: 'block' }} />
 }
@@ -124,7 +122,14 @@ export default function Sidebar() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUserEmail(user.email ?? '')
-        const { data: sub } = await supabase.from('subscriptions').select('plan, modules').eq('user_id', user.id).single()
+        const { data: rows } = await supabase
+          .from('team_members')
+          .select('user_id')
+          .eq('email', user.email)
+          .order('created_at', { ascending: false })
+          .limit(1)
+        const ownerId = rows?.[0]?.user_id ?? user.id
+        const { data: sub } = await supabase.from('subscriptions').select('plan, modules').eq('user_id', ownerId).single()
         if (sub) {
           if ((sub as any).plan) setPlan((sub as any).plan)
           if ((sub as any).modules) setModules((sub as any).modules ?? [])
@@ -144,7 +149,6 @@ export default function Sidebar() {
   function buildNav(isCollapsed: boolean) {
     return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
@@ -162,7 +166,6 @@ export default function Sidebar() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
       </button>
 
-      {/* Nav */}
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
@@ -181,12 +184,6 @@ export default function Sidebar() {
                 </div>
               )}
               {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice }: any) => {
-                // Most items just inherit their group's access check. A
-                // few (like AI Property Manager, living inside the
-                // shared Staff Centre group but still a real £9.99/mo
-                // module) need their own module requirement so moving
-                // them into a shared group doesn't accidentally waive
-                // their paywall for anyone with any other module.
                 const itemHasModule = requiresModule
                   ? (modules.includes(requiresModule) && roleModules.includes(requiresModule))
                   : hasModule
@@ -212,7 +209,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #F2F4F7' }}>
         {plan !== 'professional' && (
           <a href="/modules" title={isCollapsed ? 'Upgrade plan' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 7, background: '#3B4AFF', color: '#fff', fontSize: 12.5, fontWeight: 600, textDecoration: 'none', marginBottom: 6 }}>
