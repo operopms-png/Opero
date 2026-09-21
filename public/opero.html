@@ -20,7 +20,7 @@ a{text-decoration:none;color:inherit}
 .card-title{font-size:15.5px;font-weight:600;margin-bottom:8px;color:#101828;letter-spacing:-0.01em}
 .card-desc{font-size:13.5px;color:#667085;line-height:1.65}
 .competitor-tag{background:#FEE2E2;color:#991B1B;font-size:11px;padding:3px 10px;border-radius:6px;display:inline-block;margin:2px}
-nav{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid #F2F4F7;background:#fff;position:sticky;top:0;z-index:100}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid transparent;background:transparent;position:sticky;top:0;z-index:100}
 .nav-links{display:flex;align-items:center;gap:28px}
 .nav-links a{font-size:14px;color:#667085}
 .module-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F9FAFB;border-radius:14px;border:1px solid #E4E7EC;padding:28px 36px}
@@ -56,32 +56,25 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
   <div style="display:flex;align-items:center;gap:10px">
     <img src="/logo.PNG" alt="Opero" style="height:36px;width:auto"/>
   </div>
-  <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')" style="display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px"><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div><div style="width:15px;height:2px;background:#101828;border-radius:2px"></div><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div></button><div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#ai-agents">AI Agents</a>
-    <a href="#pricing">Pricing</a>
-    
-    <a href="#compare">Compare</a>
-    <a href="#reviews">Reviews</a>
-  </div>
+  <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')" style="display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px"><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div><div style="width:15px;height:2px;background:#101828;border-radius:2px"></div><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div></button>
   <div style="display:flex;align-items:center;gap:10px">
     <button class="btn-outline" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Log in</button>
     <button class="btn-primary" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Start free trial <i class="ti ti-arrow-right"></i></button>
   </div>
-</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('open')">Features</a><a href="#ai-agents" onclick="document.getElementById('mobileMenu').classList.remove('open')">AI Agents</a><a href="#pricing" onclick="document.getElementById('mobileMenu').classList.remove('open')">Pricing</a><a href="#compare" onclick="document.getElementById('mobileMenu').classList.remove('open')">Compare</a><a href="#reviews" onclick="document.getElementById('mobileMenu').classList.remove('open')">Reviews</a><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
+</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><button onclick="window.location.href='/login'" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
 
 <section class="section" id="see-it-in-action" style="background:#F9FAFB">
-  <div style="max-width:1100px;margin:0 auto">
+  <div style="max-width:1300px;margin:0 auto">
 
     <style>
-    .seia-grid{display:flex;gap:48px;align-items:center}
-    .seia-text{text-align:left;flex:0 0 360px;max-width:360px}
+    .seia-grid{display:flex;gap:40px;align-items:center}
+    .seia-text{text-align:left;flex:0 0 300px;max-width:300px}
     .seia-text .tag{display:inline-block}
-    .seia-text h2{font-size:60px;font-weight:800;line-height:1.05;margin:10px 0 16px;letter-spacing:-0.02em}
+    .seia-text h2{font-size:52px;font-weight:800;line-height:1.08;margin:10px 0 16px;letter-spacing:-0.02em}
     .seia-text p{font-size:15px;color:#667085;margin:0 0 20px}
     .seia-signup-btn{background:#5B7CFA;color:#fff;border:none;padding:14px 26px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
     .seia-signup-note{font-size:12px;color:#98A2B3;margin:12px 0 0}
-    @media(max-width:900px){.seia-text h2{font-size:40px}}
+    @media(max-width:900px){.seia-text h2{font-size:36px}}
     .seia-devices{flex:1;min-width:0}
     @media(max-width:900px){.seia-grid{flex-direction:column}.seia-text{flex:0 0 auto;max-width:100%;text-align:center}}
     </style>
@@ -90,41 +83,42 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
       <div class="seia-text">
         <span class="tag">See it in action</span>
         <h2>One login. Every module.</h2>
-        <p>Switch between Vacation Rentals, Property Management, Estate Agency, Developments and AI Agents — same login, same dashboard family.</p>
+        <p>Switch between Vacation Rentals, Property Management, Estate Agency, Developments and Staff Centre — same login, same dashboard family.</p>
+        <p style="font-size:14px;font-weight:600;color:#5B7CFA;margin:-4px 0 20px">One plan, every module — £79/mo or £175.50 one-time.</p>
         <button class="seia-signup-btn" onclick="window.location.href='/login'">Sign up for free <i class="ti ti-arrow-right"></i></button>
         <p class="seia-signup-note">14-day free trial · no credit card required</p>
       </div>
 
       <div class="seia-devices">
     <style>
-    .prev-tabs{display:flex;gap:8px;background:#0d0d1a;padding:6px;border-radius:12px;margin:0 0 28px;width:fit-content;flex-wrap:wrap}
-    .prev-tab{padding:10px 22px;border-radius:8px;border:none;background:transparent;color:#9999b3;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
+    .prev-tabs{display:flex;gap:8px;background:#0d0d1a;padding:7px;border-radius:14px;margin:0 0 32px;width:fit-content;flex-wrap:wrap}
+    .prev-tab{padding:12px 24px;border-radius:9px;border:none;background:transparent;color:#9999b3;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
     .prev-tab.prev-on{background:#5B7CFA;color:#fff}
     .prev-tab:hover:not(.prev-on){color:#fff;background:rgba(255,255,255,0.08)}
-    .prev-devices{display:flex;gap:24px;align-items:flex-start;justify-content:flex-start;flex-wrap:wrap}
-    .prev-laptop{width:480px;max-width:100%}
-    .prev-laptop-screen{background:#1a1a1a;border-radius:12px 12px 0 0;padding:12px 12px 0;box-shadow:0 30px 80px rgba(0,0,0,0.35)}
-    .prev-laptop-inner{background:#fff;border-radius:6px;overflow:hidden;height:320px;position:relative}
-    .prev-laptop-base{height:16px;background:linear-gradient(180deg,#3a3a3a,#2a2a2a);border-radius:0 0 9px 9px;position:relative}
-    .prev-laptop-base::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:80px;height:4px;background:#1a1a1a;border-radius:0 0 5px 5px}
-    .prev-phone{width:170px;background:#0d0d0d;border-radius:30px;padding:8px;border:5px solid #2a2a2a;box-shadow:0 24px 70px rgba(0,0,0,0.35);position:relative;flex-shrink:0}
-    .prev-phone::before{content:'';position:absolute;top:16px;left:50%;transform:translateX(-50%);width:50px;height:4px;background:#1a1a1a;border-radius:8px;z-index:5}
-    .prev-phone-screen{background:#fff;border-radius:22px;overflow:hidden;height:340px;position:relative}
+    .prev-devices{display:flex;gap:32px;align-items:flex-start;justify-content:flex-start;flex-wrap:nowrap}
+    .prev-laptop{width:640px;max-width:100%}
+    .prev-laptop-screen{background:#1a1a1a;border-radius:16px 16px 0 0;padding:16px 16px 0;box-shadow:0 36px 90px rgba(0,0,0,0.35)}
+    .prev-laptop-inner{background:#fff;border-radius:8px;overflow:hidden;height:420px;position:relative}
+    .prev-laptop-base{height:20px;background:linear-gradient(180deg,#3a3a3a,#2a2a2a);border-radius:0 0 11px 11px;position:relative}
+    .prev-laptop-base::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:5px;background:#1a1a1a;border-radius:0 0 6px 6px}
+    .prev-phone{width:220px;background:#0d0d0d;border-radius:38px;padding:10px;border:6px solid #2a2a2a;box-shadow:0 30px 80px rgba(0,0,0,0.35);position:relative;flex-shrink:0}
+    .prev-phone::before{content:'';position:absolute;top:20px;left:50%;transform:translateX(-50%);width:64px;height:5px;background:#1a1a1a;border-radius:10px;z-index:5}
+    .prev-phone-screen{background:#fff;border-radius:28px;overflow:hidden;height:440px;position:relative}
     .prev-ui{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif}
     .prev-screen{display:none;height:100%}
     .prev-screen.prev-on{display:flex}
     .prev-pscreen{display:none;height:100%;flex-direction:column}
     .prev-pscreen.prev-on{display:flex}
-    .prev-sidebar{width:120px;background:#fff;border-right:1px solid #F2F4F7;padding:8px 0;flex-shrink:0;overflow:hidden}
-    .prev-logo-row{padding:0 10px 8px;border-bottom:1px solid #F2F4F7;margin-bottom:5px;display:flex;align-items:center;gap:4px}
-    .prev-nav-group{font-size:7px;font-weight:700;color:#98A2B3;text-transform:uppercase;padding:4px 12px 2px}
-    .prev-nav-item{padding:4px 12px;font-size:9px;color:#667085}
-    .prev-nav-item.prev-on{margin:0 6px;padding:4px 6px;border-radius:5px;background:#EEF1FF;color:#5B7CFA;font-weight:600}
-    .prev-main{flex:1;padding:11px;overflow:hidden}
-    .prev-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
-    .prev-stat{background:#F9FAFB;border:1px solid #E4E7EC;border-radius:7px;padding:6px}
-    .prev-stat-label{font-size:6px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:2px}
-    .prev-stat-value{font-size:13px;font-weight:700;color:#101828}
+    .prev-sidebar{width:150px;background:#fff;border-right:1px solid #F2F4F7;padding:10px 0;flex-shrink:0;overflow:hidden}
+    .prev-logo-row{padding:0 13px 10px;border-bottom:1px solid #F2F4F7;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+    .prev-nav-group{font-size:9px;font-weight:700;color:#98A2B3;text-transform:uppercase;padding:5px 15px 3px}
+    .prev-nav-item{padding:5px 15px;font-size:11px;color:#667085}
+    .prev-nav-item.prev-on{margin:0 8px;padding:5px 8px;border-radius:6px;background:#EEF1FF;color:#5B7CFA;font-weight:600}
+    .prev-main{flex:1;padding:14px;overflow:hidden}
+    .prev-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px}
+    .prev-stat{background:#F9FAFB;border:1px solid #E4E7EC;border-radius:9px;padding:8px}
+    .prev-stat-label{font-size:8px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:3px}
+    .prev-stat-value{font-size:16px;font-weight:700;color:#101828}
     .prev-infopanel{display:none;width:100%;max-width:100%;background:#fff;border-radius:12px;padding:20px 0 0}
     .prev-infopanel.prev-on{display:block}
     .prev-info-title{font-size:15px;font-weight:700;color:#101828;margin-bottom:4px}
@@ -133,17 +127,16 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     .prev-info-item{display:flex;gap:8px;align-items:flex-start}
     .prev-info-dot{width:6px;height:6px;border-radius:50%;background:#5B7CFA;margin-top:5px;flex-shrink:0}
     .prev-info-text{font-size:12px;color:#344054;line-height:1.4}
-    @media(max-width:900px){.prev-devices{justify-content:center}}
+    @media(max-width:1100px){.prev-devices{flex-wrap:wrap;justify-content:center}}
     @media(max-width:768px){.prev-devices{flex-direction:column;align-items:center}.prev-laptop{width:100%}.prev-tabs{margin:0 auto 28px}}
     </style>
 
     <div class="prev-tabs">
-      <button class="prev-tab prev-on" data-prevtab="str">STR</button>
-      <button class="prev-tab" data-prevtab="pm">PM</button>
-      <button class="prev-tab" data-prevtab="ea">EA</button>
-      <button class="prev-tab" data-prevtab="dev">Dev</button>
-      <button class="prev-tab" data-prevtab="invest">Invest</button>
-      <button class="prev-tab" data-prevtab="ai">AI Agents</button>
+      <button class="prev-tab prev-on" data-prevtab="str">Vacation Rentals</button>
+      <button class="prev-tab" data-prevtab="pm">Property Management</button>
+      <button class="prev-tab" data-prevtab="ea">Estate Agency</button>
+      <button class="prev-tab" data-prevtab="dev">Developments</button>
+      <button class="prev-tab" data-prevtab="staff">Staff Centre</button>
     </div>
 
     <div class="prev-devices">
@@ -154,30 +147,28 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
 
             <div class="prev-screen prev-on" id="prevscreen-str">
               <div class="prev-sidebar">
-                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
                 <div class="prev-nav-group">Vacation Rentals</div>
                 <div class="prev-nav-item prev-on">Vacation Rentals</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
                 <div class="prev-nav-item">CRM</div>
-                <div class="prev-nav-item">Marketing</div>
-                <div class="prev-nav-item">Sales</div>
-                <div class="prev-nav-item">Reporting</div>
-                <div class="prev-nav-item">Contractors</div>
-                <div class="prev-nav-item">Service</div>
               </div>
               <div class="prev-main">
-                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:2px">Hello Jordan!</div>
-                <div style="font-size:9px;color:#667085;margin-bottom:12px">Sunday, 14 June 2026</div>
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:3px">Hello Jordan!</div>
+                <div style="font-size:11px;color:#667085;margin-bottom:14px">Sunday, 14 June 2026</div>
                 <div class="prev-stat-grid">
                   <div class="prev-stat"><div class="prev-stat-label">Properties</div><div class="prev-stat-value" style="color:#5B7CFA">1</div></div>
                   <div class="prev-stat"><div class="prev-stat-label">Revenue</div><div class="prev-stat-value">£0</div></div>
                   <div class="prev-stat"><div class="prev-stat-label">Cleaning</div><div class="prev-stat-value" style="color:#F59E0B">0</div></div>
                   <div class="prev-stat" style="background:#101828;border-color:#101828"><div class="prev-stat-label" style="color:rgba(255,255,255,0.5)">Maint.</div><div class="prev-stat-value" style="color:#fff">0</div></div>
                 </div>
-                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
-                  <div style="font-size:10px;font-weight:600;margin-bottom:8px">Revenue trends</div>
-                  <svg viewBox="0 0 280 50" style="width:100%;height:50px">
-                    <polyline points="10,40 55,34 100,36 145,22 190,18 235,8 270,4" fill="none" stroke="#5B7CFA" stroke-width="2"/>
-                    <circle cx="270" cy="4" r="3" fill="#5B7CFA"/>
+                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:13px">
+                  <div style="font-size:12px;font-weight:600;margin-bottom:10px">Revenue trends</div>
+                  <svg viewBox="0 0 400 60" style="width:100%;height:60px">
+                    <polyline points="10,48 80,40 150,44 220,26 290,20 360,8 390,4" fill="none" stroke="#5B7CFA" stroke-width="2.5"/>
+                    <circle cx="390" cy="4" r="4" fill="#5B7CFA"/>
                   </svg>
                 </div>
               </div>
@@ -185,38 +176,36 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
 
             <div class="prev-screen" id="prevscreen-pm">
               <div class="prev-sidebar">
-                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
                 <div class="prev-nav-group">Property Management</div>
                 <div class="prev-nav-item prev-on">Property Management</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
                 <div class="prev-nav-item">CRM</div>
-                <div class="prev-nav-item">Marketing</div>
-                <div class="prev-nav-item">Sales</div>
-                <div class="prev-nav-item">Reporting</div>
-                <div class="prev-nav-item">Contractors</div>
-                <div class="prev-nav-item">Service</div>
               </div>
               <div class="prev-main">
-                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:12px">Property Management</div>
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:14px">Property Management</div>
                 <div class="prev-stat-grid">
                   <div class="prev-stat"><div class="prev-stat-label">Properties</div><div class="prev-stat-value" style="color:#5B7CFA">1</div></div>
                   <div class="prev-stat"><div class="prev-stat-label">Collected</div><div class="prev-stat-value" style="color:#10B981">£0</div></div>
                   <div class="prev-stat"><div class="prev-stat-label">Arrears</div><div class="prev-stat-value" style="color:#EF4444">£0</div></div>
                   <div class="prev-stat"><div class="prev-stat-label">Maint.</div><div class="prev-stat-value" style="color:#F59E0B">0</div></div>
                 </div>
-                <div style="display:flex;gap:8px">
-                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
-                    <div style="font-size:10px;font-weight:600;margin-bottom:6px">Rent trends</div>
-                    <svg viewBox="0 0 130 40" style="width:100%;height:40px">
-                      <polyline points="5,32 25,26 45,28 65,14 85,11 105,5 125,2" fill="none" stroke="#10B981" stroke-width="2"/>
+                <div style="display:flex;gap:10px">
+                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:13px">
+                    <div style="font-size:12px;font-weight:600;margin-bottom:8px">Rent trends</div>
+                    <svg viewBox="0 0 180 50" style="width:100%;height:50px">
+                      <polyline points="5,40 35,32 60,35 85,18 110,14 135,6 175,2" fill="none" stroke="#10B981" stroke-width="2.5"/>
                     </svg>
                   </div>
-                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
-                    <div style="font-size:10px;font-weight:600;margin-bottom:6px">Occupancy</div>
-                    <div style="display:flex;gap:3px;align-items:flex-end;height:40px">
-                      <div style="flex:1;background:#E0E7FF;height:30%;border-radius:2px"></div>
-                      <div style="flex:1;background:#E0E7FF;height:40%;border-radius:2px"></div>
-                      <div style="flex:1;background:#5B7CFA;height:80%;border-radius:2px"></div>
-                      <div style="flex:1;background:#5B7CFA;height:100%;border-radius:2px"></div>
+                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:13px">
+                    <div style="font-size:12px;font-weight:600;margin-bottom:8px">Occupancy</div>
+                    <div style="display:flex;gap:4px;align-items:flex-end;height:50px">
+                      <div style="flex:1;background:#E0E7FF;height:30%;border-radius:3px"></div>
+                      <div style="flex:1;background:#E0E7FF;height:40%;border-radius:3px"></div>
+                      <div style="flex:1;background:#5B7CFA;height:80%;border-radius:3px"></div>
+                      <div style="flex:1;background:#5B7CFA;height:100%;border-radius:3px"></div>
                     </div>
                   </div>
                 </div>
@@ -225,22 +214,22 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
 
             <div class="prev-screen" id="prevscreen-ea">
               <div class="prev-sidebar">
-                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
                 <div class="prev-nav-group">Estate Agency</div>
                 <div class="prev-nav-item prev-on">Estate Agency</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
                 <div class="prev-nav-item">CRM</div>
-                <div class="prev-nav-item">Marketing</div>
-                <div class="prev-nav-item">Sales</div>
-                <div class="prev-nav-item">Reporting</div>
               </div>
               <div class="prev-main">
-                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:12px">Finance overview</div>
-                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:12px;margin-bottom:10px">
-                  <div style="display:flex;gap:20px;margin-bottom:8px">
-                    <div><div style="font-size:8px;font-weight:600;color:#667085;text-transform:uppercase">Rent paid</div><div style="font-size:18px;font-weight:700;color:#10B981">1</div></div>
-                    <div><div style="font-size:8px;font-weight:600;color:#667085;text-transform:uppercase">Late rent</div><div style="font-size:18px;font-weight:700;color:#EF4444">1</div></div>
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:14px">Finance overview</div>
+                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:12px;padding:15px;margin-bottom:13px">
+                  <div style="display:flex;gap:26px;margin-bottom:10px">
+                    <div><div style="font-size:10px;font-weight:600;color:#667085;text-transform:uppercase">Rent paid</div><div style="font-size:22px;font-weight:700;color:#10B981">1</div></div>
+                    <div><div style="font-size:10px;font-weight:600;color:#667085;text-transform:uppercase">Late rent</div><div style="font-size:22px;font-weight:700;color:#EF4444">1</div></div>
                   </div>
-                  <div style="height:7px;background:#F3F4F6;border-radius:4px;overflow:hidden"><div style="width:40%;height:100%;background:linear-gradient(90deg,#10B981,#059669)"></div></div>
+                  <div style="height:9px;background:#F3F4F6;border-radius:5px;overflow:hidden"><div style="width:40%;height:100%;background:linear-gradient(90deg,#10B981,#059669)"></div></div>
                 </div>
                 <div class="prev-stat-grid" style="grid-template-columns:repeat(2,1fr)">
                   <div class="prev-stat"><div class="prev-stat-label">Gross income</div><div class="prev-stat-value">£923</div></div>
@@ -251,117 +240,72 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
 
             <div class="prev-screen" id="prevscreen-dev">
               <div class="prev-sidebar">
-                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
                 <div class="prev-nav-group">Developments</div>
                 <div class="prev-nav-item prev-on">Developments</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
                 <div class="prev-nav-item">CRM</div>
-                <div class="prev-nav-item">Marketing</div>
-                <div class="prev-nav-item">Sales</div>
-                <div class="prev-nav-item">Reporting</div>
               </div>
-              <div class="prev-main" style="display:flex;gap:12px">
+              <div class="prev-main" style="display:flex;gap:16px">
                 <div style="flex:1">
-                  <div style="font-size:12px;font-weight:700;color:#101828;margin-bottom:2px">Seacastle Phase II</div>
-                  <div style="font-size:8px;color:#667085;margin-bottom:12px">Project timeline</div>
-                  <div style="position:relative;padding-left:14px">
-                    <div style="position:absolute;left:4px;top:5px;bottom:5px;width:2px;background:#E4E7EC"></div>
-                    <div style="position:relative;margin-bottom:12px">
-                      <div style="position:absolute;left:-14px;top:2px;width:9px;height:9px;border-radius:50%;background:#10B981"></div>
-                      <div style="font-size:9px;font-weight:600;color:#101828">Land acquisition</div>
-                      <div style="font-size:7px;color:#667085">Completed · Jan</div>
+                  <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:3px">Seacastle Phase II</div>
+                  <div style="font-size:10px;color:#667085;margin-bottom:14px">Project timeline</div>
+                  <div style="position:relative;padding-left:18px">
+                    <div style="position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:#E4E7EC"></div>
+                    <div style="position:relative;margin-bottom:14px">
+                      <div style="position:absolute;left:-18px;top:2px;width:11px;height:11px;border-radius:50%;background:#10B981"></div>
+                      <div style="font-size:11px;font-weight:600;color:#101828">Land acquisition</div>
+                      <div style="font-size:9px;color:#667085">Completed · Jan</div>
                     </div>
-                    <div style="position:relative;margin-bottom:12px">
-                      <div style="position:absolute;left:-14px;top:2px;width:9px;height:9px;border-radius:50%;background:#5B7CFA"></div>
-                      <div style="font-size:9px;font-weight:600;color:#101828">Foundation works</div>
-                      <div style="font-size:7px;color:#667085">Due Jul 2026</div>
-                      <div style="height:4px;background:#F3F4F6;border-radius:3px;margin-top:3px;width:100px"><div style="height:100%;width:62%;background:#5B7CFA;border-radius:3px"></div></div>
+                    <div style="position:relative;margin-bottom:14px">
+                      <div style="position:absolute;left:-18px;top:2px;width:11px;height:11px;border-radius:50%;background:#5B7CFA"></div>
+                      <div style="font-size:11px;font-weight:600;color:#101828">Foundation works</div>
+                      <div style="font-size:9px;color:#667085">Due Jul 2026</div>
+                      <div style="height:5px;background:#F3F4F6;border-radius:3px;margin-top:4px;width:130px"><div style="height:100%;width:62%;background:#5B7CFA;border-radius:3px"></div></div>
                     </div>
                     <div style="position:relative">
-                      <div style="position:absolute;left:-14px;top:2px;width:9px;height:9px;border-radius:50%;background:#E4E7EC"></div>
-                      <div style="font-size:9px;font-weight:600;color:#98A2B3">Structural build</div>
-                      <div style="font-size:7px;color:#98A2B3">Upcoming</div>
+                      <div style="position:absolute;left:-18px;top:2px;width:11px;height:11px;border-radius:50%;background:#E4E7EC"></div>
+                      <div style="font-size:11px;font-weight:600;color:#98A2B3">Structural build</div>
+                      <div style="font-size:9px;color:#98A2B3">Upcoming</div>
                     </div>
                   </div>
                 </div>
-                <div style="width:120px;border-left:1px solid #F2F4F7;padding-left:12px">
-                  <div style="font-size:8px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:6px">Budget</div>
-                  <div style="font-size:14px;font-weight:700;color:#101828">£2.4M</div>
-                  <div style="font-size:7px;color:#10B981;margin-bottom:10px">68% allocated</div>
-                  <div style="background:#EEF1FF;color:#5B7CFA;font-size:8px;font-weight:600;padding:3px 7px;border-radius:5px;display:inline-block">On track</div>
+                <div style="width:150px;border-left:1px solid #F2F4F7;padding-left:16px">
+                  <div style="font-size:10px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:8px">Budget</div>
+                  <div style="font-size:18px;font-weight:700;color:#101828">£2.4M</div>
+                  <div style="font-size:9px;color:#10B981;margin-bottom:12px">68% allocated</div>
+                  <div style="background:#EEF1FF;color:#5B7CFA;font-size:10px;font-weight:600;padding:4px 9px;border-radius:6px;display:inline-block">On track</div>
                 </div>
               </div>
             </div>
 
-            <div class="prev-screen" id="prevscreen-invest">
+            <div class="prev-screen" id="prevscreen-staff">
               <div class="prev-sidebar">
-                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
-                <div class="prev-nav-group">Invest</div>
-                <div class="prev-nav-item prev-on">Deal Analyser</div>
-                <div class="prev-nav-item">Saved Deals</div>
-                <div class="prev-nav-item">Watchlist</div>
-                <div class="prev-nav-item">Postcode Insights</div>
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item prev-on">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
+                <div class="prev-nav-item">Maintenance Board</div>
+                <div class="prev-nav-item">CRM</div>
+                <div class="prev-nav-item">Calendar</div>
+                <div class="prev-nav-item">Tasks</div>
               </div>
               <div class="prev-main">
-                <div style="font-size:13px;font-weight:700;color:#101828;margin-bottom:12px">Deal Analyser</div>
-                <div class="prev-stat-grid">
-                  <div class="prev-stat"><div class="prev-stat-label">Yield</div><div class="prev-stat-value" style="color:#10B981">7.2%</div></div>
-                  <div class="prev-stat"><div class="prev-stat-label">Cash flow</div><div class="prev-stat-value" style="color:#5B7CFA">£340</div></div>
-                  <div class="prev-stat"><div class="prev-stat-label">ROI</div><div class="prev-stat-value" style="color:#F59E0B">14%</div></div>
-                  <div class="prev-stat" style="background:#101828;border-color:#101828"><div class="prev-stat-label" style="color:rgba(255,255,255,0.5)">Strategy</div><div class="prev-stat-value" style="color:#fff;font-size:11px">BRRR</div></div>
-                </div>
-                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:10px">
-                  <div style="font-size:10px;font-weight:600;margin-bottom:8px">Saved deals comparison</div>
-                  <div style="display:flex;gap:3px;align-items:flex-end;height:40px">
-                    <div style="flex:1;background:#E0E7FF;height:55%;border-radius:2px"></div>
-                    <div style="flex:1;background:#5B7CFA;height:85%;border-radius:2px"></div>
-                    <div style="flex:1;background:#E0E7FF;height:40%;border-radius:2px"></div>
-                    <div style="flex:1;background:#E0E7FF;height:65%;border-radius:2px"></div>
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:14px">Conversations</div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center">
+                    <div style="display:flex;gap:9px;align-items:center"><div style="width:26px;height:26px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5B7CFA">SJ</div><div><div style="font-size:11.5px;font-weight:600">Sarah J.</div><div style="font-size:9.5px;color:#667085">Is the parking included?</div></div></div>
+                    <span style="font-size:9px;color:#98A2B3">2m</span>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="prev-screen" id="prevscreen-ai">
-              <div class="prev-sidebar">
-                <div class="prev-logo-row"><img src="/logo.PNG" style="height:16px;width:auto"/><span style="font-size:11px;font-weight:700">Opero</span></div>
-                <div class="prev-nav-group">AI Property Manager</div>
-                <div class="prev-nav-item prev-on">AI Property Manager</div>
-              </div>
-              <div class="prev-main">
-                <div style="background:#5B7CFA;border-radius:10px;padding:12px;color:#fff;margin-bottom:10px">
-                  <div style="font-size:8px;opacity:0.85;font-weight:600;text-transform:uppercase;margin-bottom:3px">AI Property Manager</div>
-                  <div style="font-size:13px;font-weight:700">2 of 6 agents active</div>
-                </div>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
-                  <div style="background:#fff;border:1px solid #5B7CFA;border-radius:7px;padding:8px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
-                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Guest</div>
-                    <div style="font-size:7px;color:#10B981;font-weight:600">● Active</div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center">
+                    <div style="display:flex;gap:9px;align-items:center"><div style="width:26px;height:26px;border-radius:50%;background:#FEF3E2;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#B54708">MK</div><div><div style="font-size:11.5px;font-weight:600">Marcus K.</div><div style="font-size:9.5px;color:#667085">Thanks for the quick fix!</div></div></div>
+                    <span style="font-size:9px;color:#98A2B3">1h</span>
                   </div>
-                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Maint.</div>
-                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
-                  </div>
-                  <div style="background:#fff;border:1px solid #5B7CFA;border-radius:7px;padding:8px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8"><path d="M3 3l18 18M9 9l-6 6a2 2 0 002.83 2.83L12 11.8M14 4l6 6-3.5 3.5L10 7l4-3z"/></svg>
-                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Cleaning</div>
-                    <div style="font-size:7px;color:#10B981;font-weight:600">● Active</div>
-                  </div>
-                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Revenue</div>
-                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
-                  </div>
-                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Owner</div>
-                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
-                  </div>
-                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:7px;padding:8px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98A2B3" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                    <div style="font-size:8px;font-weight:600;color:#101828;margin-top:5px">Leads</div>
-                    <div style="font-size:7px;color:#98A2B3">○ Off</div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center">
+                    <div style="display:flex;gap:9px;align-items:center"><div style="width:26px;height:26px;border-radius:50%;background:#EAF3EE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#2D6A4F">TD</div><div><div style="font-size:11.5px;font-weight:600">Tunde D.</div><div style="font-size:9.5px;color:#667085">Viewing confirmed for Friday</div></div></div>
+                    <span style="font-size:9px;color:#98A2B3">3h</span>
                   </div>
                 </div>
               </div>
@@ -376,89 +320,63 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
         <div class="prev-phone-screen prev-ui">
 
           <div class="prev-pscreen prev-on" id="prevphone-str">
-            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;border-bottom:1px solid #F2F4F7">
-              <div style="display:flex;flex-direction:column;gap:3px"><div style="width:14px;height:2px;background:#101828"></div><div style="width:10px;height:2px;background:#101828"></div><div style="width:14px;height:2px;background:#101828"></div></div>
-              <span style="font-size:11px;font-weight:700">Bookings</span>
-              <div style="width:22px;height:22px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#5B7CFA">J</div>
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 12px;border-bottom:1px solid #F2F4F7">
+              <span style="font-size:13px;font-weight:700">Bookings</span>
+              <div style="width:26px;height:26px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5B7CFA">J</div>
             </div>
-            <div style="padding:10px 14px 0">
-              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px">
-                <span style="font-size:7px;color:#98A2B3;text-align:center">M</span><span style="font-size:7px;color:#98A2B3;text-align:center">T</span><span style="font-size:7px;color:#98A2B3;text-align:center">W</span><span style="font-size:7px;color:#98A2B3;text-align:center">T</span><span style="font-size:7px;color:#98A2B3;text-align:center">F</span><span style="font-size:7px;color:#98A2B3;text-align:center">S</span><span style="font-size:7px;color:#98A2B3;text-align:center">S</span>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
-                <div style="height:26px;border-radius:5px;background:#F9FAFB"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
-                <div style="height:26px;border-radius:5px;background:#EEF1FF"></div><div style="height:26px;border-radius:5px;background:#EEF1FF"></div>
-                <div style="height:26px;border-radius:5px;background:#EEF1FF"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
-                <div style="height:26px;border-radius:5px;background:#F9FAFB"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
-                <div style="height:26px;border-radius:5px;background:#F9FAFB"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
-                <div style="height:26px;border-radius:5px;background:#5B7CFA"></div><div style="height:26px;border-radius:5px;background:#5B7CFA"></div>
-                <div style="height:26px;border-radius:5px;background:#5B7CFA"></div><div style="height:26px;border-radius:5px;background:#F9FAFB"></div>
+            <div style="padding:12px 16px 0">
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">
+                <div style="height:32px;border-radius:6px;background:#F9FAFB"></div><div style="height:32px;border-radius:6px;background:#F9FAFB"></div>
+                <div style="height:32px;border-radius:6px;background:#EEF1FF"></div><div style="height:32px;border-radius:6px;background:#EEF1FF"></div>
+                <div style="height:32px;border-radius:6px;background:#EEF1FF"></div><div style="height:32px;border-radius:6px;background:#F9FAFB"></div>
+                <div style="height:32px;border-radius:6px;background:#5B7CFA"></div>
               </div>
             </div>
-            <div style="padding:12px 14px 0">
-              <div style="font-size:9px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:6px">Check-ins</div>
-              <div style="background:#F9FAFB;border-radius:8px;padding:9px;margin-bottom:6px;display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600">Sarah J.</span><span style="font-size:9px;color:#5B7CFA;font-weight:600">Jun 11</span></div>
-              <div style="background:#F9FAFB;border-radius:8px;padding:9px;display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600">Marcus K.</span><span style="font-size:9px;color:#5B7CFA;font-weight:600">Jun 18</span></div>
+            <div style="padding:16px 16px 0">
+              <div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:8px">Check-ins</div>
+              <div style="background:#F9FAFB;border-radius:9px;padding:11px;margin-bottom:8px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Sarah J.</span><span style="font-size:11px;color:#5B7CFA;font-weight:600">Jun 11</span></div>
+              <div style="background:#F9FAFB;border-radius:9px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Marcus K.</span><span style="font-size:11px;color:#5B7CFA;font-weight:600">Jun 18</span></div>
             </div>
           </div>
 
           <div class="prev-pscreen" id="prevphone-pm">
-            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
-            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Rent collection</span></div>
-            <div style="padding:0 14px">
-              <div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:8px"><div style="font-size:8px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:3px">Collected</div><div style="font-size:18px;font-weight:700;color:#10B981">£0</div></div>
-              <div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:8px"><div style="font-size:8px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:3px">Arrears</div><div style="font-size:18px;font-weight:700;color:#EF4444">£0</div></div>
-            </div>
-            <div style="padding:6px 14px">
-              <div style="font-size:9px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:6px">Tenants</div>
-              <div style="background:#F9FAFB;border-radius:8px;padding:9px;display:flex;justify-content:space-between"><span style="font-size:10px;font-weight:600">Apt C1-12</span><span style="font-size:9px;color:#10B981">Paid</span></div>
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Rent collection</span></div>
+            <div style="padding:0 16px">
+              <div style="background:#F9FAFB;border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:4px">Collected</div><div style="font-size:21px;font-weight:700;color:#10B981">£0</div></div>
+              <div style="background:#F9FAFB;border-radius:12px;padding:14px"><div style="font-size:10px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:4px">Arrears</div><div style="font-size:21px;font-weight:700;color:#EF4444">£0</div></div>
             </div>
           </div>
 
           <div class="prev-pscreen" id="prevphone-ea">
-            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
-            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Estate Agency</span></div>
-            <div style="padding:0 14px">
-              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:12px;margin-bottom:8px">
-                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:9px;color:#667085">Rent paid</span><span style="font-size:11px;font-weight:700;color:#10B981">£923</span></div>
-                <div style="height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden"><div style="width:40%;height:100%;background:#10B981"></div></div>
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Estate Agency</span></div>
+            <div style="padding:0 16px">
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:12px;padding:14px;margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:#667085">Rent paid</span><span style="font-size:13px;font-weight:700;color:#10B981">£923</span></div>
+                <div style="height:7px;background:#F3F4F6;border-radius:4px;overflow:hidden"><div style="width:40%;height:100%;background:#10B981"></div></div>
               </div>
             </div>
-            <div style="padding:0 14px"><div style="background:#F9FAFB;border-radius:10px;padding:12px"><div style="font-size:8px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:3px">Net profit</div><div style="font-size:18px;font-weight:700;color:#5B7CFA">£923</div></div></div>
           </div>
 
           <div class="prev-pscreen" id="prevphone-dev">
-            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
-            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Seacastle II</span></div>
-            <div style="padding:0 14px;position:relative;padding-left:24px">
-              <div style="position:absolute;left:18px;top:6px;bottom:6px;width:2px;background:#E4E7EC"></div>
-              <div style="position:relative;margin-bottom:14px"><div style="position:absolute;left:-6px;top:2px;width:9px;height:9px;border-radius:50%;background:#10B981"></div><div style="font-size:10px;font-weight:600">Land acquisition</div><div style="font-size:8px;color:#667085">Completed</div></div>
-              <div style="position:relative;margin-bottom:14px"><div style="position:absolute;left:-6px;top:2px;width:9px;height:9px;border-radius:50%;background:#5B7CFA"></div><div style="font-size:10px;font-weight:600">Foundation</div><div style="font-size:8px;color:#667085">62% · Jul 2026</div></div>
-              <div style="position:relative"><div style="position:absolute;left:-6px;top:2px;width:9px;height:9px;border-radius:50%;background:#E4E7EC"></div><div style="font-size:10px;font-weight:600;color:#98A2B3">Structural build</div><div style="font-size:8px;color:#98A2B3">Sep 2026</div></div>
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Seacastle II</span></div>
+            <div style="padding:0 16px;position:relative;padding-left:30px">
+              <div style="position:absolute;left:22px;top:8px;bottom:8px;width:2px;background:#E4E7EC"></div>
+              <div style="position:relative;margin-bottom:16px"><div style="position:absolute;left:-8px;top:2px;width:11px;height:11px;border-radius:50%;background:#10B981"></div><div style="font-size:12px;font-weight:600">Land acquisition</div><div style="font-size:10px;color:#667085">Completed</div></div>
+              <div style="position:relative"><div style="position:absolute;left:-8px;top:2px;width:11px;height:11px;border-radius:50%;background:#5B7CFA"></div><div style="font-size:12px;font-weight:600">Foundation</div><div style="font-size:10px;color:#667085">62% · Jul 2026</div></div>
             </div>
-            <div style="margin-top:14px;padding:0 14px"><div style="background:#EEF1FF;color:#5B7CFA;font-size:9px;font-weight:600;padding:4px 9px;border-radius:6px;display:inline-block">£2.4M · On track</div></div>
           </div>
 
-          <div class="prev-pscreen" id="prevphone-invest">
-            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
-            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">Deal Analyser</span></div>
-            <div style="padding:0 14px;display:flex;flex-direction:column;gap:6px">
-              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Yield</span><span style="font-size:10px;color:#10B981;font-weight:700">7.2%</span></div>
-              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Cash flow</span><span style="font-size:10px;color:#5B7CFA;font-weight:700">£340/mo</span></div>
-              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">ROI</span><span style="font-size:10px;color:#F59E0B;font-weight:700">14%</span></div>
-            </div>
-            <div style="margin-top:14px;padding:0 14px"><div style="background:#EEF1FF;color:#5B7CFA;font-size:9px;font-weight:600;padding:4px 9px;border-radius:6px;display:inline-block">BRRR strategy</div></div>
-          </div>
-
-          <div class="prev-pscreen" id="prevphone-ai">
-            <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:9px;font-weight:600">9:41</span><div style="width:16px;height:8px;border:1.3px solid #101828;border-radius:2px"></div></div>
-            <div style="padding:10px 14px"><span style="font-size:13px;font-weight:700">AI Agents</span></div>
-            <div style="padding:0 14px;display:flex;flex-direction:column;gap:6px">
-              <div style="background:#fff;border:1px solid #5B7CFA;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Guest Agent</span><span style="font-size:8px;color:#10B981;font-weight:600">● Active</span></div>
-              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Maintenance</span><span style="font-size:8px;color:#98A2B3">○ Off</span></div>
-              <div style="background:#fff;border:1px solid #5B7CFA;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Cleaning</span><span style="font-size:8px;color:#10B981;font-weight:600">● Active</span></div>
-              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:8px;padding:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;font-weight:600">Revenue</span><span style="font-size:8px;color:#98A2B3">○ Off</span></div>
+          <div class="prev-pscreen" id="prevphone-staff">
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Conversations</span></div>
+            <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+              <div style="background:#F9FAFB;border-radius:10px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Sarah J.</span><span style="font-size:10px;color:#98A2B3">2m</span></div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Marcus K.</span><span style="font-size:10px;color:#98A2B3">1h</span></div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Tunde D.</span><span style="font-size:10px;color:#98A2B3">3h</span></div>
             </div>
           </div>
 
@@ -468,8 +386,8 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     </div>
 
     <div class="prev-infopanel prev-on" id="previnfo-str">
-      <div class="prev-info-title">Vacation Rentals — £29/mo</div>
-      <div class="prev-info-sub">Bookings, CRM, cleaning, maintenance, banking, reports, contractor portal and guest comms in one module.</div>
+      <div class="prev-info-title">Vacation Rentals</div>
+      <div class="prev-info-sub">Included in every Opero plan. Bookings, CRM, cleaning, maintenance, banking, reports, contractor portal and guest comms in one module.</div>
       <div class="prev-info-grid">
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Direct booking engine + iCal sync across Airbnb/Vrbo</div></div>
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Auto-scheduled cleaning after every checkout</div></div>
@@ -478,8 +396,8 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     </div>
 
     <div class="prev-infopanel" id="previnfo-pm">
-      <div class="prev-info-title">Property Management — £39/mo</div>
-      <div class="prev-info-sub">Tenants, leases, rent collection, inspections, banking and reports for long-term lets.</div>
+      <div class="prev-info-title">Property Management</div>
+      <div class="prev-info-sub">Included in every Opero plan. Tenants, leases, rent collection, inspections, banking and reports for long-term lets.</div>
       <div class="prev-info-grid">
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Automated rent reminders and arrears tracking</div></div>
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Lease renewal alerts 60 days ahead</div></div>
@@ -488,8 +406,8 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     </div>
 
     <div class="prev-infopanel" id="previnfo-ea">
-      <div class="prev-info-title">Estate Agency — £59/mo</div>
-      <div class="prev-info-sub">Vacancies, rent collection, landlord portal, CRM and banking for agency operations.</div>
+      <div class="prev-info-title">Estate Agency</div>
+      <div class="prev-info-sub">Included in every Opero plan. Vacancies, rent collection, landlord portal, CRM and banking for agency operations.</div>
       <div class="prev-info-grid">
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Untapped income potential calculated from vacant units</div></div>
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Loans & mortgages tracker with repayment progress</div></div>
@@ -498,8 +416,8 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
     </div>
 
     <div class="prev-infopanel" id="previnfo-dev">
-      <div class="prev-info-title">Developments — £49/mo</div>
-      <div class="prev-info-sub">Projects, budgets, investors, milestones and contractor management for build projects.</div>
+      <div class="prev-info-title">Developments</div>
+      <div class="prev-info-sub">Included in every Opero plan. Projects, budgets, investors, milestones and contractor management for build projects.</div>
       <div class="prev-info-grid">
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Milestone timeline with budget allocation tracking</div></div>
         <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Multiple investors per project with avatar tracking</div></div>
@@ -507,26 +425,13 @@ footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-conte
       </div>
     </div>
 
-    <div class="prev-infopanel" id="previnfo-invest">
-      <div class="prev-info-title">Invest — £19/mo</div>
-      <div class="prev-info-sub">8 strategies, deal analyser, watchlist and saved deals for property investors.</div>
+    <div class="prev-infopanel" id="previnfo-staff">
+      <div class="prev-info-title">Staff Centre</div>
+      <div class="prev-info-sub">Included in every Opero plan. Conversations, property portals, maintenance board, CRM, calendar and tasks for your team in one place.</div>
       <div class="prev-info-grid">
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Instant yield, cash flow and ROI calculations per deal</div></div>
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Compare saved deals side-by-side before committing</div></div>
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Postcode-level insights to spot opportunity areas</div></div>
-      </div>
-    </div>
-
-    <div class="prev-infopanel" id="previnfo-ai">
-      <div class="prev-info-title">AI Property Manager — £9.99/mo</div>
-      <div class="prev-info-sub">Six AI agents designed to reduce day-to-day admin while operating 24/7.</div>
-      <div class="prev-info-grid">
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Guest Agent — 24/7 enquiry handling & check-in info</div></div>
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Maintenance Coordinator — logs, assigns, tracks repairs</div></div>
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Cleaning Coordinator — auto-schedules after bookings</div></div>
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Revenue Manager — dynamic pricing & gap filling</div></div>
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Owner Relations — automated monthly reports</div></div>
-        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Lead Qualification — finds & scores landlord leads</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Team inbox for guest, tenant and owner conversations</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">One-click access to Rightmove, Zillow & Jamaica MLS</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Shared CRM, calendar and task board across staff</div></div>
       </div>
     </div>
 
@@ -1122,6 +1027,77 @@ peRenderAll();
   <p style="font-size:13px;color:rgba(255,255,255,0.6)">14-day free trial &middot; No credit card required &middot; Cancel anytime</p>
 </section>
 
+<section id="demo" style="background:#101828;padding:96px 64px;">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(91,124,250,0.16);border:1px solid rgba(91,124,250,0.35);border-radius:20px;padding:6px 14px;margin-bottom:24px">
+        <i class="ti ti-calendar" style="color:#8BA1FF;font-size:13px"></i>
+        <span style="font-size:12px;font-weight:600;color:#8BA1FF">Book a demo</span>
+      </div>
+      <h2 style="font-size:38px;font-weight:700;color:#fff;line-height:1.2;margin:0 0 18px">See Opero running your own portfolio</h2>
+      <p style="font-size:16px;color:#98A2B3;line-height:1.6;margin:0">Tell us a bit about your business and we'll walk you through exactly how Opero fits — no generic sales pitch, a real look at your own properties, tenants, and bookings.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:36px;box-shadow:0 24px 70px rgba(0,0,0,0.35)">
+      <img src="/logo.PNG" alt="Opero" style="height:28px;width:auto;margin-bottom:24px"/>
+      <form id="demoRequestForm" onsubmit="submitDemoRequest(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <input required name="first_name" placeholder="First name*" style="padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          <input required name="last_name" placeholder="Last name*" style="padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+        </div>
+        <input required name="company_name" placeholder="Company name*" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <input required name="email" type="email" placeholder="Email*" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <input name="phone" type="tel" placeholder="Phone number" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <select name="portfolio_type" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:20px;background:#fff;color:#101828">
+          <option value="">What are you managing?</option>
+          <option value="STR">Vacation Rentals</option>
+          <option value="PM">Property Management</option>
+          <option value="Estate Agency">Estate Agency</option>
+          <option value="Developments">Developments</option>
+          <option value="Multiple">More than one of these</option>
+        </select>
+        <button type="submit" id="demoRequestSubmit" style="width:100%;background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Book my demo</button>
+        <p id="demoRequestError" style="display:none;color:#EF4444;font-size:12px;margin:10px 0 0"></p>
+      </form>
+      <div id="demoRequestSuccess" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:32px;margin-bottom:10px">✅</div>
+        <div style="font-size:16px;font-weight:600;color:#101828;margin-bottom:6px">Thanks — request sent</div>
+        <div style="font-size:13px;color:#667085">We'll be in touch shortly to set up your demo.</div>
+      </div>
+      <p style="font-size:11px;color:#98A2B3;margin:14px 0 0;text-align:center">By submitting you agree to us contacting you about Opero.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+async function submitDemoRequest(e) {
+  e.preventDefault()
+  var form = document.getElementById('demoRequestForm')
+  var btn = document.getElementById('demoRequestSubmit')
+  var errorEl = document.getElementById('demoRequestError')
+  errorEl.style.display = 'none'
+  btn.disabled = true
+  btn.textContent = 'Sending…'
+  var data = Object.fromEntries(new FormData(form).entries())
+  try {
+    var res = await fetch('/api/demo-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    var result = await res.json()
+    if (!res.ok) throw new Error(result.error || 'Something went wrong.')
+    form.style.display = 'none'
+    document.getElementById('demoRequestSuccess').style.display = 'block'
+  } catch (err) {
+    errorEl.textContent = err.message
+    errorEl.style.display = 'block'
+    btn.disabled = false
+    btn.textContent = 'Book my demo'
+  }
+}
+</script>
+
 <footer style="flex-direction:column;align-items:stretch;gap:0;padding:56px 64px 28px">
   <div style="display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap;padding-bottom:36px;border-bottom:1px solid #F2F4F7;margin-bottom:24px">
     <div style="max-width:260px">
@@ -1181,3 +1157,4 @@ function startCheckout(plan) {
 </script>
 </body>
 </html>
+<!-- redeploy trigger 2026-08-24T12:09:46Z -->
