@@ -6,69 +6,47 @@ import { supabase } from '../../lib/supabase'
 import { normalizeRole } from '../../lib/useRole'
 
 
+// Baby blue used for both plans -- Jordan asked for the plan cards to be
+// this colour rather than each module having its own accent (that made
+// sense back when plans were sold per-module; now there are just two
+// tiers of the same one-plan-every-module offer).
+const BABY_BLUE = '#89CFF0'
+
 const PLANS = [
   {
-    id: 'aipm',
-    label: 'AI Property Manager',
-    price: '£9.99',
+    id: 'monthly',
+    label: 'Monthly',
+    price: '£79',
     period: '/mo',
-    color: '#5B7CFA',
-    features: ['Guest comms', 'Maintenance coordination', 'Cleaning scheduling', 'Dynamic pricing', 'Owner reporting', 'Lead qualification'],
-  },
-  {
-    id: 'invest',
-    label: 'Invest',
-    price: '£19',
-    period: '/mo',
-    color: '#5B7CFA',
-    features: ['8 investment strategies', 'Deal analyser', 'Watchlist', 'Saved deals', 'ROI calculator'],
-  },
-  {
-    id: 'str',
-    label: 'Vacation Rentals (STR)',
-    price: '£29',
-    period: '/mo',
-    color: '#3B4AFF',
+    color: BABY_BLUE,
     popular: true,
-    features: ['Bookings & CRM', 'Cleaning & maintenance', 'Banking & reports', 'Guest comms', 'Contractor portal', 'iCal sync'],
+    features: [
+      'All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager',
+      '6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification',
+      'Staff Centre included free — conversations, property portals, CRM & more',
+      'Unlimited properties',
+      'One login, one bill',
+    ],
   },
   {
-    id: 'pm',
-    label: 'Property Management',
-    price: '£39',
-    period: '/mo',
-    color: '#5B7CFA',
-    features: ['Tenants & leases', 'Rent collection', 'Inspections', 'Banking & reports', 'Owner portal'],
-  },
-  {
-    id: 'dev',
-    label: 'Developments',
-    price: '£49',
-    period: '/mo',
-    color: '#5B7CFA',
-    features: ['Projects & budgets', 'Investors', 'Milestones', 'Contractor management', 'Documents'],
-  },
-  {
-    id: 'ea',
-    label: 'Estate Agency',
-    price: '£59',
-    period: '/mo',
-    color: '#5B7CFA',
-    features: ['Vacancy management', 'Rent collection', 'Landlord portal', 'CRM', 'Banking & reports'],
-  },
-  {
-    id: 'bundle',
-    label: 'All Modules Bundle',
+    id: 'onetime',
+    label: 'One-time (lifetime access)',
     price: '£175.50',
     period: ' one-time',
-    color: '#1a1a2e',
-    features: ['Every module included', '10% off vs buying separately', 'Unlimited properties', 'Priority support'],
+    color: BABY_BLUE,
+    features: [
+      'All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager',
+      '6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification',
+      'Staff Centre included free — conversations, property portals, CRM & more',
+      'Unlimited properties',
+      'One login, no recurring bill',
+    ],
   },
 ]
 
 function LoginForm() {
   const searchParams = useSearchParams()
-  const initialPlan = searchParams.get('plan') ?? 'str'
+  const initialPlan = searchParams.get('plan') ?? 'monthly'
   const success = searchParams.get('success') === 'true'
   const redirect = searchParams.get('redirect') ?? '/dashboard'
   const fromPricing = searchParams.get('mode') === 'signup'
@@ -253,7 +231,7 @@ function LoginForm() {
           </div>
 
           <div style={{ marginTop: 'auto', paddingTop: 24, fontSize: 12, color: '#98A2B3', textAlign: 'center' }}>
-            Monthly plans include a 14-day free trial, cancel anytime. The bundle is a one-time purchase.
+            The monthly plan includes a 14-day free trial, cancel anytime. The one-time plan is a single lifetime-access purchase.
           </div>
         </div>
       )}
@@ -265,7 +243,7 @@ function LoginForm() {
           {/* Success plan banner */}
           {success && (
             <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 16px', marginBottom: 24 }}>
-              {initialPlan === 'bundle' ? (
+              {initialPlan === 'onetime' ? (
                 <>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>✅ Payment successful!</div>
                   <div style={{ fontSize: 12, color: '#6B7280' }}>Full access to every module is now unlocked</div>
@@ -305,7 +283,7 @@ function LoginForm() {
             {error && <div style={{ fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
             {successMsg && <div style={{ fontSize: 13, color: '#12B76A', background: '#F6FEF9', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}
             <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#3B4AFF', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
-              {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? (selectedPlan === 'bundle' ? 'Purchase bundle →' : 'Start free trial →') : 'Send Reset Email'}
+              {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? (selectedPlan === 'onetime' ? 'Get lifetime access →' : 'Start free trial →') : 'Send Reset Email'}
             </button>
           </div>
 
