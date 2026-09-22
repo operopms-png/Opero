@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Opero — The All-in-One Property Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;color:#101828;background:linear-gradient(180deg,#E9EDFF 0%,#F3F1FF 160px,#FFFFFF 460px,#FFFFFF 100%);line-height:1.5}
+a{text-decoration:none;color:inherit}
+.btn-primary{background:#5B7CFA;color:#fff;border:none;padding:13px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-outline{background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.tag{font-size:11px;font-weight:600;color:#5B7CFA;text-transform:uppercase;letter-spacing:0.08em}
+.section{padding:88px 64px}
+.card{background:#fff;border-radius:14px;border:1px solid #EAECF0;padding:28px;transition:box-shadow 0.2s ease,border-color 0.2s ease,transform 0.2s ease}
+.card:hover{box-shadow:0 4px 16px rgba(16,24,40,0.06);border-color:#D0D5DD;transform:translateY(-2px)}
+.card-icon{width:44px;height:44px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.card-icon i{font-size:20px;color:#5B7CFA}
+.card-title{font-size:15.5px;font-weight:600;margin-bottom:8px;color:#101828;letter-spacing:-0.01em}
+.card-desc{font-size:13.5px;color:#667085;line-height:1.65}
+.competitor-tag{background:#FEE2E2;color:#991B1B;font-size:11px;padding:3px 10px;border-radius:6px;display:inline-block;margin:2px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 64px;border-bottom:1px solid transparent;background:transparent;position:sticky;top:0;z-index:100}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:14px;color:#667085}
+.module-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F9FAFB;border-radius:14px;border:1px solid #E4E7EC;padding:28px 36px}
+.module-item{display:flex;align-items:center;gap:10px}
+.module-icon{width:36px;height:36px;background:#EEF1FF;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.module-divider{width:1px;height:36px;background:#E4E7EC}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.pricing-grid-top{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.pricing-grid-bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pricing-card{background:#fff;border-radius:12px;border:1px solid #E4E7EC;padding:24px}
+.bundle-card{background:#5B7CFA;border-radius:12px;padding:24px;position:relative}
+.compare-row{background:#fff;border-radius:12px;border:1px solid #E4E7EC;padding:22px 28px;display:grid;grid-template-columns:180px 1fr 120px;gap:20px;align-items:center;margin-bottom:12px;transition:box-shadow 0.2s ease,border-color 0.2s ease,transform 0.2s ease}
+.compare-row:hover{box-shadow:0 4px 16px rgba(16,24,40,0.06);border-color:#D0D5DD;transform:translateY(-2px)}
+.step-card{background:#fff;border-radius:14px;border:1px solid #EAECF0;padding:28px 24px;transition:box-shadow 0.2s ease,border-color 0.2s ease,transform 0.2s ease}
+.step-card:hover{box-shadow:0 4px 16px rgba(16,24,40,0.06);border-color:#D0D5DD;transform:translateY(-2px)}
+#faq summary::-webkit-details-marker{display:none}
+#faq summary::marker{content:''}
+#faq details summary i{transition:transform 0.2s ease}
+#faq details[open] summary i{transform:rotate(180deg)}
+.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.avatar{width:32px;height:32px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#5B7CFA;flex-shrink:0}
+.cta-section{padding:88px 64px;text-align:center;background:#5B7CFA}
+footer{padding:28px 64px;border-top:1px solid #E4E7EC;display:flex;justify-content:space-between;align-items:center}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:13px;color:#667085}
+.save-badge{background:#10B981;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;position:absolute;top:-10px;left:20px}
+.mobile-menu{display:none}.hamburger{display:none}
+@media(max-width:768px){nav{padding:14px 20px}.nav-links{display:none!important}.nav-cta-desktop{display:none!important}.hamburger{display:flex!important}.mobile-menu{display:none;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:200;padding:80px 32px 32px;gap:24px}.mobile-menu.open{display:flex}.mobile-menu a{font-size:22px;font-weight:600;color:#101828;text-decoration:none}.close-btn{position:absolute;top:20px;right:20px;background:none;border:none;font-size:28px;cursor:pointer;color:#101828}section[style*="96px 64px"]{padding:48px 20px 32px!important}h1[style*="52px"]{font-size:30px!important}.module-strip{flex-wrap:wrap!important;padding:16px!important}.module-divider{display:none!important}.module-item{width:calc(50% - 5px);background:#F9FAFB;border-radius:10px;border:1px solid #E4E7EC;padding:12px}.section{padding:40px 16px!important}.features-grid{grid-template-columns:1fr!important}.pricing-grid-top,.pricing-grid-bottom{grid-template-columns:1fr!important}.compare-row{grid-template-columns:1fr!important}.testimonials-grid{grid-template-columns:1fr!important}.cta-section{padding:48px 20px!important}footer{flex-direction:column!important;gap:16px;text-align:center;padding:24px 20px!important}.footer-links{justify-content:center}}</style>
+</head>
+<body>
+
+<nav>
+  <div style="display:flex;align-items:center;gap:10px">
+    <img src="/logo.PNG" alt="Opero" style="height:36px;width:auto"/>
+  </div>
+  <button class="hamburger" onclick="document.getElementById('mobileMenu').classList.toggle('open')" style="display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px"><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div><div style="width:15px;height:2px;background:#101828;border-radius:2px"></div><div style="width:22px;height:2px;background:#101828;border-radius:2px"></div></button>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn-outline" style="padding:8px 18px;font-size:13px" onclick="window.location.href='/login'">Log in</button>
+    <button class="btn-primary" style="padding:8px 18px;font-size:13px" onclick="startCheckout('monthly')">Start free trial <i class="ti ti-arrow-right"></i></button>
+  </div>
+</nav><div class="mobile-menu" id="mobileMenu"><button class="close-btn" onclick="document.getElementById('mobileMenu').classList.remove('open')">&#x2715;</button><button onclick="startCheckout('monthly')" style="background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Start free trial</button><button onclick="window.location.href='/login'" style="background:transparent;color:#5B7CFA;border:1.5px solid #5B7CFA;padding:12px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;width:100%">Log in</button></div>
+
+<section class="section" id="see-it-in-action">
+  <div style="max-width:1300px;margin:0 auto">
+
+    <style>
+    .seia-grid{display:flex;gap:40px;align-items:center}
+    .seia-text{text-align:left;flex:0 0 300px;max-width:300px}
+    .seia-text .tag{display:inline-block}
+    .seia-text h2{font-size:52px;font-weight:800;line-height:1.08;margin:10px 0 16px;letter-spacing:-0.02em}
+    .seia-text p{font-size:15px;color:#667085;margin:0 0 20px}
+    .seia-signup-btn{background:#5B7CFA;color:#fff;border:none;padding:14px 26px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+    .seia-signup-note{font-size:12px;color:#98A2B3;margin:12px 0 0}
+    @media(max-width:900px){.seia-text h2{font-size:36px}}
+    .seia-devices{flex:1;min-width:0}
+    @media(max-width:900px){.seia-grid{flex-direction:column}.seia-text{flex:0 0 auto;max-width:100%;text-align:center}}
+    </style>
+
+    <div class="seia-grid">
+      <div class="seia-text">
+        <span class="tag">See it in action</span>
+        <h2>One login. Every module.</h2>
+        <p>Switch between Vacation Rentals, Property Management, Estate Agency, Developments and Staff Centre — same login, same dashboard family.</p>
+        <p style="font-size:14px;font-weight:600;color:#5B7CFA;margin:-4px 0 20px">One plan, every module — £79/mo or £175.50 one-time.</p>
+        <button class="seia-signup-btn" onclick="startCheckout('monthly')">Sign up for free <i class="ti ti-arrow-right"></i></button>
+        <p class="seia-signup-note">14-day free trial · no credit card required</p>
+      </div>
+
+      <div class="seia-devices">
+    <style>
+    .prev-tabs{display:flex;gap:8px;background:#0d0d1a;padding:7px;border-radius:14px;margin:0 0 32px;width:fit-content;flex-wrap:wrap}
+    .prev-tab{padding:12px 24px;border-radius:9px;border:none;background:transparent;color:#9999b3;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
+    .prev-tab.prev-on{background:#5B7CFA;color:#fff}
+    .prev-tab:hover:not(.prev-on){color:#fff;background:rgba(255,255,255,0.08)}
+    .prev-devices{display:flex;gap:32px;align-items:flex-start;justify-content:flex-start;flex-wrap:nowrap}
+    .prev-laptop{width:640px;max-width:100%}
+    .prev-laptop-screen{background:#1a1a1a;border-radius:16px 16px 0 0;padding:16px 16px 0;box-shadow:0 36px 90px rgba(0,0,0,0.35)}
+    .prev-laptop-inner{background:#fff;border-radius:8px;overflow:hidden;height:420px;position:relative}
+    .prev-laptop-base{height:20px;background:linear-gradient(180deg,#3a3a3a,#2a2a2a);border-radius:0 0 11px 11px;position:relative}
+    .prev-laptop-base::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:5px;background:#1a1a1a;border-radius:0 0 6px 6px}
+    .prev-phone{width:220px;background:#0d0d0d;border-radius:38px;padding:10px;border:6px solid #2a2a2a;box-shadow:0 30px 80px rgba(0,0,0,0.35);position:relative;flex-shrink:0}
+    .prev-phone::before{content:'';position:absolute;top:20px;left:50%;transform:translateX(-50%);width:64px;height:5px;background:#1a1a1a;border-radius:10px;z-index:5}
+    .prev-phone-screen{background:#fff;border-radius:28px;overflow:hidden;height:440px;position:relative}
+    .prev-ui{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif}
+    .prev-screen{display:none;height:100%}
+    .prev-screen.prev-on{display:flex}
+    .prev-pscreen{display:none;height:100%;flex-direction:column}
+    .prev-pscreen.prev-on{display:flex}
+    .prev-sidebar{width:150px;background:#fff;border-right:1px solid #F2F4F7;padding:10px 0;flex-shrink:0;overflow:hidden}
+    .prev-logo-row{padding:0 13px 10px;border-bottom:1px solid #F2F4F7;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+    .prev-nav-group{font-size:9px;font-weight:700;color:#98A2B3;text-transform:uppercase;padding:5px 15px 3px}
+    .prev-nav-item{padding:5px 15px;font-size:11px;color:#667085}
+    .prev-nav-item.prev-on{margin:0 8px;padding:5px 8px;border-radius:6px;background:#EEF1FF;color:#5B7CFA;font-weight:600}
+    .prev-main{flex:1;padding:14px;overflow:hidden}
+    .prev-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px}
+    .prev-stat{background:#F9FAFB;border:1px solid #E4E7EC;border-radius:9px;padding:8px}
+    .prev-stat-label{font-size:8px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:3px}
+    .prev-stat-value{font-size:16px;font-weight:700;color:#101828}
+    .prev-infopanel{display:none;width:100%;max-width:100%;background:#fff;border-radius:12px;padding:20px 0 0}
+    .prev-infopanel.prev-on{display:block}
+    .prev-info-title{font-size:15px;font-weight:700;color:#101828;margin-bottom:4px}
+    .prev-info-sub{font-size:12px;color:#667085;margin-bottom:14px}
+    .prev-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .prev-info-item{display:flex;gap:8px;align-items:flex-start}
+    .prev-info-dot{width:6px;height:6px;border-radius:50%;background:#5B7CFA;margin-top:5px;flex-shrink:0}
+    .prev-info-text{font-size:12px;color:#344054;line-height:1.4}
+    @media(max-width:1100px){.prev-devices{flex-wrap:wrap;justify-content:center}}
+    @media(max-width:768px){.prev-devices{flex-direction:column;align-items:center}.prev-laptop{width:100%}.prev-tabs{margin:0 auto 28px}}
+    </style>
+
+    <div class="prev-tabs">
+      <button class="prev-tab prev-on" data-prevtab="str">Vacation Rentals</button>
+      <button class="prev-tab" data-prevtab="pm">Property Management</button>
+      <button class="prev-tab" data-prevtab="ea">Estate Agency</button>
+      <button class="prev-tab" data-prevtab="dev">Developments</button>
+      <button class="prev-tab" data-prevtab="staff">Staff Centre</button>
+    </div>
+
+    <div class="prev-devices">
+
+      <div class="prev-laptop">
+        <div class="prev-laptop-screen">
+          <div class="prev-laptop-inner prev-ui">
+
+            <div class="prev-screen prev-on" id="prevscreen-str">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Vacation Rentals</div>
+                <div class="prev-nav-item prev-on">Vacation Rentals</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
+                <div class="prev-nav-item">CRM</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:3px">Hello Jordan!</div>
+                <div style="font-size:11px;color:#667085;margin-bottom:14px">Sunday, 14 June 2026</div>
+                <div class="prev-stat-grid">
+                  <div class="prev-stat"><div class="prev-stat-label">Properties</div><div class="prev-stat-value" style="color:#5B7CFA">1</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Revenue</div><div class="prev-stat-value">£0</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Cleaning</div><div class="prev-stat-value" style="color:#F59E0B">0</div></div>
+                  <div class="prev-stat" style="background:#101828;border-color:#101828"><div class="prev-stat-label" style="color:rgba(255,255,255,0.5)">Maint.</div><div class="prev-stat-value" style="color:#fff">0</div></div>
+                </div>
+                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:13px">
+                  <div style="font-size:12px;font-weight:600;margin-bottom:10px">Revenue trends</div>
+                  <svg viewBox="0 0 400 60" style="width:100%;height:60px">
+                    <polyline points="10,48 80,40 150,44 220,26 290,20 360,8 390,4" fill="none" stroke="#5B7CFA" stroke-width="2.5"/>
+                    <circle cx="390" cy="4" r="4" fill="#5B7CFA"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-pm">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Property Management</div>
+                <div class="prev-nav-item prev-on">Property Management</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
+                <div class="prev-nav-item">CRM</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:14px">Property Management</div>
+                <div class="prev-stat-grid">
+                  <div class="prev-stat"><div class="prev-stat-label">Properties</div><div class="prev-stat-value" style="color:#5B7CFA">1</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Collected</div><div class="prev-stat-value" style="color:#10B981">£0</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Arrears</div><div class="prev-stat-value" style="color:#EF4444">£0</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Maint.</div><div class="prev-stat-value" style="color:#F59E0B">0</div></div>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:13px">
+                    <div style="font-size:12px;font-weight:600;margin-bottom:8px">Rent trends</div>
+                    <svg viewBox="0 0 180 50" style="width:100%;height:50px">
+                      <polyline points="5,40 35,32 60,35 85,18 110,14 135,6 175,2" fill="none" stroke="#10B981" stroke-width="2.5"/>
+                    </svg>
+                  </div>
+                  <div style="flex:1;background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:13px">
+                    <div style="font-size:12px;font-weight:600;margin-bottom:8px">Occupancy</div>
+                    <div style="display:flex;gap:4px;align-items:flex-end;height:50px">
+                      <div style="flex:1;background:#E0E7FF;height:30%;border-radius:3px"></div>
+                      <div style="flex:1;background:#E0E7FF;height:40%;border-radius:3px"></div>
+                      <div style="flex:1;background:#5B7CFA;height:80%;border-radius:3px"></div>
+                      <div style="flex:1;background:#5B7CFA;height:100%;border-radius:3px"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-ea">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Estate Agency</div>
+                <div class="prev-nav-item prev-on">Estate Agency</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
+                <div class="prev-nav-item">CRM</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:14px">Finance overview</div>
+                <div style="background:#fff;border:1px solid #E4E7EC;border-radius:12px;padding:15px;margin-bottom:13px">
+                  <div style="display:flex;gap:26px;margin-bottom:10px">
+                    <div><div style="font-size:10px;font-weight:600;color:#667085;text-transform:uppercase">Rent paid</div><div style="font-size:22px;font-weight:700;color:#10B981">1</div></div>
+                    <div><div style="font-size:10px;font-weight:600;color:#667085;text-transform:uppercase">Late rent</div><div style="font-size:22px;font-weight:700;color:#EF4444">1</div></div>
+                  </div>
+                  <div style="height:9px;background:#F3F4F6;border-radius:5px;overflow:hidden"><div style="width:40%;height:100%;background:linear-gradient(90deg,#10B981,#059669)"></div></div>
+                </div>
+                <div class="prev-stat-grid" style="grid-template-columns:repeat(2,1fr)">
+                  <div class="prev-stat"><div class="prev-stat-label">Gross income</div><div class="prev-stat-value">£923</div></div>
+                  <div class="prev-stat"><div class="prev-stat-label">Net profit</div><div class="prev-stat-value" style="color:#5B7CFA">£923</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-dev">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Developments</div>
+                <div class="prev-nav-item prev-on">Developments</div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
+                <div class="prev-nav-item">CRM</div>
+              </div>
+              <div class="prev-main" style="display:flex;gap:16px">
+                <div style="flex:1">
+                  <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:3px">Seacastle Phase II</div>
+                  <div style="font-size:10px;color:#667085;margin-bottom:14px">Project timeline</div>
+                  <div style="position:relative;padding-left:18px">
+                    <div style="position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:#E4E7EC"></div>
+                    <div style="position:relative;margin-bottom:14px">
+                      <div style="position:absolute;left:-18px;top:2px;width:11px;height:11px;border-radius:50%;background:#10B981"></div>
+                      <div style="font-size:11px;font-weight:600;color:#101828">Land acquisition</div>
+                      <div style="font-size:9px;color:#667085">Completed · Jan</div>
+                    </div>
+                    <div style="position:relative;margin-bottom:14px">
+                      <div style="position:absolute;left:-18px;top:2px;width:11px;height:11px;border-radius:50%;background:#5B7CFA"></div>
+                      <div style="font-size:11px;font-weight:600;color:#101828">Foundation works</div>
+                      <div style="font-size:9px;color:#667085">Due Jul 2026</div>
+                      <div style="height:5px;background:#F3F4F6;border-radius:3px;margin-top:4px;width:130px"><div style="height:100%;width:62%;background:#5B7CFA;border-radius:3px"></div></div>
+                    </div>
+                    <div style="position:relative">
+                      <div style="position:absolute;left:-18px;top:2px;width:11px;height:11px;border-radius:50%;background:#E4E7EC"></div>
+                      <div style="font-size:11px;font-weight:600;color:#98A2B3">Structural build</div>
+                      <div style="font-size:9px;color:#98A2B3">Upcoming</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="width:150px;border-left:1px solid #F2F4F7;padding-left:16px">
+                  <div style="font-size:10px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:8px">Budget</div>
+                  <div style="font-size:18px;font-weight:700;color:#101828">£2.4M</div>
+                  <div style="font-size:9px;color:#10B981;margin-bottom:12px">68% allocated</div>
+                  <div style="background:#EEF1FF;color:#5B7CFA;font-size:10px;font-weight:600;padding:4px 9px;border-radius:6px;display:inline-block">On track</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prev-screen" id="prevscreen-staff">
+              <div class="prev-sidebar">
+                <div class="prev-logo-row"><img src="/logo.PNG" style="height:18px;width:auto"/><span style="font-size:13px;font-weight:700">Opero</span></div>
+                <div class="prev-nav-group">Staff Centre</div>
+                <div class="prev-nav-item prev-on">Conversations</div>
+                <div class="prev-nav-item">Property Portals</div>
+                <div class="prev-nav-item">Maintenance Board</div>
+                <div class="prev-nav-item">CRM</div>
+                <div class="prev-nav-item">Calendar</div>
+                <div class="prev-nav-item">Tasks</div>
+              </div>
+              <div class="prev-main">
+                <div style="font-size:15px;font-weight:700;color:#101828;margin-bottom:14px">Conversations</div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center">
+                    <div style="display:flex;gap:9px;align-items:center"><div style="width:26px;height:26px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5B7CFA">SJ</div><div><div style="font-size:11.5px;font-weight:600">Sarah J.</div><div style="font-size:9.5px;color:#667085">Is the parking included?</div></div></div>
+                    <span style="font-size:9px;color:#98A2B3">2m</span>
+                  </div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center">
+                    <div style="display:flex;gap:9px;align-items:center"><div style="width:26px;height:26px;border-radius:50%;background:#FEF3E2;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#B54708">MK</div><div><div style="font-size:11.5px;font-weight:600">Marcus K.</div><div style="font-size:9.5px;color:#667085">Thanks for the quick fix!</div></div></div>
+                    <span style="font-size:9px;color:#98A2B3">1h</span>
+                  </div>
+                  <div style="background:#fff;border:1px solid #E4E7EC;border-radius:10px;padding:11px;display:flex;justify-content:space-between;align-items:center">
+                    <div style="display:flex;gap:9px;align-items:center"><div style="width:26px;height:26px;border-radius:50%;background:#EAF3EE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#2D6A4F">TD</div><div><div style="font-size:11.5px;font-weight:600">Tunde D.</div><div style="font-size:9.5px;color:#667085">Viewing confirmed for Friday</div></div></div>
+                    <span style="font-size:9px;color:#98A2B3">3h</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="prev-laptop-base"></div>
+      </div>
+
+      <div class="prev-phone">
+        <div class="prev-phone-screen prev-ui">
+
+          <div class="prev-pscreen prev-on" id="prevphone-str">
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 12px;border-bottom:1px solid #F2F4F7">
+              <span style="font-size:13px;font-weight:700">Bookings</span>
+              <div style="width:26px;height:26px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5B7CFA">J</div>
+            </div>
+            <div style="padding:12px 16px 0">
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">
+                <div style="height:32px;border-radius:6px;background:#F9FAFB"></div><div style="height:32px;border-radius:6px;background:#F9FAFB"></div>
+                <div style="height:32px;border-radius:6px;background:#EEF1FF"></div><div style="height:32px;border-radius:6px;background:#EEF1FF"></div>
+                <div style="height:32px;border-radius:6px;background:#EEF1FF"></div><div style="height:32px;border-radius:6px;background:#F9FAFB"></div>
+                <div style="height:32px;border-radius:6px;background:#5B7CFA"></div>
+              </div>
+            </div>
+            <div style="padding:16px 16px 0">
+              <div style="font-size:11px;font-weight:600;color:#667085;text-transform:uppercase;margin-bottom:8px">Check-ins</div>
+              <div style="background:#F9FAFB;border-radius:9px;padding:11px;margin-bottom:8px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Sarah J.</span><span style="font-size:11px;color:#5B7CFA;font-weight:600">Jun 11</span></div>
+              <div style="background:#F9FAFB;border-radius:9px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Marcus K.</span><span style="font-size:11px;color:#5B7CFA;font-weight:600">Jun 18</span></div>
+            </div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-pm">
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Rent collection</span></div>
+            <div style="padding:0 16px">
+              <div style="background:#F9FAFB;border-radius:12px;padding:14px;margin-bottom:10px"><div style="font-size:10px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:4px">Collected</div><div style="font-size:21px;font-weight:700;color:#10B981">£0</div></div>
+              <div style="background:#F9FAFB;border-radius:12px;padding:14px"><div style="font-size:10px;color:#667085;text-transform:uppercase;font-weight:600;margin-bottom:4px">Arrears</div><div style="font-size:21px;font-weight:700;color:#EF4444">£0</div></div>
+            </div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-ea">
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Estate Agency</span></div>
+            <div style="padding:0 16px">
+              <div style="background:#fff;border:1px solid #E4E7EC;border-radius:12px;padding:14px;margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:#667085">Rent paid</span><span style="font-size:13px;font-weight:700;color:#10B981">£923</span></div>
+                <div style="height:7px;background:#F3F4F6;border-radius:4px;overflow:hidden"><div style="width:40%;height:100%;background:#10B981"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-dev">
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Seacastle II</span></div>
+            <div style="padding:0 16px;position:relative;padding-left:30px">
+              <div style="position:absolute;left:22px;top:8px;bottom:8px;width:2px;background:#E4E7EC"></div>
+              <div style="position:relative;margin-bottom:16px"><div style="position:absolute;left:-8px;top:2px;width:11px;height:11px;border-radius:50%;background:#10B981"></div><div style="font-size:12px;font-weight:600">Land acquisition</div><div style="font-size:10px;color:#667085">Completed</div></div>
+              <div style="position:relative"><div style="position:absolute;left:-8px;top:2px;width:11px;height:11px;border-radius:50%;background:#5B7CFA"></div><div style="font-size:12px;font-weight:600">Foundation</div><div style="font-size:10px;color:#667085">62% · Jul 2026</div></div>
+            </div>
+          </div>
+
+          <div class="prev-pscreen" id="prevphone-staff">
+            <div style="padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600">9:41</span><div style="width:20px;height:10px;border:1.5px solid #101828;border-radius:2px"></div></div>
+            <div style="padding:12px 16px"><span style="font-size:15px;font-weight:700">Conversations</span></div>
+            <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+              <div style="background:#F9FAFB;border-radius:10px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Sarah J.</span><span style="font-size:10px;color:#98A2B3">2m</span></div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Marcus K.</span><span style="font-size:10px;color:#98A2B3">1h</span></div>
+              <div style="background:#F9FAFB;border-radius:10px;padding:11px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Tunde D.</span><span style="font-size:10px;color:#98A2B3">3h</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="prev-infopanel prev-on" id="previnfo-str">
+      <div class="prev-info-title">Vacation Rentals</div>
+      <div class="prev-info-sub">Included in every Opero plan. Bookings, CRM, cleaning, maintenance, banking, reports, contractor portal and guest comms in one module.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Direct booking engine + iCal sync across Airbnb/Vrbo</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Auto-scheduled cleaning after every checkout</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Owner reports with revenue & occupancy charts</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-pm">
+      <div class="prev-info-title">Property Management</div>
+      <div class="prev-info-sub">Included in every Opero plan. Tenants, leases, rent collection, inspections, banking and reports for long-term lets.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Automated rent reminders and arrears tracking</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Lease renewal alerts 60 days ahead</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Owner statements with 80/20 split breakdown</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-ea">
+      <div class="prev-info-title">Estate Agency</div>
+      <div class="prev-info-sub">Included in every Opero plan. Vacancies, rent collection, landlord portal, CRM and banking for agency operations.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Untapped income potential calculated from vacant units</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Loans & mortgages tracker with repayment progress</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Landlord-facing portal with live finance dashboard</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-dev">
+      <div class="prev-info-title">Developments</div>
+      <div class="prev-info-sub">Included in every Opero plan. Projects, budgets, investors, milestones and contractor management for build projects.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Milestone timeline with budget allocation tracking</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Multiple investors per project with avatar tracking</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Contractor management integrated with budgets</div></div>
+      </div>
+    </div>
+
+    <div class="prev-infopanel" id="previnfo-staff">
+      <div class="prev-info-title">Staff Centre</div>
+      <div class="prev-info-sub">Included in every Opero plan. Conversations, property portals, maintenance board, CRM, calendar and tasks for your team in one place.</div>
+      <div class="prev-info-grid">
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Team inbox for guest, tenant and owner conversations</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">One-click access to Rightmove, Zillow & Jamaica MLS</div></div>
+        <div class="prev-info-item"><div class="prev-info-dot"></div><div class="prev-info-text">Shared CRM, calendar and task board across staff</div></div>
+      </div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.prev-tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var key = btn.getAttribute('data-prevtab')
+    document.querySelectorAll('.prev-tab').forEach(function(t){t.classList.remove('prev-on')})
+    btn.classList.add('prev-on')
+    document.querySelectorAll('.prev-screen').forEach(function(s){s.classList.remove('prev-on')})
+    document.getElementById('prevscreen-'+key).classList.add('prev-on')
+    document.querySelectorAll('.prev-pscreen').forEach(function(s){s.classList.remove('prev-on')})
+    document.getElementById('prevphone-'+key).classList.add('prev-on')
+    document.querySelectorAll('.prev-infopanel').forEach(function(s){s.classList.remove('prev-on')})
+    document.getElementById('previnfo-'+key).classList.add('prev-on')
+  })
+})
+</script>
+
+
+<section style="padding:96px 64px 72px;text-align:center;max-width:900px;margin:0 auto">
+  <div style="display:inline-flex;align-items:center;gap:8px;background:#EEF1FF;border:1px solid #C7D2FE;border-radius:20px;padding:6px 14px;margin-bottom:24px">
+    <i class="ti ti-sparkles" style="color:#5B7CFA;font-size:13px"></i>
+    <span style="font-size:12px;font-weight:600;color:#5B7CFA">The all-in-one property platform</span>
+  </div>
+  <div style="border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(16,24,40,0.16);border:1px solid #E4E7EC;margin-bottom:36px">
+    <video controls preload="metadata" playsinline style="width:100%;display:block;background:#000">
+      <source src="/videos/opero-demo.mp4" type="video/mp4">
+      Your browser doesn't support embedded video. <a href="/videos/opero-demo.mp4">Download the video</a> instead.
+    </video>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
+    <button class="btn-primary" style="font-size:15px;padding:14px 28px" onclick="startCheckout('monthly')">Start free trial <i class="ti ti-arrow-right"></i></button>
+  </div>
+  <p style="font-size:13px;color:#98A2B3">No credit card required &middot; 14-day free trial &middot; Cancel anytime</p>
+</section>
+
+<section class="section" id="how-it-works">
+  <div style="max-width:1000px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:48px">
+      <span class="tag">How it works</span>
+      <h2 style="font-size:36px;font-weight:700;margin:10px 0 12px">Up and running in four steps</h2>
+      <p style="font-size:15px;color:#667085;max-width:520px;margin:0 auto">No lengthy onboarding calls. Pick what you need and start using it the same day.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
+      <div class="step-card">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">1</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Create your account</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Sign up free, no card required. Tell us a little about your portfolio.</div>
+      </div>
+      <div class="step-card">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">2</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Pick your modules</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">STR, Property Management, Estate Agency, Developments, Invest — turn on only what you run.</div>
+      </div>
+      <div class="step-card">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">3</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Connect your channels</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Sync calendars, link your bank, invite your team and contractors.</div>
+      </div>
+      <div class="step-card">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5B7CFA;margin-bottom:16px">4</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Go live</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Bookings, rent, reporting and CRM all flow through one dashboard from day one.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section" id="features" style="background:#F9FAFB">
+  <div style="text-align:center;margin-bottom:64px">
+    <span class="tag" style="display:block;margin-bottom:10px">Features</span>
+    <h2 style="font-size:36px;font-weight:700;margin-bottom:12px;letter-spacing:-0.01em">Everything your portfolio needs</h2>
+    <p style="font-size:16px;color:#667085;max-width:480px;margin:0 auto">Replace five disconnected tools with one platform built for serious property operators.</p>
+  </div>
+
+  <style>
+  .module-showcase{display:flex;align-items:center;gap:56px;max-width:1180px;margin:0 auto 88px}
+  .module-showcase.reverse{flex-direction:row-reverse}
+  .module-showcase-text{flex:0 0 360px}
+  .module-showcase-img{flex:1;min-width:0;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(16,24,40,0.10);border:1px solid #E4E7EC}
+  .module-showcase-img img{width:100%;display:block}
+  .module-showcase-text .tag{display:inline-block;margin-bottom:14px}
+  .module-showcase-text h3{font-size:26px;font-weight:700;margin-bottom:12px;letter-spacing:-0.01em;color:#101828}
+  .module-showcase-text p{font-size:14px;color:#667085;line-height:1.7;margin-bottom:20px}
+  .module-showcase-list{display:flex;flex-direction:column;gap:10px}
+  .module-showcase-list div{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:#344054}
+  .module-showcase-list div::before{content:'';width:5px;height:5px;border-radius:50%;background:#5B7CFA;margin-top:7px;flex-shrink:0}
+  @media(max-width:900px){.module-showcase,.module-showcase.reverse{flex-direction:column;gap:28px}.module-showcase-text{flex:0 0 auto;text-align:center}.module-showcase-list div{text-align:left}}
+  </style>
+
+  <div class="module-showcase">
+    <div class="module-showcase-text">
+      <span class="tag">Vacation Rentals</span>
+      <h3>Run short-term rentals like a pro</h3>
+      <p>Bookings, revenue trends, occupancy and check-ins — all on one dashboard, synced directly with Airbnb and Vrbo.</p>
+      <div class="module-showcase-list">
+        <div>Direct booking engine + iCal sync</div>
+        <div>Auto-scheduled cleaning after every checkout</div>
+        <div>Owner reports with revenue & occupancy charts</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/str.png" alt="Opero Vacation Rentals dashboard" loading="lazy"></div>
+  </div>
+
+  <div class="module-showcase reverse">
+    <div class="module-showcase-text">
+      <span class="tag">Property Management</span>
+      <h3>Tenants, leases and rent — handled</h3>
+      <p>Track rent collected, arrears, lease expiries and maintenance from a single property management dashboard.</p>
+      <div class="module-showcase-list">
+        <div>Rent collection trends vs amounts due</div>
+        <div>Lease expiry tracking with automatic alerts</div>
+        <div>Inspections, maintenance and owner reports</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/pm.png" alt="Opero Property Management dashboard" loading="lazy"></div>
+  </div>
+
+  <div class="module-showcase">
+    <div class="module-showcase-text">
+      <span class="tag">Estate Agency</span>
+      <h3>Manage lettings on behalf of landlords</h3>
+      <p>Rented properties, tenancies and rent collection in one place, with built-in real estate news and market updates.</p>
+      <div class="module-showcase-list">
+        <div>Revenue and expenses by month or year</div>
+        <div>Tenancy and tenant tracking with archiving</div>
+        <div>Landlord portal with owner-facing reports</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/estate.png" alt="Opero Estate Agency dashboard" loading="lazy"></div>
+  </div>
+
+  <div class="module-showcase reverse">
+    <div class="module-showcase-text">
+      <span class="tag">Developments</span>
+      <h3>Track every build from start to finish</h3>
+      <p>Budgets, spend, investor equity and project status — all visible at a glance across every development.</p>
+      <div class="module-showcase-list">
+        <div>Budget vs spend tracked over time</div>
+        <div>Investor summary with equity breakdown</div>
+        <div>Milestones and project status by stage</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/dev.png" alt="Opero Developments dashboard" loading="lazy"></div>
+  </div>
+
+  <div class="module-showcase">
+    <div class="module-showcase-text">
+      <span class="tag">Invest</span>
+      <h3>Analyse any deal before you buy</h3>
+      <p>Eight investment strategies built in, so you can model returns before committing to a purchase.</p>
+      <div class="module-showcase-list">
+        <div>Buy to Let, Flip, BRRR, HMO and more</div>
+        <div>Rent to Rent, Social Housing, Supported Living</div>
+        <div>Land Purchase analysis for development gain</div>
+      </div>
+    </div>
+    <div class="module-showcase-img"><img src="/screenshots/invest.png" alt="Opero Invest Deal Analyser" loading="lazy"></div>
+  </div>
+
+</section>
+
+<section class="section" id="ai-agents" style="background:#F9FAFB">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:40px">
+      <span class="tag">New</span>
+      <h2 style="font-size:36px;font-weight:700;margin:10px 0 12px">Let AI handle the day-to-day</h2>
+      <p style="font-size:15px;color:#667085;max-width:600px;margin:0 auto">Six AI agents built into Opero — designed to take routine guest, maintenance and reporting work off your plate.</p>
+    </div>
+    <style>
+    .sc-frame{max-width:900px;margin:0 auto 48px;border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(16,24,40,0.12);border:1px solid #E4E7EC;background:#fff}
+    .sc-chrome{background:#F2F4F7;padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #E4E7EC}
+    .sc-tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 16px;border-bottom:1px solid #F2F4F7;scrollbar-width:none}
+    .sc-tabs::-webkit-scrollbar{display:none}
+    .sc-tab{flex-shrink:0;padding:8px 16px;border-radius:8px;border:none;background:transparent;color:#667085;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap}
+    .sc-tab.sc-on{background:#EEF1FF;color:#5B7CFA}
+    .sc-tab:hover:not(.sc-on){background:#F9FAFB;color:#101828}
+    .sc-panel{display:none;padding:24px;min-height:280px}
+    .sc-panel.sc-on{display:block}
+    @media(max-width:700px){.sc-panel{min-height:340px}}
+    </style>
+    <div class="sc-frame">
+      <div class="sc-chrome">
+        <span style="width:10px;height:10px;border-radius:50%;background:#F04438;display:inline-block"></span>
+        <span style="width:10px;height:10px;border-radius:50%;background:#F59E0B;display:inline-block"></span>
+        <span style="width:10px;height:10px;border-radius:50%;background:#10B981;display:inline-block"></span>
+        <span style="margin:0 auto;background:#fff;border:1px solid #E4E7EC;border-radius:6px;padding:3px 18px;font-size:11px;color:#98A2B3" id="scUrlBar">app.helloopero.com/staff-centre/conversations</span>
+      </div>
+      <div class="sc-tabs" id="scTabs">
+        <button class="sc-tab sc-on" data-sctab="conversations">Conversations</button>
+        <button class="sc-tab" data-sctab="portals">Property Portals</button>
+        <button class="sc-tab" data-sctab="maintenance">Maintenance Board</button>
+        <button class="sc-tab" data-sctab="crm">CRM</button>
+        <button class="sc-tab" data-sctab="marketing">Marketing</button>
+        <button class="sc-tab" data-sctab="sales">Sales</button>
+        <button class="sc-tab" data-sctab="team">Team Management</button>
+        <button class="sc-tab" data-sctab="calendar">Calendar</button>
+        <button class="sc-tab" data-sctab="tasks">Tasks</button>
+      </div>
+
+      <div class="sc-panel sc-on" id="scpanel-conversations">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Conversations</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div style="width:30px;height:30px;border-radius:50%;background:#EEF1FF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#5B7CFA">SJ</div><div><div style="font-size:13px;font-weight:600">Sarah J.</div><div style="font-size:11.5px;color:#667085">Is the parking included?</div></div></div><span style="font-size:10.5px;color:#98A2B3">2m</span></div>
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div style="width:30px;height:30px;border-radius:50%;background:#FEF3E2;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#B54708">MK</div><div><div style="font-size:13px;font-weight:600">Marcus K.</div><div style="font-size:11.5px;color:#667085">Thanks for the quick fix!</div></div></div><span style="font-size:10.5px;color:#98A2B3">1h</span></div>
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div style="width:30px;height:30px;border-radius:50%;background:#EAF3EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#2D6A4F">TD</div><div><div style="font-size:13px;font-weight:600">Tunde D.</div><div style="font-size:11.5px;color:#667085">Viewing confirmed for Friday</div></div></div><span style="font-size:10.5px;color:#98A2B3">3h</span></div>
+        </div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-portals">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Property Portals</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:16px;text-align:center"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Rightmove</div><div style="font-size:11px;color:#10B981;font-weight:600">Connected</div></div>
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:16px;text-align:center"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Zillow</div><div style="font-size:11px;color:#10B981;font-weight:600">Connected</div></div>
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:16px;text-align:center"><div style="font-size:13px;font-weight:700;margin-bottom:4px">Jamaica MLS</div><div style="font-size:11px;color:#10B981;font-weight:600">Connected</div></div>
+        </div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-maintenance">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Maintenance Board</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div><div style="font-size:11px;font-weight:700;color:#98A2B3;text-transform:uppercase;margin-bottom:8px">To do</div><div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:8px;padding:10px;font-size:12px;font-weight:600;margin-bottom:6px">Leaking tap · Flat 3</div></div>
+          <div><div style="font-size:11px;font-weight:700;color:#98A2B3;text-transform:uppercase;margin-bottom:8px">In progress</div><div style="background:#EEF1FF;border:1px solid #C7D2FE;border-radius:8px;padding:10px;font-size:12px;font-weight:600;margin-bottom:6px">Boiler service</div></div>
+          <div><div style="font-size:11px;font-weight:700;color:#98A2B3;text-transform:uppercase;margin-bottom:8px">Done</div><div style="background:#EAF3EE;border:1px solid #A7E5C1;border-radius:8px;padding:10px;font-size:12px;font-weight:600;margin-bottom:6px">Gutter clean</div></div>
+        </div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-crm">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">CRM</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px solid #F2F4F7;font-size:12.5px"><span style="font-weight:600">Sarah Johnson</span><span style="color:#667085">Tenant · Flat 3</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px solid #F2F4F7;font-size:12.5px"><span style="font-weight:600">Marcus King</span><span style="color:#667085">Guest · Booking #4021</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 4px;font-size:12.5px"><span style="font-weight:600">Tunde David</span><span style="color:#667085">Landlord · 3 properties</span></div>
+        </div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-marketing">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Marketing</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:14px"><div style="font-size:12px;color:#667085;margin-bottom:4px">Email open rate</div><div style="font-size:22px;font-weight:700;color:#5B7CFA">42%</div></div>
+          <div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:10px;padding:14px"><div style="font-size:12px;color:#667085;margin-bottom:4px">New leads this month</div><div style="font-size:22px;font-weight:700;color:#10B981">18</div></div>
+        </div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-sales">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Sales pipeline</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div><div style="font-size:10.5px;font-weight:700;color:#98A2B3;text-transform:uppercase;margin-bottom:8px">New</div><div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:8px;padding:8px;font-size:11.5px;font-weight:600">3 leads</div></div>
+          <div><div style="font-size:10.5px;font-weight:700;color:#98A2B3;text-transform:uppercase;margin-bottom:8px">Contacted</div><div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:8px;padding:8px;font-size:11.5px;font-weight:600">5 leads</div></div>
+          <div><div style="font-size:10.5px;font-weight:700;color:#98A2B3;text-transform:uppercase;margin-bottom:8px">Viewing</div><div style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:8px;padding:8px;font-size:11.5px;font-weight:600">2 leads</div></div>
+          <div><div style="font-size:10.5px;font-weight:700;color:#98A2B3;text-transform:uppercase;margin-bottom:8px">Won</div><div style="background:#EAF3EE;border:1px solid #A7E5C1;border-radius:8px;padding:8px;font-size:11.5px;font-weight:600">1 lead</div></div>
+        </div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-team">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Team Management</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px solid #F2F4F7;font-size:12.5px"><span style="font-weight:600">Jordan S.</span><span style="background:#EEF1FF;color:#5B7CFA;font-weight:600;font-size:11px;padding:2px 8px;border-radius:6px">Admin</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px solid #F2F4F7;font-size:12.5px"><span style="font-weight:600">Cleaning Team</span><span style="background:#F9FAFB;color:#344054;font-weight:600;font-size:11px;padding:2px 8px;border-radius:6px">Cleaning</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 4px;font-size:12.5px"><span style="font-weight:600">Maintenance</span><span style="background:#F9FAFB;color:#344054;font-weight:600;font-size:11px;padding:2px 8px;border-radius:6px">Maintenance</span></div>
+        </div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-calendar">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Calendar</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+          <div style="height:34px;border-radius:6px;background:#F9FAFB"></div><div style="height:34px;border-radius:6px;background:#F9FAFB"></div><div style="height:34px;border-radius:6px;background:#EEF1FF"></div><div style="height:34px;border-radius:6px;background:#EEF1FF"></div><div style="height:34px;border-radius:6px;background:#5B7CFA"></div><div style="height:34px;border-radius:6px;background:#F9FAFB"></div><div style="height:34px;border-radius:6px;background:#F9FAFB"></div>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:#667085">3 events today · Boiler service at 2pm</div>
+      </div>
+
+      <div class="sc-panel" id="scpanel-tasks">
+        <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:14px">Tasks</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px"><i class="ti ti-square-check" style="color:#10B981;font-size:16px"></i><span style="text-decoration:line-through;color:#98A2B3">Reply to Sarah J.</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px"><i class="ti ti-square" style="color:#D0D5DD;font-size:16px"></i><span>Chase contractor invoice</span></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px"><i class="ti ti-square" style="color:#D0D5DD;font-size:16px"></i><span>Confirm Friday viewing</span></div>
+        </div>
+      </div>
+    </div>
+    <script>
+    (function(){
+      var urls = {conversations:'conversations',portals:'property-portals',maintenance:'maintenance-board',crm:'crm',marketing:'marketing',sales:'sales',team:'team-management',calendar:'calendar',tasks:'tasks'}
+      document.querySelectorAll('#scTabs .sc-tab').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var key = btn.getAttribute('data-sctab')
+          document.querySelectorAll('#scTabs .sc-tab').forEach(function(t){t.classList.remove('sc-on')})
+          btn.classList.add('sc-on')
+          document.querySelectorAll('.sc-panel').forEach(function(p){p.classList.remove('sc-on')})
+          document.getElementById('scpanel-'+key).classList.add('sc-on')
+          document.getElementById('scUrlBar').textContent = 'app.helloopero.com/staff-centre/' + urls[key]
+        })
+      })
+      var scAuto = 0, scKeys = Object.keys(urls)
+      setInterval(function(){
+        scAuto = (scAuto + 1) % scKeys.length
+        document.querySelector('#scTabs .sc-tab[data-sctab="'+scKeys[scAuto]+'"]').click()
+      }, 3500)
+    })()
+    </script>
+    <div class="features-grid" style="margin-bottom:32px">
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Guest Agent</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Answers guest questions 24/7, sends check-in instructions, Wi-Fi details and house rules, and handles common complaints.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Maintenance Coordinator</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Logs issues, assigns jobs to contractors, tracks repairs and follows up until work is completed.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M3 3l18 18M9 9l-6 6a2 2 0 002.83 2.83L12 11.8M14 4l6 6-3.5 3.5L10 7l4-3z"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Cleaning Coordinator</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Automatically schedules cleaners after bookings, notifies them of turnovers and tracks completion.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Revenue Manager</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Adjusts nightly rates, monitors competitor pricing, raises rates in high demand and fills calendar gaps.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Owner Relations Manager</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Generates monthly income reports, occupancy reports, expense tracking and P&amp;L statements for owners.</div>
+      </div>
+      <div class="card">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:14px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <div style="font-size:15px;font-weight:600;margin-bottom:8px">AI Lead Qualification Agent</div>
+        <div style="font-size:13px;color:#667085;line-height:1.6">Finds landlord leads, qualifies property owners, books appointments and follows up with prospects.</div>
+      </div>
+    </div>
+    <div style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #E4E7EC;border-radius:14px;padding:28px 32px;text-align:center;box-shadow:0 4px 16px rgba(16,24,40,0.04)">
+      <div style="width:40px;height:40px;border-radius:10px;background:#EEF1FF;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+        <i class="ti ti-users-group" style="color:#5B7CFA;font-size:19px"></i>
+      </div>
+      <div style="font-size:16px;font-weight:700;color:#101828;margin-bottom:4px">Staff Centre</div>
+      <div style="font-size:12.5px;color:#5B7CFA;font-weight:600;margin-bottom:16px">Included free in every plan</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Conversations</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Property Portals</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Maintenance Board</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">CRM</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Marketing</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Sales</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Team Management</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Calendar</span>
+        <span style="background:#F9FAFB;border:1px solid #E4E7EC;border-radius:16px;padding:5px 12px;font-size:12px;color:#344054;font-weight:600">Tasks</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="pricing" style="background:#F9FAFB">
+  <div style="text-align:center;margin-bottom:16px">
+    <span class="tag" style="display:block;margin-bottom:10px">Pricing</span>
+    <h2 style="font-size:36px;font-weight:700;margin-bottom:12px">One plan. Every module.</h2>
+    <p style="font-size:16px;color:#667085;max-width:560px;margin:0 auto">Vacation Rentals, Property Management, Estate Agency, Developments, Invest, 6 AI agents and Staff Centre — all included. No per-module add-ons.</p>
+  </div>
+  <p style="text-align:center;font-size:13px;color:#98A2B3;margin-bottom:40px">14-day free trial &middot; No credit card required</p>
+
+  <style>
+  .tier-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:760px;margin:0 auto}
+  .tier-card{background:#fff;border-radius:14px;padding:32px 28px;border:1px solid #E4E7EC;position:relative}
+  @media(max-width:700px){.tier-grid{grid-template-columns:1fr}}
+  </style>
+
+  <div class="tier-grid">
+    <div class="tier-card">
+      <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:6px">Monthly</div>
+      <div style="font-size:40px;font-weight:800;color:#5B7CFA;margin-bottom:4px">£79<span style="font-size:15px;font-weight:400;color:#667085">/mo</span></div>
+      <div style="font-size:12.5px;color:#98A2B3;margin-bottom:22px">Billed monthly &middot; cancel anytime</div>
+      <button onclick="startCheckout('monthly')" style="width:100%;background:#101828;color:#fff;border:none;padding:13px 0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:20px">Start free trial</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Staff Centre included free — conversations, property portals, CRM & more</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Unlimited properties</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>One login, one bill</span></div>
+      </div>
+    </div>
+    <div class="tier-card" style="border:2px solid #5B7CFA">
+      <div style="position:absolute;top:0;left:24px;transform:translateY(-50%);background:#5B7CFA;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px">Best value</div>
+      <div style="font-size:14px;font-weight:700;color:#101828;margin-bottom:6px">One-time</div>
+      <div style="font-size:40px;font-weight:800;color:#5B7CFA;margin-bottom:4px">£175.50<span style="font-size:15px;font-weight:400;color:#667085"> one-time</span></div>
+      <div style="font-size:12.5px;color:#98A2B3;margin-bottom:22px">One payment &middot; lifetime access, no renewals</div>
+      <button onclick="startCheckout('onetime')" style="width:100%;background:#5B7CFA;color:#fff;border:none;padding:13px 0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:20px">Get lifetime access</button>
+      <div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Staff Centre included free — conversations, property portals, CRM & more</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>Unlimited properties</span></div>
+<div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#344054;padding:6px 0;border-top:1px solid #F2F4F7"><i class="ti ti-check" style="color:#10B981;font-size:15px;flex-shrink:0;margin-top:1px"></i><span>One login, no recurring bill</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div style="max-width:900px;margin:0 auto;text-align:center">
+    <span class="tag">Why Opero</span>
+    <h2 style="font-size:32px;font-weight:700;margin:10px 0 16px">Built by people who run property businesses</h2>
+    <p style="font-size:15px;color:#667085;line-height:1.7;max-width:680px;margin:0 auto 28px">Opero started as an internal tool for managing a short-let and lettings portfolio across Jamaica, the UK, the US and Dubai. We got tired of stitching together five different platforms for bookings, CRM, cleaning, banking and reporting — so we built the one we wished existed, and opened it up for other property operators.</p>
+    <div style="display:flex;justify-content:center;gap:36px;flex-wrap:wrap">
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Short-term rentals</div>
+        <div style="font-size:12px;color:#667085">Hosts &amp; co-hosts</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Property management</div>
+        <div style="font-size:12px;color:#667085">Letting agents &amp; landlords</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Estate agencies</div>
+        <div style="font-size:12px;color:#667085">Sales &amp; lettings teams</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Developers</div>
+        <div style="font-size:12px;color:#667085">Project &amp; investor management</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:13px;font-weight:600;color:#101828">Investors</div>
+        <div style="font-size:12px;color:#667085">Deal analysis &amp; sourcing</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="reviews">
+  <div style="text-align:center;margin-bottom:52px">
+    <span class="tag" style="display:block;margin-bottom:10px">Reviews</span>
+    <h2 style="font-size:36px;font-weight:700">Trusted by property operators</h2>
+  </div>
+  <div class="testimonials-grid">
+    <div class="card"><div style="color:#F59E0B;font-size:16px;margin-bottom:14px">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p style="font-size:14px;color:#667085;line-height:1.7;margin-bottom:18px">"Finally a platform that handles my Airbnb properties AND my long-term rentals. I cancelled three other subscriptions the same week."</p><div style="display:flex;align-items:center;gap:10px"><div class="avatar">SJ</div><div><div style="font-size:13px;font-weight:600">Sarah J.</div><div style="font-size:11px;color:#667085">12 properties &middot; London</div></div></div></div>
+    <div class="card"><div style="color:#F59E0B;font-size:16px;margin-bottom:14px">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p style="font-size:14px;color:#667085;line-height:1.7;margin-bottom:18px">"The deal analyser alone is worth the price. I ran 40 BTL and HMO analyses before buying my last property. Nothing else comes close."</p><div style="display:flex;align-items:center;gap:10px"><div class="avatar">MK</div><div><div style="font-size:13px;font-weight:600">Marcus K.</div><div style="font-size:11px;color:#667085">Investor &middot; Birmingham</div></div></div></div>
+    <div class="card"><div style="color:#F59E0B;font-size:16px;margin-bottom:14px">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p style="font-size:14px;color:#667085;line-height:1.7;margin-bottom:18px">"We manage 60 units across STR and long-term. Opero is the only platform that handles both without compromise. Game changer."</p><div style="display:flex;align-items:center;gap:10px"><div class="avatar">TD</div><div><div style="font-size:13px;font-weight:600">Tunde D.</div><div style="font-size:11px;color:#667085">60 units &middot; Manchester</div></div></div></div>
+  </div>
+</section>
+
+<section class="section" id="faq" style="background:#F9FAFB">
+  <div style="max-width:760px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:36px">
+      <span class="tag">FAQ</span>
+      <h2 style="font-size:36px;font-weight:700;margin:10px 0 0">Questions, answered</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What's included in Vacation Rentals (STR)?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Bookings, CRM, cleaning and maintenance scheduling, banking and reports, guest messaging, a contractor portal, and direct iCal sync with Airbnb and Vrbo — everything you need to run short-term rentals in one place.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What does Property Management cover?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Tenants and leases, rent collection, inspections, an owner reporting portal, and full banking and reports — built for landlords and managers running long-term lets.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What's in the Estate Agency module?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Vacancy management, rent collection, a landlord portal, a built-in CRM, and banking and reports — designed for agencies managing properties on behalf of landlords.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What does the Developments module do?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Track projects and budgets, manage investors, hit milestones, and coordinate contractors and documents — purpose-built for property developers managing builds from start to finish.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What can I do with the Invest (Deal Analyser) module?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Run the numbers on a property before you buy. Eight investment strategies are covered — BTL, HMO, BRRR, R2R, Social Housing, Supported Living, Flip & Land — plus a watchlist, saved deals, and an ROI calculator.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Can I use multiple modules together, e.g. STR and PM?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes. Every module shares one login and one dashboard family, so you can run Vacation Rentals and Property Management side by side without juggling separate logins or tools. Add the bundle for all six modules at a 10% discount.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Can I use just one module?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes. Every module — Vacation Rentals, Property Management, Estate Agency, Developments and Invest — can be activated on its own. Add more later as your business grows.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Is there a contract or minimum term?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">No. Opero is billed monthly with no lock-in. Cancel any time from your account settings.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Do you take a commission on bookings?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">No. Your subscription price is fixed — we don't take a cut of your booking revenue or rent collected.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Can I switch plans later?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">Yes, you can upgrade, downgrade, or add/remove modules at any time. Changes apply from your next billing cycle.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">What happens to my data if I cancel?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">You can export your bookings, tenants, and financial records at any time. We retain your data for a limited period after cancellation in case you want to return, then it's deleted.</p>
+      </details>
+      <details class="card" style="cursor:pointer">
+        <summary style="font-size:14px;font-weight:600;list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">Is the AI Property Manager fully autonomous?<i class="ti ti-chevron-down" style="color:#5B7CFA;font-size:16px;flex-shrink:0"></i></summary>
+        <p style="font-size:13px;color:#667085;margin-top:10px;line-height:1.6">AI Property Manager is an actively developing feature. Today it gives you a central place to manage and log AI-assisted workflows across guest communication, maintenance, cleaning, pricing, owner reporting and lead qualification — with deeper automation rolling out over time.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <h2 style="font-size:42px;font-weight:700;color:#fff;margin-bottom:16px">Ready to run your property business smarter?</h2>
+  <p style="font-size:17px;color:rgba(255,255,255,0.8);margin-bottom:36px;max-width:500px;margin-left:auto;margin-right:auto">Join operators across the UK, Jamaica, US and Dubai already using Opero.</p>
+  <button onclick="startCheckout('monthly')" style="background:#fff;color:#5B7CFA;border:none;padding:16px 36px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-bottom:14px">Get started free <i class="ti ti-arrow-right" style="color:#5B7CFA"></i></button>
+  <p style="font-size:13px;color:rgba(255,255,255,0.6)">14-day free trial &middot; No credit card required &middot; Cancel anytime</p>
+</section>
+
+<section id="demo" style="background:#101828;padding:96px 64px;">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(91,124,250,0.16);border:1px solid rgba(91,124,250,0.35);border-radius:20px;padding:6px 14px;margin-bottom:24px">
+        <i class="ti ti-calendar" style="color:#8BA1FF;font-size:13px"></i>
+        <span style="font-size:12px;font-weight:600;color:#8BA1FF">Book a demo</span>
+      </div>
+      <h2 style="font-size:38px;font-weight:700;color:#fff;line-height:1.2;margin:0 0 18px">See Opero running your own portfolio</h2>
+      <p style="font-size:16px;color:#98A2B3;line-height:1.6;margin:0">Tell us a bit about your business and we'll walk you through exactly how Opero fits — no generic sales pitch, a real look at your own properties, tenants, and bookings.</p>
+    </div>
+
+    <div style="background:#fff;border-radius:16px;padding:36px;box-shadow:0 24px 70px rgba(0,0,0,0.35)">
+      <img src="/logo.PNG" alt="Opero" style="height:28px;width:auto;margin-bottom:24px"/>
+      <form id="demoRequestForm" onsubmit="submitDemoRequest(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <input required name="first_name" placeholder="First name*" style="padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+          <input required name="last_name" placeholder="Last name*" style="padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/>
+        </div>
+        <input required name="company_name" placeholder="Company name*" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <input required name="email" type="email" placeholder="Email*" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <input name="phone" type="tel" placeholder="Phone number" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:12px"/>
+        <select name="portfolio_type" style="width:100%;padding:12px 14px;border:1px solid #D0D5DD;border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;margin-bottom:20px;background:#fff;color:#101828">
+          <option value="">What are you managing?</option>
+          <option value="STR">Vacation Rentals</option>
+          <option value="PM">Property Management</option>
+          <option value="Estate Agency">Estate Agency</option>
+          <option value="Developments">Developments</option>
+          <option value="Multiple">More than one of these</option>
+        </select>
+        <button type="submit" id="demoRequestSubmit" style="width:100%;background:#5B7CFA;color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Book my demo</button>
+        <p id="demoRequestError" style="display:none;color:#EF4444;font-size:12px;margin:10px 0 0"></p>
+      </form>
+      <div id="demoRequestSuccess" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:32px;margin-bottom:10px">✅</div>
+        <div style="font-size:16px;font-weight:600;color:#101828;margin-bottom:6px">Thanks — request sent</div>
+        <div style="font-size:13px;color:#667085">We'll be in touch shortly to set up your demo.</div>
+      </div>
+      <p style="font-size:11px;color:#98A2B3;margin:14px 0 0;text-align:center">By submitting you agree to us contacting you about Opero.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+async function submitDemoRequest(e) {
+  e.preventDefault()
+  var form = document.getElementById('demoRequestForm')
+  var btn = document.getElementById('demoRequestSubmit')
+  var errorEl = document.getElementById('demoRequestError')
+  errorEl.style.display = 'none'
+  btn.disabled = true
+  btn.textContent = 'Sending…'
+  var data = Object.fromEntries(new FormData(form).entries())
+  try {
+    var res = await fetch('/api/demo-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    var result = await res.json()
+    if (!res.ok) throw new Error(result.error || 'Something went wrong.')
+    form.style.display = 'none'
+    document.getElementById('demoRequestSuccess').style.display = 'block'
+  } catch (err) {
+    errorEl.textContent = err.message
+    errorEl.style.display = 'block'
+    btn.disabled = false
+    btn.textContent = 'Book my demo'
+  }
+}
+</script>
+
+<footer style="flex-direction:column;align-items:stretch;gap:0;padding:56px 64px 28px">
+  <div style="display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap;padding-bottom:36px;border-bottom:1px solid #F2F4F7;margin-bottom:24px">
+    <div style="max-width:260px">
+      <img src="/logo.PNG" alt="Opero" style="height:30px;width:auto;margin-bottom:14px"/>
+      <p style="font-size:13px;color:#667085;line-height:1.6">The all-in-one platform for vacation rentals, property management, estate agencies, developments and property investment.</p>
+    </div>
+    <div style="display:flex;gap:48px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Product</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="#features" style="font-size:13px;color:#667085">Features</a>
+          <a href="#pricing" style="font-size:13px;color:#667085">Pricing</a>
+          
+          <a href="#compare" style="font-size:13px;color:#667085">Compare</a>
+          <a href="#ai-agents" style="font-size:13px;color:#667085">AI Property Manager</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Modules</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="/login" style="font-size:13px;color:#667085">Vacation Rentals</a>
+          <a href="/login" style="font-size:13px;color:#667085">Property Management</a>
+          <a href="/login" style="font-size:13px;color:#667085">Estate Agency</a>
+          <a href="/login" style="font-size:13px;color:#667085">Developments</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Company</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="#faq" style="font-size:13px;color:#667085">FAQ</a>
+          <a href="/login" style="font-size:13px;color:#667085">Log in</a>
+          <a href="mailto:hello@helloopero.com" style="font-size:13px;color:#667085">Contact</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#101828;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px">Legal</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <a href="#" style="font-size:13px;color:#667085">Privacy policy</a>
+          <a href="#" style="font-size:13px;color:#667085">Terms of service</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <div style="font-size:12px;color:#98A2B3">&copy; 2026 Opero. All rights reserved.</div>
+    <div style="display:flex;gap:14px">
+      <a href="https://www.instagram.com/hellooperoofficial" style="font-size:12px;color:#98A2B3">Instagram</a>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+function startCheckout(plan) {
+  window.location.href = '/login?plan=' + plan + '&mode=signup';
+}
+</script>
+</body>
+</html>
+<!-- redeploy trigger 2026-08-24T12:09:46Z -->
