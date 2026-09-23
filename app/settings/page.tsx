@@ -348,7 +348,7 @@ function SettingsInner() {
                 <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Custom module access (optional)</div>
                 <div style={{fontSize:11,color:'#98A2B3',marginBottom:6}}>Leave none checked to use whatever their role normally grants. Check specific modules to override it for just this person — e.g. a Property Manager who also needs Vacation Rentals and the Deal Analyser.</div>
                 <div style={{display:'flex',flexWrap:'wrap' as const,gap:8}}>
-                  {[{k:'str',l:'Vacation Rentals'},{k:'pm',l:'Property Management'},{k:'ea',l:'Estate Agency'},{k:'dev',l:'Developments'},{k:'sc',l:'Staff Centre'}].map(mod=>(
+                  {[{k:'str',l:'Vacation Rentals'},{k:'pm',l:'Property Management'},{k:'ea',l:'Estate Agency'},{k:'dev',l:'Developments'},{k:'sc',l:'Staff Centre'},{k:'aipm',l:'AI Property Manager'},{k:'invest',l:'Deal Analyser & Watchlist'}].map(mod=>(
                     <label key={mod.k} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,cursor:'pointer',border:'1px solid '+(customModules.includes(mod.k)?ACCENT:'#E4E7EC'),borderRadius:20,background:customModules.includes(mod.k)?ACCENT+'10':'#fff',color:customModules.includes(mod.k)?ACCENT:'#344054'}}>
                       <input type="checkbox" checked={customModules.includes(mod.k)} onChange={()=>setCustomModules(prev=>{
                         const checked = prev.includes(mod.k)
