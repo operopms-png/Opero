@@ -4,23 +4,14 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
-import { normalizeRole, ROLE_SETTINGS, ROLE_MODULES } from '@/lib/useRole'
+import { normalizeRole, ROLE_SETTINGS, ROLE_MODULES, getScTabs } from '@/lib/useRole'
 import { SidebarCollapseProvider, useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import './globals.css'
 
 const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/staff-dashboard']
 
-// Statuses where Stripe has stopped billing successfully — trial expired
-// with no working payment method, a renewal failed, or it was cancelled.
-// 'cancelled' (double-l) is kept alongside Stripe's real 'canceled' value
-// since an earlier version of the webhook wrote the non-standard spelling.
 const BLOCKED_STATUSES = ['past_due', 'unpaid', 'incomplete_expired', 'canceled', 'cancelled', 'paused']
 
-// Maps a URL path prefix to the module key ROLE_MODULES is keyed by.
-// This is the actual enforcement of "picking a role only unlocks that
-// module" — previously ROLE_MODULES was computed but never checked
-// against the current path anywhere, so any staff role could reach any
-// module just by navigating to its URL directly.
 const PATH_MODULE: Record<string, string> = {
   '/str': 'str',
   '/pm': 'pm',
@@ -30,14 +21,26 @@ const PATH_MODULE: Record<string, string> = {
   '/staff-centre': 'sc',
 }
 
+const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
+  '/staff-centre/inbox': 'inbox',
+  '/staff-centre/portals': 'portals',
+  '/staff-centre/maintenance': 'maintenance',
+  '/staff-centre/crm': 'crm',
+  '/staff-centre/marketing': 'marketing',
+  '/staff-centre/sales': 'sales',
+  '/staff-centre/applications': 'applications',
+  '/staff-centre/performance': 'performance',
+  '/staff-centre/hr': 'hr',
+  '/staff-centre/training': 'training',
+  '/staff-centre/calendar': 'calendar',
+  '/staff-centre/tasks': 'tasks',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route))
   const [checked, setChecked] = useState(false)
 
-  // Runs on every protected page load (not just at login) — catches
-  // Cleaner/Maintenance staff who land here via an existing session,
-  // a bookmark, or direct URL, not just a fresh sign-in.
   useEffect(() => {
     if (isPublicRoute) { setChecked(true); return }
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -54,22 +57,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         window.location.href = '/staff-dashboard'
         return
       }
-      // Belt-and-suspenders: any role not entitled to Settings (per
-      // ROLE_SETTINGS) gets bounced from it specifically, even if it's
-      // not Cleaning Team/Maintenance Team — those roles still use the
-      // rest of the app fine.
       if (pathname?.startsWith('/settings') && !ROLE_SETTINGS[role]) {
         window.location.href = '/'
         return
       }
-      // The actual module-access guard: if the current path belongs to
-      // a module this role isn't in ROLE_MODULES for, send them to the
-      // first module they DO have, rather than leaving a gap where the
-      // page just silently rendered anyway.
       const pathPrefix = Object.keys(PATH_MODULE).find(p => pathname?.startsWith(p))
+      const allowedModules = customModules ?? (ROLE_MODULES[role] ?? [])
       if (pathPrefix) {
         const requiredModule = PATH_MODULE[pathPrefix]
-        const allowedModules = customModules ?? (ROLE_MODULES[role] ?? [])
         if (!allowedModules.includes(requiredModule)) {
           const fallbackModule = allowedModules[0]
           const fallbackPath = fallbackModule ? Object.keys(PATH_MODULE).find(p => PATH_MODULE[p] === fallbackModule) : null
@@ -77,20 +72,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           return
         }
       }
-      // Staff accounts don't have their own subscription — team_members
-      // rows are saved with user_id = the owning account, not the staff
-      // member's own auth id. Not being in team_members means this user
-      // IS the owner. Either way, this resolves to the account whose
-      // billing actually governs access.
+      const scPathPrefix = Object.keys(STAFF_CENTRE_PATH_TAB).find(p => pathname?.startsWith(p))
+      if (scPathPrefix) {
+        const requiredTab = STAFF_CENTRE_PATH_TAB[scPathPrefix]
+        const allowedTabs = getScTabs(role, allowedModules)
+        if (!allowedTabs.includes(requiredTab)) {
+          const firstAllowedPath = Object.keys(STAFF_CENTRE_PATH_TAB).find(p => STAFF_CENTRE_PATH_TAB[p] === allowedTabs[0])
+          window.location.href = firstAllowedPath || '/'
+          return
+        }
+      }
       const ownerId = rows?.[0]?.user_id ?? user.id
       const { data: sub } = await supabase
         .from('subscriptions')
         .select('status')
         .eq('user_id', ownerId)
         .single()
-      // No subscription row at all is left un-blocked deliberately —
-      // that covers accounts set up directly rather than through Stripe
-      // checkout, which should never be locked out by this check.
       if (sub && BLOCKED_STATUSES.includes(sub.status) && !pathname?.startsWith('/settings')) {
         window.location.href = '/settings?billing=required'
         return
