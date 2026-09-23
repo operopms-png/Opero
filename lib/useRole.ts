@@ -54,6 +54,42 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
   return RESTRICTED_TABS[role]?.[moduleKey] ?? null
 }
 
+// Every individual Staff Centre section that can be locked/unlocked per
+// staff member (independent of the coarse 'sc' module toggle, which just
+// gates Staff Centre as a whole). Stored on team_members.custom_modules
+// as 'sc:<key>' entries alongside the plain module keys above.
+export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
+  { k: 'inbox',       l: 'Conversations' },
+  { k: 'portals',     l: 'Property Portals' },
+  { k: 'maintenance', l: 'Maintenance Board' },
+  { k: 'crm',         l: 'CRM' },
+  { k: 'marketing',   l: 'Marketing' },
+  { k: 'sales',       l: 'Sales' },
+  { k: 'applications', l: 'Applications' },
+  { k: 'performance', l: 'Staff Performance' },
+  { k: 'hr',          l: 'People & HR' },
+  { k: 'training',    l: 'Staff Training' },
+  { k: 'calendar',    l: 'Calendar' },
+  { k: 'tasks',       l: 'Tasks' },
+]
+export const SC_TABS = STAFF_CENTRE_TABS.map(t => t.k)
+// People & HR and Applications are admin-only unless a staff member's
+// row explicitly grants them via an 'sc:hr' / 'sc:applications' entry.
+export const DEFAULT_SC_TABS = SC_TABS.filter(k => k !== 'hr' && k !== 'applications')
+
+// Which Staff Centre sub-tabs a given role + resolved module list (what
+// useRole()'s `modules` already returns — customModules if set, else the
+// role's defaults) is allowed to open. Admin (the account owner, or a
+// team member explicitly given the Admin role) always gets every tab;
+// everyone else gets the default set unless their row has explicit
+// 'sc:<key>' overrides, in which case only those exact tabs apply.
+export function getScTabs(role: string, modules: string[]): string[] {
+  if (!modules.includes('sc')) return []
+  if (role === 'Admin') return [...SC_TABS]
+  const explicit = modules.filter(m => m.startsWith('sc:')).map(m => m.slice(3))
+  return explicit.length ? explicit : DEFAULT_SC_TABS
+}
+
 const KNOWN_ROLES: UserRole[] = ['Admin', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Estate Agency Team']
 
 // Old role names, kept only so a not-yet-migrated team_members row
