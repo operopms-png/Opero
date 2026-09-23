@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 const ACCENT = '#3B4AFF'
 const CONTACT_TYPES = ['Landlord','Tenant','Buyer','Seller','Investor','Other']
 const DEAL_STAGES = ['Enquiry','Viewing','Offer','Negotiation','Won','Lost']
@@ -68,7 +68,8 @@ export default function Page() {
   useEffect(()=>{
     supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
-      await loadAll(user.id)
+      const accountId = await getAccountId(user)
+      await loadAll(accountId)
       setLoading(false)
     })
   },[])
@@ -89,22 +90,24 @@ export default function Page() {
   async function logActivity() {
     if(!newActivity.content||!viewingContact) return
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from('crm_activities').insert([{...newActivity,contact_id:viewingContact.id,user_id:user?.id}])
+    const accountId = await getAccountId(user!)
+    const {error} = await supabase.from('crm_activities').insert([{...newActivity,contact_id:viewingContact.id,user_id:accountId}])
     if(error){alert(error.message);return}
     setNewActivity({type:'Note',content:'',logged_by:''})
-    await loadAll(user!.id)
+    await loadAll(accountId)
   }
 
   async function saveFollowup() {
     if(!followupForm.title||!followupForm.due_date) return
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from('crm_followups').insert([{...followupForm,user_id:user?.id}])
+    const accountId = await getAccountId(user!)
+    const {error} = await supabase.from('crm_followups').insert([{...followupForm,user_id:accountId}])
     setSaving(false)
     if(error){alert(error.message);return}
     setFollowupForm({title:'',due_date:'',assigned_to:'',notes:'',contact_id:''})
     setShowFollowupForm(false)
-    await loadAll(user!.id)
+    await loadAll(accountId)
   }
 
   async function toggleFollowupDone(id: string, status: string) {
@@ -126,45 +129,49 @@ export default function Page() {
     if(!contactForm.name) return
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
+    const accountId = await getAccountId(user!)
     if(editId){
       const {error}=await supabase.from('crm_contacts').update(contactForm).eq('id',editId)
       if(error){alert(error.message);setSaving(false);return}
     } else {
-      const {error}=await supabase.from('crm_contacts').insert([{...contactForm,user_id:user?.id}])
+      const {error}=await supabase.from('crm_contacts').insert([{...contactForm,user_id:accountId}])
       if(error){alert(error.message);setSaving(false);return}
     }
     setSaving(false); setContactForm({name:'',email:'',phone:'',type:'Landlord',notes:'',module:'pm'}); setShowContactForm(false); setEditId(null)
-    await loadAll(user!.id)
+    await loadAll(accountId)
   }
 
   async function saveDeal() {
     if(!dealForm.name) return
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
+    const accountId = await getAccountId(user!)
     const payload = {...dealForm, value: dealForm.value ? parseFloat(dealForm.value as any) : null, contact_id: dealForm.contact_id || null}
     if(editId){
       const {error}=await supabase.from('crm_deals').update(payload).eq('id',editId)
       if(error){alert(error.message);setSaving(false);return}
     } else {
-      const {error}=await supabase.from('crm_deals').insert([{...payload,user_id:user?.id}])
+      const {error}=await supabase.from('crm_deals').insert([{...payload,user_id:accountId}])
       if(error){alert(error.message);setSaving(false);return}
     }
     setSaving(false); setDealForm({name:'',contact_id:'',value:'',stage:'Enquiry',module:'pm'}); setShowDealForm(false); setEditId(null)
-    await loadAll(user!.id)
+    await loadAll(accountId)
   }
 
   async function delContact(id: string) {
     if(!confirm('Delete this contact?')) return
     await supabase.from('crm_contacts').delete().eq('id',id)
     const {data:{user}} = await supabase.auth.getUser()
-    await loadAll(user!.id)
+    const accountId = await getAccountId(user!)
+    await loadAll(accountId)
   }
 
   async function delDeal(id: string) {
     if(!confirm('Delete this deal?')) return
     await supabase.from('crm_deals').delete().eq('id',id)
     const {data:{user}} = await supabase.auth.getUser()
-    await loadAll(user!.id)
+    const accountId = await getAccountId(user!)
+    await loadAll(accountId)
   }
 
   async function updateDealStage(id: string, stage: string) {
