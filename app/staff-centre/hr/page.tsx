@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 
 const ACCENT = '#3B4AFF'
 const SECTIONS = ['Dashboard','Employees','Onboarding','Performance','Training','Discipline','Time Tracking','HR Requests','Company Goals']
@@ -45,16 +45,17 @@ export default function Page() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { window.location.href='/login'; return }
-    setUserId(user.id)
+    const accountId = await getAccountId(user)
+    setUserId(accountId)
     const [emp, ob, perf, tr, disc, time, req, gl] = await Promise.all([
-      supabase.from('hr_employees').select('*').eq('user_id',user.id).order('full_name'),
-      supabase.from('hr_onboarding_tasks').select('*').eq('user_id',user.id).order('due_date',{ascending:true}),
-      supabase.from('hr_performance_reviews').select('*').eq('user_id',user.id).order('review_date',{ascending:false}),
-      supabase.from('hr_training_records').select('*').eq('user_id',user.id).order('expiry_date',{ascending:true}),
-      supabase.from('hr_discipline_records').select('*').eq('user_id',user.id).order('date_issued',{ascending:false}),
-      supabase.from('hr_time_entries').select('*').eq('user_id',user.id).order('entry_date',{ascending:false}),
-      supabase.from('hr_requests').select('*').eq('user_id',user.id).order('created_at',{ascending:false}),
-      supabase.from('hr_company_goals').select('*').eq('user_id',user.id).order('target_date',{ascending:true}),
+      supabase.from('hr_employees').select('*').eq('user_id',accountId).order('full_name'),
+      supabase.from('hr_onboarding_tasks').select('*').eq('user_id',accountId).order('due_date',{ascending:true}),
+      supabase.from('hr_performance_reviews').select('*').eq('user_id',accountId).order('review_date',{ascending:false}),
+      supabase.from('hr_training_records').select('*').eq('user_id',accountId).order('expiry_date',{ascending:true}),
+      supabase.from('hr_discipline_records').select('*').eq('user_id',accountId).order('date_issued',{ascending:false}),
+      supabase.from('hr_time_entries').select('*').eq('user_id',accountId).order('entry_date',{ascending:false}),
+      supabase.from('hr_requests').select('*').eq('user_id',accountId).order('created_at',{ascending:false}),
+      supabase.from('hr_company_goals').select('*').eq('user_id',accountId).order('target_date',{ascending:true}),
     ])
     setEmployees(emp.data??[]); setOnboarding(ob.data??[]); setReviews(perf.data??[]); setTraining(tr.data??[])
     setDiscipline(disc.data??[]); setTimeEntries(time.data??[]); setRequests(req.data??[]); setGoals(gl.data??[])
