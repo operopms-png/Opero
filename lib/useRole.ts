@@ -10,14 +10,14 @@ export type UserRole = 'Admin' | 'Vacation Rental Team' | 'Property Management T
 // module entirely) — a role picked here is the ONLY thing that module
 // scoping in the whole app is keyed off of.
 export const ROLE_MODULES: Record<string, string[]> = {
-  'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm'],
+  'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
   'Vacation Rental Team':        ['str'],
   'Property Management Team':    ['pm'],
   'Development Team':            ['dev'],
   'Estate Agency Team':          ['ea'],
   'Cleaning Team':                ['str', 'pm', 'ea'],
   'Maintenance Team':            ['str', 'pm', 'ea'],
-  'Viewer':                      ['str', 'pm', 'dev', 'ea', 'invest', 'aipm'],
+  'Viewer':                      ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
 }
 
 export const ROLE_SETTINGS: Record<string, boolean> = {
@@ -113,4 +113,3 @@ export function useRole() {
 
   return { role, propertyIds, loading, modules: customModules ?? (ROLE_MODULES[role] ?? []), hasSettings: ROLE_SETTINGS[role] ?? false, readOnly: ROLE_READONLY[role] ?? false }
 }
-
