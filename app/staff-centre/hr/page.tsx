@@ -65,9 +65,14 @@ export default function Page() {
 
   async function saveRecord(table: string, setter: (v:any)=>void, resetForm: any) {
     if (!userId) return
+    // Empty text inputs come through as '' -- fine for text columns, but
+    // Postgres rejects '' for numeric/uuid columns (e.g. Salary, Rating,
+    // Progress %, or an unselected employee/owner dropdown). Convert any
+    // blank field to null before it hits the database.
+    const cleaned = Object.fromEntries(Object.entries(form).map(([k,v])=>[k, v==='' ? null : v]))
     const { error } = editId
-      ? await supabase.from(table).update(form).eq('id',editId)
-      : await supabase.from(table).insert([{...form,user_id:userId}])
+      ? await supabase.from(table).update(cleaned).eq('id',editId)
+      : await supabase.from(table).insert([{...cleaned,user_id:userId}])
     if (error) { alert(error.message); return }
     setForm(resetForm); setEditId(null); setShowForm(false)
     await load()
