@@ -70,6 +70,9 @@ const PLAN_FEATURES: Record<string, string[]> = {
   starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate','invest','ai','ai','staffcentre'],
   growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
   professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
+  // The current (and only) plan sold today -- one price, every module,
+  // every feature. Aliased to the fullest feature set above so a bundle
+  // subscriber never hits a stray lock.
   bundle:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
 }
 
@@ -151,6 +154,7 @@ export default function Sidebar() {
   function buildNav(isCollapsed: boolean) {
     return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #DCE4FA', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
@@ -168,14 +172,22 @@ export default function Sidebar() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
       </button>
 
+      {/* Nav */}
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
-          const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
+          // Per-staff custom module grants (teamModules, resolved by useRole()
+          // as customModules ?? ROLE_MODULES[role]) take precedence over the
+          // static role default -- same resolution pattern as app/layout.tsx.
+          const roleModules = teamModules ?? ROLE_MODULES[role] ?? ['str','pm','dev','estate']
           const hasModule = (group as any).staffCentre
             ? modules.length > 0
             : (group as any).roleOnly
             ? roleModules.includes((group as any).module)
             : (modules.includes(group.module) && roleModules.includes(group.module))
+          // Staff Centre as a whole needs the subscription to include it
+          // (hasModule above) AND this specific staff member's role/
+          // custom_modules to actually grant 'sc' -- otherwise a plan
+          // that includes Staff Centre would show it to every role.
           const scTabs = (group as any).staffCentre ? getScTabs(role, teamModules) : []
           return (
             <div key={group.label}>
@@ -209,6 +221,7 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #DCE4FA' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#3B4AFF', flexShrink: 0 }} title={isCollapsed ? userEmail : undefined}>
