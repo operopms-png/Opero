@@ -8,7 +8,6 @@ const NAV = [
   {group:'ACCOUNT',items:[
     {s:'My Account',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>},
     {s:'Team Management',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>},
-    {s:'Referrals',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>},
     {s:'Billing & Subscriptions',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>},
     {s:'System Messages',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>},
   ]}
@@ -455,37 +454,6 @@ function SettingsInner() {
             </div>
           </div>)}
 
-          {section==='Referrals'&&(<div style={{maxWidth:600}}>
-            <div style={{background:'linear-gradient(135deg,'+ACCENT+' 0%,#1a1a2e 100%)',borderRadius:12,padding:32,marginBottom:20,color:'#fff'}}>
-              <h2 style={{fontSize:22,fontWeight:700,margin:'0 0 8px'}}>Refer & Earn</h2>
-              <p style={{fontSize:14,opacity:0.8,margin:'0 0 20px'}}>Earn £100 for every property manager or landlord you refer who signs up to Opero.</p>
-              <div style={{background:'rgba(255,255,255,0.15)',borderRadius:8,padding:16,display:'flex',alignItems:'center',gap:12}}>
-                <input readOnly value={"https://helloopero.com?ref="+user?.email?.split('@')[0].toUpperCase()} style={{flex:1,background:'transparent',border:'none',color:'#fff',fontSize:13,fontFamily:'monospace',outline:'none'}}/>
-                <button onClick={()=>navigator.clipboard.writeText("https://helloopero.com?ref="+user?.email?.split('@')[0].toUpperCase())} style={{padding:'7px 14px',borderRadius:6,border:'1px solid rgba(255,255,255,0.4)',background:'transparent',color:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>Copy link</button>
-              </div>
-            </div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Your referral stats</h3>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                {[{l:'Total referrals',v:'0'},{l:'Pending',v:'0'},{l:'Total earned',v:'£0'}].map(s=>(
-                  <div key={s.l} style={{textAlign:'center',padding:16,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
-                    <div style={{fontSize:24,fontWeight:700,color:ACCENT,marginBottom:4}}>{s.v}</div>
-                    <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 12px'}}>How it works</h3>
-              {[{n:'1',t:'Share your link',d:'Send your unique referral link to property managers and landlords.'},{n:'2',t:'They sign up',d:'They create an Opero account using your referral link.'},{n:'3',t:'You earn £100',d:'Once they complete their first month, £100 is credited to your account.'}].map(s=>(
-                <div key={s.n} style={{display:'flex',gap:12,marginBottom:16}}>
-                  <div style={{width:28,height:28,borderRadius:'50%',background:ACCENT,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,flexShrink:0}}>{s.n}</div>
-                  <div><div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:2}}>{s.t}</div><div style={{fontSize:12,color:'#667085'}}>{s.d}</div></div>
-                </div>
-              ))}
-            </div>
-          </div>)}
-
           {section==='Billing & Subscriptions'&&(<div style={{maxWidth:700}}>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
@@ -525,73 +493,3 @@ function SettingsInner() {
               </div>
               {connectOnboarded ? (
                 <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:8,background:'#ECFDF5',border:'1px solid #A7F3D0'}}>
-                  <span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>✓ Connected — tenant payments route to your account</span>
-                </div>
-              ) : (
-                <div>
-                  {connectAccountId && <div style={{fontSize:12,color:'#F59E0B',marginBottom:10}}>Setup started but not finished — payments won't work until this is complete.</div>}
-                  <button onClick={connectStripe} disabled={connectingStripe} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:connectingStripe?0.6:1}}>{connectingStripe?'Redirecting…':connectAccountId?'Finish Stripe setup':'Connect Stripe account'}</button>
-                </div>
-              )}
-            </div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Plans</h3>
-              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>One plan unlocks every module — Vacation Rentals, Property Management, Estate Agency, Developments, AI Property Manager, Deal Analyser and the whole Staff Centre.</div>
-
-              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16}}>
-                <div style={{border:'2px solid '+(plan==='all_monthly'?ACCENT:'#E4E7EC'),borderRadius:12,padding:24,background:plan==='all_monthly'?ACCENT+'08':'#fff'}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>Monthly</div>
-                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, billed every month. Cancel anytime.</div>
-                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£79<span style={{fontSize:14,color:'#98A2B3',fontWeight:400}}>/mo</span></div>
-                  <button onClick={()=>buyPlan('all_monthly')} disabled={buyingPlan==='all_monthly'||plan==='all_monthly'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='all_monthly'?'#F2F4F7':ACCENT,color:plan==='all_monthly'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='all_monthly'?0.6:1}}>{plan==='all_monthly'?'Current plan':buyingPlan==='all_monthly'?'Redirecting…':'Choose monthly'}</button>
-                </div>
-                <div style={{border:'2px solid '+(plan==='bundle'?ACCENT:'#C9A84C'),borderRadius:12,padding:24,background:plan==='bundle'?ACCENT+'08':'#FBF4E6'}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>One-time payment</div>
-                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, pay once, keep it forever — no recurring fees.</div>
-                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£175.50</div>
-                  <button onClick={()=>buyPlan('bundle')} disabled={buyingPlan==='bundle'||plan==='bundle'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='bundle'?'#F2F4F7':'#C9A84C',color:plan==='bundle'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='bundle'?0.6:1}}>{plan==='bundle'?'Current plan':buyingPlan==='bundle'?'Redirecting…':'Pay once'}</button>
-                </div>
-              </div>
-            </div>
-          </div>)}
-
-          {section==='System Messages'&&(<div>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div>
-                <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>System Messages</h2>
-                <div style={{fontSize:13,color:'#667085'}}>Platform updates, new features and announcements from Opero.</div>
-              </div>
-            </div>
-            <div style={{display:'flex',flexDirection:'column',gap:12}}>
-              {messages.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center',color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:8}}>🔔</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No messages yet</div><div style={{fontSize:13}}>System announcements will appear here.</div></div>):messages.map(msg=>{
-                const colors:any = {success:{bg:'#ECFDF5',border:'#6EE7B7',icon:'✅',tag:'#10B981',tagBg:'#ECFDF5'},info:{bg:'#EFF6FF',border:'#93C5FD',icon:'ℹ️',tag:'#3B82F6',tagBg:'#EFF6FF'},update:{bg:'#EEF0FF',border:'#A5B4FC',icon:'🚀',tag:'#6366F1',tagBg:'#EEF0FF'},warning:{bg:'#FFFBEB',border:'#FCD34D',icon:'⚠️',tag:'#F59E0B',tagBg:'#FFFBEB'}}
-                const c = colors[msg.type]??colors.info
-                return(<div key={msg.id} style={{background:c.bg,borderRadius:12,border:'1px solid '+c.border,padding:20,display:'flex',gap:14}}>
-                  <span style={{fontSize:24,flexShrink:0}}>{c.icon}</span>
-                  <div style={{flex:1}}>
-                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{msg.title}</div>
-                      <span style={{fontSize:10,fontWeight:700,background:c.tagBg,color:c.tag,border:'1px solid '+c.border,padding:'2px 8px',borderRadius:20,textTransform:'uppercase'}}>{msg.type}</span>
-                    </div>
-                    {msg.body&&<div style={{fontSize:13,color:'#344054',lineHeight:1.6}}>{msg.body}</div>}
-                    <div style={{fontSize:11,color:'#98A2B3',marginTop:6}}>{new Date(msg.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
-                  </div>
-                </div>)
-              })}
-            </div>
-          </div>)}
-
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function Page() {
-  return (
-    <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>}>
-      <SettingsInner />
-    </Suspense>
-  )
-}
-// redeploy trigger 2026-08-24T18:32:21Z
