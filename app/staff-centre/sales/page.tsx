@@ -29,7 +29,8 @@ export default function Page() {
   const [leadForm, setLeadForm] = useState({name:'',email:'',phone:'',source:'Direct',status:'New',value:'',notes:'',module:'pm'})
   const [deals, setDeals] = useState<any[]>([])
   const [showDealForm, setShowDealForm] = useState(false)
-  const [dealForm, setDealForm] = useState({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:'',module:'pm'})
+  const [dealForm, setDealForm] = useState({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:'',module:'pm',staff_name:''})
+  const [team, setTeam] = useState<any[]>([])
   const [quotes, setQuotes] = useState<any[]>([])
   const [showQuoteForm, setShowQuoteForm] = useState(false)
   const [quoteForm, setQuoteForm] = useState({client:'',property:'',amount:'',valid_until:'',status:'Draft',notes:'',module:'pm'})
@@ -46,13 +47,38 @@ export default function Page() {
   },[])
 
   async function loadAll(userId: string) {
-    const [l,d,q,m] = await Promise.all([
+    const [l,d,q,m,t] = await Promise.all([
       supabase.from('sales_leads').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('sales_deals').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('sales_quotes').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('sales_meetings').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('team_members').select('id,name').eq('user_id',userId).order('name'),
     ])
-    setLeads(l.data??[]); setDeals(d.data??[]); setQuotes(q.data??[]); setMeetings(m.data??[])
+    setLeads(l.data??[]); setDeals(d.data??[]); setQuotes(q.data??[]); setMeetings(m.data??[]); setTeam(t.data??[])
+  }
+
+  // Keeps the Sales pipeline and the Staff Performance leaderboard in sync:
+  // marking a deal "Won" logs a matching win (tagged with the deal's id so it
+  // can be found again), moving it off "Won" removes that auto-logged win.
+  async function setDealStage(deal: any, newStage: string) {
+    const prevStage = deal.stage
+    await updateField('sales_deals', deal.id, 'stage', newStage, setDeals)
+    if (newStage === 'Won' && prevStage !== 'Won') {
+      const {data:{user}} = await supabase.auth.getUser()
+      await supabase.from('staff_performance_wins').insert([{
+        user_id: user?.id,
+        staff_name: deal.staff_name || 'Unassigned',
+        category: 'Deal Closed',
+        title: deal.name,
+        value: deal.value ?? null,
+        module: deal.module || null,
+        date_achieved: new Date().toISOString().slice(0,10),
+        notes: 'Auto-logged from Sales pipeline',
+        source_deal_id: deal.id,
+      }])
+    } else if (prevStage === 'Won' && newStage !== 'Won') {
+      await supabase.from('staff_performance_wins').delete().eq('source_deal_id', deal.id)
+    }
   }
 
   const fLeads = moduleFilter==='All'?leads:leads.filter((x:any)=>x.module===moduleFilter)
@@ -136,12 +162,35 @@ export default function Page() {
               <div><label style={lbl}>Contact</label><input value={dealForm.contact} onChange={e=>setDealForm({...dealForm,contact:e.target.value})} placeholder="Contact name" style={inp}/></div>
               <div><label style={lbl}>Value (£)</label><input value={dealForm.value} onChange={e=>setDealForm({...dealForm,value:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
               <div><label style={lbl}>Stage</label><select value={dealForm.stage} onChange={e=>setDealForm({...dealForm,stage:e.target.value})} style={inp}>{STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label style={lbl}>Assigned Staff</label><select value={dealForm.staff_name} onChange={e=>setDealForm({...dealForm,staff_name:e.target.value})} style={inp}>
+                <option value="">Unassigned</option>
+                {team.map((t:any)=><option key={t.id} value={t.name}>{t.name}</option>)}
+              </select></div>
               <div><label style={lbl}>Close Date</label><input value={dealForm.close_date} onChange={e=>setDealForm({...dealForm,close_date:e.target.value})} type="date" style={inp}/></div>
               <ModuleSelect value={dealForm.module} onChange={v=>setDealForm({...dealForm,module:v})}/>
               <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={dealForm.notes} onChange={e=>setDealForm({...dealForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
             </div>
+            {team.length===0&&<div style={{fontSize:12,color:'#98A2B3',marginBottom:12}}>No staff added yet — add your team in Settings → Team Management to assign deals to them.</div>}
             <div style={{display:'flex',gap:8}}>
-              <button onClick={()=>{if(!dealForm.name)return;save('sales_deals',{...dealForm,value:dealForm.value?parseFloat(dealForm.value):null,close_date:dealForm.close_date||null},()=>setDealForm({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:'',module:'pm'}),()=>setShowDealForm(false))}} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add Deal'}</button>
+              <button onClick={async ()=>{
+                if(!dealForm.name)return
+                setSaving(true)
+                const {data:{user}} = await supabase.auth.getUser()
+                const value = dealForm.value?parseFloat(dealForm.value):null
+                const {data:inserted,error} = await supabase.from('sales_deals').insert([{...dealForm,value,close_date:dealForm.close_date||null,staff_name:dealForm.staff_name||null,user_id:user?.id}]).select().single()
+                setSaving(false)
+                if(error){alert(error.message);return}
+                if(inserted && inserted.stage==='Won') {
+                  await supabase.from('staff_performance_wins').insert([{
+                    user_id: user?.id, staff_name: inserted.staff_name || 'Unassigned', category: 'Deal Closed',
+                    title: inserted.name, value: inserted.value, module: inserted.module || null,
+                    date_achieved: new Date().toISOString().slice(0,10), notes: 'Auto-logged from Sales pipeline', source_deal_id: inserted.id,
+                  }])
+                }
+                setDealForm({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:'',module:'pm',staff_name:''})
+                setShowDealForm(false)
+                await loadAll(user!.id)
+              }} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add Deal'}</button>
               <button onClick={()=>setShowDealForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -154,9 +203,10 @@ export default function Page() {
                     <div style={{fontSize:12,fontWeight:600,color:'#101828',marginBottom:4}}>{d.name}</div>
                     {d.contact&&<div style={{fontSize:11,color:'#667085',marginBottom:4}}>{d.contact}</div>}
                     <div style={{fontSize:13,fontWeight:700,color:ACCENT,marginBottom:6}}>£{parseFloat(d.value||0).toLocaleString()}</div>
+                    {d.staff_name&&<div style={{fontSize:10,color:'#667085',marginBottom:6}}>👤 {d.staff_name}</div>}
                     {moduleBadge(d.module)}
                     <div style={{display:'flex',gap:4,marginTop:8}}>
-                      <select value={d.stage} onChange={e=>updateField('sales_deals',d.id,'stage',e.target.value,setDeals)} style={{fontSize:10,border:'1px solid #E4E7EC',borderRadius:4,padding:'2px 4px',fontFamily:'inherit',flex:1}}>{STAGES.map(s=><option key={s}>{s}</option>)}</select>
+                      <select value={d.stage} onChange={e=>setDealStage(d,e.target.value)} style={{fontSize:10,border:'1px solid #E4E7EC',borderRadius:4,padding:'2px 4px',fontFamily:'inherit',flex:1}}>{STAGES.map(s=><option key={s}>{s}</option>)}</select>
                       <button onClick={()=>del('sales_deals',d.id,setDeals)} style={{padding:'2px 6px',borderRadius:4,border:'none',background:'#FEE2E2',fontSize:10,cursor:'pointer',color:'#EF4444'}}>×</button>
                     </div>
                   </div>
