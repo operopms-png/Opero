@@ -329,21 +329,6 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Upsell */}
-            {plan === 'starter' && (
-              <div className="card" style={{ padding: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>🚀 Add more modules</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 16, lineHeight: 1.6 }}>Property Management, Estate Agency, Developments and more.</div>
-                <a href="/modules" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#fff', color: '#764ba2', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>View modules →</a>
-              </div>
-            )}
-            {plan === 'growth' && (
-              <div className="card" style={{ padding: 24, background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', border: 'none' }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Unlock Professional</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginBottom: 16, lineHeight: 1.6 }}>Advanced reports, document storage, custom branding and API access.</div>
-                <a href="/landing.html#pricing" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Upgrade to Professional →</a>
-              </div>
-            )}
           </div>
         </div>
       </div>
