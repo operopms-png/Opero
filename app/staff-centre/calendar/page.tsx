@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 
 const ACCENT = '#3B4AFF'
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7) // 7am - 8pm
@@ -24,6 +24,7 @@ function avatarColor(name: string) {
 export default function CalendarPage() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [accountId, setAccountId] = useState<string>('')
   const [team, setTeam] = useState<any[]>([])
   const [shifts, setShifts] = useState<any[]>([])
   const [visibleStaff, setVisibleStaff] = useState<string[]>([])
@@ -37,13 +38,15 @@ export default function CalendarPage() {
   const [editingCell, setEditingCell] = useState<{ staffId: string; date: string } | null>(null)
 
   useEffect(() => { init() }, [])
-  useEffect(() => { if (user) loadShifts() }, [user, weekStart])
+  useEffect(() => { if (accountId) loadShifts() }, [accountId, weekStart])
 
   async function init() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { window.location.href = '/login'; return }
     setUser(user)
-    const { data: teamData } = await supabase.from('team_members').select('*').eq('user_id', user.id).order('name')
+    const acctId = await getAccountId(user)
+    setAccountId(acctId)
+    const { data: teamData } = await supabase.from('team_members').select('*').eq('user_id', acctId).order('name')
     setTeam(teamData ?? [])
     setVisibleStaff((teamData ?? []).map((m: any) => m.id))
     setLoading(false)
@@ -52,13 +55,13 @@ export default function CalendarPage() {
   async function loadShifts() {
     const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6)
     const fmt = (d: Date) => d.toISOString().slice(0, 10)
-    const { data } = await supabase.from('staff_shifts').select('*').eq('user_id', user.id).gte('date', fmt(weekStart)).lte('date', fmt(weekEnd))
+    const { data } = await supabase.from('staff_shifts').select('*').eq('user_id', accountId).gte('date', fmt(weekStart)).lte('date', fmt(weekEnd))
     setShifts(data ?? [])
   }
 
   async function setShift(staffId: string, date: string, type: string, startTime?: string, endTime?: string) {
     const { error } = await supabase.from('staff_shifts').upsert(
-      { user_id: user.id, staff_id: staffId, date, type, start_time: startTime || null, end_time: endTime || null },
+      { user_id: accountId, staff_id: staffId, date, type, start_time: startTime || null, end_time: endTime || null },
       { onConflict: 'staff_id,date' }
     )
     if (error) { alert(error.message); return }
