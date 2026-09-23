@@ -493,3 +493,73 @@ function SettingsInner() {
               </div>
               {connectOnboarded ? (
                 <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:8,background:'#ECFDF5',border:'1px solid #A7F3D0'}}>
+                  <span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>✓ Connected — tenant payments route to your account</span>
+                </div>
+              ) : (
+                <div>
+                  {connectAccountId && <div style={{fontSize:12,color:'#F59E0B',marginBottom:10}}>Setup started but not finished — payments won't work until this is complete.</div>}
+                  <button onClick={connectStripe} disabled={connectingStripe} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:connectingStripe?0.6:1}}>{connectingStripe?'Redirecting…':connectAccountId?'Finish Stripe setup':'Connect Stripe account'}</button>
+                </div>
+              )}
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Plans</h3>
+              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>One plan unlocks every module — Vacation Rentals, Property Management, Estate Agency, Developments, AI Property Manager, Deal Analyser and the whole Staff Centre.</div>
+
+              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16}}>
+                <div style={{border:'2px solid '+(plan==='all_monthly'?ACCENT:'#E4E7EC'),borderRadius:12,padding:24,background:plan==='all_monthly'?ACCENT+'08':'#fff'}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>Monthly</div>
+                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, billed every month. Cancel anytime.</div>
+                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£79<span style={{fontSize:14,color:'#98A2B3',fontWeight:400}}>/mo</span></div>
+                  <button onClick={()=>buyPlan('all_monthly')} disabled={buyingPlan==='all_monthly'||plan==='all_monthly'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='all_monthly'?'#F2F4F7':ACCENT,color:plan==='all_monthly'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='all_monthly'?0.6:1}}>{plan==='all_monthly'?'Current plan':buyingPlan==='all_monthly'?'Redirecting…':'Choose monthly'}</button>
+                </div>
+                <div style={{border:'2px solid '+(plan==='bundle'?ACCENT:'#C9A84C'),borderRadius:12,padding:24,background:plan==='bundle'?ACCENT+'08':'#FBF4E6'}}>
+                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>One-time payment</div>
+                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, pay once, keep it forever — no recurring fees.</div>
+                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£175.50</div>
+                  <button onClick={()=>buyPlan('bundle')} disabled={buyingPlan==='bundle'||plan==='bundle'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='bundle'?'#F2F4F7':'#C9A84C',color:plan==='bundle'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='bundle'?0.6:1}}>{plan==='bundle'?'Current plan':buyingPlan==='bundle'?'Redirecting…':'Pay once'}</button>
+                </div>
+              </div>
+            </div>
+          </div>)}
+
+          {section==='System Messages'&&(<div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div>
+                <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>System Messages</h2>
+                <div style={{fontSize:13,color:'#667085'}}>Platform updates, new features and announcements from Opero.</div>
+              </div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              {messages.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center',color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:8}}>🔔</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No messages yet</div><div style={{fontSize:13}}>System announcements will appear here.</div></div>):messages.map(msg=>{
+                const colors:any = {success:{bg:'#ECFDF5',border:'#6EE7B7',icon:'✅',tag:'#10B981',tagBg:'#ECFDF5'},info:{bg:'#EFF6FF',border:'#93C5FD',icon:'ℹ️',tag:'#3B82F6',tagBg:'#EFF6FF'},update:{bg:'#EEF0FF',border:'#A5B4FC',icon:'🚀',tag:'#6366F1',tagBg:'#EEF0FF'},warning:{bg:'#FFFBEB',border:'#FCD34D',icon:'⚠️',tag:'#F59E0B',tagBg:'#FFFBEB'}}
+                const c = colors[msg.type]??colors.info
+                return(<div key={msg.id} style={{background:c.bg,borderRadius:12,border:'1px solid '+c.border,padding:20,display:'flex',gap:14}}>
+                  <span style={{fontSize:24,flexShrink:0}}>{c.icon}</span>
+                  <div style={{flex:1}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{msg.title}</div>
+                      <span style={{fontSize:10,fontWeight:700,background:c.tagBg,color:c.tag,border:'1px solid '+c.border,padding:'2px 8px',borderRadius:20,textTransform:'uppercase'}}>{msg.type}</span>
+                    </div>
+                    {msg.body&&<div style={{fontSize:13,color:'#344054',lineHeight:1.6}}>{msg.body}</div>}
+                    <div style={{fontSize:11,color:'#98A2B3',marginTop:6}}>{new Date(msg.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+                  </div>
+                </div>)
+              })}
+            </div>
+          </div>)}
+
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>}>
+      <SettingsInner />
+    </Suspense>
+  )
+}
+// redeploy trigger 2026-08-24T18:32:21Z
