@@ -73,9 +73,11 @@ export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'tasks',       l: 'Tasks' },
 ]
 export const SC_TABS = STAFF_CENTRE_TABS.map(t => t.k)
-// People & HR and Applications are admin-only unless a staff member's
-// row explicitly grants them via an 'sc:hr' / 'sc:applications' entry.
-export const DEFAULT_SC_TABS = SC_TABS.filter(k => k !== 'hr' && k !== 'applications')
+// Every tab is unlocked by default when a staff member is given Staff
+// Centre access -- an admin locks specific tabs per person afterward via
+// explicit 'sc:<key>' entries (see getScTabs below), rather than tabs
+// being locked by default and admin unlocking them.
+export const DEFAULT_SC_TABS = [...SC_TABS]
 
 // Which Staff Centre sub-tabs a given role + resolved module list (what
 // useRole()'s `modules` already returns — customModules if set, else the
