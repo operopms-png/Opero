@@ -1,14 +1,12 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Opero now sells one thing: all-modules access, either £79/mo or £175.50
+// one-time -- the old per-module à la carte prices (aipm/invest/str/pm/
+// dev/ea) are no longer offered for new signups.
 const PRICE_IDS: Record<string, string> = {
-  aipm: 'price_1TnhJFGa2COshwfZ4gPTqI5U',
-  invest: 'price_1TnhKSGa2COshwfZ2htSNZgt',
-  str: 'price_1TnhL3Ga2COshwfZw7qLRJt2',
-  pm: 'price_1TnhLWGa2COshwfZE1YImFSK',
-  dev: 'price_1TnhM2Ga2COshwfZSViH7HsG',
-  ea: 'price_1TnhMYGa2COshwfZVkT5DQGt',
-  bundle: 'price_1TnhN2Ga2COshwfZPkq6XNA7',
+  monthly: 'price_1UICnBGa2COshwfZYzSdr6V3',
+  onetime: 'price_1TnhN2Ga2COshwfZPkq6XNA7',
 }
 
 export async function POST(request: NextRequest) {
@@ -19,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { plan, priceId, email, returnTo } = body
     const finalPriceId = priceId || PRICE_IDS[plan]
     if (!finalPriceId) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
-    const isOneTime = plan === 'bundle'
+    const isOneTime = plan === 'onetime'
     const successPath = returnTo || `/login?plan=${plan}&success=true`
     const session = await stripe.checkout.sessions.create({
       mode: isOneTime ? 'payment' : 'subscription',
