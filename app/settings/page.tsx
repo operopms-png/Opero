@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
-import { useRole } from '@/lib/useRole'
+import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
 const ACCENT = '#3B4AFF'
 const NAV = [
   {group:'ACCOUNT',items:[
@@ -350,11 +350,43 @@ function SettingsInner() {
                 <div style={{display:'flex',flexWrap:'wrap' as const,gap:8}}>
                   {[{k:'str',l:'Vacation Rentals'},{k:'pm',l:'Property Management'},{k:'ea',l:'Estate Agency'},{k:'dev',l:'Developments'},{k:'sc',l:'Staff Centre'}].map(mod=>(
                     <label key={mod.k} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,cursor:'pointer',border:'1px solid '+(customModules.includes(mod.k)?ACCENT:'#E4E7EC'),borderRadius:20,background:customModules.includes(mod.k)?ACCENT+'10':'#fff',color:customModules.includes(mod.k)?ACCENT:'#344054'}}>
-                      <input type="checkbox" checked={customModules.includes(mod.k)} onChange={()=>setCustomModules(prev=>prev.includes(mod.k)?prev.filter(k=>k!==mod.k):[...prev,mod.k])} style={{display:'none'}} />
+                      <input type="checkbox" checked={customModules.includes(mod.k)} onChange={()=>setCustomModules(prev=>{
+                        const checked = prev.includes(mod.k)
+                        // Unchecking "Staff Centre" also clears any per-tab
+                        // overrides below, so re-checking it later starts
+                        // fresh from the default tab set rather than an
+                        // orphaned partial list.
+                        if(mod.k==='sc'&&checked) return prev.filter(k=>k!==mod.k&&!k.startsWith('sc:'))
+                        return checked?prev.filter(k=>k!==mod.k):[...prev,mod.k]
+                      })} style={{display:'none'}} />
                       {mod.l}
                     </label>
                   ))}
                 </div>
+                {customModules.includes('sc')&&(
+                  <div style={{marginTop:10,padding:12,background:'#F9FAFB',border:'1px solid #E4E7EC',borderRadius:8}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#344054',marginBottom:2}}>Staff Centre — which tabs can they open?</div>
+                    <div style={{fontSize:11,color:'#98A2B3',marginBottom:8}}>People &amp; HR and Applications are admin-only by default. Tick a box to give this person that tab specifically; untick any tab to lock it for them.</div>
+                    <div style={{display:'flex',flexWrap:'wrap' as const,gap:6}}>
+                      {STAFF_CENTRE_TABS.map(tab=>{
+                        const hasExplicit = customModules.some(k=>k.startsWith('sc:'))
+                        const checked = hasExplicit ? customModules.includes('sc:'+tab.k) : DEFAULT_SC_TABS.includes(tab.k)
+                        return (
+                          <label key={tab.k} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',fontSize:11,cursor:'pointer',border:'1px solid '+(checked?ACCENT:'#E4E7EC'),borderRadius:20,background:checked?ACCENT+'10':'#fff',color:checked?ACCENT:'#344054'}}>
+                            <input type="checkbox" checked={checked} onChange={()=>setCustomModules(prev=>{
+                              const hasExplicit = prev.some(k=>k.startsWith('sc:'))
+                              const baseline = hasExplicit ? prev.filter(k=>k.startsWith('sc:')).map(k=>k.slice(3)) : DEFAULT_SC_TABS
+                              const nextTabs = baseline.includes(tab.k) ? baseline.filter(k=>k!==tab.k) : [...baseline,tab.k]
+                              const rest = prev.filter(k=>!k.startsWith('sc:'))
+                              return [...rest,...nextTabs.map(k=>'sc:'+k)]
+                            })} style={{display:'none'}} />
+                            {tab.l}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               {allProperties.length>0 && (
                 <div style={{marginBottom:16}}>
