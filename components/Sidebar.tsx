@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
-import { useRole, ROLE_MODULES } from '@/lib/useRole'
+import { useRole, ROLE_MODULES, getScTabs } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 
@@ -49,19 +49,19 @@ const NAV_GROUPS = [
       { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles', requiresModule: 'aipm', requiresModulePrice: '£9.99/mo' },
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
-      { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message' },
-      { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe' },
-      { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench' },
-      { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts' },
-      { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles' },
-      { href: '/staff-centre/sales', label: 'Sales', key: 'staffcentre', icon: 'trendingup' },
-      { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file' },
+      { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox' },
+      { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe', scTab: 'portals' },
+      { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance' },
+      { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts', scTab: 'crm' },
+      { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles', scTab: 'marketing' },
+      { href: '/staff-centre/sales', label: 'Sales', key: 'staffcentre', icon: 'trendingup', scTab: 'sales' },
+      { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file', scTab: 'applications' },
       { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },
-      { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup' },
-      { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users' },
-      { href: '/staff-centre/training', label: 'Staff Training', key: 'staffcentre', icon: 'graduation' },
-      { href: '/staff-centre/calendar', label: 'Calendar', key: 'staffcentre', icon: 'calendar' },
-      { href: '/staff-centre/tasks', label: 'Tasks', key: 'staffcentre', icon: 'file' },
+      { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup', scTab: 'performance' },
+      { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users', scTab: 'hr' },
+      { href: '/staff-centre/training', label: 'Staff Training', key: 'staffcentre', icon: 'graduation', scTab: 'training' },
+      { href: '/staff-centre/calendar', label: 'Calendar', key: 'staffcentre', icon: 'calendar', scTab: 'calendar' },
+      { href: '/staff-centre/tasks', label: 'Tasks', key: 'staffcentre', icon: 'file', scTab: 'tasks' },
     ]
   },
 ]
@@ -70,9 +70,6 @@ const PLAN_FEATURES: Record<string, string[]> = {
   starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate','invest','ai','ai','staffcentre'],
   growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
   professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
-  // The current (and only) plan sold today -- one price, every module,
-  // every feature. Aliased to the fullest feature set above so a bundle
-  // subscriber never hits a stray lock.
   bundle:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
 }
 
@@ -119,7 +116,7 @@ export default function Sidebar() {
   const [plan, setPlan] = useState('starter')
   const [modules, setModules] = useState<string[]>([])
   const [userEmail, setUserEmail] = useState('')
-  const { role, hasSettings } = useRole()
+  const { role, hasSettings, modules: teamModules } = useRole()
   const { collapsed, toggle } = useSidebarCollapse()
 
   useEffect(() => {
@@ -154,7 +151,6 @@ export default function Sidebar() {
   function buildNav(isCollapsed: boolean) {
     return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #DCE4FA', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
@@ -172,7 +168,6 @@ export default function Sidebar() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
       </button>
 
-      {/* Nav */}
       <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto' }}>
         {NAV_GROUPS.map((group, gi) => {
           const roleModules = ROLE_MODULES[role] ?? ['str','pm','dev','estate']
@@ -181,6 +176,7 @@ export default function Sidebar() {
             : (group as any).roleOnly
             ? roleModules.includes((group as any).module)
             : (modules.includes(group.module) && roleModules.includes(group.module))
+          const scTabs = (group as any).staffCentre ? getScTabs(role, teamModules) : []
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#DCE4FA', margin: '6px 0' }} />}
@@ -189,9 +185,11 @@ export default function Sidebar() {
                   {group.label}
                 </div>
               )}
-              {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice }: any) => {
+              {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice, scTab }: any) => {
                 const itemHasModule = requiresModule
                   ? (modules.includes(requiresModule) && roleModules.includes(requiresModule))
+                  : scTab
+                  ? (hasModule && scTabs.includes(scTab))
                   : hasModule
                 const hasAccess = itemHasModule && features.includes(key)
                 const active = pathname === href.split('?')[0]
@@ -211,7 +209,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #DCE4FA' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#3B4AFF', flexShrink: 0 }} title={isCollapsed ? userEmail : undefined}>
