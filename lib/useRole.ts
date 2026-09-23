@@ -59,6 +59,7 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
 // gates Staff Centre as a whole). Stored on team_members.custom_modules
 // as 'sc:<key>' entries alongside the plain module keys above.
 export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
+  { k: 'oversight',  l: 'Oversight' },
   { k: 'inbox',       l: 'Conversations' },
   { k: 'portals',     l: 'Property Portals' },
   { k: 'maintenance', l: 'Maintenance Board' },
