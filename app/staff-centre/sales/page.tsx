@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 const ACCENT = '#3B4AFF'
 const SECTIONS = ['Pipeline','Leads','Quotes','Meetings','Analytics']
 const STAGES = ['Enquiry','Qualified','Proposal','Negotiation','Won','Lost']
@@ -41,7 +41,8 @@ export default function Page() {
   useEffect(()=>{
     supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
-      await loadAll(user.id)
+      const accountId = await getAccountId(user)
+      await loadAll(accountId)
       setLoading(false)
     })
   },[])
@@ -65,8 +66,9 @@ export default function Page() {
     await updateField('sales_deals', deal.id, 'stage', newStage, setDeals)
     if (newStage === 'Won' && prevStage !== 'Won') {
       const {data:{user}} = await supabase.auth.getUser()
+      const accountId = await getAccountId(user!)
       await supabase.from('staff_performance_wins').insert([{
-        user_id: user?.id,
+        user_id: accountId,
         staff_name: deal.staff_name || 'Unassigned',
         category: 'Deal Closed',
         title: deal.name,
@@ -77,7 +79,9 @@ export default function Page() {
         source_deal_id: deal.id,
       }])
     } else if (prevStage === 'Won' && newStage !== 'Won') {
-      await supabase.from('staff_performance_wins').delete().eq('source_deal_id', deal.id)
+      const {data:{user}} = await supabase.auth.getUser()
+      const accountId = await getAccountId(user!)
+      await supabase.from('staff_performance_wins').delete().eq('source_deal_id', deal.id).eq('user_id', accountId)
     }
   }
 
@@ -89,10 +93,11 @@ export default function Page() {
   async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from(table).insert([{...data,user_id:user?.id}])
+    const accountId = await getAccountId(user!)
+    const {error} = await supabase.from(table).insert([{...data,user_id:accountId}])
     setSaving(false)
     if(error){alert(error.message);return}
-    clearForm(); closeForm(); await loadAll(user!.id)
+    clearForm(); closeForm(); await loadAll(accountId)
   }
 
   async function updateField(table: string, id: string, field: string, value: any, setter: (fn:(prev:any[])=>any[])=>void) {
@@ -176,20 +181,21 @@ export default function Page() {
                 if(!dealForm.name)return
                 setSaving(true)
                 const {data:{user}} = await supabase.auth.getUser()
+                const accountId = await getAccountId(user!)
                 const value = dealForm.value?parseFloat(dealForm.value):null
-                const {data:inserted,error} = await supabase.from('sales_deals').insert([{...dealForm,value,close_date:dealForm.close_date||null,staff_name:dealForm.staff_name||null,user_id:user?.id}]).select().single()
+                const {data:inserted,error} = await supabase.from('sales_deals').insert([{...dealForm,value,close_date:dealForm.close_date||null,staff_name:dealForm.staff_name||null,user_id:accountId}]).select().single()
                 setSaving(false)
                 if(error){alert(error.message);return}
                 if(inserted && inserted.stage==='Won') {
                   await supabase.from('staff_performance_wins').insert([{
-                    user_id: user?.id, staff_name: inserted.staff_name || 'Unassigned', category: 'Deal Closed',
+                    user_id: accountId, staff_name: inserted.staff_name || 'Unassigned', category: 'Deal Closed',
                     title: inserted.name, value: inserted.value, module: inserted.module || null,
                     date_achieved: new Date().toISOString().slice(0,10), notes: 'Auto-logged from Sales pipeline', source_deal_id: inserted.id,
                   }])
                 }
                 setDealForm({name:'',contact:'',value:'',stage:'Enquiry',close_date:'',notes:'',module:'pm',staff_name:''})
                 setShowDealForm(false)
-                await loadAll(user!.id)
+                await loadAll(accountId)
               }} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add Deal'}</button>
               <button onClick={()=>setShowDealForm(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
