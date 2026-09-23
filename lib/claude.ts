@@ -26,6 +26,53 @@ export async function callClaude(system: string, userMessage: string, maxTokens 
   return { text }
 }
 
+// Same as callClaude, but attaches an actual file (PDF or photo) for Claude
+// to read directly -- used for things like a bank statement affordability
+// check, where the point is to have the model look at the real document
+// rather than a staff member's own manual summary of it.
+export async function callClaudeWithDocument(
+  system: string,
+  userMessage: string,
+  file: { base64: string; mediaType: string },
+  maxTokens = 700
+): Promise<{ text?: string; error?: string }> {
+  if (!process.env.ANTHROPIC_API_KEY) return { error: 'ANTHROPIC_API_KEY is not configured on the server' }
+
+  const isPdf = file.mediaType === 'application/pdf'
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: maxTokens,
+      system,
+      messages: [{
+        role: 'user',
+        content: [
+          isPdf
+            ? { type: 'document', source: { type: 'base64', media_type: file.mediaType, data: file.base64 } }
+            : { type: 'image', source: { type: 'base64', media_type: file.mediaType, data: file.base64 } },
+          { type: 'text', text: userMessage },
+        ],
+      }],
+    }),
+  })
+
+  if (!res.ok) {
+    const errText = await res.text()
+    return { error: `Claude API error: ${errText}` }
+  }
+
+  const data = await res.json()
+  const text = data.content?.find((c: any) => c.type === 'text')?.text ?? ''
+  return { text }
+}
+
 // Same as callClaude, but with Anthropic's web_search tool enabled so the
 // model can pull real, current listings rather than guessing from training
 // data. Used for market rent estimates — the response should always be
