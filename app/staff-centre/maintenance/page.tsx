@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 
 const ACCENT = '#3B4AFF'
 const MODULES = [
@@ -38,14 +38,15 @@ export default function Page() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { window.location.href='/login'; return }
+    const accountId = await getAccountId(user)
 
     const [pmRes, eaRes, strProps] = await Promise.all([
-      supabase.from('pm_maintenance').select('*,pm_properties(name)').eq('user_id',user.id).order('created_at',{ascending:false}),
-      supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id',user.id).order('created_at',{ascending:false}),
+      supabase.from('pm_maintenance').select('*,pm_properties(name)').eq('user_id',accountId).order('created_at',{ascending:false}),
+      supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id',accountId).order('created_at',{ascending:false}),
       // maintenance_tickets has no user_id column -- scoped via the
       // business's own properties instead, same pattern str/page.tsx
       // itself uses.
-      supabase.from('properties').select('id,name').eq('user_id',user.id),
+      supabase.from('properties').select('id,name').eq('user_id',accountId),
     ])
     const strPropIds = (strProps.data??[]).map((p:any)=>p.id)
     const strRes = strPropIds.length
