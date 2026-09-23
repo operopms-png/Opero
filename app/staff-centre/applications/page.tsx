@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 const ACCENT = '#3B4AFF'
 const STAGES = ['Applied','Interviewing','Offered','Hired','Rejected']
 const MODULES = [
@@ -32,7 +32,8 @@ export default function Page() {
   useEffect(()=>{
     supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
-      await loadAll(user.id)
+      const accountId = await getAccountId(user)
+      await loadAll(accountId)
       setLoading(false)
     })
   },[])
@@ -48,15 +49,16 @@ export default function Page() {
     if(!form.candidate_name || !form.role_applied) return
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
+    const accountId = await getAccountId(user!)
     if(editId){
       const {error} = await supabase.from('job_applications').update(form).eq('id',editId)
       if(error){alert(error.message);setSaving(false);return}
     } else {
-      const {error} = await supabase.from('job_applications').insert([{...form,user_id:user?.id}])
+      const {error} = await supabase.from('job_applications').insert([{...form,user_id:accountId}])
       if(error){alert(error.message);setSaving(false);return}
     }
     setSaving(false); setForm({candidate_name:'',email:'',phone:'',role_applied:'',module:'',stage:'Applied',notes:''}); setShowForm(false); setEditId(null)
-    await loadAll(user!.id)
+    await loadAll(accountId)
   }
 
   async function updateStage(id: string, stage: string) {
