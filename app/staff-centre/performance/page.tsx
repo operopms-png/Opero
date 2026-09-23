@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 
 const ACCENT = '#3B4AFF'
 const CATEGORIES = [
@@ -54,7 +54,8 @@ export default function Page() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { window.location.href='/login'; return }
-    const { data } = await supabase.from('staff_performance_wins').select('*').eq('user_id',user.id).order('date_achieved',{ascending:false})
+    const accountId = await getAccountId(user)
+    const { data } = await supabase.from('staff_performance_wins').select('*').eq('user_id',accountId).order('date_achieved',{ascending:false})
     setWins(data ?? [])
     setLoading(false)
   }
@@ -63,7 +64,8 @@ export default function Page() {
     if (!form.staff_name.trim() || !form.title.trim()) return
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const payload = { ...form, value: form.value ? parseFloat(form.value) : null, module: form.module || null, user_id: user?.id }
+    const accountId = await getAccountId(user!)
+    const payload = { ...form, value: form.value ? parseFloat(form.value) : null, module: form.module || null, user_id: accountId }
     const { error } = await supabase.from('staff_performance_wins').insert([payload])
     setSaving(false)
     if (error) { alert(error.message); return }
