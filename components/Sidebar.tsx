@@ -70,6 +70,10 @@ const PLAN_FEATURES: Record<string, string[]> = {
   starter:      ['dashboard','properties','cleaning','maintenance','turnovers','team','pm','dev','str','estate','invest','ai','ai','staffcentre'],
   growth:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
   professional: ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
+  // The current (and only) plan sold today -- one price, every module,
+  // every feature. Aliased to the fullest feature set above so a bundle
+  // subscriber never hits a stray lock.
+  bundle:       ['dashboard','properties','cleaning','maintenance','turnovers','bookings','owners','analytics','integrations','team','reports','documents','guest-comms','audit','pm','dev','str','estate','invest','ai','ai','staffcentre'],
 }
 
 function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
@@ -183,7 +187,6 @@ export default function Sidebar() {
               {!isCollapsed && (
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#6B7A99', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {group.label}
-                  {!hasModule && (group as any).modulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#DCE4FA', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{(group as any).modulePrice}</span>}
                 </div>
               )}
               {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice }: any) => {
@@ -200,13 +203,9 @@ export default function Sidebar() {
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#D7E0FF' : 'transparent', color: !itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
                     <Icon name={icon} size={16} color={!itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#667085'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
-                    {!isCollapsed && !itemHasModule && requiresModulePrice && <span style={{ fontSize: 9, fontWeight: 700, background: '#F2F4F7', color: '#667085', padding: '2px 6px', borderRadius: 4 }}>{requiresModulePrice}</span>}
-                    {!isCollapsed && !itemHasModule && !requiresModulePrice && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C1C9D2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>}
-                    {!isCollapsed && itemHasModule && !hasAccess && minPlan && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, background: minPlan === 'professional' ? '#1D2939' : '#EEF0FF', color: minPlan === 'professional' ? '#fff' : '#3B4AFF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{minPlan === 'professional' ? 'Pro' : 'Growth'}</span>}
                   </Link>
                 )
               })}
-              {!isCollapsed && !hasModule && (group as any).modulePrice && <a href="/modules" style={{ display: 'block', textAlign: 'center', fontSize: 11, fontWeight: 600, color: (group as any).module === 'dev' ? '#8B5CF6' : '#3B4AFF', background: (group as any).module === 'dev' ? '#EDE9FE' : '#EEF0FF', borderRadius: 6, padding: '5px 8px', textDecoration: 'none', margin: '4px 0 8px' }}>Unlock — {(group as any).modulePrice}</a>}
             </div>
           )
         })}
