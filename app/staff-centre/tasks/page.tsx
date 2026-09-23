@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 
 const ACCENT = '#3B4AFF'
 
@@ -13,6 +13,7 @@ const ACCENT = '#3B4AFF'
 export default function TasksPage() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [accountId, setAccountId] = useState<string>('')
   const [team, setTeam] = useState<any[]>([])
   const [tasks, setTasks] = useState<any[]>([])
   const [showTaskForm, setShowTaskForm] = useState(false)
@@ -25,9 +26,11 @@ export default function TasksPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { window.location.href = '/login'; return }
     setUser(user)
-    const { data: teamData } = await supabase.from('team_members').select('*').eq('user_id', user.id).order('name')
+    const acctId = await getAccountId(user)
+    setAccountId(acctId)
+    const { data: teamData } = await supabase.from('team_members').select('*').eq('user_id', acctId).order('name')
     setTeam(teamData ?? [])
-    await loadTasks(user.id)
+    await loadTasks(acctId)
     setLoading(false)
   }
 
@@ -39,12 +42,12 @@ export default function TasksPage() {
   async function saveTask() {
     if (!taskForm.title || !user) return
     setSavingTask(true)
-    const { error } = await supabase.from('staff_tasks').insert({ ...taskForm, user_id: user.id, assigned_to: taskForm.assigned_to || null, due_date: taskForm.due_date || null })
+    const { error } = await supabase.from('staff_tasks').insert({ ...taskForm, user_id: accountId, assigned_to: taskForm.assigned_to || null, due_date: taskForm.due_date || null })
     setSavingTask(false)
     if (error) { alert(error.message); return }
     setTaskForm({ title: '', assigned_to: '', status: 'On track', due_date: '', notes: '' })
     setShowTaskForm(false)
-    await loadTasks(user.id)
+    await loadTasks(accountId)
   }
 
   async function updateTaskStatus(id: string, status: string) {
