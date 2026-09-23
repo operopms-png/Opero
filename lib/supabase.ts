@@ -80,6 +80,26 @@ function wrapStorageBucket(bucket: any) {
   return bucket
 }
 
+// Resolves the shared account/tenant id that Staff Centre (and every
+// other module's) data is actually scoped by -- the OWNER's auth id.
+// For the owner themselves this is just their own id (they're never a
+// row in team_members). For a staff account, their own auth id is
+// different from the owner's -- team_members stores their profile
+// under `user_id` = the owner's id, keyed by their own `email`. Every
+// page that scopes reads/writes by `user_id` must use THIS id, not the
+// logged-in user's own `user.id` directly, or a staff login sees/writes
+// an empty personal silo instead of the shared company data.
+export async function getAccountId(user: { id: string; email?: string | null }): Promise<string> {
+  if (!user.email) return user.id
+  const { data: rows } = await rawClient
+    .from('team_members')
+    .select('user_id')
+    .eq('email', user.email)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  return rows?.[0]?.user_id ?? user.id
+}
+
 export const supabase = new Proxy(rawClient, {
   get(target, prop, receiver) {
     if (prop === 'from') {
