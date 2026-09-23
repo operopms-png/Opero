@@ -49,6 +49,7 @@ const NAV_GROUPS = [
       { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles', requiresModule: 'aipm', requiresModulePrice: '£9.99/mo' },
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
+      { href: '/staff-centre/oversight', label: 'Oversight', key: 'staffcentre', icon: 'trendingup', scTab: 'oversight' },
       { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox' },
       { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe', scTab: 'portals' },
       { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance' },
