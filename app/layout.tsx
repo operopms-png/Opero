@@ -27,6 +27,7 @@ const PATH_MODULE: Record<string, string> = {
   '/dev': 'dev',
   '/estate': 'ea',
   '/invest': 'invest',
+  '/staff-centre': 'sc',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
