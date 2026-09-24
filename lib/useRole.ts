@@ -4,11 +4,6 @@ import { supabase } from '@/lib/supabase'
 
 export type UserRole = 'Admin' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Estate Agency Team'
 
-// Each role's allowed module keys. This list drives BOTH the tab-level
-// UI (locking things they can see but shouldn't use) and the hard
-// page-access guard in app/layout.tsx (blocking direct navigation to a
-// module entirely) — a role picked here is the ONLY thing that module
-// scoping in the whole app is keyed off of.
 export const ROLE_MODULES: Record<string, string[]> = {
   'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
   'Vacation Rental Team':        ['str'],
@@ -31,37 +26,24 @@ export const ROLE_SETTINGS: Record<string, boolean> = {
   'Viewer':                      false,
 }
 
-// Viewer can see everything ROLE_MODULES grants it, but can't create,
-// edit, or delete anything anywhere. Enforced for real (not just UI) in
-// lib/supabase.ts, which blocks every write at the network-call level
-// regardless of which page/button triggered it.
 export const ROLE_READONLY: Record<string, boolean> = {
   'Viewer': true,
 }
 
-// For roles listed here, within a given module they can ONLY use the
-// named tab — every other tab in that module shows locked/greyed out.
-// Roles not listed here have no tab-level restriction — module-level
-// access via ROLE_MODULES still applies on top of this.
 export const RESTRICTED_TABS: Record<string, Record<string, string>> = {
   'Maintenance Team': { str: 'Maintenance', pm: 'Maintenance', estate: 'Maintenance' },
   'Cleaning Team':     { str: 'Cleaning', pm: 'Cleaning', estate: 'Cleaning' },
 }
 
-// Returns the single tab name this role is restricted to within a module,
-// or null if this role has no tab-level restriction there.
 export function getAllowedTab(role: string, moduleKey: string): string | null {
   return RESTRICTED_TABS[role]?.[moduleKey] ?? null
 }
 
-// Every individual Staff Centre section that can be locked/unlocked per
-// staff member (independent of the coarse 'sc' module toggle, which just
-// gates Staff Centre as a whole). Stored on team_members.custom_modules
-// as 'sc:<key>' entries alongside the plain module keys above.
 export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'oversight',  l: 'Dashboard' },
   { k: 'investors',  l: 'Investors' },
   { k: 'customeronboarding', l: 'Customer Onboarding' },
+  { k: 'meetings',    l: 'Meetings' },
   { k: 'inbox',       l: 'Conversations' },
   { k: 'portalaccess', l: 'Portal Access' },
   { k: 'portals',     l: 'Property Portals' },
@@ -77,18 +59,8 @@ export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'tasks',       l: 'Tasks' },
 ]
 export const SC_TABS = STAFF_CENTRE_TABS.map(t => t.k)
-// Every tab is unlocked by default when a staff member is given Staff
-// Centre access -- an admin locks specific tabs per person afterward via
-// explicit 'sc:<key>' entries (see getScTabs below), rather than tabs
-// being locked by default and admin unlocking them.
 export const DEFAULT_SC_TABS = [...SC_TABS]
 
-// Which Staff Centre sub-tabs a given role + resolved module list (what
-// useRole()'s `modules` already returns — customModules if set, else the
-// role's defaults) is allowed to open. Admin (the account owner, or a
-// team member explicitly given the Admin role) always gets every tab;
-// everyone else gets the default set unless their row has explicit
-// 'sc:<key>' overrides, in which case only those exact tabs apply.
 export function getScTabs(role: string, modules: string[]): string[] {
   if (!modules.includes('sc')) return []
   if (role === 'Admin') return [...SC_TABS]
@@ -98,12 +70,6 @@ export function getScTabs(role: string, modules: string[]): string[] {
 
 const KNOWN_ROLES: UserRole[] = ['Admin', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Estate Agency Team']
 
-// Old role names, kept only so a not-yet-migrated team_members row
-// (or a stale cached session) still resolves to the right new role
-// instead of silently falling back to Admin. The DB itself is migrated
-// to the new names directly — see
-// migrations/rename-team-roles.sql — this is a safety net, not the
-// primary mechanism.
 const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
   'airbnb agent':     'Vacation Rental Team',
   'property manager': 'Property Management Team',
@@ -113,10 +79,6 @@ const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
   'estate agent':     'Estate Agency Team',
 }
 
-// Matches a raw role string (whatever casing it was stored in) against
-// the canonical role names, case-insensitively. Falls back to 'Admin'
-// only if there's genuinely no match — a typo'd/lowercased role should
-// never silently grant full access.
 export function normalizeRole(raw: string | null | undefined): UserRole {
   if (!raw) return 'Admin'
   const trimmed = raw.trim().toLowerCase()
@@ -134,18 +96,12 @@ export function useRole() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setLoading(false); return }
-      // .single() throws if there's more than one team_members row for this
-      // email (which silently fell back to Admin below) — use a list query
-      // instead and take the most recent row so duplicates can't grant
-      // accidental full access.
       const { data } = await supabase
         .from('team_members')
         .select('role, property_ids, custom_modules')
         .eq('email', user.email)
         .order('created_at', { ascending: false })
         .limit(1)
-      // Not in team_members = owner = Admin. Otherwise normalize
-      // whatever casing was stored against the canonical role names.
       setRole(normalizeRole(data?.[0]?.role))
       setPropertyIds(data?.[0]?.property_ids ?? [])
       setCustomModules(data?.[0]?.custom_modules?.length ? data[0].custom_modules : null)
