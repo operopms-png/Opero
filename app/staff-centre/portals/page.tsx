@@ -41,6 +41,20 @@ function initials(name: string) {
   return name.trim().slice(0, 2).toUpperCase() || 'PT'
 }
 
+// Our own client-facing portals -- opened in the same tab since these
+// are internal Opero pages, not external sites. The Developments
+// Investors Portal doesn't have real data behind it yet (off-plan
+// deposit plans aren't tracked anywhere in the schema yet), so it
+// links to a preview page rather than a live portal.
+const OUR_PORTALS = [
+  { key: 'str-owner', module: 'Vacation Rentals', name: 'Owner Portal', url: '/owner-portal', color: '#3B4AFF', live: true },
+  { key: 'pm-landlord', module: 'Property Management', name: 'Landlord Portal', url: '/pm-owner-portal', color: '#10B981', live: true },
+  { key: 'pm-tenant', module: 'Property Management', name: 'Tenant Portal', url: '/pm-tenant-portal', color: '#10B981', live: true },
+  { key: 'ea-landlord', module: 'Estate Agency', name: 'Landlord Portal', url: '/estate-owner-portal', color: '#F59E0B', live: true },
+  { key: 'ea-tenant', module: 'Estate Agency', name: 'Tenant Portal', url: '/estate-tenant-portal', color: '#F59E0B', live: true },
+  { key: 'dev-investors', module: 'Developments', name: 'Investors Portal', url: '/dev-investor-portal', color: '#8B5CF6', live: false },
+]
+
 export default function PortalsPage() {
   const [loading, setLoading] = useState(true)
   const [ownerId, setOwnerId] = useState<string | null>(null)
@@ -107,6 +121,34 @@ export default function PortalsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '40px 48px' }}>
       <div style={{ maxWidth: 1040, margin: '0 auto' }}>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Portal Access</div>
+          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#101828', letterSpacing: '-0.01em' }}>Client Portals</h1>
+          <div style={{ fontSize: 14, color: '#667085', maxWidth: 640, lineHeight: 1.5 }}>
+            View and access every client-facing portal across every module from one place.
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 20, marginBottom: 36 }}>
+          {OUR_PORTALS.map(p => (
+            <div key={p.key} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 14, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 10, background: p.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: p.color, flexShrink: 0 }}>{p.name.charAt(0)}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#101828' }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: '#98A2B3' }}>{p.module}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 13, color: '#667085', lineHeight: 1.5, flexGrow: 1 }}>
+                {p.live ? `View this module's ${p.name.toLowerCase()} the way a client sees it.` : 'Preview only — the off-plan deposit plan feature this needs isn’t built yet.'}
+              </div>
+              <a href={p.url} style={{ background: p.live ? p.color : '#F2F4F7', color: p.live ? '#fff' : '#667085', fontSize: 13, fontWeight: 600, padding: '10px 14px', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textDecoration: 'none' }}>
+                {p.live ? `Open ${p.name}` : 'Preview'}
+              </a>
+            </div>
+          ))}
+        </div>
+
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>External listings</div>
           <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#101828', letterSpacing: '-0.01em' }}>Property Portals</h1>
