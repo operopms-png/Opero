@@ -8,8 +8,12 @@ import { normalizeRole, ROLE_SETTINGS, ROLE_MODULES, getScTabs } from '@/lib/use
 import { SidebarCollapseProvider, useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import './globals.css'
 
-const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/staff-dashboard']
+const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/staff-dashboard', '/meet']
 
+// Statuses where Stripe has stopped billing successfully — trial expired
+// with no working payment method, a renewal failed, or it was cancelled.
+// 'cancelled' (double-l) is kept alongside Stripe's real 'canceled' value
+// since an earlier version of the webhook wrote the non-standard spelling.
 const BLOCKED_STATUSES = ['past_due', 'unpaid', 'incomplete_expired', 'canceled', 'cancelled', 'paused']
 
 const PATH_MODULE: Record<string, string> = {
@@ -34,6 +38,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/training': 'training',
   '/staff-centre/calendar': 'calendar',
   '/staff-centre/tasks': 'tasks',
+  '/staff-centre/meetings': 'meetings',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
