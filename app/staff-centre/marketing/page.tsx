@@ -17,6 +17,25 @@ function moduleBadge(m: string) {
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
+// Renders an email body exactly as /api/marketing-send sends it (newlines -> <br/>, wrapped in <p>),
+// so staff see images/HTML visually instead of raw markup. Sandboxed iframe: no scripts run.
+function emailPreviewDoc(body: string, zoom = 1) {
+  const html = `<p>${(body||'').replace(/\n/g,'<br/>')}</p>`
+  return `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#101828;background:#fff;zoom:${zoom}}img{max-width:100%;height:auto}p{margin:0}</style></head><body>${html}</body></html>`
+}
+function EmailPreview({ body, height = 480, zoom = 1, label = true }: { body: string, height?: number, zoom?: number, label?: boolean }) {
+  return (
+    <div>
+      {label&&<label style={lbl}>Preview</label>}
+      <div style={{border:'1px solid #D0D5DD',borderRadius:8,overflow:'hidden',background:'#F9FAFB'}}>
+        {body?.trim()
+          ? <iframe title="Email preview" sandbox="" srcDoc={emailPreviewDoc(body, zoom)} style={{width:'100%',height,border:'none',display:'block',background:'#fff',pointerEvents:label?'auto':'none'}}/>
+          : <div style={{height:Math.min(height,120),display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'#98A2B3'}}>Nothing to preview yet</div>}
+      </div>
+    </div>
+  )
+}
+
 export default function Page() {
   const [section, setSection] = useState('Campaigns')
   const [moduleFilter, setModuleFilter] = useState('pm')
@@ -317,6 +336,7 @@ export default function Page() {
                 <div><label style={lbl}>Subject *</label><input value={emailForm.subject} onChange={e=>setEmailForm({...emailForm,subject:e.target.value})} placeholder="Email subject" style={inp}/></div>
                 <div><label style={lbl}>To *</label><input value={emailForm.to_recipient} onChange={e=>setEmailForm({...emailForm,to_recipient:e.target.value})} placeholder="recipient@example.com" style={inp}/></div>
                 <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Body *</label><textarea value={emailForm.body} onChange={e=>setEmailForm({...emailForm,body:e.target.value})} placeholder="Write your email…" rows={5} style={{...inp,resize:'vertical' as const}}/></div>
+                <div style={{gridColumn:'span 2' as const}}><EmailPreview body={emailForm.body}/></div>
                 <div><label style={lbl}>Status</label><select value={emailForm.status} onChange={e=>setEmailForm({...emailForm,status:e.target.value})} style={inp}>{['Draft','Scheduled'].map(s=><option key={s}>{s}</option>)}</select></div>
                 <div><label style={lbl}>Scheduled At</label><input value={emailForm.scheduled_at} onChange={e=>setEmailForm({...emailForm,scheduled_at:e.target.value})} type="datetime-local" style={inp}/></div>
               </div>
@@ -437,6 +457,7 @@ export default function Page() {
                 <div><label style={lbl}>Category</label><select value={templateForm.category} onChange={e=>setTemplateForm({...templateForm,category:e.target.value})} style={inp}>{['Onboarding','Rent & Payments','Maintenance','Renewals','Announcements','Landlord Acquisition','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                 <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Subject *</label><input value={templateForm.subject} onChange={e=>setTemplateForm({...templateForm,subject:e.target.value})} placeholder="Email subject" style={inp}/></div>
                 <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Body *</label><textarea value={templateForm.body} onChange={e=>setTemplateForm({...templateForm,body:e.target.value})} placeholder="Write the template…" rows={6} style={{...inp,resize:'vertical' as const}}/></div>
+                <div style={{gridColumn:'span 2' as const}}><EmailPreview body={templateForm.body}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
                 <button onClick={saveTemplate} disabled={savingTemplate} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingTemplate?0.6:1}}>{savingTemplate?'Saving…':'Save Template'}</button>
@@ -451,7 +472,7 @@ export default function Page() {
                   </div>
                   <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>{t.name}</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:6}}>{t.subject}</div>
-                  <div style={{fontSize:12,color:'#98A2B3',lineHeight:1.5,marginBottom:12,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical' as const,overflow:'hidden'}}>{t.body}</div>
+                  <div style={{marginBottom:12}}><EmailPreview body={t.body} height={260} zoom={0.5} label={false}/></div>
                   <div style={{display:'flex',gap:6}}>
                     <button onClick={()=>useTemplate(t)} style={{flex:1,padding:'7px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Use Template</button>
                     <button onClick={()=>{setEditingTemplateId(t.id);setTemplateForm({name:t.name,category:t.category,subject:t.subject,body:t.body});setShowTemplateForm(true)}} style={{padding:'7px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
