@@ -61,6 +61,7 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
 export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'oversight',  l: 'Oversight' },
   { k: 'investors',  l: 'Investors' },
+  { k: 'customeronboarding', l: 'Customer Onboarding' },
   { k: 'inbox',       l: 'Conversations' },
   { k: 'portalaccess', l: 'Portal Access' },
   { k: 'portals',     l: 'Property Portals' },
