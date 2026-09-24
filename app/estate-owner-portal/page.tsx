@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 // Mirrors app/pm-owner-portal closely -- same layout, same staff-preview
 // pattern via ?landlord_id=. Messages now use estate_landlord_messages
@@ -21,6 +21,7 @@ function EstateOwnerPortalInner() {
   const [isStaffView, setIsStaffView] = useState(false)
   const [tab, setTab] = useState('Dashboard')
   const [landlord, setLandlord] = useState<any>(null)
+  const [pickerLandlords, setPickerLandlords] = useState<any[] | null>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [tenancies, setTenancies] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
@@ -59,7 +60,17 @@ function EstateOwnerPortalInner() {
         const { data } = await supabase.from('estate_landlords').select('*').eq('portal_user_id', user.id).single()
         ll = data
       }
-      if (!ll) { window.location.href = '/login'; return }
+      if (!ll) {
+        if (!viewingLandlordId) {
+          // Staff/account owner opening the bare portal link rather than a
+          // specific landlord's own link -- show a picker instead of
+          // bouncing to login.
+          const accountId = await getAccountId(user)
+          const { data: rows } = await supabase.from('estate_landlords').select('*').eq('user_id', accountId).order('name', { ascending: true })
+          if (rows && rows.length) { setPickerLandlords(rows); setLoading(false); return }
+        }
+        window.location.href = '/login'; return
+      }
       setLandlord(ll)
       setContactForm({ email: ll.email ?? '', phone: ll.phone ?? '', bank_name: ll.bank_name ?? '', account_name: ll.account_name ?? '', account_number: ll.account_number ?? '', sort_code: ll.sort_code ?? '', notes: ll.notes ?? '' })
       await loadAll(ll)
@@ -99,6 +110,29 @@ function EstateOwnerPortalInner() {
   }
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
+
+  if (pickerLandlords && !landlord) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '48px 28px' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Estate Agency — Owner Portal</div>
+          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#101828' }}>Select a landlord to preview</h1>
+          <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>This is the staff view — pick a landlord to see their portal exactly as they see it.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pickerLandlords.map(l => (
+              <a key={l.id} href={`/estate-owner-portal?landlord_id=${l.id}`} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{l.name}</div>
+                  <div style={{ fontSize: 12, color: '#98A2B3' }}>{l.email ?? '—'}</div>
+                </div>
+                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>Preview →</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   async function saveContact() {
     setSaving(true)
