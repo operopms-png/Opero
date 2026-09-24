@@ -6,24 +6,26 @@ import { serviceClient } from '@/lib/admin-auth'
 // deliberately unauthenticated. It only ever exposes what's needed to
 // book (title, duration, status), never the business's user_id or any
 // other account data.
-export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
   const { data, error } = await serviceClient
     .from('meetings')
     .select('title,duration_minutes,status,scheduled_at,attendee_name')
-    .eq('token', params.token)
+    .eq('token', token)
     .maybeSingle()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'This meeting link is invalid.' }, { status: 404 })
   return NextResponse.json({ meeting: data })
 }
 
-export async function POST(req: NextRequest, { params }: { params: { token: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
   const { attendee_name, attendee_email, scheduled_at, notes } = await req.json()
   if (!attendee_name || !attendee_email || !scheduled_at) {
     return NextResponse.json({ error: 'Name, email, and a time are required' }, { status: 400 })
   }
 
-  const { data: meeting } = await serviceClient.from('meetings').select('id,status').eq('token', params.token).maybeSingle()
+  const { data: meeting } = await serviceClient.from('meetings').select('id,status').eq('token', token).maybeSingle()
   if (!meeting) return NextResponse.json({ error: 'This meeting link is invalid.' }, { status: 404 })
   if (meeting.status === 'cancelled') return NextResponse.json({ error: 'This meeting link has been cancelled.' }, { status: 409 })
   if (meeting.status === 'scheduled') return NextResponse.json({ error: 'This link has already been booked.' }, { status: 409 })
