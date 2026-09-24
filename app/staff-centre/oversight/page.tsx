@@ -1,9 +1,36 @@
 'use client'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
 const ACCENT = '#3B4AFF'
 const COLORS = { str: '#3B4AFF', pm: '#10B981', ea: '#F59E0B', dev: '#8B5CF6' }
+
+// Plain line icons instead of emoji -- emoji render inconsistently
+// across platforms and read as informal for a business dashboard.
+function Ico({ name, size = 16, color = '#667085' }: { name: string; size?: number; color?: string }) {
+  const s = { width: size, height: size, display: 'block', flexShrink: 0 }
+  const common = { fill: 'none', stroke: color, strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  const paths: Record<string, React.ReactElement> = {
+    mail: <svg style={s} viewBox="0 0 24 24" {...common}><rect x="3" y="5" width="18" height="14" rx="2" /><polyline points="3 7 12 13 21 7" /></svg>,
+    eye: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>,
+    click: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M4 3l7.07 17 2.51-7.39L21 10.07z" /></svg>,
+    trendup: <svg style={s} viewBox="0 0 24 24" {...common}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>,
+    trenddown: <svg style={s} viewBox="0 0 24 24" {...common}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6" /><polyline points="17 18 23 18 23 12" /></svg>,
+    users: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>,
+    phone: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>,
+    file: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="16" y2="17" /></svg>,
+    bell: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" /></svg>,
+    key: <svg style={s} viewBox="0 0 24 24" {...common}><circle cx="7" cy="15" r="3" /><path d="M9.5 12.5L20 2M15 7l3 3M18 4l2 2" /></svg>,
+    wrench: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg>,
+    home: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+    building: <svg style={s} viewBox="0 0 24 24" {...common}><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
+    layers: <svg style={s} viewBox="0 0 24 24" {...common}><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>,
+    alert: <svg style={s} viewBox="0 0 24 24" {...common}><path d="M12 2L1 21h22L12 2z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17.5" x2="12" y2="17.51" /></svg>,
+    clipboard: <svg style={s} viewBox="0 0 24 24" {...common}><rect x="4" y="4" width="16" height="18" rx="2" /><path d="M9 2h6a1 1 0 011 1v2H8V3a1 1 0 011-1z" /><line x1="8" y1="11" x2="16" y2="11" /><line x1="8" y1="15" x2="16" y2="15" /></svg>,
+    check: <svg style={s} viewBox="0 0 24 24" {...common}><circle cx="12" cy="12" r="10" /><polyline points="8 12 11 15 16 9" /></svg>,
+  }
+  return paths[name] ?? <span style={{ width: size, height: size, display: 'inline-block' }} />
+}
 
 function fmtMoney(n: number) {
   return '£' + Math.round(n).toLocaleString('en-GB')
@@ -168,28 +195,28 @@ export default function OversightPage() {
   const maxHeadcount = Math.max(1, ...Object.values(headcount))
 
   const modules = [
-    { key: 'str', name: 'Vacation Rentals', icon: '🏖️', revenue: strRevenue, expenses: strExpenses, occLabel: strOccPct + '% occ.', occPct: strOccPct, tasks: data.str.maint.filter((m: any) => isOpen(m.status)).length },
-    { key: 'pm', name: 'Property Management', icon: '🏢', revenue: pmRevenue, expenses: pmExpenses, occLabel: pmOccPct + '% occ.', occPct: pmOccPct, tasks: data.pm.maint.filter((m: any) => isOpen(m.status)).length },
-    { key: 'ea', name: 'Estate Agency', icon: '🏠', revenue: eaRevenue, expenses: eaExpenses, occLabel: eaOccPct + '% let', occPct: eaOccPct, tasks: data.ea.maint.filter((m: any) => isOpen(m.status)).length },
-    { key: 'dev', name: 'Developments', icon: '🏗️', revenue: 0, expenses: devSpent, occLabel: devPctBuilt + '% spent', occPct: devPctBuilt, tasks: data.dev.milestones.filter((m: any) => isOpen(m.status)).length },
+    { key: 'str', name: 'Vacation Rentals', icon: 'home', revenue: strRevenue, expenses: strExpenses, occLabel: strOccPct + '% occ.', occPct: strOccPct, tasks: data.str.maint.filter((m: any) => isOpen(m.status)).length },
+    { key: 'pm', name: 'Property Management', icon: 'building', revenue: pmRevenue, expenses: pmExpenses, occLabel: pmOccPct + '% occ.', occPct: pmOccPct, tasks: data.pm.maint.filter((m: any) => isOpen(m.status)).length },
+    { key: 'ea', name: 'Estate Agency', icon: 'key', revenue: eaRevenue, expenses: eaExpenses, occLabel: eaOccPct + '% let', occPct: eaOccPct, tasks: data.ea.maint.filter((m: any) => isOpen(m.status)).length },
+    { key: 'dev', name: 'Developments', icon: 'layers', revenue: 0, expenses: devSpent, occLabel: devPctBuilt + '% spent', occPct: devPctBuilt, tasks: data.dev.milestones.filter((m: any) => isOpen(m.status)).length },
   ]
 
   const pipeline = [
-    { label: 'New bookings this week (STR)', value: data.str.bookings.filter((b: any) => new Date(b.created_at) >= sevenDaysAgo).length, icon: '🛎️' },
-    { label: 'New tenants this week (PM)', value: data.pm.tenants.filter((t: any) => new Date(t.created_at) >= sevenDaysAgo).length, icon: '🔑' },
-    { label: 'New tenants this week (EA)', value: data.ea.tenants.filter((t: any) => new Date(t.created_at) >= sevenDaysAgo).length, icon: '🤝' },
-    { label: 'Milestones completed (Dev)', value: data.dev.milestones.filter((m: any) => !isOpen(m.status) && new Date(m.created_at) >= sevenDaysAgo).length, icon: '🏗️' },
+    { label: 'New bookings this week (STR)', value: data.str.bookings.filter((b: any) => new Date(b.created_at) >= sevenDaysAgo).length, icon: 'bell' },
+    { label: 'New tenants this week (PM)', value: data.pm.tenants.filter((t: any) => new Date(t.created_at) >= sevenDaysAgo).length, icon: 'key' },
+    { label: 'New tenants this week (EA)', value: data.ea.tenants.filter((t: any) => new Date(t.created_at) >= sevenDaysAgo).length, icon: 'users' },
+    { label: 'Milestones completed (Dev)', value: data.dev.milestones.filter((m: any) => !isOpen(m.status) && new Date(m.created_at) >= sevenDaysAgo).length, icon: 'layers' },
   ]
 
-  const alerts: { icon: string; title: string; detail: string; bg: string }[] = []
-  if (overdueCompliance > 0) alerts.push({ icon: '⚠️', title: `${overdueCompliance} compliance check${overdueCompliance === 1 ? '' : 's'} overdue`, detail: 'Across all modules', bg: '#FEF2F2' })
-  if (dueSoonCompliance > 0) alerts.push({ icon: '📋', title: `${dueSoonCompliance} compliance check${dueSoonCompliance === 1 ? '' : 's'} due in 30 days`, detail: 'Across all modules', bg: '#FFFBEB' })
+  const alerts: { icon: string; color: string; title: string; detail: string; bg: string }[] = []
+  if (overdueCompliance > 0) alerts.push({ icon: 'alert', color: '#B42318', title: `${overdueCompliance} compliance check${overdueCompliance === 1 ? '' : 's'} overdue`, detail: 'Across all modules', bg: '#FEF2F2' })
+  if (dueSoonCompliance > 0) alerts.push({ icon: 'clipboard', color: '#B54708', title: `${dueSoonCompliance} compliance check${dueSoonCompliance === 1 ? '' : 's'} due in 30 days`, detail: 'Across all modules', bg: '#FFFBEB' })
   const staleMaint = [...data.str.maint, ...data.pm.maint, ...data.ea.maint].filter((m: any) => isOpen(m.status) && new Date(m.created_at) < sevenDaysAgo).length
-  if (staleMaint > 0) alerts.push({ icon: '🔧', title: `${staleMaint} maintenance ticket${staleMaint === 1 ? '' : 's'} open 7+ days`, detail: 'STR, PM & EA combined', bg: '#FEF2F2' })
-  if (vacantProperties > 0) alerts.push({ icon: '🔑', title: `${vacantProperties} vacant propert${vacantProperties === 1 ? 'y' : 'ies'}`, detail: 'PM & EA combined', bg: '#FFFBEB' })
+  if (staleMaint > 0) alerts.push({ icon: 'wrench', color: '#B42318', title: `${staleMaint} maintenance ticket${staleMaint === 1 ? '' : 's'} open 7+ days`, detail: 'STR, PM & EA combined', bg: '#FEF2F2' })
+  if (vacantProperties > 0) alerts.push({ icon: 'key', color: '#B54708', title: `${vacantProperties} vacant propert${vacantProperties === 1 ? 'y' : 'ies'}`, detail: 'PM & EA combined', bg: '#FFFBEB' })
   const overdueMilestones = data.dev.milestones.filter((m: any) => isOpen(m.status) && m.due_date && m.due_date < todayStr).length
-  if (overdueMilestones > 0) alerts.push({ icon: '📉', title: `${overdueMilestones} development milestone${overdueMilestones === 1 ? '' : 's'} overdue`, detail: 'Developments', bg: '#FFFBEB' })
-  if (alerts.length === 0) alerts.push({ icon: '✅', title: 'Nothing needs attention', detail: 'All modules look clear right now', bg: '#ECFDF5' })
+  if (overdueMilestones > 0) alerts.push({ icon: 'trenddown', color: '#B54708', title: `${overdueMilestones} development milestone${overdueMilestones === 1 ? '' : 's'} overdue`, detail: 'Developments', bg: '#FFFBEB' })
+  if (alerts.length === 0) alerts.push({ icon: 'check', color: '#10B981', title: 'Nothing needs attention', detail: 'All modules look clear right now', bg: '#ECFDF5' })
 
   // Business activity -- emails, engagement, meetings & leads, all scoped
   // to the last 7 days so this reads as "what's happening" rather than
@@ -203,13 +230,13 @@ export default function OversightPage() {
   const documentsUploaded = data.companyDocuments.filter((d: any) => new Date(d.created_at) >= sevenDaysAgo).length
 
   const activityStats = [
-    { label: 'Emails sent', value: String(sentEmails), icon: '📤' },
-    { label: 'Emails opened', value: String(emailOpens), icon: '👀' },
-    { label: 'Email clicks', value: String(emailClicks), icon: '🖱️' },
-    { label: 'New leads', value: String(newLeads), icon: '📈' },
-    { label: 'Meetings logged', value: String(meetingsLogged), icon: '🤝' },
-    { label: 'Calls logged', value: String(callsLogged), icon: '📞' },
-    { label: 'Documents uploaded', value: String(documentsUploaded), icon: '📄' },
+    { label: 'Emails sent', value: String(sentEmails), icon: 'mail' },
+    { label: 'Emails opened', value: String(emailOpens), icon: 'eye' },
+    { label: 'Email clicks', value: String(emailClicks), icon: 'click' },
+    { label: 'New leads', value: String(newLeads), icon: 'trendup' },
+    { label: 'Meetings logged', value: String(meetingsLogged), icon: 'users' },
+    { label: 'Calls logged', value: String(callsLogged), icon: 'phone' },
+    { label: 'Documents uploaded', value: String(documentsUploaded), icon: 'file' },
   ]
 
   // Revenue by module, last 6 months (STR/PM/EA only — Developments has
@@ -234,10 +261,10 @@ export default function OversightPage() {
     { label: 'Avg. occupancy (STR/PM/EA)', value: avgOccupancy + '%' },
   ]
   const portfolioStats = [
-    { label: 'Total tenants', value: String(totalTenants), sub: 'PM & EA combined', icon: '🧑‍🤝‍🧑' },
-    { label: 'Total properties', value: String(totalProperties), sub: 'STR, PM & EA combined', icon: '🏘️' },
-    { label: 'Apartment blocks / units', value: `${totalBlocks} / ${totalUnits}`, sub: 'PM & EA combined', icon: '🏢' },
-    { label: 'Vacant properties', value: String(vacantProperties), sub: totalUnits ? pct(vacantProperties, totalUnits) + '% of units' : '', icon: '🔑' },
+    { label: 'Total tenants', value: String(totalTenants), sub: 'PM & EA combined', icon: 'users' },
+    { label: 'Total properties', value: String(totalProperties), sub: 'STR, PM & EA combined', icon: 'home' },
+    { label: 'Apartment blocks / units', value: `${totalBlocks} / ${totalUnits}`, sub: 'PM & EA combined', icon: 'building' },
+    { label: 'Vacant properties', value: String(vacantProperties), sub: totalUnits ? pct(vacantProperties, totalUnits) + '% of units' : '', icon: 'key' },
   ]
 
   return (
@@ -252,7 +279,7 @@ export default function OversightPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10 }}>
           {activityStats.map(s => (
             <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '14px 12px' }}>
-              <div style={{ fontSize: 15, marginBottom: 6 }}>{s.icon}</div>
+              <div style={{ marginBottom: 8 }}><Ico name={s.icon} size={18} color="#667085" /></div>
               <div style={{ fontSize: 20, fontWeight: 700, color: '#101828' }}>{s.value}</div>
               <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{s.label}</div>
             </div>
@@ -273,7 +300,7 @@ export default function OversightPage() {
         {portfolioStats.map(p => (
           <div key={p.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 15 }}>{p.icon}</span>
+              <Ico name={p.icon} size={16} color="#667085" />
               <div style={{ fontSize: 12, color: '#667085', fontWeight: 500 }}>{p.label}</div>
             </div>
             <div style={{ fontSize: 26, fontWeight: 700, color: '#101828' }}>{p.value}</div>
@@ -287,7 +314,7 @@ export default function OversightPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
           {pipeline.map(pl => (
             <div key={pl.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 9, background: '#F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{pl.icon}</div>
+              <div style={{ width: 36, height: 36, borderRadius: 9, background: '#F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Ico name={pl.icon} size={17} color="#344054" /></div>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: '#101828' }}>{pl.value}</div>
                 <div style={{ fontSize: 11, color: '#667085' }}>{pl.label}</div>
@@ -311,7 +338,7 @@ export default function OversightPage() {
           return (
             <a key={m.key} href={`/${m.key === 'ea' ? 'estate' : m.key}`} style={{ display: 'grid', gridTemplateColumns: '1fr 95px 95px 85px 150px 80px 40px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>{m.icon}</div>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ico name={m.icon} size={16} color={color} /></div>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#101828' }}>{m.name}</span>
               </div>
               <span style={{ fontSize: 13, fontWeight: 600, color: '#101828' }}>{m.revenue ? fmtMoney(m.revenue) : '—'}</span>
@@ -394,7 +421,7 @@ export default function OversightPage() {
           <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 2 }}>Needs attention</div>
           {alerts.map((a, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 10, borderRadius: 8, background: a.bg }}>
-              <span style={{ fontSize: 15, flexShrink: 0 }}>{a.icon}</span>
+              <span style={{ flexShrink: 0, marginTop: 1 }}><Ico name={a.icon} size={16} color={a.color} /></span>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#101828' }}>{a.title}</div>
                 <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{a.detail}</div>
