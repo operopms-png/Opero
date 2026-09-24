@@ -60,7 +60,9 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
 // as 'sc:<key>' entries alongside the plain module keys above.
 export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'oversight',  l: 'Oversight' },
+  { k: 'investors',  l: 'Investors' },
   { k: 'inbox',       l: 'Conversations' },
+  { k: 'portalaccess', l: 'Portal Access' },
   { k: 'portals',     l: 'Property Portals' },
   { k: 'maintenance', l: 'Maintenance Board' },
   { k: 'crm',         l: 'CRM' },
