@@ -35,6 +35,7 @@ export default function OversightPage() {
       eaProps, eaUnits, eaTenants, eaBuildings, eaMaint, eaTx, eaCompliance,
       devProjects, devUnits, devBudget, devMilestones, devCompliance,
       team,
+      marketingEmails, crmActivities, salesLeads, companyDocuments,
     ] = await Promise.all([
       supabase.from('properties').select('id,status').eq('user_id', accountId),
       supabase.from('maintenance_tickets').select('id,status,created_at,property_id'),
@@ -60,7 +61,19 @@ export default function OversightPage() {
       supabase.from('dev_milestones').select('id,status,due_date,created_at').eq('user_id', accountId),
       supabase.from('dev_compliance').select('id,expiry_date').eq('user_id', accountId),
       supabase.from('team_members').select('id,role,custom_modules').eq('user_id', accountId),
+      supabase.from('marketing_emails').select('id,status,sent_at,created_at').eq('user_id', accountId),
+      supabase.from('crm_activities').select('id,type,created_at').eq('user_id', accountId),
+      supabase.from('sales_leads').select('id,created_at,status').eq('user_id', accountId),
+      supabase.from('company_documents').select('id,created_at').eq('user_id', accountId),
     ])
+
+    // Email opens/clicks live on marketing_email_events, keyed off the
+    // sent email's id rather than the account directly, so fetch them
+    // scoped to this account's own marketing_emails ids.
+    const emailIds = (marketingEmails.data ?? []).map((e: any) => e.id)
+    const { data: emailEventsData } = emailIds.length
+      ? await supabase.from('marketing_email_events').select('id,marketing_email_id,type,created_at').in('marketing_email_id', emailIds)
+      : { data: [] as any[] }
 
     // Bookings need the real property-id filter (properties table has no
     // account_id column of its own to join on directly here), so fetch
@@ -77,6 +90,11 @@ export default function OversightPage() {
       ea: { props: eaProps.data ?? [], units: eaUnits.data ?? [], tenants: eaTenants.data ?? [], buildings: eaBuildings.data ?? [], maint: eaMaint.data ?? [], tx: eaTx.data ?? [], compliance: eaCompliance.data ?? [] },
       dev: { projects: devProjects.data ?? [], units: devUnits.data ?? [], budget: devBudget.data ?? [], milestones: devMilestones.data ?? [], compliance: devCompliance.data ?? [] },
       team: team.data ?? [],
+      marketingEmails: marketingEmails.data ?? [],
+      emailEvents: emailEventsData ?? [],
+      crmActivities: crmActivities.data ?? [],
+      salesLeads: salesLeads.data ?? [],
+      companyDocuments: companyDocuments.data ?? [],
     })
     setLoading(false)
   }
@@ -173,6 +191,27 @@ export default function OversightPage() {
   if (overdueMilestones > 0) alerts.push({ icon: '📉', title: `${overdueMilestones} development milestone${overdueMilestones === 1 ? '' : 's'} overdue`, detail: 'Developments', bg: '#FFFBEB' })
   if (alerts.length === 0) alerts.push({ icon: '✅', title: 'Nothing needs attention', detail: 'All modules look clear right now', bg: '#ECFDF5' })
 
+  // Business activity -- emails, engagement, meetings & leads, all scoped
+  // to the last 7 days so this reads as "what's happening" rather than
+  // an all-time total.
+  const sentEmails = data.marketingEmails.filter((e: any) => new Date(e.created_at) >= sevenDaysAgo).length
+  const emailOpens = data.emailEvents.filter((e: any) => e.type === 'email.opened' && new Date(e.created_at) >= sevenDaysAgo).length
+  const emailClicks = data.emailEvents.filter((e: any) => e.type === 'email.clicked' && new Date(e.created_at) >= sevenDaysAgo).length
+  const meetingsLogged = data.crmActivities.filter((a: any) => a.type === 'Meeting' && new Date(a.created_at) >= sevenDaysAgo).length
+  const callsLogged = data.crmActivities.filter((a: any) => a.type === 'Call' && new Date(a.created_at) >= sevenDaysAgo).length
+  const newLeads = data.salesLeads.filter((l: any) => new Date(l.created_at) >= sevenDaysAgo).length
+  const documentsUploaded = data.companyDocuments.filter((d: any) => new Date(d.created_at) >= sevenDaysAgo).length
+
+  const activityStats = [
+    { label: 'Emails sent', value: String(sentEmails), icon: '📤' },
+    { label: 'Emails opened', value: String(emailOpens), icon: '👀' },
+    { label: 'Email clicks', value: String(emailClicks), icon: '🖱️' },
+    { label: 'New leads', value: String(newLeads), icon: '📈' },
+    { label: 'Meetings logged', value: String(meetingsLogged), icon: '🤝' },
+    { label: 'Calls logged', value: String(callsLogged), icon: '📞' },
+    { label: 'Documents uploaded', value: String(documentsUploaded), icon: '📄' },
+  ]
+
   // Revenue by module, last 6 months (STR/PM/EA only — Developments has
   // no comparable recurring-revenue figure; it runs on project spend).
   const months: Date[] = []
@@ -204,8 +243,22 @@ export default function OversightPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#101828', margin: '0 0 4px' }}>Oversight</h1>
-        <div style={{ fontSize: 13, color: '#667085' }}>Combined performance across Vacation Rentals, Property Management, Estate Agency &amp; Developments — this month.</div>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#101828', margin: '0 0 4px' }}>Dashboard</h1>
+        <div style={{ fontSize: 13, color: '#667085' }}>Everything happening across Vacation Rentals, Property Management, Estate Agency &amp; Developments — this month.</div>
+      </div>
+
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Business activity — last 7 days</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10 }}>
+          {activityStats.map(s => (
+            <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '14px 12px' }}>
+              <div style={{ fontSize: 15, marginBottom: 6 }}>{s.icon}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#101828' }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 8 }}>Document views aren't tracked yet — "Documents uploaded" counts new files added this week. Let me know if you want view-tracking built.</div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 12 }}>
