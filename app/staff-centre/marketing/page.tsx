@@ -434,7 +434,7 @@ export default function Page() {
               <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editingTemplateId?'Edit Template':'New Template'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={lbl}>Template Name *</label><input value={templateForm.name} onChange={e=>setTemplateForm({...templateForm,name:e.target.value})} placeholder="e.g. Move-In Welcome" style={inp}/></div>
-                <div><label style={lbl}>Category</label><select value={templateForm.category} onChange={e=>setTemplateForm({...templateForm,category:e.target.value})} style={inp}>{['Onboarding','Rent & Payments','Maintenance','Renewals','Announcements','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
+                <div><label style={lbl}>Category</label><select value={templateForm.category} onChange={e=>setTemplateForm({...templateForm,category:e.target.value})} style={inp}>{['Onboarding','Rent & Payments','Maintenance','Renewals','Announcements','Landlord Acquisition','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                 <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Subject *</label><input value={templateForm.subject} onChange={e=>setTemplateForm({...templateForm,subject:e.target.value})} placeholder="Email subject" style={inp}/></div>
                 <div style={{gridColumn:'span 2' as const}}><label style={lbl}>Body *</label><textarea value={templateForm.body} onChange={e=>setTemplateForm({...templateForm,body:e.target.value})} placeholder="Write the template…" rows={6} style={{...inp,resize:'vertical' as const}}/></div>
               </div>
