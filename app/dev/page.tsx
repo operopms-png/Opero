@@ -193,6 +193,8 @@ export default function DevPage() {
   const [healthSafety, setHealthSafety] = useState<any[]>([])
   const [budgetItems, setBudgetItems] = useState<any[]>([])
   const [investors, setInvestors] = useState<any[]>([])
+  const [investorPayments, setInvestorPayments] = useState<any[]>([])
+  const [expandedInvestor, setExpandedInvestor] = useState<string|null>(null)
   const [documents, setDocuments] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
   const [checklistProjectId, setChecklistProjectId] = useState('')
@@ -213,10 +215,11 @@ export default function DevPage() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user ? await getAccountId(user) : undefined }
-    const [p, b, i, d, m, ex, un, cp, sn, hs] = await Promise.all([
+    const [p, b, i, ip, d, m, ex, un, cp, sn, hs] = await Promise.all([
       supabase.from('dev_projects').select('*').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_budget_items').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_investors').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
+      supabase.from('dev_investor_payments').select('*').eq('user_id',userId).order('date', { ascending: false }),
       supabase.from('dev_documents').select('*, dev_projects(name)').eq('user_id',userId).order('created_at', { ascending: false }),
       supabase.from('dev_milestones').select('*, dev_projects(name)').eq('user_id',userId).order('due_date', { ascending: true }),
       supabase.from('office_expenses').select('*').eq('user_id',userId).order('date', { ascending: false }),
@@ -228,6 +231,7 @@ export default function DevPage() {
     setProjects(p.data ?? [])
     setBudgetItems(b.data ?? [])
     setInvestors(i.data ?? [])
+    setInvestorPayments(ip.data ?? [])
     setDocuments(d.data ?? [])
     setMilestones(m.data ?? [])
     setExpenses(ex.data ?? [])
@@ -331,6 +335,12 @@ export default function DevPage() {
   function projectBudget(projectId: string) { return budgetItems.filter(b => b.project_id === projectId).reduce((s, b) => s + (b.budgeted ?? 0), 0) }
   function projectSpent(projectId: string) { return budgetItems.filter(b => b.project_id === projectId).reduce((s, b) => s + (b.actual ?? 0), 0) }
   const totalInvestment = investors.reduce((s, i) => s + (i.investment_amount ?? 0), 0)
+  const totalPaidBack = investorPayments.reduce((s, p) => s + (p.amount ?? 0), 0)
+  function paidBackTo(investorId: string) { return investorPayments.filter(p => p.investor_id === investorId).reduce((s, p) => s + (p.amount ?? 0), 0) }
+  function paybackLabel(i: any) {
+    if (!i.payback_value) return 'No terms set'
+    return i.payback_type === 'fixed' ? `£${Number(i.payback_value).toLocaleString()} fixed fee, ${i.payback_frequency}` : `${i.payback_value}% payback, ${i.payback_frequency}`
+  }
   const activeProjects = projects.filter(p => p.status === 'active').length
   const today = new Date().toISOString().split('T')[0]
 
@@ -836,10 +846,11 @@ export default function DevPage() {
         {/* INVESTORS */}
         {tab==='Investors' && (
           <div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
               {[
                 { label:'Total Investors', value:investors.length },
                 { label:'Total Investment', value:`£${totalInvestment.toLocaleString()}`, green:true },
+                { label:'Paid Back So Far', value:`£${totalPaidBack.toLocaleString()}` },
                 { label:'Avg Investment', value:`£${investors.length>0?Math.round(totalInvestment/investors.length).toLocaleString():0}` },
               ].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
@@ -850,22 +861,45 @@ export default function DevPage() {
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {investors.length===0 ? <div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No investors yet</div> :
-              investors.map(i=>(
-                <div key={i.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-                  <div style={{ width:44, height:44, borderRadius:'50%', background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:16, color:'#8B5CF6', flexShrink:0 }}>{i.name.charAt(0)}</div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{i.name}</div>
-                    <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{i.email} {i.phone?`· ${i.phone}`:''}</div>
-                    <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{i.dev_projects?.name} · {i.equity_percentage}% equity</div>
+              investors.map(i=>{
+                const paid = paidBackTo(i.id)
+                const payments = investorPayments.filter(p=>p.investor_id===i.id)
+                const open = expandedInvestor===i.id
+                return (
+                <div key={i.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
+                  <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
+                    <div style={{ width:44, height:44, borderRadius:'50%', background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:16, color:'#8B5CF6', flexShrink:0 }}>{i.name.charAt(0)}</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{i.name}</div>
+                      <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{i.email} {i.phone?`· ${i.phone}`:''}</div>
+                      <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{i.dev_projects?.name} · {paybackLabel(i)}</div>
+                    </div>
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:16, fontWeight:700, color:'#10B981' }}>£{(i.investment_amount??0).toLocaleString()}</div>
+                      <div style={{ fontSize:11, color:'#98A2B3', marginTop:2 }}>£{paid.toLocaleString()} paid back</div>
+                      <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:STATUS_COLORS[i.status]?.bg??'#F3F4F6', color:STATUS_COLORS[i.status]?.color??'#6B7280' }}>{i.status}</span>
+                    </div>
+                    <button onClick={()=>{setForm({investor_id:i.id});setEditId(null);setModal('investor-payment')}} style={{ fontSize:12, color:'#10B981', background:'none', border:'1px solid #10B981', borderRadius:6, padding:'4px 10px', cursor:'pointer', whiteSpace:'nowrap' }}>+ Log Payment</button>
+                    <button onClick={()=>setExpandedInvestor(open?null:i.id)} style={{ fontSize:12, color:'#667085', background:'none', border:'1px solid #D0D5DD', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>{open?'Hide':`History (${payments.length})`}</button>
+                    <button onClick={()=>openEdit('investor',i)} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                    <button onClick={()=>del('dev_investors',i.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                   </div>
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ fontSize:16, fontWeight:700, color:'#10B981' }}>£{(i.investment_amount??0).toLocaleString()}</div>
-                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:STATUS_COLORS[i.status]?.bg??'#F3F4F6', color:STATUS_COLORS[i.status]?.color??'#6B7280' }}>{i.status}</span>
-                  </div>
-                  <button onClick={()=>openEdit('investor',i)} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
-                  <button onClick={()=>del('dev_investors',i.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                  {open && (
+                    <div style={{ borderTop:'1px solid #F2F4F7', padding:'12px 20px 16px', background:'#FAFAFB' }}>
+                      {payments.length===0 ? <div style={{ fontSize:12, color:'#98A2B3' }}>No payments logged yet.</div> :
+                      payments.map(p=>(
+                        <div key={p.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:13, padding:'6px 0', borderBottom:'1px solid #F2F4F7' }}>
+                          <span style={{ color:'#667085' }}>{p.date}{p.note?` · ${p.note}`:''}</span>
+                          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                            <span style={{ fontWeight:600, color:'#101828' }}>£{Number(p.amount).toLocaleString()}</span>
+                            <button onClick={()=>del('dev_investor_payments',p.id)} style={{ fontSize:11, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         )}
@@ -1223,6 +1257,24 @@ export default function DevPage() {
               <div><label style={lbl}>Investment Amount (£)</label><input type="number" style={inp} value={form.investment_amount??''} onChange={e=>setForm({...form,investment_amount:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Equity %</label><input type="number" style={inp} value={form.equity_percentage??''} onChange={e=>setForm({...form,equity_percentage:parseFloat(e.target.value)})}/></div>
             </div>
+            <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.04em', marginTop:6 }}>Payback terms</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Payback Type</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.payback_type??'percentage'} onChange={e=>setForm({...form,payback_type:e.target.value})}>
+                  <option value="percentage">% of profit/return</option>
+                  <option value="fixed">Fixed fee</option>
+                </select>
+              </div>
+              <div><label style={lbl}>{form.payback_type==='fixed'?'Fixed Fee (£)':'Percentage (%)'}</label><input type="number" style={inp} value={form.payback_value??''} onChange={e=>setForm({...form,payback_value:parseFloat(e.target.value)})} placeholder={form.payback_type==='fixed'?'e.g. 500':'e.g. 10'}/></div>
+            </div>
+            <div><label style={lbl}>Frequency</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.payback_frequency??'monthly'} onChange={e=>setForm({...form,payback_frequency:e.target.value})}>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annually">Annually</option>
+                <option value="on_exit">On exit / sale</option>
+              </select>
+            </div>
             <div><label style={lbl}>Status</label>
               <select style={{...inp,cursor:'pointer'}} value={form.status??'active'} onChange={e=>setForm({...form,status:e.target.value})}>
                 <option value="active">Active</option>
@@ -1234,6 +1286,28 @@ export default function DevPage() {
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
             <button onClick={()=>save('dev_investors',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Investor'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='investor-payment' && (
+        <Modal title="Log Payment to Investor" onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div><label style={lbl}>Investor *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.investor_id??''} onChange={e=>setForm({...form,investor_id:e.target.value})}>
+                <option value="">Select investor…</option>
+                {investors.map(inv=><option key={inv.id} value={inv.id}>{inv.name}</option>)}
+              </select>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+              <div><label style={lbl}>Amount (£) *</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:parseFloat(e.target.value)})} placeholder="500"/></div>
+              <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.date??today} onChange={e=>setForm({...form,date:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Note (optional)</label><input style={inp} value={form.note??''} onChange={e=>setForm({...form,note:e.target.value})} placeholder="e.g. March payback"/></div>
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
+            <button onClick={()=>save('dev_investor_payments',form)} disabled={saving||!form.investor_id||!form.amount} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.investor_id||!form.amount?0.6:1 }}>{saving?'Saving…':'Log Payment'}</button>
           </div>
         </Modal>
       )}
