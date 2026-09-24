@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 const ACCENT = '#5B7CFA'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -38,6 +38,7 @@ function PMOwnerPortalInner() {
   const [isStaffView, setIsStaffView] = useState(false)
   const [tab, setTab] = useState('Dashboard')
   const [landlord, setLandlord] = useState<any>(null)
+  const [pickerLandlords, setPickerLandlords] = useState<any[] | null>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [payments, setPayments] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
@@ -100,7 +101,19 @@ function PMOwnerPortalInner() {
         const { data } = await supabase.from('pm_landlords').select('*').eq('portal_user_id', user.id).single()
         ll = data
       }
-      if (!ll) { window.location.href = '/login'; return }
+      if (!ll) {
+        if (!viewingLandlordId) {
+          // Not a landlord themselves -- this is staff/the account owner
+          // opening the bare portal link (e.g. from Staff Centre ->
+          // Portal Access) rather than a specific landlord's own link.
+          // Show a picker scoped to their account instead of bouncing to
+          // login, so the link actually goes somewhere useful.
+          const accountId = await getAccountId(user)
+          const { data: rows } = await supabase.from('pm_landlords').select('*').eq('user_id', accountId).order('name', { ascending: true })
+          if (rows && rows.length) { setPickerLandlords(rows); setLoading(false); return }
+        }
+        window.location.href = '/login'; return
+      }
       setLandlord(ll)
       setContactForm({ email: ll.email ?? '', phone: ll.phone ?? '', address: ll.address ?? '', bank_name: ll.bank_name ?? '', account_name: ll.account_name ?? '', account_number: ll.account_number ?? '', sort_code: ll.sort_code ?? '', routing_number: ll.routing_number ?? '' })
       await loadAll(ll)
@@ -109,6 +122,29 @@ function PMOwnerPortalInner() {
   }, [viewingLandlordId])
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
+
+  if (pickerLandlords && !landlord) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '48px 28px' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Landlord Portal</div>
+          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#101828' }}>Select a landlord to preview</h1>
+          <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>This is the staff view — pick a landlord to see and manage their portal exactly as they see it.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pickerLandlords.map(l => (
+              <a key={l.id} href={`/pm-owner-portal?landlord_id=${l.id}`} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{l.name}</div>
+                  <div style={{ fontSize: 12, color: '#98A2B3' }}>{l.email ?? '—'}</div>
+                </div>
+                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>Preview →</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const today = new Date().toISOString().slice(0,10)
   const totalPaid = payments.filter(p => p.paid_date).reduce((s, p) => s + (parseFloat(p.amount) || 0), 0)
