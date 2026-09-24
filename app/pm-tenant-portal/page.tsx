@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 const ACCENT = '#5B7CFA'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -23,6 +23,7 @@ function PMTenantPortalInner() {
   const [isStaffView, setIsStaffView] = useState(false)
   const [tab, setTab] = useState('My Lease')
   const [tenant, setTenant] = useState<any>(null)
+  const [pickerTenants, setPickerTenants] = useState<any[] | null>(null)
   const [property, setProperty] = useState<any>(null)
   const [unit, setUnit] = useState<any>(null)
   const [lease, setLease] = useState<any>(null)
@@ -201,7 +202,17 @@ function PMTenantPortalInner() {
         const { data } = await supabase.from('pm_tenants').select('*').eq('portal_user_id', user.id).single()
         t = data
       }
-      if (!t) { window.location.href = '/login'; return }
+      if (!t) {
+        if (!viewingTenantId) {
+          // Staff/account owner opening the bare portal link rather than a
+          // specific tenant's own link -- show a picker instead of
+          // bouncing to login.
+          const accountId = await getAccountId(user)
+          const { data: rows } = await supabase.from('pm_tenants').select('*').eq('user_id', accountId).order('name', { ascending: true })
+          if (rows && rows.length) { setPickerTenants(rows); setLoading(false); return }
+        }
+        window.location.href = '/login'; return
+      }
       setTenant(t)
       await loadAll(t)
       setLoading(false)
@@ -209,6 +220,29 @@ function PMTenantPortalInner() {
   }, [viewingTenantId])
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
+
+  if (pickerTenants && !tenant) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '48px 28px' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Tenant Portal</div>
+          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#101828' }}>Select a tenant to preview</h1>
+          <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>This is the staff view — pick a tenant to see their portal exactly as they see it.</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pickerTenants.map(t => (
+              <a key={t.id} href={`/pm-tenant-portal?tenant_id=${t.id}`} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{t.name}</div>
+                  <div style={{ fontSize: 12, color: '#98A2B3' }}>{t.email ?? '—'}</div>
+                </div>
+                <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>Preview →</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
