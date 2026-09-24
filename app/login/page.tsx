@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
-import { normalizeRole } from '../../lib/useRole'
+import { normalizeRole, ROLE_MODULES } from '../../lib/useRole'
 
 
 // Baby blue used for both plans -- Jordan asked for the plan cards to be
@@ -48,8 +48,19 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const initialPlan = searchParams.get('plan') ?? 'monthly'
   const success = searchParams.get('success') === 'true'
-  const redirect = searchParams.get('redirect') ?? '/dashboard'
+  const explicitRedirect = searchParams.get('redirect')
+  const redirect = explicitRedirect ?? '/dashboard'
   const fromPricing = searchParams.get('mode') === 'signup'
+
+  // Anyone with Staff Centre access lands on the Staff Centre Dashboard
+  // (renamed from "Oversight") first, not the generic account dashboard --
+  // unless the URL explicitly asked for somewhere else via ?redirect=.
+  function resolveDestination(role: string, customModules: string[] | null | undefined) {
+    if (explicitRedirect) return explicitRedirect
+    const modules = customModules?.length ? customModules : (ROLE_MODULES[role] ?? [])
+    if (modules.includes('sc')) return '/staff-centre/oversight'
+    return redirect
+  }
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -73,9 +84,9 @@ function LoginForm() {
         if (tenantProfile) { window.location.href = '/pm-tenant-portal'; return }
         const { data: estateTenantProfile } = await supabase.from('estate_tenants').select('id').eq('portal_user_id', session.user.id).single()
         if (estateTenantProfile) { window.location.href = '/estate-tenant-portal'; return }
-        const { data: teamRows } = await supabase.from('team_members').select('role').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
+        const { data: teamRows } = await supabase.from('team_members').select('role, custom_modules').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
         const staffRole = normalizeRole(teamRows?.[0]?.role)
-        window.location.href = (staffRole === 'Cleaning Team' || staffRole === 'Maintenance Team') ? '/staff-dashboard' : redirect
+        window.location.href = (staffRole === 'Cleaning Team' || staffRole === 'Maintenance Team') ? '/staff-dashboard' : resolveDestination(staffRole, teamRows?.[0]?.custom_modules)
       } else {
         setCheckingSession(false)
       }
@@ -133,12 +144,12 @@ function LoginForm() {
         // so, send them to their focused task dashboard, not the full app
         const { data: teamRows } = await supabase
           .from('team_members')
-          .select('role')
+          .select('role, custom_modules')
           .eq('email', email)
           .order('created_at', { ascending: false })
           .limit(1)
         const staffRole = normalizeRole(teamRows?.[0]?.role)
-        window.location.href = (staffRole === 'Cleaning Team' || staffRole === 'Maintenance Team') ? '/staff-dashboard' : redirect
+        window.location.href = (staffRole === 'Cleaning Team' || staffRole === 'Maintenance Team') ? '/staff-dashboard' : resolveDestination(staffRole, teamRows?.[0]?.custom_modules)
       }
     } else if (mode === 'signup') {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })
