@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
-import { useRole, ROLE_MODULES, getScTabs } from '@/lib/useRole'
+import { useRole, ROLE_MODULES, getScTabs, resolveAccess } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 
@@ -47,6 +47,7 @@ const NAV_GROUPS = [
     staffCentre: true,
     items: [
       { href: '/staff-centre/oversight', label: 'Dashboard', key: 'staffcentre', icon: 'trendingup', scTab: 'oversight' },
+      { href: '/staff-centre/partners', label: 'Partners', key: 'staffcentre', icon: 'users', scTab: 'partners' },
       { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles', requiresModule: 'aipm', requiresModulePrice: '£9.99/mo' },
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
@@ -129,13 +130,8 @@ export default function Sidebar() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUserEmail(user.email ?? '')
-        const { data: rows } = await supabase
-          .from('team_members')
-          .select('user_id')
-          .eq('email', user.email)
-          .order('created_at', { ascending: false })
-          .limit(1)
-        const ownerId = rows?.[0]?.user_id ?? user.id
+        // Staff and partners use their business's subscription
+        const ownerId = (await resolveAccess(user)).businessId
         const { data: sub } = await supabase.from('subscriptions').select('plan, modules').eq('user_id', ownerId).single()
         if (sub) {
           if ((sub as any).plan) setPlan((sub as any).plan)
@@ -184,6 +180,12 @@ export default function Sidebar() {
             ? roleModules.includes((group as any).module)
             : (modules.includes(group.module) && roleModules.includes(group.module))
           const scTabs = (group as any).staffCentre ? getScTabs(role, teamModules) : []
+          // Partners only see what they've been given — no locked/greyed-out items
+          const isPartner = role === 'Partner'
+          const itemAllowed = (it: any) => it.requiresModule
+            ? (modules.includes(it.requiresModule) && roleModules.includes(it.requiresModule))
+            : it.scTab ? (hasModule && scTabs.includes(it.scTab)) : hasModule
+          if (isPartner && !group.items.some((it: any) => itemAllowed(it) && !String(it.href).startsWith('/settings'))) return null
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#DCE4FA', margin: '6px 0' }} />}
@@ -193,11 +195,8 @@ export default function Sidebar() {
                 </div>
               )}
               {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice, scTab }: any) => {
-                const itemHasModule = requiresModule
-                  ? (modules.includes(requiresModule) && roleModules.includes(requiresModule))
-                  : scTab
-                  ? (hasModule && scTabs.includes(scTab))
-                  : hasModule
+                const itemHasModule = itemAllowed({ requiresModule, scTab })
+                if (isPartner && (!itemHasModule || String(href).startsWith('/settings'))) return null
                 const hasAccess = itemHasModule && features.includes(key)
                 const active = pathname === href.split('?')[0]
                 const linkHref = itemHasModule ? href : (requiresModule ? '/modules' : '#')
