@@ -29,6 +29,16 @@ export async function POST(req: NextRequest) {
       .select('business_id, alert_email, fee_gbp')
       .eq('business_id', signup.business_id)
       .maybeSingle()
+    // In-app: bell notification for the business (Partners also shows a red badge)
+    await serviceClient.from('notifications').insert({
+      user_id: signup.business_id,
+      module: 'sc',
+      type: 'partner_payment',
+      title: `${signup.name} says they've paid their partner membership (${signup.reference}). Check your bank, then Confirm.`,
+      link: '/staff-centre/partners?tab=Investors',
+      read: false,
+    })
+
     const to = link ? await alertEmailFor(link) : null
     if (to) {
       const fee = Number(link?.fee_gbp) || 75

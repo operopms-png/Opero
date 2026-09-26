@@ -122,7 +122,25 @@ export default function Sidebar() {
   const [plan, setPlan] = useState('starter')
   const [modules, setModules] = useState<string[]>([])
   const [userEmail, setUserEmail] = useState('')
+  const [partnerPayments, setPartnerPayments] = useState(0)
   const { role, hasSettings, modules: teamModules } = useRole()
+
+  // Red badge on Partners: bank transfers partners say they've sent that staff haven't confirmed yet.
+  // Partners themselves can't read partner_signups (RLS), so they always get 0.
+  useEffect(() => {
+    let alive = true
+    async function loadPartnerPayments() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const biz = (await resolveAccess(user)).businessId
+      const { count } = await supabase.from('partner_signups').select('id', { count: 'exact', head: true })
+        .eq('business_id', biz).eq('status', 'pending').eq('payment_method', 'bank').not('marked_sent_at', 'is', null)
+      if (alive) setPartnerPayments(count ?? 0)
+    }
+    loadPartnerPayments()
+    const t = setInterval(loadPartnerPayments, 60000)
+    return () => { alive = false; clearInterval(t) }
+  }, [pathname])
   const { collapsed, toggle } = useSidebarCollapse()
 
   useEffect(() => {
@@ -207,6 +225,9 @@ export default function Sidebar() {
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#D7E0FF' : 'transparent', color: !itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
                     <Icon name={icon} size={16} color={!itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#667085'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
+                    {scTab === 'partners' && partnerPayments > 0 && (
+                      <span title={`${partnerPayments} bank transfer${partnerPayments === 1 ? '' : 's'} to check`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>{partnerPayments}</span>
+                    )}
                   </Link>
                 )
               })}

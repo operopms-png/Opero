@@ -185,6 +185,9 @@ export default function PartnersPage() {
       setAuthorName(rows?.[0]?.name || [meta.first_name, meta.last_name].filter(Boolean).join(' ') || user.email || 'Team')
       setBusinessId(biz)
       await loadStaff(biz)
+      // Deep link from notifications, e.g. /staff-centre/partners?tab=Investors
+      const wantTab = new URLSearchParams(window.location.search).get('tab')
+      if (wantTab && (STAFF_TABS as string[]).includes(wantTab)) setStaffTab(wantTab as StaffTab)
       setLoading(false)
     }
     init()
@@ -546,10 +549,31 @@ export default function PartnersPage() {
           </div>
         )}
 
+        {/* Bank transfers partners say they've sent: shown on every staff tab except Investors (where the list is) */}
+        {isStaff && staffTab !== 'Investors' && pendingSignups.some(s => s.marked_sent_at) && (() => {
+          const n = pendingSignups.filter(s => s.marked_sent_at).length
+          return (
+            <div style={{ ...card, padding: '12px 16px', marginBottom: 16, borderColor: '#FEC84B', background: '#FFFAEB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 13 }}>
+                <b>💷 {n} partner payment{n === 1 ? '' : 's'} to check.</b> <span style={{ color: '#667085' }}>Check your bank for the reference, then Confirm to unlock their account.</span>
+              </div>
+              <button onClick={() => setStaffTab('Investors')} style={btnGold}>Review</button>
+            </div>
+          )
+        })()}
+
         {/* Tabs */}
         {!locked && <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto' }}>
           {isStaff
-            ? STAFF_TABS.map(t => <button key={t} onClick={() => setStaffTab(t)} style={chip(staffTab === t)}>{t}</button>)
+            ? STAFF_TABS.map(t => {
+                const n = t === 'Investors' ? pendingSignups.filter(s => s.marked_sent_at).length : 0
+                return (
+                  <button key={t} onClick={() => setStaffTab(t)} style={{ ...chip(staffTab === t), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    {t}
+                    {n > 0 && <span style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>}
+                  </button>
+                )
+              })
             : INVESTOR_TABS.map(t => <button key={t} onClick={() => setInvestorTab(t)} style={chip(investorTab === t)}>{t}</button>)}
         </div>}
 
