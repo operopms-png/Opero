@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { requireStaffWithBusiness, serviceClient as supabase } from '@/lib/admin-auth'
 
 export async function POST(req: NextRequest) {
+  // Only signed-in staff can create investor/owner logins. The new owner is
+  // tied to the creating staff member's business (business_id), which is
+  // what gives them access to that business's Partners Broadcast.
+  const staff = await requireStaffWithBusiness(req)
+  if (!staff) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+
   const { first_name, last_name, email, phone, password } = await req.json()
 
   if (!email || !password) {
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
 
   const { error: profileError } = await supabase.from('owner_profiles').insert({
     user_id: data.user.id,
+    business_id: staff.businessId,
     name: `${first_name} ${last_name}`.trim(),
     email,
     phone,

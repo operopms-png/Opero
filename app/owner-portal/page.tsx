@@ -440,7 +440,7 @@ export default function OwnerPortalPage() {
     // would log the admin out and log them in as the owner just created.
     const res = await fetch('/api/create-owner', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeader(),
       body: JSON.stringify({
         first_name: ownerForm.first_name,
         last_name: ownerForm.last_name,

@@ -124,7 +124,7 @@ export default function PartnerBroadcast({ businessId, userId, authorName, autho
   const shown = posts.filter(p => filter === 'all' || p.is_opportunity)
 
   if (!businessId) {
-    return <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 20, fontSize: 13, color: '#667085' }}>The broadcast opens once a property is linked to your account.</div>
+    return <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 20, fontSize: 13, color: '#667085' }}>The broadcast isn't available on your account yet. Please contact the team.</div>
   }
 
   return (

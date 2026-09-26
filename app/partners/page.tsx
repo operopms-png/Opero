@@ -153,8 +153,8 @@ export default function PartnersPage() {
         setBookings(b.data ?? [])
         setStatements(s.data ?? [])
         setFinance(f.data ?? [])
-        // An investor's broadcast is their managing business's — the owner of their linked properties
-        setBusinessId((p.data ?? [])[0]?.user_id ?? null)
+        // An investor's broadcast is the business that created them (fallback: owner of their linked properties)
+        setBusinessId(owner.business_id ?? (p.data ?? [])[0]?.user_id ?? null)
         setLoading(false)
         return
       }
