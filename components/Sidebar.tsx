@@ -14,7 +14,7 @@ const NAV_GROUPS = [
     module: 'str',
     modulePrice: '£29/mo',
     items: [
-      { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home' },
+      { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home', badge: 'str' },
     ]
   },
   {
@@ -22,7 +22,7 @@ const NAV_GROUPS = [
     module: 'pm',
     modulePrice: '£39/mo',
     items: [
-      { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building' },
+      { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building', badge: 'pm' },
     ]
   },
   {
@@ -30,7 +30,7 @@ const NAV_GROUPS = [
     module: 'ea',
     modulePrice: '£59/mo',
     items: [
-      { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building' },
+      { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building', badge: 'estate' },
     ]
   },
   {
@@ -38,7 +38,7 @@ const NAV_GROUPS = [
     module: 'dev',
     modulePrice: '£49/mo',
     items: [
-      { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder' },
+      { href: '/dev', label: 'Developments', key: 'dev', icon: 'folder', badge: 'dev' },
     ]
   },
   {
@@ -47,27 +47,27 @@ const NAV_GROUPS = [
     staffCentre: true,
     items: [
       { href: '/staff-centre/oversight', label: 'Dashboard', key: 'staffcentre', icon: 'trendingup', scTab: 'oversight' },
-      { href: '/staff-centre/partners', label: 'Partners', key: 'staffcentre', icon: 'users', scTab: 'partners' },
+      { href: '/staff-centre/partners', label: 'Partners', key: 'staffcentre', icon: 'users', scTab: 'partners', badge: 'partners' },
       { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles', requiresModule: 'aipm', requiresModulePrice: '£9.99/mo' },
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/staff-centre/investors', label: 'Investors', key: 'staffcentre', icon: 'revenue', scTab: 'investors' },
       { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', key: 'staffcentre', icon: 'report', scTab: 'customeronboarding' },
-      { href: '/staff-centre/meetings', label: 'Meetings', key: 'staffcentre', icon: 'phone', scTab: 'meetings' },
-      { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox' },
+      { href: '/staff-centre/meetings', label: 'Meetings', key: 'staffcentre', icon: 'phone', scTab: 'meetings', badge: 'meetings' },
+      { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox', badge: 'inbox' },
       { href: '/staff-centre/portal-access', label: 'Portal Access', key: 'staffcentre', icon: 'globe', scTab: 'portalaccess' },
       { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe', scTab: 'portals' },
-      { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance' },
-      { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts', scTab: 'crm' },
+      { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance', badge: 'maintenance' },
+      { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts', scTab: 'crm', badge: 'crm' },
       { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles', scTab: 'marketing' },
-      { href: '/staff-centre/sales', label: 'Sales', key: 'staffcentre', icon: 'trendingup', scTab: 'sales' },
-      { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file', scTab: 'applications' },
+      { href: '/staff-centre/sales', label: 'Sales', key: 'staffcentre', icon: 'trendingup', scTab: 'sales', badge: 'sales' },
+      { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file', scTab: 'applications', badge: 'applications' },
       { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },
       { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup', scTab: 'performance' },
-      { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users', scTab: 'hr' },
+      { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users', scTab: 'hr', badge: 'hr' },
       { href: '/staff-centre/training', label: 'Staff Training', key: 'staffcentre', icon: 'graduation', scTab: 'training' },
       { href: '/staff-centre/calendar', label: 'Calendar', key: 'staffcentre', icon: 'calendar', scTab: 'calendar' },
-      { href: '/staff-centre/tasks', label: 'Tasks', key: 'staffcentre', icon: 'file', scTab: 'tasks' },
+      { href: '/staff-centre/tasks', label: 'Tasks', key: 'staffcentre', icon: 'file', scTab: 'tasks', badge: 'tasks' },
     ]
   },
 ]
@@ -122,23 +122,19 @@ export default function Sidebar() {
   const [plan, setPlan] = useState('starter')
   const [modules, setModules] = useState<string[]>([])
   const [userEmail, setUserEmail] = useState('')
-  const [partnerPayments, setPartnerPayments] = useState(0)
+  const [counts, setCounts] = useState<Record<string, number>>({})
   const { role, hasSettings, modules: teamModules } = useRole()
 
-  // Red badge on Partners: bank transfers partners say they've sent that staff haven't confirmed yet.
-  // Partners themselves can't read partner_signups (RLS), so they always get 0.
+  // Red counts on menu items: things waiting for attention in each area
+  // (one database call, see sidebar_counts() in Supabase). Partners get none.
   useEffect(() => {
     let alive = true
-    async function loadPartnerPayments() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const biz = (await resolveAccess(user)).businessId
-      const { count } = await supabase.from('partner_signups').select('id', { count: 'exact', head: true })
-        .eq('business_id', biz).eq('status', 'pending').eq('payment_method', 'bank').not('marked_sent_at', 'is', null)
-      if (alive) setPartnerPayments(count ?? 0)
+    async function loadCounts() {
+      const { data, error } = await supabase.rpc('sidebar_counts')
+      if (alive && !error && data) setCounts(data as Record<string, number>)
     }
-    loadPartnerPayments()
-    const t = setInterval(loadPartnerPayments, 60000)
+    loadCounts()
+    const t = setInterval(loadCounts, 60000)
     return () => { alive = false; clearInterval(t) }
   }, [pathname])
   const { collapsed, toggle } = useSidebarCollapse()
@@ -212,7 +208,7 @@ export default function Sidebar() {
                   {group.label}
                 </div>
               )}
-              {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice, scTab }: any) => {
+              {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice, scTab, badge }: any) => {
                 const itemHasModule = itemAllowed({ requiresModule, scTab })
                 if (isPartner && (!itemHasModule || String(href).startsWith('/settings'))) return null
                 const hasAccess = itemHasModule && features.includes(key)
@@ -222,11 +218,13 @@ export default function Sidebar() {
                   <Link key={href} href={linkHref}
                     title={isCollapsed ? label : undefined}
                     onClick={(e: any) => { if (!itemHasModule && !requiresModule) e.preventDefault(); else if (itemHasModule && !hasAccess) e.preventDefault(); else setOpen(false) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#D7E0FF' : 'transparent', color: !itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#D7E0FF' : 'transparent', color: !itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#344054', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
                     <Icon name={icon} size={16} color={!itemHasModule ? '#C1C9D2' : !hasAccess ? '#C1C9D2' : active ? '#3B4AFF' : '#667085'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
-                    {scTab === 'partners' && partnerPayments > 0 && (
-                      <span title={`${partnerPayments} bank transfer${partnerPayments === 1 ? '' : 's'} to check`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>{partnerPayments}</span>
+                    {badge && itemHasModule && (counts[badge] ?? 0) > 0 && (
+                      isCollapsed
+                        ? <span style={{ position: 'absolute', top: 5, left: '50%', marginLeft: 5, width: 8, height: 8, borderRadius: '50%', background: '#EF4444', border: '1.5px solid #EAF0FF' }} />
+                        : <span title={`${counts[badge]} waiting`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>{counts[badge] > 99 ? '99+' : counts[badge]}</span>
                     )}
                   </Link>
                 )

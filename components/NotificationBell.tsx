@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 
 const TYPE_ICON: Record<string, string> = {
   maintenance: '🔧', cleaning: '🧹', booking: '📅', guest_message: '💬', reminder_digest: '⏰', partner_payment: '💷',
+  viewing: '🏠', tenant_message: '💬', landlord_message: '💬', application: '📄', hr_request: '🙋', lead: '⭐',
 }
 
 export default function NotificationBell() {
@@ -14,7 +15,10 @@ export default function NotificationBell() {
   async function load() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data } = await supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20)
+    // Notifications belong to the business, so all staff see them (partners get none)
+    const { data: biz } = await supabase.rpc('current_business_id')
+    if (!biz) { setNotifications([]); return }
+    const { data } = await supabase.from('notifications').select('*').eq('user_id', biz as string).order('created_at', { ascending: false }).limit(30)
     setNotifications(data ?? [])
   }
 
