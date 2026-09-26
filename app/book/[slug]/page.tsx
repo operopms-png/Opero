@@ -97,19 +97,13 @@ export default function BookingPage({ params }: { params: { slug: string } }) {
 
   useEffect(() => {
     async function load() {
-      const { data: prop } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('slug', params.slug)
-        .single()
-      if (prop) {
-        setProperty(prop)
-        const { data: bookings } = await supabase
-          .from('direct_bookings')
-          .select('check_in, check_out')
-          .eq('property_id', prop.id)
-          .eq('status', 'confirmed')
-        if (bookings) setBookedRanges(bookings.map((b:any) => ({start:b.check_in, end:b.check_out})))
+      // Public, no login: a database function returns only what this page
+      // shows (never addresses, wifi, purchase price etc.) plus booked dates
+      // from direct bookings and synced Airbnb/Booking.com bookings.
+      const { data } = await supabase.rpc('public_property_by_slug', { p_slug: params.slug })
+      if (data?.property) {
+        setProperty(data.property)
+        setBookedRanges((data.booked ?? []).map((b:any) => ({start:b.start, end:b.end})))
       }
     }
     load()
