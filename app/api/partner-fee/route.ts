@@ -45,14 +45,11 @@ export async function POST(req: NextRequest) {
         },
         quantity: 1,
       }],
-      payment_intent_data: {
-        transfer_data: { destination: businessSub.stripe_connect_account_id },
-      },
       metadata: { type: 'partner_fee', owner_id: owner.id },
       ...(owner.email ? { customer_email: owner.email } : {}),
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/staff-centre/partners?paid=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/staff-centre/partners`,
-    })
+    }, { stripeAccount: businessSub.stripe_connect_account_id }) // direct charge on the business's own account
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     console.error('[partner-fee]', err)

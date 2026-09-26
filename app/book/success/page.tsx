@@ -8,8 +8,9 @@ function SuccessContent() {
 
   useEffect(() => {
     const sessionId = params.get('session_id')
+    const propertyId = params.get('p')
     if (sessionId) {
-      fetch(`/api/booking-confirmation?session_id=${sessionId}`)
+      fetch(`/api/booking-confirmation?session_id=${encodeURIComponent(sessionId)}${propertyId ? `&p=${encodeURIComponent(propertyId)}` : ''}`)
         .then(r => r.json())
         .then(setSession)
         .catch(() => {})

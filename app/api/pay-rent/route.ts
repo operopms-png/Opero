@@ -69,15 +69,12 @@ export async function POST(req: NextRequest) {
         },
         quantity: 1,
       }],
-      payment_intent_data: {
-        transfer_data: { destination: businessSub.stripe_connect_account_id },
-        ...(applicationFeeAmount > 0 ? { application_fee_amount: applicationFeeAmount } : {}),
-      },
+      ...(applicationFeeAmount > 0 ? { payment_intent_data: { application_fee_amount: applicationFeeAmount } } : {}),
       metadata: { type: 'tenant_rent_payment', payment_id: payment.id, tenant_id: tenant.id },
       ...(tenant.email ? { customer_email: tenant.email } : {}),
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal?paid=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal`,
-    })
+    }, { stripeAccount: businessSub.stripe_connect_account_id }) // direct charge on the business's own account
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     console.error('[pay-rent]', err)

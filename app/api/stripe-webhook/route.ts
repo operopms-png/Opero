@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { activatePartnerSignup } from '@/lib/partner-activation'
 
 const PLAN_MAP: Record<string, string> = {
   // Old 3-tier prices (kept for backwards compat)
@@ -39,8 +40,10 @@ export async function POST(request: NextRequest) {
   const body = await request.text()
   const sig = request.headers.get('stripe-signature')!
 
-  // Stripe sends connected-account events (account.updated) from a separate
-  // webhook endpoint with its own signing secret: accept either secret.
+  // Customer payments are direct charges on each business's connected
+  // account, so their checkout.session.completed events come from a separate
+  // "Connected accounts" webhook endpoint with its own signing secret
+  // (STRIPE_CONNECT_WEBHOOK_SECRET). Accept either secret.
   let event
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
@@ -92,29 +95,8 @@ export async function POST(request: NextRequest) {
       // login created at sign-up and create their partner record, marked paid.
       // Safe to run twice (Stripe can resend events).
       if (session.metadata?.type === 'partner_join') {
-        const signupId = session.metadata.signup_id
-        const { data: signup } = await supabase.from('partner_signups').select('*').eq('id', signupId).maybeSingle()
-        if (signup && signup.status !== 'paid') {
-          await supabase.auth.admin.updateUserById(signup.user_id, { ban_duration: 'none' })
-          const { data: existingProfile } = await supabase.from('owner_profiles').select('id').eq('user_id', signup.user_id).maybeSingle()
-          let profileId = existingProfile?.id
-          const paidFields = { partner_paid_at: new Date().toISOString(), partner_payment_ref: (session.payment_intent as string) ?? session.id }
-          if (profileId) {
-            await supabase.from('owner_profiles').update(paidFields).eq('id', profileId)
-          } else {
-            const { data: created } = await supabase.from('owner_profiles').insert({
-              user_id: signup.user_id,
-              business_id: signup.business_id,
-              name: signup.name,
-              email: signup.email,
-              phone: signup.phone,
-              property_ids: [],
-              split_percentage: 60,
-              ...paidFields,
-            }).select('id').single()
-            profileId = created?.id
-          }
-          await supabase.from('partner_signups').update({ status: 'paid', paid_at: new Date().toISOString(), owner_profile_id: profileId ?? null }).eq('id', signup.id)
+        if (session.payment_status === 'paid' && session.metadata.signup_id) {
+          await activatePartnerSignup(session.metadata.signup_id, (session.payment_intent as string) ?? session.id)
         }
         return NextResponse.json({ received: true })
       }
@@ -156,6 +138,10 @@ export async function POST(request: NextRequest) {
         }
         return NextResponse.json({ received: true })
       }
+
+      // Anything else from a business's connected account is that business's
+      // own sale, never an Opero subscription.
+      if ((event as any).account) return NextResponse.json({ received: true })
 
       const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
       const email = fullSession.customer_details?.email ?? fullSession.customer_email

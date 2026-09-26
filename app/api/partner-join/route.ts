@@ -115,11 +115,10 @@ export async function POST(req: NextRequest) {
         },
         quantity: 1,
       }],
-      payment_intent_data: { transfer_data: { destination } },
       metadata: { type: 'partner_join', signup_id: signupId! },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/join/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/join/${link.slug}`,
-    })
+    }, { stripeAccount: destination }) // direct charge on the business's own account
     await serviceClient.from('partner_signups').update({ stripe_session_id: session.id }).eq('id', signupId!)
     return NextResponse.json({ url: session.url })
   } catch (err: any) {

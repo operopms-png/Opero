@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
+import { businessStripeAccount, getStripe } from '@/lib/stripe-connect'
 
 // Direct booking checkout for the public /book/[slug] page.
 // Everything that decides the price is worked out HERE from the database —
@@ -51,17 +52,14 @@ export async function POST(request: NextRequest) {
     const total = nights * nightly + cleaning
     const amountPence = Math.round(total * 100)
 
-    // Pay the business that owns the property when they've connected Stripe;
-    // otherwise the platform account (previous behaviour).
-    const { data: businessSub } = await serviceClient
-      .from('subscriptions')
-      .select('stripe_connect_account_id, stripe_connect_onboarded')
-      .eq('user_id', property.user_id)
-      .maybeSingle()
-    const destination = businessSub?.stripe_connect_onboarded ? businessSub.stripe_connect_account_id : null
+    // Guest pays the business that owns the property, as a direct charge on
+    // its own connected Stripe account. Never Opero's account.
+    const account = await businessStripeAccount(property.user_id)
+    if (!account) {
+      return NextResponse.json({ error: 'Online booking payments aren’t set up for this property yet. Please contact the host to book.' }, { status: 400 })
+    }
 
-    const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' })
+    const stripe = await getStripe()
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -77,7 +75,6 @@ export async function POST(request: NextRequest) {
         },
         quantity: 1,
       }],
-      ...(destination ? { payment_intent_data: { transfer_data: { destination } } } : {}),
       metadata: {
         type: 'direct_booking',
         propertyId: property.id,
@@ -92,9 +89,9 @@ export async function POST(request: NextRequest) {
         guestEmail,
         guestPhone,
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/book/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/book/success?session_id={CHECKOUT_SESSION_ID}&p=${property.id}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/book/${property.slug}`,
-    })
+    }, { stripeAccount: account })
     return NextResponse.json({ url: session.url })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
