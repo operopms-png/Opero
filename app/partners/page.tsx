@@ -130,6 +130,9 @@ export default function PartnersPage() {
   const [joinLink, setJoinLink] = useState<any>(null)
   const [joinSlug, setJoinSlug] = useState('')
   const [copied, setCopied] = useState(false)
+  const [pendingSignups, setPendingSignups] = useState<any[]>([])
+  const [showBankForm, setShowBankForm] = useState(false)
+  const [bankForm, setBankForm] = useState<any>({ bank_name: '', bank_account_name: '', bank_sort_code: '', bank_account_number: '', alert_email: '' })
 
   // Agent Programme UI
   const [apView, setApView] = useState<'Referrals' | 'Agents'>('Referrals')
@@ -225,6 +228,57 @@ export default function PartnersPage() {
     setBizProperties(p.data ?? [])
     const { data: jl } = await supabase.from('partner_join_links').select('*').eq('business_id', biz).maybeSingle()
     setJoinLink(jl ?? null)
+    const { data: ps } = await supabase.from('partner_signups').select('*').eq('business_id', biz).eq('status', 'pending').eq('payment_method', 'bank').order('created_at', { ascending: false })
+    setPendingSignups(ps ?? [])
+  }
+
+  // ---------- Bank transfer sign-ups ----------
+  async function signupAction(s: any, action: 'confirm' | 'cancel') {
+    const msg = action === 'confirm'
+      ? `Confirm you've received ${PARTNER_FEE} from ${s.name} (reference ${s.reference})? Their account will be unlocked and they'll get a sign-in email.`
+      : `Cancel ${s.name}'s sign-up? Their locked login will be removed.`
+    if (!confirm(msg)) return
+    setSaving(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/partner-signups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ signup_id: s.id, action }),
+    })
+    const result = await res.json()
+    setSaving(false)
+    if (!res.ok) { alert(result.error || 'Something went wrong'); return }
+    if (businessId) await loadStaff(businessId)
+  }
+
+  function openBankForm() {
+    setBankForm({
+      bank_name: joinLink?.bank_name ?? '',
+      bank_account_name: joinLink?.bank_account_name ?? '',
+      bank_sort_code: joinLink?.bank_sort_code ?? '',
+      bank_account_number: joinLink?.bank_account_number ?? '',
+      alert_email: joinLink?.alert_email ?? '',
+    })
+    setShowBankForm(true)
+  }
+
+  async function saveBankForm() {
+    if (!joinLink) return
+    const clean = (v: string) => (v ?? '').trim() || null
+    const update = {
+      bank_name: clean(bankForm.bank_name),
+      bank_account_name: clean(bankForm.bank_account_name),
+      bank_sort_code: clean(bankForm.bank_sort_code),
+      bank_account_number: clean(bankForm.bank_account_number),
+      alert_email: clean(bankForm.alert_email),
+    }
+    if (update.alert_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(update.alert_email)) { alert('Please enter a valid alerts email'); return }
+    setSaving(true)
+    const { data, error } = await supabase.from('partner_join_links').update(update).eq('id', joinLink.id).select('*').single()
+    setSaving(false)
+    if (error) { alert(error.message); return }
+    setJoinLink(data)
+    setShowBankForm(false)
   }
 
   // ---------- Agent Programme actions ----------
@@ -775,6 +829,70 @@ export default function PartnersPage() {
               )}
             </div>
 
+            {joinLink && (
+              <div style={{ ...card, marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>Bank transfer</div>
+                    <div style={{ fontSize: 13, color: '#667085', marginTop: 2 }}>New partners can pay by bank transfer. They get a unique reference; you confirm the payment here to unlock them.</div>
+                    {joinLink.bank_sort_code && joinLink.bank_account_number ? (
+                      <div style={{ fontSize: 13, marginTop: 8, color: '#344054' }}>
+                        {joinLink.bank_account_name ?? '—'} · {joinLink.bank_name ?? 'Bank'} · {joinLink.bank_sort_code} · {joinLink.bank_account_number}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 13, marginTop: 8, color: '#B54708' }}>Not set up: add your bank details to offer bank transfer.</div>
+                    )}
+                    <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Payment alerts go to: <b style={{ color: '#344054' }}>{joinLink.alert_email || 'your login email'}</b></div>
+                  </div>
+                  {!showBankForm && <button onClick={openBankForm} style={btnGhost}>Edit</button>}
+                </div>
+                {showBankForm && (
+                  <div style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+                    {[
+                      ['bank_name', 'Bank', 'Metro Bank'],
+                      ['bank_account_name', 'Account name', 'Your company name'],
+                      ['bank_sort_code', 'Sort code', '00-00-00'],
+                      ['bank_account_number', 'Account number', '12345678'],
+                      ['alert_email', 'Payment alerts email', 'finance@yourcompany.com'],
+                    ].map(([k, l, ph]) => (
+                      <div key={k}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4 }}>{l}</div>
+                        <input value={bankForm[k]} onChange={e => setBankForm({ ...bankForm, [k]: e.target.value })} placeholder={ph} style={{ ...input, width: '100%' }} />
+                      </div>
+                    ))}
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8 }}>
+                      <button onClick={saveBankForm} disabled={saving} style={btnGold}>{saving ? 'Saving…' : 'Save'}</button>
+                      <button onClick={() => setShowBankForm(false)} style={btnGhost}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {pendingSignups.length > 0 && (
+              <div style={{ ...card, marginBottom: 16, borderColor: '#FEC84B' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Bank transfers to check ({pendingSignups.length})</div>
+                <div style={{ fontSize: 13, color: '#667085', marginBottom: 12 }}>When the money shows in your bank with the reference, click Confirm. Their account unlocks and they get a sign-in email.</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {pendingSignups.map(s => (
+                    <div key={s.id} style={{ border: '1px solid #EAECF0', borderRadius: 10, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600 }}>{s.name} <span style={{ fontFamily: 'monospace', fontSize: 12, background: '#F2F4F7', borderRadius: 6, padding: '2px 6px', marginLeft: 4 }}>{s.reference}</span></div>
+                        <div style={{ fontSize: 12, color: '#667085' }}>{s.email} · {s.phone}</div>
+                        <div style={{ fontSize: 12, marginTop: 2, color: s.marked_sent_at ? '#067647' : '#98A2B3' }}>
+                          {s.marked_sent_at ? `Says they paid ${new Date(s.marked_sent_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : `Signed up ${new Date(s.created_at).toLocaleDateString('en-GB')}, not marked as sent yet`}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => signupAction(s, 'confirm')} disabled={saving} style={btnGold}>Confirm</button>
+                        <button onClick={() => signupAction(s, 'cancel')} disabled={saving} style={btnGhost}>Cancel</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={card}>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Investor accounts</div>
               {allOwners.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No owners yet. Owners created in Vacation Rentals appear here automatically.</div>}
@@ -791,7 +909,7 @@ export default function PartnersPage() {
                           <div style={{ fontSize: 12, color: '#667085' }}>Access: <b style={{ color: '#344054' }}>{accessSummary(o)}</b></div>
                           <div style={{ fontSize: 12, color: '#667085', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                             Membership ({PARTNER_FEE}): {o.partner_paid_at
-                              ? <><Pill status="paid" label={`Paid ${new Date(o.partner_paid_at).toLocaleDateString('en-GB')}`} /><span style={{ fontSize: 11, color: '#98A2B3' }}>{/^(pi_|cs_)/.test(o.partner_payment_ref ?? '') ? 'by card' : (o.partner_payment_ref ?? '')}</span><button onClick={() => setPartnerPaid(o, false)} style={{ background: 'none', border: 'none', color: '#98A2B3', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Undo</button></>
+                              ? <><Pill status="paid" label={`Paid ${new Date(o.partner_paid_at).toLocaleDateString('en-GB')}`} /><span style={{ fontSize: 11, color: '#98A2B3' }}>{/^(pi_|cs_)/.test(o.partner_payment_ref ?? '') ? 'by card' : /^bank:/.test(o.partner_payment_ref ?? '') ? `by bank transfer (${(o.partner_payment_ref as string).slice(5)})` : (o.partner_payment_ref ?? '')}</span><button onClick={() => setPartnerPaid(o, false)} style={{ background: 'none', border: 'none', color: '#98A2B3', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Undo</button></>
                               : <><Pill status="pending" label="Unpaid" /><button onClick={() => setPartnerPaid(o, true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Mark paid / waive</button></>}
                           </div>
                         </div>
