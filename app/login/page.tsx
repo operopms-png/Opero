@@ -75,7 +75,7 @@ function LoginForm() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         const { data: ownerProfile } = await supabase.from('owner_profiles').select('id').eq('user_id', session.user.id).single()
-        if (ownerProfile) { window.location.href = '/partners'; return }
+        if (ownerProfile) { window.location.href = '/staff-centre/partners'; return }
         const { data: landlordProfile } = await supabase.from('pm_landlords').select('id').eq('portal_user_id', session.user.id).single()
         if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
         const { data: estateLandlordProfile } = await supabase.from('estate_landlords').select('id').eq('portal_user_id', session.user.id).single()
@@ -109,7 +109,7 @@ function LoginForm() {
           .select('id')
           .eq('user_id', data.user?.id)
           .single()
-        if (ownerProfile) { window.location.href = '/partners'; return }
+        if (ownerProfile) { window.location.href = '/staff-centre/partners'; return }
         // Check if this user is a PM landlord — if so, send to the landlord portal
         const { data: landlordProfile } = await supabase
           .from('pm_landlords')

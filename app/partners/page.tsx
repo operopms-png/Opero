@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import PartnerBroadcast from '../../components/PartnerBroadcast'
+import { STAFF_CENTRE_TABS, PARTNER_GRANTABLE_MODULES } from '../../lib/useRole'
 
 // Partners
 // --------
@@ -130,6 +131,10 @@ export default function PartnersPage() {
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null)
   const [showRefForm, setShowRefForm] = useState(false)
   const [refForm, setRefForm] = useState<any>(EMPTY_REFERRAL)
+
+  // Investor access (what a partner can see beyond Partners)
+  const [accessOwnerId, setAccessOwnerId] = useState<string | null>(null)
+  const [accessForm, setAccessForm] = useState<string[]>([])
 
   useEffect(() => {
     async function init() {
@@ -296,6 +301,40 @@ export default function PartnersPage() {
     const { error } = await supabase.from('agent_referrals').update({ commission_status: 'paid', paid_at: new Date().toISOString(), payout_reference: reference || null }).eq('id', ref.id)
     if (error) { alert(error.message); return }
     await loadStaff(businessId)
+  }
+
+  // ---------- Partner access ----------
+  function openAccess(o: any) {
+    setAccessOwnerId(accessOwnerId === o.id ? null : o.id)
+    setAccessForm(o.custom_modules ?? [])
+  }
+
+  function toggleAccess(key: string) {
+    setAccessForm(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+  }
+
+  async function saveAccess(o: any) {
+    if (!businessId) return
+    setSaving(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/partner-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ owner_id: o.id, custom_modules: accessForm }),
+    })
+    const result = await res.json()
+    setSaving(false)
+    if (!res.ok) { alert(result.error || 'Could not save access'); return }
+    setAccessOwnerId(null)
+    await loadStaff(businessId)
+  }
+
+  function accessSummary(o: any) {
+    const cm: string[] = o.custom_modules ?? []
+    const mods = PARTNER_GRANTABLE_MODULES.filter(m => cm.includes(m.k)).map(m => m.l)
+    const tabs = STAFF_CENTRE_TABS.filter(t => t.k !== 'partners' && cm.includes(`sc:${t.k}`)).map(t => t.l)
+    const extra = [...mods, ...tabs]
+    return extra.length ? `Partners + ${extra.join(', ')}` : 'Partners only'
   }
 
   // A referral is a likely duplicate if an EARLIER live referral has the same email or phone — first claim wins.
@@ -641,9 +680,40 @@ export default function PartnersPage() {
                         <div>
                           <div style={{ fontWeight: 700 }}>{o.name ?? 'Unnamed owner'}</div>
                           <div style={{ fontSize: 12, color: '#667085' }}>{o.email ?? '—'} · {n} propert{n === 1 ? 'y' : 'ies'} · {o.user_id ? 'Can sign in' : 'No login yet'}</div>
+                          <div style={{ fontSize: 12, color: '#667085' }}>Access: <b style={{ color: '#344054' }}>{accessSummary(o)}</b></div>
                         </div>
-                        <a href="/owner-portal" style={{ ...btnGold, padding: '7px 12px', fontSize: 12 }}>Manage in Owner Portal</a>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => openAccess(o)} style={btnGhost}>{accessOwnerId === o.id ? 'Close' : 'Access'}</button>
+                          <a href="/owner-portal" style={{ ...btnGold, padding: '7px 12px', fontSize: 12 }}>Manage in Owner Portal</a>
+                        </div>
                       </div>
+                      {accessOwnerId === o.id && (
+                        <div style={{ background: CREAM, borderRadius: 10, padding: 14, marginBottom: 12 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>What can {o.name?.split(' ')[0] ?? 'this partner'} see?</div>
+                          <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Partners is always on. Tick anything else they should have.</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Modules</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 6, marginBottom: 12 }}>
+                            {PARTNER_GRANTABLE_MODULES.map(m => (
+                              <label key={m.k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                                <input type="checkbox" checked={accessForm.includes(m.k)} onChange={() => toggleAccess(m.k)} />{m.l}
+                              </label>
+                            ))}
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Staff Centre</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 6, marginBottom: 14 }}>
+                            {STAFF_CENTRE_TABS.map(t => t.k === 'partners' ? (
+                              <label key={t.k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#98A2B3' }}>
+                                <input type="checkbox" checked disabled />{t.l} (always)
+                              </label>
+                            ) : (
+                              <label key={t.k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                                <input type="checkbox" checked={accessForm.includes(`sc:${t.k}`)} onChange={() => toggleAccess(`sc:${t.k}`)} />{t.l}
+                              </label>
+                            ))}
+                          </div>
+                          <button onClick={() => saveAccess(o)} disabled={saving} style={btnGold}>{saving ? 'Saving…' : 'Save access'}</button>
+                        </div>
+                      )}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, fontSize: 12, marginBottom: 8 }}>
                         <div><div style={{ color: '#667085' }}>Invested</div><div style={{ fontWeight: 700 }}>{gbp(t.inv)}</div></div>
                         <div><div style={{ color: '#667085' }}>Returned</div><div style={{ fontWeight: 700 }}>{gbp(t.ret)}</div></div>
