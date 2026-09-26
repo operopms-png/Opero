@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export type UserRole = 'Admin' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Estate Agency Team'
+export type UserRole = 'Admin' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Estate Agency Team' | 'Partner'
 
 export const ROLE_MODULES: Record<string, string[]> = {
   'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
@@ -13,6 +13,8 @@ export const ROLE_MODULES: Record<string, string[]> = {
   'Cleaning Team':                ['str', 'pm', 'ea'],
   'Maintenance Team':            ['str', 'pm', 'ea'],
   'Viewer':                      ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
+  // Investors / partners: Staff Centre → Partners only, unless an admin grants more
+  'Partner':                     ['sc'],
 }
 
 export const ROLE_SETTINGS: Record<string, boolean> = {
@@ -24,6 +26,7 @@ export const ROLE_SETTINGS: Record<string, boolean> = {
   'Cleaning Team':                false,
   'Maintenance Team':            false,
   'Viewer':                      false,
+  'Partner':                     false,
 }
 
 export const ROLE_READONLY: Record<string, boolean> = {
@@ -41,6 +44,7 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
 
 export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'oversight',  l: 'Dashboard' },
+  { k: 'partners',   l: 'Partners' },
   { k: 'investors',  l: 'Investors' },
   { k: 'customeronboarding', l: 'Customer Onboarding' },
   { k: 'meetings',    l: 'Meetings' },
@@ -65,10 +69,60 @@ export function getScTabs(role: string, modules: string[]): string[] {
   if (!modules.includes('sc')) return []
   if (role === 'Admin') return [...SC_TABS]
   const explicit = modules.filter(m => m.startsWith('sc:')).map(m => m.slice(3))
+  // Partners always get the Partners tab, plus only what an admin has ticked
+  if (role === 'Partner') return ['partners', ...explicit.filter(t => t !== 'partners')]
   return explicit.length ? explicit : DEFAULT_SC_TABS
 }
 
-const KNOWN_ROLES: UserRole[] = ['Admin', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Estate Agency Team']
+// Modules and Staff Centre tabs an admin can grant a partner on top of Partners
+export const PARTNER_GRANTABLE_MODULES: { k: string; l: string }[] = [
+  { k: 'str', l: 'Vacation Rentals' },
+  { k: 'pm', l: 'Property Management' },
+  { k: 'ea', l: 'Estate Agency' },
+  { k: 'dev', l: 'Developments' },
+]
+
+export type Access = {
+  role: UserRole
+  customModules: string[] | null
+  propertyIds: string[]
+  businessId: string
+  isPartner: boolean
+}
+
+// Single source of truth for who someone is when they sign in.
+//  1. A team_members row (staff, or a partner an admin has granted extra access to)
+//  2. Otherwise an owner_profiles row → investor partner (Partners tab only)
+//  3. Otherwise the business owner's own login → Admin
+export async function resolveAccess(user: { id: string; email?: string | null }): Promise<Access> {
+  const [{ data: rows }, { data: owner }] = await Promise.all([
+    supabase.from('team_members').select('role, user_id, property_ids, custom_modules').eq('email', user.email ?? '').order('created_at', { ascending: false }).limit(1),
+    supabase.from('owner_profiles').select('id, business_id, custom_modules').eq('user_id', user.id).maybeSingle(),
+  ])
+  const row = rows?.[0]
+  if (row) {
+    const role = owner ? 'Partner' : normalizeRole(row.role)
+    return {
+      role,
+      customModules: row.custom_modules?.length ? row.custom_modules : null,
+      propertyIds: row.property_ids ?? [],
+      businessId: row.user_id ?? user.id,
+      isPartner: role === 'Partner',
+    }
+  }
+  if (owner) {
+    return {
+      role: 'Partner',
+      customModules: owner.custom_modules?.length ? owner.custom_modules : null,
+      propertyIds: [],
+      businessId: owner.business_id ?? user.id,
+      isPartner: true,
+    }
+  }
+  return { role: 'Admin', customModules: null, propertyIds: [], businessId: user.id, isPartner: false }
+}
+
+const KNOWN_ROLES: UserRole[] = ['Admin', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Estate Agency Team', 'Partner']
 
 const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
   'airbnb agent':     'Vacation Rental Team',
@@ -96,15 +150,10 @@ export function useRole() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setLoading(false); return }
-      const { data } = await supabase
-        .from('team_members')
-        .select('role, property_ids, custom_modules')
-        .eq('email', user.email)
-        .order('created_at', { ascending: false })
-        .limit(1)
-      setRole(normalizeRole(data?.[0]?.role))
-      setPropertyIds(data?.[0]?.property_ids ?? [])
-      setCustomModules(data?.[0]?.custom_modules?.length ? data[0].custom_modules : null)
+      const access = await resolveAccess(user)
+      setRole(access.role)
+      setPropertyIds(access.propertyIds)
+      setCustomModules(access.customModules)
       setLoading(false)
     })
   }, [])
