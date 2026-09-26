@@ -53,6 +53,7 @@ const OUR_PORTALS = [
   { key: 'ea-landlord', module: 'Estate Agency', name: 'Landlord Portal', url: '/estate-owner-portal', color: '#F59E0B', live: true },
   { key: 'ea-tenant', module: 'Estate Agency', name: 'Tenant Portal', url: '/estate-tenant-portal', color: '#F59E0B', live: true },
   { key: 'dev-investors', module: 'Developments', name: 'Investors Portal', url: '/dev-investor-portal', color: '#8B5CF6', live: false },
+  { key: 'partners', module: 'Partners', name: 'Partners Dashboard', url: '/partners', color: '#C9A84C', live: true },
 ]
 
 export default function PortalsPage() {

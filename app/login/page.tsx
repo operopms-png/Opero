@@ -75,7 +75,7 @@ function LoginForm() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         const { data: ownerProfile } = await supabase.from('owner_profiles').select('id').eq('user_id', session.user.id).single()
-        if (ownerProfile) { window.location.href = '/owner-portal'; return }
+        if (ownerProfile) { window.location.href = '/partners'; return }
         const { data: landlordProfile } = await supabase.from('pm_landlords').select('id').eq('portal_user_id', session.user.id).single()
         if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
         const { data: estateLandlordProfile } = await supabase.from('estate_landlords').select('id').eq('portal_user_id', session.user.id).single()
@@ -102,13 +102,14 @@ function LoginForm() {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
       else {
-        // Check if this user is an owner — if so, send to owner portal
+        // Owners are investor partners — land them on the Partners dashboard,
+        // which links through to their Owner Portal
         const { data: ownerProfile } = await supabase
           .from('owner_profiles')
           .select('id')
           .eq('user_id', data.user?.id)
           .single()
-        if (ownerProfile) { window.location.href = '/owner-portal'; return }
+        if (ownerProfile) { window.location.href = '/partners'; return }
         // Check if this user is a PM landlord — if so, send to the landlord portal
         const { data: landlordProfile } = await supabase
           .from('pm_landlords')
