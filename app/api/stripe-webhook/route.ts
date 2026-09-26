@@ -80,6 +80,37 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true })
       }
 
+      // New partner paying the one-time fee from /join/<slug>: activate the
+      // login created at sign-up and create their partner record, marked paid.
+      // Safe to run twice (Stripe can resend events).
+      if (session.metadata?.type === 'partner_join') {
+        const signupId = session.metadata.signup_id
+        const { data: signup } = await supabase.from('partner_signups').select('*').eq('id', signupId).maybeSingle()
+        if (signup && signup.status !== 'paid') {
+          await supabase.auth.admin.updateUserById(signup.user_id, { ban_duration: 'none' })
+          const { data: existingProfile } = await supabase.from('owner_profiles').select('id').eq('user_id', signup.user_id).maybeSingle()
+          let profileId = existingProfile?.id
+          const paidFields = { partner_paid_at: new Date().toISOString(), partner_payment_ref: (session.payment_intent as string) ?? session.id }
+          if (profileId) {
+            await supabase.from('owner_profiles').update(paidFields).eq('id', profileId)
+          } else {
+            const { data: created } = await supabase.from('owner_profiles').insert({
+              user_id: signup.user_id,
+              business_id: signup.business_id,
+              name: signup.name,
+              email: signup.email,
+              phone: signup.phone,
+              property_ids: [],
+              split_percentage: 60,
+              ...paidFields,
+            }).select('id').single()
+            profileId = created?.id
+          }
+          await supabase.from('partner_signups').update({ status: 'paid', paid_at: new Date().toISOString(), owner_profile_id: profileId ?? null }).eq('id', signup.id)
+        }
+        return NextResponse.json({ received: true })
+      }
+
       // Guest paying for a direct booking from /book/[slug]. Record it so the
       // dates are blocked on the booking calendar and it shows in bookings.
       // Stripe can resend events, so skip if this session is already saved.

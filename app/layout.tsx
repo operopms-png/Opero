@@ -8,7 +8,7 @@ import { resolveAccess, ROLE_SETTINGS, ROLE_MODULES, getScTabs } from '@/lib/use
 import { SidebarCollapseProvider, useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import './globals.css'
 
-const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/staff-dashboard', '/meet']
+const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/staff-dashboard', '/meet', '/join', '/book']
 
 // Statuses where Stripe has stopped billing successfully — trial expired
 // with no working payment method, a renewal failed, or it was cancelled.

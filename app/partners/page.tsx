@@ -127,6 +127,9 @@ export default function PartnersPage() {
   const [referrals, setReferrals] = useState<any[]>([])
   const [bizProperties, setBizProperties] = useState<any[]>([])
   const [agentsMissing, setAgentsMissing] = useState(false)
+  const [joinLink, setJoinLink] = useState<any>(null)
+  const [joinSlug, setJoinSlug] = useState('')
+  const [copied, setCopied] = useState(false)
 
   // Agent Programme UI
   const [apView, setApView] = useState<'Referrals' | 'Agents'>('Referrals')
@@ -220,6 +223,8 @@ export default function PartnersPage() {
     setAgents(a.data ?? [])
     setReferrals(r.data ?? [])
     setBizProperties(p.data ?? [])
+    const { data: jl } = await supabase.from('partner_join_links').select('*').eq('business_id', biz).maybeSingle()
+    setJoinLink(jl ?? null)
   }
 
   // ---------- Agent Programme actions ----------
@@ -736,6 +741,40 @@ export default function PartnersPage() {
               <Stat label="Capital Returned" value={gbp(staffReturned)} />
               <Stat label="Outstanding" value={gbp(Math.max(0, staffInvested - staffReturned))} dark />
             </div>
+
+            {/* Public sign-up link: new partners pay the one-time membership and get their own login */}
+            <div style={{ ...card, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>Partner sign-up link</div>
+                <div style={{ fontSize: 13, color: '#667085', marginTop: 2 }}>Share this with new investors. They pay the {PARTNER_FEE} membership and get their own login.</div>
+                {joinLink ? (
+                  <div style={{ marginTop: 8, fontSize: 13, background: '#F9FAFB', border: '1px solid #EAECF0', borderRadius: 8, padding: '8px 10px', display: 'inline-block', wordBreak: 'break-all' }}>
+                    {typeof window !== 'undefined' ? window.location.host : 'helloopero.com'}/join/{joinLink.slug}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 13, color: '#667085' }}>/join/</span>
+                    <input value={joinSlug} onChange={e => setJoinSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} placeholder="your-business" style={{ ...input, width: 180, padding: '7px 10px' }} />
+                  </div>
+                )}
+              </div>
+              {joinLink ? (
+                <button onClick={async () => {
+                  const url = `${window.location.origin}/join/${joinLink.slug}`
+                  try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000) } catch { prompt('Copy this link:', url) }
+                }} style={btnGold}>{copied ? 'Copied ✓' : 'Copy link'}</button>
+              ) : (
+                <button disabled={!joinSlug || saving} onClick={async () => {
+                  if (!businessId) return
+                  setSaving(true)
+                  const { data, error } = await supabase.from('partner_join_links').insert({ business_id: businessId, slug: joinSlug, headline: 'Become a partner', blurb: null }).select('*').single()
+                  setSaving(false)
+                  if (error) { alert(error.message.includes('duplicate') ? 'That link name is taken — try another.' : error.message); return }
+                  setJoinLink(data)
+                }} style={{ ...btnGold, opacity: !joinSlug ? 0.6 : 1 }}>Create link</button>
+              )}
+            </div>
+
             <div style={card}>
               <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Investor accounts</div>
               {allOwners.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No owners yet. Owners created in Vacation Rentals appear here automatically.</div>}
@@ -752,7 +791,7 @@ export default function PartnersPage() {
                           <div style={{ fontSize: 12, color: '#667085' }}>Access: <b style={{ color: '#344054' }}>{accessSummary(o)}</b></div>
                           <div style={{ fontSize: 12, color: '#667085', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                             Membership ({PARTNER_FEE}): {o.partner_paid_at
-                              ? <><Pill status="paid" label={`Paid ${new Date(o.partner_paid_at).toLocaleDateString('en-GB')}`} /><button onClick={() => setPartnerPaid(o, false)} style={{ background: 'none', border: 'none', color: '#98A2B3', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Undo</button></>
+                              ? <><Pill status="paid" label={`Paid ${new Date(o.partner_paid_at).toLocaleDateString('en-GB')}`} /><span style={{ fontSize: 11, color: '#98A2B3' }}>{/^(pi_|cs_)/.test(o.partner_payment_ref ?? '') ? 'by card' : (o.partner_payment_ref ?? '')}</span><button onClick={() => setPartnerPaid(o, false)} style={{ background: 'none', border: 'none', color: '#98A2B3', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Undo</button></>
                               : <><Pill status="pending" label="Unpaid" /><button onClick={() => setPartnerPaid(o, true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Mark paid / waive</button></>}
                           </div>
                         </div>
