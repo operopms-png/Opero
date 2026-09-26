@@ -3,15 +3,17 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import PartnerBroadcast from '../../components/PartnerBroadcast'
 
 // Partners
 // --------
-// Staff see three tabs: Dashboard (investors + agents at a glance),
+// Staff see four tabs: Dashboard (investors + agents at a glance),
 // Agent Programme (commission agents and the guests/tenants they log),
-// and Investors (every Vacation Rentals owner, added automatically).
+// Investors (every Vacation Rentals owner, added automatically) and
+// Broadcast (group chat with partners for opportunities and updates).
 //
 // Owners (owner_profiles) sign in here as investor partners and see their
-// own Dashboard, Investments and Payouts, with a link into their Owner Portal.
+// own Dashboard, Investments, Payouts and Broadcast, with a link into their Owner Portal.
 // Investor figures mirror /owner-portal: owner share = 60% of guest revenue,
 // capital returned = paid owner_statements, invested = owner_profiles.invested.
 
@@ -21,10 +23,10 @@ const INK = '#1A1A1A'
 const CREAM = '#FBF4E6'
 const TOTAL_STAGES = 10
 
-type StaffTab = 'Dashboard' | 'Agent Programme' | 'Investors'
-type InvestorTab = 'Dashboard' | 'Investments' | 'Payouts'
-const STAFF_TABS: StaffTab[] = ['Dashboard', 'Agent Programme', 'Investors']
-const INVESTOR_TABS: InvestorTab[] = ['Dashboard', 'Investments', 'Payouts']
+type StaffTab = 'Dashboard' | 'Agent Programme' | 'Investors' | 'Broadcast'
+type InvestorTab = 'Dashboard' | 'Investments' | 'Payouts' | 'Broadcast'
+const STAFF_TABS: StaffTab[] = ['Dashboard', 'Agent Programme', 'Investors', 'Broadcast']
+const INVESTOR_TABS: InvestorTab[] = ['Dashboard', 'Investments', 'Payouts', 'Broadcast']
 
 const REFERRAL_STATUSES = ['logged', 'screening', 'approved', 'rejected', 'completed', 'cancelled']
 const STATUS_LABEL: Record<string, string> = {
@@ -101,6 +103,8 @@ export default function PartnersPage() {
   const [staffTab, setStaffTab] = useState<StaffTab>('Dashboard')
   const [investorTab, setInvestorTab] = useState<InvestorTab>('Dashboard')
   const [businessId, setBusinessId] = useState<string | null>(null)
+  const [userId, setUserId] = useState('')
+  const [authorName, setAuthorName] = useState('')
   const [saving, setSaving] = useState(false)
 
   // Investor (owner) data
@@ -131,10 +135,12 @@ export default function PartnersPage() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login?redirect=/partners'; return }
+      setUserId(user.id)
 
       const { data: owner } = await supabase.from('owner_profiles').select('*').eq('user_id', user.id).single()
       if (owner) {
         setProfile(owner)
+        setAuthorName(owner.name || user.email || 'Partner')
         const ids: string[] = owner.property_ids ?? []
         const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
         const [p, b, s, f] = await Promise.all([
@@ -147,14 +153,18 @@ export default function PartnersPage() {
         setBookings(b.data ?? [])
         setStatements(s.data ?? [])
         setFinance(f.data ?? [])
+        // An investor's broadcast is their managing business's — the owner of their linked properties
+        setBusinessId((p.data ?? [])[0]?.user_id ?? null)
         setLoading(false)
         return
       }
 
       // Staff — resolve the business owner's id the same way Sidebar/portals do
       setIsStaff(true)
-      const { data: rows } = await supabase.from('team_members').select('user_id').eq('email', user.email).order('created_at', { ascending: false }).limit(1)
+      const { data: rows } = await supabase.from('team_members').select('user_id, name').eq('email', user.email).order('created_at', { ascending: false }).limit(1)
       const biz = rows?.[0]?.user_id ?? user.id
+      const meta = user.user_metadata ?? {}
+      setAuthorName(rows?.[0]?.name || [meta.first_name, meta.last_name].filter(Boolean).join(' ') || user.email || 'Team')
       setBusinessId(biz)
       await loadStaff(biz)
       setLoading(false)
@@ -649,7 +659,15 @@ export default function PartnersPage() {
           </>
         )}
 
+        {isStaff && staffTab === 'Broadcast' && (
+          <PartnerBroadcast businessId={businessId} userId={userId} authorName={authorName} authorRole="staff" isStaff />
+        )}
+
         {/* ======================= INVESTOR ======================= */}
+
+        {!isStaff && investorTab === 'Broadcast' && (
+          <PartnerBroadcast businessId={businessId} userId={userId} authorName={authorName} authorRole="investor" isStaff={false} />
+        )}
 
         {!isStaff && investorTab === 'Dashboard' && (
           <>
