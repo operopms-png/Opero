@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 
 // Public partner sign-up page: helloopero.com/join/<slug>
@@ -18,7 +19,9 @@ const FEATURES = [
   { icon: '⌂', title: 'Owner Portal', desc: 'Bookings, statements and messages for properties you’re in.' },
 ]
 
-export default function JoinPage({ params }: { params: { slug: string } }) {
+export default function JoinPage() {
+  // Next 16: route params come from useParams() in client pages (the params prop is a Promise)
+  const { slug } = useParams() as { slug: string }
   const [link, setLink] = useState<any>(null)
   const [loaded, setLoaded] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' })
@@ -26,11 +29,11 @@ export default function JoinPage({ params }: { params: { slug: string } }) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    supabase.rpc('public_join_link', { p_slug: params.slug }).then(({ data }) => {
+    supabase.rpc('public_join_link', { p_slug: slug }).then(({ data }) => {
       setLink(data ?? null)
       setLoaded(true)
     })
-  }, [params.slug])
+  }, [slug])
 
   async function join() {
     setError('')
@@ -41,7 +44,7 @@ export default function JoinPage({ params }: { params: { slug: string } }) {
       const res = await fetch('/api/partner-join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug: params.slug, ...form }),
+        body: JSON.stringify({ slug, ...form }),
       })
       const data = await res.json()
       if (data.url) { window.location.href = data.url; return }

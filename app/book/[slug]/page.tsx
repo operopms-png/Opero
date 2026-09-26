@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 
 
@@ -84,7 +85,9 @@ function Calendar({ bookedRanges, onSelect, checkIn, checkOut }: {
   )
 }
 
-export default function BookingPage({ params }: { params: { slug: string } }) {
+export default function BookingPage() {
+  // Next 16: route params come from useParams() in client pages (the params prop is a Promise)
+  const { slug } = useParams() as { slug: string }
   const [property, setProperty] = useState<any>(null)
   const [bookedRanges, setBookedRanges] = useState<{start:string,end:string}[]>([])
   const [checkIn, setCheckIn] = useState<string|null>(null)
@@ -99,14 +102,14 @@ export default function BookingPage({ params }: { params: { slug: string } }) {
       // Public, no login: a database function returns only what this page
       // shows (never addresses, wifi, purchase price etc.) plus booked dates
       // from direct bookings and synced Airbnb/Booking.com bookings.
-      const { data } = await supabase.rpc('public_property_by_slug', { p_slug: params.slug })
+      const { data } = await supabase.rpc('public_property_by_slug', { p_slug: slug })
       if (data?.property) {
         setProperty(data.property)
         setBookedRanges((data.booked ?? []).map((b:any) => ({start:b.start, end:b.end})))
       }
     }
     load()
-  }, [params.slug])
+  }, [slug])
 
   function handleDateSelect(date: string) {
     if (!checkIn || (checkIn && checkOut)) {
