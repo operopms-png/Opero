@@ -86,6 +86,8 @@ export async function POST(request: NextRequest) {
           await supabase.from('owner_profiles').update({
             partner_paid_at: new Date().toISOString(),
             partner_payment_ref: (session.payment_intent as string) ?? session.id,
+            partner_confirmed_by: 'Stripe (card payment)',
+            partner_confirmed_at: new Date().toISOString(),
           }).eq('id', ownerId)
         }
         return NextResponse.json({ received: true })
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
       // Safe to run twice (Stripe can resend events).
       if (session.metadata?.type === 'partner_join') {
         if (session.payment_status === 'paid' && session.metadata.signup_id) {
-          await activatePartnerSignup(session.metadata.signup_id, (session.payment_intent as string) ?? session.id)
+          await activatePartnerSignup(session.metadata.signup_id, (session.payment_intent as string) ?? session.id, 'Stripe (card payment)')
         }
         return NextResponse.json({ received: true })
       }

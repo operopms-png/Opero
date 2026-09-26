@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       const stripe = await getStripe()
       const session = await stripe.checkout.sessions.retrieve(sessionId, {}, { stripeAccount: sub.stripe_connect_account_id })
       if (session.payment_status === 'paid' && session.metadata?.signup_id === data.id) {
-        await activatePartnerSignup(data.id, (session.payment_intent as string) ?? session.id)
+        await activatePartnerSignup(data.id, (session.payment_intent as string) ?? session.id, 'Stripe (card payment)')
         return NextResponse.json({ status: 'paid', email: data.email })
       }
     }

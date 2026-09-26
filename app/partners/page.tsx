@@ -238,7 +238,7 @@ export default function PartnersPage() {
   // ---------- Bank transfer sign-ups ----------
   async function signupAction(s: any, action: 'confirm' | 'cancel') {
     const msg = action === 'confirm'
-      ? `Confirm you've received ${PARTNER_FEE} from ${s.name} (reference ${s.reference})? Their account will be unlocked and they'll get a sign-in email.`
+      ? `Confirm you've received ${PARTNER_FEE} with reference ${s.reference}?\n\n${s.name}\n${s.email}\n\nThis unlocks their account and emails them a sign-in link. Your name will be recorded as the person who confirmed it.`
       : `Cancel ${s.name}'s sign-up? Their locked login will be removed.`
     if (!confirm(msg)) return
     setSaving(true)
@@ -936,6 +936,13 @@ export default function PartnersPage() {
                               ? <><Pill status="paid" label={`Paid ${new Date(o.partner_paid_at).toLocaleDateString('en-GB')}`} /><span style={{ fontSize: 11, color: '#98A2B3' }}>{/^(pi_|cs_)/.test(o.partner_payment_ref ?? '') ? 'by card' : /^bank:/.test(o.partner_payment_ref ?? '') ? `by bank transfer (${(o.partner_payment_ref as string).slice(5)})` : (o.partner_payment_ref ?? '')}</span><button onClick={() => setPartnerPaid(o, false)} style={{ background: 'none', border: 'none', color: '#98A2B3', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Undo</button></>
                               : <><Pill status="pending" label="Unpaid" /><button onClick={() => setPartnerPaid(o, true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Mark paid / waive</button></>}
                           </div>
+                          {o.partner_paid_at && (
+                            <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>
+                              {o.partner_confirmed_by
+                                ? <>Confirmed by <b style={{ color: '#667085', fontWeight: 600 }}>{o.partner_confirmed_by}</b> on {new Date(o.partner_confirmed_at ?? o.partner_paid_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</>
+                                : 'Confirmed before audit tracking started'}
+                            </div>
+                          )}
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button onClick={() => openAccess(o)} style={btnGhost}>{accessOwnerId === o.id ? 'Close' : 'Access'}</button>

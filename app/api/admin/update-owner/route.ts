@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStaff, serviceClient } from '@/lib/admin-auth'
+import { staffLabel } from '@/lib/partner-activation'
 
 export async function PATCH(req: NextRequest) {
   const staffId = await requireStaff(req)
@@ -22,6 +23,9 @@ export async function PATCH(req: NextRequest) {
   if ('partner_paid' in body) {
     patch.partner_paid_at = body.partner_paid ? new Date().toISOString() : null
     patch.partner_payment_ref = body.partner_paid ? (body.partner_payment_ref || 'Marked paid by staff') : null
+    // Audit trail: who marked it paid (or undid it) and when
+    patch.partner_confirmed_by = body.partner_paid ? await staffLabel(staffId, null) : null
+    patch.partner_confirmed_at = body.partner_paid ? new Date().toISOString() : null
   }
 
   const { error } = await serviceClient.from('owner_profiles').update(patch).eq('id', owner_id)

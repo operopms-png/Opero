@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStaffWithBusiness, serviceClient } from '@/lib/admin-auth'
-import { activatePartnerSignup } from '@/lib/partner-activation'
+import { activatePartnerSignup, staffLabel } from '@/lib/partner-activation'
 import { sendEmail } from '@/lib/send-email'
 import { esc } from '@/lib/partner-bank'
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   if (action === 'confirm') {
     try {
-      await activatePartnerSignup(signup.id, `bank:${signup.reference ?? 'transfer'}`)
+      await activatePartnerSignup(signup.id, `bank:${signup.reference ?? 'transfer'}`, await staffLabel(staff.staffId, staff.email))
     } catch (err: any) {
       return NextResponse.json({ error: err?.message || 'Could not activate' }, { status: 500 })
     }
