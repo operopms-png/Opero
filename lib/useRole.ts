@@ -97,7 +97,9 @@ export type Access = {
 export async function resolveAccess(user: { id: string; email?: string | null }): Promise<Access> {
   const [{ data: rows }, { data: owner }] = await Promise.all([
     supabase.from('team_members').select('role, user_id, property_ids, custom_modules').eq('email', user.email ?? '').order('created_at', { ascending: false }).limit(1),
-    supabase.from('owner_profiles').select('id, business_id, custom_modules').eq('user_id', user.id).maybeSingle(),
+    // select('*') so this never fails if newer owner_profiles columns aren't in the database yet —
+    // a failed lookup here would otherwise treat an investor as Admin
+    supabase.from('owner_profiles').select('*').eq('user_id', user.id).maybeSingle(),
   ])
   const row = rows?.[0]
   if (row) {
