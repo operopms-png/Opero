@@ -80,6 +80,31 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true })
       }
 
+      // Guest paying for a direct booking from /book/[slug]. Record it so the
+      // dates are blocked on the booking calendar and it shows in bookings.
+      // Stripe can resend events, so skip if this session is already saved.
+      if (session.metadata?.type === 'direct_booking') {
+        const m = session.metadata
+        const { data: existingBooking } = await supabase.from('direct_bookings').select('id').eq('stripe_session_id', session.id).maybeSingle()
+        if (!existingBooking) {
+          await supabase.from('direct_bookings').insert({
+            property_id: m.propertyId,
+            guest_name: m.guestName,
+            guest_email: m.guestEmail || session.customer_email,
+            guest_phone: m.guestPhone,
+            check_in: m.checkIn,
+            check_out: m.checkOut,
+            nights: Number(m.nights) || null,
+            nightly_rate: Number(m.nightlyRate) || null,
+            cleaning_fee: Number(m.cleaningFee) || 0,
+            total: Number(m.total) || (session.amount_total ? session.amount_total / 100 : null),
+            status: 'confirmed',
+            stripe_session_id: session.id,
+          })
+        }
+        return NextResponse.json({ received: true })
+      }
+
       // Same as above, for Estate Agency tenants paying via
       // estate_rent_schedules instead of pm_rent_payments.
       if (session.metadata?.type === 'estate_tenant_rent_payment') {
