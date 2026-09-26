@@ -7,8 +7,8 @@ import { serviceClient } from '@/lib/admin-auth'
 // 2. Records a pending sign-up and sends them to Stripe for the one-time fee.
 // 3. The Stripe webhook (type 'partner_join') unbans the login, creates their
 //    partner record (owner_profiles) linked to the business, marked paid.
-// Payment goes to the business's connected Stripe account when set up,
-// otherwise the main Opero Stripe account.
+// Payment always goes to the business's own connected Stripe account.
+// If the business hasn't connected Stripe (Settings), sign-ups are refused.
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const BANNED = '876000h' // ~100 years; lifted by the webhook once paid
@@ -31,6 +31,18 @@ export async function POST(req: NextRequest) {
       .eq('slug', String(slug).toLowerCase())
       .maybeSingle()
     if (!link || !link.active) return NextResponse.json({ error: 'This sign-up link isn’t active.' }, { status: 404 })
+
+    // The fee belongs to the business, so it must go to the business's own
+    // connected Stripe account. Never fall back to Opero's platform account.
+    const { data: businessSub } = await serviceClient
+      .from('subscriptions')
+      .select('stripe_connect_account_id, stripe_connect_onboarded')
+      .eq('user_id', link.business_id)
+      .maybeSingle()
+    const destination = businessSub?.stripe_connect_onboarded ? businessSub.stripe_connect_account_id : null
+    if (!destination) {
+      return NextResponse.json({ error: 'Online payments aren’t set up for this partner programme yet. Please contact the team who shared this link.' }, { status: 400 })
+    }
 
     // Is there already a login with this email?
     const { data: userList } = await serviceClient.auth.admin.listUsers({ perPage: 1000 })
@@ -88,13 +100,6 @@ export async function POST(req: NextRequest) {
       signupId = row.id
     }
 
-    const { data: businessSub } = await serviceClient
-      .from('subscriptions')
-      .select('stripe_connect_account_id, stripe_connect_onboarded')
-      .eq('user_id', link.business_id)
-      .maybeSingle()
-    const destination = businessSub?.stripe_connect_onboarded ? businessSub.stripe_connect_account_id : null
-
     const fee = Number(link.fee_gbp) || 75
     const Stripe = (await import('stripe')).default
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' })
@@ -110,7 +115,7 @@ export async function POST(req: NextRequest) {
         },
         quantity: 1,
       }],
-      ...(destination ? { payment_intent_data: { transfer_data: { destination } } } : {}),
+      payment_intent_data: { transfer_data: { destination } },
       metadata: { type: 'partner_join', signup_id: signupId! },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/join/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/join/${link.slug}`,
