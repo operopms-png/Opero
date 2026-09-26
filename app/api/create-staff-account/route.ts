@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { requireStaff, serviceClient } from '@/lib/admin-auth'
+import { requireStaff, serviceClient, resolveBusinessUserId } from '@/lib/admin-auth'
 
 export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
@@ -66,6 +66,29 @@ export async function POST(req: NextRequest) {
     // Roll back the auth user so we don't leave an orphaned login with no team_members row
     await serviceClient.auth.admin.deleteUser(data.user.id)
     return NextResponse.json({ error: 'Team member record creation failed: ' + memberError.message }, { status: 500 })
+  }
+
+  // A 'Partner' created here is an investor partner: give them a partner
+  // (owner_profiles) record tied to this business so they get the Partners
+  // portal, its membership fee, Deal Analyser and broadcast.
+  if (role === 'Partner') {
+    const { data: staffUser } = await serviceClient.auth.admin.getUserById(staffId)
+    const businessId = await resolveBusinessUserId(staffId, staffUser?.user?.email)
+    const { error: partnerError } = await serviceClient.from('owner_profiles').insert({
+      user_id: data.user.id,
+      business_id: businessId,
+      name,
+      email,
+      phone: phone || null,
+      property_ids: [],
+      split_percentage: 60,
+      custom_modules: custom_modules?.length ? custom_modules : null,
+    })
+    if (partnerError) {
+      await serviceClient.from('team_members').delete().eq('id', member.id)
+      await serviceClient.auth.admin.deleteUser(data.user.id)
+      return NextResponse.json({ error: 'Partner record creation failed: ' + partnerError.message }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ success: true, member })

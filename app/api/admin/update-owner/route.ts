@@ -18,6 +18,11 @@ export async function PATCH(req: NextRequest) {
   if ('invested' in body) patch.invested = Number(body.invested) || 0
   if ('split_percentage' in body) patch.split_percentage = Number(body.split_percentage) || 0
   if ('property_ids' in body) patch.property_ids = body.property_ids ?? []
+  // Staff marking the Partners portal fee as paid (e.g. bank transfer) or waiving/undoing it
+  if ('partner_paid' in body) {
+    patch.partner_paid_at = body.partner_paid ? new Date().toISOString() : null
+    patch.partner_payment_ref = body.partner_paid ? (body.partner_payment_ref || 'Marked paid by staff') : null
+  }
 
   const { error } = await serviceClient.from('owner_profiles').update(patch).eq('id', owner_id)
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import PartnerBroadcast from '../../components/PartnerBroadcast'
 import { STAFF_CENTRE_TABS, PARTNER_GRANTABLE_MODULES } from '../../lib/useRole'
+import InvestPage from '../invest/page'
 
 // Partners
 // --------
@@ -27,9 +28,10 @@ const PAGE_BG = '#F7F8FA'
 const TOTAL_STAGES = 10
 
 type StaffTab = 'Dashboard' | 'Agent Programme' | 'Investors' | 'Broadcast'
-type InvestorTab = 'Dashboard' | 'Investments' | 'Payouts' | 'Broadcast'
+type InvestorTab = 'Dashboard' | 'Investments' | 'Payouts' | 'Deal Analyser' | 'Broadcast'
 const STAFF_TABS: StaffTab[] = ['Dashboard', 'Agent Programme', 'Investors', 'Broadcast']
-const INVESTOR_TABS: InvestorTab[] = ['Dashboard', 'Investments', 'Payouts', 'Broadcast']
+const INVESTOR_TABS: InvestorTab[] = ['Dashboard', 'Investments', 'Payouts', 'Deal Analyser', 'Broadcast']
+const PARTNER_FEE = '£75'
 
 const REFERRAL_STATUSES = ['logged', 'screening', 'approved', 'rejected', 'completed', 'cancelled']
 const STATUS_LABEL: Record<string, string> = {
@@ -134,6 +136,8 @@ export default function PartnersPage() {
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null)
   const [showRefForm, setShowRefForm] = useState(false)
   const [refForm, setRefForm] = useState<any>(EMPTY_REFERRAL)
+  const [paying, setPaying] = useState(false)
+  const [paidReturn, setPaidReturn] = useState(false)
 
   // Investor access (what a partner can see beyond Partners)
   const [accessOwnerId, setAccessOwnerId] = useState<string | null>(null)
@@ -179,6 +183,28 @@ export default function PartnersPage() {
     }
     init()
   }, [])
+
+  // Back from Stripe checkout: wait for the webhook to mark the membership paid
+  useEffect(() => {
+    if (!profile || profile.partner_paid_at) return
+    if (typeof window === 'undefined' || new URLSearchParams(window.location.search).get('paid') !== 'true') return
+    setPaidReturn(true)
+    let tries = 0
+    const t = setInterval(async () => {
+      tries++
+      const { data } = await supabase.from('owner_profiles').select('partner_paid_at').eq('id', profile.id).single()
+      if (data?.partner_paid_at) {
+        clearInterval(t)
+        setProfile({ ...profile, partner_paid_at: data.partner_paid_at })
+        window.history.replaceState(null, '', window.location.pathname)
+      } else if (tries >= 20) {
+        clearInterval(t)
+        setPaidReturn(false)
+        alert('Your payment is still being confirmed. Please refresh in a minute, or contact the team if it doesn’t unlock.')
+      }
+    }, 3000)
+    return () => clearInterval(t)
+  }, [profile?.id, profile?.partner_paid_at])
 
   async function loadStaff(biz: string) {
     const [o, s, a, r, p] = await Promise.all([
@@ -384,6 +410,36 @@ export default function PartnersPage() {
   const agentName = (id: string) => agents.find(a => a.id === id)?.name ?? '—'
   const filteredReferrals = referrals.filter(r => refFilter === 'all' || r.referral_type === refFilter)
 
+  // ---------- Partners membership (one-time fee) ----------
+  const locked = !isStaff && !!profile && !profile.partner_paid_at
+  const inv = !isStaff && !locked
+
+  async function payPartnerFee() {
+    setPaying(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/partner-fee', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` } })
+    const result = await res.json()
+    if (result.url) { window.location.href = result.url; return }
+    setPaying(false)
+    alert(result.error || 'Could not start payment')
+  }
+
+  async function setPartnerPaid(o: any, paid: boolean) {
+    if (!businessId) return
+    if (!confirm(paid ? `Mark ${o.name ?? 'this partner'}'s ${PARTNER_FEE} membership as paid (or waived)?` : `Remove ${o.name ?? 'this partner'}'s paid membership? They'll be asked to pay again.`)) return
+    setSaving(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/update-owner', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ owner_id: o.id, partner_paid: paid }),
+    })
+    const result = await res.json()
+    setSaving(false)
+    if (!res.ok) { alert(result.error || 'Could not update'); return }
+    await loadStaff(businessId)
+  }
+
   const card: React.CSSProperties = { background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 20 }
   const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }
   const formGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }
@@ -412,12 +468,31 @@ export default function PartnersPage() {
 
       <div>
 
+        {/* Membership paywall — investors pay once before the portal unlocks */}
+        {locked && (
+          <div style={{ ...card, maxWidth: 560, padding: 28 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: ACCENT_SOFT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Unlock your Partners portal</div>
+            <div style={{ fontSize: 13, color: '#667085', lineHeight: 1.6, marginBottom: 16 }}>
+              A one-time membership of <b style={{ color: TEXT }}>{PARTNER_FEE}</b> gives you full access to your investment dashboard, payouts, the Deal Analyser and the partners broadcast for new opportunities.
+            </div>
+            {paidReturn ? (
+              <div style={{ fontSize: 13, color: '#067647', background: '#ECFDF3', border: '1px solid #ABEFC6', borderRadius: 8, padding: 12 }}>Payment received — unlocking your portal…</div>
+            ) : (
+              <button onClick={payPartnerFee} disabled={paying} style={{ ...btnGold, opacity: paying ? 0.6 : 1 }}>{paying ? 'Opening payment…' : `Pay ${PARTNER_FEE} one-time`}</button>
+            )}
+            <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 12 }}>Secure card payment. Your Owner Portal stays available either way.</div>
+          </div>
+        )}
+
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto' }}>
+        {!locked && <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto' }}>
           {isStaff
             ? STAFF_TABS.map(t => <button key={t} onClick={() => setStaffTab(t)} style={chip(staffTab === t)}>{t}</button>)
             : INVESTOR_TABS.map(t => <button key={t} onClick={() => setInvestorTab(t)} style={chip(investorTab === t)}>{t}</button>)}
-        </div>
+        </div>}
 
         {/* ======================= STAFF ======================= */}
 
@@ -675,6 +750,11 @@ export default function PartnersPage() {
                           <div style={{ fontWeight: 700 }}>{o.name ?? 'Unnamed owner'}</div>
                           <div style={{ fontSize: 12, color: '#667085' }}>{o.email ?? '—'} · {n} propert{n === 1 ? 'y' : 'ies'} · {o.user_id ? 'Can sign in' : 'No login yet'}</div>
                           <div style={{ fontSize: 12, color: '#667085' }}>Access: <b style={{ color: '#344054' }}>{accessSummary(o)}</b></div>
+                          <div style={{ fontSize: 12, color: '#667085', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                            Membership ({PARTNER_FEE}): {o.partner_paid_at
+                              ? <><Pill status="paid" label={`Paid ${new Date(o.partner_paid_at).toLocaleDateString('en-GB')}`} /><button onClick={() => setPartnerPaid(o, false)} style={{ background: 'none', border: 'none', color: '#98A2B3', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Undo</button></>
+                              : <><Pill status="pending" label="Unpaid" /><button onClick={() => setPartnerPaid(o, true)} style={{ background: 'none', border: 'none', color: ACCENT, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>Mark paid / waive</button></>}
+                          </div>
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button onClick={() => openAccess(o)} style={btnGhost}>{accessOwnerId === o.id ? 'Close' : 'Access'}</button>
@@ -729,11 +809,17 @@ export default function PartnersPage() {
 
         {/* ======================= INVESTOR ======================= */}
 
-        {!isStaff && investorTab === 'Broadcast' && (
+        {inv && investorTab === 'Deal Analyser' && (
+          <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, overflow: 'hidden' }}>
+            <InvestPage />
+          </div>
+        )}
+
+        {inv && investorTab === 'Broadcast' && (
           <PartnerBroadcast businessId={businessId} userId={userId} authorName={authorName} authorRole="investor" isStaff={false} />
         )}
 
-        {!isStaff && investorTab === 'Dashboard' && (
+        {inv && investorTab === 'Dashboard' && (
           <>
             <div style={{ ...grid, marginBottom: 16 }}>
               <Stat label="Capital Invested" value={gbp(invested)} />
@@ -764,7 +850,7 @@ export default function PartnersPage() {
           </>
         )}
 
-        {!isStaff && investorTab === 'Investments' && (
+        {inv && investorTab === 'Investments' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {properties.length === 0 && <div style={{ ...card, fontSize: 13, color: '#98A2B3' }}>No properties linked to your account yet.</div>}
             {properties.map(p => {
@@ -799,7 +885,7 @@ export default function PartnersPage() {
           </div>
         )}
 
-        {!isStaff && investorTab === 'Payouts' && (
+        {inv && investorTab === 'Payouts' && (
           <div style={card}>
             <div style={{ ...grid, marginBottom: 16 }}>
               <Stat label="Paid to you" value={gbp(returned)} />

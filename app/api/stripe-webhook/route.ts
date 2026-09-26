@@ -67,6 +67,19 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true })
       }
 
+      // Investor partner paying the one-time Partners portal fee.
+      // Like tenant payments, this never touches the subscriptions table.
+      if (session.metadata?.type === 'partner_fee') {
+        const ownerId = session.metadata.owner_id
+        if (ownerId) {
+          await supabase.from('owner_profiles').update({
+            partner_paid_at: new Date().toISOString(),
+            partner_payment_ref: (session.payment_intent as string) ?? session.id,
+          }).eq('id', ownerId)
+        }
+        return NextResponse.json({ received: true })
+      }
+
       // Same as above, for Estate Agency tenants paying via
       // estate_rent_schedules instead of pm_rent_payments.
       if (session.metadata?.type === 'estate_tenant_rent_payment') {

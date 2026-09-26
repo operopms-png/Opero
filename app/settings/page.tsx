@@ -13,7 +13,7 @@ const NAV = [
   ]}
 ]
 
-const ROLES = ['Admin','Vacation Rental Team','Property Management Team','Estate Agency Team','Development Team','Cleaning Team','Maintenance Team','Viewer']
+const ROLES = ['Admin','Vacation Rental Team','Property Management Team','Estate Agency Team','Development Team','Cleaning Team','Maintenance Team','Viewer','Partner']
 
 function SettingsInner() {
   const searchParams = useSearchParams()
@@ -362,6 +362,26 @@ function SettingsInner() {
                       {mod.l}
                     </label>
                   ))}
+                  {(()=>{
+                    // Partners — a Staff Centre tab, offered as its own chip so it can be
+                    // switched on/off directly. On its own it gives Staff Centre → Partners only.
+                    const hasSc = customModules.includes('sc')
+                    const hasExplicit = customModules.some(k=>k.startsWith('sc:'))
+                    const checked = hasSc && (hasExplicit ? customModules.includes('sc:partners') : DEFAULT_SC_TABS.includes('partners'))
+                    return (
+                      <label style={{display:'flex',alignItems:'center',gap:6,padding:'6px 12px',fontSize:12,cursor:'pointer',border:'1px solid '+(checked?ACCENT:'#E4E7EC'),borderRadius:20,background:checked?ACCENT+'10':'#fff',color:checked?ACCENT:'#344054'}}>
+                        <input type="checkbox" checked={checked} onChange={()=>setCustomModules(prev=>{
+                          const prevSc = prev.includes('sc')
+                          const prevExplicit = prev.some(k=>k.startsWith('sc:'))
+                          const baseline = prevExplicit ? prev.filter(k=>k.startsWith('sc:')).map(k=>k.slice(3)) : (prevSc ? DEFAULT_SC_TABS : [])
+                          const rest = prev.filter(k=>k!=='sc'&&!k.startsWith('sc:'))
+                          const nextTabs = checked ? baseline.filter(k=>k!=='partners') : Array.from(new Set([...baseline,'partners']))
+                          return nextTabs.length ? [...rest,'sc',...nextTabs.map(k=>'sc:'+k)] : rest
+                        })} style={{display:'none'}} />
+                        Partners
+                      </label>
+                    )
+                  })()}
                 </div>
                 {customModules.includes('sc')&&(
                   <div style={{marginTop:10,padding:12,background:'#F9FAFB',border:'1px solid #E4E7EC',borderRadius:8}}>
