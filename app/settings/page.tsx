@@ -74,6 +74,12 @@ function SettingsInner() {
         setPlan((sub as any).plan??'Professional')
         setConnectAccountId((sub as any).stripe_connect_account_id??null)
         setConnectOnboarded(!!(sub as any).stripe_connect_onboarded)
+        // Started Stripe setup but not marked done yet: ask Stripe directly
+        if ((sub as any).stripe_connect_account_id && !(sub as any).stripe_connect_onboarded) {
+          const { data: { session } } = await supabase.auth.getSession()
+          fetch('/api/stripe-connect/status', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } })
+            .then(r => r.json()).then(s => { if (s?.onboarded) setConnectOnboarded(true) }).catch(() => {})
+        }
       }
       const {data:msgs} = await supabase.from('system_messages').select('*').eq('published',true).order('created_at',{ascending:false})
       setMessages(msgs??[])

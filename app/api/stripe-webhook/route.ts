@@ -39,12 +39,20 @@ export async function POST(request: NextRequest) {
   const body = await request.text()
   const sig = request.headers.get('stripe-signature')!
 
+  // Stripe sends connected-account events (account.updated) from a separate
+  // webhook endpoint with its own signing secret: accept either secret.
   let event
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 })
+    const connectSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET
+    try {
+      if (!connectSecret) throw err
+      event = stripe.webhooks.constructEvent(body, sig, connectSecret)
+    } catch {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 })
+    }
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -219,10 +227,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Fires when a connected account's details change during/after Stripe
-  // Connect onboarding. Requires "Listen for events on Connected accounts"
-  // to be enabled on this webhook endpoint in the Stripe dashboard — no
-  // second endpoint/secret needed. charges_enabled flipping to true is
-  // what actually means onboarding is complete and payouts can flow.
+  // Connect onboarding. Arrives from a "Connected accounts" webhook endpoint
+  // (its secret in STRIPE_CONNECT_WEBHOOK_SECRET). Optional: Settings also
+  // checks Stripe directly via /api/stripe-connect/status. charges_enabled
+  // flipping to true is what means onboarding is complete.
   if (event.type === 'account.updated') {
     const account = event.data.object as any
     await supabase.from('subscriptions').update({
