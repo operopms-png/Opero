@@ -8,9 +8,11 @@ import { supabase } from '../lib/supabase'
 // and pictures; posts can be flagged as an investment opportunity.
 // Live via Supabase Realtime, with a light poll as a fallback.
 
-const GOLD = '#C9A84C'
-const INK = '#1A1A1A'
-const CREAM = '#FBF4E6'
+// Same palette as the Staff Centre dashboard
+const ACCENT = '#3B4AFF'
+const ACCENT_SOFT = '#EEF0FF'
+const TEXT = '#101828'
+const FEED_BG = '#F7F8FA'
 
 type Props = {
   businessId: string | null
@@ -137,13 +139,13 @@ export default function PartnerBroadcast({ businessId, userId, authorName, autho
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {([['all', 'All'], ['opportunities', 'Opportunities']] as const).map(([k, v]) => (
-            <button key={k} onClick={() => setFilter(k)} style={{ padding: '6px 12px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${filter === k ? INK : '#D0D5DD'}`, background: filter === k ? INK : '#fff', color: filter === k ? '#fff' : '#344054' }}>{v}</button>
+            <button key={k} onClick={() => setFilter(k)} style={{ padding: '6px 12px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${filter === k ? '#D7E0FF' : '#D0D5DD'}`, background: filter === k ? '#D7E0FF' : '#fff', color: filter === k ? ACCENT : '#344054' }}>{v}</button>
           ))}
         </div>
       </div>
 
       {/* Feed */}
-      <div ref={feedRef} style={{ flex: 1, overflowY: 'auto', padding: 16, background: CREAM, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div ref={feedRef} style={{ flex: 1, overflowY: 'auto', padding: 16, background: FEED_BG, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {missing && <div style={{ fontSize: 13, color: '#92400E', background: '#FFFAEB', border: '1px solid #FDB022', borderRadius: 8, padding: 12 }}>The broadcast table isn't in the database yet. Run <b>migrations/add-partner-broadcast.sql</b> in the Supabase SQL Editor.</div>}
         {loaded && !missing && shown.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3', textAlign: 'center', marginTop: 40 }}>{filter === 'all' ? 'No posts yet. Start the conversation.' : 'No opportunities posted yet.'}</div>}
         {shown.map(p => {
@@ -153,15 +155,15 @@ export default function PartnerBroadcast({ businessId, userId, authorName, autho
             <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#667085', marginBottom: 3 }}>
                 <span style={{ fontWeight: 600, color: '#344054' }}>{mine ? 'You' : (p.author_name || 'Member')}</span>
-                <span style={{ padding: '1px 7px', borderRadius: 10, fontWeight: 700, background: p.author_role === 'staff' ? INK : '#fff', color: p.author_role === 'staff' ? GOLD : '#667085', border: p.author_role === 'staff' ? 'none' : '1px solid #E4E7EC' }}>{p.author_role === 'staff' ? 'Team' : 'Partner'}</span>
+                <span style={{ padding: '1px 7px', borderRadius: 10, fontWeight: 700, background: p.author_role === 'staff' ? ACCENT_SOFT : '#fff', color: p.author_role === 'staff' ? ACCENT : '#667085', border: p.author_role === 'staff' ? 'none' : '1px solid #E4E7EC' }}>{p.author_role === 'staff' ? 'Team' : 'Partner'}</span>
                 <span>{timeLabel(p.created_at)}</span>
               </div>
               <div style={{
                 maxWidth: 'min(85%, 520px)', borderRadius: 14, padding: 10,
-                background: mine ? INK : '#fff', color: mine ? '#fff' : '#101828',
-                border: p.is_opportunity ? `2px solid ${GOLD}` : (mine ? 'none' : '1px solid #E4E7EC'),
+                background: mine ? ACCENT : '#fff', color: mine ? '#fff' : TEXT,
+                border: p.is_opportunity ? '2px solid #F59E0B' : (mine ? 'none' : '1px solid #E4E7EC'),
               }}>
-                {p.is_opportunity && <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Investment opportunity</div>}
+                {p.is_opportunity && <div style={{ fontSize: 11, fontWeight: 700, color: mine ? '#FEF3C7' : '#B54708', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Investment opportunity</div>}
                 {(p.image_urls ?? []).length > 0 && (
                   <div style={{ display: 'grid', gridTemplateColumns: (p.image_urls.length === 1) ? '1fr' : '1fr 1fr', gap: 4, marginBottom: p.body ? 8 : 0 }}>
                     {p.image_urls.map((u: string) => (
@@ -184,7 +186,7 @@ export default function PartnerBroadcast({ businessId, userId, authorName, autho
             {images.map(u => (
               <div key={u} style={{ position: 'relative' }}>
                 <img src={u} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
-                <button onClick={() => setImages(prev => prev.filter(x => x !== u))} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: 'none', background: INK, color: '#fff', fontSize: 12, cursor: 'pointer', lineHeight: '20px', padding: 0 }}>×</button>
+                <button onClick={() => setImages(prev => prev.filter(x => x !== u))} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: 'none', background: TEXT, color: '#fff', fontSize: 12, cursor: 'pointer', lineHeight: '20px', padding: 0 }}>×</button>
               </div>
             ))}
           </div>
@@ -205,7 +207,7 @@ export default function PartnerBroadcast({ businessId, userId, authorName, autho
             style={{ flex: 1, resize: 'none', padding: '10px 12px', border: '1px solid #D0D5DD', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', minHeight: 40, maxHeight: 140, boxSizing: 'border-box' }}
           />
           <button onClick={send} disabled={sending || uploading || (!body.trim() && images.length === 0)}
-            style={{ flexShrink: 0, height: 40, padding: '0 16px', borderRadius: 10, border: 'none', background: GOLD, color: INK, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', opacity: sending || (!body.trim() && images.length === 0) ? 0.6 : 1 }}>
+            style={{ flexShrink: 0, height: 40, padding: '0 16px', borderRadius: 10, border: 'none', background: ACCENT, color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', opacity: sending || (!body.trim() && images.length === 0) ? 0.6 : 1 }}>
             {sending ? '…' : 'Send'}
           </button>
         </div>

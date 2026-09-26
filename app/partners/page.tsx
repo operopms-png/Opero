@@ -19,9 +19,11 @@ import { STAFF_CENTRE_TABS, PARTNER_GRANTABLE_MODULES } from '../../lib/useRole'
 // capital returned = paid owner_statements, invested = owner_profiles.invested.
 
 const MGMT_FEE = 0.40
-const GOLD = '#C9A84C'
-const INK = '#1A1A1A'
-const CREAM = '#FBF4E6'
+// Matches the Staff Centre dashboard: Inter, #F7F8FA page, white #E4E7EC cards, #3B4AFF accent
+const ACCENT = '#3B4AFF'
+const ACCENT_SOFT = '#EEF0FF'
+const TEXT = '#101828'
+const PAGE_BG = '#F7F8FA'
 const TOTAL_STAGES = 10
 
 type StaffTab = 'Dashboard' | 'Agent Programme' | 'Investors' | 'Broadcast'
@@ -43,11 +45,12 @@ const gbp = (n: number) => `£${Math.round(n).toLocaleString('en-GB')}`
 const normPhone = (p?: string | null) => (p ?? '').replace(/\D/g, '')
 
 function Stat({ label, value, sub, dark }: { label: string; value: string; sub?: string; dark?: boolean }) {
+  // Same tile as the Staff Centre dashboard; `dark` marks the key figure in the accent colour
   return (
-    <div style={{ background: dark ? INK : '#fff', border: `1px solid ${dark ? INK : '#E4E7EC'}`, borderRadius: 12, padding: '16px 18px' }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: dark ? GOLD : '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: dark ? '#fff' : '#101828' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 4 }}>{sub}</div>}
+    <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 20 }}>
+      <div style={{ fontSize: 12, fontWeight: 500, color: '#667085', marginBottom: 10 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: dark ? ACCENT : TEXT }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>{sub}</div>}
     </div>
   )
 }
@@ -68,7 +71,7 @@ function Pill({ status, label }: { status: string; label?: string }) {
 function Bar({ pct }: { pct: number }) {
   return (
     <div style={{ height: 8, background: '#F2F4F7', borderRadius: 4, overflow: 'hidden' }}>
-      <div style={{ height: 8, width: `${Math.max(0, Math.min(100, pct))}%`, background: GOLD, borderRadius: 4 }} />
+      <div style={{ height: 8, width: `${Math.max(0, Math.min(100, pct))}%`, background: ACCENT, borderRadius: 4 }} />
     </div>
   )
 }
@@ -191,11 +194,6 @@ export default function PartnersPage() {
     setAgents(a.data ?? [])
     setReferrals(r.data ?? [])
     setBizProperties(p.data ?? [])
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut()
-    window.location.href = '/login'
   }
 
   // ---------- Agent Programme actions ----------
@@ -390,33 +388,29 @@ export default function PartnersPage() {
   const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }
   const formGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }
   const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }
-  const btnGold: React.CSSProperties = { background: GOLD, color: INK, border: 'none', borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }
+  const btnGold: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }
   const btnGhost: React.CSSProperties = { background: '#fff', color: '#344054', border: '1px solid #D0D5DD', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }
-  const chip = (on: boolean): React.CSSProperties => ({ padding: '9px 16px', borderRadius: 20, border: `1px solid ${on ? INK : '#E4E7EC'}`, background: on ? INK : '#fff', color: on ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' })
+  const chip = (on: boolean): React.CSSProperties => ({ padding: '8px 14px', borderRadius: 8, border: `1px solid ${on ? '#D7E0FF' : '#E4E7EC'}`, background: on ? '#D7E0FF' : '#fff', color: on ? ACCENT : '#344054', fontSize: 13, fontWeight: on ? 600 : 500, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' })
 
   if (loading) {
-    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', fontFamily: "'Poppins', 'Inter', sans-serif" }}>Loading…</div>
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', fontFamily: "'Inter', sans-serif" }}>Loading…</div>
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: CREAM, fontFamily: "'Poppins', 'Inter', -apple-system, sans-serif", color: '#101828' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');`}</style>
+    <div style={{ minHeight: '100vh', background: PAGE_BG, fontFamily: "'Inter', sans-serif", color: TEXT, padding: '24px 28px' }}>
 
-      {/* Header */}
-      <div style={{ background: INK, padding: '0 20px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          <div>
-            <div style={{ color: GOLD, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Partners</div>
-            <div style={{ color: '#fff', fontSize: 17, fontWeight: 700 }}>{isStaff ? staffTab : `Welcome, ${profile?.name?.split(' ')[0] ?? 'Partner'}`}</div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <a href="/owner-portal" style={btnGold}>Owner Portal →</a>
-            <button onClick={signOut} style={{ background: 'transparent', color: CREAM, border: '1px solid #3A3A3A', borderRadius: 8, padding: '9px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>
+      {/* Header — same as the Staff Centre dashboard */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+        <div>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: '0 0 4px' }}>{isStaff ? 'Partners' : `Welcome, ${profile?.name?.split(' ')[0] ?? 'Partner'}`}</h1>
+          <div style={{ fontSize: 13, color: '#667085' }}>
+            {isStaff ? 'Investors, the Agent Programme and the partners broadcast — all in one place.' : 'Your investment, payouts and partner updates.'}
           </div>
         </div>
+        <a href="/owner-portal" style={btnGold}>Owner Portal →</a>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px 48px' }}>
+      <div>
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto' }}>
@@ -429,14 +423,14 @@ export default function PartnersPage() {
 
         {isStaff && staffTab === 'Dashboard' && (
           <>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Investors</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 12 }}>Investors</div>
             <div style={{ ...grid, marginBottom: 24 }}>
               <Stat label="Investors" value={String(allOwners.length)} />
               <Stat label="Capital In" value={gbp(staffInvested)} />
               <Stat label="Capital Returned" value={gbp(staffReturned)} />
               <Stat label="Outstanding" value={gbp(Math.max(0, staffInvested - staffReturned))} dark />
             </div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Agent Programme</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 12 }}>Agent Programme</div>
             <div style={{ ...grid, marginBottom: 24 }}>
               <Stat label="Active Agents" value={String(activeAgents)} />
               <Stat label="Open Referrals" value={String(openReferrals)} sub={`${inScreening} in screening`} />
@@ -489,7 +483,7 @@ export default function PartnersPage() {
             {apView === 'Agents' && (
               <>
                 {showAgentForm && (
-                  <div style={{ ...card, marginBottom: 16, borderColor: GOLD }}>
+                  <div style={{ ...card, marginBottom: 16, borderColor: ACCENT }}>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>{editingAgentId ? 'Edit agent' : 'New agent'}</div>
                     <div style={{ ...formGrid, marginBottom: 12 }}>
                       <Field label="Name *"><input style={input} value={agentForm.name} onChange={e => setAgentForm({ ...agentForm, name: e.target.value })} /></Field>
@@ -532,7 +526,7 @@ export default function PartnersPage() {
                       <div key={a.id} style={card}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                           <div>
-                            <div style={{ fontWeight: 700 }}>{a.name} <span style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginLeft: 6 }}>{a.code}</span></div>
+                            <div style={{ fontWeight: 700 }}>{a.name} <span style={{ fontSize: 12, color: ACCENT, fontWeight: 700, marginLeft: 6 }}>{a.code}</span></div>
                             <div style={{ fontSize: 12, color: '#667085' }}>{[a.email, a.phone, a.country].filter(Boolean).join(' · ') || '—'}</div>
                           </div>
                           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -560,7 +554,7 @@ export default function PartnersPage() {
               <>
                 {agents.length === 0 && !agentsMissing && <div style={{ ...card, marginBottom: 12, fontSize: 13, color: '#667085' }}>Add an agent first (Agents tab), then log their guests and tenants here.</div>}
                 {showRefForm && (
-                  <div style={{ ...card, marginBottom: 16, borderColor: GOLD }}>
+                  <div style={{ ...card, marginBottom: 16, borderColor: ACCENT }}>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Log a guest or tenant</div>
                     <div style={{ ...formGrid, marginBottom: 12 }}>
                       <Field label="Agent *">
@@ -601,7 +595,7 @@ export default function PartnersPage() {
 
                 <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
                   {([['all', 'All'], ['short_term', 'Short-term'], ['long_term', 'Long-term']] as const).map(([k, v]) => (
-                    <button key={k} onClick={() => setRefFilter(k)} style={{ ...btnGhost, background: refFilter === k ? CREAM : '#fff', borderColor: refFilter === k ? GOLD : '#D0D5DD' }}>{v}</button>
+                    <button key={k} onClick={() => setRefFilter(k)} style={{ ...btnGhost, background: refFilter === k ? ACCENT_SOFT : '#fff', borderColor: refFilter === k ? ACCENT : '#D0D5DD', color: refFilter === k ? ACCENT : '#344054' }}>{v}</button>
                   ))}
                 </div>
 
@@ -688,7 +682,7 @@ export default function PartnersPage() {
                         </div>
                       </div>
                       {accessOwnerId === o.id && (
-                        <div style={{ background: CREAM, borderRadius: 10, padding: 14, marginBottom: 12 }}>
+                        <div style={{ background: '#F9FAFB', border: '1px solid #EAECF0', borderRadius: 10, padding: 14, marginBottom: 12 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>What can {o.name?.split(' ')[0] ?? 'this partner'} see?</div>
                           <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Partners is always on. Tick anything else they should have.</div>
                           <div style={{ fontSize: 11, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Modules</div>
