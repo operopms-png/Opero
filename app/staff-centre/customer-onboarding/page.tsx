@@ -6,6 +6,22 @@ const ACCENT = '#3B4AFF'
 
 type ChecklistItem = { key: string; label: string; auto: boolean }
 
+// Same 10 steps the owner sees in their portal (Owner Portal -> Property Onboarding).
+// Progress is stored as a number on the property (properties.staging_stage = steps done, in order).
+const PROPERTY_STEPS = [
+  'Property virtually viewed and confirmed',
+  'Management agreement signed',
+  'Fees, rent and deposit sent to Sangsters Group',
+  'Offer accepted or rejected by landlord',
+  'Contract viewed and signed',
+  'Rent and deposit sent to broker',
+  'Furnishing the property',
+  'Cleaning the property',
+  'Pictures of the property',
+  'Going live on all travel booking platforms',
+]
+const PROPERTY_ITEMS: ChecklistItem[] = PROPERTY_STEPS.map((label, i) => ({ key: 'step_' + i, label, auto: false }))
+
 type ModuleDef = {
   key: string
   label: string
@@ -23,15 +39,19 @@ const MODULES: ModuleDef[] = [
     key: 'str', label: 'Vacation Rentals', color: '#3B4AFF',
     segments: [
       {
-        key: 'str_owner', label: 'Owners', table: 'owner_profiles',
+        key: 'str_owner', label: 'Client onboarding (owners)', table: 'owner_profiles',
         items: [
           { key: 'intro_call', label: 'Introduction call done', auto: false },
           { key: 'agreement_signed', label: 'Management agreement signed', auto: false },
           { key: 'id_uploaded', label: 'ID document uploaded', auto: false },
           { key: 'compliance_uploaded', label: 'Compliance / insurance documents uploaded', auto: true },
           { key: 'first_payout', label: 'First payout sent', auto: false },
-          { key: 'live_on_platforms', label: 'Property live on booking platforms', auto: false },
+          { key: 'live_on_platforms', label: 'Property live on booking platforms', auto: true },
         ],
+      },
+      {
+        key: 'str_property', label: 'Property onboarding', table: 'properties',
+        items: PROPERTY_ITEMS,
       },
     ],
   },
@@ -135,7 +155,31 @@ export default function CustomerOnboardingPage() {
     const currentMod = moduleInfo(moduleKey)
     const currentSeg = currentMod.segments.find(s => s.key === segmentKey) ?? currentMod.segments[0]
 
-    const { data: rows } = await supabase.from(currentSeg.table).select('*').eq('user_id', uid).order('name', { ascending: true })
+    // Property onboarding: one card per property, progress lives on the property itself
+    if (currentSeg.key === 'str_property') {
+      const [{ data: props }, { data: owners }] = await Promise.all([
+        supabase.from('properties').select('id, name, city, location, staging_stage').eq('user_id', uid).order('name', { ascending: true }),
+        supabase.from('owner_profiles').select('name, property_ids').eq('business_id', uid),
+      ])
+      const ownerNames = (pid: string) => (owners ?? []).filter((o: any) => (o.property_ids ?? []).includes(pid)).map((o: any) => String(o.name ?? '').trim()).filter(Boolean)
+      setCustomers((props ?? []).map((p: any) => {
+        const names = ownerNames(p.id)
+        const where = p.city || p.location
+        return {
+          ...p,
+          name: String(p.name ?? '').trim(),
+          email: [names.length ? 'Owner: ' + names.join(', ') : 'No owner linked', where].filter(Boolean).join(' · '),
+        }
+      }))
+      setAutoDone({})
+      setOverrides({})
+      setLoading(false)
+      return
+    }
+
+    // Owners belong to the business through business_id (their own user_id is their login)
+    const ownerCol = currentSeg.table === 'owner_profiles' ? 'business_id' : 'user_id'
+    const { data: rows } = await supabase.from(currentSeg.table).select('*').eq(ownerCol, uid).order('name', { ascending: true })
     const custs = rows ?? []
     setCustomers(custs)
 
@@ -151,9 +195,16 @@ export default function CustomerOnboardingPage() {
           const { data: comp } = await supabase.from('str_compliance').select('property_id').in('property_id', allPropertyIds)
           compliantPropertyIds = new Set((comp ?? []).map((r: any) => r.property_id))
         }
+        let liveIds = new Set<string>()
+        if (allPropertyIds.length) {
+          const { data: props } = await supabase.from('properties').select('id, staging_stage').in('id', allPropertyIds)
+          liveIds = new Set((props ?? []).filter((p: any) => (p.staging_stage ?? 0) >= PROPERTY_STEPS.length).map((p: any) => p.id))
+        }
         custs.forEach((c: any) => {
           const owned: string[] = c.property_ids ?? []
           auto[c.id].compliance_uploaded = owned.some(pid => compliantPropertyIds.has(pid))
+          // Ticks itself once a property finishes Property onboarding (last step: going live)
+          auto[c.id].live_on_platforms = owned.some(pid => liveIds.has(pid))
         })
       }
 
@@ -216,11 +267,30 @@ export default function CustomerOnboardingPage() {
   }
 
   function isDone(customerId: string, item: ChecklistItem): boolean {
+    if (seg.key === 'str_property') {
+      const p = customers.find(c => c.id === customerId)
+      return Number(item.key.slice(5)) < (p?.staging_stage ?? 0)
+    }
     if (item.auto) return !!autoDone[customerId]?.[item.key]
     return !!overrides[customerId]?.[item.key]
   }
 
+  // Property steps go in order: ticking step 5 completes 1–5; unticking step 3 leaves 1–2 done.
+  // Same rule as the owner portal, so both always show the same progress.
+  async function toggleStep(propertyId: string, item: ChecklistItem) {
+    const i = Number(item.key.slice(5))
+    const p = customers.find(c => c.id === propertyId)
+    const prev = p?.staging_stage ?? 0
+    const next = i < prev ? i : i + 1
+    setSaving(propertyId + item.key)
+    setCustomers(cs => cs.map(c => c.id === propertyId ? { ...c, staging_stage: next } : c))
+    const { error } = await supabase.from('properties').update({ staging_stage: next }).eq('id', propertyId)
+    if (error) setCustomers(cs => cs.map(c => c.id === propertyId ? { ...c, staging_stage: prev } : c))
+    setSaving(null)
+  }
+
   async function toggleManual(customerId: string, item: ChecklistItem) {
+    if (seg.key === 'str_property') return toggleStep(customerId, item)
     if (item.auto) return
     const current = !!overrides[customerId]?.[item.key]
     const next = !current
@@ -279,7 +349,7 @@ export default function CustomerOnboardingPage() {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 13, color: '#667085' }}>{rows.length} {rows.length === 1 ? 'client' : 'clients'}</div>
+          <div style={{ fontSize: 13, color: '#667085' }}>{rows.length} {seg.key === 'str_property' ? (rows.length === 1 ? 'property' : 'properties') : (rows.length === 1 ? 'client' : 'clients')}</div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#344054', cursor: 'pointer' }}>
             <input type="checkbox" checked={hideComplete} onChange={e => setHideComplete(e.target.checked)} />
             Hide fully onboarded
@@ -288,8 +358,44 @@ export default function CustomerOnboardingPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {rows.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 80, color: '#98A2B3', fontSize: 14, background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC' }}>No clients here yet</div>
-          ) : rows.map(({ customer: c, doneCount, total, complete }) => (
+            <div style={{ textAlign: 'center', padding: 80, color: '#98A2B3', fontSize: 14, background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC' }}>{seg.key === 'str_property' ? 'No properties yet' : 'No clients here yet'}</div>
+          ) : seg.key === 'str_property' ? rows.map(({ customer: c }) => {
+            // Same layout as the owner portal's Property Onboarding page
+            const stage = Math.min(c.staging_stage ?? 0, PROPERTY_STEPS.length)
+            return (
+              <div key={c.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #EAECF0', padding: '22px 24px', marginBottom: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{c.name}</div>
+                    <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 2 }}>{c.email}</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#667085', flexShrink: 0 }}>{stage} of {PROPERTY_STEPS.length} complete</div>
+                </div>
+                <div style={{ height: 6, background: '#F2F4F7', borderRadius: 3, margin: '10px 0 16px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${(stage / PROPERTY_STEPS.length) * 100}%`, background: '#5B7CFA', transition: 'width .2s' }} />
+                </div>
+                {PROPERTY_ITEMS.map((item, i) => {
+                  const done = i < stage
+                  const current = i === stage
+                  const busy = saving === c.id + item.key
+                  return (
+                    <div key={item.key} onClick={() => toggleStep(c.id, item)} title="Click to tick this step (and every step before it). Click a ticked step to untick it." style={{ display: 'flex', gap: 12, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{
+                          width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700,
+                          background: done ? '#10B981' : current ? '#EEF1FF' : '#F2F4F7',
+                          color: done ? '#fff' : current ? '#5B7CFA' : '#98A2B3',
+                          border: current ? '1px solid #5B7CFA' : 'none',
+                        }}>{done ? '✓' : i + 1}</div>
+                        {i < PROPERTY_ITEMS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 16, background: '#EAECF0' }} />}
+                      </div>
+                      <div style={{ paddingBottom: 14, paddingTop: 3, fontSize: 13, color: done || current ? '#101828' : '#667085' }}>{item.label}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          }) : rows.map(({ customer: c, doneCount, total, complete }) => (
             <div key={c.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: mod.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: mod.color, flexShrink: 0 }}>{(c.name ?? '?').charAt(0)}</div>
@@ -311,8 +417,8 @@ export default function CustomerOnboardingPage() {
                   return (
                     <div
                       key={item.key}
-                      onClick={() => !item.auto && toggleManual(c.id, item)}
-                      title={item.auto ? 'Auto-detected from a real record — cannot be ticked by hand' : 'Click to tick/untick'}
+                      onClick={() => (seg.key === 'str_property' || !item.auto) && toggleManual(c.id, item)}
+                      title={seg.key === 'str_property' ? 'Steps go in order: clicking a step ticks every step before it too. The owner sees the same progress in their portal.' : item.auto ? 'Auto-detected from a real record — cannot be ticked by hand' : 'Click to tick/untick'}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8,
                         background: done ? '#F0FDF4' : '#FAFAFB', border: '1px solid ' + (done ? '#BBF7D0' : '#F2F4F7'),
@@ -322,7 +428,7 @@ export default function CustomerOnboardingPage() {
                       <span style={{
                         width: 18, height: 18, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: done ? '#10B981' : '#fff', border: '1.5px solid ' + (done ? '#10B981' : '#D0D5DD'), fontSize: 11, color: '#fff', fontWeight: 700,
-                      }}>{done ? '✓' : ''}</span>
+                      }}>{done ? '✓' : seg.key === 'str_property' ? <span style={{ color: '#98A2B3', fontSize: 10 }}>{Number(item.key.slice(5)) + 1}</span> : ''}</span>
                       <span style={{ fontSize: 12.5, color: done ? '#065F46' : '#344054', flex: 1 }}>{item.label}</span>
                       {item.auto && <span style={{ fontSize: 9, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Auto</span>}
                     </div>
