@@ -173,6 +173,9 @@ export default function PartnersPage() {
         setFinance(f.data ?? [])
         // An investor's broadcast is the business that created them (fallback: owner of their linked properties)
         setBusinessId(owner.business_id ?? (p.data ?? [])[0]?.user_id ?? null)
+        // Deep link from notifications, e.g. /staff-centre/partners?tab=Broadcast
+        const wantInvTab = new URLSearchParams(window.location.search).get('tab')
+        if (wantInvTab && (INVESTOR_TABS as string[]).includes(wantInvTab)) setInvestorTab(wantInvTab as InvestorTab)
         setLoading(false)
         return
       }
@@ -192,6 +195,12 @@ export default function PartnersPage() {
     }
     init()
   }, [])
+
+  // Partner opens the group chat: clear their "new post" alerts (bell + red count on Partners)
+  useEffect(() => {
+    if (isStaff || !userId || investorTab !== 'Broadcast') return
+    supabase.from('notifications').update({ read: true }).eq('user_id', userId).in('type', ['broadcast', 'opportunity']).eq('read', false).then(() => {})
+  }, [isStaff, userId, investorTab])
 
   // Back from Stripe checkout: wait for the webhook to mark the membership paid
   useEffect(() => {
