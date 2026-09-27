@@ -134,6 +134,14 @@ export default function CustomerOnboardingPage() {
   const [overrides, setOverrides] = useState<Record<string, Record<string, boolean>>>({})
   const [hideComplete, setHideComplete] = useState(false)
   const [saving, setSaving] = useState<string | null>(null)
+  // Vacation Rentals: clients (owners) and the properties they're linked to
+  const [vrProps, setVrProps] = useState<{ id: string; name: string }[]>([])
+  const [vrOwners, setVrOwners] = useState<{ id: string; name: string; property_ids: string[] }[]>([])
+  const [showAdd, setShowAdd] = useState(false)
+  const [addForm, setAddForm] = useState({ first_name: '', last_name: '', email: '', phone: '', password: '', property_ids: [] as string[] })
+  const [addError, setAddError] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [linkError, setLinkError] = useState('')
 
   const mod = moduleInfo(moduleKey)
   const seg = mod.segments.find(s => s.key === segmentKey) ?? mod.segments[0]
@@ -149,11 +157,20 @@ export default function CustomerOnboardingPage() {
     setAccountId(uid)
   }
 
-  async function loadSegment() {
-    setLoading(true)
+  async function loadSegment(quiet = false) {
+    if (!quiet) setLoading(true)
     const uid = accountId!
     const currentMod = moduleInfo(moduleKey)
     const currentSeg = currentMod.segments.find(s => s.key === segmentKey) ?? currentMod.segments[0]
+
+    if (currentMod.key === 'str') {
+      const [{ data: ps }, { data: os }] = await Promise.all([
+        supabase.from('properties').select('id, name').eq('user_id', uid).order('name', { ascending: true }),
+        supabase.from('owner_profiles').select('id, name, property_ids').eq('business_id', uid).order('name', { ascending: true }),
+      ])
+      setVrProps((ps ?? []).map((p: any) => ({ id: p.id, name: String(p.name ?? '').trim() || 'Untitled' })))
+      setVrOwners((os ?? []).map((o: any) => ({ id: o.id, name: String(o.name ?? '').trim() || 'Unnamed', property_ids: o.property_ids ?? [] })))
+    }
 
     // Property onboarding: one card per property, progress lives on the property itself
     if (currentSeg.key === 'str_property') {
@@ -308,6 +325,37 @@ export default function CustomerOnboardingPage() {
     setSaving(null)
   }
 
+  async function authHeaders() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
+  }
+
+  // Link a property to a client (or unlink with ownerId null). One client per property.
+  async function linkProperty(propertyId: string, ownerId: string | null) {
+    setLinkError('')
+    setSaving('link' + propertyId)
+    const res = await fetch('/api/admin/assign-property', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ property_id: propertyId, owner_id: ownerId }) })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok) setLinkError(d.error || 'Could not link the property')
+    await loadSegment(true)
+    setSaving(null)
+  }
+
+  async function addClient() {
+    setAddError('')
+    const f = addForm
+    if (!f.first_name.trim() || !f.email.trim()) { setAddError('Add at least a first name and email.'); return }
+    if (f.password.length < 6) { setAddError('The password must be at least 6 characters.'); return }
+    setAdding(true)
+    const res = await fetch('/api/create-owner', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ ...f, email: f.email.trim() }) })
+    const d = await res.json().catch(() => ({}))
+    setAdding(false)
+    if (!res.ok) { setAddError(d.error || 'Could not add the client'); return }
+    setShowAdd(false)
+    setAddForm({ first_name: '', last_name: '', email: '', phone: '', password: '', property_ids: [] })
+    await loadSegment(true)
+  }
+
   const rows = useMemo(() => {
     return customers.map(c => {
       const doneCount = seg.items.filter(item => isDone(c.id, item)).length
@@ -348,12 +396,55 @@ export default function CustomerOnboardingPage() {
           </div>
         )}
 
+        {mod.key === 'str' && showAdd && (
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#101828', marginBottom: 4 }}>Add a client</div>
+            <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 14 }}>Creates their owner portal login and links them to their property. They can sign in straight away with this email and password.</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>First name *</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} value={addForm.first_name} onChange={e => setAddForm({ ...addForm, first_name: e.target.value })} /></div>
+              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Last name</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} value={addForm.last_name} onChange={e => setAddForm({ ...addForm, last_name: e.target.value })} /></div>
+              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Email *</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} type="email" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} /></div>
+              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Phone</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} /></div>
+              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Portal password * (min 6)</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} type="text" autoComplete="off" value={addForm.password} onChange={e => setAddForm({ ...addForm, password: e.target.value })} /></div>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Property</label>
+              {vrProps.length === 0 ? <div style={{ fontSize: 12.5, color: '#98A2B3' }}>No properties yet. Add one in Vacation Rentals first.</div> : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {vrProps.map(p => {
+                    const on = addForm.property_ids.includes(p.id)
+                    const current = vrOwners.find(o => o.property_ids.includes(p.id))
+                    return (
+                      <button key={p.id} type="button" onClick={() => setAddForm({ ...addForm, property_ids: on ? addForm.property_ids.filter(x => x !== p.id) : [...addForm.property_ids, p.id] })}
+                        title={current ? `Currently linked to ${current.name}. Choosing it moves it to the new client.` : undefined}
+                        style={{ padding: '7px 12px', borderRadius: 20, border: '1px solid ' + (on ? ACCENT : '#D0D5DD'), background: on ? '#EEF1FF' : '#fff', color: on ? ACCENT : '#344054', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        {on ? '✓ ' : ''}{p.name}{current ? <span style={{ fontWeight: 400, color: '#98A2B3' }}> · {current.name}</span> : null}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            {addError && <div style={{ fontSize: 12.5, color: '#B42318', marginTop: 12 }}>{addError}</div>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              <button onClick={addClient} disabled={adding} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: adding ? 0.6 : 1 }}>{adding ? 'Adding…' : 'Add client'}</button>
+              <button onClick={() => { setShowAdd(false); setAddError('') }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', color: '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+            </div>
+          </div>
+        )}
+        {linkError && <div style={{ background: '#FEF3F2', border: '1px solid #FECDCA', color: '#B42318', borderRadius: 10, padding: '9px 14px', fontSize: 13, marginBottom: 12 }}>{linkError}</div>}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ fontSize: 13, color: '#667085' }}>{rows.length} {seg.key === 'str_property' ? (rows.length === 1 ? 'property' : 'properties') : (rows.length === 1 ? 'client' : 'clients')}</div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#344054', cursor: 'pointer' }}>
-            <input type="checkbox" checked={hideComplete} onChange={e => setHideComplete(e.target.checked)} />
-            Hide fully onboarded
-          </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#344054', cursor: 'pointer' }}>
+              <input type="checkbox" checked={hideComplete} onChange={e => setHideComplete(e.target.checked)} />
+              Hide fully onboarded
+            </label>
+            {mod.key === 'str' && !showAdd && (
+              <button onClick={() => { setShowAdd(true); setAddError('') }} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add client</button>
+            )}
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -367,7 +458,19 @@ export default function CustomerOnboardingPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{c.name}</div>
-                    <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 2 }}>{c.email}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 12, color: '#667085' }}>Client:</span>
+                      <select
+                        value={vrOwners.find(o => o.property_ids.includes(c.id))?.id ?? ''}
+                        disabled={saving === 'link' + c.id}
+                        onChange={e => linkProperty(c.id, e.target.value || null)}
+                        style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', color: '#101828', fontFamily: 'inherit', cursor: 'pointer' }}
+                      >
+                        <option value="">No client linked</option>
+                        {vrOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                      </select>
+                      {(c.city || c.location) && <span style={{ fontSize: 12, color: '#98A2B3' }}>· {c.city || c.location}</span>}
+                    </div>
                   </div>
                   <div style={{ fontSize: 12, color: '#667085', flexShrink: 0 }}>{stage} of {PROPERTY_STEPS.length} complete</div>
                 </div>
@@ -402,6 +505,29 @@ export default function CustomerOnboardingPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, fontSize: 14, color: '#101828' }}>{c.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>{c.email ?? '—'}</div>
+                  {seg.key === 'str_owner' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                      {(c.property_ids ?? []).map((pid: string) => {
+                        const p = vrProps.find(x => x.id === pid)
+                        if (!p) return null
+                        return (
+                          <span key={pid} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#3B4AFF', background: '#EEF1FF', borderRadius: 14, padding: '4px 6px 4px 10px' }}>
+                            {p.name}
+                            <button title="Unlink this property" disabled={saving === 'link' + pid} onClick={() => linkProperty(pid, null)} style={{ border: 'none', background: 'none', color: '#3B4AFF', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
+                          </span>
+                        )
+                      })}
+                      {vrProps.some(p => !(c.property_ids ?? []).includes(p.id)) && (
+                        <select value="" onChange={e => e.target.value && linkProperty(e.target.value, c.id)} style={{ fontSize: 12, padding: '4px 8px', borderRadius: 14, border: '1px dashed #98A2B3', background: '#fff', color: '#344054', fontFamily: 'inherit', cursor: 'pointer' }}>
+                          <option value="">+ Link property</option>
+                          {vrProps.filter(p => !(c.property_ids ?? []).includes(p.id)).map(p => {
+                            const cur = vrOwners.find(o => o.property_ids.includes(p.id))
+                            return <option key={p.id} value={p.id}>{p.name}{cur ? ` (moves from ${cur.name})` : ''}</option>
+                          })}
+                        </select>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 120 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: complete ? '#10B981' : '#667085', marginBottom: 4 }}>{doneCount} of {total} complete</div>
