@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import WeatherWidget from '@/components/WeatherWidget'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
+import TenantDocuments from '@/components/TenantDocuments'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { downloadCsv } from '@/lib/export-csv'
 import { useRole, getAllowedTab } from '@/lib/useRole'
@@ -255,6 +256,7 @@ function PMPageInner() {
   const [cleaning, setCleaning] = useState<any[]>([])
   const [inspections, setInspections] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
+  const [docsTenant, setDocsTenant] = useState<any>(null)
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
   const [showAddCompliance, setShowAddCompliance] = useState(false)
   const [complianceScope, setComplianceScope] = useState<'property'|'business'>('property')
@@ -976,12 +978,15 @@ function PMPageInner() {
                 {t.portal_user_id
                   ? <a href={`/pm-tenant-portal?tenant_id=${t.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#5B7CFA',background:'none',border:'1px solid #5B7CFA',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
                   : <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:'#5B7CFA',background:'none',border:'1px solid #5B7CFA',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>}
+                <button onClick={()=>setDocsTenant(t)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>📁 Documents ({documents.filter((d:any)=>d.tenant_id===t.id).length})</button>
                 <button onClick={()=>openEdit('tenant',t)} style={{fontSize:12,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_tenants',t.id,setTenants)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
             ))}
           </div>
         )}
+
+        {docsTenant&&<TenantDocuments kind="pm" tenant={docsTenant} onClose={()=>setDocsTenant(null)} onChanged={async()=>{const {data}=await supabase.from('pm_documents').select('*,pm_properties(name)').eq('user_id',docsTenant.user_id).order('created_at',{ascending:false});setDocuments(data??[])}} />}
 
         {tab==='Leases'&&(
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
@@ -1230,7 +1235,7 @@ function PMPageInner() {
                   <div style={{fontWeight:600,fontSize:14,color:'#101828'}}>{d.name}</div>
                   <div style={{fontSize:12,color:'#667085',textTransform:'capitalize',marginTop:2}}>{d.type}{d.pm_properties?` · ${d.pm_properties.name}`:''}</div>
                 </div>
-                <a href={d.url} target="_blank" rel="noreferrer" style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:13,fontWeight:500,textDecoration:'none',color:'#344054'}}>View</a>
+                <a href={d.url||d.file_url} target="_blank" rel="noreferrer" style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:13,fontWeight:500,textDecoration:'none',color:'#344054'}}>View</a>
                 <button onClick={()=>del('pm_documents',d.id,setDocuments)} style={{padding:'7px 12px',borderRadius:8,border:'1px solid #FEE2E2',background:'#FFF5F5',color:'#EF4444',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>Delete</button>
               </div>
             ))}

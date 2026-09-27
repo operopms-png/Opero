@@ -100,7 +100,7 @@ function PMTenantPortalInner() {
       supabase.from('pm_rent_payments').select('*').eq('tenant_id', t.id).order('due_date', { ascending: false }),
       supabase.from('pm_maintenance').select('*').eq('property_id', t.property_id).order('created_at', { ascending: false }),
       supabase.from('pm_tenant_messages').select('*').eq('tenant_id', t.id).order('created_at', { ascending: true }),
-      supabase.from('pm_documents').select('*').eq('tenant_id', t.id).order('created_at', { ascending: false }),
+      supabase.from('pm_documents').select('*').eq('tenant_id', t.id).eq('visible_to_tenant', true).order('created_at', { ascending: false }),
       supabase.from('system_messages').select('*').eq('published', true).order('created_at', { ascending: false }).limit(10),
     ])
     setLease(leases?.[0] ?? null)
@@ -390,10 +390,10 @@ function PMTenantPortalInner() {
             {documents.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>No documents shared yet</div> :
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {documents.map(d => (
-                <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none' }}>
+                <a key={d.id} href={d.file_url || d.url} target="_blank" rel="noreferrer" style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none' }}>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 13, color: '#101828' }}>{d.name}</div>
-                    <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{d.category}{d.expiry_date ? ` · Expires ${d.expiry_date}` : ''}</div>
+                    <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{d.category || d.type}{d.expiry_date ? ` · Expires ${d.expiry_date}` : ''}</div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 600, color: ACCENT }}>View →</span>
                 </a>
