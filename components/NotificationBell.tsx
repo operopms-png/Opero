@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 const TYPE_ICON: Record<string, string> = {
   maintenance: '🔧', cleaning: '🧹', booking: '📅', guest_message: '💬', reminder_digest: '⏰', partner_payment: '💷',
   viewing: '🏠', tenant_message: '💬', landlord_message: '💬', application: '📄', hr_request: '🙋', lead: '⭐',
-  broadcast: '📣', opportunity: '💡',
+  broadcast: '📣', opportunity: '💡', website_lead: '🌐',
 }
 
 export default function NotificationBell() {

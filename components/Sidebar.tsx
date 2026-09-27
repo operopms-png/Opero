@@ -55,6 +55,7 @@ const NAV_GROUPS = [
       { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', key: 'staffcentre', icon: 'report', scTab: 'customeronboarding' },
       { href: '/staff-centre/meetings', label: 'Meetings', key: 'staffcentre', icon: 'phone', scTab: 'meetings', badge: 'meetings' },
       { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox', badge: 'inbox' },
+      { href: '/staff-centre/website-chats', label: 'Website Chats', key: 'staffcentre', icon: 'globe', scTab: 'inbox', badge: 'webchat' },
       { href: '/staff-centre/portal-access', label: 'Portal Access', key: 'staffcentre', icon: 'globe', scTab: 'portalaccess' },
       { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe', scTab: 'portals' },
       { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance', badge: 'maintenance' },

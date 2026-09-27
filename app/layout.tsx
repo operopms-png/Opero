@@ -36,6 +36,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/customer-onboarding': 'customeronboarding',
   '/staff-centre/portal-access': 'portalaccess',
   '/staff-centre/inbox': 'inbox',
+  '/staff-centre/website-chats': 'inbox',
   '/staff-centre/portals': 'portals',
   '/staff-centre/maintenance': 'maintenance',
   '/staff-centre/crm': 'crm',
