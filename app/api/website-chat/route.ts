@@ -75,7 +75,9 @@ export async function POST(req: NextRequest) {
     for (let round = 0; round < 3; round++) {
       const res = await callClaudeChat(system, messages)
       const textParts = (res.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text)
-      if (textParts.length) finalText += (finalText ? '\n\n' : '') + textParts.join('\n').trim()
+      // Keep the latest round's text only (earlier rounds are usually "let me pull those up…")
+      const roundText = textParts.join('\n').trim()
+      if (roundText) finalText = roundText
       const toolUses = (res.content ?? []).filter((c: any) => c.type === 'tool_use')
       if (!toolUses.length || res.stop_reason !== 'tool_use') break
 
@@ -90,10 +92,10 @@ export async function POST(req: NextRequest) {
             type: l.kind === 'furnished' ? 'Furnished apartment' : 'To let',
             price: cur && l.price != null ? `${cur}${l.price.toLocaleString('en-GB')} / ${l.price_unit}` : null,
           }))
-          results.push({ type: 'tool_result', tool_use_id: t.id, content: `Shown ${cards.length} card(s).` })
+          results.push({ type: 'tool_result', tool_use_id: t.id, content: `${cards.length} property card(s) will appear directly under your reply. Don't repeat their details; write one or two short sentences.` })
         } else if (t.name === 'request_contact') {
           showForm = String(t.input?.reason ?? 'Follow up').slice(0, 120)
-          results.push({ type: 'tool_result', tool_use_id: t.id, content: 'Form shown to the visitor.' })
+          results.push({ type: 'tool_result', tool_use_id: t.id, content: 'A short contact form will appear directly under your reply. Mention it as "below".' })
         } else if (t.name === 'save_contact') {
           await saveLead(s, chat.id, t.input ?? {})
           results.push({ type: 'tool_result', tool_use_id: t.id, content: 'Saved. The team has been notified.' })
