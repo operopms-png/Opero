@@ -40,7 +40,6 @@ function SettingsInner() {
   const [creating, setCreating] = useState(false)
   const [apiKey, setApiKey] = useState('')
   const [copied, setCopied] = useState(false)
-  const [plan, setPlan] = useState('Professional')
   const [messages, setMessages] = useState<any[]>([])
   const [connectAccountId, setConnectAccountId] = useState<string|null>(null)
   const [connectOnboarded, setConnectOnboarded] = useState(false)
@@ -57,7 +56,6 @@ function SettingsInner() {
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskForm, setTaskForm] = useState({title:'',assigned_to:'',status:'On track',due_date:'',notes:''})
   const [savingTask, setSavingTask] = useState(false)
-  const [buyingPlan, setBuyingPlan] = useState<string|null>(null)
 
   useEffect(() => {
     if(roleLoading) return
@@ -71,7 +69,6 @@ function SettingsInner() {
       const {data:sub} = await supabase.from('subscriptions').select('*').eq('user_id',user.id).single()
       if(sub){
         setApiKey((sub as any).api_key??'')
-        setPlan((sub as any).plan??'Professional')
         setConnectAccountId((sub as any).stripe_connect_account_id??null)
         setConnectOnboarded(!!(sub as any).stripe_connect_onboarded)
         // Started Stripe setup but not marked done yet: ask Stripe directly
@@ -100,14 +97,6 @@ function SettingsInner() {
       setLoading(false)
     })
   },[])
-
-  async function buyPlan(planKey: string) {
-    setBuyingPlan(planKey)
-    const res = await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:planKey,email:user?.email})})
-    const result = await res.json()
-    if(result.url) window.location.href = result.url
-    else { alert(result.error || 'Could not start checkout'); setBuyingPlan(null) }
-  }
 
   useEffect(() => {
     if (!user) return
@@ -226,7 +215,6 @@ function SettingsInner() {
                 <div>
                   <div style={{fontSize:15,fontWeight:600,color:'#101828'}}>{user?.email?.split('@')[0]}</div>
                   <div style={{fontSize:13,color:'#667085'}}>{user?.email}</div>
-                  <div style={{fontSize:12,color:ACCENT,fontWeight:500,marginTop:2,textTransform:'capitalize'}}>{plan} Plan</div>
                 </div>
               </div>
               <div style={{display:'grid',gap:12}}>
@@ -507,7 +495,7 @@ function SettingsInner() {
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                 <div>
                   <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Tenant payment setup</h3>
-                  <div style={{fontSize:13,color:'#667085'}}>Connect your own Stripe account so rent and utility payments tenants make through their portal go directly to your bank.</div>
+                  <div style={{fontSize:13,color:'#667085'}}>Connect your Stripe account so tenant rent, utility payments and the £75 partner fee go directly to your bank.</div>
                 </div>
               </div>
               {connectOnboarded ? (
