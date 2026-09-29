@@ -215,7 +215,7 @@ export default function Sidebar() {
                 const active = pathname === href.split('?')[0]
                 const linkHref = itemHasModule ? href : (requiresModule ? '/modules' : '#')
                 return (
-                  <Link key={href} href={linkHref}
+                  <Link key={href + label} href={linkHref}
                     data-active={active ? '1' : undefined}
                     title={isCollapsed ? label : undefined}
                     onClick={(e: any) => { if (!itemHasModule && !requiresModule) e.preventDefault(); else if (itemHasModule && !hasAccess) e.preventDefault(); else setOpen(false) }}
