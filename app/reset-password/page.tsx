@@ -39,7 +39,7 @@ function ResetPasswordForm() {
     <div style={{ minHeight: '100vh', background: '#F7F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', -apple-system, sans-serif", padding: 20 }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 32 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#101828', margin: '0 0 4px' }}>Set a new password</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Set a new password</h1>
           <p style={{ fontSize: 13, color: '#667085', margin: '0 0 24px' }}>Choose a new password for your account.</p>
 
           {done ? (
@@ -47,7 +47,7 @@ function ResetPasswordForm() {
               <div style={{ fontSize: 13, color: '#067647', background: '#ECFDF3', border: '1px solid #ABEFC6', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
                 Password updated. You can now sign in.
               </div>
-              <a href="/login" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#3B4AFF', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Go to sign in</a>
+              <a href="/login" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#A8862E', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Go to sign in</a>
             </div>
           ) : !ready ? (
             <div style={{ fontSize: 13, color: '#98A2B3' }}>Verifying your reset link…</div>
@@ -61,7 +61,7 @@ function ResetPasswordForm() {
               <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={8}
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, marginBottom: 20, boxSizing: 'border-box' }} />
               <button type="submit" disabled={loading}
-                style={{ width: '100%', padding: '10px', background: '#3B4AFF', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+                style={{ width: '100%', padding: '10px', background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1 }}>
                 {loading ? 'Updating…' : 'Update password'}
               </button>
             </form>

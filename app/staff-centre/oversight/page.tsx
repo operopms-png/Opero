@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
-const COLORS = { str: '#3B4AFF', pm: '#10B981', ea: '#F59E0B', dev: '#8B5CF6' }
+const ACCENT = '#A8862E'
+const COLORS = { str: '#A8862E', pm: '#10B981', ea: '#F59E0B', dev: '#A8862E' }
 
 // Plain line icons instead of emoji -- emoji render inconsistently
 // across platforms and read as informal for a business dashboard.
@@ -270,17 +270,17 @@ export default function OversightPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#101828', margin: '0 0 4px' }}>Dashboard</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Dashboard</h1>
         <div style={{ fontSize: 13, color: '#667085' }}>Everything happening across Vacation Rentals, Property Management, Estate Agency &amp; Developments — this month.</div>
       </div>
 
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Business activity — last 7 days</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 12 }}>Business activity — last 7 days</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10 }}>
           {activityStats.map(s => (
             <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '14px 12px' }}>
               <div style={{ marginBottom: 8 }}><Ico name={s.icon} size={18} color="#667085" /></div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#101828' }}>{s.value}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#323338' }}>{s.value}</div>
               <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
@@ -292,7 +292,7 @@ export default function OversightPage() {
         {topStats.map(s => (
           <div key={s.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20 }}>
             <div style={{ fontSize: 12, color: '#667085', fontWeight: 500, marginBottom: 10 }}>{s.label}</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: '#101828' }}>{s.value}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: '#323338' }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -303,20 +303,20 @@ export default function OversightPage() {
               <Ico name={p.icon} size={16} color="#667085" />
               <div style={{ fontSize: 12, color: '#667085', fontWeight: 500 }}>{p.label}</div>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: '#101828' }}>{p.value}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color: '#323338' }}>{p.value}</div>
             {p.sub && <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>{p.sub}</div>}
           </div>
         ))}
       </div>
 
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 12 }}>This week's pipeline</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 12 }}>This week's pipeline</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
           {pipeline.map(pl => (
             <div key={pl.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: 9, background: '#F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Ico name={pl.icon} size={17} color="#344054" /></div>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#101828' }}>{pl.value}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#323338' }}>{pl.value}</div>
                 <div style={{ fontSize: 11, color: '#667085' }}>{pl.label}</div>
               </div>
             </div>
@@ -326,7 +326,7 @@ export default function OversightPage() {
 
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden', marginBottom: 24 }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#101828' }}>Module breakdown</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338' }}>Module breakdown</div>
           <div style={{ fontSize: 12, color: '#98A2B3' }}>Revenue, costs &amp; workload by module</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 95px 95px 85px 150px 80px 40px', padding: '10px 20px', background: '#F9FAFB', borderBottom: '1px solid #E4E7EC', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase', gap: 8 }}>
@@ -339,9 +339,9 @@ export default function OversightPage() {
             <a key={m.key} href={`/${m.key === 'ea' ? 'estate' : m.key}`} style={{ display: 'grid', gridTemplateColumns: '1fr 95px 95px 85px 150px 80px 40px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'inherit' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ico name={m.icon} size={16} color={color} /></div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#101828' }}>{m.name}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#323338' }}>{m.name}</span>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#101828' }}>{m.revenue ? fmtMoney(m.revenue) : '—'}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#323338' }}>{m.revenue ? fmtMoney(m.revenue) : '—'}</span>
               <span style={{ fontSize: 13, color: '#B42318' }}>{fmtMoney(m.expenses)}</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: margin == null ? '#98A2B3' : '#10B981' }}>{margin == null ? '—' : margin + '%'}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -359,7 +359,7 @@ export default function OversightPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 0.9fr', gap: 16 }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 4 }}>Revenue by module — last 6 months</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Revenue by module — last 6 months</div>
           <div style={{ fontSize: 11, color: '#98A2B3', marginBottom: 10 }}>Developments isn't shown here — it runs on project spend, not recurring revenue.</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, height: 140, padding: '0 4px' }}>
             {chartMonths.map(mo => (
@@ -383,7 +383,7 @@ export default function OversightPage() {
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#101828' }}>Team &amp; compliance</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338' }}>Team &amp; compliance</div>
           <div>
             <div style={{ fontSize: 11, color: '#98A2B3', marginBottom: 8, textTransform: 'uppercase', fontWeight: 600, letterSpacing: '.04em' }}>Team headcount by module</div>
             {(['str', 'pm', 'ea', 'dev'] as const).map(k => (
@@ -418,12 +418,12 @@ export default function OversightPage() {
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 2 }}>Needs attention</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 2 }}>Needs attention</div>
           {alerts.map((a, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 10, borderRadius: 8, background: a.bg }}>
               <span style={{ flexShrink: 0, marginTop: 1 }}><Ico name={a.icon} size={16} color={a.color} /></span>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#101828' }}>{a.title}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#323338' }}>{a.title}</div>
                 <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{a.detail}</div>
               </div>
             </div>

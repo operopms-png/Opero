@@ -96,13 +96,13 @@ export default function WeatherWidget() {
           <div style={{ display:'flex', alignItems:'center', gap:6 }}>
             <span style={{ fontSize:14 }}>🌤️</span>
             <div>
-              <div style={{ fontSize:12, fontWeight:600, color:'#101828' }}>Weather</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'#323338' }}>Weather</div>
               <div style={{ fontSize:10, color:'#667085' }}>{city}</div>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
             <button onClick={()=>setDayOffset(d=>Math.max(0,d-1))} disabled={dayOffset===0} style={{ background:'none', border:'none', cursor:dayOffset===0?'default':'pointer', color:dayOffset===0?'#D0D5DD':'#344054', fontSize:14, padding:'0 2px', lineHeight:1 }}>‹</button>
-            <span style={{ fontSize:11, fontWeight:500, color:'#101828', minWidth:52, textAlign:'center' }}>{dayLabel}</span>
+            <span style={{ fontSize:11, fontWeight:500, color:'#323338', minWidth:52, textAlign:'center' }}>{dayLabel}</span>
             <button onClick={()=>setDayOffset(d=>Math.min(6,d+1))} disabled={dayOffset===6} style={{ background:'none', border:'none', cursor:dayOffset===6?'default':'pointer', color:dayOffset===6?'#D0D5DD':'#344054', fontSize:14, padding:'0 2px', lineHeight:1 }}>›</button>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function WeatherWidget() {
             <div key={s.time} style={{ textAlign:'center', padding:'6px 4px', background:'#F7F8FA', borderRadius:8 }}>
               <div style={{ fontSize:10, color:'#667085' }}>{s.time}</div>
               <div style={{ fontSize:16, margin:'2px 0' }}>{WMO_ICONS[s.code]??'🌡️'}</div>
-              <div style={{ fontSize:12, fontWeight:600, color:'#101828' }}>{s.temp}°C</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'#323338' }}>{s.temp}°C</div>
             </div>
           ))}
         </div>
@@ -124,7 +124,7 @@ export default function WeatherWidget() {
             <div key={f.day} style={{ textAlign:'center', padding:'6px 2px', background:'#F7F8FA', borderRadius:8 }}>
               <div style={{ fontSize:10, color:'#667085', marginBottom:2 }}>{f.day}</div>
               <div style={{ fontSize:14 }}>{WMO_ICONS[f.code]??'🌡️'}</div>
-              <div style={{ fontSize:11, fontWeight:600, color:'#101828' }}>{f.max}°</div>
+              <div style={{ fontSize:11, fontWeight:600, color:'#323338' }}>{f.max}°</div>
               <div style={{ fontSize:10, color:'#98A2B3' }}>{f.min}°</div>
             </div>
           ))}

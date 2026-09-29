@@ -177,7 +177,7 @@ export default function PropertiesPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Properties</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Properties</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>
               {properties.length}{propertyLimit !== Infinity ? `/${propertyLimit}` : ''}
             </span>
@@ -188,9 +188,9 @@ export default function PropertiesPage() {
               {syncing ? 'Syncing…' : 'Sync iCal'}
             </button>
             {atLimit && plan !== 'professional' && (
-              <a href="/settings" style={{ fontSize: 13, color: '#5B7BF8', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
+              <a href="/settings" style={{ fontSize: 13, color: '#A8862E', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
             )}
-            <button onClick={openCreate} style={{ background: atLimit ? '#E5E7EB' : '#111827', color: atLimit ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: atLimit ? 'not-allowed' : 'pointer' }}>
+            <button onClick={openCreate} style={{ background: atLimit ? '#E5E7EB' : '#A8862E', color: atLimit ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: atLimit ? 'not-allowed' : 'pointer' }}>
               + Add Property
             </button>
           </div>
@@ -232,12 +232,12 @@ export default function PropertiesPage() {
                   <div style={{ padding: '16px 18px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>{p.name}</div>
+                        <div style={{ fontWeight: 600, fontSize: 15, color: '#323338' }}>{p.name}</div>
                         {(p.city || p.country) && <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>📍 {[p.city, p.country].filter(Boolean).join(', ')}</div>}
                       </div>
                       <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: cfg.color, background: cfg.bg, whiteSpace: 'nowrap' }}>{cfg.label}</span>
                     </div>
-                    {p.nightly_rate && <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 8 }}>£{p.nightly_rate}<span style={{ fontSize: 12, fontWeight: 400, color: '#9CA3AF' }}>/night</span></div>}
+                    {p.nightly_rate && <div style={{ fontSize: 14, fontWeight: 700, color: '#323338', marginBottom: 8 }}>£{p.nightly_rate}<span style={{ fontSize: 12, fontWeight: 400, color: '#9CA3AF' }}>/night</span></div>}
                     <div style={{ display: 'flex', gap: 12, fontSize: 13, color: '#6B7280', paddingTop: 10, borderTop: '1px solid #F3F4F6', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
                       <div style={{ display: 'flex', gap: 12 }}>
                         {p.bedrooms != null && <span>🛏 {p.bedrooms} bed</span>}
@@ -248,9 +248,9 @@ export default function PropertiesPage() {
 
                     {/* Direct booking link */}
                     {p.slug && (
-                      <div style={{ marginTop: 10, padding: '8px 12px', background: '#F8FAFF', borderRadius: 8, border: '1px solid #E0E7FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <span style={{ fontSize: 11, color: '#5B7BF8', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>/book/{p.slug}</span>
-                        <button onClick={() => copyBookingLink(p.slug!)} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, border: 'none', background: copiedSlug === p.slug ? '#10B981' : '#5B7BF8', color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      <div style={{ marginTop: 10, padding: '8px 12px', background: '#F8FAFF', borderRadius: 8, border: '1px solid #EADBB8', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <span style={{ fontSize: 11, color: '#A8862E', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>/book/{p.slug}</span>
+                        <button onClick={() => copyBookingLink(p.slug!)} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, border: 'none', background: copiedSlug === p.slug ? '#10B981' : '#A8862E', color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           {copiedSlug === p.slug ? '✓ Copied' : 'Copy link'}
                         </button>
                       </div>
@@ -314,7 +314,7 @@ export default function PropertiesPage() {
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Property'}
               </button>
             </div>
@@ -327,12 +327,12 @@ export default function PropertiesPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e => e.target === e.currentTarget && setShowUpgradeModal(false)}>
           <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 420, margin: '0 16px', textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Property limit reached</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 8px' }}>Property limit reached</h2>
             <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 8px' }}>Your <strong>{planLabel} plan</strong> allows up to <strong>{propertyLimit} properties</strong>.</p>
             <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px' }}>Upgrade to <strong>{nextPlan} ({nextPrice}/mo)</strong> to add more.</p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowUpgradeModal(false)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <a href="/settings" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#5B7BF8', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>Upgrade to {nextPlan} →</a>
+              <a href="/settings" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>Upgrade to {nextPlan} →</a>
             </div>
           </div>
         </div>

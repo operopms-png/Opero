@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const MODULE = 'estate'
 const LABEL = 'ESTATE AGENCY'
 const SECTIONS = ['Pipeline','Leads','Quotes','Meetings','Analytics']
@@ -75,7 +75,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>{LABEL}</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Sales</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Sales</div>
         </div>
         <div style={{display:'flex',gap:8}}>
           {section==='Pipeline'&&<button onClick={()=>setShowDealForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Deal</button>}
@@ -90,7 +90,7 @@ export default function Page() {
       <div style={{padding:24}}>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-          {[{l:'Pipeline Value',v:'£'+totalPipeline.toLocaleString(),c:ACCENT},{l:'Won',v:'£'+wonDeals.toLocaleString(),c:'#10B981'},{l:'Total Leads',v:leads.length,c:'#101828'},{l:'Open Deals',v:deals.filter(d=>!['Won','Lost'].includes(d.stage)).length,c:'#F59E0B'}].map((s:any)=>(
+          {[{l:'Pipeline Value',v:'£'+totalPipeline.toLocaleString(),c:ACCENT},{l:'Won',v:'£'+wonDeals.toLocaleString(),c:'#10B981'},{l:'Total Leads',v:leads.length,c:'#323338'},{l:'Open Deals',v:deals.filter(d=>!['Won','Lost'].includes(d.stage)).length,c:'#F59E0B'}].map((s:any)=>(
             <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
               <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
               <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
@@ -120,7 +120,7 @@ export default function Page() {
                 <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:10}}>{stage} <span style={{background:'#E4E7EC',borderRadius:10,padding:'1px 6px',fontSize:10}}>{deals.filter(d=>d.stage===stage).length}</span></div>
                 {deals.filter(d=>d.stage===stage).map((d:any)=>(
                   <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E4E7EC',padding:12,marginBottom:8}}>
-                    <div style={{fontSize:12,fontWeight:600,color:'#101828',marginBottom:4}}>{d.name}</div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#323338',marginBottom:4}}>{d.name}</div>
                     {d.contact&&<div style={{fontSize:11,color:'#667085',marginBottom:4}}>{d.contact}</div>}
                     <div style={{fontSize:13,fontWeight:700,color:ACCENT}}>£{parseFloat(d.value||0).toLocaleString()}</div>
                     <div style={{display:'flex',gap:4,marginTop:8}}>
@@ -155,11 +155,11 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 100px 120px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Name</span><span>Email</span><span>Source</span><span>Value</span><span>Status</span><span></span>
             </div>
-            {leads.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🎯</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No leads yet</div><div style={{fontSize:13}}>Add your first lead to start tracking.</div></div>):leads.map((l:any)=>(
+            {leads.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🎯</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No leads yet</div><div style={{fontSize:13}}>Add your first lead to start tracking.</div></div>):leads.map((l:any)=>(
               <div key={l.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 100px 120px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{l.name}</div>{l.phone&&<div style={{fontSize:11,color:'#98A2B3'}}>{l.phone}</div>}</div>
+                <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{l.name}</div>{l.phone&&<div style={{fontSize:11,color:'#98A2B3'}}>{l.phone}</div>}</div>
                 <span style={{fontSize:12,color:'#667085'}}>{l.email||'—'}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{l.source}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{l.source}</span>
                 <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{l.value?'£'+parseFloat(l.value).toLocaleString():'—'}</span>
                 <select value={l.status} onChange={e=>updateField('sales_leads',l.id,'status',e.target.value,setLeads)} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,border:'1px solid #E4E7EC',fontFamily:'inherit'}}>{['New','Contacted','Qualified','Unqualified'].map(s=><option key={s}>{s}</option>)}</select>
                 <button onClick={()=>del('sales_leads',l.id,setLeads)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
@@ -188,9 +188,9 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 120px 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Client</span><span>Property</span><span>Amount</span><span>Valid Until</span><span>Status</span><span></span>
             </div>
-            {quotes.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📋</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No quotes yet</div></div>):quotes.map((q:any)=>(
+            {quotes.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📋</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No quotes yet</div></div>):quotes.map((q:any)=>(
               <div key={q.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 120px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{q.client}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{q.client}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{q.property||'—'}</span>
                 <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(q.amount||0).toLocaleString()}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{q.valid_until||'—'}</span>
@@ -221,13 +221,13 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 100px 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Title</span><span>Contact</span><span>Date</span><span>Time</span><span>Type</span><span></span>
             </div>
-            {meetings.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📅</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No meetings scheduled</div></div>):meetings.map((m:any)=>(
+            {meetings.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📅</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No meetings scheduled</div></div>):meetings.map((m:any)=>(
               <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 100px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.title}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{m.title}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{m.contact||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{m.meeting_date||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{m.meeting_time||'—'}</span>
-                <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT}}>{m.type}</span>
+                <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT}}>{m.type}</span>
                 <button onClick={()=>del('sales_meetings',m.id,setMeetings)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
             ))}
@@ -236,7 +236,7 @@ export default function Page() {
 
         {section==='Analytics'&&(<div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-            {[{l:'Conversion Rate',v:leads.length>0?Math.round(deals.filter(d=>d.stage==='Won').length/leads.length*100)+'%':'0%',c:'#10B981'},{l:'Avg Deal Value',v:deals.length>0?'£'+Math.round(deals.reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)/deals.length).toLocaleString():'£0',c:ACCENT},{l:'Total Revenue',v:'£'+wonDeals.toLocaleString(),c:'#101828'}].map((s:any)=>(
+            {[{l:'Conversion Rate',v:leads.length>0?Math.round(deals.filter(d=>d.stage==='Won').length/leads.length*100)+'%':'0%',c:'#10B981'},{l:'Avg Deal Value',v:deals.length>0?'£'+Math.round(deals.reduce((s:number,d:any)=>s+parseFloat(d.value||0),0)/deals.length).toLocaleString():'£0',c:ACCENT},{l:'Total Revenue',v:'£'+wonDeals.toLocaleString(),c:'#323338'}].map((s:any)=>(
               <div key={s.l} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
                 <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                 <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>

@@ -109,10 +109,10 @@ export default function BookingsPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Bookings</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Bookings</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{bookings.length}</span>
           </div>
-          <button onClick={() => setShowModal(true)} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={() => setShowModal(true)} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
             + New Booking
           </button>
         </div>
@@ -124,8 +124,8 @@ export default function BookingsPage() {
           {['all', 'confirmed', 'pending', 'completed', 'cancelled'].map(s => (
             <button key={s} onClick={() => setFilter(s)} style={{
               padding: '7px 16px', borderRadius: 20, border: '1px solid',
-              borderColor: filter === s ? '#111827' : '#E5E7EB',
-              background: filter === s ? '#111827' : '#fff',
+              borderColor: filter === s ? '#323338' : '#E5E7EB',
+              background: filter === s ? '#A8862E' : '#fff',
               color: filter === s ? '#fff' : '#6B7280',
               fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
               textTransform: 'capitalize',
@@ -147,14 +147,14 @@ export default function BookingsPage() {
               return (
                 <div key={b.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto auto', alignItems: 'center', gap: 16 }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>{b.guest_name ?? 'Unknown Guest'}</div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: '#323338' }}>{b.guest_name ?? 'Unknown Guest'}</div>
                     <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{b.properties?.name ?? '—'}</div>
                   </div>
                   <div style={{ fontSize: 13, color: '#374151' }}>
                     <div>{new Date(b.check_in).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} → {new Date(b.check_out).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                     <div style={{ color: '#9CA3AF', marginTop: 2 }}>{nights(b.check_in, b.check_out)} nights{b.platform ? ` · ${b.platform}` : ''}</div>
                   </div>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: '#323338' }}>
                     {b.total_amount != null ? `£${b.total_amount.toLocaleString()}` : '—'}
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: cfg.color, background: cfg.bg, whiteSpace: 'nowrap' }}>
@@ -199,7 +199,7 @@ export default function BookingsPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.property_id || !form.check_in || !form.check_out} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.property_id || !form.check_in || !form.check_out} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
                 {saving ? 'Saving…' : 'Add Booking'}
               </button>
             </div>

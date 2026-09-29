@@ -1,11 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const MODULE = 'dev'
 const LABEL = 'Developments'
 const VENDOR_TYPES = ['Cleaner','Maintenance','Plumber','Electrician','Handyman','Landscaper','Other']
-const STATUS_COLORS: any = {'Open':'#F59E0B','In Progress':'#3B4AFF','Completed':'#10B981','Approved':'#10B981','Rejected':'#EF4444','Pending':'#F59E0B'}
+const STATUS_COLORS: any = {'Open':'#F59E0B','In Progress':'#A8862E','Completed':'#10B981','Approved':'#10B981','Rejected':'#EF4444','Pending':'#F59E0B'}
 const NAV = [
   {group:'VENDORS',items:[
     {s:'Work Orders',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>},
@@ -87,7 +87,7 @@ export default function Page() {
       <div style={{width:210,background:'#fff',borderRight:'1px solid #F2F4F7',display:'flex',flexDirection:'column',paddingTop:16,flexShrink:0,minHeight:'100vh'}}>
         <div style={{padding:'0 16px 14px',borderBottom:'1px solid #F2F4F7'}}>
           <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>{LABEL}</div>
-          <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>Contractor Portal</div>
+          <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>Contractor Portal</div>
         </div>
         <nav style={{flex:1,padding:'8px 10px'}}>
           {NAV.map(group=>(
@@ -105,7 +105,7 @@ export default function Page() {
       </div>
       <div style={{flex:1,display:'flex',flexDirection:'column'}}>
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#101828'}}>{section}</h1>
+          <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#323338'}}>{section}</h1>
           <div style={{display:'flex',gap:8}}>
             {section==='Work Orders'&&<button onClick={()=>setShowWO(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New work order</button>}
             {section==='Contractors'&&<button onClick={()=>setShowContractor(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add contractor</button>}
@@ -115,7 +115,7 @@ export default function Page() {
 
           {section==='Work Orders'&&(<div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total orders',v:workOrders.length,c:ACCENT},{l:'Open',v:workOrders.filter(w=>w.status==='Open').length,c:'#F59E0B'},{l:'In Progress',v:workOrders.filter(w=>w.status==='In Progress').length,c:'#3B4AFF'},{l:'Completed',v:workOrders.filter(w=>w.status==='Completed'||w.status==='Approved').length,c:'#10B981'}].map(s=>(
+              {[{l:'Total orders',v:workOrders.length,c:ACCENT},{l:'Open',v:workOrders.filter(w=>w.status==='Open').length,c:'#F59E0B'},{l:'In Progress',v:workOrders.filter(w=>w.status==='In Progress').length,c:'#A8862E'},{l:'Completed',v:workOrders.filter(w=>w.status==='Completed'||w.status==='Approved').length,c:'#10B981'}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
@@ -123,7 +123,7 @@ export default function Page() {
               ))}
             </div>
             {showWO&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>New work order</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>New work order</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Title *</div><input value={wo.title} onChange={e=>setWo({...wo,title:e.target.value})} placeholder="e.g. Fix leaking tap in unit 3" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><input value={wo.property} onChange={e=>setWo({...wo,property:e.target.value})} placeholder="e.g. Sangsters Aurevo C1-12" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/></div>
@@ -137,9 +137,9 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 160px 100px 100px 120px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Title</span><span>Contractor</span><span>Priority</span><span>Status</span><span>Created</span><span></span>
               </div>
-              {workOrders.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🔧</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No work orders yet</div><div style={{fontSize:13}}>Create a work order to assign to a contractor.</div></div>):workOrders.map(w=>(
+              {workOrders.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🔧</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No work orders yet</div><div style={{fontSize:13}}>Create a work order to assign to a contractor.</div></div>):workOrders.map(w=>(
                 <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 100px 100px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{w.title}</div>{w.property&&<div style={{fontSize:11,color:'#667085'}}>{w.property}</div>}</div>
+                  <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.title}</div>{w.property&&<div style={{fontSize:11,color:'#667085'}}>{w.property}</div>}</div>
                   <span style={{fontSize:13,color:'#344054'}}>{w.vendor_contractors?.name||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:w.priority==='Urgent'?'#FEE2E2':w.priority==='High'?'#FEF3C7':'#F2F4F7',color:w.priority==='Urgent'?'#EF4444':w.priority==='High'?'#F59E0B':'#667085',display:'inline-block'}}>{w.priority}</span>
                   <select value={w.status} onChange={e=>updateWOField(w.id,'status',e.target.value)} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #E4E7EC',fontSize:12,fontFamily:'inherit',outline:'none',background:'#fff',color:STATUS_COLORS[w.status]||'#344054',fontWeight:600}}>
@@ -162,7 +162,7 @@ export default function Page() {
               ))}
             </div>
             {showContractor&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add contractor</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add contractor</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Full name *</div><input value={con.name} onChange={e=>setCon({...con,name:e.target.value})} placeholder="John Smith" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Company</div><input value={con.company} onChange={e=>setCon({...con,company:e.target.value})} placeholder="Smith Plumbing Ltd" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/></div>
@@ -176,9 +176,9 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 140px 140px 120px 80px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Name</span><span>Type</span><span>Company</span><span>Phone</span><span>Status</span><span></span>
               </div>
-              {contractors.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>👷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No contractors yet</div><div style={{fontSize:13}}>Add your first contractor to start assigning work orders.</div></div>):contractors.map(c=>(
+              {contractors.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>👷</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No contractors yet</div><div style={{fontSize:13}}>Add your first contractor to start assigning work orders.</div></div>):contractors.map(c=>(
                 <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 140px 120px 80px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:ACCENT}}>{c.name.charAt(0)}</div><div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.name}</div><div style={{fontSize:11,color:'#667085'}}>{c.email}</div></div></div>
+                  <div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:ACCENT}}>{c.name.charAt(0)}</div><div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.name}</div><div style={{fontSize:11,color:'#667085'}}>{c.email}</div></div></div>
                   <span style={{fontSize:12,fontWeight:600,color:'#344054',background:'#F2F4F7',padding:'3px 8px',borderRadius:4,display:'inline-block'}}>{c.type}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{c.company||'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{c.phone||'—'}</span>
@@ -202,9 +202,9 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 120px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Work order</span><span>Contractor</span><span>Amount</span><span>Status</span><span></span>
               </div>
-              {workOrders.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No invoices yet</div><div style={{fontSize:13}}>Invoices will appear here once work orders are submitted.</div></div>):workOrders.map(w=>(
+              {workOrders.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No invoices yet</div><div style={{fontSize:13}}>Invoices will appear here once work orders are submitted.</div></div>):workOrders.map(w=>(
                 <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 120px 120px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{w.title}</div>{w.property&&<div style={{fontSize:11,color:'#667085'}}>{w.property}</div>}</div>
+                  <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.title}</div>{w.property&&<div style={{fontSize:11,color:'#667085'}}>{w.property}</div>}</div>
                   <span style={{fontSize:13,color:'#344054'}}>{w.vendor_contractors?.name||'—'}</span>
                   <div style={{display:'flex',gap:4,alignItems:'center'}}>
                     <span style={{fontSize:12,color:'#667085'}}>£</span>
@@ -220,14 +220,14 @@ export default function Page() {
           {section==='Approvals'&&(<div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{padding:'16px 20px',borderBottom:'1px solid #E4E7EC',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Pending approvals</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Pending approvals</div>
                 <span style={{fontSize:12,color:'#667085'}}>{pendingInvoices.length} awaiting review</span>
               </div>
-              {pendingInvoices.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No invoices pending approval.</div></div>):pendingInvoices.map(w=>(
+              {pendingInvoices.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No invoices pending approval.</div></div>):pendingInvoices.map(w=>(
                 <div key={w.id} style={{padding:'20px',borderBottom:'1px solid #F2F4F7'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
-                    <div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:2}}>{w.title}</div><div style={{fontSize:12,color:'#667085'}}>{w.vendor_contractors?.name} · {w.property} · {new Date(w.created_at).toLocaleDateString('en-GB')}</div></div>
-                    <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</div>
+                    <div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:2}}>{w.title}</div><div style={{fontSize:12,color:'#667085'}}>{w.vendor_contractors?.name} · {w.property} · {new Date(w.created_at).toLocaleDateString('en-GB')}</div></div>
+                    <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</div>
                   </div>
                   {w.description&&<div style={{fontSize:13,color:'#667085',marginBottom:12,background:'#F9FAFB',padding:'10px 12px',borderRadius:8}}>{w.description}</div>}
                   <div style={{display:'flex',gap:8}}>
@@ -237,12 +237,12 @@ export default function Page() {
                 </div>
               ))}
               {workOrders.filter(w=>w.status==='Approved'||w.status==='Rejected').length>0&&(<div style={{padding:'16px 20px',borderTop:'1px solid #E4E7EC'}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:12}}>Completed</div>
+                <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:12}}>Completed</div>
                 {workOrders.filter(w=>w.status==='Approved'||w.status==='Rejected').map(w=>(
                   <div key={w.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #F9FAFB'}}>
                     <div><div style={{fontSize:13,color:'#344054'}}>{w.title}</div><div style={{fontSize:11,color:'#667085'}}>{w.vendor_contractors?.name}</div></div>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
-                      <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</span>
                       <span style={{fontSize:12,fontWeight:600,color:STATUS_COLORS[w.status]}}>{w.status}</span>
                     </div>
                   </div>

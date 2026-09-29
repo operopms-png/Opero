@@ -10,7 +10,7 @@
 //   2. portal auth for buyers (same portal_user_id pattern as
 //      pm_tenants/estate_tenants)
 //   3. a staff-side screen in Developments to create/manage plans
-const ACCENT = '#8B5CF6'
+const ACCENT = '#A8862E'
 
 export default function DevInvestorPortalPreview() {
   const depositTotal = 5000
@@ -25,14 +25,14 @@ export default function DevInvestorPortalPreview() {
         </div>
 
         <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Developments</div>
-        <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 700, color: '#101828' }}>Investor / Off-Plan Buyer Portal</h1>
+        <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 700, color: '#323338' }}>Investor / Off-Plan Buyer Portal</h1>
         <div style={{ fontSize: 14, color: '#667085', marginBottom: 28, lineHeight: 1.5 }}>
           Where an off-plan buyer would log in to see their reservation, deposit plan, and payment history.
         </div>
 
         <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4E7EC', padding: 24, marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#667085', marginBottom: 4 }}>Example unit reservation</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#101828', marginBottom: 16 }}>Unit 4B — [Project name]</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#323338', marginBottom: 16 }}>Unit 4B — [Project name]</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div>
               <div style={{ fontSize: 12, color: '#98A2B3', marginBottom: 2 }}>Minimum deposit</div>
@@ -40,7 +40,7 @@ export default function DevInvestorPortalPreview() {
             </div>
             <div>
               <div style={{ fontSize: 12, color: '#98A2B3', marginBottom: 2 }}>Monthly installment</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#101828' }}>£{monthlyAmount.toLocaleString()}/mo</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#323338' }}>£{monthlyAmount.toLocaleString()}/mo</div>
             </div>
           </div>
           <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 12 }}>
@@ -53,7 +53,7 @@ export default function DevInvestorPortalPreview() {
           {Array.from({ length: months }).map((_, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < months - 1 ? '1px solid #F2F4F7' : 'none', fontSize: 13 }}>
               <span style={{ color: '#344054' }}>Month {i + 1}</span>
-              <span style={{ color: '#101828', fontWeight: 600 }}>£{monthlyAmount.toLocaleString()}</span>
+              <span style={{ color: '#323338', fontWeight: 600 }}>£{monthlyAmount.toLocaleString()}</span>
               <span style={{ color: i === 0 ? '#10B981' : '#98A2B3', fontWeight: 600 }}>{i === 0 ? 'Paid' : 'Upcoming'}</span>
             </div>
           ))}

@@ -200,9 +200,9 @@ function LoginForm() {
         <div style={{ width: 420, background: '#fff', borderRight: '1px solid #E4E7EC', padding: '40px 32px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
             <img src="/logo.PNG" alt={BRAND_NAME} style={{ width: 28, height: 28, objectFit: 'contain' }} />
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#101828' }}>{BRAND_NAME}</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#323338' }}>{BRAND_NAME}</span>
           </div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#101828', marginBottom: 4 }}>Choose your plan</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Choose your plan</div>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>14-day free trial · No credit card required</div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -223,7 +223,7 @@ function LoginForm() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 10, height: 10, borderRadius: '50%', border: `2px solid ${plan.color}`, background: selectedPlan === plan.id ? plan.color : 'transparent', transition: 'all 0.15s' }} />
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{plan.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{plan.label}</span>
                   </div>
                   <div>
                     <span style={{ fontSize: 18, fontWeight: 700, color: plan.color }}>{plan.price}</span>
@@ -272,7 +272,7 @@ function LoginForm() {
 
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             {mode !== 'signup' && <img src="/logo.PNG" alt={BRAND_NAME} style={{ width: 48, height: 48, objectFit: 'contain', marginBottom: 8 }} />}
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#101828' }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#323338' }}>
               {mode === 'login' ? `Sign in to ${BRAND_NAME}` : mode === 'signup' ? 'Create your account' : 'Reset your password'}
             </div>
             {mode === 'signup' && selectedPlan && (
@@ -295,7 +295,7 @@ function LoginForm() {
             )}
             {error && <div style={{ fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
             {successMsg && <div style={{ fontSize: 13, color: '#12B76A', background: '#F6FEF9', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}
-            <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#3B4AFF', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
+            <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
               {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? (selectedPlan === 'onetime' ? 'Get lifetime access →' : 'Start free trial →') : 'Send Reset Email'}
             </button>
           </div>
@@ -307,8 +307,8 @@ function LoginForm() {
                 <div><button onClick={() => setMode('reset')} style={{ background: 'none', border: 'none', color: '#98A2B3', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Forgot password?</button></div>
               </>
             )}
-            {mode === 'signup' && <div>Already have an account? <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#3B4AFF', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign in</button></div>}
-            {mode === 'reset' && <div><button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#3B4AFF', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back to sign in</button></div>}
+            {mode === 'signup' && <div>Already have an account? <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#A8862E', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign in</button></div>}
+            {mode === 'reset' && <div><button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#A8862E', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back to sign in</button></div>}
           </div>
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <a href="https://www.sangstersgroup.com" style={{ fontSize: 13, color: '#98A2B3', textDecoration: 'none' }}>← Back to sangstersgroup.com</a>

@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       await sendEmail(
         to,
         `Partner bank transfer to check: ${signup.reference}`,
-        `<div style="font-family:Inter,Arial,sans-serif;font-size:14px;color:#101828;line-height:1.6">
+        `<div style="font-family:Inter,Arial,sans-serif;font-size:14px;color:#323338;line-height:1.6">
           <p><b>${esc(signup.name)}</b> says they've sent their £${fee} partner membership by bank transfer.</p>
           <table style="border-collapse:collapse;margin:8px 0 16px">
             <tr><td style="padding:2px 16px 2px 0;color:#667085">Reference</td><td><b>${esc(signup.reference)}</b></td></tr>
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
             <tr><td style="padding:2px 16px 2px 0;color:#667085">Phone</td><td>${esc(signup.phone)}</td></tr>
           </table>
           <p>When the money shows in your bank with this reference, click <b>Confirm</b> in Partners → Investors to unlock their account.</p>
-          <p><a href="${site}/staff-centre/partners" style="display:inline-block;background:#3B4AFF;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Partners</a></p>
+          <p><a href="${site}/staff-centre/partners" style="display:inline-block;background:#A8862E;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Partners</a></p>
         </div>`,
         signup.email ?? undefined,
       )

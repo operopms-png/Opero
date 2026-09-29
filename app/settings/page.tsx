@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
 import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const NAV = [
   {group:'ACCOUNT',items:[
     {s:'My Account',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>},
@@ -183,7 +183,7 @@ function SettingsInner() {
       <div style={{width:210,background:'#fff',borderRight:'1px solid #F2F4F7',display:'flex',flexDirection:'column',paddingTop:16,flexShrink:0,minHeight:'100vh'}}>
         <div style={{padding:'0 16px 14px',borderBottom:'1px solid #F2F4F7'}}>
           <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>{BRAND_NAME}</div>
-          <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>{section}</div>
+          <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{section}</div>
         </div>
         <nav style={{flex:1,padding:'8px 10px'}}>
           {NAV.map(group=>(
@@ -203,17 +203,17 @@ function SettingsInner() {
       </div>
       <div style={{flex:1,display:'flex',flexDirection:'column'}}>
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#101828'}}>{section}</h1>
+          <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#323338'}}>{section}</h1>
         </div>
         <div style={{flex:1,padding:24,overflowY:'auto'}}>
 
           {section==='My Account'&&(<div style={{maxWidth:600}}>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16,margin:'0 0 16px'}}>Profile</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16,margin:'0 0 16px'}}>Profile</h3>
               <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
                 <div style={{width:56,height:56,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:700,color:ACCENT}}>{user?.email?.charAt(0).toUpperCase()}</div>
                 <div>
-                  <div style={{fontSize:15,fontWeight:600,color:'#101828'}}>{user?.email?.split('@')[0]}</div>
+                  <div style={{fontSize:15,fontWeight:600,color:'#323338'}}>{user?.email?.split('@')[0]}</div>
                   <div style={{fontSize:13,color:'#667085'}}>{user?.email}</div>
                 </div>
               </div>
@@ -221,21 +221,21 @@ function SettingsInner() {
                 {[{l:'Full name',v:user?.email?.split('@')[0]},{l:'Email address',v:user?.email},{l:'Role',v:'Admin'}].map(f=>(
                   <div key={f.l}>
                     <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>{f.l}</div>
-                    <input defaultValue={f.v} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',color:'#101828'}}/>
+                    <input defaultValue={f.v} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',color:'#323338'}}/>
                   </div>
                 ))}
               </div>
               <button style={{marginTop:16,padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save changes</button>
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>API Key</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>API Key</h3>
               <div style={{fontSize:13,color:'#667085',marginBottom:16}}>Use this key to connect the portal with external tools and websites. Keep it private — anyone with this key can add contacts to your account.</div>
               <div style={{display:'flex',gap:8,marginBottom:20}}>
                 <input value={apiKey} readOnly style={{flex:1,padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:12,fontFamily:'monospace',outline:'none',background:'#F9FAFB',color:'#344054'}}/>
                 <button onClick={copyKey} style={{padding:'9px 16px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054',whiteSpace:'nowrap'}}>{copied?'✓ Copied!':'Copy'}</button>
               </div>
               <div style={{background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC',padding:20}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:12}}>How to use</div>
+                <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:12}}>How to use</div>
                 <div style={{display:'flex',flexDirection:'column',gap:10}}>
                   {[{n:'1',t:'Copy your API key above'},{n:'2',t:'In your website form script, add',code:"api_key: 'YOUR_KEY'"},{n:'3',t:'Enquiries from your website will appear in your STR and PM CRM automatically'},{n:'4',t:'For the source field, pass the form name e.g.',code:"source: 'Contact Form'"}].map(s=>(
                     <div key={s.n} style={{display:'flex',alignItems:'flex-start',gap:10}}>
@@ -264,7 +264,7 @@ function SettingsInner() {
               </div>
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 8px'}}>Change password</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 8px'}}>Change password</h3>
               <div style={{display:'grid',gap:12}}>
                 {['Current password','New password','Confirm new password'].map(f=>(
                   <div key={f}>
@@ -280,13 +280,13 @@ function SettingsInner() {
           {section==='Team Management'&&(<div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
               <div>
-                <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>Team Management</h2>
+                <h2 style={{fontSize:20,fontWeight:700,color:'#323338',margin:'0 0 4px'}}>Team Management</h2>
                 <div style={{fontSize:13,color:'#667085'}}>Add unlimited cleaners and admins. Assign multiple cleaners per property. Everyone gets their own account.</div>
               </div>
               <button onClick={()=>{setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setCustomModules([]);setShowInvite(true)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>+ Invite member</button>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1+team.filter(t=>t.role==='Admin').length,c:'#101828'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaning Team').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaning Team'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
+              {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1+team.filter(t=>t.role==='Admin').length,c:'#323338'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaning Team').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaning Team'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
@@ -300,7 +300,7 @@ function SettingsInner() {
                   <button onClick={()=>setAddMode('create')} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(addMode==='create'?ACCENT:'#E4E7EC'),background:addMode==='create'?ACCENT:'#fff',color:addMode==='create'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create account directly</button>
                 </div>
               )}
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>{editingMemberId?'Edit team member':addMode==='invite'?'Invite team member':'Create staff account'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>{editingMemberId?'Edit team member':addMode==='invite'?'Invite team member':'Create staff account'}</h3>
               <div style={{fontSize:12,color:'#667085',marginBottom:16}}>{editingMemberId?'Update their details, role, and assigned properties.':addMode==='invite'?'Sends a real invite email — they set their own password via the link.':"Sets a password now — no email needed. Share the login details with them yourself (text, WhatsApp, in person)."}</div>
               <div style={{display:'grid',gridTemplateColumns:addMode==='create'&&!editingMemberId?'1fr 1fr 1fr 1fr 160px':'1fr 1fr 1fr 160px',gap:12,marginBottom:16}}>
                 <div>
@@ -309,7 +309,7 @@ function SettingsInner() {
                 </div>
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Email address {editingMemberId&&<span style={{color:'#98A2B3',fontWeight:400}}>(can't be changed here)</span>}</div>
-                  <input value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} disabled={!!editingMemberId} placeholder="jane@example.com" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',background:editingMemberId?'#F9FAFB':'#fff',color:editingMemberId?'#98A2B3':'#101828'}}/>
+                  <input value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} disabled={!!editingMemberId} placeholder="jane@example.com" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',background:editingMemberId?'#F9FAFB':'#fff',color:editingMemberId?'#98A2B3':'#323338'}}/>
                 </div>
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Phone (optional)</div>
@@ -449,7 +449,7 @@ function SettingsInner() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <div style={{display:'flex',alignItems:'center',gap:10}}>
                   <div style={{width:32,height:32,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:ACCENT}}>{user?.email?.charAt(0).toUpperCase()}</div>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{user?.email?.split('@')[0]}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{user?.email?.split('@')[0]}</span>
                 </div>
                 <span style={{fontSize:13,color:'#667085'}}>{user?.email}</span>
                 <span style={{fontSize:12,fontWeight:600,color:ACCENT,background:ACCENT+'18',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>{myRole}</span>
@@ -460,7 +460,7 @@ function SettingsInner() {
                 <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
                     <div style={{width:32,height:32,borderRadius:'50%',background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#344054'}}>{m.name.charAt(0).toUpperCase()}</div>
-                    <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.name}</span>
+                    <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{m.name}</span>
                   </div>
                   <span style={{fontSize:13,color:'#667085'}}>{m.email}</span>
                   <span style={{fontSize:12,fontWeight:600,color:'#344054',background:'#F2F4F7',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>{m.role}</span>
@@ -484,7 +484,7 @@ function SettingsInner() {
               ))}
               {team.length===0&&(<div style={{textAlign:'center',padding:40,color:'#98A2B3'}}>
                 <div style={{fontSize:32,marginBottom:8}}>👥</div>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No additional team members yet</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>No additional team members yet</div>
                 <div style={{fontSize:13}}>Invite cleaners, admins and managers to get started.</div>
               </div>)}
             </div>
@@ -494,7 +494,7 @@ function SettingsInner() {
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                 <div>
-                  <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Tenant payment setup</h3>
+                  <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>Tenant payment setup</h3>
                   <div style={{fontSize:13,color:'#667085'}}>Connect your Stripe account so tenant rent, utility payments and the £75 partner fee go directly to your bank.</div>
                 </div>
               </div>
@@ -514,19 +514,19 @@ function SettingsInner() {
           {section==='System Messages'&&(<div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
               <div>
-                <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>System Messages</h2>
+                <h2 style={{fontSize:20,fontWeight:700,color:'#323338',margin:'0 0 4px'}}>System Messages</h2>
                 <div style={{fontSize:13,color:'#667085'}}>Platform updates, new features and announcements for the portal.</div>
               </div>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:12}}>
-              {messages.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center',color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:8}}>🔔</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>No messages yet</div><div style={{fontSize:13}}>System announcements will appear here.</div></div>):messages.map(msg=>{
-                const colors:any = {success:{bg:'#ECFDF5',border:'#6EE7B7',icon:'✅',tag:'#10B981',tagBg:'#ECFDF5'},info:{bg:'#EFF6FF',border:'#93C5FD',icon:'ℹ️',tag:'#3B82F6',tagBg:'#EFF6FF'},update:{bg:'#EEF0FF',border:'#A5B4FC',icon:'🚀',tag:'#6366F1',tagBg:'#EEF0FF'},warning:{bg:'#FFFBEB',border:'#FCD34D',icon:'⚠️',tag:'#F59E0B',tagBg:'#FFFBEB'}}
+              {messages.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center',color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:8}}>🔔</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>No messages yet</div><div style={{fontSize:13}}>System announcements will appear here.</div></div>):messages.map(msg=>{
+                const colors:any = {success:{bg:'#ECFDF5',border:'#6EE7B7',icon:'✅',tag:'#10B981',tagBg:'#ECFDF5'},info:{bg:'#FBF4E6',border:'#93C5FD',icon:'ℹ️',tag:'#A8862E',tagBg:'#FBF4E6'},update:{bg:'#FBF4E6',border:'#A5B4FC',icon:'🚀',tag:'#A8862E',tagBg:'#FBF4E6'},warning:{bg:'#FFFBEB',border:'#FCD34D',icon:'⚠️',tag:'#F59E0B',tagBg:'#FFFBEB'}}
                 const c = colors[msg.type]??colors.info
                 return(<div key={msg.id} style={{background:c.bg,borderRadius:12,border:'1px solid '+c.border,padding:20,display:'flex',gap:14}}>
                   <span style={{fontSize:24,flexShrink:0}}>{c.icon}</span>
                   <div style={{flex:1}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{msg.title}</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{msg.title}</div>
                       <span style={{fontSize:10,fontWeight:700,background:c.tagBg,color:c.tag,border:'1px solid '+c.border,padding:'2px 8px',borderRadius:20,textTransform:'uppercase'}}>{msg.type}</span>
                     </div>
                     {msg.body&&<div style={{fontSize:13,color:'#344054',lineHeight:1.6}}>{msg.body}</div>}

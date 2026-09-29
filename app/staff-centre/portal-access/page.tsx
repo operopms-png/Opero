@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const MODULES: { k: string; l: string; color: string }[] = [
-  { k: 'str', l: 'Vacation Rentals', color: '#3B4AFF' },
+  { k: 'str', l: 'Vacation Rentals', color: '#A8862E' },
   { k: 'pm', l: 'Property Management', color: '#10B981' },
   { k: 'ea', l: 'Estate Agency', color: '#F59E0B' },
-  { k: 'dev', l: 'Developments', color: '#8B5CF6' },
+  { k: 'dev', l: 'Developments', color: '#A8862E' },
   { k: 'other', l: 'Other', color: '#667085' },
 ]
 const lbl: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }
@@ -100,12 +100,12 @@ export default function PortalAccessPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Staff Centre</div>
-            <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#101828', letterSpacing: '-0.01em' }}>Portal Access</h1>
+            <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#323338', letterSpacing: '-0.01em' }}>Portal Access</h1>
             <div style={{ fontSize: 14, color: '#667085', maxWidth: 640, lineHeight: 1.5 }}>
               Every client-facing portal, across every module. Add, rename or retire any of them — nothing here is hardcoded.
             </div>
           </div>
-          <button onClick={() => { setForm({ module: 'other', live: true }); setEditId(null); setModal('portal') }} style={{ background: '#101828', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add Portal</button>
+          <button onClick={() => { setForm({ module: 'other', live: true }); setEditId(null); setModal('portal') }} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add Portal</button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 20 }}>
@@ -117,7 +117,7 @@ export default function PortalAccessPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 42, height: 42, borderRadius: 10, background: mod.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: mod.color, flexShrink: 0 }}>{p.name.charAt(0)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: '#101828' }}>{p.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: '#323338' }}>{p.name}</div>
                     <div style={{ fontSize: 11, color: '#98A2B3' }}>{mod.l}</div>
                   </div>
                 </div>
@@ -125,7 +125,7 @@ export default function PortalAccessPage() {
                   {p.live ? 'Open Portal' : 'Preview'}
                 </a>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { setForm(p); setEditId(p.id); setModal('portal') }} style={{ flex: 1, fontSize: 12, color: '#8B5CF6', background: 'none', border: '1px solid #8B5CF6', borderRadius: 6, padding: '5px 0', cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => { setForm(p); setEditId(p.id); setModal('portal') }} style={{ flex: 1, fontSize: 12, color: '#A8862E', background: 'none', border: '1px solid #A8862E', borderRadius: 6, padding: '5px 0', cursor: 'pointer' }}>Edit</button>
                   <button onClick={() => del(p.id)} style={{ flex: 1, fontSize: 12, color: '#EF4444', background: 'none', border: '1px solid #FEE2E2', borderRadius: 6, padding: '5px 0', cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function PortalAccessPage() {
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             <button onClick={() => { setModal(null); setEditId(null); setForm({}) }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-            <button onClick={save} disabled={saving || !form.name || !form.url} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name || !form.url ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Portal'}</button>
+            <button onClick={save} disabled={saving || !form.name || !form.url} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name || !form.url ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Portal'}</button>
           </div>
         </Modal>
       )}

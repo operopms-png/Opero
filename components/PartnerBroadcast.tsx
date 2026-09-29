@@ -9,9 +9,9 @@ import { supabase } from '../lib/supabase'
 // Live via Supabase Realtime, with a light poll as a fallback.
 
 // Same palette as the Staff Centre dashboard
-const ACCENT = '#3B4AFF'
-const ACCENT_SOFT = '#EEF0FF'
-const TEXT = '#101828'
+const ACCENT = '#A8862E'
+const ACCENT_SOFT = '#FBF4E6'
+const TEXT = '#323338'
 const FEED_BG = '#F7F8FA'
 
 type Props = {
@@ -139,7 +139,7 @@ export default function PartnerBroadcast({ businessId, userId, authorName, autho
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {([['all', 'All'], ['opportunities', 'Opportunities']] as const).map(([k, v]) => (
-            <button key={k} onClick={() => setFilter(k)} style={{ padding: '6px 12px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${filter === k ? '#D7E0FF' : '#D0D5DD'}`, background: filter === k ? '#D7E0FF' : '#fff', color: filter === k ? ACCENT : '#344054' }}>{v}</button>
+            <button key={k} onClick={() => setFilter(k)} style={{ padding: '6px 12px', borderRadius: 16, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${filter === k ? '#EADBB8' : '#D0D5DD'}`, background: filter === k ? '#EADBB8' : '#fff', color: filter === k ? ACCENT : '#344054' }}>{v}</button>
           ))}
         </div>
       </div>

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 
 type ChecklistItem = { key: string; label: string; auto: boolean }
 
@@ -36,7 +36,7 @@ type ModuleDef = {
 
 const MODULES: ModuleDef[] = [
   {
-    key: 'str', label: 'Vacation Rentals', color: '#3B4AFF',
+    key: 'str', label: 'Vacation Rentals', color: '#A8862E',
     segments: [
       {
         key: 'str_owner', label: 'Client onboarding (owners)', table: 'owner_profiles',
@@ -106,7 +106,7 @@ const MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'dev', label: 'Developments', color: '#8B5CF6',
+    key: 'dev', label: 'Developments', color: '#A8862E',
     segments: [
       {
         key: 'dev_investor', label: 'Off-Plan Buyers / Investors', table: 'dev_investors',
@@ -370,7 +370,7 @@ export default function CustomerOnboardingPage() {
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Staff Centre</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#101828', letterSpacing: '-0.01em' }}>Customer Onboarding</h1>
+          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#323338', letterSpacing: '-0.01em' }}>Customer Onboarding</h1>
           <div style={{ fontSize: 14, color: '#667085', maxWidth: 720, lineHeight: 1.5 }}>
             One checklist per client across every module. Items with a tick icon (●) auto-complete from real records — an uploaded ID, a signed agreement, a logged payment. Everything else is ticked by hand and saved here.
           </div>
@@ -398,7 +398,7 @@ export default function CustomerOnboardingPage() {
 
         {mod.key === 'str' && showAdd && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#101828', marginBottom: 4 }}>Add a client</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Add a client</div>
             <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 14 }}>Creates their owner portal login and links them to their property. They can sign in straight away with this email and password.</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
               <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>First name *</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} value={addForm.first_name} onChange={e => setAddForm({ ...addForm, first_name: e.target.value })} /></div>
@@ -417,7 +417,7 @@ export default function CustomerOnboardingPage() {
                     return (
                       <button key={p.id} type="button" onClick={() => setAddForm({ ...addForm, property_ids: on ? addForm.property_ids.filter(x => x !== p.id) : [...addForm.property_ids, p.id] })}
                         title={current ? `Currently linked to ${current.name}. Choosing it moves it to the new client.` : undefined}
-                        style={{ padding: '7px 12px', borderRadius: 20, border: '1px solid ' + (on ? ACCENT : '#D0D5DD'), background: on ? '#EEF1FF' : '#fff', color: on ? ACCENT : '#344054', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        style={{ padding: '7px 12px', borderRadius: 20, border: '1px solid ' + (on ? ACCENT : '#D0D5DD'), background: on ? '#FBF4E6' : '#fff', color: on ? ACCENT : '#344054', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                         {on ? '✓ ' : ''}{p.name}{current ? <span style={{ fontWeight: 400, color: '#98A2B3' }}> · {current.name}</span> : null}
                       </button>
                     )
@@ -457,14 +457,14 @@ export default function CustomerOnboardingPage() {
               <div key={c.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #EAECF0', padding: '22px 24px', marginBottom: 6 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{c.name}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{c.name}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 12, color: '#667085' }}>Client:</span>
                       <select
                         value={vrOwners.find(o => o.property_ids.includes(c.id))?.id ?? ''}
                         disabled={saving === 'link' + c.id}
                         onChange={e => linkProperty(c.id, e.target.value || null)}
-                        style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', color: '#101828', fontFamily: 'inherit', cursor: 'pointer' }}
+                        style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', color: '#323338', fontFamily: 'inherit', cursor: 'pointer' }}
                       >
                         <option value="">No client linked</option>
                         {vrOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -475,7 +475,7 @@ export default function CustomerOnboardingPage() {
                   <div style={{ fontSize: 12, color: '#667085', flexShrink: 0 }}>{stage} of {PROPERTY_STEPS.length} complete</div>
                 </div>
                 <div style={{ height: 6, background: '#F2F4F7', borderRadius: 3, margin: '10px 0 16px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(stage / PROPERTY_STEPS.length) * 100}%`, background: '#5B7CFA', transition: 'width .2s' }} />
+                  <div style={{ height: '100%', width: `${(stage / PROPERTY_STEPS.length) * 100}%`, background: '#A8862E', transition: 'width .2s' }} />
                 </div>
                 {PROPERTY_ITEMS.map((item, i) => {
                   const done = i < stage
@@ -486,13 +486,13 @@ export default function CustomerOnboardingPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <div style={{
                           width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700,
-                          background: done ? '#10B981' : current ? '#EEF1FF' : '#F2F4F7',
-                          color: done ? '#fff' : current ? '#5B7CFA' : '#98A2B3',
-                          border: current ? '1px solid #5B7CFA' : 'none',
+                          background: done ? '#10B981' : current ? '#FBF4E6' : '#F2F4F7',
+                          color: done ? '#fff' : current ? '#A8862E' : '#98A2B3',
+                          border: current ? '1px solid #A8862E' : 'none',
                         }}>{done ? '✓' : i + 1}</div>
                         {i < PROPERTY_ITEMS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 16, background: '#EAECF0' }} />}
                       </div>
-                      <div style={{ paddingBottom: 14, paddingTop: 3, fontSize: 13, color: done || current ? '#101828' : '#667085' }}>{item.label}</div>
+                      <div style={{ paddingBottom: 14, paddingTop: 3, fontSize: 13, color: done || current ? '#323338' : '#667085' }}>{item.label}</div>
                     </div>
                   )
                 })}
@@ -503,7 +503,7 @@ export default function CustomerOnboardingPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: mod.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: mod.color, flexShrink: 0 }}>{(c.name ?? '?').charAt(0)}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: '#101828' }}>{c.name}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{c.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>{c.email ?? '—'}</div>
                   {seg.key === 'str_owner' && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
@@ -511,9 +511,9 @@ export default function CustomerOnboardingPage() {
                         const p = vrProps.find(x => x.id === pid)
                         if (!p) return null
                         return (
-                          <span key={pid} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#3B4AFF', background: '#EEF1FF', borderRadius: 14, padding: '4px 6px 4px 10px' }}>
+                          <span key={pid} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#A8862E', background: '#FBF4E6', borderRadius: 14, padding: '4px 6px 4px 10px' }}>
                             {p.name}
-                            <button title="Unlink this property" disabled={saving === 'link' + pid} onClick={() => linkProperty(pid, null)} style={{ border: 'none', background: 'none', color: '#3B4AFF', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
+                            <button title="Unlink this property" disabled={saving === 'link' + pid} onClick={() => linkProperty(pid, null)} style={{ border: 'none', background: 'none', color: '#A8862E', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
                           </span>
                         )
                       })}

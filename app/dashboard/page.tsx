@@ -14,7 +14,7 @@ const PLAN_PROPERTY_LIMIT: Record<string, number> = {
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  starter: '#6B7280', growth: '#5B7BF8', professional: '#1a1a2e',
+  starter: '#6B7280', growth: '#A8862E', professional: '#1a1a2e',
 }
 
 const GROWTH_LOCKED = ['Bookings management', 'Owner reporting portal', 'Photo verification', 'Performance analytics', 'Calendar integrations', '10 team members']
@@ -112,7 +112,7 @@ export default function DashboardPage() {
       {/* Top bar */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E8ECF4', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#0F172A' }}>{greeting}, {user?.email?.split('@')[0]}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#323338' }}>{greeting}, {user?.email?.split('@')[0]}</div>
           <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 1 }}>Here's what's happening today</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -120,11 +120,11 @@ export default function DashboardPage() {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px',
               borderRadius: 20,
-              background: trialUrgent ? '#FEF3C7' : '#EEF1FF',
-              border: `1px solid ${trialUrgent ? '#FCD34D' : '#C7D2FE'}`,
+              background: trialUrgent ? '#FEF3C7' : '#FBF4E6',
+              border: `1px solid ${trialUrgent ? '#FCD34D' : '#EADBB8'}`,
             }}>
               <span style={{ fontSize: 16 }}>{trialUrgent ? '⚠️' : '⏱️'}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: trialUrgent ? '#B45309' : '#5B7CFA' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: trialUrgent ? '#B45309' : '#A8862E' }}>
                 {daysLeft === 0 ? 'Trial ends today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in trial`}
               </span>
             </div>
@@ -136,13 +136,13 @@ export default function DashboardPage() {
             </div>
           )}
           {subscription && !isTrialing && !isPaid && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 20, background: '#F1F5FF', border: '1px solid #E0E7FF' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 20, background: '#F1F5FF', border: '1px solid #EADBB8' }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: PLAN_COLOR[plan] }} />
               <span style={{ fontSize: 13, fontWeight: 600, color: PLAN_COLOR[plan], textTransform: 'capitalize' }}>{plan}</span>
             </div>
           )}
           {false && plan !== 'professional' && (
-            <a href="/settings" style={{ padding: '7px 16px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>⚡ Upgrade</a>
+            <a href="/settings" style={{ padding: '7px 16px', background: '#A8862E', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>⚡ Upgrade</a>
           )}
         </div>
       </div>
@@ -152,23 +152,23 @@ export default function DashboardPage() {
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           {[
-            { label: 'Properties', value: `${stats.properties}${propertyLimit !== Infinity ? `/${propertyLimit}` : ''}`, sub: 'Total active', icon: '🏠', color: '#5B7BF8', bg: '#EEF2FF' },
+            { label: 'Properties', value: `${stats.properties}${propertyLimit !== Infinity ? `/${propertyLimit}` : ''}`, sub: 'Total active', icon: 'home', color: '#A8862E', bg: '#FBF4E6' },
             { label: 'Cleaning Tasks', value: stats.cleaning, sub: 'Pending today', icon: 'clean', color: '#10B981', bg: '#D1FAE5' },
             { label: 'Maintenance', value: stats.maintenance, sub: 'Open tickets', icon: 'wrench', color: '#F59E0B', bg: '#FEF3C7' },
-            { label: 'Revenue', value: `£${stats.revenue.toLocaleString()}`, sub: 'This month', icon: 'revenue', color: '#fff', bg: '#5B7BF8', dark: true },
+            { label: 'Revenue', value: `£${stats.revenue.toLocaleString()}`, sub: 'This month', icon: 'revenue', color: '#fff', bg: '#A8862E', dark: true },
           ].map(card => (
-            <div key={card.label} className="card" style={{ padding: '20px 24px', background: (card as any).dark ? '#5B7BF8' : '#fff', border: (card as any).dark ? 'none' : '1px solid #E8ECF4' }}>
+            <div key={card.label} className="card" style={{ padding: '20px 24px', background: (card as any).dark ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', border: (card as any).dark ? '1px solid #EADBB8' : '1px solid #E8ECF4' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: (card as any).dark ? 'rgba(255,255,255,0.7)' : '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: (card as any).dark ? 'rgba(255,255,255,0.2)' : card.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {card.icon === 'home' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#fff' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
-                  {card.icon === 'clean' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#fff' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l9-9M12.5 6.5l5 5-9 9H3v-5.5l9-9z"/><path d="M15 3l3 3-9 9-3-3z"/></svg>}
-                  {card.icon === 'wrench' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#fff' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>}
+                <div style={{ fontSize: 12, fontWeight: 600, color: (card as any).dark ? '#8A6B2E' : '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{card.label}</div>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: (card as any).dark ? '#D0AE4C' : card.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {card.icon === 'home' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#624920' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>}
+                  {card.icon === 'clean' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#624920' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l9-9M12.5 6.5l5 5-9 9H3v-5.5l9-9z"/><path d="M15 3l3 3-9 9-3-3z"/></svg>}
+                  {card.icon === 'wrench' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={(card as any).dark ? '#624920' : card.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>}
                   {card.icon === 'revenue' && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>}
                 </div>
               </div>
-              <div style={{ fontSize: 32, fontWeight: 800, color: (card as any).dark ? '#fff' : '#0F172A', letterSpacing: '-1px' }}>{loading ? '—' : card.value}</div>
-              <div style={{ fontSize: 12, color: (card as any).dark ? 'rgba(255,255,255,0.6)' : '#94A3B8', marginTop: 4 }}>{card.sub}</div>
+              <div style={{ fontSize: 32, fontWeight: 800, color: (card as any).dark ? '#624920' : '#323338', letterSpacing: '-1px' }}>{loading ? '—' : card.value}</div>
+              <div style={{ fontSize: 12, color: (card as any).dark ? '#8A6B2E' : '#94A3B8', marginTop: 4 }}>{card.sub}</div>
             </div>
           ))}
         </div>
@@ -179,10 +179,10 @@ export default function DashboardPage() {
           <div className="card" style={{ padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A' }}>Upcoming check-ins</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#323338' }}>Upcoming check-ins</div>
                 <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>Next 7 days</div>
               </div>
-              <a href="/bookings" style={{ fontSize: 12, color: '#5B7BF8', fontWeight: 600, textDecoration: 'none' }}>View all →</a>
+              <a href="/bookings" style={{ fontSize: 12, color: '#A8862E', fontWeight: 600, textDecoration: 'none' }}>View all →</a>
             </div>
             {loading ? (
               <div style={{ color: '#94A3B8', textAlign: 'center', padding: 32, fontSize: 14 }}>Loading…</div>
@@ -196,13 +196,13 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {upcomingBookings.map(b => (
                   <div key={b.id} className="hover-row" style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, cursor: 'pointer' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#FBF4E6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>{b.guest_name ?? 'Guest'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{b.guest_name ?? 'Guest'}</div>
                       <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 1 }}>{b.properties?.name} · {nightsBetween(b.check_in, b.check_out)} nights</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{formatDate(b.check_in)}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#323338' }}>{formatDate(b.check_in)}</div>
                       <div style={{ fontSize: 11, color: '#94A3B8' }}>→ {formatDate(b.check_out)}</div>
                     </div>
                   </div>
@@ -213,7 +213,7 @@ export default function DashboardPage() {
 
           {/* Activity feed */}
           <div className="card" style={{ padding: 24 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>Activity feed</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Activity feed</div>
             <div style={{ fontSize: 12, color: '#94A3B8', marginBottom: 20 }}>Recent bookings & changes</div>
             {loading ? (
               <div style={{ color: '#94A3B8', textAlign: 'center', padding: 32, fontSize: 14 }}>Loading…</div>
@@ -226,9 +226,9 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {recentActivity.map(b => (
                   <div key={b.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F1F5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: '#F1F5FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#0F172A' }}>{b.guest_name ?? 'New booking'}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#323338' }}>{b.guest_name ?? 'New booking'}</div>
                       <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{b.properties?.name} · {b.platform ?? 'Direct'}</div>
                     </div>
                     <div style={{ fontSize: 11, color: '#94A3B8', whiteSpace: 'nowrap' }}>{formatDate(b.created_at)}</div>
@@ -245,10 +245,10 @@ export default function DashboardPage() {
           <div className="card" style={{ padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A' }}>Your properties</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#323338' }}>Your properties</div>
                 <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>{stats.properties} total</div>
               </div>
-              <a href="/properties" style={{ fontSize: 12, color: '#5B7BF8', fontWeight: 600, textDecoration: 'none' }}>Manage →</a>
+              <a href="/properties" style={{ fontSize: 12, color: '#A8862E', fontWeight: 600, textDecoration: 'none' }}>Manage →</a>
             </div>
             {loading ? (
               <div style={{ color: '#94A3B8', textAlign: 'center', padding: 32, fontSize: 14 }}>Loading…</div>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
               <div style={{ textAlign: 'center', padding: '32px 0' }}>
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D0D5DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:8}}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 <div style={{ fontSize: 14, fontWeight: 500, color: '#64748B' }}>No properties yet</div>
-                <a href="/properties" style={{ display: 'inline-block', marginTop: 12, padding: '8px 16px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Add property</a>
+                <a href="/properties" style={{ display: 'inline-block', marginTop: 12, padding: '8px 16px', background: '#A8862E', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Add property</a>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -266,7 +266,7 @@ export default function DashboardPage() {
                       {p.image_url ? <img src={p.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#98A2B3' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>}
                     </div>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#0F172A' }}>{p.name}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{p.name}</div>
                       <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 1 }}>{[p.city, p.country].filter(Boolean).join(', ') || 'No location set'}</div>
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, color: p.status === 'active' ? '#10B981' : '#6B7280', background: p.status === 'active' ? '#D1FAE5' : '#F3F4F6' }}>
@@ -283,11 +283,11 @@ export default function DashboardPage() {
 
             {/* Calendar sync status */}
             <div className="card" style={{ padding: 24 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#0F172A', marginBottom: 16 }}>Portal status</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#323338', marginBottom: 16 }}>Portal status</div>
               {properties.filter(p => p.airbnb_ical_url || p.vrbo_ical_url || p.booking_ical_url).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
                   <div style={{ fontSize: 13, color: '#94A3B8' }}>No calendars connected yet.</div>
-                  <a href="/properties" style={{ fontSize: 12, color: '#5B7BF8', fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'block' }}>Connect via properties →</a>
+                  <a href="/properties" style={{ fontSize: 12, color: '#A8862E', fontWeight: 600, textDecoration: 'none', marginTop: 4, display: 'block' }}>Connect via properties →</a>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -296,8 +296,8 @@ export default function DashboardPage() {
                       {p.airbnb_ical_url && (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: '#0F172A' }}>Airbnb</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>Airbnb</span>
                             <span style={{ fontSize: 11, color: '#94A3B8' }}>{p.name}</span>
                           </div>
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: 20 }}>Synced</span>
@@ -306,8 +306,8 @@ export default function DashboardPage() {
                       {p.vrbo_ical_url && (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B7BF8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: '#0F172A' }}>VRBO</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>VRBO</span>
                             <span style={{ fontSize: 11, color: '#94A3B8' }}>{p.name}</span>
                           </div>
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: 20 }}>Synced</span>
@@ -317,7 +317,7 @@ export default function DashboardPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <span style={{ fontSize: 16 }}>🌐</span>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: '#0F172A' }}>Booking.com</span>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>Booking.com</span>
                             <span style={{ fontSize: 11, color: '#94A3B8' }}>{p.name}</span>
                           </div>
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: 20 }}>Synced</span>

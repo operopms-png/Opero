@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 
 const DEFAULT_PORTALS = [
   {
@@ -47,12 +47,12 @@ function initials(name: string) {
 // deposit plans aren't tracked anywhere in the schema yet), so it
 // links to a preview page rather than a live portal.
 const OUR_PORTALS = [
-  { key: 'str-owner', module: 'Vacation Rentals', name: 'Owner Portal', url: '/owner-portal', color: '#3B4AFF', live: true },
+  { key: 'str-owner', module: 'Vacation Rentals', name: 'Owner Portal', url: '/owner-portal', color: '#A8862E', live: true },
   { key: 'pm-landlord', module: 'Property Management', name: 'Landlord Portal', url: '/pm-owner-portal', color: '#10B981', live: true },
   { key: 'pm-tenant', module: 'Property Management', name: 'Tenant Portal', url: '/pm-tenant-portal', color: '#10B981', live: true },
   { key: 'ea-landlord', module: 'Estate Agency', name: 'Landlord Portal', url: '/estate-owner-portal', color: '#F59E0B', live: true },
   { key: 'ea-tenant', module: 'Estate Agency', name: 'Tenant Portal', url: '/estate-tenant-portal', color: '#F59E0B', live: true },
-  { key: 'dev-investors', module: 'Developments', name: 'Investors Portal', url: '/dev-investor-portal', color: '#8B5CF6', live: false },
+  { key: 'dev-investors', module: 'Developments', name: 'Investors Portal', url: '/dev-investor-portal', color: '#A8862E', live: false },
   { key: 'partners', module: 'Partners', name: 'Partners Dashboard', url: '/partners', color: '#C9A84C', live: true },
 ]
 
@@ -124,7 +124,7 @@ export default function PortalsPage() {
       <div style={{ maxWidth: 1040, margin: '0 auto' }}>
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Portal Access</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#101828', letterSpacing: '-0.01em' }}>Client Portals</h1>
+          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#323338', letterSpacing: '-0.01em' }}>Client Portals</h1>
           <div style={{ fontSize: 14, color: '#667085', maxWidth: 640, lineHeight: 1.5 }}>
             View and access every client-facing portal across every module from one place.
           </div>
@@ -136,7 +136,7 @@ export default function PortalsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 42, height: 42, borderRadius: 10, background: p.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: p.color, flexShrink: 0 }}>{p.name.charAt(0)}</div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#101828' }}>{p.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#323338' }}>{p.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>{p.module}</div>
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default function PortalsPage() {
 
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>External listings</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#101828', letterSpacing: '-0.01em' }}>Property Portals</h1>
+          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#323338', letterSpacing: '-0.01em' }}>Property Portals</h1>
           <div style={{ fontSize: 14, color: '#667085', maxWidth: 640, lineHeight: 1.5 }}>
             Quick access to the listing sites and MLS accounts staff use for comparables and research. Each opens in a new tab with your own sign-in — nothing is embedded, since these providers don't allow it.
           </div>
@@ -164,7 +164,7 @@ export default function PortalsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 42, height: 42, borderRadius: 10, background: p.badgeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, color: p.badgeFg, flexShrink: 0 }}>{p.badge}</div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#101828' }}>{p.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#323338' }}>{p.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>{p.sub}</div>
                 </div>
               </div>
@@ -182,9 +182,9 @@ export default function PortalsPage() {
                 <button onClick={() => removePortal(p.id)} title="Remove" style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#98A2B3', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 4 }}>×</button>
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: '#EEF0FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: ACCENT, flexShrink: 0 }}>{initials(p.name)}</div>
+                <div style={{ width: 42, height: 42, borderRadius: 10, background: '#FBF4E6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: ACCENT, flexShrink: 0 }}>{initials(p.name)}</div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: '#101828' }}>{p.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16, color: '#323338' }}>{p.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>Custom portal</div>
                 </div>
               </div>
@@ -199,7 +199,7 @@ export default function PortalsPage() {
 
         {isOwner && (showAdd ? (
           <div style={{ background: '#fff', border: '1px solid ' + ACCENT, borderRadius: 14, padding: 22 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#101828', marginBottom: 12 }}>Add another portal</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#323338', marginBottom: 12 }}>Add another portal</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Name</div>

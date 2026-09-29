@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { useRole } from '../../../lib/useRole'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const TYPES = [
   { k: 'pdf', l: 'PDF' },
   { k: 'file', l: 'File' },
@@ -128,7 +128,7 @@ export default function TrainingPage() {
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#101828', margin: '0 0 4px' }}>Staff Training</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Staff Training</h1>
           <div style={{ fontSize: 13, color: '#667085' }}>
             {materials.length ? `${totalDone} of ${materials.length} completed` : 'PDFs, files, and videos for the team to work through and check off.'}
           </div>
@@ -138,7 +138,7 @@ export default function TrainingPage() {
 
       {isAdmin && showAdd && (
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, marginBottom: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 14 }}>New training material</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 14 }}>New training material</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Title</label>
@@ -157,7 +157,7 @@ export default function TrainingPage() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Type</label>
             <div style={{ display: 'flex', gap: 6 }}>
               {TYPES.map(t => (
-                <button key={t.k} onClick={() => setForm({ ...form, type: t.k, url: '' })} style={{ padding: '8px 16px', borderRadius: 8, border: `1.5px solid ${form.type === t.k ? ACCENT : '#D0D5DD'}`, background: form.type === t.k ? '#EEF0FF' : '#fff', color: form.type === t.k ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{t.l}</button>
+                <button key={t.k} onClick={() => setForm({ ...form, type: t.k, url: '' })} style={{ padding: '8px 16px', borderRadius: 8, border: `1.5px solid ${form.type === t.k ? ACCENT : '#D0D5DD'}`, background: form.type === t.k ? '#FBF4E6' : '#fff', color: form.type === t.k ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{t.l}</button>
               ))}
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function TrainingPage() {
                     <div style={{ display: 'flex', gap: 12 }}>
                       <div style={{ width: 34, height: 34, borderRadius: 8, background: '#F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{typeIcon(m.type)}</div>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{m.title}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{m.title}</div>
                         {m.description && <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{m.description}</div>}
                         {(m.type === 'pdf' || m.type === 'file') && (
                           <a href={m.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>{m.type === 'pdf' ? 'Open PDF' : 'Open file'} →</a>

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     `Your tenancy agreement for ${propertyName}`,
     `<p>Hi ${tenantName},</p>
      <p>Please review and sign your tenancy agreement for <strong>${propertyName}</strong> using the secure link below:</p>
-     <p><a href="${signUrl}" style="display:inline-block;background:#101828;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;">Review & Sign Agreement</a></p>
+     <p><a href="${signUrl}" style="display:inline-block;background:#323338;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;">Review & Sign Agreement</a></p>
      <p>Or copy this link into your browser: ${signUrl}</p>`,
     undefined,
     from

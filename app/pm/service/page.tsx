@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const MODULE = 'pm'
 const LABEL = 'PROPERTY MANAGEMENT'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -67,7 +67,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>{LABEL}</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Service</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Service</div>
         </div>
         <div style={{display:'flex',gap:8}}>
           {section==='Tickets'&&<button onClick={()=>setShowTicketForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Ticket</button>}
@@ -80,7 +80,7 @@ export default function Page() {
       <div style={{padding:24}}>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-          {[{l:'Open',v:open,c:'#EF4444'},{l:'In Progress',v:inProgress,c:'#F59E0B'},{l:'Resolved',v:resolved,c:'#10B981'},{l:'Total',v:tickets.length,c:'#101828'}].map((s:any)=>(
+          {[{l:'Open',v:open,c:'#EF4444'},{l:'In Progress',v:inProgress,c:'#F59E0B'},{l:'Resolved',v:resolved,c:'#10B981'},{l:'Total',v:tickets.length,c:'#323338'}].map((s:any)=>(
             <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
               <div style={{fontSize:26,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
               <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
@@ -109,10 +109,10 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 100px 80px 80px 140px 120px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Title</span><span>Type</span><span>Priority</span><span>Status</span><span>Contact</span><span>Property</span><span></span>
             </div>
-            {tickets.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🎧</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No tickets yet</div><div style={{fontSize:13}}>Raise a new support ticket.</div></div>):tickets.map((t:any)=>(
+            {tickets.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🎧</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No tickets yet</div><div style={{fontSize:13}}>Raise a new support ticket.</div></div>):tickets.map((t:any)=>(
               <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 80px 80px 140px 120px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.title}</div>{t.description&&<div style={{fontSize:11,color:'#98A2B3'}}>{t.description.substring(0,40)}...</div>}</div>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{t.type}</span>
+                <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.title}</div>{t.description&&<div style={{fontSize:11,color:'#98A2B3'}}>{t.description.substring(0,40)}...</div>}</div>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{t.type}</span>
                 <span style={{fontSize:11,fontWeight:600,padding:'3px 6px',borderRadius:4,background:t.priority==='Urgent'?'#FEE2E2':t.priority==='High'?'#FEF3C7':'#F9FAFB',color:t.priority==='Urgent'?'#EF4444':t.priority==='High'?'#F59E0B':'#667085'}}>{t.priority}</span>
                 <select value={t.status} onChange={e=>updateField('service_tickets',t.id,'status',e.target.value,setTickets)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Open','In Progress','Resolved','Closed'].map(s=><option key={s}>{s}</option>)}</select>
                 <span style={{fontSize:12,color:'#667085'}}>{t.contact||'—'}</span>
@@ -138,10 +138,10 @@ export default function Page() {
             </div>
           </div>)}
           <div style={{display:'flex',flexDirection:'column' as const,gap:12}}>
-            {faqs.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>❓</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No FAQs yet</div></div>):faqs.map((f:any)=>(
+            {faqs.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>❓</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No FAQs yet</div></div>):faqs.map((f:any)=>(
               <div key={f.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-                  <div><span style={{fontSize:10,fontWeight:600,color:ACCENT,background:'#EEF1FF',padding:'2px 8px',borderRadius:4,marginRight:8}}>{f.category}</span><span style={{fontSize:14,fontWeight:600,color:'#101828'}}>{f.question}</span></div>
+                  <div><span style={{fontSize:10,fontWeight:600,color:ACCENT,background:'#FBF4E6',padding:'2px 8px',borderRadius:4,marginRight:8}}>{f.category}</span><span style={{fontSize:14,fontWeight:600,color:'#323338'}}>{f.question}</span></div>
                   <button onClick={()=>del('service_faqs',f.id,setFaqs)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444',flexShrink:0}}>×</button>
                 </div>
                 <p style={{fontSize:13,color:'#667085',lineHeight:1.6,margin:0}}>{f.answer}</p>

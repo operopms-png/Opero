@@ -108,7 +108,7 @@ export default function TenantDocuments({ kind, tenant, onClose, onChanged }: {
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tenant documents</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#101828' }}>{tenant.name}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#323338' }}>{tenant.name}</div>
           </div>
           <span style={{ fontSize: 12, color: '#667085' }}>{docs.length} {docs.length === 1 ? 'file' : 'files'}</span>
           <button onClick={close} aria-label="Close" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#667085', lineHeight: 1 }}>×</button>
@@ -130,10 +130,10 @@ export default function TenantDocuments({ kind, tenant, onClose, onChanged }: {
             onDragOver={e => { e.preventDefault(); setDragOver(true) }}
             onDragLeave={() => setDragOver(false)}
             onDrop={e => { e.preventDefault(); setDragOver(false); uploadAll(Array.from(e.dataTransfer.files)) }}
-            style={{ border: '2px dashed ' + (dragOver ? '#3B4AFF' : '#D0D5DD'), background: dragOver ? '#EEF1FF' : '#fff', borderRadius: 12, padding: '22px 16px', textAlign: 'center', cursor: 'pointer' }}
+            style={{ border: '2px dashed ' + (dragOver ? '#A8862E' : '#D0D5DD'), background: dragOver ? '#FBF4E6' : '#fff', borderRadius: 12, padding: '22px 16px', textAlign: 'center', cursor: 'pointer' }}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto 6px' }}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: '#101828' }}>Click to upload or drop files here</div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: '#323338' }}>Click to upload or drop files here</div>
             <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 2 }}>Choose as many as you like · PDF, Word, images · up to {MAX_MB} MB each</div>
             <input ref={inputRef} type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.webp,.xls,.xlsx,.txt" style={{ display: 'none' }}
               onChange={e => { uploadAll(Array.from(e.target.files ?? [])); e.target.value = '' }} />
@@ -165,7 +165,7 @@ export default function TenantDocuments({ kind, tenant, onClose, onChanged }: {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#323338', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
                       <div style={{ fontSize: 11.5, color: '#98A2B3' }}>
                         {new Date(d.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         {' · '}
@@ -179,7 +179,7 @@ export default function TenantDocuments({ kind, tenant, onClose, onChanged }: {
                       style={{ fontSize: 11, fontWeight: 600, padding: '4px 9px', borderRadius: 20, border: 'none', cursor: 'pointer', fontFamily: 'inherit', background: d.visible_to_tenant ? '#ECFDF3' : '#F2F4F7', color: d.visible_to_tenant ? '#027A48' : '#667085', whiteSpace: 'nowrap' }}>
                       {d.visible_to_tenant ? 'Tenant can see' : 'Staff only'}
                     </button>
-                    {fileLink(d) && <a href={fileLink(d)} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600, color: '#3B4AFF', textDecoration: 'none' }}>Open</a>}
+                    {fileLink(d) && <a href={fileLink(d)} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600, color: '#A8862E', textDecoration: 'none' }}>Open</a>}
                     <button onClick={() => remove(d)} aria-label="Delete" style={{ background: 'none', border: 'none', color: '#F04438', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
                   </div>
                 ))}

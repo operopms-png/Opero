@@ -1,13 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const LABEL = 'STAFF CENTRE'
 const MODULE_OPTIONS = [
-  { key:'str', label:'Vacation Rentals', color:'#3B4AFF', bg:'#EEF1FF' },
-  { key:'pm', label:'Property Management', color:'#3B4AFF', bg:'#EEF1FF' },
+  { key:'str', label:'Vacation Rentals', color:'#A8862E', bg:'#FBF4E6' },
+  { key:'pm', label:'Property Management', color:'#A8862E', bg:'#FBF4E6' },
   { key:'estate', label:'Estate Agency', color:'#2D6A4F', bg:'#EAF3EE' },
-  { key:'dev', label:'Developments', color:'#8B5CF6', bg:'#F3EEFF' },
+  { key:'dev', label:'Developments', color:'#A8862E', bg:'#F3EEFF' },
 ]
 function moduleBadge(m: string) {
   const found = MODULE_OPTIONS.find(x=>x.key===m)
@@ -21,7 +21,7 @@ const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'
 // so staff see images/HTML visually instead of raw markup. Sandboxed iframe: no scripts run.
 function emailPreviewDoc(body: string, zoom = 1) {
   const html = `<p>${(body||'').replace(/\n/g,'<br/>')}</p>`
-  return `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#101828;background:#fff;zoom:${zoom}}img{max-width:100%;height:auto}p{margin:0}</style></head><body>${html}</body></html>`
+  return `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#323338;background:#fff;zoom:${zoom}}img{max-width:100%;height:auto}p{margin:0}</style></head><body>${html}</body></html>`
 }
 function EmailPreview({ body, height = 480, zoom = 1, label = true }: { body: string, height?: number, zoom?: number, label?: boolean }) {
   return (
@@ -229,7 +229,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>{LABEL}</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Marketing</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Marketing</div>
         </div>
         <div style={{display:'flex',gap:8}}>
           {section==='Campaigns'&&<button onClick={()=>setShowCampaignForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Campaign</button>}
@@ -281,12 +281,12 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 100px 120px 100px 100px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Campaign</span><span>Type</span><span>Audience</span><span>Budget</span><span>Status</span><span></span>
             </div>
-            {campaigns.filter((c:any)=>c.module===moduleFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📣</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No campaigns yet</div><div style={{fontSize:13}}>Create your first marketing campaign.</div></div>):campaigns.filter((c:any)=>c.module===moduleFilter).map((c:any)=>(
+            {campaigns.filter((c:any)=>c.module===moduleFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📣</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No campaigns yet</div><div style={{fontSize:13}}>Create your first marketing campaign.</div></div>):campaigns.filter((c:any)=>c.module===moduleFilter).map((c:any)=>(
               <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 120px 100px 100px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.name}</div>{c.start_date&&<div style={{fontSize:11,color:'#98A2B3'}}>{c.start_date} - {c.end_date}</div>}</div>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{c.type}</span>
+                <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.name}</div>{c.start_date&&<div style={{fontSize:11,color:'#98A2B3'}}>{c.start_date} - {c.end_date}</div>}</div>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{c.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{c.audience||'—'}</span>
-                <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>{c.budget?'£'+parseFloat(c.budget).toLocaleString():'—'}</span>
+                <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{c.budget?'£'+parseFloat(c.budget).toLocaleString():'—'}</span>
                 <select value={c.status} onChange={e=>updateField('marketing_campaigns',c.id,'status',e.target.value,setCampaigns)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Draft','Active','Paused','Completed'].map(s=><option key={s}>{s}</option>)}</select>
                 <button onClick={()=>del('marketing_campaigns',c.id,setCampaigns)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>Delete</button>
               </div>
@@ -304,10 +304,10 @@ export default function Page() {
           {emailSubTab==='Manage'&&(<div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
               <div>
-                <div style={{fontSize:20,fontWeight:700,color:'#101828'}}>Marketing Email</div>
+                <div style={{fontSize:20,fontWeight:700,color:'#323338'}}>Marketing Email</div>
                 <div style={{fontSize:12,color:'#667085',marginTop:2}}>{emails.length} marketing email{emails.length===1?'':'s'} · {emails.filter((e:any)=>e.status==='Sent').length} sent this month</div>
               </div>
-              <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#101828'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Sangsters default notifications address (not set up yet)'}</strong> <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',marginLeft:8}}>{sendSettings.marketing_from_email?'Change':'Set up'}</button></div>
+              <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#323338'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Sangsters default notifications address (not set up yet)'}</strong> <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',marginLeft:8}}>{sendSettings.marketing_from_email?'Change':'Set up'}</button></div>
             </div>
             {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
@@ -354,7 +354,7 @@ export default function Page() {
                 {l:'Scheduled',dot:'#F59E0B'},
                 {l:'Sent',dot:'#10B981'},
               ].map(f=>(
-                <button key={f.l} onClick={()=>setEmailFilter(f.l)} style={{display:'flex',alignItems:'center',gap:6,padding:'0 0 10px',border:'none',background:'transparent',fontSize:13,fontWeight:emailFilter===f.l?600:400,color:emailFilter===f.l?'#101828':'#667085',borderBottom:emailFilter===f.l?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>
+                <button key={f.l} onClick={()=>setEmailFilter(f.l)} style={{display:'flex',alignItems:'center',gap:6,padding:'0 0 10px',border:'none',background:'transparent',fontSize:13,fontWeight:emailFilter===f.l?600:400,color:emailFilter===f.l?'#323338':'#667085',borderBottom:emailFilter===f.l?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>
                   {f.dot&&<div style={{width:7,height:7,borderRadius:'50%',background:f.dot}}/>}
                   {f.l}
                 </button>
@@ -396,7 +396,7 @@ export default function Page() {
                   .filter((e:any)=>e.module===moduleFilter)
                   .filter((e:any)=>emailFilter==='All emails'||e.status===emailFilter.replace(/s$/,''))
                   .filter((e:any)=>!emailSearch||e.subject?.toLowerCase().includes(emailSearch.toLowerCase())||e.to_recipient?.toLowerCase().includes(emailSearch.toLowerCase()))
-                if (filtered.length===0) return <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>✉️</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No emails here yet</div></div>
+                if (filtered.length===0) return <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>✉️</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No emails here yet</div></div>
                 const statusDot: Record<string,string> = {Draft:'#98A2B3',Scheduled:'#F59E0B',Sent:'#10B981'}
                 return filtered.map((e:any)=>{
                   const stats = emailStats(e.id)
@@ -409,7 +409,7 @@ export default function Page() {
                         <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
                           <div style={{width:7,height:7,borderRadius:'50%',background:statusDot[e.status]||'#98A2B3',marginTop:5,flexShrink:0}}/>
                           <div>
-                            <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>{e.subject}</div>
+                            <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{e.subject}</div>
                             <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>To: {e.to_recipient||'—'}</div>
                           </div>
                         </div>
@@ -434,7 +434,7 @@ export default function Page() {
                           <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,paddingTop:12}}>Replies ({emailReplies[e.id].length})</div>
                           {emailReplies[e.id].map((r:any)=>(
                             <div key={r.id} style={{background:'#fff',border:'1px solid #F2F4F7',borderRadius:8,padding:'10px 12px'}}>
-                              <div style={{fontSize:12,fontWeight:600,color:'#101828'}}>{r.from_address}</div>
+                              <div style={{fontSize:12,fontWeight:600,color:'#323338'}}>{r.from_address}</div>
                               <div style={{fontSize:12,color:'#344054',marginTop:2,whiteSpace:'pre-wrap' as const}}>{r.body}</div>
                               <div style={{fontSize:10,color:'#98A2B3',marginTop:4}}>{new Date(r.created_at).toLocaleString()}</div>
                             </div>
@@ -465,12 +465,12 @@ export default function Page() {
               </div>
             </div>)}
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-              {templates.length===0?(<div style={{gridColumn:'span 3' as const,textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No templates yet</div><div style={{fontSize:13}}>Add your first one above.</div></div>):templates.map((t:any)=>(
+              {templates.length===0?(<div style={{gridColumn:'span 3' as const,textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No templates yet</div><div style={{fontSize:13}}>Add your first one above.</div></div>):templates.map((t:any)=>(
                 <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT}}>{t.category}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT}}>{t.category}</span>
                   </div>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>{t.name}</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>{t.name}</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:6}}>{t.subject}</div>
                   <div style={{marginBottom:12}}><EmailPreview body={t.body} height={260} zoom={0.5} label={false}/></div>
                   <div style={{display:'flex',gap:6}}>
@@ -507,7 +507,7 @@ export default function Page() {
             return (
             <div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>Recipient Engagement</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>Recipient Engagement</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12}}>
                   {[
                     {l:'Sent',v:sent.length,sub:sent.length+' Emails'},
@@ -517,7 +517,7 @@ export default function Page() {
                     {l:'Reply Rate',v:pct(repliedCount,sent.length)+'%',sub:repliedCount+' Replied'},
                   ].map((s:any)=>(
                     <div key={s.l} style={{textAlign:'center' as const}}>
-                      <div style={{fontSize:24,fontWeight:700,color:'#101828'}}>{s.v}</div>
+                      <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>{s.v}</div>
                       <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>{s.sub}</div>
                       <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginTop:6}}>{s.l}</div>
                     </div>
@@ -526,7 +526,7 @@ export default function Page() {
               </div>
 
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>Delivery</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>Delivery</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
                   {[
                     {l:'Delivery Rate',v:pct(delivered,sent.length)+'%'},
@@ -534,7 +534,7 @@ export default function Page() {
                     {l:'Spam Report Rate',v:pct(complainedCount,sent.length)+'%'},
                   ].map((s:any)=>(
                     <div key={s.l} style={{textAlign:'center' as const}}>
-                      <div style={{fontSize:24,fontWeight:700,color:'#101828'}}>{s.v}</div>
+                      <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>{s.v}</div>
                       <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginTop:6}}>{s.l}</div>
                     </div>
                   ))}
@@ -542,7 +542,7 @@ export default function Page() {
               </div>
 
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:4}}>Performance by Device Type</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:4}}>Performance by Device Type</div>
                 <div style={{fontSize:11,color:'#98A2B3',marginBottom:16}}>Based on opens/clicks with a detectable device — sends before this tracking existed won't be counted.</div>
                 {sentEvents.filter((ev:any)=>ev.device_type).length===0?(
                   <div style={{textAlign:'center' as const,padding:30,color:'#98A2B3',fontSize:13}}>No device data yet.</div>
@@ -585,10 +585,10 @@ export default function Page() {
             </div>
           </div>)}
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-            {socials.filter((p:any)=>p.module===moduleFilter).length===0?(<div style={{gridColumn:'span 3' as const,textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>📱</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No posts yet</div></div>):socials.filter((p:any)=>p.module===moduleFilter).map((p:any)=>(
+            {socials.filter((p:any)=>p.module===moduleFilter).length===0?(<div style={{gridColumn:'span 3' as const,textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>📱</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No posts yet</div></div>):socials.filter((p:any)=>p.module===moduleFilter).map((p:any)=>(
               <div key={p.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT}}>{p.platform}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT}}>{p.platform}</span>
                   <span style={{fontSize:11,color:p.status==='Published'?'#10B981':'#667085',fontWeight:600}}>{p.status}</span>
                 </div>
                 <p style={{fontSize:13,color:'#344054',lineHeight:1.5,marginBottom:8}}>{p.caption}</p>
@@ -619,11 +619,11 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 120px 100px 100px 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Ad Name</span><span>Platform</span><span>Budget</span><span>Start</span><span>Status</span><span></span>
             </div>
-            {ads.filter((a:any)=>a.module===moduleFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📢</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No ads yet</div></div>):ads.filter((a:any)=>a.module===moduleFilter).map((a:any)=>(
+            {ads.filter((a:any)=>a.module===moduleFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📢</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No ads yet</div></div>):ads.filter((a:any)=>a.module===moduleFilter).map((a:any)=>(
               <div key={a.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 100px 100px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{a.name}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{a.platform}</span>
-                <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>{a.budget?'£'+parseFloat(a.budget).toLocaleString():'—'}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{a.name}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{a.platform}</span>
+                <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{a.budget?'£'+parseFloat(a.budget).toLocaleString():'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{a.start_date||'—'}</span>
                 <select value={a.status} onChange={e=>updateField('marketing_ads',a.id,'status',e.target.value,setAds)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Draft','Active','Paused','Ended'].map(s=><option key={s}>{s}</option>)}</select>
                 <button onClick={()=>del('marketing_ads',a.id,setAds)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
@@ -659,12 +659,12 @@ export default function Page() {
           return (
           <div>
             <div style={{marginBottom:20}}>
-              <div style={{fontSize:20,fontWeight:700,color:'#101828'}}>Marketing Analytics</div>
+              <div style={{fontSize:20,fontWeight:700,color:'#323338'}}>Marketing Analytics</div>
               <div style={{fontSize:12,color:'#667085',marginTop:2}}>Performance across every channel</div>
             </div>
 
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total Campaigns',v:campaigns.length,c:ACCENT},{l:'Emails Sent',v:sentEmails.length,c:'#10B981'},{l:'Social Posts',v:socials.length,c:'#F59E0B'},{l:'Ad Spend',v:'£'+ads.reduce((s:number,a:any)=>s+parseFloat(a.budget||0),0).toLocaleString(),c:'#101828'}].map((s:any)=>(
+              {[{l:'Total Campaigns',v:campaigns.length,c:ACCENT},{l:'Emails Sent',v:sentEmails.length,c:'#10B981'},{l:'Social Posts',v:socials.length,c:'#F59E0B'},{l:'Ad Spend',v:'£'+ads.reduce((s:number,a:any)=>s+parseFloat(a.budget||0),0).toLocaleString(),c:'#323338'}].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
                   <div style={{fontSize:26,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
@@ -675,22 +675,22 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>✉️ Email Performance</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>✉️ Email Performance</div>
                   <button onClick={()=>{setSection('Email');setEmailSubTab('Analyze')}} style={{fontSize:11,color:ACCENT,background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>View details →</button>
                 </div>
                 {sentEmails.length===0?(
                   <div style={{textAlign:'center' as const,padding:20,color:'#98A2B3',fontSize:12}}>No emails sent yet.</div>
                 ):(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-                    <div style={{textAlign:'center' as const}}><div style={{fontSize:18,fontWeight:700,color:'#101828'}}>{pct(openedCount,deliveredCount)}%</div><div style={{fontSize:10,color:'#98A2B3'}}>Open Rate</div></div>
-                    <div style={{textAlign:'center' as const}}><div style={{fontSize:18,fontWeight:700,color:'#101828'}}>{pct(clickedCount,deliveredCount)}%</div><div style={{fontSize:10,color:'#98A2B3'}}>Click Rate</div></div>
-                    <div style={{textAlign:'center' as const}}><div style={{fontSize:18,fontWeight:700,color:'#101828'}}>{deliveredCount}</div><div style={{fontSize:10,color:'#98A2B3'}}>Delivered</div></div>
+                    <div style={{textAlign:'center' as const}}><div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{pct(openedCount,deliveredCount)}%</div><div style={{fontSize:10,color:'#98A2B3'}}>Open Rate</div></div>
+                    <div style={{textAlign:'center' as const}}><div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{pct(clickedCount,deliveredCount)}%</div><div style={{fontSize:10,color:'#98A2B3'}}>Click Rate</div></div>
+                    <div style={{textAlign:'center' as const}}><div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{deliveredCount}</div><div style={{fontSize:10,color:'#98A2B3'}}>Delivered</div></div>
                   </div>
                 )}
               </div>
 
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>📱 Social by Platform</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>📱 Social by Platform</div>
                 {Object.keys(socialByPlatform).length===0?(
                   <div style={{textAlign:'center' as const,padding:20,color:'#98A2B3',fontSize:12}}>No posts yet.</div>
                 ):(
@@ -708,7 +708,7 @@ export default function Page() {
             </div>
 
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22,marginBottom:12}}>
-              <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>📢 Ads by Platform</div>
+              <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>📢 Ads by Platform</div>
               {Object.keys(adsByPlatform).length===0?(
                 <div style={{textAlign:'center' as const,padding:20,color:'#98A2B3',fontSize:12}}>No ads yet.</div>
               ):(
@@ -716,7 +716,7 @@ export default function Page() {
                   {Object.entries(adsByPlatform).map(([platform,d])=>(
                     <div key={platform} style={{border:'1px solid #F2F4F7',borderRadius:8,padding:14}}>
                       <div style={{fontSize:11,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>{platform}</div>
-                      <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>£{d.spend.toLocaleString()}</div>
+                      <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>£{d.spend.toLocaleString()}</div>
                       <div style={{fontSize:11,color:d.active>0?'#10B981':'#98A2B3',marginTop:2}}>{d.active>0?`● ${d.active} Active`:d.paused>0?`● ${d.paused} Paused`:d.ended>0?`● ${d.ended} Ended`:'No active ads'}</div>
                     </div>
                   ))}
@@ -725,16 +725,16 @@ export default function Page() {
             </div>
 
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{padding:'16px 22px',fontSize:14,fontWeight:600,color:'#101828',borderBottom:'1px solid #F2F4F7'}}>Campaign Performance</div>
+              <div style={{padding:'16px 22px',fontSize:14,fontWeight:600,color:'#323338',borderBottom:'1px solid #F2F4F7'}}>Campaign Performance</div>
               {campaigns.filter((c:any)=>c.module===moduleFilter).length===0?<div style={{color:'#98A2B3',fontSize:13,textAlign:'center' as const,padding:40}}>No campaigns to show yet.</div>:(<>
                 <div style={{display:'grid',gridTemplateColumns:'1.5fr 100px 100px 120px 100px',padding:'10px 22px',background:'#F9FAFB',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const}}>
                   <span>Campaign</span><span>Type</span><span>Budget</span><span>Dates</span><span>Status</span>
                 </div>
                 {campaigns.filter((c:any)=>c.module===moduleFilter).map((c:any)=>(
                   <div key={c.id} style={{display:'grid',gridTemplateColumns:'1.5fr 100px 100px 120px 100px',padding:'13px 22px',borderBottom:'1px solid #F2F4F7',fontSize:13,alignItems:'center'}}>
-                    <span style={{color:'#101828',fontWeight:500}}>{c.name}</span>
+                    <span style={{color:'#323338',fontWeight:500}}>{c.name}</span>
                     <span style={{color:'#667085'}}>{c.type}</span>
-                    <span style={{color:'#101828',fontWeight:600}}>{c.budget?'£'+parseFloat(c.budget).toLocaleString():'—'}</span>
+                    <span style={{color:'#323338',fontWeight:600}}>{c.budget?'£'+parseFloat(c.budget).toLocaleString():'—'}</span>
                     <span style={{color:'#667085',fontSize:11}}>{c.start_date?`${c.start_date} – ${c.end_date||'—'}`:'—'}</span>
                     <span style={{fontSize:11,fontWeight:600,color:c.status==='Active'?'#10B981':'#667085',background:c.status==='Active'?'#ECFDF5':'#F9FAFB',padding:'3px 8px',borderRadius:4,width:'fit-content'}}>{c.status}</span>
                   </div>

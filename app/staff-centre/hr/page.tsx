@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const SECTIONS = ['Dashboard','Employees','Onboarding','Performance','Training','Discipline','Time Tracking','HR Requests','Company Goals']
 const inp: React.CSSProperties = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}
 const lbl: React.CSSProperties = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}
@@ -11,7 +11,7 @@ const cardStyle: React.CSSProperties = {background:'#fff',borderRadius:12,border
 function initials(name: string) {
   return (name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]?.toUpperCase()).join('')
 }
-const AVATAR_COLORS = ['#3B4AFF','#10B981','#F59E0B','#8B5CF6','#EC4899','#2D6A4F','#DC2626','#0891B2']
+const AVATAR_COLORS = ['#A8862E','#10B981','#F59E0B','#A8862E','#EC4899','#2D6A4F','#DC2626','#0891B2']
 function avatarColor(name: string) {
   let hash = 0
   for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash<<5)-hash)
@@ -103,7 +103,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>People &amp; HR</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>People &amp; HR</div>
         </div>
       </div>
       <div style={{display:'flex',gap:0,padding:'0 28px',background:'#fff',borderBottom:'1px solid #E4E7EC',overflowX:'auto' as const}}>
@@ -116,11 +116,11 @@ export default function Page() {
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:14,marginBottom:24}}>
               {[
-                {label:'Active Employees',value:activeEmployees.length,color:'#101828'},
+                {label:'Active Employees',value:activeEmployees.length,color:'#323338'},
                 {label:'Pending Onboarding',value:pendingOnboarding.length,color:'#D97706'},
-                {label:'Pending HR Requests',value:pendingRequests.length,color:pendingRequests.length>0?'#DC2626':'#101828'},
-                {label:'Discipline (90d)',value:openDiscipline.length,color:openDiscipline.length>0?'#DC2626':'#101828'},
-                {label:'Training Expiring Soon',value:expiringTraining.length,color:expiringTraining.length>0?'#D97706':'#101828'},
+                {label:'Pending HR Requests',value:pendingRequests.length,color:pendingRequests.length>0?'#DC2626':'#323338'},
+                {label:'Discipline (90d)',value:openDiscipline.length,color:openDiscipline.length>0?'#DC2626':'#323338'},
+                {label:'Training Expiring Soon',value:expiringTraining.length,color:expiringTraining.length>0?'#D97706':'#323338'},
               ].map(s=>(
                 <div key={s.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'16px 18px'}}>
                   <div style={{fontSize:22,fontWeight:800,color:s.color}}>{s.value}</div>
@@ -128,14 +128,14 @@ export default function Page() {
                 </div>
               ))}
             </div>
-            <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:12}}>Team</div>
+            <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:12}}>Team</div>
             <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
               {employees.length===0?<div style={{color:'#98A2B3',fontSize:13,textAlign:'center' as const,padding:40,background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>No employees added yet.</div>:
               employees.map((e:any)=>(
                 <div key={e.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'14px 18px',display:'flex',alignItems:'center',gap:14}}>
                   <div style={{width:36,height:36,borderRadius:'50%',background:avatarColor(e.full_name)+'22',color:avatarColor(e.full_name),fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(e.full_name)}</div>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>{e.full_name}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{e.full_name}</div>
                     <div style={{fontSize:11,color:'#667085'}}>{e.role}{e.department?` · ${e.department}`:''}</div>
                   </div>
                   <StatusBadge status={e.status} colors={EMPLOYEE_STATUS_COLORS}/>
@@ -174,7 +174,7 @@ export default function Page() {
             {employees.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No employees yet.</div>:
             employees.map((e:any)=>(
               <div key={e.id} style={{display:'grid',gridTemplateColumns:'1.3fr 1fr 1fr 100px 100px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.full_name}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.full_name}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{e.role||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{e.department||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{e.employment_type}</span>
@@ -212,7 +212,7 @@ export default function Page() {
             {onboarding.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No onboarding tasks yet.</div>:
             onboarding.map((o:any)=>(
               <div key={o.id} style={{display:'grid',gridTemplateColumns:'1fr 1.3fr 110px 100px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{empName(o.employee_id)}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(o.employee_id)}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{o.task}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{o.due_date||'—'}</span>
                 <select value={o.status} onChange={async e=>{await supabase.from('hr_onboarding_tasks').update({status:e.target.value,completed_date:e.target.value==='Complete'?new Date().toISOString().slice(0,10):null}).eq('id',o.id);load()}} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'1px solid #E4E7EC',background:o.status==='Complete'?'#D1FAE5':'#FEF3C7',color:o.status==='Complete'?'#059669':'#D97706'}}><option>Pending</option><option>Complete</option></select>
@@ -249,7 +249,7 @@ export default function Page() {
             reviews.map((r:any)=>(
               <div key={r.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                  <div><span style={{fontSize:13,fontWeight:700,color:'#101828'}}>{empName(r.employee_id)}</span><span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{r.review_date}{r.reviewer?` · Reviewed by ${r.reviewer}`:''}</span></div>
+                  <div><span style={{fontSize:13,fontWeight:700,color:'#323338'}}>{empName(r.employee_id)}</span><span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{r.review_date}{r.reviewer?` · Reviewed by ${r.reviewer}`:''}</span></div>
                   <div style={{display:'flex',gap:8,alignItems:'center'}}>
                     {r.rating&&<span style={{fontSize:13,fontWeight:700,color:'#F59E0B'}}>{'★'.repeat(Math.round(r.rating))}<span style={{color:'#E4E7EC'}}>{'★'.repeat(5-Math.round(r.rating))}</span></span>}
                     <button onClick={()=>openEdit(r)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
@@ -292,9 +292,9 @@ export default function Page() {
               const expSoon = t.expiry_date && new Date(t.expiry_date) <= new Date(Date.now()+30*86400000) && new Date(t.expiry_date) >= new Date()
               return (
               <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 1.2fr 100px 110px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{empName(t.employee_id)}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(t.employee_id)}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{t.training_name}{t.provider?` (${t.provider})`:''}</span>
-                <StatusBadge status={t.status} colors={{'Scheduled':{bg:'#EEF1FF',fg:'#3B4AFF'},'Completed':{bg:'#D1FAE5',fg:'#059669'},'Expired':{bg:'#FEE2E2',fg:'#DC2626'}}}/>
+                <StatusBadge status={t.status} colors={{'Scheduled':{bg:'#FBF4E6',fg:'#A8862E'},'Completed':{bg:'#D1FAE5',fg:'#059669'},'Expired':{bg:'#FEE2E2',fg:'#DC2626'}}}/>
                 <span style={{fontSize:12,color:expSoon?'#D97706':'#667085',fontWeight:expSoon?600:400}}>{t.expiry_date||'—'}</span>
                 <button onClick={()=>delRecord('hr_training_records',t.id,setTraining)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
@@ -328,7 +328,7 @@ export default function Page() {
             discipline.map((d:any)=>(
               <div key={d.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-                  <div><span style={{fontSize:13,fontWeight:700,color:'#101828'}}>{empName(d.employee_id)}</span> <StatusBadge status={d.type} colors={{'Verbal Warning':{bg:'#FEF3C7',fg:'#D97706'},'Written Warning':{bg:'#FFEDD5',fg:'#EA580C'},'Final Warning':{bg:'#FEE2E2',fg:'#DC2626'},'Performance Improvement Plan':{bg:'#EEF1FF',fg:'#3B4AFF'}}}/> <span style={{fontSize:12,color:'#98A2B3',marginLeft:6}}>{d.date_issued}{d.issued_by?` · Issued by ${d.issued_by}`:''}</span></div>
+                  <div><span style={{fontSize:13,fontWeight:700,color:'#323338'}}>{empName(d.employee_id)}</span> <StatusBadge status={d.type} colors={{'Verbal Warning':{bg:'#FEF3C7',fg:'#D97706'},'Written Warning':{bg:'#FFEDD5',fg:'#EA580C'},'Final Warning':{bg:'#FEE2E2',fg:'#DC2626'},'Performance Improvement Plan':{bg:'#FBF4E6',fg:'#A8862E'}}}/> <span style={{fontSize:12,color:'#98A2B3',marginLeft:6}}>{d.date_issued}{d.issued_by?` · Issued by ${d.issued_by}`:''}</span></div>
                   <button onClick={()=>delRecord('hr_discipline_records',d.id,setDiscipline)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
                 </div>
                 {d.reason&&<div style={{fontSize:12,color:'#344054',marginBottom:4}}>{d.reason}</div>}
@@ -364,11 +364,11 @@ export default function Page() {
             {timeEntries.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No time entries yet.</div>:
             timeEntries.map((t:any)=>(
               <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 90px 90px 80px 1fr 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{empName(t.employee_id)}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(t.employee_id)}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{t.entry_date}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{t.clock_in||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{t.clock_out||'—'}</span>
-                <span style={{fontSize:12,fontWeight:600,color:'#101828'}}>{t.hours??'—'}</span>
+                <span style={{fontSize:12,fontWeight:600,color:'#323338'}}>{t.hours??'—'}</span>
                 <span style={{fontSize:12,color:'#98A2B3'}}>{t.notes||''}</span>
                 <button onClick={()=>delRecord('hr_time_entries',t.id,setTimeEntries)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
               </div>
@@ -402,7 +402,7 @@ export default function Page() {
             {requests.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No requests yet.</div>:
             requests.map((r:any)=>(
               <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 100px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{empName(r.employee_id)}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(r.employee_id)}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.title}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.type}</span>
                 <span style={{fontSize:11,color:'#98A2B3'}}>{r.start_date?`${r.start_date}${r.end_date?' – '+r.end_date:''}`:'—'}</span>
@@ -439,11 +439,11 @@ export default function Page() {
               <div key={g.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
                   <div>
-                    <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>{g.title}</div>
+                    <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{g.title}</div>
                     <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>{g.owner_employee_id?empName(g.owner_employee_id):'Unassigned'}{g.target_date?` · Target: ${g.target_date}`:''}</div>
                   </div>
                   <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                    <StatusBadge status={g.status} colors={{'Not Started':{bg:'#F2F4F7',fg:'#6B7280'},'In Progress':{bg:'#EEF1FF',fg:'#3B4AFF'},'Achieved':{bg:'#D1FAE5',fg:'#059669'},'Missed':{bg:'#FEE2E2',fg:'#DC2626'}}}/>
+                    <StatusBadge status={g.status} colors={{'Not Started':{bg:'#F2F4F7',fg:'#6B7280'},'In Progress':{bg:'#FBF4E6',fg:'#A8862E'},'Achieved':{bg:'#D1FAE5',fg:'#059669'},'Missed':{bg:'#FEE2E2',fg:'#DC2626'}}}/>
                     <button onClick={()=>openEdit(g)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
                     <button onClick={()=>delRecord('hr_company_goals',g.id,setGoals)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
                   </div>

@@ -36,7 +36,7 @@ const RULE_STATUS_COLORS: Record<string,string> = {
 }
 const CONFIDENCE_COLORS: Record<string,{color:string;bg:string}> = {
   VERIFIED:     { color:'#10B981', bg:'#ECFDF5' },
-  USER_PROVIDED:{ color:'#3B82F6', bg:'#EFF6FF' },
+  USER_PROVIDED:{ color:'#A8862E', bg:'#FBF4E6' },
   ESTIMATED:    { color:'#F59E0B', bg:'#FEF3C7' },
   MISSING:      { color:'#98A2B3', bg:'#F2F4F7' },
 }
@@ -80,7 +80,7 @@ export default function InvestPage() {
 
   const inp = {width:'100%',padding:'10px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:14,fontFamily:'inherit',boxSizing:'border-box' as const}
   const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
-  const BLUE = '#5B7CFA'
+  const BLUE = '#A8862E'
 
   async function authHeaders() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -205,7 +205,7 @@ export default function InvestPage() {
 
   const score = result ? (
     result.roi > 15 ? {label:'Excellent',color:'#10B981',bg:'#ECFDF5'} :
-    result.roi > 10 ? {label:'Good',color:'#3B82F6',bg:'#EFF6FF'} :
+    result.roi > 10 ? {label:'Good',color:'#A8862E',bg:'#FBF4E6'} :
     result.roi > 5  ? {label:'Average',color:'#F59E0B',bg:'#FEF3C7'} :
     {label:'Poor',color:'#EF4444',bg:'#FEE2E2'}
   ) : null
@@ -215,7 +215,7 @@ export default function InvestPage() {
       {/* Header */}
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 32px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:24}}>
-          <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>💹 Invest</div>
+          <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>💹 Invest</div>
           <div style={{display:'flex',gap:4}}>
             {SECTIONS.map(s=>(
               <button key={s} onClick={()=>{setSection(s);setResult(null);setStrategy(null)}} style={{padding:'6px 14px',borderRadius:7,border:'none',background:section===s?BLUE:'transparent',color:section===s?'#fff':'#667085',fontSize:13,fontWeight:section===s?600:400,cursor:'pointer',fontFamily:'inherit'}}>{s}</button>
@@ -230,7 +230,7 @@ export default function InvestPage() {
         {section==='Deal Analyser'&&(
           <div>
             <div style={{marginBottom:24}}>
-              <div style={{fontSize:22,fontWeight:700,color:'#101828',marginBottom:4}}>Deal Analyser</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#323338',marginBottom:4}}>Deal Analyser</div>
               <div style={{fontSize:14,color:'#667085'}}>Select a strategy and enter the deal details to analyse returns.</div>
             </div>
 
@@ -242,7 +242,7 @@ export default function InvestPage() {
                   {STRATEGIES.map(s=>(
                     <div key={s.id} onClick={()=>setStrategy(s.id)} style={{background:'#fff',borderRadius:12,border:'2px solid #E4E7EC',padding:20,cursor:'pointer',transition:'all 0.15s'}} onMouseEnter={e=>(e.currentTarget.style.borderColor=BLUE)} onMouseLeave={e=>(e.currentTarget.style.borderColor='#E4E7EC')}>
                       <div style={{marginBottom:12,color:BLUE}}>{STRATEGY_ICONS[s.id]}</div>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>{s.label}</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>{s.label}</div>
                       <div style={{fontSize:12,color:'#667085'}}>{s.desc}</div>
                     </div>
                   ))}
@@ -255,7 +255,7 @@ export default function InvestPage() {
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
                   <button onClick={()=>setStrategy(null)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← Back</button>
-                  <div style={{fontSize:16,fontWeight:600,color:'#101828'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} Analysis</div>
+                  <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} Analysis</div>
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
@@ -333,7 +333,7 @@ export default function InvestPage() {
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
                   <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
-                  <div style={{fontSize:16,fontWeight:600,color:'#101828'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
+                  <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
                 </div>
 
@@ -365,13 +365,13 @@ export default function InvestPage() {
                 {/* Stress Test */}
                 {getStressScenarios(strategy!)&&(
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:20}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Stress Test</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>Stress Test</div>
                     <div style={{fontSize:12,color:'#98A2B3',marginBottom:16}}>How this deal holds up if interest rates rise or rent falls — the same checks a lender runs before funding.</div>
                     <div style={{overflowX:'auto'}}>
                       <div style={{display:'grid',gridTemplateColumns:'140px repeat('+getStressScenarios(strategy!)!.length+',1fr)',minWidth:560,gap:8}}>
                         <div></div>
                         {getStressScenarios(strategy!)!.map(sc=>(
-                          <div key={sc.key} style={{fontSize:11,fontWeight:700,color:sc.key==='worst'?'#EF4444':sc.key==='base'?'#101828':'#F59E0B',textAlign:'center',padding:'6px 4px',background:sc.key==='worst'?'#FEE2E2':sc.key==='base'?'#F9FAFB':'#FEF3C7',borderRadius:6}}>{sc.label}</div>
+                          <div key={sc.key} style={{fontSize:11,fontWeight:700,color:sc.key==='worst'?'#EF4444':sc.key==='base'?'#323338':'#F59E0B',textAlign:'center',padding:'6px 4px',background:sc.key==='worst'?'#FEE2E2':sc.key==='base'?'#F9FAFB':'#FEF3C7',borderRadius:6}}>{sc.label}</div>
                         ))}
 
                         <div style={{fontSize:12,color:'#667085',display:'flex',alignItems:'center'}}>Monthly Cash Flow</div>
@@ -392,7 +392,7 @@ export default function InvestPage() {
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.roi
-                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px 14px',fontSize:13,fontWeight:600,color:'#101828'}}>{v!==undefined?v.toFixed(1)+'%':'—'}</div>
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px 14px',fontSize:13,fontWeight:600,color:'#323338'}}>{v!==undefined?v.toFixed(1)+'%':'—'}</div>
                         })}
                       </div>
                     </div>
@@ -403,7 +403,7 @@ export default function InvestPage() {
                 {/* Breakdown */}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Investment Breakdown</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Investment Breakdown</div>
                     {[
                       result.depositAmt!==undefined&&{l:'Deposit',v:'£'+result.depositAmt.toFixed(0)},
                       result.loanAmt!==undefined&&{l:'Mortgage Amount',v:'£'+result.loanAmt.toFixed(0)},
@@ -417,12 +417,12 @@ export default function InvestPage() {
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>
                         <span style={{fontSize:13,color:'#667085'}}>{item.l}</span>
-                        <span style={{fontSize:13,fontWeight:item.bold?700:500,color:'#101828'}}>{item.v}</span>
+                        <span style={{fontSize:13,fontWeight:item.bold?700:500,color:'#323338'}}>{item.v}</span>
                       </div>
                     ))}
                   </div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Monthly P&L</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Monthly P&L</div>
                     {[
                       result.totalRent!==undefined&&{l:'Total Rental Income',v:'£'+(result.totalRent||0).toFixed(0),c:'#10B981'},
                       result.totalIncome!==undefined&&{l:'Resident Rent Income',v:'£'+(result.totalIncome||0).toFixed(0),c:'#10B981'},
@@ -433,7 +433,7 @@ export default function InvestPage() {
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>
                         <span style={{fontSize:13,color:'#667085'}}>{item.l}</span>
-                        <span style={{fontSize:13,fontWeight:item.bold?700:500,color:item.c||'#101828'}}>{item.v}</span>
+                        <span style={{fontSize:13,fontWeight:item.bold?700:500,color:item.c||'#323338'}}>{item.v}</span>
                       </div>
                     ))}
                   </div>
@@ -442,7 +442,7 @@ export default function InvestPage() {
                 {strategy==='r2r'&&result.breakdown&&(
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Fixed Cost Breakdown</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Fixed Cost Breakdown</div>
                       {[
                         {l:'Landlord Rent',v:result.breakdown.landlordRent},
                         {l:'Wi-Fi/Internet',v:result.breakdown.wifi},
@@ -461,16 +461,16 @@ export default function InvestPage() {
                         </div>
                       ))}
                       <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0'}}>
-                        <span style={{fontSize:13,fontWeight:700,color:'#101828'}}>Total Fixed Costs</span>
+                        <span style={{fontSize:13,fontWeight:700,color:'#323338'}}>Total Fixed Costs</span>
                         <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>-£{result.monthlyExpenses.toFixed(0)}</span>
                       </div>
                     </div>
                     <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Furniture Payback</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Furniture Payback</div>
                       {result.furnitureCost>0?(
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
-                            <div style={{fontSize:32,fontWeight:800,color:'#101828'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#98A2B3'}}> months</span></div>
+                            <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#98A2B3'}}> months</span></div>
                             <div style={{fontSize:12,color:'#667085',marginTop:4}}>to recover £{result.furnitureCost.toFixed(0)} of furniture investment</div>
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
@@ -502,9 +502,9 @@ export default function InvestPage() {
                   <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:28,marginBottom:24}}>
                     <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
                       <span style={{padding:'6px 16px',borderRadius:20,background:vc.bg,color:vc.color,border:'1px solid '+vc.border,fontSize:14,fontWeight:800,letterSpacing:0.5}}>{verdict.status}</span>
-                      <div style={{fontSize:16,fontWeight:700,color:'#101828'}}>AI Deal Verdict</div>
+                      <div style={{fontSize:16,fontWeight:700,color:'#323338'}}>AI Deal Verdict</div>
                       {verdict.override_status&&(
-                        <span style={{marginLeft:'auto',fontSize:12,fontWeight:600,color:'#667085'}}>Human decision: <b style={{color:'#101828'}}>{verdict.override_status.replace('_',' ')}</b></span>
+                        <span style={{marginLeft:'auto',fontSize:12,fontWeight:600,color:'#667085'}}>Human decision: <b style={{color:'#323338'}}>{verdict.override_status.replace('_',' ')}</b></span>
                       )}
                     </div>
 
@@ -514,7 +514,7 @@ export default function InvestPage() {
                     {verdict.ai_error&&<div style={{fontSize:12,color:'#F59E0B',marginBottom:16}}>AI narration unavailable ({verdict.ai_error}) — the deterministic result below is still valid.</div>}
 
                     {/* Rule-by-rule table */}
-                    <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Rule Checks</div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Rule Checks</div>
                     <div style={{border:'1px solid #E4E7EC',borderRadius:8,overflow:'hidden',marginBottom:20}}>
                       <div style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'8px 14px',background:'#F9FAFB',fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase'}}>
                         <span>Rule</span><span>Result</span><span>Value</span><span>Threshold</span>
@@ -523,7 +523,7 @@ export default function InvestPage() {
                         <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'10px 14px',borderTop:'1px solid #F2F4F7',fontSize:12.5,alignItems:'center'}}>
                           <span style={{color:'#344054'}}>{r.rule}</span>
                           <span style={{fontWeight:700,color:RULE_STATUS_COLORS[r.result]||'#667085'}}>{r.result}</span>
-                          <span style={{color:'#101828'}}>{r.value}</span>
+                          <span style={{color:'#323338'}}>{r.value}</span>
                           <span style={{color:'#98A2B3'}}>{r.threshold}</span>
                         </div>
                       ))}
@@ -533,7 +533,7 @@ export default function InvestPage() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                       <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:18}}>
                         <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:6}}>Break-even Occupancy</div>
-                        <div style={{fontSize:22,fontWeight:800,color:'#101828'}}>{verdict.break_even!==null&&verdict.break_even!==undefined?verdict.break_even+'%':'N/A'}</div>
+                        <div style={{fontSize:22,fontWeight:800,color:'#323338'}}>{verdict.break_even!==null&&verdict.break_even!==undefined?verdict.break_even+'%':'N/A'}</div>
                       </div>
                       <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:18}}>
                         <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:6}}>Missing Fields</div>
@@ -542,7 +542,7 @@ export default function InvestPage() {
                     </div>
 
                     {/* Data confidence tags */}
-                    <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Data Confidence</div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Data Confidence</div>
                     <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:20}}>
                       {(verdict.inputs_confidence||[]).map((f:any,i:number)=>{
                         const cc = CONFIDENCE_COLORS[f.confidence]||CONFIDENCE_COLORS.MISSING
@@ -555,7 +555,7 @@ export default function InvestPage() {
                     {/* Risk flags */}
                     {(verdict.risk_flags||[]).length>0&&(
                       <div style={{marginBottom:20}}>
-                        <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Risk Flags</div>
+                        <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Risk Flags</div>
                         {(verdict.risk_flags||[]).map((r:string,i:number)=>(
                           <div key={i} style={{padding:'10px 14px',borderRadius:8,background:'#FEF3C7',border:'1px solid #FDE68A',fontSize:12.5,color:'#92400E',marginBottom:6}}>⚠ {r}</div>
                         ))}
@@ -563,7 +563,7 @@ export default function InvestPage() {
                     )}
 
                     {/* Due-diligence checklist */}
-                    <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Due-Diligence Checklist</div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Due-Diligence Checklist</div>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
                       {Object.entries(verdict.checklist||{}).map(([group,items]:any)=>(
                         <div key={group} style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
@@ -580,7 +580,7 @@ export default function InvestPage() {
 
                     {/* Human override */}
                     <div style={{borderTop:'1px solid #E4E7EC',paddingTop:20}}>
-                      <div style={{fontSize:13,fontWeight:700,color:'#101828',marginBottom:10}}>Human Decision</div>
+                      <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Human Decision</div>
                       <textarea value={overrideReason} onChange={e=>setOverrideReason(e.target.value)} placeholder="Optional reason for your decision..." style={{...inp,minHeight:60,marginBottom:12,resize:'vertical' as const}}/>
                       <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
                         <button onClick={()=>submitOverride('APPROVED')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#10B981',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='APPROVED'?'Saving…':'✓ Approve for Next Stage'}</button>
@@ -601,11 +601,11 @@ export default function InvestPage() {
         {/* SAVED DEALS */}
         {section==='Saved Deals'&&(
           <div>
-            <div style={{fontSize:22,fontWeight:700,color:'#101828',marginBottom:20}}>Saved Deals</div>
+            <div style={{fontSize:22,fontWeight:700,color:'#323338',marginBottom:20}}>Saved Deals</div>
             {savedDeals.length===0?(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
                 <div style={{fontSize:40,marginBottom:12}}>💾</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No saved deals yet</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No saved deals yet</div>
                 <div style={{fontSize:13}}>Run an analysis and save deals to compare them here.</div>
               </div>
             ):(
@@ -613,7 +613,7 @@ export default function InvestPage() {
                 {savedDeals.map(d=>(
                   <div key={d.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{d.address||'Deal #'+d.id}</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{d.address||'Deal #'+d.id}</div>
                       <button onClick={()=>deleteDeal(d.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444'}}>×</button>
                     </div>
                     <div style={{fontSize:12,color:'#667085',marginBottom:12}}>{STRATEGIES.find(s=>s.id===d.strategy)?.label} · £{parseFloat(d.price).toLocaleString()}</div>
@@ -633,7 +633,7 @@ export default function InvestPage() {
         {section==='Watchlist'&&(
           <div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>Watchlist</div>
+              <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>Watchlist</div>
               <button onClick={()=>setShowAddWatch(true)} style={{padding:'9px 18px',borderRadius:8,border:'none',background:BLUE,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Property</button>
             </div>
             {showAddWatch&&(
@@ -654,7 +654,7 @@ export default function InvestPage() {
             {watchlist.length===0?(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
                 <div style={{fontSize:40,marginBottom:12}}>👁️</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No properties on watchlist</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No properties on watchlist</div>
                 <div style={{fontSize:13}}>Add properties you are tracking.</div>
               </div>
             ):(
@@ -664,12 +664,12 @@ export default function InvestPage() {
                 </div>
                 {watchlist.map(w=>(
                   <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 120px 1fr 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                    <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{w.address}</span>
+                    <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.address}</span>
                     <span style={{fontSize:13,fontWeight:600,color:BLUE}}>{w.price?'£'+parseFloat(w.price).toLocaleString():'—'}</span>
-                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:w.status==='Watching'?'#EFF6FF':w.status==='Purchased'?'#ECFDF5':w.status==='Passed'?'#FEE2E2':'#FEF3C7',color:w.status==='Watching'?'#3B82F6':w.status==='Purchased'?'#10B981':w.status==='Passed'?'#EF4444':'#F59E0B'}}>{w.status}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:w.status==='Watching'?'#EFF6FF':w.status==='Purchased'?'#ECFDF5':w.status==='Passed'?'#FEE2E2':'#FEF3C7',color:w.status==='Watching'?'#A8862E':w.status==='Purchased'?'#10B981':w.status==='Passed'?'#EF4444':'#F59E0B'}}>{w.status}</span>
                     <span style={{fontSize:12,color:'#667085'}}>{w.notes||'—'}</span>
                     <div style={{display:'flex',gap:6}}>
-                      <button onClick={()=>{setSection('Deal Analyser');setForm({...form,address:w.address,price:w.price})}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#EFF6FF',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:BLUE,fontWeight:600}}>Analyse</button>
+                      <button onClick={()=>{setSection('Deal Analyser');setForm({...form,address:w.address,price:w.price})}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FBF4E6',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:BLUE,fontWeight:600}}>Analyse</button>
                       <button onClick={()=>deleteWatch(w.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                     </div>
                   </div>

@@ -67,7 +67,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
     canvas.height = h * ratio
     const ctx = canvas.getContext('2d')!
     ctx.scale(ratio, ratio)
-    ctx.strokeStyle = '#101828'
+    ctx.strokeStyle = '#323338'
     ctx.lineWidth = 2.2
     ctx.lineCap = 'round'
 
@@ -134,8 +134,8 @@ export default function SignLeasePage({ params }: { params: { token: string } })
 
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '18px 24px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 7, background: '#101828', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>O</div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#101828' }}>{BRAND_NAME}</div>
+          <div style={{ width: 26, height: 26, borderRadius: 7, background: '#A8862E', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>O</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#323338' }}>{BRAND_NAME}</div>
           <div style={{ fontSize: 13, color: '#667085', marginLeft: 6 }}>Document Signing</div>
         </div>
       </div>
@@ -152,16 +152,16 @@ export default function SignLeasePage({ params }: { params: { token: string } })
 
         {!loading && !error && record && !signedResult && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '36px 40px' }}>
-            <h1 style={{ fontSize: 19, margin: '0 0 4px', color: '#101828' }}>{docTitle}</h1>
+            <h1 style={{ fontSize: 19, margin: '0 0 4px', color: '#323338' }}>{docTitle}</h1>
             <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>
               {propertyName}{unitLabel ? ` · Unit ${unitLabel}` : ''}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24, fontSize: 13 }}>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Tenant</div><div style={{ color: '#101828', fontWeight: 500 }}>{tenantName ?? '—'}</div></div>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Term</div><div style={{ color: '#101828', fontWeight: 500 }}>{record.start_date ?? '—'} → {record.end_date ?? '—'}</div></div>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Monthly Rent</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(rentAmount ?? 0).toLocaleString()}</div></div>
-              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Deposit</div><div style={{ color: '#101828', fontWeight: 500 }}>£{(record.deposit ?? 0).toLocaleString()}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Tenant</div><div style={{ color: '#323338', fontWeight: 500 }}>{tenantName ?? '—'}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Term</div><div style={{ color: '#323338', fontWeight: 500 }}>{record.start_date ?? '—'} → {record.end_date ?? '—'}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Monthly Rent</div><div style={{ color: '#323338', fontWeight: 500 }}>£{(rentAmount ?? 0).toLocaleString()}</div></div>
+              <div><div style={{ color: '#98A2B3', fontSize: 11, textTransform: 'uppercase', marginBottom: 3 }}>Deposit</div><div style={{ color: '#323338', fontWeight: 500 }}>£{(record.deposit ?? 0).toLocaleString()}</div></div>
             </div>
 
             {record.contract_text && (
@@ -171,7 +171,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
             )}
 
             {record.document_url && (
-              <a href={record.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#2563EB', textDecoration: 'none', fontWeight: 500 }}>View full lease document →</a>
+              <a href={record.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#A8862E', textDecoration: 'none', fontWeight: 500 }}>View full lease document →</a>
             )}
 
             <div style={{ marginTop: 28, borderTop: '1px solid #E4E7EC', paddingTop: 24 }}>
@@ -180,7 +180,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
                   <button key={r} onClick={() => setRole(r)} style={{
                     fontSize: 12, fontWeight: 600, padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
                     border: role === r ? 'none' : '1px solid #E4E7EC',
-                    background: role === r ? '#101828' : '#fff', color: role === r ? '#fff' : '#667085', textTransform: 'capitalize',
+                    background: role === r ? '#A8862E' : '#fff', color: role === r ? '#fff' : '#667085', textTransform: 'capitalize',
                   }}>Sign as {r}</button>
                 ))}
               </div>
@@ -217,7 +217,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
                   </div>
 
                   <button onClick={handleSign} disabled={!canSign || !signerName.trim() || submitting}
-                    style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!canSign || !signerName.trim() || submitting) ? 0.5 : 1 }}>
+                    style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!canSign || !signerName.trim() || submitting) ? 0.5 : 1 }}>
                     {submitting ? 'Signing…' : 'Sign Document'}
                   </button>
                 </>
@@ -229,7 +229,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
         {signedResult && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #BBF7D0', padding: 40, textAlign: 'center' }}>
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 20, color: '#16A34A' }}>✓</div>
-            <div style={{ fontWeight: 700, fontSize: 16, color: '#101828', marginBottom: 6 }}>Document signed</div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: '#323338', marginBottom: 6 }}>Document signed</div>
             <div style={{ fontSize: 13, color: '#667085', marginBottom: 16 }}>Signed {new Date(signedResult.signed_at).toLocaleString()}</div>
             <div style={{ fontFamily: 'monospace', fontSize: 10.5, color: '#98A2B3', wordBreak: 'break-all', background: '#F9FAFB', borderRadius: 6, padding: '10px 14px' }}>{signedResult.document_hash}</div>
           </div>
@@ -242,5 +242,5 @@ export default function SignLeasePage({ params }: { params: { token: string } })
 const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }
 const toggleBtn = (active: boolean): React.CSSProperties => ({
   fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? '#fff' : '#667085',
-  background: active ? '#101828' : '#fff', border: '1px solid ' + (active ? '#101828' : '#E4E7EC'), borderRadius: 6, padding: '6px 12px', cursor: 'pointer',
+  background: active ? '#A8862E' : '#fff', border: '1px solid ' + (active ? '#323338' : '#E4E7EC'), borderRadius: 6, padding: '6px 12px', cursor: 'pointer',
 })

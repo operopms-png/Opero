@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { normalizeRole } from '../../lib/useRole'
 
-const ACCENT = '#5B7CFA'
+const ACCENT = '#A8862E'
 
 function startOfWeek(d: Date) {
   const date = new Date(d)
@@ -152,7 +152,7 @@ function StaffDashboardInner() {
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{member.role} Dashboard</div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#101828' }}>Hi, {member.name}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#323338' }}>Hi, {member.name}</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           {!isStaffView && <a href="/team-chat" style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>💬 Team Chat</a>}
@@ -166,7 +166,7 @@ function StaffDashboardInner() {
 
       <div style={{ padding: 28, maxWidth: 900, margin: '0 auto' }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#101828' }}>My Schedule — This Week</div>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#323338' }}>My Schedule — This Week</div>
           <div style={{ display: 'flex', overflowX: 'auto' as const }}>
             {Array.from({ length: 7 }, (_, i) => {
               const d = startOfWeek(new Date())
@@ -195,14 +195,14 @@ function StaffDashboardInner() {
 
         {myTasks.length > 0 && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden', marginBottom: 24 }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#101828' }}>My Tasks</div>
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#323338' }}>My Tasks</div>
             {myTasks.map((t: any) => {
               const statusColors: Record<string, { bg: string; fg: string }> = { 'On track': { bg: '#ECFDF5', fg: '#10B981' }, 'At risk': { bg: '#FFFBEB', fg: '#F59E0B' }, 'Off track': { bg: '#FEF2F2', fg: '#EF4444' } }
               const c = statusColors[t.status] ?? statusColors['On track']
               return (
                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #F2F4F7' }}>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: '#101828' }}>{t.title}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: '#323338' }}>{t.title}</div>
                     <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{t.due_date ? `Due ${t.due_date}` : 'No due date'}{t.notes ? ` · ${t.notes}` : ''}</div>
                   </div>
                   <select value={t.status} onChange={e => updateMyTaskStatus(t.id, e.target.value)} style={{ background: c.bg, color: c.fg, fontSize: 12, fontWeight: 600, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -221,17 +221,17 @@ function StaffDashboardInner() {
         </div>
 
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#101828' }}>Your Tasks</div>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#323338' }}>Your Tasks</div>
           {items.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>{member.role === 'Cleaning Team' ? '🧹' : '🔧'}</div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 6 }}>Nothing assigned yet</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 6 }}>Nothing assigned yet</div>
               <div style={{ fontSize: 13 }}>Ask your manager to assign you properties or tasks.</div>
             </div>
           ) : items.map((item, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #F2F4F7' }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: '#101828' }}>{item.title}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#323338' }}>{item.title}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{item.property ?? '—'}{item.priority ? ` · ${item.priority} priority` : ''}</div>
               </div>
               <select value={item.status} onChange={e => updateStatus(item, e.target.value)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E4E7EC', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer' }}>

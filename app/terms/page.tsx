@@ -2,8 +2,8 @@ export default function TermsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", padding: '48px 20px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '48px 40px' }}>
-        <a href="/login" style={{ fontSize: 13, color: '#3B4AFF', textDecoration: 'none' }}>← Back to portal</a>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#101828', margin: '20px 0 4px' }}>Terms of Service</h1>
+        <a href="/login" style={{ fontSize: 13, color: '#A8862E', textDecoration: 'none' }}>← Back to portal</a>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#323338', margin: '20px 0 4px' }}>Terms of Service</h1>
         <p style={{ fontSize: 13, color: '#98A2B3', margin: '0 0 32px' }}>Last updated: 23 September 2026</p>
 
         <div style={{ fontSize: 14, color: '#344054', lineHeight: 1.7 }}>
@@ -19,7 +19,7 @@ export default function TermsPage() {
           <p>Any payments made through the portal (such as rent or partner fees) are processed by Stripe. We do not store your card details.</p>
 
           <h2 style={sectionH}>4. Your data and content</h2>
-          <p>You retain ownership of the property, tenant, guest, booking, and staff data you enter into the portal ("your data"). You are responsible for having the right to process that data, including any personal data belonging to your tenants, guests, or staff. We process it on your behalf to provide the service, as described in our <a href="/privacy" style={{ color: '#3B4AFF' }}>Privacy Policy</a>.</p>
+          <p>You retain ownership of the property, tenant, guest, booking, and staff data you enter into the portal ("your data"). You are responsible for having the right to process that data, including any personal data belonging to your tenants, guests, or staff. We process it on your behalf to provide the service, as described in our <a href="/privacy" style={{ color: '#A8862E' }}>Privacy Policy</a>.</p>
 
           <h2 style={sectionH}>5. Acceptable use</h2>
           <p>You agree not to use the portal to break the law, infringe anyone's rights, transmit malicious code, or attempt to gain unauthorized access to the platform or other users' data.</p>
@@ -37,11 +37,11 @@ export default function TermsPage() {
           <p>These Terms are governed by the laws of England and Wales.</p>
 
           <h2 style={sectionH}>10. Contact</h2>
-          <p>Questions about these Terms can be sent to <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#3B4AFF' }}>contact.us@sangstersgroup.com</a>.</p>
+          <p>Questions about these Terms can be sent to <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#A8862E' }}>contact.us@sangstersgroup.com</a>.</p>
         </div>
       </div>
     </div>
   )
 }
 
-const sectionH = { fontSize: 16, fontWeight: 700, color: '#101828', margin: '28px 0 8px' } as const
+const sectionH = { fontSize: 16, fontWeight: 700, color: '#323338', margin: '28px 0 8px' } as const

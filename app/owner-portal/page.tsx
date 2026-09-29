@@ -59,10 +59,10 @@ const STAFF_NAV = [
 
 function StatCard({ label, value, sub, dark }: any) {
   return (
-    <div style={{ background: dark ? '#101828' : '#fff', border: `1px solid ${dark ? '#101828' : '#E4E7EC'}`, borderRadius: 10, padding: '16px 20px' }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: dark ? '#6B7280' : '#667085', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: dark ? '#fff' : '#101828' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: dark ? '#6B7280' : '#98A2B3', marginTop: 4 }}>{sub}</div>}
+    <div style={{ background: dark ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', border: `1px solid ${dark ? '#EADBB8' : '#E4E7EC'}`, borderRadius: 10, padding: '16px 20px' }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: dark ? '#8A6B2E' : '#667085', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: dark ? '#624920' : '#323338' }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: dark ? '#8A6B2E' : '#98A2B3', marginTop: 4 }}>{sub}</div>}
     </div>
   )
 }
@@ -624,17 +624,17 @@ export default function OwnerPortalPage() {
         {/* Logo */}
         <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #EAECF0', textAlign: 'center' }}>
           <img src="/logo.PNG" alt={BRAND_NAME} width={44} height={44} style={{ borderRadius: 8, marginBottom: 8 }} />
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#101828' }}>{BRAND_NAME}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#323338' }}>{BRAND_NAME}</div>
           <div style={{ fontSize: 11, color: '#667085' }}>Owner Portal</div>
         </div>
 
         {/* User */}
         <div style={{ padding: '12px 16px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#A8862E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
             {(ownerProfile?.name ?? user?.email ?? 'U')[0].toUpperCase()}
           </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#101828' }}>{ownerProfile?.name ?? user?.email?.split('@')[0]}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#323338' }}>{ownerProfile?.name ?? user?.email?.split('@')[0]}</div>
             <div style={{ fontSize: 10, color: '#667085' }}>{isStaff ? 'Admin / Staff' : 'Owner'}</div>
           </div>
         </div>
@@ -645,7 +645,7 @@ export default function OwnerPortalPage() {
             <div key={group.section}>
               <div style={{ fontSize: 9, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', padding: '12px 16px 4px', letterSpacing: '0.08em' }}>{group.section}</div>
               {group.items.map(item => (
-                <button key={item} onClick={() => { if (item === 'Partners') { window.location.href = '/staff-centre/partners'; return } setTab(item) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 16px', fontSize: 12, fontWeight: tab === item ? 600 : 400, color: tab === item ? '#5B7CFA' : '#667085', background: tab === item ? '#EEF1FF' : 'transparent', border: 'none', cursor: 'pointer', borderLeft: tab === item ? '2px solid #5B7CFA' : '2px solid transparent' }}>
+                <button key={item} onClick={() => { if (item === 'Partners') { window.location.href = '/staff-centre/partners'; return } setTab(item) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 16px', fontSize: 12, fontWeight: tab === item ? 600 : 400, color: tab === item ? '#A8862E' : '#667085', background: tab === item ? '#FBF4E6' : 'transparent', border: 'none', cursor: 'pointer', borderLeft: tab === item ? '2px solid #A8862E' : '2px solid transparent' }}>
                   {item}
                 </button>
               ))}
@@ -662,21 +662,21 @@ export default function OwnerPortalPage() {
       <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
 
         {isStaff && viewingOwner && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#EEF1FF', border: '1px solid #C7D2FE', borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 13 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FBF4E6', border: '1px solid #EADBB8', borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 13 }}>
             <span>👁 Viewing as owner: <strong>{viewingOwner.name}</strong> — all edits save to their account</span>
-            <button onClick={exitOwnerView} style={{ padding: '6px 14px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Exit owner view</button>
+            <button onClick={exitOwnerView} style={{ padding: '6px 14px', border: '1px solid #A8862E', borderRadius: 6, background: '#fff', color: '#A8862E', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Exit owner view</button>
           </div>
         )}
 
         {/* DASHBOARD */}
         {tab === 'Dashboard' && (
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#101828', marginBottom: 20 }}>Command Centre 👋 <span style={{ float: 'right', fontSize: 12, color: '#98A2B3', fontWeight: 400 }}>Last 6 months</span></div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 20 }}>Command Centre 👋 <span style={{ float: 'right', fontSize: 12, color: '#98A2B3', fontWeight: 400 }}>Last 6 months</span></div>
 
             {/* Sparkline stat cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
               <div style={card}>
-                <div style={{ fontSize: 13, color: '#101828', marginBottom: 8 }}>💰 Revenue</div>
+                <div style={{ fontSize: 13, color: '#323338', marginBottom: 8 }}>💰 Revenue</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>£{totalRevenue.toLocaleString()}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>{bookedNights} Nights</div>
                 <ResponsiveContainer width="100%" height={70}>
@@ -686,17 +686,17 @@ export default function OwnerPortalPage() {
                 </ResponsiveContainer>
               </div>
               <div style={card}>
-                <div style={{ fontSize: 13, color: '#101828', marginBottom: 8 }}>📅 Bookings</div>
+                <div style={{ fontSize: 13, color: '#323338', marginBottom: 8 }}>📅 Bookings</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{activeBookings.length}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>{bookedNights} Nights</div>
                 <ResponsiveContainer width="100%" height={70}>
                   <AreaChart data={chartData}>
-                    <Area type="monotone" dataKey="bookings" stroke="#5B7CFA" fill="#5B7CFA22" strokeWidth={2} />
+                    <Area type="monotone" dataKey="bookings" stroke="#A8862E" fill="#D0AE4C22" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
               <div style={card}>
-                <div style={{ fontSize: 13, color: '#101828', marginBottom: 8 }}>❌ Cancellations</div>
+                <div style={{ fontSize: 13, color: '#323338', marginBottom: 8 }}>❌ Cancellations</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>{bookings.filter(b => b.status === 'cancelled').length}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>0 Nights</div>
                 <ResponsiveContainer width="100%" height={70}>
@@ -710,16 +710,16 @@ export default function OwnerPortalPage() {
             {/* Occupancy gauge + full revenue/occupancy line chart */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 20 }}>
               <div style={card}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Occupancy</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#323338', marginBottom: 12 }}>Occupancy</div>
                 <ResponsiveContainer width="100%" height={180}>
-                  <RadialBarChart innerRadius="70%" outerRadius="100%" startAngle={180} endAngle={0} data={[{ value: occupancyPct, fill: '#5B7CFA' }]} barSize={22}>
+                  <RadialBarChart innerRadius="70%" outerRadius="100%" startAngle={180} endAngle={0} data={[{ value: occupancyPct, fill: '#A8862E' }]} barSize={22}>
                     <RadialBar background dataKey="value" cornerRadius={11} />
                   </RadialBarChart>
                 </ResponsiveContainer>
                 <div style={{ textAlign: 'center', marginTop: -70, fontSize: 32, fontWeight: 800 }}>{occupancyPct}%</div>
               </div>
               <div style={card}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', marginBottom: 12 }}>Occupancy & Revenue</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#323338', marginBottom: 12 }}>Occupancy & Revenue</div>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" />
@@ -729,7 +729,7 @@ export default function OwnerPortalPage() {
                     <Tooltip />
                     <Legend />
                     <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line yAxisId="right" type="monotone" dataKey="occupancy" name="Occupancy" stroke="#5B7CFA" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="occupancy" name="Occupancy" stroke="#A8862E" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -992,7 +992,7 @@ export default function OwnerPortalPage() {
                 }, {})
               ).map(([period, stmts]: any) => (
                 <div key={period} style={{ marginBottom: 24 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#101828', marginBottom: 8, padding: '8px 0', borderBottom: '1px solid #EAECF0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#323338', marginBottom: 8, padding: '8px 0', borderBottom: '1px solid #EAECF0' }}>
                     <span>{new Date(period + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span>
                     <span style={{ color: '#10B981' }}>£{stmts.reduce((s: number, r: any) => s + (Number(r.owner_amount) || 0), 0).toLocaleString()}</span>
                   </div>
@@ -1095,7 +1095,7 @@ export default function OwnerPortalPage() {
                       </div>
                       <div style={{ padding: '12px 16px' }}>£{ownerRevenue.toLocaleString()}</div>
                       <div style={{ padding: '12px 16px' }}>£{ownerShareAmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-                      <div style={{ padding: '12px 16px', fontWeight: 700, color: '#5B7CFA' }}>{ownerRoi}%</div>
+                      <div style={{ padding: '12px 16px', fontWeight: 700, color: '#A8862E' }}>{ownerRoi}%</div>
                       <div style={{ padding: '12px 16px' }}>{ownerOccupancy}%</div>
                     </div>
                   )
@@ -1104,7 +1104,7 @@ export default function OwnerPortalPage() {
             ) : (
               <div style={{ border: '1px solid #EAECF0', borderRadius: 10, overflow: 'hidden' }}>
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid #EAECF0', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#A8862E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>
                     {(ownerProfile?.name ?? 'O')[0]}
                   </div>
                   <div>
@@ -1121,7 +1121,7 @@ export default function OwnerPortalPage() {
                   ].map(s => (
                     <div key={s.label} style={{ padding: '16px 20px', borderRight: '1px solid #EAECF0' }}>
                       <div style={{ fontSize: 11, color: '#667085', marginBottom: 6, textTransform: 'uppercase' }}>{s.label}</div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: s.label === 'ROI' ? '#5B7CFA' : '#101828' }}>{s.value}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: s.label === 'ROI' ? '#A8862E' : '#323338' }}>{s.value}</div>
                     </div>
                   ))}
                 </div>
@@ -1130,7 +1130,7 @@ export default function OwnerPortalPage() {
                     <span>Occupancy</span><span>{occupancyPct}%</span>
                   </div>
                   <div style={{ height: 8, background: '#F2F4F7', borderRadius: 4 }}>
-                    <div style={{ height: 8, width: `${occupancyPct}%`, background: '#5B7CFA', borderRadius: 4 }} />
+                    <div style={{ height: 8, width: `${occupancyPct}%`, background: '#A8862E', borderRadius: 4 }} />
                   </div>
                 </div>
               </div>
@@ -1202,7 +1202,7 @@ export default function OwnerPortalPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>Finance & Documents</div>
-              {isStaff && viewingOwner && <button onClick={() => setAddFinanceOwner(viewingOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Record</button>}
+              {isStaff && viewingOwner && <button onClick={() => setAddFinanceOwner(viewingOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#A8862E', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Record</button>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
               <StatCard label="Paid Out" value={`£${paidOut.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
@@ -1244,7 +1244,7 @@ export default function OwnerPortalPage() {
               const mExp = records.filter((r: any) => r.amount < 0).reduce((s: number, r: any) => s + Math.abs(r.amount), 0)
               return (
                 <div key={month} style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, color: '#101828', padding: '10px 0', borderBottom: '1px solid #EAECF0', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, color: '#323338', padding: '10px 0', borderBottom: '1px solid #EAECF0', marginBottom: 8 }}>
                     <span>{new Date(month + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span>
                     <span style={{ fontSize: 12, color: '#667085' }}>+£{mRev.toLocaleString()} -£{mExp.toLocaleString()} Net: £{(mRev - mExp).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                   </div>
@@ -1279,7 +1279,7 @@ export default function OwnerPortalPage() {
                     <div style={{ fontSize: 12, color: '#667085' }}>{stage} of {STAGING_STEPS.length} complete</div>
                   </div>
                   <div style={{ height: 6, background: '#F2F4F7', borderRadius: 3, marginBottom: 16, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(stage / STAGING_STEPS.length) * 100}%`, background: '#5B7CFA' }} />
+                    <div style={{ height: '100%', width: `${(stage / STAGING_STEPS.length) * 100}%`, background: '#A8862E' }} />
                   </div>
                   {STAGING_STEPS.map((label, i) => {
                     const done = i < stage
@@ -1293,13 +1293,13 @@ export default function OwnerPortalPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <div style={{
                             width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700,
-                            background: done ? '#10B981' : current ? '#EEF1FF' : '#F2F4F7',
-                            color: done ? '#fff' : current ? '#5B7CFA' : '#98A2B3',
-                            border: current ? '1px solid #5B7CFA' : 'none',
+                            background: done ? '#10B981' : current ? '#FBF4E6' : '#F2F4F7',
+                            color: done ? '#fff' : current ? '#A8862E' : '#98A2B3',
+                            border: current ? '1px solid #A8862E' : 'none',
                           }}>{done ? '✓' : i + 1}</div>
                           {i < STAGING_STEPS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 16, background: '#EAECF0' }} />}
                         </div>
-                        <div style={{ paddingBottom: 14, fontSize: 13, color: done || current ? '#101828' : '#667085' }}>{label}</div>
+                        <div style={{ paddingBottom: 14, fontSize: 13, color: done || current ? '#323338' : '#667085' }}>{label}</div>
                       </div>
                     )
                   })}
@@ -1340,7 +1340,7 @@ export default function OwnerPortalPage() {
                   const isMine = isStaff ? m.sender === 'staff' : m.sender === 'owner'
                   return (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
-                    <div style={{ maxWidth: '70%', background: isMine ? '#5B7CFA' : '#F3F4F6', color: isMine ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
+                    <div style={{ maxWidth: '70%', background: isMine ? '#A8862E' : '#F3F4F6', color: isMine ? '#fff' : '#323338', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
                       <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'Sangsters Group' : (chatOwner?.name ?? 'Owner')}</div>
                       {parseAttachments(m.attachment_url).length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: m.message ? 8 : 4 }}>
@@ -1388,7 +1388,7 @@ export default function OwnerPortalPage() {
                     }} />
                   </label>
                   <input value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ flex: 1, padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13 }} />
-                  <button onClick={sendMessage} disabled={saving || uploadingMsg} style={{ padding: '10px 20px', background: '#5B7CFA', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Send</button>
+                  <button onClick={sendMessage} disabled={saving || uploadingMsg} style={{ padding: '10px 20px', background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Send</button>
                 </div>
               </div>
             )}
@@ -1482,7 +1482,7 @@ export default function OwnerPortalPage() {
               ].map(s => (
                 <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 8, padding: '12px 14px', textAlign: 'center' }}>
                   <div style={{ fontSize: 10, color: '#667085', textTransform: 'uppercase', fontWeight: 600, marginBottom: 6 }}>{s.label}</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: '#101828' }}>{s.value}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#323338' }}>{s.value}</div>
                 </div>
               ))}
             </div>
@@ -1498,13 +1498,13 @@ export default function OwnerPortalPage() {
               <div key={owner.id} style={{ border: '1px solid #EAECF0', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F9FAFB' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#5B7CFA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13 }}>{(owner.name ?? 'O')[0]}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#A8862E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13 }}>{(owner.name ?? 'O')[0]}</div>
                     <span style={{ fontWeight: 600 }}>{owner.name}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button style={{ padding: '5px 12px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(owner)}>View Portal</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #A8862E', borderRadius: 6, background: '#fff', color: '#A8862E', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(owner)}>View Portal</button>
                     <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(owner); setEditOwnerForm({ first_name: owner.name?.split(' ')[0] ?? '', last_name: owner.name?.split(' ').slice(1).join(' ') ?? '', email: owner.email, phone: owner.phone, invested: owner.invested ?? 0, split_percentage: owner.split_percentage ?? 60, property_ids: owner.property_ids ?? [] }) }}>Edit</button>
-                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#5B7CFA', color: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddFinanceOwner(owner)}>Finance</button>
+                    <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#A8862E', color: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddFinanceOwner(owner)}>Finance</button>
                     <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => setAddPaymentOwner(owner)}>+ Payment</button>
                   </div>
                 </div>
@@ -1559,7 +1559,7 @@ export default function OwnerPortalPage() {
                       <Badge status={o.user_id === user?.id ? 'admin' : 'owner'} />
                       {o.user_id !== user?.id && (
                         <>
-                          <button style={{ padding: '5px 12px', border: '1px solid #5B7CFA', borderRadius: 6, background: '#fff', color: '#5B7CFA', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(o)}>View Portal</button>
+                          <button style={{ padding: '5px 12px', border: '1px solid #A8862E', borderRadius: 6, background: '#fff', color: '#A8862E', cursor: 'pointer', fontSize: 12, fontWeight: 600 }} onClick={() => viewOwnerPortal(o)}>View Portal</button>
                           <button style={{ padding: '5px 12px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 12 }} onClick={() => { setEditingOwner(o); setEditOwnerForm({ first_name: o.name?.split(' ')[0] ?? '', last_name: o.name?.split(' ').slice(1).join(' ') ?? '', email: o.email, phone: o.phone, invested: o.invested ?? 0, split_percentage: o.split_percentage ?? 60, property_ids: o.property_ids ?? [] }) }}>Edit</button>
                         </>
                       )}
@@ -1881,7 +1881,7 @@ export default function OwnerPortalPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setAddFinanceOwner(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addFinanceRecord} disabled={saving} style={{ padding: '9px 20px', background: '#5B7CFA', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Record</button>
+              <button onClick={addFinanceRecord} disabled={saving} style={{ padding: '9px 20px', background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Record</button>
             </div>
           </div>
         </div>

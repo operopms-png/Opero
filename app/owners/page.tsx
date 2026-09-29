@@ -75,7 +75,7 @@ export default function OwnersPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Owner Reports</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Owner Reports</h1>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <select value={selectedOwner} onChange={e => setSelectedOwner(e.target.value)}
@@ -84,7 +84,7 @@ export default function OwnersPage() {
               {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             <button onClick={() => setAddRecord(true)}
-              style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+              style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
               + Add Record
             </button>
           </div>
@@ -96,8 +96,8 @@ export default function OwnersPage() {
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
               fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap',
-              color: tab === t.id ? '#2563EB' : '#6B7280',
-              borderBottom: tab === t.id ? '2px solid #2563EB' : '2px solid transparent',
+              color: tab === t.id ? '#A8862E' : '#6B7280',
+              borderBottom: tab === t.id ? '2px solid #A8862E' : '2px solid transparent',
             }}>
               {t.label}
             </button>
@@ -121,7 +121,7 @@ export default function OwnersPage() {
                   ].map(card => (
                     <div key={card.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '16px 20px' }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', letterSpacing: '0.5px', marginBottom: 6 }}>{card.label}</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}>{card.value}</div>
+                      <div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>{card.value}</div>
                     </div>
                   ))}
                 </div>
@@ -130,7 +130,7 @@ export default function OwnersPage() {
                 <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '24px', marginBottom: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
                     
-                    <span style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>Profit Split — After All Expenses</span>
+                    <span style={{ fontSize: 16, fontWeight: 600, color: '#323338' }}>Profit Split — After All Expenses</span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
                     {[
@@ -140,7 +140,7 @@ export default function OwnersPage() {
                     ].map(card => (
                       <div key={card.label} style={{ background: '#F8F9FA', borderRadius: 10, padding: '16px 20px', textAlign: 'center' }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', letterSpacing: '0.5px', marginBottom: 6 }}>{card.label}</div>
-                        <div style={{ fontSize: 22, fontWeight: 700, color: card.color ?? '#111827' }}>{card.value}</div>
+                        <div style={{ fontSize: 22, fontWeight: 700, color: card.color ?? '#323338' }}>{card.value}</div>
                         {card.sub && <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>{card.sub}</div>}
                       </div>
                     ))}
@@ -150,9 +150,9 @@ export default function OwnersPage() {
                       <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', letterSpacing: '0.5px', marginBottom: 6 }}>OWNER SHARE ({ownerPct}%)</div>
                       <div style={{ fontSize: 24, fontWeight: 700, color: '#10B981' }}>£{ownerShare.toLocaleString()}</div>
                     </div>
-                    <div style={{ background: '#EFF6FF', borderRadius: 10, padding: '16px 20px', textAlign: 'center', border: '1px solid #BFDBFE' }}>
+                    <div style={{ background: '#FBF4E6', borderRadius: 10, padding: '16px 20px', textAlign: 'center', border: '1px solid #BFDBFE' }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', letterSpacing: '0.5px', marginBottom: 6 }}>MANAGEMENT TAKE ({mgmtPct}%)</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: '#2563EB' }}>£{managementFee.toLocaleString()}</div>
+                      <div style={{ fontSize: 24, fontWeight: 700, color: '#A8862E' }}>£{managementFee.toLocaleString()}</div>
                       <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>Management Fee</div>
                     </div>
                   </div>
@@ -162,17 +162,17 @@ export default function OwnersPage() {
                 {Object.entries(byMonth).reverse().map(([month, data]) => (
                   <div key={month} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '20px 24px', marginBottom: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <span style={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>{month}</span>
+                      <span style={{ fontWeight: 600, fontSize: 15, color: '#323338' }}>{month}</span>
                       <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
                         <span style={{ color: '#10B981' }}>+£{data.revenue.toLocaleString()}</span>
                         <span style={{ color: '#EF4444' }}>-£{Math.round(data.revenue * MANAGEMENT_FEE).toLocaleString()}</span>
-                        <span style={{ fontWeight: 600, color: '#111827' }}>Net: £{Math.round(data.revenue * (1 - MANAGEMENT_FEE)).toLocaleString()}</span>
+                        <span style={{ fontWeight: 600, color: '#323338' }}>Net: £{Math.round(data.revenue * (1 - MANAGEMENT_FEE)).toLocaleString()}</span>
                       </div>
                     </div>
                     {data.bookings.map((b: any) => (
                       <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid #F3F4F6', fontSize: 13 }}>
                         <div>
-                          <div style={{ fontWeight: 500, color: '#111827' }}>{b.guest_name ?? 'Guest'} — booking revenue</div>
+                          <div style={{ fontWeight: 500, color: '#323338' }}>{b.guest_name ?? 'Guest'} — booking revenue</div>
                           <div style={{ color: '#9CA3AF', marginTop: 2 }}>{b.properties?.name} · {b.check_in}</div>
                         </div>
                         <span style={{ fontWeight: 600, color: '#10B981' }}>+£{(b.total_amount ?? 0).toLocaleString()}</span>
@@ -191,11 +191,11 @@ export default function OwnersPage() {
                 ) : bookings.map(b => (
                   <div key={b.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{b.guest_name ?? 'Guest'}</div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{b.guest_name ?? 'Guest'}</div>
                       <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{b.properties?.name} · {b.check_in} → {b.check_out}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 600, color: '#111827' }}>£{(b.total_amount ?? 0).toLocaleString()}</div>
+                      <div style={{ fontWeight: 600, color: '#323338' }}>£{(b.total_amount ?? 0).toLocaleString()}</div>
                       <div style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: b.status === 'confirmed' ? '#D1FAE5' : '#F3F4F6', color: b.status === 'confirmed' ? '#10B981' : '#6B7280', marginTop: 4, display: 'inline-block' }}>{b.status}</div>
                     </div>
                   </div>
@@ -211,7 +211,7 @@ export default function OwnersPage() {
                 ) : tickets.map(t => (
                   <div key={t.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{t.title}</div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{t.title}</div>
                       <div style={{ fontSize: 13, color: '#6B7280', marginTop: 2 }}>{t.properties?.name}</div>
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: t.status === 'open' ? '#DBEAFE' : '#D1FAE5', color: t.status === 'open' ? '#2563EB' : '#10B981' }}>{t.status}</span>
@@ -225,7 +225,7 @@ export default function OwnersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                 {properties.map(p => (
                   <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '20px 24px' }}>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: '#111827', marginBottom: 4 }}>{p.name}</div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: '#323338', marginBottom: 4 }}>{p.name}</div>
                     <div style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 12 }}>{p.address}{p.city ? `, ${p.city}` : ''}</div>
                     <div style={{ display: 'flex', gap: 12, fontSize: 13, color: '#6B7280' }}>
                       {p.bedrooms != null && <span>🛏 {p.bedrooms} bed</span>}
@@ -245,19 +245,19 @@ export default function OwnersPage() {
                   const ownerNet = revenue * (1 - MANAGEMENT_FEE)
                   return (
                     <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '20px 24px' }}>
-                      <div style={{ fontWeight: 600, fontSize: 15, color: '#111827', marginBottom: 16 }}>{p.name}</div>
+                      <div style={{ fontWeight: 600, fontSize: 15, color: '#323338', marginBottom: 16 }}>{p.name}</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                         <div style={{ textAlign: 'center', background: '#F8F9FA', borderRadius: 8, padding: '12px' }}>
                           <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 4 }}>GROSS REVENUE</div>
-                          <div style={{ fontSize: 20, fontWeight: 700, color: '#111827' }}>£{revenue.toLocaleString()}</div>
+                          <div style={{ fontSize: 20, fontWeight: 700, color: '#323338' }}>£{revenue.toLocaleString()}</div>
                         </div>
                         <div style={{ textAlign: 'center', background: '#F0FDF4', borderRadius: 8, padding: '12px' }}>
                           <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 4 }}>OWNER NET ({ownerPct}%)</div>
                           <div style={{ fontSize: 20, fontWeight: 700, color: '#10B981' }}>£{Math.round(ownerNet).toLocaleString()}</div>
                         </div>
-                        <div style={{ textAlign: 'center', background: '#EFF6FF', borderRadius: 8, padding: '12px' }}>
+                        <div style={{ textAlign: 'center', background: '#FBF4E6', borderRadius: 8, padding: '12px' }}>
                           <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 4 }}>BOOKINGS</div>
-                          <div style={{ fontSize: 20, fontWeight: 700, color: '#2563EB' }}>{propBookings.length}</div>
+                          <div style={{ fontSize: 20, fontWeight: 700, color: '#A8862E' }}>{propBookings.length}</div>
                         </div>
                       </div>
                     </div>
@@ -310,7 +310,7 @@ export default function OwnersPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setAddRecord(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={() => setAddRecord(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Save Record</button>
+              <button onClick={() => setAddRecord(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Save Record</button>
             </div>
           </div>
         </div>

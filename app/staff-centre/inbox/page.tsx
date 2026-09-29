@@ -3,13 +3,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import CallButton from '@/components/CallButton'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const CHANNELS = [
-  { key:'str_owner', label:'VR Owner', bg:'#EEF1FF', fg:'#3B4AFF',
+  { key:'str_owner', label:'VR Owner', bg:'#FBF4E6', fg:'#A8862E',
     table:'owner_messages', recipientTable:'owner_profiles', idField:'owner_id', sendRoute:'/api/admin/send-message', sendBody:'owner_id' },
-  { key:'pm_landlord', label:'PM Landlord', bg:'#EEF1FF', fg:'#3B4AFF',
+  { key:'pm_landlord', label:'PM Landlord', bg:'#FBF4E6', fg:'#A8862E',
     table:'pm_landlord_messages', recipientTable:'pm_landlords', idField:'landlord_id', sendRoute:'/api/admin/send-landlord-message', sendBody:'landlord_id' },
-  { key:'pm_tenant', label:'PM Tenant', bg:'#EEF1FF', fg:'#3B4AFF',
+  { key:'pm_tenant', label:'PM Tenant', bg:'#FBF4E6', fg:'#A8862E',
     table:'pm_tenant_messages', recipientTable:'pm_tenants', idField:'tenant_id', sendRoute:'/api/admin/send-tenant-message', sendBody:'tenant_id' },
   { key:'estate_tenant', label:'EA Tenant', bg:'#EAF3EE', fg:'#2D6A4F',
     table:'estate_tenant_messages', recipientTable:'estate_tenants', idField:'tenant_id', sendRoute:'/api/admin/send-estate-tenant-message', sendBody:'tenant_id' },
@@ -21,7 +21,7 @@ const WHATSAPP_FG = '#1DA851'
 const SMS_BG = '#FFF4E5'
 const SMS_FG = '#B45309'
 const TEAM_BG = '#F5F3FF'
-const TEAM_FG = '#7C3AED'
+const TEAM_FG = '#A8862E'
 const CALLS_BG = '#FFF1F2'
 const CALLS_FG = '#E11D48'
 const NON_STAFF_SENDER: Record<string,string> = { str_owner:'owner', pm_landlord:'landlord', pm_tenant:'tenant', estate_tenant:'tenant', estate_landlord:'landlord', whatsapp:'contact', sms:'contact' }
@@ -308,7 +308,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Conversations {unreadCount>0&&<span style={{marginLeft:8,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Conversations {unreadCount>0&&<span style={{marginLeft:8,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
         </div>
         {identity.isAdmin && (
           <button onClick={()=>setShowNewConvo(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:12.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Team Conversation</button>
@@ -354,11 +354,11 @@ export default function Page() {
             {sorted.length===0?(
               <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',fontSize:13}}>{tab==='Unread' ? 'All caught up.' : 'No conversations yet.'}</div>
             ):sorted.map((c:any)=>(
-              <div key={c.channel+c.recipientId} onClick={()=>openThread(c)} style={{padding:'14px 18px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openConvo?.recipientId===c.recipientId&&openConvo?.channel===c.channel?'#F5F6FF':'transparent',display:'flex',gap:10}}>
+              <div key={c.channel+c.recipientId} onClick={()=>openThread(c)} style={{padding:'14px 18px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openConvo?.recipientId===c.recipientId&&openConvo?.channel===c.channel?'#FBF4E6':'transparent',display:'flex',gap:10}}>
                 <div style={{width:36,height:36,borderRadius:'50%',background:c.channelBg,color:c.channelFg,fontSize:c.channel==='calls'?16:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{c.channel==='calls' ? '📞' : initials(c.recipientName)}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontSize:13,fontWeight:c.unread?700:500,color:'#101828'}}>{c.recipientName}</span>
+                    <span style={{fontSize:13,fontWeight:c.unread?700:500,color:'#323338'}}>{c.recipientName}</span>
                     <span style={{fontSize:10,color:'#98A2B3',flexShrink:0}}>{relativeTime(c.lastAt)}</span>
                   </div>
                   <div style={{fontSize:11,fontWeight:600,color:c.channelFg,margin:'2px 0'}}>{c.channelLabel}</div>
@@ -377,7 +377,7 @@ export default function Page() {
             <div style={{flex:1,display:'flex',flexDirection:'column' as const,alignItems:'center',justifyContent:'center',gap:16,padding:24}}>
               <div style={{width:64,height:64,borderRadius:'50%',background:CALLS_BG,color:CALLS_FG,fontSize:26,display:'flex',alignItems:'center',justifyContent:'center'}}>📞</div>
               <div style={{textAlign:'center' as const}}>
-                <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>{openConvo.recipientName}</div>
+                <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{openConvo.recipientName}</div>
                 <div style={{fontSize:13,color:'#667085',marginTop:4}}>{openConvo.callDirection==='outbound'?'Outgoing call':'Incoming call'} · {CALL_STATUS_LABEL[openConvo.callStatus] ?? openConvo.callStatus}</div>
                 <div style={{fontSize:13,color:'#667085',marginTop:2}}>Duration: {fmtDuration(openConvo.callDuration)}</div>
                 <div style={{fontSize:12,color:'#98A2B3',marginTop:8}}>{new Date(openConvo.lastAt).toLocaleString()}</div>
@@ -389,7 +389,7 @@ export default function Page() {
               <div style={{padding:'16px 24px',borderBottom:'1px solid #E4E7EC',background:'#fff',display:'flex',alignItems:'center',gap:10}}>
                 <div style={{width:32,height:32,borderRadius:'50%',background:openConvo.channelBg,color:openConvo.channelFg,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(openConvo.recipientName)}</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>{openConvo.recipientName}</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{openConvo.recipientName}</div>
                   <div style={{fontSize:11,color:openConvo.channelFg,fontWeight:600}}>{openConvo.channelLabel}</div>
                 </div>
                 {(openConvo.channel==='whatsapp'||openConvo.channel==='sms') && <CallButton phone={openConvo.recipientId} name={openConvo.recipientName} size={18}/>}
@@ -407,7 +407,7 @@ export default function Page() {
                   const label = openConvo.channel==='team' ? (isStaff?'You':msg.senderName) : (isStaff?'Staff':openConvo.recipientName)
                   return (
                     <div key={msg.id} style={{alignSelf:isStaff?'flex-end':'flex-start',maxWidth:'65%'}}>
-                      <div style={{background:isStaff?ACCENT:'#F2F4F7',color:isStaff?'#fff':'#101828',borderRadius:12,padding:'10px 14px',fontSize:13}}>{msg.message}</div>
+                      <div style={{background:isStaff?ACCENT:'#F2F4F7',color:isStaff?'#fff':'#323338',borderRadius:12,padding:'10px 14px',fontSize:13}}>{msg.message}</div>
                       <div style={{fontSize:10,color:'#98A2B3',marginTop:3,textAlign:isStaff?'right' as const:'left' as const}}>{label} · {new Date(msg.created_at).toLocaleString()}</div>
                     </div>
                   )
@@ -426,7 +426,7 @@ export default function Page() {
             <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:16}}>Details</div>
             <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',marginBottom:20}}>
               <div style={{width:64,height:64,borderRadius:'50%',background:openConvo.channelBg,color:openConvo.channelFg,fontSize:20,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:10}}>{initials(openConvo.recipientName)}</div>
-              <div style={{fontSize:15,fontWeight:700,color:'#101828',textAlign:'center' as const}}>{openConvo.recipientName}</div>
+              <div style={{fontSize:15,fontWeight:700,color:'#323338',textAlign:'center' as const}}>{openConvo.recipientName}</div>
               <div style={{fontSize:11,fontWeight:600,color:openConvo.channelFg,marginTop:2}}>{openConvo.channelLabel}</div>
             </div>
             {openConvo.channel==='team' ? (
@@ -458,7 +458,7 @@ export default function Page() {
       {showNewConvo && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e=>e.target===e.currentTarget&&setShowNewConvo(false)}>
           <div style={{ background: '#fff', borderRadius: 12, padding: 24, width: 400 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#101828', marginBottom: 16 }}>New Team Conversation</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#323338', marginBottom: 16 }}>New Team Conversation</div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Name</label>
             <input value={newConvoName} onChange={(e) => setNewConvoName(e.target.value)} placeholder="e.g. Maintenance Team" style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, marginBottom: 14 }} />
             <label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 6, display: 'block' }}>Members</label>

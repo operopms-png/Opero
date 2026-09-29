@@ -49,14 +49,14 @@ export default function GuestCommsPage() {
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', sans-serif" }}>
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', gap: 10 }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#101828' }}>Guest Communications</h1>
+        <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Guest Communications</h1>
       </div>
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px', display: 'grid', gridTemplateColumns: '260px 1fr', gap: 24 }}>
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Templates</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {TEMPLATES.map(t => (
-              <div key={t.id} onClick={() => setSelected(t)} style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${selected.id === t.id ? '#3B4AFF' : '#E4E7EC'}`, background: selected.id === t.id ? '#EEF0FF' : '#fff', cursor: 'pointer', fontSize: 13, fontWeight: selected.id === t.id ? 600 : 400, color: selected.id === t.id ? '#3B4AFF' : '#344054' }}>
+              <div key={t.id} onClick={() => setSelected(t)} style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${selected.id === t.id ? '#A8862E' : '#E4E7EC'}`, background: selected.id === t.id ? '#FBF4E6' : '#fff', cursor: 'pointer', fontSize: 13, fontWeight: selected.id === t.id ? 600 : 400, color: selected.id === t.id ? '#A8862E' : '#344054' }}>
                 {t.label}
               </div>
             ))}
@@ -70,7 +70,7 @@ export default function GuestCommsPage() {
           </div>
         </div>
         <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E4E7EC', padding: 28 }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#101828', marginBottom: 4 }}>{selected.label}</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: '#323338', marginBottom: 4 }}>{selected.label}</div>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 20 }}>Subject: {selected.subject.replace(/{property_name}/g, selectedBooking?.properties?.name ?? '{property_name}')}</div>
           <textarea value={preview} onChange={e => setPreview(e.target.value)} style={{ width: '100%', minHeight: 240, padding: '14px', borderRadius: 10, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }} />
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -78,7 +78,7 @@ export default function GuestCommsPage() {
               {copied ? 'Copied!' : 'Copy to clipboard'}
             </button>
             {selectedBooking?.guest_email && (
-              <a href={`mailto:${selectedBooking.guest_email}?subject=${encodeURIComponent(selected.subject)}&body=${encodeURIComponent(preview)}`} style={{ flex: 1, padding: '10px', borderRadius: 8, background: '#3B4AFF', color: '#fff', fontSize: 14, fontWeight: 500, textDecoration: 'none', textAlign: 'center', display: 'block' }}>Send via Email</a>
+              <a href={`mailto:${selectedBooking.guest_email}?subject=${encodeURIComponent(selected.subject)}&body=${encodeURIComponent(preview)}`} style={{ flex: 1, padding: '10px', borderRadius: 8, background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, textDecoration: 'none', textAlign: 'center', display: 'block' }}>Send via Email</a>
             )}
           </div>
         </div>

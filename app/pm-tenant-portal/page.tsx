@@ -3,8 +3,13 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 
-const ACCENT = '#5B7CFA'
+const ACCENT = '#A8862E'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
+function fmtDate(d?: string | null) {
+  if (!d) return '—'
+  const x = new Date(d.length === 10 ? d + 'T00:00:00' : d)
+  return isNaN(x.getTime()) ? d : x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
 async function uploadAttachment(file: File, folder: string): Promise<string | null> {
@@ -226,13 +231,13 @@ function PMTenantPortalInner() {
       <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '48px 28px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Tenant Portal</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#101828' }}>Select a tenant to preview</h1>
+          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#323338' }}>Select a tenant to preview</h1>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>This is the staff view — pick a tenant to see their portal exactly as they see it.</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pickerTenants.map(t => (
               <a key={t.id} href={`/pm-tenant-portal?tenant_id=${t.id}`} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{t.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{t.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>{t.email ?? '—'}</div>
                 </div>
                 <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>Preview →</span>
@@ -246,10 +251,16 @@ function PMTenantPortalInner() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
-      <div style={{ background: ACCENT, color: '#fff', padding: '20px 28px' }}>
-        {isStaffView && <div style={{ fontSize: 12, background: 'rgba(255,255,255,0.2)', display: 'inline-block', padding: '2px 10px', borderRadius: 20, marginBottom: 8 }}>Staff preview</div>}
-        <div style={{ fontSize: 11, opacity: 0.85, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tenant Portal</div>
-        <div style={{ fontSize: 22, fontWeight: 700 }}>Welcome, {tenant?.name?.split(' ')[0] ?? 'there'}</div>
+      <div style={{ background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid #EADBB8', padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <img src="/logo.PNG" alt="Sangsters" style={{ width: 44, height: 44, objectFit: 'contain' }} />
+          <div>
+        {isStaffView && <div style={{ fontSize: 12, background: '#fff', border: '1px solid #EADBB8', color: '#8A6B2E', display: 'inline-block', padding: '2px 10px', borderRadius: 20, marginBottom: 8 }}>Staff preview</div>}
+        <div style={{ fontSize: 11, color: '#8A6B2E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tenant Portal</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: '#624920' }}>Welcome, {tenant?.name?.split(' ')[0] ?? 'there'}</div>
+          </div>
+        </div>
+        {!isStaffView && <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D4E4', background: '#fff', color: '#323338', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>}
       </div>
 
       <div style={{ display: 'flex', gap: 0, padding: '0 28px', background: '#fff', borderBottom: '1px solid #E4E7EC' }}>
@@ -264,22 +275,22 @@ function PMTenantPortalInner() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
                 <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Property</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginTop: 4 }}>{property?.name ?? '—'}{unit?.unit_number ? `, Unit ${unit.unit_number}` : ''}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginTop: 4 }}>{property?.name ?? '—'}{unit?.unit_number ? `, Unit ${unit.unit_number}` : ''}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>{[property?.address, property?.city].filter(Boolean).join(', ')}</div>
               </div>
               <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
                 <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Monthly Rent</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#101828', marginTop: 4 }}>£{(lease?.monthly_rent ?? 0).toLocaleString()}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#323338', marginTop: 4 }}>£{(lease?.monthly_rent ?? 0).toLocaleString()}</div>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
                 <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Lease Start</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginTop: 4 }}>{lease?.start_date ?? '—'}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginTop: 4 }}>{fmtDate(lease?.start_date)}</div>
               </div>
               <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
                 <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Lease End</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginTop: 4 }}>{lease?.end_date ?? '—'}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginTop: 4 }}>{fmtDate(lease?.end_date)}</div>
               </div>
             </div>
             {lease?.document_url && (
@@ -295,7 +306,7 @@ function PMTenantPortalInner() {
 
             {showMakePayment && (
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 20, maxWidth: 400 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 14 }}>Make a payment</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 14 }}>Make a payment</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div><label style={lbl}>What's this for?</label>
                     <select style={inp} value={payCategory} onChange={e => setPayCategory(e.target.value)}>
@@ -306,7 +317,7 @@ function PMTenantPortalInner() {
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                   <button onClick={() => setShowMakePayment(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                  <button onClick={makePayment} disabled={makingPayment || !payAmount || parseFloat(payAmount) <= 0} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: makingPayment || !payAmount || parseFloat(payAmount) <= 0 ? 0.6 : 1 }}>{makingPayment ? 'Redirecting…' : 'Continue to Payment'}</button>
+                  <button onClick={makePayment} disabled={makingPayment || !payAmount || parseFloat(payAmount) <= 0} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: makingPayment || !payAmount || parseFloat(payAmount) <= 0 ? 0.6 : 1 }}>{makingPayment ? 'Redirecting…' : 'Continue to Payment'}</button>
                 </div>
               </div>
             )}
@@ -320,7 +331,7 @@ function PMTenantPortalInner() {
               <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 100px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', fontSize: 13, color: '#344054', alignItems: 'center' }}>
                 <span>{p.category ?? 'Rent'}</span>
                 <span>£{(p.amount ?? 0).toLocaleString()}</span>
-                <span>{p.due_date ?? '—'}</span>
+                <span>{fmtDate(p.due_date)}</span>
                 <span style={{ textTransform: 'capitalize' }}>{(p.method ?? '').replace('_', ' ')}</span>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: p.status === 'paid' ? '#D1FAE5' : p.status === 'overdue' ? '#FEE2E2' : '#FEF3C7', color: p.status === 'paid' ? '#059669' : p.status === 'overdue' ? '#DC2626' : '#D97706', width: 'fit-content' }}>{p.status}</span>
                 {p.status !== 'paid' && (
@@ -334,7 +345,7 @@ function PMTenantPortalInner() {
 
         {tab === 'Maintenance' && (
           <div>
-            <button onClick={() => setShowNewTicket(true)} style={{ marginBottom: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Submit Maintenance Request</button>
+            <button onClick={() => setShowNewTicket(true)} style={{ marginBottom: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Submit Maintenance Request</button>
 
             {showNewTicket && (
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 20 }}>
@@ -365,7 +376,7 @@ function PMTenantPortalInner() {
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                   <button onClick={() => setShowNewTicket(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                  <button onClick={submitTicket} disabled={submitting || !ticketForm.title.trim()} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submitting || !ticketForm.title.trim() ? 0.6 : 1 }}>{submitting ? 'Submitting…' : 'Submit Request'}</button>
+                  <button onClick={submitTicket} disabled={submitting || !ticketForm.title.trim()} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submitting || !ticketForm.title.trim() ? 0.6 : 1 }}>{submitting ? 'Submitting…' : 'Submit Request'}</button>
                 </div>
               </div>
             )}
@@ -375,7 +386,7 @@ function PMTenantPortalInner() {
               maintenance.map(m => (
                 <div key={m.id} style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#101828' }}>{m.title}</div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#323338' }}>{m.title}</div>
                     <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: m.status === 'open' ? '#DBEAFE' : m.status === 'resolved' ? '#D1FAE5' : '#FEF3C7', color: m.status === 'open' ? '#2563EB' : m.status === 'resolved' ? '#059669' : '#D97706', textTransform: 'capitalize' }}>{m.status}</span>
                   </div>
                   {m.description && <div style={{ fontSize: 12, color: '#667085' }}>{m.description}</div>}
@@ -392,8 +403,8 @@ function PMTenantPortalInner() {
               {documents.map(d => (
                 <a key={d.id} href={d.file_url || d.url} target="_blank" rel="noreferrer" style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none' }}>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#101828' }}>{d.name}</div>
-                    <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{d.category || d.type}{d.expiry_date ? ` · Expires ${d.expiry_date}` : ''}</div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#323338' }}>{d.name}</div>
+                    <div style={{ fontSize: 11, color: '#667085', marginTop: 2 }}>{d.category || d.type}{d.expiry_date ? ` · Expires ${fmtDate(d.expiry_date)}` : ''}</div>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 600, color: ACCENT }}>View →</span>
                 </a>
@@ -408,7 +419,7 @@ function PMTenantPortalInner() {
               {messages.length === 0 ? <div style={{ textAlign: 'center', padding: 30, color: '#98A2B3', fontSize: 13 }}>No messages yet — say hello to your property manager</div> :
               messages.map(m => (
                 <div key={m.id} style={{ alignSelf: m.sender === 'tenant' ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
-                  <div style={{ background: m.sender === 'tenant' ? ACCENT : '#F2F4F7', color: m.sender === 'tenant' ? '#fff' : '#101828', borderRadius: 12, padding: '8px 12px', fontSize: 13 }}>{m.message}</div>
+                  <div style={{ background: m.sender === 'tenant' ? ACCENT : '#F2F4F7', color: m.sender === 'tenant' ? '#fff' : '#323338', borderRadius: 12, padding: '8px 12px', fontSize: 13 }}>{m.message}</div>
                   <div style={{ fontSize: 10, color: '#98A2B3', marginTop: 2, textAlign: m.sender === 'tenant' ? 'right' : 'left' }}>{m.sender === 'tenant' ? 'You' : 'Property Manager'}</div>
                 </div>
               ))}
@@ -426,9 +437,9 @@ function PMTenantPortalInner() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {announcements.map((a: any) => (
                 <div key={a.id} style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px' }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: '#101828', marginBottom: 4 }}>{a.title}</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#323338', marginBottom: 4 }}>{a.title}</div>
                   <div style={{ fontSize: 12, color: '#667085' }}>{a.body}</div>
-                  <div style={{ fontSize: 10, color: '#98A2B3', marginTop: 6 }}>{new Date(a.created_at).toLocaleDateString()}</div>
+                  <div style={{ fontSize: 10, color: '#98A2B3', marginTop: 6 }}>{fmtDate(a.created_at)}</div>
                 </div>
               ))}
             </div>}
@@ -440,7 +451,7 @@ function PMTenantPortalInner() {
             {lease?.renewal_status && lease.renewal_status !== 'none' ? (
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, maxWidth: 460 }}>
                 <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', marginBottom: 6 }}>Request status</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#101828', textTransform: 'capitalize', marginBottom: 8 }}>{lease.renewal_status.replace(/_/g, ' ')}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#323338', textTransform: 'capitalize', marginBottom: 8 }}>{lease.renewal_status.replace(/_/g, ' ')}</div>
                 {lease.renewal_notes && <div style={{ fontSize: 13, color: '#667085' }}>{lease.renewal_notes}</div>}
               </div>
             ) : !showRenewalForm ? (
@@ -450,12 +461,12 @@ function PMTenantPortalInner() {
               </div>
             ) : (
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, maxWidth: 460 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 14 }}>{renewalChoice === 'renewal_requested' ? 'Request a renewal' : 'Give notice to move out'}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 14 }}>{renewalChoice === 'renewal_requested' ? 'Request a renewal' : 'Give notice to move out'}</div>
                 <label style={lbl}>Anything we should know? (optional)</label>
                 <textarea style={{ ...inp, resize: 'vertical' } as React.CSSProperties} rows={3} value={renewalNotes} onChange={e => setRenewalNotes(e.target.value)} placeholder={renewalChoice === 'renewal_requested' ? 'e.g. preferred new term length' : 'e.g. planned move-out date'} />
                 <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                   <button onClick={() => setShowRenewalForm(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                  <button onClick={submitRenewalRequest} disabled={submittingRenewal} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submittingRenewal ? 0.6 : 1 }}>{submittingRenewal ? 'Submitting…' : 'Submit Request'}</button>
+                  <button onClick={submitRenewalRequest} disabled={submittingRenewal} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submittingRenewal ? 0.6 : 1 }}>{submittingRenewal ? 'Submitting…' : 'Submit Request'}</button>
                 </div>
               </div>
             )}
@@ -466,11 +477,11 @@ function PMTenantPortalInner() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
               <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>WiFi Network</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginTop: 4 }}>{property?.wifi_ssid ?? '—'}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginTop: 4 }}>{property?.wifi_ssid ?? '—'}</div>
             </div>
             <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
               <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>WiFi Password</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginTop: 4 }}>{property?.wifi_password ?? '—'}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginTop: 4 }}>{property?.wifi_password ?? '—'}</div>
             </div>
             <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16, gridColumn: '1 / -1' }}>
               <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Bin Collection</div>
@@ -500,7 +511,7 @@ function PMTenantPortalInner() {
                 <input type="checkbox" checked={profileForm.notify_sms} onChange={e => setProfileForm({ ...profileForm, notify_sms: e.target.checked })} /> SMS notifications
               </label>
             </div>
-            <button onClick={saveProfile} disabled={savingProfile} style={{ marginTop: 18, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: savingProfile ? 0.6 : 1 }}>{savingProfile ? 'Saving…' : 'Save Profile'}</button>
+            <button onClick={saveProfile} disabled={savingProfile} style={{ marginTop: 18, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: savingProfile ? 0.6 : 1 }}>{savingProfile ? 'Saving…' : 'Save Profile'}</button>
           </div>
         )}
       </div>

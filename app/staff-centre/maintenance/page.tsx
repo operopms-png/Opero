@@ -2,10 +2,10 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const MODULES = [
-  { key:'str', label:'Vacation Rentals', bg:'#EEF1FF', fg:'#3B4AFF' },
-  { key:'pm', label:'Property Management', bg:'#EEF1FF', fg:'#3B4AFF' },
+  { key:'str', label:'Vacation Rentals', bg:'#FBF4E6', fg:'#A8862E' },
+  { key:'pm', label:'Property Management', bg:'#FBF4E6', fg:'#A8862E' },
   { key:'estate', label:'Estate Agency', bg:'#EAF3EE', fg:'#2D6A4F' },
 ]
 const PRIORITY_STYLE: Record<string,{bg:string,fg:string,border:string}> = {
@@ -82,7 +82,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Maintenance Board</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Maintenance Board</div>
         </div>
       </div>
 
@@ -90,15 +90,15 @@ export default function Page() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:20}}>
           <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
             <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>Open Jobs</div>
-            <div style={{fontSize:26,fontWeight:800,color:'#101828'}}>{openCount}</div>
+            <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{openCount}</div>
           </div>
           <div style={{background:'#fff',border:urgentCount>0?'1px solid #FEE2E2':'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
             <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>Urgent</div>
-            <div style={{fontSize:26,fontWeight:800,color:urgentCount>0?'#DC2626':'#101828'}}>{urgentCount}</div>
+            <div style={{fontSize:26,fontWeight:800,color:urgentCount>0?'#DC2626':'#323338'}}>{urgentCount}</div>
           </div>
           <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
             <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>Total Tickets</div>
-            <div style={{fontSize:26,fontWeight:800,color:'#101828'}}>{tickets.length}</div>
+            <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{tickets.length}</div>
           </div>
         </div>
 
@@ -111,7 +111,7 @@ export default function Page() {
           </div>
           <div style={{display:'flex',gap:8}}>
             {['Open','All'].map(s=>(
-              <button key={s} onClick={()=>setStatusFilter(s)} style={{padding:'6px 14px',borderRadius:20,border:statusFilter===s?'1px solid #101828':'1px solid #E4E7EC',background:statusFilter===s?'#101828':'#fff',color:statusFilter===s?'#fff':'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s}</button>
+              <button key={s} onClick={()=>setStatusFilter(s)} style={{padding:'6px 14px',borderRadius:20,border:statusFilter===s?'1px solid #A8862E':'1px solid #E4E7EC',background:statusFilter===s?'#A8862E':'#fff',color:statusFilter===s?'#fff':'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s}</button>
             ))}
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function Page() {
           {filtered.length===0?(
             <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>
               <div style={{fontSize:36,marginBottom:12}}>🔧</div>
-              <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Nothing here</div>
+              <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Nothing here</div>
             </div>
           ):filtered.map((t:any)=>{
             const p = PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.medium
@@ -129,7 +129,7 @@ export default function Page() {
               <div key={t.module+t.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',borderLeft:'3px solid '+p.border,padding:'14px 20px',display:'flex',alignItems:'center',gap:14}}>
                 <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4,background:p.bg,color:p.fg,letterSpacing:'0.03em',textTransform:'uppercase' as const}}>{t.priority}</span>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>{t.title}</div>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{t.title}</div>
                   <div style={{fontSize:12,color:'#667085',marginTop:2}}>{t.propertyName??'—'} · {mod?.label} {t.assigned_to?`· ${t.assigned_to}`:''}</div>
                 </div>
                 <span style={{fontSize:11,color:'#98A2B3'}}>{relativeTime(t.created_at)}</span>

@@ -7,7 +7,7 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 
 async function uploadPropertyImage(file: File): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -157,11 +157,11 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
     <div>
       <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-          <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Cash Flow ({year})</div>
+          <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Cash Flow ({year})</div>
           <div style={{display:'flex',gap:16,alignItems:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Inflows</span></div>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#EF4444',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Outflows</span></div>
-            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#5B7CFA',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#A8862E',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
           </div>
         </div>
         <svg viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:H,overflow:'visible'}}>
@@ -177,12 +177,12 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           <path d={line(cfData.map(d=>d.inflow))+' L'+x(11)+' '+(H-PAD)+' L'+x(0)+' '+(H-PAD)+' Z'} fill='#10B98115'/>
           <path d={line(cfData.map(d=>d.inflow))} fill='none' stroke='#10B981' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
           <path d={line(cfData.map(d=>d.outflow))} fill='none' stroke='#EF4444' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#5B7CFA' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
+          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#A8862E' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
           {cfData.map((d,i)=>(
             <g key={i}>
               <circle cx={x(i)} cy={y(d.inflow)} r='3' fill='#10B981'/>
               <circle cx={x(i)} cy={y(d.outflow)} r='3' fill='#EF4444'/>
-              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#5B7CFA'/>
+              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#A8862E'/>
             </g>
           ))}
         </svg>
@@ -195,7 +195,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           cumulative+=d.net
           return(
             <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
-              <span style={{fontWeight:500,color:'#101828'}}>{d.m} {year}</span>
+              <span style={{fontWeight:500,color:'#323338'}}>{d.m} {year}</span>
               <span style={{color:'#10B981'}}>£{d.inflow.toLocaleString()}</span>
               <span style={{color:'#EF4444'}}>£{d.outflow.toLocaleString()}</span>
               <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
@@ -203,7 +203,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
             </div>
           )
         })}
-        <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828',gap:8,borderTop:'2px solid #E4E7EC'}}>
+        <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338',gap:8,borderTop:'2px solid #E4E7EC'}}>
           <span>TOTAL {year}</span>
           <span style={{color:'#10B981'}}>£{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
           <span style={{color:'#EF4444'}}>£{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
@@ -734,8 +734,8 @@ export default function Page() {
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
   const btnStyle = (active:boolean) => ({
-    display:'flex' as const,alignItems:'center' as const,gap:8,width:'100%',padding:'8px 12px',borderRadius:6,border:'none',
-    background:active?ACCENT+'18':'transparent',color:active?ACCENT:'#344054',fontSize:13,
+    display:'flex' as const,alignItems:'center' as const,gap:8,width:'100%',padding:'8px 12px',borderRadius:6,border:active?'1px solid #A8862E':'1px solid transparent',
+    background:active?'#FBF4E6':'transparent',color:active?'#624920':'#344054',fontSize:13,
     fontWeight:active?600:400,cursor:'pointer' as const,fontFamily:'inherit',textAlign:'left' as const,marginBottom:2
   })
 
@@ -746,9 +746,9 @@ export default function Page() {
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
       {/* Sidebar */}
       <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:'flex',flexDirection:'column',paddingTop:0,flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
-        <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:ACCENT}}>
-          <div style={{width:28,height:28,borderRadius:6,background:'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:'#fff',fontSize:14,fontWeight:700}}>E</span></div>
-          <span style={{fontSize:14,fontWeight:700,color:'#fff'}}>Estate Agency</span>
+        <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)'}}>
+          <div style={{width:8,height:8,background:'#D0AE4C',borderRadius:'50%'}}/>
+          <span style={{fontSize:14,fontWeight:700,color:'#624920'}}>Estate Agency</span>
         </div>
         <div style={{padding:'8px 10px'}}>
           {NAV_GROUPS.map(group=>(
@@ -773,11 +773,11 @@ export default function Page() {
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
             {section==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
-            {section!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#101828'}}>{section}</span></>}
+            {section!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{section}</span></>}
           </div>
           <div style={{display:'flex',gap:8}}>
             {section==='Properties'&&(!isBundle&&properties.length >= propertyLimit
-              ? <button onClick={()=>setShowUpgrade(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#5B7CFA',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add more properties</button>
+              ? <button onClick={()=>setShowUpgrade(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add more properties</button>
               : <button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>)}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
             {section==='Vacancies'&&<button onClick={()=>setShowAddVacancy(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
@@ -804,14 +804,14 @@ export default function Page() {
           {section==='Dashboard'&&(<div>
             <div style={{marginBottom:20}}>
               <div style={{fontSize:13,color:'#667085'}}>Sunday, {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long'})}</div>
-              <div style={{fontSize:24,fontWeight:700,color:'#101828'}}>Hello Sangsters !</div>
+              <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>Hello Sangsters !</div>
             </div>
             {(complianceExpired>0||complianceExpiringSoon>0||tenanciesEndingSoon>0||lateRentCount>0)&&(
               <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:'16px 20px',marginBottom:20}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
                     <span style={{fontSize:20}}>⚠️</span>
-                    <span style={{fontSize:14,fontWeight:600,color:'#101828'}}>{complianceExpired+complianceExpiringSoon+tenanciesEndingSoon+lateRentCount} item{(complianceExpired+complianceExpiringSoon+tenanciesEndingSoon+lateRentCount)>1?'s':''} need attention</span>
+                    <span style={{fontSize:14,fontWeight:600,color:'#323338'}}>{complianceExpired+complianceExpiringSoon+tenanciesEndingSoon+lateRentCount} item{(complianceExpired+complianceExpiringSoon+tenanciesEndingSoon+lateRentCount)>1?'s':''} need attention</span>
                   </div>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:`repeat(${[complianceExpired+complianceExpiringSoon>0,tenanciesEndingSoon>0,lateRentCount>0].filter(Boolean).length||1},1fr)`,gap:10}}>
@@ -854,7 +854,7 @@ export default function Page() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
               <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Revenues and Expenses</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Revenues and Expenses</div>
                 <div style={{display:'flex',gap:8,marginBottom:16,borderBottom:'1px solid #E4E7EC',paddingBottom:12}}>
                   {[{k:'CURRENT_MONTH',l:'CURRENT MONTH'},{k:'LAST_MONTH',l:'LAST MONTH'},{k:'CURRENT_YEAR',l:'CURRENT YEAR'},{k:'12_MONTHS',l:'12 MONTHS'}].map(t=>(
                     <button key={t.k} onClick={()=>setPeriodTab(t.k as any)} style={{padding:'4px 10px',borderRadius:4,border:'none',background:periodTab===t.k?ACCENT:'transparent',color:periodTab===t.k?'#fff':'#667085',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t.l}</button>
@@ -909,15 +909,15 @@ export default function Page() {
               </div>
               <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Real estate news</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Real estate news</div>
                   {newsLive&&<span style={{fontSize:9,fontWeight:700,color:'#10B981',background:'#ECFDF5',padding:'2px 6px',borderRadius:10,textTransform:'uppercase' as const}}>● Live</span>}
                 </div>
                 {news.map(n=>(
                   <div key={n.title} style={{marginBottom:16,paddingBottom:16,borderBottom:'1px solid #F2F4F7'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
                       {n.link
-                        ? <a href={n.link} target="_blank" rel="noopener noreferrer" style={{fontSize:13,fontWeight:600,color:'#101828',flex:1,marginRight:8,textDecoration:'none'}}>{n.title}</a>
-                        : <div style={{fontSize:13,fontWeight:600,color:'#101828',flex:1,marginRight:8}}>{n.title}</div>}
+                        ? <a href={n.link} target="_blank" rel="noopener noreferrer" style={{fontSize:13,fontWeight:600,color:'#323338',flex:1,marginRight:8,textDecoration:'none'}}>{n.title}</a>
+                        : <div style={{fontSize:13,fontWeight:600,color:'#323338',flex:1,marginRight:8}}>{n.title}</div>}
                       <span style={{fontSize:10,fontWeight:700,background:'#E4E7EC',color:'#344054',padding:'2px 6px',borderRadius:4,whiteSpace:'nowrap' as const}}>{n.tag}</span>
                     </div>
                     <div style={{fontSize:12,color:'#667085',lineHeight:1.5}}>{n.body}</div>
@@ -930,7 +930,7 @@ export default function Page() {
 
           {section==='Properties'&&(<div>
             {showAddProperty&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit property':'Add property'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit property':'Add property'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Property name *</label><input value={prop.name} onChange={e=>setProp({...prop,name:e.target.value})} placeholder="e.g. Sangsters Aurevo C1-12" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Address</label><input value={prop.address} onChange={e=>setProp({...prop,address:e.target.value})} placeholder="Full address" style={inputStyle}/></div>
@@ -950,11 +950,11 @@ export default function Page() {
                 <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
-            {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #5B7CFA',padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 10px'}}>Add more properties</h3>
+            {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 10px'}}>Add more properties</h3>
               <p style={{fontSize:14,color:'#344054',lineHeight:1.6,marginBottom:16}}>Your Estate Agency plan includes {propertyLimit} properties. Adding 2 more properties is <strong>£12/mo</strong>, billed on your existing subscription with proration for the rest of this cycle.</p>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={purchaseBlock} disabled={upgrading} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#5B7CFA',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+                <button onClick={purchaseBlock} disabled={upgrading} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
                 <button onClick={()=>setShowUpgrade(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -970,7 +970,7 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'56px 1fr 100px 100px 60px 60px 100px 80px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span></span><span>Name</span><span>Type</span><span>Address</span><span>Beds</span><span>Baths</span><span>Rent/mo</span><span>Status</span><span></span>
               </div>
-              {properties.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏠</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No properties yet</div><div style={{fontSize:13}}>Add your first property to get started.</div></div>):properties.map(p=>{
+              {properties.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏠</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No properties yet</div><div style={{fontSize:13}}>Add your first property to get started.</div></div>):properties.map(p=>{
                 const photos = parsePropertyImages(p.image_urls)
                 return (
                 <div key={p.id} style={{display:'grid',gridTemplateColumns:'56px 1fr 100px 100px 60px 60px 100px 80px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
@@ -980,7 +980,7 @@ export default function Page() {
                         {photos.length > 1 && <span style={{position:'absolute',bottom:-2,right:-2,background:'rgba(0,0,0,0.7)',color:'#fff',fontSize:9,fontWeight:600,padding:'1px 4px',borderRadius:4}}>+{photos.length-1}</span>}
                       </div>
                     : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
-                  <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{p.name}</div>
+                  <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{p.name}</div>
                   <span style={{fontSize:12,color:'#344054'}}>{p.type}</span>
                   <span style={{fontSize:12,color:'#667085',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.address||'—'}</span>
                   <span style={{fontSize:12,color:'#344054',display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms}</span>
@@ -1032,11 +1032,11 @@ export default function Page() {
               </Modal>
             )}
             <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {tenants.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:40,marginBottom:12}}>👥</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No tenants yet</div><div style={{fontSize:13}}>Add your first tenant to get started.</div></div>):tenants.map((t:any)=>(
+              {tenants.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:40,marginBottom:12}}>👥</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No tenants yet</div><div style={{fontSize:13}}>Add your first tenant to get started.</div></div>):tenants.map((t:any)=>(
                 <div key={t.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
                   <div style={{width:40,height:40,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:ACCENT,flexShrink:0}}>{t.name.charAt(0)}</div>
                   <div style={{flex:1}}>
-                    <div style={{fontWeight:600,fontSize:14,color:'#101828'}}>{t.name}</div>
+                    <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{t.name}</div>
                     <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[t.email,t.phone].filter(Boolean).join(' · ')||'—'}</div>
                     <div style={{fontSize:12,color:'#98A2B3',marginTop:2}}>{t.estate_properties?.name}{t.unit_id?` — ${units.find((u:any)=>u.id===t.unit_id)?.unit_number??''}`:''}</div>
                   </div>
@@ -1067,7 +1067,7 @@ export default function Page() {
             </div>
 
             {showAddCompliance&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Scope</label>
                   <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:(e.target.value==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0]})} style={inputStyle}>
@@ -1115,11 +1115,11 @@ export default function Page() {
                     {complianceScope==='property'&&<span>Property</span>}
                     <span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
                   </div>
-                  {scoped.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No {complianceScope} compliance records yet</div><div style={{fontSize:13}}>{complianceScope==='property'?'Track certificates you collect from landlords for each property, with automatic expiry alerts.':'Track what your agency needs to legally operate — CMP, redress scheme, insurance, and more.'}</div></div>):scoped.map((c:any)=>{
+                  {scoped.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No {complianceScope} compliance records yet</div><div style={{fontSize:13}}>{complianceScope==='property'?'Track certificates you collect from landlords for each property, with automatic expiry alerts.':'Track what your agency needs to legally operate — CMP, redress scheme, insurance, and more.'}</div></div>):scoped.map((c:any)=>{
                     const status = complianceStatus(c.expiry_date)
                     return (
                     <div key={c.id} style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                      {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.estate_properties?.name??'—'}</span>}
+                      {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.estate_properties?.name??'—'}</span>}
                       <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
                       <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
                       <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
@@ -1134,7 +1134,7 @@ export default function Page() {
 
           {section==='Buildings'&&(<div>
             {showAddBuilding&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit building':'Add building'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit building':'Add building'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Building name *</label><input value={buildingForm.name} onChange={e=>setBuildingForm({...buildingForm,name:e.target.value})} placeholder="e.g. Crown Street Block" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Total units</label><input value={buildingForm.total_units} onChange={e=>setBuildingForm({...buildingForm,total_units:e.target.value})} type="number" style={inputStyle}/></div>
@@ -1150,9 +1150,9 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 80px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span>Name</span><span>Address</span><span>Units</span><span></span>
               </div>
-              {buildings.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏢</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No buildings yet</div><div style={{fontSize:13}}>Add a building to start grouping units.</div></div>):buildings.map((b:any)=>(
+              {buildings.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏢</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No buildings yet</div><div style={{fontSize:13}}>Add a building to start grouping units.</div></div>):buildings.map((b:any)=>(
                 <div key={b.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 80px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{b.name}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{b.name}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{b.address||'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{b.total_units||'—'}</span>
                   <button onClick={()=>delRecord('estate_buildings',b.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
@@ -1163,7 +1163,7 @@ export default function Page() {
 
           {section==='Units'&&(<div>
             {showAddUnit&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit unit':'Add unit'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit unit':'Add unit'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Unit number *</label><input value={unitForm.unit_number} onChange={e=>setUnitForm({...unitForm,unit_number:e.target.value})} placeholder="e.g. Flat 3" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Building</label>
@@ -1197,9 +1197,9 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span>Unit</span><span>Building</span><span>Property</span><span>Status</span><span></span>
               </div>
-              {units.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🚪</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No units yet</div><div style={{fontSize:13}}>Add a unit within a building.</div></div>):units.map((u:any)=>(
+              {units.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🚪</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No units yet</div><div style={{fontSize:13}}>Add a unit within a building.</div></div>):units.map((u:any)=>(
                 <div key={u.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{u.unit_number}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{u.unit_number}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{u.estate_buildings?.name||'—'}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{u.estate_properties?.name||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:u.status==='Occupied'?'#D1FAE5':u.status==='Maintenance'?'#FEF3C7':'#F3F4F6',color:u.status==='Occupied'?'#059669':u.status==='Maintenance'?'#D97706':'#6B7280'}}>{u.status}</span>
@@ -1211,7 +1211,7 @@ export default function Page() {
 
           {section==='Viewings'&&(<div>
             {showAddViewing&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit viewing':'Add viewing'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit viewing':'Add viewing'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Property *</label>
                   <select style={{...inputStyle,cursor:'pointer'}} value={viewingForm.property_id} onChange={e=>setViewingForm({...viewingForm,property_id:e.target.value})}>
@@ -1239,9 +1239,9 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span>Prospect</span><span>Property</span><span>When</span><span>Status</span><span></span>
               </div>
-              {viewings.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No viewings yet</div><div style={{fontSize:13}}>Schedule your first viewing.</div></div>):viewings.map((bk:any)=>(
+              {viewings.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No viewings yet</div><div style={{fontSize:13}}>Schedule your first viewing.</div></div>):viewings.map((bk:any)=>(
                 <div key={bk.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{bk.prospect_name}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{bk.prospect_name}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{bk.estate_properties?.name||'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{bk.scheduled_at?new Date(bk.scheduled_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:bk.status==='Completed'?'#D1FAE5':bk.status==='Cancelled'||bk.status==='No Show'?'#FEE2E2':'#DBEAFE',color:bk.status==='Completed'?'#059669':bk.status==='Cancelled'||bk.status==='No Show'?'#DC2626':'#2563EB'}}>{bk.status}</span>
@@ -1253,7 +1253,7 @@ export default function Page() {
 
           {section==='Inventories'&&(<div>
             {showAddInventory&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit report':'Add inventory report'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit report':'Add inventory report'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Property *</label>
                   <select style={{...inputStyle,cursor:'pointer'}} value={inventoryForm.property_id} onChange={e=>setInventoryForm({...inventoryForm,property_id:e.target.value})}>
@@ -1290,9 +1290,9 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span>Property</span><span>Type</span><span>Date</span><span>Status</span><span></span>
               </div>
-              {inventories.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📝</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No inventory reports yet</div><div style={{fontSize:13}}>Log a check-in or check-out report.</div></div>):inventories.map((inv:any)=>(
+              {inventories.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📝</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No inventory reports yet</div><div style={{fontSize:13}}>Log a check-in or check-out report.</div></div>):inventories.map((inv:any)=>(
                 <div key={inv.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{inv.estate_properties?.name||'—'}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{inv.estate_properties?.name||'—'}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{inv.type}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{inv.inspection_date||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:inv.status==='Completed'?'#D1FAE5':'#F3F4F6',color:inv.status==='Completed'?'#059669':'#6B7280'}}>{inv.status}</span>
@@ -1304,7 +1304,7 @@ export default function Page() {
 
           {section==='Documents'&&(<div>
             {showAddDocument&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit Document':'Add Document'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit Document':'Add Document'}</h3>
               <div style={{display:'flex',flexDirection:'column' as const,gap:14}}>
                 <div><label style={labelStyle}>Document Name *</label><input value={documentForm.name} onChange={e=>setDocumentForm({...documentForm,name:e.target.value})} placeholder="e.g. Passport, Tenancy Agreement" style={inputStyle}/></div>
                 <FileUpload label="Upload File (PDF, Image) *" value={documentForm.file_url} onChange={url=>setDocumentForm({...documentForm,file_url:url})} folder="estate-documents" />
@@ -1363,10 +1363,10 @@ export default function Page() {
                   if(documentFilter==='Property Documents') return !!d.property_id && !d.landlord_id && !d.tenant_id
                   return true
                 })
-                if(filtered.length===0) return <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📁</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No documents yet</div><div style={{fontSize:13}}>Upload tenancy agreements, certificates and more.</div></div>
+                if(filtered.length===0) return <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📁</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No documents yet</div><div style={{fontSize:13}}>Upload tenancy agreements, certificates and more.</div></div>
                 return filtered.map((d:any)=>(
                   <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 1fr 110px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                    <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.file_url?<a href={d.file_url} target="_blank" rel="noreferrer" style={{color:'#101828',textDecoration:'none'}}>{d.name}</a>:d.name}</span>
+                    <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{d.file_url?<a href={d.file_url} target="_blank" rel="noreferrer" style={{color:'#323338',textDecoration:'none'}}>{d.name}</a>:d.name}</span>
                     <span style={{fontSize:12,color:'#667085'}}>{DOCUMENT_CATEGORIES.find(c=>c.value===d.category)?.label||d.category}</span>
                     <div>
                       {d.landlord_id?(<><div style={{fontSize:13,color:'#344054'}}>👤 {d.estate_landlords?.name??'—'}</div><div style={{fontSize:11,color:'#98A2B3'}}>Landlord</div></>)
@@ -1387,7 +1387,7 @@ export default function Page() {
 
           {section==='Tenancies'&&(<div>
             {showAddTenancy&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editItem?'Edit tenancy':'Add tenancy'}</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit tenancy':'Add tenancy'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Property *</label><select value={tenancy.property} onChange={e=>setTenancy({...tenancy,property:e.target.value})} style={inputStyle}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Tenant</label><select value={tenancy.tenant} onChange={e=>setTenancy({...tenancy,tenant:e.target.value})} style={inputStyle}><option value="">Select tenant</option>{tenants.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
@@ -1407,12 +1407,12 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 100px 100px 80px 150px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span>Property</span><span>Tenant</span><span>Start</span><span>End</span><span>Rent/mo</span><span>Status</span><span>Signature</span><span></span>
               </div>
-              {tenancies.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No tenancies yet</div><div style={{fontSize:13}}>Add your first tenancy to get started.</div></div>):tenancies.map((t:any)=>{
+              {tenancies.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>📋</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No tenancies yet</div><div style={{fontSize:13}}>Add your first tenancy to get started.</div></div>):tenancies.map((t:any)=>{
                 const fullySigned=t.tenant_signed_at&&t.landlord_signed_at
                 const partiallySigned=t.tenant_signed_at||t.landlord_signed_at
                 return(
                 <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 100px 100px 80px 150px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.estate_properties?.name??'—'}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.estate_properties?.name??'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{t.estate_tenants?.name||'—'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{t.start_date||'—'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{t.end_date||'—'}</span>
@@ -1423,8 +1423,8 @@ export default function Page() {
                   ):(
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       {partiallySigned&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>Partial</span>}
-                      <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${t.sign_token}`);alert('Signing link copied')}} style={{fontSize:11,fontWeight:600,color:'#2563EB',background:'none',border:'1px solid #2563EB',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
-                      <button onClick={()=>openContractPicker(t)} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2563EB',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
+                      <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${t.sign_token}`);alert('Signing link copied')}} style={{fontSize:11,fontWeight:600,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
+                      <button onClick={()=>openContractPicker(t)} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#A8862E',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
                     </div>
                   )}
                   <div style={{display:'flex',gap:4}}>
@@ -1443,7 +1443,7 @@ export default function Page() {
                 <div key={l.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
                   <div style={{width:40,height:40,borderRadius:'50%',background:'#EAF3EE',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:ACCENT,flexShrink:0}}>{l.name.charAt(0)}</div>
                   <div style={{flex:1}}>
-                    <div style={{fontWeight:600,fontSize:14,color:'#101828'}}>{l.name}</div>
+                    <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{l.name}</div>
                     <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[l.email,l.phone].filter(Boolean).join(' · ')}</div>
                   </div>
                   <div style={{fontSize:13,color:'#667085'}}>{properties.filter((p:any)=>p.owner_id===l.id).length} properties</div>
@@ -1466,7 +1466,7 @@ export default function Page() {
             {/* Rent paid progress */}
             <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828'}}>Rent Overview</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338'}}>Rent Overview</div>
                 <div style={{fontSize:12,color:'#667085'}}>{new Date().toLocaleString('default',{month:'long',year:'numeric'})}</div>
               </div>
               <div style={{display:'flex',gap:32,marginBottom:16}}>
@@ -1485,7 +1485,7 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Gross Income for the Month</div>
-                <div style={{fontSize:28,fontWeight:800,color:'#101828'}}>£{monthlyRent.toLocaleString()}</div>
+                <div style={{fontSize:28,fontWeight:800,color:'#323338'}}>£{monthlyRent.toLocaleString()}</div>
                 <div style={{display:'inline-flex',alignItems:'center',gap:4,marginTop:8,background:'#ECFDF5',padding:'3px 8px',borderRadius:20}}><span style={{fontSize:11,color:'#10B981',fontWeight:600}}>↑ Active</span></div>
               </div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
@@ -1512,7 +1512,7 @@ export default function Page() {
             </div>
             {/* Revenue by property */}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Revenue by Property</div>
+              <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Revenue by Property</div>
               {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3'}}>No active tenancies yet</div>):tenancies.filter((t:any)=>t.status==='Active').map((t:any)=>(
                 <div key={t.id} style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
                   <div style={{fontSize:13,color:'#344054',width:180,flexShrink:0}}>{t.property}</div>
@@ -1542,7 +1542,7 @@ export default function Page() {
             </div>
             {/* Add form */}
             {showAddVacancy&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add vacancy</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add vacancy</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Property name *</label><select value={vacForm.property} onChange={e=>setVacForm({...vacForm,property:e.target.value})} style={inputStyle}><option value=''>Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Room type</label><select value={vacForm.roomType} onChange={e=>setVacForm({...vacForm,roomType:e.target.value})} style={inputStyle}>{['Whole Unit','Single','Double','Suite','Studio'].map(t=><option key={t}>{t}</option>)}</select></div>
@@ -1567,7 +1567,7 @@ export default function Page() {
             {vacancies.length===0?(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
                 <div style={{fontSize:40,marginBottom:12}}>🏠</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No vacancies right now</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No vacancies right now</div>
                 <div style={{fontSize:13}}>When a unit becomes vacant it will show here.</div>
               </div>
             ):(
@@ -1577,7 +1577,7 @@ export default function Page() {
                     <div style={{background:ACCENT+'15',height:80,display:'flex',alignItems:'center',justifyContent:'center',fontSize:32}}>🏠</div>
                     <div style={{padding:16}}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-                        <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{v.estate_properties?.name??'—'}</div>
+                        <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{v.estate_properties?.name??'—'}</div>
                         <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#ECFDF5',color:'#10B981'}}>{v.status}</span>
                       </div>
                       <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{v.room_type} · {v.bedrooms} bed · {v.type}</div>
@@ -1597,7 +1597,7 @@ export default function Page() {
 
           {section==='Maintenance'&&(<div style={{display:'flex',flexDirection:'column',gap:8}}>
             {showAddMaint&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:12}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>New maintenance ticket</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>New maintenance ticket</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Title *</div><input value={maintForm.title} onChange={e=>setMaintForm({...maintForm,title:e.target.value})} placeholder="e.g. Boiler not working" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><select value={maintForm.property_id} onChange={e=>setMaintForm({...maintForm,property_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
@@ -1618,7 +1618,7 @@ export default function Page() {
               return(
                 <div key={m.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto auto',alignItems:'center',gap:16}}>
                   <div>
-                    <div style={{fontWeight:600,fontSize:14,color:'#101828',marginBottom:2}}>{m.title}</div>
+                    <div style={{fontWeight:600,fontSize:14,color:'#323338',marginBottom:2}}>{m.title}</div>
                     <div style={{fontSize:12,color:'#667085'}}>{m.estate_properties?.name??'—'}</div>
                   </div>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:priBg,color:priColor,textTransform:'uppercase'}}>{m.priority}</span>
@@ -1634,7 +1634,7 @@ export default function Page() {
 
           {section==='Cleaning'&&(<div style={{display:'flex',flexDirection:'column',gap:8}}>
             {showAddCleaning&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:12}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Schedule cleaning</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Schedule cleaning</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Property</div><select value={cleanForm.property_id} onChange={e=>setCleanForm({...cleanForm,property_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Unit</div><select value={cleanForm.unit_id} onChange={e=>setCleanForm({...cleanForm,unit_id:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',background:'#fff',boxSizing:'border-box'}}><option value="">Select unit (optional)…</option>{units.filter((u:any)=>u.property_id===cleanForm.property_id).map((u:any)=><option key={u.id} value={u.id}>{u.unit_number}</option>)}</select></div>
@@ -1651,7 +1651,7 @@ export default function Page() {
             cleaning.map((c:any)=>(
               <div key={c.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto',alignItems:'center',gap:16}}>
                 <div>
-                  <div style={{fontWeight:600,fontSize:14,color:'#101828',marginBottom:2}}>{c.estate_properties?.name??'—'}</div>
+                  <div style={{fontWeight:600,fontSize:14,color:'#323338',marginBottom:2}}>{c.estate_properties?.name??'—'}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{c.scheduled_date??'—'}{c.assigned_to?` · ${c.assigned_to}`:''}</div>
                 </div>
                 <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:c.status==='completed'?'#D1FAE5':c.status==='in_progress'?'#DBEAFE':'#FEF3C7',color:c.status==='completed'?'#059669':c.status==='in_progress'?'#2563EB':'#D97706',textTransform:'capitalize'}}>{c.status}</span>
@@ -1685,13 +1685,13 @@ export default function Page() {
               ].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{s.l}</div>
-                  <div style={{fontSize:24,fontWeight:800,color:'#101828'}}>{s.v}</div>
+                  <div style={{fontSize:24,fontWeight:800,color:'#323338'}}>{s.v}</div>
                 </div>
               ))}
             </div>
             {/* Add form */}
             {showAddMortgage&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:16}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add Loan / Mortgage</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add Loan / Mortgage</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Property *</label><select value={mortgageForm.property} onChange={e=>setMortgageForm({...mortgageForm,property:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Bank / Lender</label><input value={mortgageForm.bank} onChange={e=>setMortgageForm({...mortgageForm,bank:e.target.value})} placeholder="e.g. Barclays" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -1717,21 +1717,21 @@ export default function Page() {
               {mortgages.length===0?(
                 <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>
                   <div style={{fontSize:40,marginBottom:12}}>🏦</div>
-                  <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No loans or mortgages yet</div>
+                  <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No loans or mortgages yet</div>
                   <div style={{fontSize:13}}>Add your first mortgage or loan to track repayments.</div>
                 </div>
               ):mortgages.map((m:any)=>(
                 <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 100px 100px 100px 100px 80px 90px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div>
-                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.estate_properties?.name??'—'}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{m.estate_properties?.name??'—'}</div>
                   </div>
                   <span style={{fontSize:12,color:'#344054'}}>{m.bank||'—'}</span>
-                  <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(m.amount||0).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>£{parseFloat(m.amount||0).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{m.rate||'—'}%</span>
                   <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(m.monthly_payment||0).toLocaleString()}</span>
                   <span style={{fontSize:11,color:'#667085'}}>{m.start_date||'—'}</span>
                   <span style={{fontSize:11,color:'#667085'}}>{m.end_date||'—'}</span>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:'#5B7CFA'}}>{m.type}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:'#A8862E'}}>{m.type}</span>
                   <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
                     <button onClick={()=>{setEditItem(m);setMortgageForm({property:m.property_id??'',bank:m.bank??'',amount:m.amount!=null?String(m.amount):'',rate:m.rate??'',startDate:m.start_date??'',endDate:m.end_date??'',duration:m.duration??'25',monthlyPayment:m.monthly_payment!=null?String(m.monthly_payment):'',insurance:m.insurance??'',type:m.type??'Repayment'});setShowAddMortgage(true)}} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_mortgages',m.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
@@ -1741,7 +1741,7 @@ export default function Page() {
             </div>
             {mortgages.length>0&&(
               <div style={{marginTop:12,background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Repayment Progress</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Repayment Progress</div>
                 {mortgages.map((m:any)=>{
                   const total = parseFloat(m.amount||0)
                   const repaid = parseFloat(m.repaid_capital||0)
@@ -1749,7 +1749,7 @@ export default function Page() {
                   return(
                     <div key={m.id} style={{marginBottom:16}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-                        <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{m.estate_properties?.name??'—'}</span>
+                        <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{m.estate_properties?.name??'—'}</span>
                         <span style={{fontSize:12,color:'#667085'}}>{pct}% repaid · £{repaid.toLocaleString()} of £{total.toLocaleString()}</span>
                       </div>
                       <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:pct+'%'}}></div></div>
@@ -1770,7 +1770,7 @@ export default function Page() {
               ))}
             </div>
             {showAddRent&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add rent schedule</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add rent schedule</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Tenancy *</label><select value={rentForm.tenancy} onChange={e=>setRentForm({...rentForm,tenancy:e.target.value})} style={inputStyle}><option value=''>Select tenancy</option>{tenancies.map((t:any)=><option key={t.id} value={t.id}>{t.estate_properties?.name} — {t.estate_tenants?.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Amount (£)</label><input value={rentForm.amount} onChange={e=>setRentForm({...rentForm,amount:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
@@ -1787,11 +1787,11 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 140px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                 <span>Tenancy</span><span>Tenant</span><span>Amount</span><span>Due</span><span>Frequency</span><span>Status</span><span>Actions</span>
               </div>
-              {rentSchedules.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No rent schedules yet</div><div style={{fontSize:13}}>Add a schedule to track rent collection.</div></div>):rentSchedules.map((r:any)=>{
+              {rentSchedules.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>💷</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No rent schedules yet</div><div style={{fontSize:13}}>Add a schedule to track rent collection.</div></div>):rentSchedules.map((r:any)=>{
                 const scheduleTenancy = tenancies.find((t:any)=>t.id===r.tenancy_id)
                 return (
                 <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 140px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{scheduleTenancy?.estate_properties?.name??'—'}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{scheduleTenancy?.estate_properties?.name??'—'}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{scheduleTenancy?.estate_tenants?.name??'—'}</span>
                   <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(r.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{r.due_day}{['st','nd','rd'][parseInt(r.due_day)-1]||'th'}</span>
@@ -1830,7 +1830,7 @@ export default function Page() {
               </div>
               {showAddExpense&&(
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-                  <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add expense</h3>
+                  <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add expense</h3>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Repairs" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Vendor</label><input value={expForm.vendor||''} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. B&Q" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
@@ -1850,9 +1850,9 @@ export default function Page() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                   <span>Description</span><span>Vendor</span><span>Category</span><span>Amount</span><span>Date</span><span>Status</span><span></span><span></span>
                 </div>
-                {expenses.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No expenses yet</div></div>):expenses.map((e:any)=>(
+                {expenses.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No expenses yet</div></div>):expenses.map((e:any)=>(
                   <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                    <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</span>
+                    <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</span>
                     <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                     <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{e.category}</span>
                     <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
@@ -1884,10 +1884,10 @@ export default function Page() {
                     <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
                   </div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Quick Actions</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Quick Actions</div>
                     {[{l:'Add Bank Account',d:'Manually add an account'},{l:'Add Transaction',d:'Record income or expense'},{l:'Reconcile',d:'Match transactions'}].map(a=>(
                       <div key={a.l} onClick={()=>{if(a.l==='Add Bank Account')setShowAddBank(true);if(a.l==='Add Transaction')setShowAddTx(true);if(a.l==='Reconcile')setBankingTab('Reconciliation')}} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 0',borderBottom:'1px solid #F2F4F7',cursor:'pointer'}}>
-                        <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{a.l}</div><div style={{fontSize:11,color:'#98A2B3'}}>{a.d}</div></div>
+                        <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{a.l}</div><div style={{fontSize:11,color:'#98A2B3'}}>{a.d}</div></div>
                         <span style={{color:'#667085'}}>›</span>
                       </div>
                     ))}
@@ -1909,9 +1909,9 @@ export default function Page() {
                       <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>)}
-                  {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
+                  {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                     <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                      {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div><button onClick={()=>delRecord('estate_bank_accounts',a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:ACCENT,marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
+                      {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><button onClick={()=>delRecord('estate_bank_accounts',a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:ACCENT,marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                       <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
                     </div>
                   )}
@@ -1933,10 +1933,10 @@ export default function Page() {
                     </div>
                   </div>)}
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{transactions.length} transactions</div><button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button></div>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{transactions.length} transactions</div><button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button></div>
                     {transactions.length===0?<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.map((t:any)=>(
                       <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 80px 120px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                        <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                        <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                         <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
                         <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600}}>{t.type}</span>
                         <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>saveRecord('estate_transactions',{status:t.status==='Reconciled'?'Unreconciled':'Reconciled'},t.id)}>{t.status}</span>
@@ -1948,9 +1948,9 @@ export default function Page() {
               )}
               {bankingTab==='Reconciliation'&&(
                 <div>
-                  {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
+                  {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                     <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                      <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                      <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                       <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>saveRecord('estate_transactions',{status:'Reconciled'},t.id)} style={{padding:'6px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                     </div>
                   ))}
@@ -2038,7 +2038,7 @@ export default function Page() {
                 return (
                 <div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>Cash Flow ({year})</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>Cash Flow ({year})</div>
                     <div style={{fontSize:11,color:'#98A2B3',marginBottom:16}}>Real money in/out, from Banking transactions dated this year — not the same income figure as the P&L tab, which only has current-month rent to go on.</div>
                     <div style={{display:'grid',gridTemplateColumns:'repeat(12,1fr)',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
                       {cfData.map(d=>(
@@ -2066,7 +2066,7 @@ export default function Page() {
               {reportTab==='Forecast'&&(
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center' as const,color:'#98A2B3'}}>
                   <div style={{fontSize:32,marginBottom:12}}>🔮</div>
-                  <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>Revenue Forecast</div>
+                  <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>Revenue Forecast</div>
                   <div style={{fontSize:13}}>Add more transaction history to generate a 12-month forecast.</div>
                 </div>
               )}
@@ -2080,7 +2080,7 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:20}}>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:12,color:'#667085'}}>Annual Rent Roll</span></div>
-                  <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{annualRent.toLocaleString()}</div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{annualRent.toLocaleString()}</div>
                   <div style={{fontSize:12,color:'#98A2B3'}}>{tenancies.filter((t:any)=>t.status==='Active').length} active tenancies</div>
                   <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
                     const sorted=[...tenancies].filter((t:any)=>t.status==='Active').sort((a:any,b:any)=>(a.created_at||'').localeCompare(b.created_at||''))
@@ -2093,14 +2093,14 @@ export default function Page() {
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>🏘️</span><span style={{fontSize:12,color:'#667085'}}>Properties</span></div>
-                  <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>{properties.length}</div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>{properties.length}</div>
                   <div style={{fontSize:12,color:'#98A2B3'}}>{tenants.length} tenants</div>
                   <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
                     const sorted=[...properties].sort((a:any,b:any)=>(a.created_at||'').localeCompare(b.created_at||''))
                     const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
                     const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).length;return cum})
                     const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${45-(v/max)*39}`).join(' ')
-                    return <polyline points={pts} fill="none" stroke="#5B7CFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    return <polyline points={pts} fill="none" stroke="#A8862E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   })()}</svg>
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
@@ -2118,16 +2118,16 @@ export default function Page() {
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24,display:'flex',flexDirection:'column',alignItems:'center'}}>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:20,alignSelf:'flex-start'}}>Occupancy Rate</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:20,alignSelf:'flex-start'}}>Occupancy Rate</div>
                   <svg viewBox="0 0 200 120" style={{width:'100%',maxWidth:200}}>
                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#F3F4F6" strokeWidth="20" strokeLinecap="round"/>
                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={ACCENT} strokeWidth="20" strokeLinecap="round"/>
-                    <text x="100" y="95" fontSize="22" fontWeight="800" fill="#101828" textAnchor="middle">{properties.length>0?Math.round(tenancies.filter((t:any)=>t.status==='Active').length/Math.max(properties.length,1)*100):0}%</text>
+                    <text x="100" y="95" fontSize="22" fontWeight="800" fill="#A8862E" textAnchor="middle">{properties.length>0?Math.round(tenancies.filter((t:any)=>t.status==='Active').length/Math.max(properties.length,1)*100):0}%</text>
                     <text x="100" y="115" fontSize="10" fill="#98A2B3" textAnchor="middle">occupancy rate</text>
                   </svg>
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Owner vs Management Split</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Owner vs Management Split</div>
                   <div style={{display:'flex',flexDirection:'column',gap:12}}>
                     <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Owner (85%)</span><span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>£{Math.round(annualRent*0.85).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#10B981',borderRadius:4,width:'85%'}}></div></div></div>
                     <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (15%)</span><span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{Math.round(annualRent*0.15).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:'15%'}}></div></div></div>
@@ -2137,11 +2137,11 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Active Tenancies</div>
-                  {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>):tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#101828',fontWeight:500}}>{t.tenant}</span><span style={{color:'#10B981',fontWeight:600}}>£{(parseFloat(t.rent)||0).toLocaleString()}/mo</span></div>))}
+                  {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>):tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338',fontWeight:500}}>{t.tenant}</span><span style={{color:'#10B981',fontWeight:600}}>£{(parseFloat(t.rent)||0).toLocaleString()}/mo</span></div>))}
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Recent Finance</div>
-                  {tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#101828'}}>{t.tenant} — monthly rent</span><span style={{color:'#10B981',fontWeight:600}}>+£{(parseFloat(t.rent)||0).toLocaleString()}</span></div>))}
+                  {tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338'}}>{t.tenant} — monthly rent</span><span style={{color:'#10B981',fontWeight:600}}>+£{(parseFloat(t.rent)||0).toLocaleString()}</span></div>))}
                   {tenancies.filter((t:any)=>t.status==='Active').length===0&&<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>}
                 </div>
               </div>
@@ -2174,7 +2174,7 @@ export default function Page() {
             return (
             <div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
-                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#101828'}}>£{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#323338'}}>£{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#059669'}}>{onTimeCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid On Time</div></div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#D97706'}}>{lateCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid Late</div></div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #FEE2E2',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#EF4444'}}>{overdueCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Overdue</div></div>
@@ -2191,7 +2191,7 @@ export default function Page() {
 
               {showAddLandlordPayment&&(
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-                  <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editingPaymentId?'Edit Statement Line':'Generate Statement'}</h3>
+                  <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editingPaymentId?'Edit Statement Line':'Generate Statement'}</h3>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={labelStyle}>Landlord</label><select style={inputStyle} value={lpForm.landlord_id} onChange={e=>setLpForm({...lpForm,landlord_id:e.target.value,property_id:''})}><option value="">Select landlord…</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name} ({l.commission_rate??12}% fee)</option>)}</select></div>
                     <div><label style={labelStyle}>Property</label><select style={inputStyle} value={lpForm.property_id} onChange={e=>setLpForm({...lpForm,property_id:e.target.value})}><option value="">Select property…</option>{properties.filter((p:any)=>!lpForm.landlord_id||p.owner_id===lpForm.landlord_id).map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
@@ -2232,17 +2232,17 @@ export default function Page() {
                   <span>Landlord</span><span>Property</span><span>Category</span><span>Amount</span><span>Due</span><span>Paid</span><span>Status</span><span></span>
                 </div>
                 {landlordPayments.length===0?(
-                  <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No statements yet</div><div style={{fontSize:13}}>Generate your first landlord statement above.</div></div>
+                  <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No statements yet</div><div style={{fontSize:13}}>Generate your first landlord statement above.</div></div>
                 ):landlordPayments.map((p:any)=>{
                   const l = landlords.find((x:any)=>x.id===p.landlord_id)
                   const prop = properties.find((x:any)=>x.id===p.property_id)
                   const st = statusFor(p)
                   return (
                     <div key={p.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 100px 110px 110px 110px 90px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                      <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{l?.name??'—'}</span>
+                      <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{l?.name??'—'}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{prop?.name??'—'}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{p.category}</span>
-                      <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>£{parseFloat(p.amount).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>£{parseFloat(p.amount).toLocaleString()}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{p.due_date??'—'}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{p.paid_date??'—'}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:st.bg,color:st.color,width:'fit-content'}}>{st.label}</span>
@@ -2275,13 +2275,13 @@ export default function Page() {
                     <span>Tenant</span><span>Property</span><span>Right to Rent</span><span>Bank Check</span><span></span>
                   </div>
                   {tenancies.length===0?(
-                    <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🛂</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No tenancies yet</div></div>
+                    <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🛂</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No tenancies yet</div></div>
                   ):tenancies.map((t:any)=>{
                     const rtr = rtrChecks.find((r:any)=>r.tenancy_id===t.id)
                     const bank = bankChecks.find((b:any)=>b.tenancy_id===t.id)
                     return (
                       <div key={t.id} style={{display:'grid',gridTemplateColumns:'1.3fr 1fr 130px 130px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                        <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.estate_tenants?.name??'—'}</span>
+                        <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.estate_tenants?.name??'—'}</span>
                         <span style={{fontSize:12,color:'#667085'}}>{t.estate_properties?.name??'—'}</span>
                         {rtr ? <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:rtrStatusColor[rtr.status]?.bg,color:rtrStatusColor[rtr.status]?.fg,width:'fit-content'}}>{rtr.status}</span> : <span style={{fontSize:12,color:'#98A2B3'}}>Not checked</span>}
                         {bank ? <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:bankStatusColor[bank.status]?.bg,color:bankStatusColor[bank.status]?.fg,width:'fit-content'}}>{bank.status}</span> : <span style={{fontSize:12,color:'#98A2B3'}}>Not checked</span>}
@@ -2293,11 +2293,11 @@ export default function Page() {
               ) : (
               <div>
                 <button onClick={()=>setEditingChecksTenancyId(null)} style={{fontSize:12,color:'#667085',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',marginBottom:14}}>&larr; Back to list</button>
-                <div style={{fontSize:15,fontWeight:700,color:'#101828',marginBottom:2}}>Tenant Checks — {editingTenancy?.estate_tenants?.name}</div>
+                <div style={{fontSize:15,fontWeight:700,color:'#323338',marginBottom:2}}>Tenant Checks — {editingTenancy?.estate_tenants?.name}</div>
                 <div style={{fontSize:12,color:'#98A2B3',marginBottom:20}}>{editingTenancy?.estate_properties?.name}</div>
 
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22,marginBottom:16}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:16}}>🛂 Right to Rent</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:16}}>🛂 Right to Rent</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={labelStyle}>Full Name</label><input style={inputStyle} value={rtrForm.full_name} onChange={e=>setRtrForm({...rtrForm,full_name:e.target.value})}/></div>
                     <div><label style={labelStyle}>Date of Birth</label><input type="date" style={inputStyle} value={rtrForm.date_of_birth} onChange={e=>setRtrForm({...rtrForm,date_of_birth:e.target.value})}/></div>
@@ -2317,7 +2317,7 @@ export default function Page() {
                 </div>
 
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22,marginBottom:16}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:16}}>🏦 Bank Statement Check</div>
+                  <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:16}}>🏦 Bank Statement Check</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:14}}>
                     <div><label style={labelStyle}>Statement Start</label><input type="date" style={inputStyle} value={bankCheckForm.statement_start} onChange={e=>setBankCheckForm({...bankCheckForm,statement_start:e.target.value})}/></div>
                     <div><label style={labelStyle}>Statement End</label><input type="date" style={inputStyle} value={bankCheckForm.statement_end} onChange={e=>setBankCheckForm({...bankCheckForm,statement_end:e.target.value})}/></div>
@@ -2351,7 +2351,7 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <div style={{marginBottom:14,background:'#F5F6FF',border:'1px solid #DCE0FF',borderRadius:10,padding:16}}>
+                  <div style={{marginBottom:14,background:'#FBF4E6',border:'1px solid #DCE0FF',borderRadius:10,padding:16}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:bankCheckForm.ai_assessment?10:0}}>
                       <div style={{fontSize:12,fontWeight:600,color:'#344054'}}>🤖 AI Affordability Opinion <span style={{fontWeight:400,color:'#98A2B3'}}>— advisory only, not a decision</span></div>
                       <button onClick={()=>generateAssessment(parseFloat(editingTenancy?.rent)||0)} disabled={generatingAssessment||(!bankCheckForm.declared_income&&!bankCheckForm.document_url)} style={{fontSize:11,fontWeight:600,color:'#fff',background:ACCENT,border:'none',borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit',opacity:generatingAssessment||(!bankCheckForm.declared_income&&!bankCheckForm.document_url)?0.6:1}}>{generatingAssessment?'Reading statement…':bankCheckForm.ai_assessment?'Regenerate':'Generate Opinion'}</button>
@@ -2387,7 +2387,7 @@ export default function Page() {
           {STUB_SECTIONS.includes(section)&&(
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center'}}>
               <div style={{fontSize:48,marginBottom:16}}>🏗️</div>
-              <div style={{fontSize:18,fontWeight:600,color:'#101828',marginBottom:8}}>{section}</div>
+              <div style={{fontSize:18,fontWeight:600,color:'#323338',marginBottom:8}}>{section}</div>
               <div style={{fontSize:14,color:'#667085',marginBottom:20}}>This section is coming soon. Core modules (Properties, Tenants, Tenancies, Finance) are fully functional.</div>
               <button style={{padding:'10px 24px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Request early access</button>
             </div>
@@ -2462,7 +2462,7 @@ export default function Page() {
               await saveRecord('estate_landlords',landlordForm,editItem?.id)
               setEditItem(null);setShowAddLandlord(false)
               setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''})
-            }} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Landlord'}</button>
+            }} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Landlord'}</button>
           </div>
         </Modal>
       )}
@@ -2486,7 +2486,7 @@ export default function Page() {
               if(!res.ok){alert(result.error||'Could not create portal access');return}
               alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalLandlord(null);await loadAll()
-            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
+            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}
@@ -2510,7 +2510,7 @@ export default function Page() {
               if(!res.ok){alert(result.error||'Could not create portal access');return}
               alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalTenant(null);await loadAll()
-            }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
+            }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}
@@ -2569,7 +2569,7 @@ export default function Page() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>{setShowContractPicker(null);setSelectedTemplateId('');setEditableContractText('')}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>emailSigningLink(showContractPicker)} disabled={sendingSignLink===showContractPicker} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===showContractPicker?0.6:1}}>{sendingSignLink===showContractPicker?'Sending…':'Send Email'}</button>
+            <button onClick={()=>emailSigningLink(showContractPicker)} disabled={sendingSignLink===showContractPicker} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===showContractPicker?0.6:1}}>{sendingSignLink===showContractPicker?'Sending…':'Send Email'}</button>
           </div>
         </Modal>
         )

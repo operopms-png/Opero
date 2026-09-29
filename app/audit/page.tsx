@@ -28,13 +28,13 @@ export default function AuditPage() {
     load()
   }, [])
 
-  const TYPE_COLOR: Record<string, string> = { booking: '#3B4AFF', cleaning: '#10B981', maintenance: '#F59E0B', property: '#8B5CF6' }
+  const TYPE_COLOR: Record<string, string> = { booking: '#A8862E', cleaning: '#10B981', maintenance: '#F59E0B', property: '#A8862E' }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', sans-serif" }}>
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 32px', height: 64, display: 'flex', alignItems: 'center', gap: 10 }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#101828' }}>Audit Log</h1>
+        <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Audit Log</h1>
         <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{logs.length}</span>
       </div>
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px' }}>
@@ -45,7 +45,7 @@ export default function AuditPage() {
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', borderBottom: i < logs.length - 1 ? '1px solid #F2F4F7' : 'none' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: TYPE_COLOR[log.type] ?? '#98A2B3', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#101828' }}>{log.action}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{log.action}</div>
                   <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{log.detail}</div>
                 </div>
                 <div style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: TYPE_COLOR[log.type] + '20', color: TYPE_COLOR[log.type], textTransform: 'capitalize' }}>{log.type}</div>

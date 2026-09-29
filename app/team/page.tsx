@@ -57,8 +57,8 @@ export default function TeamPage() {
   }
 
   const ROLE_COLOR: Record<string, string> = {
-    cleaner: '#10B981', maintenance: '#F59E0B', manager: '#5B7BF8',
-    inspector: '#8B5CF6', admin: '#EF4444',
+    cleaner: '#10B981', maintenance: '#F59E0B', manager: '#A8862E',
+    inspector: '#A8862E', admin: '#EF4444',
   }
 
   return (
@@ -68,10 +68,10 @@ export default function TeamPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#0F172A' }}>Team Members</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Team Members</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{members.length}</span>
           </div>
-          <button onClick={() => { setEditId(null); setForm(INITIAL_FORM); setShowModal(true) }} style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={() => { setEditId(null); setForm(INITIAL_FORM); setShowModal(true) }} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
             + Add Member
           </button>
         </div>
@@ -96,7 +96,7 @@ export default function TeamPage() {
                       {m.role === 'cleaner' ? 'C' : m.role === 'maintenance' ? 'M' : m.role === 'manager' ? 'Mg' : m.role === 'inspector' ? 'I' : 'A'}
                     </div>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A' }}>{m.name}</div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: '#323338' }}>{m.name}</div>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: ROLE_COLOR[m.role ?? 'cleaner'], background: ROLE_COLOR[m.role ?? 'cleaner'] + '20', textTransform: 'capitalize' }}>{m.role}</span>
                     </div>
                   </div>
@@ -129,7 +129,7 @@ export default function TeamPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Member'}
               </button>
             </div>

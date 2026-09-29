@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#101828'
+const ACCENT = '#A8862E'
 const MODULE = 'pm'
 const CONTACT_TYPES = ['Landlord','Tenant','Buyer','Seller','Investor','Other']
 const DEAL_STAGES = ['Enquiry','Viewing','Offer','Negotiation','Won','Lost']
@@ -104,7 +104,7 @@ export default function Page() {
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div><div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>PROPERTY MANAGEMENT</div><div style={{fontSize:15,fontWeight:700,color:'#101828'}}>CRM</div></div>
+        <div><div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>PROPERTY MANAGEMENT</div><div style={{fontSize:15,fontWeight:700,color:'#323338'}}>CRM</div></div>
         <div style={{display:'flex',gap:8}}>
           {section==='Contacts'&&<button onClick={()=>{setEditId(null);setContactForm({name:'',email:'',phone:'',type:'Landlord',notes:''});setShowContactForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Contact</button>}
           {section==='Deals'&&<button onClick={()=>{setEditId(null);setDealForm({name:'',contact_id:'',value:'',stage:'Enquiry'});setShowDealForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Deal</button>}
@@ -140,12 +140,12 @@ export default function Page() {
           </div>)}
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 180px 140px 100px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Name</span><span>Email</span><span>Phone</span><span>Type</span><span></span></div>
-            {contacts.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>👥</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No contacts yet</div></div>):contacts.map((c:any)=>(
+            {contacts.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>👥</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No contacts yet</div></div>):contacts.map((c:any)=>(
               <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 180px 140px 100px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.name}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.name}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{c.email||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{c.phone||'—'}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{c.type}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{c.type}</span>
                 <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
                   <button onClick={()=>openEditContact(c)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
                   <button onClick={()=>delContact(c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
@@ -171,9 +171,9 @@ export default function Page() {
           </div>)}
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 130px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Deal</span><span>Contact</span><span>Value</span><span>Stage</span><span></span></div>
-            {deals.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🏠</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No deals yet</div></div>):deals.map((d:any)=>(
+            {deals.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🏠</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No deals yet</div></div>):deals.map((d:any)=>(
               <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 130px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{d.name}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{d.name}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{d.crm_contacts?.name||'—'}</span>
                 <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{d.value?'£'+parseFloat(d.value).toLocaleString():'—'}</span>
                 <select value={d.stage} onChange={e=>updateDealStage(d.id,e.target.value)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{DEAL_STAGES.map(s=><option key={s}>{s}</option>)}</select>
@@ -193,7 +193,7 @@ export default function Page() {
                 <div style={{fontSize:10,fontWeight:700,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:8}}>{stage} ({deals.filter((d:any)=>d.stage===stage).length})</div>
                 {deals.filter((d:any)=>d.stage===stage).map((d:any)=>(
                   <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E4E7EC',padding:10,marginBottom:8}}>
-                    <div style={{fontSize:12,fontWeight:600,color:'#101828',marginBottom:2}}>{d.name}</div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#323338',marginBottom:2}}>{d.name}</div>
                     <div style={{fontSize:11,color:ACCENT,fontWeight:600}}>£{parseFloat(d.value||0).toLocaleString()}</div>
                   </div>
                 ))}

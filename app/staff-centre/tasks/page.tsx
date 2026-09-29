@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 
 // Standalone Tasks page -- was previously only reachable via
 // Settings > Tasks (buried inside the Settings shell, with the full
@@ -68,7 +68,7 @@ export default function TasksPage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>STAFF CENTRE</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>Tasks</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>Tasks</div>
         </div>
         <button onClick={() => { setTaskForm({ title: '', assigned_to: '', status: 'On track', due_date: '', notes: '' }); setShowTaskForm(true) }} style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ New Task</button>
       </div>
@@ -120,7 +120,7 @@ export default function TasksPage() {
           {tasks.length === 0 ? (
             <div style={{ textAlign: 'center' as const, padding: 60, color: '#98A2B3' }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 4 }}>No tasks yet</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 4 }}>No tasks yet</div>
               <div style={{ fontSize: 13 }}>Create your first task above.</div>
             </div>
           ) : tasks.map((t: any) => {
@@ -130,7 +130,7 @@ export default function TasksPage() {
             return (
               <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr 60px', padding: '13px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#101828' }}>{t.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{t.title}</div>
                   {t.notes && <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>{t.notes}</div>}
                 </div>
                 <span style={{ fontSize: 13, color: '#344054' }}>{assignee?.name ?? 'Unassigned'}</span>

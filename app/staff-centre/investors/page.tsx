@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const MODULES: { k: string; l: string; color: string }[] = [
-  { k: 'str', l: 'Vacation Rentals', color: '#3B4AFF' },
+  { k: 'str', l: 'Vacation Rentals', color: '#A8862E' },
   { k: 'pm', l: 'Property Management', color: '#10B981' },
   { k: 'ea', l: 'Estate Agency', color: '#F59E0B' },
-  { k: 'dev', l: 'Developments', color: '#8B5CF6' },
+  { k: 'dev', l: 'Developments', color: '#A8862E' },
 ]
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   active: { bg: '#D1FAE5', color: '#059669' },
@@ -107,12 +107,12 @@ export default function StaffCentreInvestorsPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Staff Centre</div>
-            <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#101828', letterSpacing: '-0.01em' }}>Investors</h1>
+            <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#323338', letterSpacing: '-0.01em' }}>Investors</h1>
             <div style={{ fontSize: 14, color: '#667085', maxWidth: 640, lineHeight: 1.5 }}>
               Every investor across every module, in one place — what they put in, what we agreed to pay back, and every payment made.
             </div>
           </div>
-          <button onClick={() => { setForm({ module: 'dev', status: 'active' }); setEditId(null); setModal('investor') }} style={{ background: '#101828', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add Investor</button>
+          <button onClick={() => { setForm({ module: 'dev', status: 'active' }); setEditId(null); setModal('investor') }} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add Investor</button>
         </div>
 
         <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -134,7 +134,7 @@ export default function StaffCentreInvestorsPage() {
           ].map((c: any) => (
             <div key={c.label} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '20px 24px' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{c.label}</div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: c.green ? '#10B981' : '#101828' }}>{c.value}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: c.green ? '#10B981' : '#323338' }}>{c.value}</div>
             </div>
           ))}
         </div>
@@ -152,7 +152,7 @@ export default function StaffCentreInvestorsPage() {
                   <div style={{ width: 44, height: 44, borderRadius: '50%', background: mod.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: mod.color, flexShrink: 0 }}>{i.name.charAt(0)}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: '#101828' }}>{i.name}</div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{i.name}</div>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: mod.color + '18', color: mod.color, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{mod.l}</span>
                     </div>
                     <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{i.email} {i.phone ? `· ${i.phone}` : ''}</div>
@@ -165,7 +165,7 @@ export default function StaffCentreInvestorsPage() {
                   </div>
                   <button onClick={() => { setForm({ investor_id: i.id }); setEditId(null); setModal('payment') }} style={{ fontSize: 12, color: '#10B981', background: 'none', border: '1px solid #10B981', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Log Payment</button>
                   <button onClick={() => setExpanded(open ? null : i.id)} style={{ fontSize: 12, color: '#667085', background: 'none', border: '1px solid #D0D5DD', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>{open ? 'Hide' : `History (${invPayments.length})`}</button>
-                  <button onClick={() => { setForm(i); setEditId(i.id); setModal('investor') }} style={{ fontSize: 12, color: '#8B5CF6', background: 'none', border: '1px solid #8B5CF6', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>Edit</button>
+                  <button onClick={() => { setForm(i); setEditId(i.id); setModal('investor') }} style={{ fontSize: 12, color: '#A8862E', background: 'none', border: '1px solid #A8862E', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>Edit</button>
                   <button onClick={() => del('dev_investors', i.id)} style={{ fontSize: 12, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
                 </div>
                 {open && (
@@ -175,7 +175,7 @@ export default function StaffCentreInvestorsPage() {
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, padding: '6px 0', borderBottom: '1px solid #F2F4F7' }}>
                         <span style={{ color: '#667085' }}>{p.date}{p.note ? ` · ${p.note}` : ''}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontWeight: 600, color: '#101828' }}>£{Number(p.amount).toLocaleString()}</span>
+                          <span style={{ fontWeight: 600, color: '#323338' }}>£{Number(p.amount).toLocaleString()}</span>
                           <button onClick={() => del('dev_investor_payments', p.id)} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
                         </div>
                       </div>
@@ -241,7 +241,7 @@ export default function StaffCentreInvestorsPage() {
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             <button onClick={() => { setModal(null); setEditId(null); setForm({}) }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-            <button onClick={() => save('dev_investors', form)} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Investor'}</button>
+            <button onClick={() => save('dev_investors', form)} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Investor'}</button>
           </div>
         </Modal>
       )}
@@ -263,7 +263,7 @@ export default function StaffCentreInvestorsPage() {
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
             <button onClick={() => { setModal(null); setEditId(null); setForm({}) }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-            <button onClick={() => save('dev_investor_payments', form)} disabled={saving || !form.investor_id || !form.amount} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.investor_id || !form.amount ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Log Payment'}</button>
+            <button onClick={() => save('dev_investor_payments', form)} disabled={saving || !form.investor_id || !form.amount} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.investor_id || !form.amount ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Log Payment'}</button>
           </div>
         </Modal>
       )}

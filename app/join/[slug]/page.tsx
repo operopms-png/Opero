@@ -11,8 +11,8 @@ import { BRAND_NAME } from '@/lib/brand'
 // card (Stripe, when the business has connected Stripe) or bank transfer
 // (bank details + unique reference; staff confirm to unlock the account).
 
-const ACCENT = '#3B4AFF'
-const TEXT = '#101828'
+const ACCENT = '#A8862E'
+const TEXT = '#323338'
 
 const FEATURES = [
   { icon: '£', title: 'Your investment dashboard', desc: 'Capital in, returned, outstanding, payback and ROI, live.' },
@@ -94,7 +94,7 @@ export default function JoinPage() {
   const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: '#344054', margin: '12px 0 4px' }
   const option = (on: boolean, disabled: boolean): React.CSSProperties => ({
     flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 9, cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-    border: `1.5px solid ${on ? ACCENT : '#D0D5DD'}`, background: on ? '#EEF0FF' : '#fff', opacity: disabled ? 0.5 : 1,
+    border: `1.5px solid ${on ? ACCENT : '#D0D5DD'}`, background: on ? '#FBF4E6' : '#fff', opacity: disabled ? 0.5 : 1,
   })
 
   const detailRow = (k: string, l: string, v: string, mono = false) => (
@@ -167,7 +167,7 @@ export default function JoinPage() {
             {link.blurb && <div style={{ fontSize: 15, color: '#667085', lineHeight: 1.6, marginBottom: 22 }}>{link.blurb}</div>}
             {FEATURES.map(f => (
               <div key={f.title} style={{ display: 'flex', gap: 12, background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '14px 16px', marginBottom: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: '#EEF0FF', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, fontWeight: 800 }}>{f.icon}</div>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: '#FBF4E6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, fontWeight: 800 }}>{f.icon}</div>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{f.title}</div>
                   <div style={{ fontSize: 12.5, color: '#667085', marginTop: 2 }}>{f.desc}</div>

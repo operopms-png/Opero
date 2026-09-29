@@ -58,7 +58,7 @@ function FileUpload({ label, value, onChange, folder }: { label: string; value: 
           {uploading ? 'Uploading…' : value ? 'Replace file' : 'Upload file (PDF, JPG, PNG)'}
           <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handle} style={{ display:'none' }} />
         </label>
-        {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#8B5CF6', fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
+        {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#A8862E', fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
       </div>
       {value && <div style={{ fontSize:11, color:'#10B981', marginTop:4 }}>✓ File uploaded</div>}
     </div>
@@ -80,7 +80,7 @@ function Modal({ title, onClose, children }: any) {
 }
 
 const STATUS_COLORS: Record<string,{bg:string,color:string}> = {
-  planning: { bg:'#EEF0FF', color:'#3B4AFF' },
+  planning: { bg:'#FBF4E6', color:'#A8862E' },
   active: { bg:'#D1FAE5', color:'#059669' },
   on_hold: { bg:'#FEF3C7', color:'#D97706' },
   completed: { bg:'#F3F4F6', color:'#6B7280' },
@@ -108,11 +108,11 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
     <div>
       <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-          <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Cash Flow ({year})</div>
+          <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Cash Flow ({year})</div>
           <div style={{display:'flex',gap:16,alignItems:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Inflows</span></div>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#EF4444',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Outflows</span></div>
-            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#5B7CFA',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#A8862E',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
           </div>
         </div>
         <svg viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:H,overflow:'visible'}}>
@@ -128,12 +128,12 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           <path d={line(cfData.map(d=>d.inflow))+' L'+x(11)+' '+(H-PAD)+' L'+x(0)+' '+(H-PAD)+' Z'} fill='#10B98115'/>
           <path d={line(cfData.map(d=>d.inflow))} fill='none' stroke='#10B981' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
           <path d={line(cfData.map(d=>d.outflow))} fill='none' stroke='#EF4444' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#5B7CFA' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
+          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#A8862E' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
           {cfData.map((d,i)=>(
             <g key={i}>
               <circle cx={x(i)} cy={y(d.inflow)} r='3' fill='#10B981'/>
               <circle cx={x(i)} cy={y(d.outflow)} r='3' fill='#EF4444'/>
-              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#5B7CFA'/>
+              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#A8862E'/>
             </g>
           ))}
         </svg>
@@ -146,7 +146,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           cumulative+=d.net
           return(
             <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
-              <span style={{fontWeight:500,color:'#101828'}}>{d.m} {year}</span>
+              <span style={{fontWeight:500,color:'#323338'}}>{d.m} {year}</span>
               <span style={{color:'#10B981'}}>£{d.inflow.toLocaleString()}</span>
               <span style={{color:'#EF4444'}}>£{d.outflow.toLocaleString()}</span>
               <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
@@ -154,7 +154,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
             </div>
           )
         })}
-        <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828',gap:8,borderTop:'2px solid #E4E7EC'}}>
+        <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338',gap:8,borderTop:'2px solid #E4E7EC'}}>
           <span>TOTAL {year}</span>
           <span style={{color:'#10B981'}}>£{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
           <span style={{color:'#EF4444'}}>£{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
@@ -350,16 +350,16 @@ export default function DevPage() {
     <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
       {/* Sidebar */}
       <div style={{ width:200, background:'#fff', borderRight:'1px solid #E4E7EC', display:'flex', flexDirection:'column', flexShrink:0, minHeight:'100vh', overflowY:'auto' }}>
-        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'#101828' }}>
-          <div style={{ width:8, height:8, background:'#8B5CF6', borderRadius:'50%' }} />
-          <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}>Developments</span>
+        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)' }}>
+          <div style={{ width:8, height:8, background:'#D0AE4C', borderRadius:'50%' }} />
+          <span style={{ fontSize:14, fontWeight:700, color:'#624920' }}>Developments</span>
         </div>
         <div style={{ padding:'8px 10px' }}>
           {DEV_NAV_GROUPS.map(group=>(
             <div key={group.label}>
               <div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'10px 10px 4px', marginTop:8 }}>{group.label}</div>
               {group.items.map(t=>(
-                <button key={t} onClick={()=>{if(t==='Contractors'){window.location.href='/dev/vendors';return;} if(t==='Service'){window.location.href='/dev/service';return;} setTab(t)}} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t?'#8B5CF618':'transparent', color:tab===t?'#8B5CF6':'#344054', fontSize:13, fontWeight:tab===t?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}>{t}</button>
+                <button key={t} onClick={()=>{if(t==='Contractors'){window.location.href='/dev/vendors';return;} if(t==='Service'){window.location.href='/dev/service';return;} setTab(t)}} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:tab===t?'1px solid #A8862E':'1px solid transparent',background:tab===t?'#FBF4E6':'transparent', color:tab===t?'#624920':'#344054', fontSize:13, fontWeight:tab===t?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}>{t}</button>
               ))}
             </div>
           ))}
@@ -371,18 +371,18 @@ export default function DevPage() {
         <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:13, color:'#667085' }}>Dashboard</span>
-            {tab!=='Dashboard'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#101828' }}>{tab}</span></>}
+            {tab!=='Dashboard'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#323338' }}>{tab}</span></>}
           </div>
           <div style={{ display:'flex', gap:8 }}>
-            {tab==='Projects' && <button onClick={()=>{setModal('project');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Project</button>}
-            {tab==='Units' && <button onClick={()=>{setModal('unit');setForm({status:'Available'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Unit</button>}
-            {tab==='Compliance' && <button onClick={()=>{setModal('compliance');setForm({status:'Pending'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Record</button>}
-            {tab==='Snagging' && <button onClick={()=>{setModal('snag');setForm({priority:'Medium',status:'Open'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Report Snag</button>}
-            {tab==='Health & Safety' && <button onClick={()=>{setModal('healthsafety');setForm({record_type:'Site Diary'});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Record</button>}
-            {tab==='Budget' && <button onClick={()=>{setModal('budget');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Budget Item</button>}
-            {tab==='Investors' && <button onClick={()=>{setModal('investor');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Investor</button>}
-            {tab==='Documents' && <button onClick={()=>{setModal('document');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Document</button>}
-            {tab==='Milestones' && <button onClick={()=>{setModal('milestone');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Milestone</button>}
+            {tab==='Projects' && <button onClick={()=>{setModal('project');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Project</button>}
+            {tab==='Units' && <button onClick={()=>{setModal('unit');setForm({status:'Available'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Unit</button>}
+            {tab==='Compliance' && <button onClick={()=>{setModal('compliance');setForm({status:'Pending'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Record</button>}
+            {tab==='Snagging' && <button onClick={()=>{setModal('snag');setForm({priority:'Medium',status:'Open'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Report Snag</button>}
+            {tab==='Health & Safety' && <button onClick={()=>{setModal('healthsafety');setForm({record_type:'Site Diary'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Record</button>}
+            {tab==='Budget' && <button onClick={()=>{setModal('budget');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Budget Item</button>}
+            {tab==='Investors' && <button onClick={()=>{setModal('investor');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Investor</button>}
+            {tab==='Documents' && <button onClick={()=>{setModal('document');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Document</button>}
+            {tab==='Milestones' && <button onClick={()=>{setModal('milestone');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Milestone</button>}
           </div>
         </div>
 
@@ -390,25 +390,25 @@ export default function DevPage() {
 
         {tab==='Expenses'&&(
           <div>
-            <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',border:'1px solid #EADBB8',borderRadius:12,padding:24,marginBottom:20,color:'#624920',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
                 <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{expenses.length} records</div>
               </div>
-              <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#101828',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
+              <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#323338',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
               {['Property','Utilities','Staff','Overhead'].map(cat=>(
                 <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>{cat}</div>
-                  <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 </div>
               ))}
             </div>
             {showAddExpense&&(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
-                <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add expense</h3>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add expense</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Cleaning supplies" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Amazon" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -423,7 +423,7 @@ export default function DevPage() {
                   <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={addExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
+                  <button onClick={addExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
                   <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
@@ -431,16 +431,16 @@ export default function DevPage() {
             {/* Filter by specific property/project */}
             <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap' as const}}>
               {['All','Office / General', ...projects.map((p:any)=>p.name)].map(p=>(
-                <button key={p} onClick={()=>setExpensePropertyFilter(p)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(expensePropertyFilter===p?'#8B5CF6':'#E4E7EC'),background:expensePropertyFilter===p?'#8B5CF6':'#fff',color:expensePropertyFilter===p?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap' as const}}>{p}</button>
+                <button key={p} onClick={()=>setExpensePropertyFilter(p)} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(expensePropertyFilter===p?'#A8862E':'#E4E7EC'),background:expensePropertyFilter===p?'#A8862E':'#fff',color:expensePropertyFilter===p?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap' as const}}>{p}</button>
               ))}
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 120px 130px 110px 90px 90px 90px 70px 30px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span>Description</span><span>Property</span><span>Vendor</span><span>Category</span><span>Amount</span><span>Date</span><span>Status</span><span></span><span></span>
               </div>
-              {expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No expenses yet</div></div>):expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).map((e:any)=>(
+              {expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No expenses yet</div></div>):expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).map((e:any)=>(
                 <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{e.property_name||<span style={{color:'#98A2B3'}}>Office</span>}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{e.category}</span>
@@ -462,21 +462,21 @@ export default function DevPage() {
           <div>
             <div style={{display:'flex',gap:4,marginBottom:20,background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:4,width:'fit-content'}}>
               {['Overview','Bank Accounts','Transactions','Reconciliation','Cash Flow'].map(t=>(
-                <button key={t} onClick={()=>setBankingTab(t)} style={{padding:'7px 14px',borderRadius:7,border:'none',background:bankingTab===t?'#101828':'transparent',color:bankingTab===t?'#fff':'#344054',fontSize:13,fontWeight:bankingTab===t?600:400,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+                <button key={t} onClick={()=>setBankingTab(t)} style={{padding:'7px 14px',borderRadius:7,border:'none',background:bankingTab===t?'#A8862E':'transparent',color:bankingTab===t?'#fff':'#344054',fontSize:13,fontWeight:bankingTab===t?600:400,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
               ))}
             </div>
             {bankingTab==='Overview'&&(
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>TOTAL CASH BALANCE</div>
-                  <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
                   <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
                 </div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Quick Actions</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Quick Actions</div>
                   {[{l:'Add Bank Account',d:'Connect or manually add'},{l:'Add Transaction',d:'Record income or expense'},{l:'Reconcile',d:'Match transactions'}].map(a=>(
                     <div key={a.l} onClick={()=>{if(a.l==='Add Bank Account')setShowAddBank(true);if(a.l==='Add Transaction')setShowAddTx(true);if(a.l==='Reconcile')setBankingTab('Reconciliation')}} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 0',borderBottom:'1px solid #F2F4F7',cursor:'pointer'}}>
-                      <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{a.l}</div><div style={{fontSize:11,color:'#98A2B3'}}>{a.d}</div></div>
+                      <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{a.l}</div><div style={{fontSize:11,color:'#98A2B3'}}>{a.d}</div></div>
                       <span style={{color:'#667085'}}>›</span>
                     </div>
                   ))}
@@ -486,7 +486,7 @@ export default function DevPage() {
             {bankingTab==='Bank Accounts'&&(
               <div>
                 {showAddBank&&(
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add bank account</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -495,14 +495,14 @@ export default function DevPage() {
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!bankForm.name)return;setBankAccounts([...bankAccounts,{id:Date.now(),...bankForm}]);setBankForm({name:'',type:'Current',balance:'',currency:'GBP'});setShowAddBank(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
+                      <button onClick={()=>{if(!bankForm.name)return;setBankAccounts([...bankAccounts,{id:Date.now(),...bankForm}]);setBankForm({name:'',type:'Current',balance:'',currency:'GBP'});setShowAddBank(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
                       <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
                 )}
-                {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
+                {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div><button onClick={()=>setBankAccounts(bankAccounts.filter((x:any)=>x.id!==a.id))} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:'#101828',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
+                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><button onClick={()=>setBankAccounts(bankAccounts.filter((x:any)=>x.id!==a.id))} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                     <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
                   </div>
                 )}
@@ -511,7 +511,7 @@ export default function DevPage() {
             {bankingTab==='Transactions'&&(
               <div>
                 {showAddTx&&(
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:16}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:16}}>
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -520,16 +520,16 @@ export default function DevPage() {
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={()=>{if(!txForm.description||!txForm.amount)return;setTransactions([...transactions,{id:Date.now(),...txForm,status:'Unreconciled'}]);setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'});setShowAddTx(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
+                      <button onClick={()=>{if(!txForm.description||!txForm.amount)return;setTransactions([...transactions,{id:Date.now(),...txForm,status:'Unreconciled'}]);setTxForm({account:'',description:'',amount:'',type:'Income',date:'',category:'Rent',status:'Unreconciled'});setShowAddTx(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
                       <button onClick={()=>setShowAddTx(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
                 )}
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{transactions.length} transactions</div><button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button></div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{transactions.length} transactions</div><button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button></div>
                   {transactions.length===0?<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.map((t:any)=>(
                     <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                      <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                      <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                       <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
                       <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600}}>{t.type}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:x.status==='Reconciled'?'Unreconciled':'Reconciled'}:x))}>{t.status}</span>
@@ -541,10 +541,10 @@ export default function DevPage() {
             )}
             {bankingTab==='Reconciliation'&&(
               <div>
-                {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No transactions waiting for review.</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
+                {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No transactions waiting for review.</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                   <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
+                    <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#A8862E',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                   </div>
                 ))}
               </div>
@@ -575,14 +575,14 @@ export default function DevPage() {
           }).sort((a,b)=>b.budgeted-a.budgeted)
           return (
           <div>
-            <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
+            <div style={{background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',border:'1px solid #EADBB8',borderRadius:12,padding:24,marginBottom:20,color:'#624920'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>BUDGET VS ACTUAL · ALL PROJECTS</div>
               <div style={{fontSize:36,fontWeight:800}}>£{totalSpent.toLocaleString()} <span style={{fontSize:18,opacity:0.6,fontWeight:600}}>of £{totalBudget.toLocaleString()}</span></div>
               <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{totalInvestment.toLocaleString()} raised from {investors.length} investor{investors.length===1?'':'s'}</div>
             </div>
 
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-              <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Budget by Category</div>
+              <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Budget by Category</div>
               <button onClick={()=>downloadCsv(`developments-budget-${new Date().getFullYear()}.csv`, byCategory.map(c=>({
                 Category: c.category, Budgeted: c.budgeted, Actual: c.actual, Variance: c.budgeted-c.actual,
               })))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
@@ -601,14 +601,14 @@ export default function DevPage() {
                   <span style={{fontWeight:600,color:c.budgeted-c.actual<0?'#EF4444':'#10B981'}}>£{(c.budgeted-c.actual).toLocaleString()}</span>
                 </div>
               ))}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338'}}>
                 <span>TOTAL</span><span>£{totalBudget.toLocaleString()}</span><span>£{totalSpent.toLocaleString()}</span><span>£{(totalBudget-totalSpent).toLocaleString()}</span>
               </div>
             </div>
 
-            <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Investment Summary</div>
+            <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Investment Summary</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-              {[{l:'Total Raised',v:'£'+totalInvestment.toLocaleString(),c:'#10B981'},{l:'Investors',v:investors.length,c:'#101828'},{l:'Active Projects',v:activeProjects,c:'#8B5CF6'}].map((s:any)=>(
+              {[{l:'Total Raised',v:'£'+totalInvestment.toLocaleString(),c:'#10B981'},{l:'Investors',v:investors.length,c:'#323338'},{l:'Active Projects',v:activeProjects,c:'#A8862E'}].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
                   <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
@@ -632,7 +632,7 @@ export default function DevPage() {
               ].map((c:any) => (
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
-                  <div style={{ fontSize:26, fontWeight:800, color:c.purple?'#8B5CF6':c.amber?'#F59E0B':c.green?'#10B981':'#101828', letterSpacing:'-0.02em' }}>{c.value}</div>
+                  <div style={{ fontSize:26, fontWeight:800, color:c.purple?'#A8862E':c.amber?'#F59E0B':c.green?'#10B981':'#323338', letterSpacing:'-0.02em' }}>{c.value}</div>
                   <div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>{c.sub}</div>
                 </div>
               ))}
@@ -641,9 +641,9 @@ export default function DevPage() {
             {/* Charts */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Budget vs Spent</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:4 }}>Budget vs Spent</div>
                 <div style={{ display:'flex', gap:16, fontSize:11, color:'#667085', marginBottom:12 }}>
-                  <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#8B5CF6', display:'inline-block', borderRadius:2 }}></span>Budget</span>
+                  <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#A8862E', display:'inline-block', borderRadius:2 }}></span>Budget</span>
                   <span style={{ display:'flex', alignItems:'center', gap:4 }}><span style={{ width:12, height:2, background:'#F59E0B', display:'inline-block', borderRadius:2 }}></span>Spent</span>
                 </div>
                 {(() => {
@@ -661,7 +661,7 @@ export default function DevPage() {
                   const spentPts = monthly.map((m,i)=>`${10+i*56},${toY(m.cumSpent).toFixed(1)}`).join(' ')
                   return (
                   <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
-                    <polyline points={budgetPts} fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <polyline points={budgetPts} fill="none" stroke="#A8862E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <polyline points={spentPts} fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 3"/>
                     {['Jan','Feb','Mar','Apr','May','Jun'].map((m,i)=>(<text key={m} x={10+(i*56)} y={78} fontSize="8" fill="#98A2B3">{m}</text>))}
                   </svg>
@@ -669,10 +669,10 @@ export default function DevPage() {
                 })()}
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Project Status</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:4 }}>Project Status</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:12, marginTop:8 }}>
                   {[
-                    { label:'Planning', count:projects.filter((p:any)=>p.status==='planning').length, color:'#8B5CF6' },
+                    { label:'Planning', count:projects.filter((p:any)=>p.status==='planning').length, color:'#A8862E' },
                     { label:'Active', count:projects.filter((p:any)=>p.status==='active').length, color:'#10B981' },
                     { label:'On Hold', count:projects.filter((p:any)=>p.status==='on_hold').length, color:'#F59E0B' },
                     { label:'Completed', count:projects.filter((p:any)=>p.status==='completed').length, color:'#667085' },
@@ -682,7 +682,7 @@ export default function DevPage() {
                       <div style={{ flex:1, background:'#F2F4F7', borderRadius:100, height:8 }}>
                         <div style={{ background:s.color, borderRadius:100, height:8, width:projects.length>0?`${Math.round((s.count/projects.length)*100)}%`:'0%' }}/>
                       </div>
-                      <div style={{ fontSize:12, fontWeight:600, color:'#101828', width:20, textAlign:'right' }}>{s.count}</div>
+                      <div style={{ fontSize:12, fontWeight:600, color:'#323338', width:20, textAlign:'right' }}>{s.count}</div>
                     </div>
                   ))}
                 </div>
@@ -692,28 +692,28 @@ export default function DevPage() {
             {/* Milestones + Investors */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Upcoming Milestones</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:14 }}>Upcoming Milestones</div>
                 {milestones.filter((m:any)=>m.status!=='completed').slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No upcoming milestones</div> :
                 milestones.filter((m:any)=>m.status!=='completed').slice(0,5).map((m:any) => {
                   const overdue = m.due_date && m.due_date < today && m.status !== 'completed'
                   return (
                     <div key={m.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}>
                       <div>
-                        <div style={{ fontWeight:500, color:'#101828' }}>{m.name}</div>
+                        <div style={{ fontWeight:500, color:'#323338' }}>{m.name}</div>
                         <div style={{ fontSize:11, color:overdue?'#EF4444':'#667085' }}>{m.dev_projects?.name} · {m.due_date}{overdue?' · Overdue':''}</div>
                       </div>
-                      <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:overdue?'#FEE2E2':'#EEF0FF', color:overdue?'#DC2626':'#3B4AFF' }}>{m.status}</span>
+                      <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:overdue?'#FEE2E2':'#FBF4E6', color:overdue?'#DC2626':'#A8862E' }}>{m.status}</span>
                     </div>
                   )
                 })}
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Investor Summary</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:14 }}>Investor Summary</div>
                 {investors.length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No investors yet</div> :
                 investors.slice(0,5).map((i:any) => (
                   <div key={i.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}>
                     <div>
-                      <div style={{ fontWeight:500, color:'#101828' }}>{i.name}</div>
+                      <div style={{ fontWeight:500, color:'#323338' }}>{i.name}</div>
                       <div style={{ fontSize:11, color:'#667085' }}>{i.dev_projects?.name} · {i.equity_percentage}% equity</div>
                     </div>
                     <span style={{ fontWeight:600, color:'#10B981' }}>£{(i.investment_amount??0).toLocaleString()}</span>
@@ -724,7 +724,7 @@ export default function DevPage() {
 
             {/* Active project cards */}
             <div>
-              <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:12 }}>Projects</div>
+              <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:12 }}>Projects</div>
               {projects.length===0 ? (
                 <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:40, textAlign:'center', color:'#98A2B3', fontSize:14 }}>No projects yet — click Projects tab to add one.</div>
               ) : (
@@ -736,7 +736,7 @@ export default function DevPage() {
                     return (
                       <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                          <div style={{ fontWeight:600, fontSize:15, color:'#101828' }}>{p.name}</div>
+                          <div style={{ fontWeight:600, fontSize:15, color:'#323338' }}>{p.name}</div>
                           <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:sc.bg, color:sc.color, textTransform:'capitalize' }}>{p.status}</span>
                         </div>
                         <div style={{ fontSize:13, color:'#667085', marginBottom:12 }}>{p.location}</div>
@@ -745,7 +745,7 @@ export default function DevPage() {
                           <span>Spent: £{pSpent.toLocaleString()} ({pct}%)</span>
                         </div>
                         <div style={{ background:'#F2F4F7', borderRadius:100, height:6 }}>
-                          <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#8B5CF6', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
+                          <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#A8862E', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
                         </div>
                         {p.end_date && <div style={{ fontSize:11, color:'#98A2B3', marginTop:8 }}>Due: {p.end_date}</div>}
                       </div>
@@ -757,13 +757,13 @@ export default function DevPage() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16 }}>
             <WeatherWidget />
             <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-              <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Quick Stats</div>
+              <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:14 }}>Quick Stats</div>
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Projects</span><span style={{ fontWeight:600, color:'#101828' }}>{projects.length}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Projects</span><span style={{ fontWeight:600, color:'#323338' }}>{projects.length}</span></div>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Active</span><span style={{ fontWeight:600, color:'#10B981' }}>{projects.filter((p:any)=>p.status==='active').length}</span></div>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Budget</span><span style={{ fontWeight:600, color:'#8B5CF6' }}>£{totalBudget.toLocaleString()}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Budget</span><span style={{ fontWeight:600, color:'#A8862E' }}>£{totalBudget.toLocaleString()}</span></div>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Spent</span><span style={{ fontWeight:600, color:'#F59E0B' }}>£{totalSpent.toLocaleString()}</span></div>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Investors</span><span style={{ fontWeight:600, color:'#101828' }}>{investors.length}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Investors</span><span style={{ fontWeight:600, color:'#323338' }}>{investors.length}</span></div>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Investment</span><span style={{ fontWeight:600, color:'#10B981' }}>£{totalInvestment.toLocaleString()}</span></div>
               </div>
             </div>
@@ -783,7 +783,7 @@ export default function DevPage() {
                 return (
                   <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                      <div style={{ fontWeight:600, fontSize:15, color:'#101828' }}>{p.name}</div>
+                      <div style={{ fontWeight:600, fontSize:15, color:'#323338' }}>{p.name}</div>
                       <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:sc.bg, color:sc.color, textTransform:'capitalize' }}>{p.status}</span>
                     </div>
                     <div style={{ fontSize:13, color:'#667085', marginBottom:4 }}>{p.location}</div>
@@ -793,10 +793,10 @@ export default function DevPage() {
                       <span>Spent: £{pSpent.toLocaleString()} ({pct}%)</span>
                     </div>
                     <div style={{ background:'#F2F4F7', borderRadius:100, height:6, marginBottom:12 }}>
-                      <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#8B5CF6', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
+                      <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#A8862E', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
                     </div>
                     <div style={{ display:'flex', gap:8 }}>
-                      <button onClick={()=>openEdit('project',p)} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                      <button onClick={()=>openEdit('project',p)} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                       <button onClick={()=>del('dev_projects',p.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer', padding:0 }}>Delete</button>
                     </div>
                   </div>
@@ -811,7 +811,7 @@ export default function DevPage() {
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
               {[
-                { label:'Total Budgeted', value:`£${budgetItems.reduce((s,b)=>s+(b.budgeted??0),0).toLocaleString()}`, color:'#101828' },
+                { label:'Total Budgeted', value:`£${budgetItems.reduce((s,b)=>s+(b.budgeted??0),0).toLocaleString()}`, color:'#323338' },
                 { label:'Total Actual', value:`£${budgetItems.reduce((s,b)=>s+(b.actual??0),0).toLocaleString()}`, color:'#F59E0B' },
                 { label:'Variance', value:`£${(budgetItems.reduce((s,b)=>s+(b.budgeted??0),0)-budgetItems.reduce((s,b)=>s+(b.actual??0),0)).toLocaleString()}`, color:'#10B981' },
               ].map((c:any)=>(
@@ -828,13 +828,13 @@ export default function DevPage() {
               {budgetItems.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No budget items yet</div> :
               budgetItems.map(b=>(
                 <div key={b.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 100px 100px 100px 80px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
-                  <span style={{ fontWeight:500, color:'#101828' }}>{b.name}</span>
+                  <span style={{ fontWeight:500, color:'#323338' }}>{b.name}</span>
                   <span>{b.dev_projects?.name??'—'}</span>
                   <span style={{ textTransform:'capitalize' }}>{b.category}</span>
                   <span>£{(b.budgeted??0).toLocaleString()}</span>
                   <span style={{ color:(b.actual??0)>(b.budgeted??0)?'#EF4444':'#10B981', fontWeight:600 }}>£{(b.actual??0).toLocaleString()}</span>
                   <div style={{ display:'flex', gap:6 }}>
-                    <button onClick={()=>openEdit('budget',b)} style={{ fontSize:11, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                    <button onClick={()=>openEdit('budget',b)} style={{ fontSize:11, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                     <button onClick={()=>del('dev_budget_items',b.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
                   </div>
                 </div>
@@ -855,7 +855,7 @@ export default function DevPage() {
               ].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
-                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#101828' }}>{c.value}</div>
+                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#323338' }}>{c.value}</div>
                 </div>
               ))}
             </div>
@@ -868,9 +868,9 @@ export default function DevPage() {
                 return (
                 <div key={i.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
                   <div style={{ padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-                    <div style={{ width:44, height:44, borderRadius:'50%', background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:16, color:'#8B5CF6', flexShrink:0 }}>{i.name.charAt(0)}</div>
+                    <div style={{ width:44, height:44, borderRadius:'50%', background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:16, color:'#A8862E', flexShrink:0 }}>{i.name.charAt(0)}</div>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{i.name}</div>
+                      <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{i.name}</div>
                       <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{i.email} {i.phone?`· ${i.phone}`:''}</div>
                       <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{i.dev_projects?.name} · {paybackLabel(i)}</div>
                     </div>
@@ -881,7 +881,7 @@ export default function DevPage() {
                     </div>
                     <button onClick={()=>{setForm({investor_id:i.id});setEditId(null);setModal('investor-payment')}} style={{ fontSize:12, color:'#10B981', background:'none', border:'1px solid #10B981', borderRadius:6, padding:'4px 10px', cursor:'pointer', whiteSpace:'nowrap' }}>+ Log Payment</button>
                     <button onClick={()=>setExpandedInvestor(open?null:i.id)} style={{ fontSize:12, color:'#667085', background:'none', border:'1px solid #D0D5DD', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>{open?'Hide':`History (${payments.length})`}</button>
-                    <button onClick={()=>openEdit('investor',i)} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                    <button onClick={()=>openEdit('investor',i)} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                     <button onClick={()=>del('dev_investors',i.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                   </div>
                   {open && (
@@ -891,7 +891,7 @@ export default function DevPage() {
                         <div key={p.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:13, padding:'6px 0', borderBottom:'1px solid #F2F4F7' }}>
                           <span style={{ color:'#667085' }}>{p.date}{p.note?` · ${p.note}`:''}</span>
                           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                            <span style={{ fontWeight:600, color:'#101828' }}>£{Number(p.amount).toLocaleString()}</span>
+                            <span style={{ fontWeight:600, color:'#323338' }}>£{Number(p.amount).toLocaleString()}</span>
                             <button onClick={()=>del('dev_investor_payments',p.id)} style={{ fontSize:11, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                           </div>
                         </div>
@@ -911,10 +911,10 @@ export default function DevPage() {
             documents.map(d=>(
               <div key={d.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
                 <div style={{ width:40, height:40, borderRadius:10, background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 </div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{d.name}</div>
+                  <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{d.name}</div>
                   <div style={{ fontSize:12, color:'#667085', marginTop:2, textTransform:'capitalize' }}>{d.type}{d.dev_projects?` · ${d.dev_projects.name}`:''}</div>
                 </div>
                 <a href={d.url} target="_blank" rel="noreferrer" style={{ padding:'7px 14px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:13, fontWeight:500, textDecoration:'none', color:'#344054' }}>View</a>
@@ -936,16 +936,16 @@ export default function DevPage() {
               return (
                 <div key={m.id} style={{ background:'#fff', borderRadius:12, border:`1px solid ${overdue?'#FEE2E2':'#E4E7EC'}`, padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr auto auto auto auto', alignItems:'center', gap:16 }}>
                   <div>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:2 }}>{m.name}</div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#323338', marginBottom:2 }}>{m.name}</div>
                     <div style={{ fontSize:12, color:'#667085' }}>{m.dev_projects?.name} · Due: {m.due_date??'—'}{overdue?' · Overdue':''}</div>
                   </div>
-                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:overdue?'#FEE2E2':STATUS_COLORS[m.status]?.bg??'#EEF0FF', color:overdue?'#DC2626':STATUS_COLORS[m.status]?.color??'#3B4AFF', textTransform:'capitalize' }}>{m.status}</span>
+                  <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:overdue?'#FEE2E2':STATUS_COLORS[m.status]?.bg??'#FBF4E6', color:overdue?'#DC2626':STATUS_COLORS[m.status]?.color??'#A8862E', textTransform:'capitalize' }}>{m.status}</span>
                   <select value={m.status} onChange={async e=>{await supabase.from('dev_milestones').update({status:e.target.value}).eq('id',m.id);loadAll()}} style={{ padding:'6px 10px', borderRadius:8, border:'1px solid #E4E7EC', fontSize:13, fontFamily:'inherit' }}>
                     <option value="pending">Pending</option>
                     <option value="in_progress">In Progress</option>
                     <option value="completed">Completed</option>
                   </select>
-                  <button onClick={()=>openEdit('milestone',m)} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>openEdit('milestone',m)} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('dev_milestones',m.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
                 </div>
               )
@@ -970,7 +970,7 @@ export default function DevPage() {
                 return (
                   <div style={{ textAlign:'center', padding:80 }}>
                     <div style={{ color:'#98A2B3', fontSize:14, marginBottom:16 }}>No checklist yet for this project.</div>
-                    <button onClick={()=>seedChecklist(checklistProjectId)} disabled={seeding} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer', opacity:seeding?0.6:1 }}>{seeding?'Setting up…':'Start standard checklist'}</button>
+                    <button onClick={()=>seedChecklist(checklistProjectId)} disabled={seeding} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer', opacity:seeding?0.6:1 }}>{seeding?'Setting up…':'Start standard checklist'}</button>
                   </div>
                 )
               }
@@ -983,7 +983,7 @@ export default function DevPage() {
                     <span style={{ color:'#98A2B3' }}>Same list as Milestones — filtered to this project's checklist tasks</span>
                   </div>
                   <div style={{ height:6, background:'#F2F4F7', borderRadius:3, marginBottom:20, overflow:'hidden' }}>
-                    <div style={{ height:'100%', width:`${Math.round(done/items.length*100)}%`, background:'#8B5CF6' }} />
+                    <div style={{ height:'100%', width:`${Math.round(done/items.length*100)}%`, background:'#A8862E' }} />
                   </div>
                   {phases.map(phase => {
                     const phaseItems = items.filter(i=>i.phase===phase)
@@ -995,7 +995,7 @@ export default function DevPage() {
                         <div onClick={()=>setExpandedPhase(isOpen?null:phase)} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', cursor:'pointer', background:'#F9FAFB' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                             <span style={{ color: complete?'#10B981':'#98A2B3', fontSize:16 }}>{complete?'✓':'○'}</span>
-                            <span style={{ fontSize:14, fontWeight:600, color:'#101828' }}>{phase}</span>
+                            <span style={{ fontSize:14, fontWeight:600, color:'#323338' }}>{phase}</span>
                           </div>
                           <span style={{ fontSize:12, color:'#667085' }}>{phaseDone}/{phaseItems.length}</span>
                         </div>
@@ -1004,7 +1004,7 @@ export default function DevPage() {
                             {phaseItems.map(item=>(
                               <label key={item.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', fontSize:13, cursor:'pointer' }}>
                                 <input type="checkbox" checked={item.status==='completed'} onChange={e=>toggleChecklistItem(item.id, e.target.checked)} />
-                                <span style={{ color: item.status==='completed'?'#98A2B3':'#101828', textDecoration: item.status==='completed'?'line-through':'none' }}>{item.name}</span>
+                                <span style={{ color: item.status==='completed'?'#98A2B3':'#323338', textDecoration: item.status==='completed'?'line-through':'none' }}>{item.name}</span>
                               </label>
                             ))}
                           </div>
@@ -1023,7 +1023,7 @@ export default function DevPage() {
           const UNIT_STATUS_COLORS: Record<string,{bg:string,color:string}> = {
             Available: { bg:'#D1FAE5', color:'#059669' },
             Reserved: { bg:'#FEF3C7', color:'#D97706' },
-            Exchanged: { bg:'#EEF0FF', color:'#3B4AFF' },
+            Exchanged: { bg:'#FBF4E6', color:'#A8862E' },
             Completed: { bg:'#F3F4F6', color:'#6B7280' },
           }
           const soldValue = units.filter(u=>u.status==='Completed').reduce((s,u)=>s+(parseFloat(u.price)||0),0)
@@ -1038,7 +1038,7 @@ export default function DevPage() {
               ].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase' as const, letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
-                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#101828' }}>{c.value}</div>
+                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#323338' }}>{c.value}</div>
                 </div>
               ))}
             </div>
@@ -1046,17 +1046,17 @@ export default function DevPage() {
               {units.length===0 ? <div style={{ textAlign:'center' as const, padding:80, color:'#98A2B3', fontSize:14 }}>No units yet — add the individual plots/units that make up a project.</div> :
               units.map((u:any)=>(
                 <div key={u.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-                  <div style={{ width:44, height:44, borderRadius:10, background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:14, color:'#8B5CF6', flexShrink:0 }}>{u.unit_number?.slice(0,3)}</div>
+                  <div style={{ width:44, height:44, borderRadius:10, background:'#EDE9FE', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:14, color:'#A8862E', flexShrink:0 }}>{u.unit_number?.slice(0,3)}</div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>Plot {u.unit_number} {u.unit_type?`· ${u.unit_type}`:''}</div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>Plot {u.unit_number} {u.unit_type?`· ${u.unit_type}`:''}</div>
                     <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{u.dev_projects?.name??'—'} {u.size_sqft?`· ${u.size_sqft} sqft`:''}</div>
                     {u.buyer_name && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>Buyer: {u.buyer_name} {u.buyer_solicitor?`· ${u.buyer_solicitor}`:''}</div>}
                   </div>
                   <div style={{ textAlign:'right' as const }}>
-                    <div style={{ fontSize:16, fontWeight:700, color:'#101828' }}>£{(u.price??0).toLocaleString()}</div>
+                    <div style={{ fontSize:16, fontWeight:700, color:'#323338' }}>£{(u.price??0).toLocaleString()}</div>
                     <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:UNIT_STATUS_COLORS[u.status]?.bg??'#F3F4F6', color:UNIT_STATUS_COLORS[u.status]?.color??'#6B7280' }}>{u.status}</span>
                   </div>
-                  <button onClick={()=>{const{dev_projects,...clean}=u;setForm(clean);setEditId(u.id);setModal('unit')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>{const{dev_projects,...clean}=u;setForm(clean);setEditId(u.id);setModal('unit')}} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('dev_units',u.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                 </div>
               ))}
@@ -1086,13 +1086,13 @@ export default function DevPage() {
               compliance.map((c:any)=>(
                 <div key={c.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{c.type}</div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{c.type}</div>
                     <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{c.dev_projects?.name??'—'} {c.reference_number?`· Ref: ${c.reference_number}`:''}</div>
                     {c.expiry_date && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>Expires {c.expiry_date}</div>}
-                    {c.document_url && <a href={c.document_url} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#8B5CF6' }}>View document</a>}
+                    {c.document_url && <a href={c.document_url} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#A8862E' }}>View document</a>}
                   </div>
                   <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:COMPLIANCE_STATUS_COLORS[c.status]?.bg??'#F3F4F6', color:COMPLIANCE_STATUS_COLORS[c.status]?.color??'#6B7280' }}>{c.status}</span>
-                  <button onClick={()=>{const{dev_projects,...clean}=c;setForm(clean);setEditId(c.id);setModal('compliance')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>{const{dev_projects,...clean}=c;setForm(clean);setEditId(c.id);setModal('compliance')}} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('dev_compliance',c.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                 </div>
               ))}
@@ -1119,7 +1119,7 @@ export default function DevPage() {
               ].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase' as const, letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
-                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#101828' }}>{c.value}</div>
+                  <div style={{ fontSize:26, fontWeight:800, color:c.green?'#10B981':'#323338' }}>{c.value}</div>
                 </div>
               ))}
             </div>
@@ -1128,12 +1128,12 @@ export default function DevPage() {
               snags.map((s:any)=>(
                 <div key={s.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{s.title} <span style={{ fontSize:11, fontWeight:700, color:PRIORITY_COLORS[s.priority] }}>· {s.priority}</span></div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{s.title} <span style={{ fontSize:11, fontWeight:700, color:PRIORITY_COLORS[s.priority] }}>· {s.priority}</span></div>
                     <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{s.dev_projects?.name??'—'} {s.dev_units?.unit_number?`· Plot ${s.dev_units.unit_number}`:''} {s.assigned_to?`· Assigned: ${s.assigned_to}`:''}</div>
                     {s.description && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{s.description}</div>}
                   </div>
                   <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:SNAG_STATUS_COLORS[s.status]?.bg??'#F3F4F6', color:SNAG_STATUS_COLORS[s.status]?.color??'#6B7280' }}>{s.status}</span>
-                  <button onClick={()=>{const{dev_projects,dev_units,...clean}=s;setForm(clean);setEditId(s.id);setModal('snag')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>{const{dev_projects,dev_units,...clean}=s;setForm(clean);setEditId(s.id);setModal('snag')}} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('dev_snagging',s.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                 </div>
               ))}
@@ -1150,13 +1150,13 @@ export default function DevPage() {
               healthSafety.map((h:any)=>(
                 <div key={h.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{h.title} <span style={{ fontSize:11, fontWeight:600, color:'#8B5CF6' }}>· {h.record_type}</span></div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{h.title} <span style={{ fontSize:11, fontWeight:600, color:'#A8862E' }}>· {h.record_type}</span></div>
                     <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{h.dev_projects?.name??'—'} {h.date?`· ${h.date}`:''} {h.logged_by?`· Logged by ${h.logged_by}`:''}</div>
                     {h.record_type==='Site Diary' && (h.weather||h.workers_on_site) && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{h.weather?`${h.weather}`:''}{h.weather&&h.workers_on_site?' · ':''}{h.workers_on_site?`${h.workers_on_site} workers on site`:''}</div>}
                     {h.description && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{h.description}</div>}
-                    {h.document_url && <a href={h.document_url} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#8B5CF6' }}>View document</a>}
+                    {h.document_url && <a href={h.document_url} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#A8862E' }}>View document</a>}
                   </div>
-                  <button onClick={()=>{const{dev_projects,...clean}=h;setForm(clean);setEditId(h.id);setModal('healthsafety')}} style={{ fontSize:12, color:'#8B5CF6', background:'none', border:'1px solid #8B5CF6', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>{const{dev_projects,...clean}=h;setForm(clean);setEditId(h.id);setModal('healthsafety')}} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('dev_health_safety',h.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                 </div>
               ))}
@@ -1191,7 +1191,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_projects',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Create Project'}</button>
+            <button onClick={()=>save('dev_projects',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Create Project'}</button>
           </div>
         </Modal>
       )}
@@ -1236,7 +1236,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_budget_items',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Item'}</button>
+            <button onClick={()=>save('dev_budget_items',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Item'}</button>
           </div>
         </Modal>
       )}
@@ -1285,7 +1285,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_investors',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Investor'}</button>
+            <button onClick={()=>save('dev_investors',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Investor'}</button>
           </div>
         </Modal>
       )}
@@ -1307,7 +1307,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_investor_payments',form)} disabled={saving||!form.investor_id||!form.amount} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.investor_id||!form.amount?0.6:1 }}>{saving?'Saving…':'Log Payment'}</button>
+            <button onClick={()=>save('dev_investor_payments',form)} disabled={saving||!form.investor_id||!form.amount} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.investor_id||!form.amount?0.6:1 }}>{saving?'Saving…':'Log Payment'}</button>
           </div>
         </Modal>
       )}
@@ -1336,7 +1336,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_documents',form)} disabled={saving||!form.name||!form.url} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name||!form.url?0.6:1 }}>{saving?'Saving…':'Add Document'}</button>
+            <button onClick={()=>save('dev_documents',form)} disabled={saving||!form.name||!form.url} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name||!form.url?0.6:1 }}>{saving?'Saving…':'Add Document'}</button>
           </div>
         </Modal>
       )}
@@ -1382,7 +1382,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_units',form)} disabled={saving||!form.unit_number||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.unit_number||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Unit'}</button>
+            <button onClick={()=>save('dev_units',form)} disabled={saving||!form.unit_number||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.unit_number||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Unit'}</button>
           </div>
         </Modal>
       )}
@@ -1417,7 +1417,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_compliance',form)} disabled={saving||!form.type||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.type||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Record'}</button>
+            <button onClick={()=>save('dev_compliance',form)} disabled={saving||!form.type||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.type||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Record'}</button>
           </div>
         </Modal>
       )}
@@ -1460,7 +1460,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_snagging',form)} disabled={saving||!form.title||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Report Snag'}</button>
+            <button onClick={()=>save('dev_snagging',form)} disabled={saving||!form.title||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Report Snag'}</button>
           </div>
         </Modal>
       )}
@@ -1496,7 +1496,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_health_safety',form)} disabled={saving||!form.title||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Record'}</button>
+            <button onClick={()=>save('dev_health_safety',form)} disabled={saving||!form.title||!form.project_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title||!form.project_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Record'}</button>
           </div>
         </Modal>
       )}
@@ -1525,7 +1525,7 @@ export default function DevPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('dev_milestones',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Milestone'}</button>
+            <button onClick={()=>save('dev_milestones',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Milestone'}</button>
           </div>
         </Modal>
       )}

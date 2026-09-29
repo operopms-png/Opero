@@ -21,10 +21,10 @@ import { SITE_HOST } from '@/lib/brand'
 // capital returned = paid owner_statements, invested = owner_profiles.invested.
 
 const MGMT_FEE = 0.40
-// Matches the Staff Centre dashboard: Inter, #F7F8FA page, white #E4E7EC cards, #3B4AFF accent
-const ACCENT = '#3B4AFF'
-const ACCENT_SOFT = '#EEF0FF'
-const TEXT = '#101828'
+// Matches the Staff Centre dashboard: Inter, #F7F8FA page, white #E4E7EC cards, #A8862E accent
+const ACCENT = '#A8862E'
+const ACCENT_SOFT = '#FBF4E6'
+const TEXT = '#323338'
 const PAGE_BG = '#F7F8FA'
 const TOTAL_STAGES = 10
 
@@ -62,9 +62,9 @@ function Pill({ status, label }: { status: string; label?: string }) {
   const map: Record<string, [string, string]> = {
     paid: ['#D1FAE5', '#059669'], sent: ['#FEF3C7', '#D97706'], draft: ['#F3F4F6', '#6B7280'],
     live: ['#D1FAE5', '#059669'], active: ['#D1FAE5', '#059669'], onboarding: ['#FEF3C7', '#D97706'],
-    logged: ['#EEF2FF', '#4F46E5'], screening: ['#FEF3C7', '#D97706'], approved: ['#DBEAFE', '#2563EB'],
+    logged: ['#FBF4E6', '#A8862E'], screening: ['#FEF3C7', '#D97706'], approved: ['#EADBB8', '#A8862E'],
     rejected: ['#FEE2E2', '#DC2626'], completed: ['#D1FAE5', '#059669'], cancelled: ['#F3F4F6', '#6B7280'],
-    pending: ['#FEF3C7', '#D97706'], payable: ['#DBEAFE', '#2563EB'], clawed_back: ['#FEE2E2', '#DC2626'],
+    pending: ['#FEF3C7', '#D97706'], payable: ['#EADBB8', '#A8862E'], clawed_back: ['#FEE2E2', '#DC2626'],
     none: ['#F3F4F6', '#6B7280'], paused: ['#F3F4F6', '#6B7280'], duplicate: ['#FEE2E2', '#DC2626'],
   }
   const [bg, color] = map[(status ?? '').toLowerCase()] ?? ['#F3F4F6', '#6B7280']
@@ -518,7 +518,7 @@ export default function PartnersPage() {
   const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }
   const btnGold: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }
   const btnGhost: React.CSSProperties = { background: '#fff', color: '#344054', border: '1px solid #D0D5DD', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }
-  const chip = (on: boolean): React.CSSProperties => ({ padding: '8px 14px', borderRadius: 8, border: `1px solid ${on ? '#D7E0FF' : '#E4E7EC'}`, background: on ? '#D7E0FF' : '#fff', color: on ? ACCENT : '#344054', fontSize: 13, fontWeight: on ? 600 : 500, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' })
+  const chip = (on: boolean): React.CSSProperties => ({ padding: '8px 14px', borderRadius: 8, border: `1px solid ${on ? '#EADBB8' : '#E4E7EC'}`, background: on ? '#EADBB8' : '#fff', color: on ? ACCENT : '#344054', fontSize: 13, fontWeight: on ? 600 : 500, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' })
 
   if (loading) {
     return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', fontFamily: "'Inter', sans-serif" }}>Loading…</div>

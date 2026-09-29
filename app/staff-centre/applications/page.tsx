@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const STAGES = ['Applied','Interviewing','Offered','Hired','Rejected']
 const MODULES = [
   { key:'str', label:'Vacation Rentals' },
@@ -14,7 +14,7 @@ const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRa
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 const STAGE_COLORS: Record<string,{bg:string,fg:string}> = {
   Applied: {bg:'#F2F4F7',fg:'#667085'},
-  Interviewing: {bg:'#EEF1FF',fg:ACCENT},
+  Interviewing: {bg:'#FBF4E6',fg:ACCENT},
   Offered: {bg:'#FFFBEB',fg:'#F59E0B'},
   Hired: {bg:'#ECFDF5',fg:'#10B981'},
   Rejected: {bg:'#FEF2F2',fg:'#EF4444'},
@@ -85,7 +85,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Applications</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Applications</div>
         </div>
         <button onClick={()=>{setEditId(null);setForm({candidate_name:'',email:'',phone:'',role_applied:'',module:'',stage:'Applied',notes:''});setShowForm(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Candidate</button>
       </div>
@@ -129,10 +129,10 @@ export default function Page() {
             <span>Candidate</span><span>Contact</span><span>Role</span><span>Module</span><span>Stage</span><span></span>
           </div>
           {filtered.length===0?(
-            <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No applications yet</div></div>
+            <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No applications yet</div></div>
           ):filtered.map((a:any)=>(
             <div key={a.id} style={{display:'grid',gridTemplateColumns:'1fr 160px 150px 130px 130px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-              <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{a.candidate_name}</span>
+              <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{a.candidate_name}</span>
               <div><div style={{fontSize:12,color:'#667085'}}>{a.email||'—'}</div>{a.phone&&<div style={{fontSize:11,color:'#98A2B3'}}>{a.phone}</div>}</div>
               <span style={{fontSize:12,color:'#667085'}}>{a.role_applied}</span>
               <span style={{fontSize:11,color:'#667085'}}>{MODULES.find(m=>m.key===a.module)?.label ?? '—'}</span>

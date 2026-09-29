@@ -20,7 +20,7 @@ type CleaningTask = {
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#F59E0B', bg: '#FEF3C7' },
-  in_progress: { label: 'In Progress', color: '#3B82F6', bg: '#DBEAFE' },
+  in_progress: { label: 'In Progress', color: '#A8862E', bg: '#EADBB8' },
   completed: { label: 'Completed', color: '#10B981', bg: '#D1FAE5' },
   skipped: { label: 'Skipped', color: '#6B7280', bg: '#F3F4F6' },
 }
@@ -115,11 +115,11 @@ export default function CleaningTasksPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l9-9M12.5 6.5l5 5-9 9H3v-5.5l9-9z"/><path d="M15 3l3 3-9 9-3-3z"/></svg>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#111827' }}>Cleaning Tasks</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Cleaning Tasks</h1>
           </div>
           <button
             onClick={() => setShowModal(true)}
-            style={{ background: '#111827', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             + New Task
           </button>
@@ -137,8 +137,8 @@ export default function CleaningTasksPage() {
                 padding: '7px 16px',
                 borderRadius: 20,
                 border: '1px solid',
-                borderColor: filter === s ? '#111827' : '#E5E7EB',
-                background: filter === s ? '#111827' : '#fff',
+                borderColor: filter === s ? '#323338' : '#E5E7EB',
+                background: filter === s ? '#A8862E' : '#fff',
                 color: filter === s ? '#fff' : '#6B7280',
                 fontSize: 13,
                 fontWeight: 500,
@@ -183,7 +183,7 @@ export default function CleaningTasksPage() {
                 >
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 600, fontSize: 15, color: '#111827' }}>
+                      <span style={{ fontWeight: 600, fontSize: 15, color: '#323338' }}>
                         {task.properties?.name ?? 'Unknown Property'}
                       </span>
                       <span style={{ fontSize: 12, fontWeight: 500, padding: '2px 10px', borderRadius: 20, color: cfg.color, background: cfg.bg }}>
@@ -290,7 +290,7 @@ export default function CleaningTasksPage() {
               <button
                 onClick={handleCreate}
                 disabled={saving || !form.property_id || !form.scheduled_date}
-                style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#111827', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}
+                style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}
               >
                 {saving ? 'Saving…' : 'Create Task'}
               </button>

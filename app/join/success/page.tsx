@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation'
 // After Stripe: wait for the webhook to activate the account, then send
 // the new partner to sign in (email prefilled) → their Partners portal.
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 
 function Success() {
   const params = useSearchParams()
@@ -64,7 +64,7 @@ function Success() {
 
 export default function JoinSuccessPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", color: '#101828', padding: '0 16px' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", color: '#323338', padding: '0 16px' }}>
       <Suspense fallback={null}><Success /></Suspense>
     </div>
   )

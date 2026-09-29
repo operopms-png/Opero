@@ -2,8 +2,8 @@ export default function PrivacyPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", padding: '48px 20px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '48px 40px' }}>
-        <a href="/login" style={{ fontSize: 13, color: '#3B4AFF', textDecoration: 'none' }}>← Back to portal</a>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#101828', margin: '20px 0 4px' }}>Privacy Policy</h1>
+        <a href="/login" style={{ fontSize: 13, color: '#A8862E', textDecoration: 'none' }}>← Back to portal</a>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#323338', margin: '20px 0 4px' }}>Privacy Policy</h1>
         <p style={{ fontSize: 13, color: '#98A2B3', margin: '0 0 32px' }}>Last updated: 23 September 2026</p>
 
         <div style={{ fontSize: 14, color: '#344054', lineHeight: 1.7 }}>
@@ -40,11 +40,11 @@ export default function PrivacyPage() {
           <p>We may update this policy from time to time. Material changes will be notified to account holders by email or an in-app notice.</p>
 
           <h2 style={sectionH}>11. Contact</h2>
-          <p>For any privacy question or request, contact <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#3B4AFF' }}>contact.us@sangstersgroup.com</a>.</p>
+          <p>For any privacy question or request, contact <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#A8862E' }}>contact.us@sangstersgroup.com</a>.</p>
         </div>
       </div>
     </div>
   )
 }
 
-const sectionH = { fontSize: 16, fontWeight: 700, color: '#101828', margin: '28px 0 8px' } as const
+const sectionH = { fontSize: 16, fontWeight: 700, color: '#323338', margin: '28px 0 8px' } as const

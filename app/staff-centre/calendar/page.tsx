@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7) // 7am - 8pm
 const STATUS_COLORS: Record<string, { bg: string; fg: string; border: string }> = {
   Working: { bg: '#ECFDF5', fg: '#10B981', border: '#A7F3D0' },
@@ -14,7 +14,7 @@ function initials(name: string) {
   return (name || '?').split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join('')
 }
 
-const AVATAR_COLORS = ['#3B4AFF', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#2D6A4F', '#DC2626', '#0891B2']
+const AVATAR_COLORS = ['#A8862E', '#10B981', '#F59E0B', '#A8862E', '#EC4899', '#2D6A4F', '#DC2626', '#0891B2']
 function avatarColor(name: string) {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
@@ -86,14 +86,14 @@ export default function CalendarPage() {
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>STAFF CENTRE</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>Calendar</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>Calendar</div>
         </div>
       </div>
 
       <div style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10, background: '#fff', borderBottom: '1px solid #E4E7EC' }}>
         <button onClick={() => { const d = new Date(); const day = d.getDay(); d.setDate(d.getDate() - day + (day === 0 ? -6 : 1)); d.setHours(0, 0, 0, 0); setWeekStart(d) }} style={{ background: '#fff', border: '1px solid #D0D5DD', borderRadius: 8, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, color: '#344054', cursor: 'pointer', fontFamily: 'inherit' }}>Today</button>
         <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }} style={{ background: '#fff', border: '1px solid #D0D5DD', borderRadius: 8, width: 30, height: 30, fontSize: 13, color: '#344054', cursor: 'pointer' }}>←</button>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: '#101828', minWidth: 170 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: '#323338', minWidth: 170 }}>
           {days[0].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {days[6].toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
         <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }} style={{ background: '#fff', border: '1px solid #D0D5DD', borderRadius: 8, width: 30, height: 30, fontSize: 13, color: '#344054', cursor: 'pointer' }}>→</button>
@@ -110,7 +110,7 @@ export default function CalendarPage() {
         {team.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', flexDirection: 'column' as const, gap: 8 }}>
             <div style={{ fontSize: 32 }}>📅</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>No team members yet</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>No team members yet</div>
             <div style={{ fontSize: 13 }}>Add staff in Team Management first, then schedule their shifts here.</div>
           </div>
         ) : (
@@ -123,7 +123,7 @@ export default function CalendarPage() {
                   return (
                     <div key={i} style={{ position: 'sticky' as const, top: 0, background: '#fff', zIndex: 2, borderBottom: '1px solid #E4E7EC', borderLeft: '1px solid #F2F4F7', padding: '10px 8px', textAlign: 'center' as const }}>
                       <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: isToday ? ACCENT : '#101828', marginTop: 2 }}>{d.getDate()}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: isToday ? ACCENT : '#323338', marginTop: 2 }}>{d.getDate()}</div>
                     </div>
                   )
                 })}
@@ -167,7 +167,7 @@ export default function CalendarPage() {
             </div>
 
             <div style={{ width: 260, borderLeft: '1px solid #E4E7EC', background: '#fff', padding: 20, overflowY: 'auto' as const }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#101828', marginBottom: 14 }}>Manage view</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#323338', marginBottom: 14 }}>Manage view</div>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase' as const, marginBottom: 8 }}>Staff</div>
               {team.map((m: any) => (
                 <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', fontSize: 13, cursor: 'pointer' }}>

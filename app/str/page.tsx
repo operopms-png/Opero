@@ -539,9 +539,9 @@ export default function STRPage() {
     <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
       {/* Sidebar */}
       <div style={{ width:200, background:'#fff', borderRight:'1px solid #E4E7EC', display:'flex', flexDirection:'column', flexShrink:0, minHeight:'100vh', overflowY:'auto' }}>
-        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'#101828' }}>
-          <div style={{ width:8, height:8, background:'#3B4AFF', borderRadius:'50%' }} />
-          <span style={{ fontSize:14, fontWeight:700, color:'#fff' }}>Vacation Rentals</span>
+        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)' }}>
+          <div style={{ width:8, height:8, background:'#D0AE4C', borderRadius:'50%' }} />
+          <span style={{ fontSize:14, fontWeight:700, color:'#624920' }}>Vacation Rentals</span>
         </div>
         <div style={{ padding:'8px 10px' }}>
           {STR_NAV_GROUPS.map(group=>(
@@ -550,7 +550,7 @@ export default function STRPage() {
               {group.items.map(t=>{
                 const locked = !!(allowedTab && t !== allowedTab)
                 const badge = t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : 0
-                return <button key={t} onClick={()=>{if(locked)return; if(t==='Owners'){window.location.href='/owner-portal';return;} setTab(t)}} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:'none', background:tab===t&&!locked?'#3B4AFF18':'transparent', color:locked?'#C1C9D2':tab===t?'#3B4AFF':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+                return <button key={t} onClick={()=>{if(locked)return; if(t==='Owners'){window.location.href='/owner-portal';return;} setTab(t)}} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:tab===t&&!locked?'1px solid #A8862E':'1px solid transparent',background:tab===t&&!locked?'#FBF4E6':'transparent', color:locked?'#C1C9D2':tab===t?'#624920':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
             </div>
           ))}
@@ -562,19 +562,19 @@ export default function STRPage() {
         <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:13, color:'#667085' }}>Home</span>
-            {tab!=='Home'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#101828' }}>{tab}</span></>}
+            {tab!=='Home'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#323338' }}>{tab}</span></>}
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
-            {tab==='Bookings' && <button onClick={()=>{setModal('booking');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Booking</button>}
+            {tab==='Bookings' && <button onClick={()=>{setModal('booking');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Booking</button>}
             {tab==='Properties' && (!isBundle && properties.length >= propertyLimit
-              ? <button onClick={()=>setShowUpgrade(true)} style={{ background:'#5B7CFA', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>Add more properties</button>
-              : <button onClick={()=>{setModal('property');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Property</button>)}
-            {tab==='Cleaning' && <button onClick={()=>{setModal('cleaning');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Task</button>}
-            {tab==='Maintenance' && <button onClick={()=>{setModal('maintenance');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Ticket</button>}
-            {tab==='Compliance' && <button onClick={()=>{setEditId(null);setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add record</button>}
-            {tab==='Reviews' && <button onClick={()=>{setEditingReviewId(null);setReviewForm({property_id:'',guest_name:'',platform:'Airbnb',rating:'',review_text:'',review_date:'',response_text:'',responded:false});setShowAddReview(true)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Log Review</button>}
-            {tab==='Team' && <button onClick={()=>{setModal('team');setForm({});setEditId(null)}} style={{ background:'#101828', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Member</button>}
+              ? <button onClick={()=>setShowUpgrade(true)} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>Add more properties</button>
+              : <button onClick={()=>{setModal('property');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Property</button>)}
+            {tab==='Cleaning' && <button onClick={()=>{setModal('cleaning');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Task</button>}
+            {tab==='Maintenance' && <button onClick={()=>{setModal('maintenance');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Ticket</button>}
+            {tab==='Compliance' && <button onClick={()=>{setEditId(null);setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add record</button>}
+            {tab==='Reviews' && <button onClick={()=>{setEditingReviewId(null);setReviewForm({property_id:'',guest_name:'',platform:'Airbnb',rating:'',review_text:'',review_date:'',response_text:'',responded:false});setShowAddReview(true)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Log Review</button>}
+            {tab==='Team' && <button onClick={()=>{setModal('team');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Member</button>}
           </div>
         </div>
 
@@ -583,26 +583,26 @@ export default function STRPage() {
         {tab==='Home' && (
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:16 }}>
-              <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Properties</div><div style={{ fontSize:28, fontWeight:800, color:'#3B4AFF' }}>{stats.properties}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Total active</div></div>
+              <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Properties</div><div style={{ fontSize:28, fontWeight:800, color:'#A8862E' }}>{stats.properties}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Total active</div></div>
               <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Cleaning Tasks</div><div style={{ fontSize:28, fontWeight:800, color:'#10B981' }}>{stats.cleaning}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Pending today</div></div>
               <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Maintenance</div><div style={{ fontSize:28, fontWeight:800, color:'#F59E0B' }}>{stats.maintenance}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Open tickets</div></div>
-              <div style={{ background:'#101828', border:'1px solid #101828', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#6B7280', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Revenue</div><div style={{ fontSize:28, fontWeight:800, color:'#fff' }}>£{stats.revenue.toLocaleString()}</div><div style={{ fontSize:12, color:'#6B7280', marginTop:4 }}>This month</div></div>
+              <div style={{ background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)', border:'1px solid #EADBB8', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#8A6B2E', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Revenue</div><div style={{ fontSize:28, fontWeight:800, color:'#624920' }}>£{stats.revenue.toLocaleString()}</div><div style={{ fontSize:12, color:'#8A6B2E', marginTop:4 }}>This month</div></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Revenue Trends</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:4 }}>Revenue Trends</div>
                 <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
-                  <polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue), 300, 65)} fill="none" stroke="#3B4AFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue), 300, 65)} fill="none" stroke="#A8862E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                   {monthlyTrend.map((m,i)=>(<text key={m.key} x={8+(i*(284/(monthlyTrend.length-1||1)))} y={78} fontSize="8" fill="#98A2B3">{m.label}</text>))}
                 </svg>
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:4 }}>Occupancy Trends</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:4 }}>Occupancy Trends</div>
                 <svg viewBox="0 0 300 80" style={{ width:'100%' }}>
                   {monthlyTrend.map((m,i)=>{
                     const x = 10+(i*47)
                     const h = Math.max(2,(m.occupancyPct/100)*60)
-                    return <rect key={m.key} x={x} y={75-h} width={30} height={h} rx="3" fill={i===monthlyTrend.length-1?'#3B4AFF':'#EEF0FF'}/>
+                    return <rect key={m.key} x={x} y={75-h} width={30} height={h} rx="3" fill={i===monthlyTrend.length-1?'#A8862E':'#E8D29A'}/>
                   })}
                   {monthlyTrend.map((m,i)=>(<text key={m.key} x={15+(i*47)} y={79} fontSize="8" fill="#98A2B3">{m.label}</text>))}
                 </svg>
@@ -610,27 +610,27 @@ export default function STRPage() {
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Upcoming Check-ins</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:14 }}>Upcoming Check-ins</div>
                 {bookings.filter(b=>b.check_in>=today && b.status!=='cancelled').slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No upcoming check-ins</div> :
-                bookings.filter(b=>b.check_in>=today && b.status!=='cancelled').slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name} · {b.check_in}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>Check-in</span></div>))}
+                bookings.filter(b=>b.check_in>=today && b.status!=='cancelled').slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#323338' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name} · {b.check_in}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>Check-in</span></div>))}
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Recent Bookings</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:14 }}>Recent Bookings</div>
                 {bookings.slice(0,5).length===0 ? <div style={{ color:'#98A2B3', fontSize:13 }}>No bookings yet</div> :
-                bookings.slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:b.status==='confirmed'?'#D1FAE5':'#F3F4F6', color:b.status==='confirmed'?'#059669':'#6B7280' }}>{b.status}</span></div>))}
+                bookings.slice(0,5).map(b=>(<div key={b.id} style={{ display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid #F2F4F7', fontSize:13 }}><div><div style={{ fontWeight:500, color:'#323338' }}>{b.guest_name??'Guest'}</div><div style={{ fontSize:11, color:'#667085' }}>{b.properties?.name}</div></div><span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:b.status==='confirmed'?'#D1FAE5':'#F3F4F6', color:b.status==='confirmed'?'#059669':'#6B7280' }}>{b.status}</span></div>))}
               </div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16 }}>
               <WeatherWidget />
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-                <div style={{ fontSize:14, fontWeight:600, color:'#101828', marginBottom:14 }}>Quick Stats</div>
+                <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:14 }}>Quick Stats</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Avg nightly rate</span><span style={{ fontWeight:600, color:'#101828' }}>£{properties.length>0?Math.round(properties.reduce((s:number,p:any)=>s+(p.nightly_rate??0),0)/properties.length):0}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total bookings</span><span style={{ fontWeight:600, color:'#101828' }}>{bookings.length}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Avg nightly rate</span><span style={{ fontWeight:600, color:'#323338' }}>£{properties.length>0?Math.round(properties.reduce((s:number,p:any)=>s+(p.nightly_rate??0),0)/properties.length):0}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total bookings</span><span style={{ fontWeight:600, color:'#323338' }}>{bookings.length}</span></div>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Confirmed</span><span style={{ fontWeight:600, color:'#10B981' }}>{bookings.filter((b:any)=>b.status==='confirmed').length}</span></div>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Cancelled</span><span style={{ fontWeight:600, color:'#EF4444' }}>{bookings.filter((b:any)=>b.status==='cancelled').length}</span></div>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Cleaning pending</span><span style={{ fontWeight:600, color:'#F59E0B' }}>{cleaning.filter((c:any)=>c.status==='pending').length}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Open maintenance</span><span style={{ fontWeight:600, color:'#3B4AFF' }}>{maintenance.filter((m:any)=>m.status==='open').length}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Open maintenance</span><span style={{ fontWeight:600, color:'#A8862E' }}>{maintenance.filter((m:any)=>m.status==='open').length}</span></div>
                 </div>
               </div>
             </div>
@@ -644,13 +644,13 @@ export default function STRPage() {
             </div>
             {bookings.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No bookings yet</div> :
             bookings.map(b=>(<div key={b.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 80px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
-              <span style={{ fontWeight:500, color:'#101828' }}>{b.guest_name??'—'}</span>
+              <span style={{ fontWeight:500, color:'#323338' }}>{b.guest_name??'—'}</span>
               <span>{b.properties?.name??'—'}</span>
               <span>{b.check_in??'—'}</span>
               <span>{b.check_out??'—'}</span>
               <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:b.status==='confirmed'?'#D1FAE5':'#F3F4F6', color:b.status==='confirmed'?'#059669':'#6B7280' }}>{b.status}</span>
               <div style={{ display:'flex', gap:6 }}>
-                <button onClick={()=>openEdit('booking',b)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                <button onClick={()=>openEdit('booking',b)} style={{ fontSize:11, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                 <button onClick={()=>del('bookings',b.id)} style={{ fontSize:11, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>×</button>
               </div>
             </div>))}
@@ -661,11 +661,11 @@ export default function STRPage() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
             {properties.length===0 ? <div style={{ color:'#98A2B3', fontSize:14 }}>No properties yet</div> :
             properties.map(p=>(<div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
-              <div style={{ fontWeight:600, fontSize:15, color:'#101828', marginBottom:4 }}>{p.name}</div>
+              <div style={{ fontWeight:600, fontSize:15, color:'#323338', marginBottom:4 }}>{p.name}</div>
               <div style={{ fontSize:13, color:'#667085', marginBottom:8 }}>{p.address}</div>
               <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>active</span>
               <div style={{ display:'flex', gap:8, marginTop:12 }}>
-                <button onClick={()=>openEdit('property',p)} style={{ fontSize:12, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                <button onClick={()=>openEdit('property',p)} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                 <button onClick={()=>del('properties',p.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer', padding:0 }}>Delete</button>
               </div>
             </div>))}
@@ -675,7 +675,7 @@ export default function STRPage() {
         {tab==='Cleaning' && (
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
-              {[{label:'Total Tasks',value:cleaning.length,color:'#101828'},{label:'Pending',value:cleaning.filter(t=>t.status==='pending').length,color:'#F59E0B'},{label:'Completed',value:cleaning.filter(t=>t.status==='completed').length,color:'#10B981'}].map((c:any)=>(
+              {[{label:'Total Tasks',value:cleaning.length,color:'#323338'},{label:'Pending',value:cleaning.filter(t=>t.status==='pending').length,color:'#F59E0B'},{label:'Completed',value:cleaning.filter(t=>t.status==='completed').length,color:'#10B981'}].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div><div style={{ fontSize:28, fontWeight:800, color:c.color }}>{c.value}</div></div>
               ))}
             </div>
@@ -685,7 +685,7 @@ export default function STRPage() {
                 const before = parseMedia(t.before_media)
                 const after = parseMedia(t.after_media)
                 return (<div key={t.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto auto auto auto', alignItems:'center', gap:12 }}>
-                <span style={{ fontWeight:500, color:'#101828' }}>{t.properties?.name??'—'}</span>
+                <span style={{ fontWeight:500, color:'#323338' }}>{t.properties?.name??'—'}</span>
                 <span style={{ fontSize:13, color:'#667085' }}>{t.scheduled_date??'—'}</span>
                 <span style={{ fontSize:13, color:'#667085' }}>{teamName(t.assigned_to)??'Unassigned'}</span>
                 <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.status==='completed'?'#D1FAE5':t.status==='in_progress'?'#FEF3C7':'#DBEAFE', color:t.status==='completed'?'#059669':t.status==='in_progress'?'#D97706':'#2563EB' }}>{t.status??'pending'}</span>
@@ -696,7 +696,7 @@ export default function STRPage() {
                       : <img key={i} src={url} alt="" style={{ height:32, width:32, objectFit:'cover', borderRadius:4, cursor:'pointer' }} onClick={()=>window.open(url,'_blank')} />
                   ))}
                 </div>
-                <button onClick={()=>openEdit('cleaning',t)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                <button onClick={()=>openEdit('cleaning',t)} style={{ fontSize:11, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                 <button onClick={()=>del('cleaning_tasks',t.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
               </div>)})}
             </div>
@@ -706,22 +706,22 @@ export default function STRPage() {
         {tab==='Maintenance' && (
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
-              {[{label:'Total',value:maintenance.length,color:'#101828'},{label:'Open',value:maintenance.filter(m=>m.status==='open').length,color:'#3B4AFF'},{label:'In Progress',value:maintenance.filter(m=>m.status==='in_progress').length,color:'#F59E0B'},{label:'Urgent',value:maintenance.filter(m=>m.priority==='urgent').length,color:'#EF4444'}].map((c:any)=>(
+              {[{label:'Total',value:maintenance.length,color:'#323338'},{label:'Open',value:maintenance.filter(m=>m.status==='open').length,color:'#A8862E'},{label:'In Progress',value:maintenance.filter(m=>m.status==='in_progress').length,color:'#F59E0B'},{label:'Urgent',value:maintenance.filter(m=>m.priority==='urgent').length,color:'#EF4444'}].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div><div style={{ fontSize:28, fontWeight:800, color:c.color }}>{c.value}</div></div>
               ))}
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {maintenance.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No maintenance tickets</div> :
               maintenance.map((m:any)=>{
-                const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#3B4AFF'
-                const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#EEF0FF'
+                const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#A8862E'
+                const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#FBF4E6'
                 return(<div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'grid', gridTemplateColumns:'1fr auto auto auto auto', alignItems:'center', gap:12 }}>
-                  <div><div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:2 }}>{m.title}</div><div style={{ fontSize:12, color:'#667085' }}>{m.properties?.name}{teamName(m.assigned_to)?` · ${teamName(m.assigned_to)}`:''}</div></div>
+                  <div><div style={{ fontWeight:600, fontSize:14, color:'#323338', marginBottom:2 }}>{m.title}</div><div style={{ fontSize:12, color:'#667085' }}>{m.properties?.name}{teamName(m.assigned_to)?` · ${teamName(m.assigned_to)}`:''}</div></div>
                   <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:priBg, color:priColor, textTransform:'uppercase' }}>{m.priority}</span>
                   <select value={m.status} onChange={async e=>{await supabase.from('maintenance_tickets').update({status:e.target.value}).eq('id',m.id);loadAll()}} style={{ padding:'6px 10px', borderRadius:8, border:'1px solid #E4E7EC', fontSize:13, fontFamily:'inherit' }}>
                     <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
                   </select>
-                  <button onClick={()=>openEdit('maintenance',m)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>openEdit('maintenance',m)} style={{ fontSize:11, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('maintenance_tickets',m.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
                 </div>)
               })}
@@ -733,9 +733,9 @@ export default function STRPage() {
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {team.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No team members yet</div> :
             team.map((m:any)=>(<div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-              <div style={{ width:40, height:40, borderRadius:'50%', background:'#EEF0FF', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:15, color:'#3B4AFF' }}>{m.name.charAt(0)}</div>
-              <div style={{ flex:1 }}><div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{m.name}</div><div style={{ fontSize:12, color:'#667085', textTransform:'capitalize' }}>{m.role}</div></div>
-              <button onClick={()=>openEdit('team',m)} style={{ fontSize:12, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+              <div style={{ width:40, height:40, borderRadius:'50%', background:'#FBF4E6', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:15, color:'#A8862E' }}>{m.name.charAt(0)}</div>
+              <div style={{ flex:1 }}><div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{m.name}</div><div style={{ fontSize:12, color:'#667085', textTransform:'capitalize' }}>{m.role}</div></div>
+              <button onClick={()=>openEdit('team',m)} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
               <button onClick={()=>del('team_members',m.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Remove</button>
             </div>))}
           </div>
@@ -747,24 +747,24 @@ export default function STRPage() {
         {tab==='Analytics' && (
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>£{stats.revenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Bookings</div><div style={{ fontSize:24, fontWeight:800, color:'#101828' }}>{bookings.filter(b=>b.status!=='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.nights),200,50)} fill="none" stroke="#3B4AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div><div style={{ fontSize:24, fontWeight:800, color:'#323338' }}>£{stats.revenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Bookings</div><div style={{ fontSize:24, fontWeight:800, color:'#323338' }}>{bookings.filter(b=>b.status!=='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.nights),200,50)} fill="none" stroke="#A8862E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #FEE2E2', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Cancellations</div><div style={{ fontSize:24, fontWeight:800, color:'#EF4444' }}>{bookings.filter(b=>b.status==='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(Array.from({length:6},(_,i)=>bookings.filter((b:any)=>b.status==='cancelled'&&b.check_in?.startsWith(monthlyTrend[i]?.key)).length),200,50)} fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/></svg></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
-                <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:16 }}>Occupancy</div>
+                <div style={{ fontSize:15, fontWeight:600, color:'#323338', marginBottom:16 }}>Occupancy</div>
                 <svg viewBox="0 0 200 110" style={{ width:'100%', maxWidth:240, display:'block', margin:'0 auto' }}>
                   <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#F3F4F6" strokeWidth="16" strokeLinecap="round"/>
-                  <path d={gaugeArcPath(currentOccupancyPct)} fill="none" stroke="#3B4AFF" strokeWidth="16" strokeLinecap="round"/>
+                  <path d={gaugeArcPath(currentOccupancyPct)} fill="none" stroke="#A8862E" strokeWidth="16" strokeLinecap="round"/>
                   <text x="18" y="98" fontSize="10" fill="#9CA3AF">0%</text><text x="88" y="18" fontSize="10" fill="#9CA3AF">50%</text><text x="172" y="98" fontSize="10" fill="#9CA3AF">100%</text>
-                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#101828" textAnchor="middle">{currentOccupancyPct}%</text>
+                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#A8862E" textAnchor="middle">{currentOccupancyPct}%</text>
                 </svg>
               </div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px' }}>
-                <div style={{ fontSize:15, fontWeight:600, color:'#101828', marginBottom:16 }}>Revenue & Occupancy</div>
+                <div style={{ fontSize:15, fontWeight:600, color:'#323338', marginBottom:16 }}>Revenue & Occupancy</div>
                 <svg viewBox="0 0 300 120" style={{ width:'100%' }}>
-                  <polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),300,120,10)} fill="none" stroke="#3B4AFF" strokeWidth="2"/>
+                  <polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),300,120,10)} fill="none" stroke="#A8862E" strokeWidth="2"/>
                   <polyline points={polylinePoints(monthlyTrend.map(m=>m.occupancyPct),300,120,10)} fill="none" stroke="#10B981" strokeWidth="2" strokeDasharray="5 3"/>
                   {monthlyTrend.map((m,i)=>(<text key={m.key} x={10+(i*52)} y={118} fontSize="8" fill="#9CA3AF" textAnchor="middle">{m.label}</text>))}
                 </svg>
@@ -776,8 +776,8 @@ export default function STRPage() {
         {tab==='Channels' && (() => {
           const CHANNEL_DEFS = [
             { key:'airbnb_ical_url', name:'Airbnb', logo:'🏠', color:'#ff5a5f', bg:'#fff1f2' },
-            { key:'vrbo_ical_url', name:'VRBO', logo:'🏡', color:'#1e6ef4', bg:'#eff6ff' },
-            { key:'booking_ical_url', name:'Booking.com', logo:'🌐', color:'#003580', bg:'#eff6ff' },
+            { key:'vrbo_ical_url', name:'VRBO', logo:'🏡', color:'#1e6ef4', bg:'#FBF4E6' },
+            { key:'booking_ical_url', name:'Booking.com', logo:'🌐', color:'#003580', bg:'#FBF4E6' },
           ]
           const threads = bookings.filter((b:any)=>guestMessages.some((m:any)=>m.booking_id===b.id))
             .map((b:any)=>{
@@ -790,7 +790,7 @@ export default function STRPage() {
 
           return (
           <div>
-            <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:12}}>Channel Status</div>
+            <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:12}}>Channel Status</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:16}}>
               {CHANNEL_DEFS.map(ch=>{
                 const connectedCount = properties.filter((p:any)=>p[ch.key]).length
@@ -798,7 +798,7 @@ export default function STRPage() {
                   <div key={ch.key} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 20px',display:'flex',alignItems:'center',gap:14}}>
                     <div style={{width:40,height:40,borderRadius:10,background:ch.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>{ch.logo}</div>
                     <div style={{flex:1}}>
-                      <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>{ch.name}</div>
+                      <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{ch.name}</div>
                       <div style={{fontSize:12,color:connectedCount>0?'#10B981':'#98A2B3'}}>{connectedCount>0?`${connectedCount} propert${connectedCount===1?'y':'ies'} connected`:'Not connected'}</div>
                     </div>
                   </div>
@@ -811,7 +811,7 @@ export default function STRPage() {
                   <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 20px',display:'flex',alignItems:'center',gap:14}}>
                     <div style={{width:40,height:40,borderRadius:10,background:'#E6F5FC',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>🗓️</div>
                     <div style={{flex:1}}>
-                      <div style={{fontSize:13,fontWeight:600,color:'#101828'}}>Smoobu</div>
+                      <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>Smoobu</div>
                       <div style={{fontSize:12,color:smoobuConnected&&smoobuMapped>0?'#10B981':'#98A2B3'}}>{!smoobuConnected?'Not connected (see Integrations)':smoobuMapped>0?`${smoobuMapped} propert${smoobuMapped===1?'y':'ies'} mapped`:'Connected, no properties mapped yet'}</div>
                     </div>
                   </div>
@@ -821,7 +821,7 @@ export default function STRPage() {
             <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginBottom:8}}>
               {lastSyncResult&&!lastSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>iCal: {lastSyncResult.synced?.length ?? 0} property/channel pairs checked</span>}
               {lastSyncResult?.error&&<span style={{fontSize:12,color:'#DC2626'}}>iCal sync failed: {lastSyncResult.error}</span>}
-              <button onClick={runChannelSync} disabled={syncingChannels} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingChannels?0.6:1}}>{syncingChannels?'Syncing…':'⟳ Sync iCal Now'}</button>
+              <button onClick={runChannelSync} disabled={syncingChannels} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingChannels?0.6:1}}>{syncingChannels?'Syncing…':'⟳ Sync iCal Now'}</button>
             </div>
             <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginBottom:24}}>
               {lastSmoobuSyncResult&&!lastSmoobuSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>Smoobu: {lastSmoobuSyncResult.synced?.reduce((s:number,r:any)=>s+(r.bookings??0),0) ?? 0} bookings, {lastSmoobuSyncResult.synced?.reduce((s:number,r:any)=>s+(r.messages??0),0) ?? 0} messages checked</span>}
@@ -847,7 +847,7 @@ export default function STRPage() {
             )}
 
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
-              <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>Guest Messages {unreadCount>0&&<span style={{marginLeft:6,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
+              <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>Guest Messages {unreadCount>0&&<span style={{marginLeft:6,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
               <select onChange={e=>{ if(!e.target.value)return; const b=bookings.find((bk:any)=>bk.id===e.target.value); if(b)setOpenBookingThread(b); e.target.value='' }} style={{...inp,width:220,fontSize:12,padding:'6px 10px'}} defaultValue="">
                 <option value="" disabled>+ Message a guest…</option>
                 {bookings.filter((b:any)=>b.guest_email).map((b:any)=><option key={b.id} value={b.id}>{b.guest_name||'Guest'} — {b.properties?.name}</option>)}
@@ -860,10 +860,10 @@ export default function STRPage() {
                 {threads.length===0?(
                   <div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No guest messages yet.</div>
                 ):threads.map((t:any)=>(
-                  <div key={t.booking.id} onClick={()=>setOpenBookingThread(t.booking)} style={{padding:'12px 16px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openBookingThread?.id===t.booking.id?'#F5F6FF':'transparent'}}>
+                  <div key={t.booking.id} onClick={()=>setOpenBookingThread(t.booking)} style={{padding:'12px 16px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openBookingThread?.id===t.booking.id?'#FBF4E6':'transparent'}}>
                     <div style={{display:'flex',justifyContent:'space-between'}}>
-                      <span style={{fontSize:13,fontWeight:t.unread?700:500,color:'#101828'}}>{t.booking.guest_name||'Guest'}</span>
-                      {t.unread&&<div style={{width:7,height:7,borderRadius:'50%',background:'#3B4AFF',marginTop:4}}/>}
+                      <span style={{fontSize:13,fontWeight:t.unread?700:500,color:'#323338'}}>{t.booking.guest_name||'Guest'}</span>
+                      {t.unread&&<div style={{width:7,height:7,borderRadius:'50%',background:'#A8862E',marginTop:4}}/>}
                     </div>
                     <div style={{fontSize:11,color:'#667085'}}>{t.booking.properties?.name??'—'}</div>
                     <div style={{fontSize:12,color:t.unread?'#344054':'#98A2B3',whiteSpace:'nowrap' as const,overflow:'hidden',textOverflow:'ellipsis',marginTop:2}}>{t.lastMessage}</div>
@@ -876,7 +876,7 @@ export default function STRPage() {
                 ):(
                   <>
                     <div style={{padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}>
-                      <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>{openBookingThread.guest_name||'Guest'}</div>
+                      <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{openBookingThread.guest_name||'Guest'}</div>
                       <div style={{fontSize:12,color:'#667085'}}>{openBookingThread.properties?.name??'—'} · {openBookingThread.guest_email}</div>
                     </div>
                     <div style={{flex:1,overflowY:'auto' as const,padding:20,display:'flex',flexDirection:'column' as const,gap:10}}>
@@ -884,7 +884,7 @@ export default function STRPage() {
                         const isOutbound = m.sender==='staff'||m.sender==='ai'
                         return (
                         <div key={m.id} style={{alignSelf:isOutbound?'flex-end':'flex-start',maxWidth:'65%'}}>
-                          <div style={{background:m.sender==='ai'?'#EEF1FF':isOutbound?'#3B4AFF':'#F2F4F7',color:m.sender==='ai'?'#3B4AFF':isOutbound?'#fff':'#101828',border:m.sender==='ai'?'1px solid #3B4AFF':'none',borderRadius:12,padding:'10px 14px',fontSize:13}}>{m.message}</div>
+                          <div style={{background:m.sender==='ai'?'#FBF4E6':isOutbound?'#A8862E':'#F2F4F7',color:m.sender==='ai'?'#A8862E':isOutbound?'#fff':'#323338',border:m.sender==='ai'?'1px solid #A8862E':'none',borderRadius:12,padding:'10px 14px',fontSize:13}}>{m.message}</div>
                           <div style={{fontSize:10,color:'#98A2B3',marginTop:3,textAlign:isOutbound?'right' as const:'left' as const}}>{m.sender==='ai'?'🤖 AI Receptionist':m.sender==='staff'?'You':openBookingThread.guest_name} · {new Date(m.created_at).toLocaleString()}</div>
                         </div>
                         )
@@ -892,7 +892,7 @@ export default function STRPage() {
                     </div>
                     <div style={{borderTop:'1px solid #E4E7EC',padding:14,display:'flex',gap:10}}>
                       <input value={guestReply} onChange={e=>setGuestReply(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendGuestReply()} placeholder="Type a reply…" style={{...inp,flex:1}}/>
-                      <button onClick={sendGuestReply} disabled={sendingGuestReply||!guestReply.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#3B4AFF',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:sendingGuestReply||!guestReply.trim()?0.6:1}}>Send</button>
+                      <button onClick={sendGuestReply} disabled={sendingGuestReply||!guestReply.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:sendingGuestReply||!guestReply.trim()?0.6:1}}>Send</button>
                     </div>
                   </>
                 )}
@@ -909,10 +909,10 @@ export default function STRPage() {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
               {[
                 { id:'xero', name:'Xero', desc:'Sync contacts and financial data with your Xero accounting. Connect your organisation to keep bookkeeping in sync automatically.', logo:'📗', color:'#13B5EA', bg:'#E8FAFF', oauth:true },
-                { id:'pricelabs', name:'PriceLabs', desc:'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.', logo:'📊', color:'#1a56db', bg:'#eff6ff', column:'pricelabs_api_key', placeholder:'Enter your PriceLabs API key', docsUrl:'https://pricelabs.co/users/api_keys', docsLabel:'Get your API key →' },
+                { id:'pricelabs', name:'PriceLabs', desc:'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.', logo:'📊', color:'#1a56db', bg:'#FBF4E6', column:'pricelabs_api_key', placeholder:'Enter your PriceLabs API key', docsUrl:'https://pricelabs.co/users/api_keys', docsLabel:'Get your API key →' },
                 { id:'stripe', name:'Stripe', desc:'Process payments and subscriptions. Already configured.', logo:'💳', color:'#635bff', bg:'#f5f3ff', builtIn:true },
                 { id:'smoobu', name:'Smoobu', desc:'Pull real bookings and guest messages from your Smoobu account — messages relay into the guest\'s actual Airbnb/Booking.com chat, not just email.', logo:'🗓️', color:'#0084C7', bg:'#E6F5FC', column:'smoobu_api_key', placeholder:'Enter your Smoobu API key', docsUrl:'https://login.smoobu.com/en/settings/api', docsLabel:'Get your API key →' },
-                { id:'paypal', name:'PayPal', desc:'Accept PayPal and PayPal.me payments from guests and owners.', logo:'🅿️', color:'#003087', bg:'#eff6ff', column:'paypal_client_id', placeholder:'Enter your PayPal Client ID', docsUrl:'https://developer.paypal.com/dashboard/', docsLabel:'Get your Client ID →' },
+                { id:'paypal', name:'PayPal', desc:'Accept PayPal and PayPal.me payments from guests and owners.', logo:'🅿️', color:'#003087', bg:'#FBF4E6', column:'paypal_client_id', placeholder:'Enter your PayPal Client ID', docsUrl:'https://developer.paypal.com/dashboard/', docsLabel:'Get your Client ID →' },
               ].map(int => {
                 const isConnected = int.builtIn || (int.oauth ? !!integrationsRow?.xero_access_token : (int.column ? !!integrationsRow?.[int.column] : false))
                 return (
@@ -921,7 +921,7 @@ export default function STRPage() {
                       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                         <div style={{ width:40, height:40, background:int.bg, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{int.logo}</div>
                         <div>
-                          <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{int.name}</div>
+                          <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{int.name}</div>
                           {isConnected && !int.builtIn && <div style={{ fontSize:11, color:'#16a34a', fontWeight:500 }}>● Connected</div>}
                         </div>
                       </div>
@@ -963,7 +963,7 @@ export default function STRPage() {
         {tab==='Reports' && (
           <div>
             {/* Net Profit Banner */}
-            <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
+            <div style={{background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',border:'1px solid #EADBB8',borderRadius:12,padding:24,marginBottom:20,color:'#624920'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>{new Date().toLocaleString('default',{month:'long',year:'numeric'}).toUpperCase()} · NET PROFIT</div>
               <div style={{fontSize:36,fontWeight:800}}>£{(stats.revenue - expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
               <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{stats.revenue.toLocaleString()} income · £{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()} costs</div>
@@ -971,7 +971,7 @@ export default function STRPage() {
             {/* Period tabs */}
             <div style={{display:'flex',gap:8,marginBottom:20}}>
               {['P&L','Rent Collection','Cash Flow','Forecast'].map(t=>(
-                <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:reportTab===t?'#101828':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',outline:'1px solid '+(reportTab===t?'#101828':'#E4E7EC')}}>{t}</button>
+                <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:reportTab===t?'#A8862E':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',outline:'1px solid '+(reportTab===t?'#323338':'#E4E7EC')}}>{t}</button>
               ))}
             </div>
             {reportTab==='P&L'&&(() => {
@@ -994,7 +994,7 @@ export default function STRPage() {
                   })))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#101828'},{l:'YTD Costs',v:'£'+totalLLCosts.toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
+                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#323338'},{l:'YTD Costs',v:'£'+totalLLCosts.toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                       <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                       <div style={{fontSize:11,color:'#667085',fontWeight:600,textTransform:'uppercase'}}>{s.l}</div>
@@ -1014,7 +1014,7 @@ export default function STRPage() {
                       <span style={{fontWeight:600}}>£{(pnlByMonth[i].income-pnlByMonth[i].costs).toLocaleString()}</span>
                     </div>
                   ))}
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338'}}>
                     <span>TOTAL {year}</span>
                     <span style={{color:'#10B981'}}>£{stats.revenue.toLocaleString()}</span>
                     <span style={{color:'#EF4444'}}>£{totalLLCosts.toLocaleString()}</span>
@@ -1028,7 +1028,7 @@ export default function STRPage() {
             {reportTab==='Rent Collection'&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center',color:'#98A2B3'}}>
                 <div style={{fontSize:32,marginBottom:12}}>📊</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>Rent Collection Report</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>Rent Collection Report</div>
                 <div style={{fontSize:13}}>Payment history and arrears data will appear here as bookings are recorded.</div>
               </div>
             )}
@@ -1048,7 +1048,7 @@ export default function STRPage() {
               return (
               <div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-                  <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:16}}>Cash Flow ({year})</div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Cash Flow ({year})</div>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(12,1fr)',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
                     {cfData.map(d=>(
                       <div key={d.m} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
@@ -1074,7 +1074,7 @@ export default function STRPage() {
             {reportTab==='Forecast'&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:32,textAlign:'center',color:'#98A2B3'}}>
                 <div style={{fontSize:32,marginBottom:12}}>🔮</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>Revenue Forecast</div>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>Revenue Forecast</div>
                 <div style={{fontSize:13}}>Add bookings and expenses to generate a 12-month forecast.</div>
               </div>
             )}
@@ -1084,27 +1084,27 @@ export default function STRPage() {
         {tab==='Expenses' && (
           <div>
             {/* Banner */}
-            <div style={{background:'linear-gradient(135deg,#101828,#1D2939)',borderRadius:12,padding:24,marginBottom:20,color:'#fff',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',border:'1px solid #EADBB8',borderRadius:12,padding:24,marginBottom:20,color:'#624920',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
                 <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{expenses.length} records</div>
               </div>
-              <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#101828',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
+              <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#323338',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
             </div>
             {/* Category stats */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
               {['Property','Utilities','Staff','Overhead'].map(cat=>(
                 <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>{cat}</div>
-                  <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 </div>
               ))}
             </div>
             {/* Add form */}
             {showAddExpense&&(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
-                <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add expense</h3>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add expense</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={lbl}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Office rent" style={inp}/></div>
                   <div><label style={lbl}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Landlord" style={inp}/></div>
@@ -1116,7 +1116,7 @@ export default function STRPage() {
                   <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={expForm.notes} onChange={e=>setExpForm({...expForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={addOfficeExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
+                  <button onClick={addOfficeExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
                   <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
@@ -1129,13 +1129,13 @@ export default function STRPage() {
               {expenses.length===0?(
                 <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
                   <div style={{fontSize:32,marginBottom:12}}>🧾</div>
-                  <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No expenses yet</div>
+                  <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No expenses yet</div>
                   <div style={{fontSize:13}}>Add your first expense to start tracking costs.</div>
                 </div>
               ):expenses.map((e:any)=>(
                 <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div>
-                    <div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</div>
                     {e.notes&&<div style={{fontSize:11,color:'#98A2B3'}}>{e.notes}</div>}
                   </div>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
@@ -1159,7 +1159,7 @@ export default function STRPage() {
             {/* Banking sub-tabs */}
             <div style={{display:'flex',gap:0,marginBottom:20,background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:4,width:'fit-content'}}>
               {['Overview','Bank Accounts','Transactions','Reconciliation','Cash Flow'].map(t=>(
-                <button key={t} onClick={()=>setBankingTab(t)} style={{padding:'7px 14px',borderRadius:7,border:'none',background:bankingTab===t?'#101828':'transparent',color:bankingTab===t?'#fff':'#344054',fontSize:13,fontWeight:bankingTab===t?600:400,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+                <button key={t} onClick={()=>setBankingTab(t)} style={{padding:'7px 14px',borderRadius:7,border:'none',background:bankingTab===t?'#A8862E':'transparent',color:bankingTab===t?'#fff':'#344054',fontSize:13,fontWeight:bankingTab===t?600:400,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
               ))}
             </div>
 
@@ -1168,11 +1168,11 @@ export default function STRPage() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>TOTAL CASH BALANCE</div>
-                    <div style={{fontSize:32,fontWeight:800,color:'#101828',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
+                    <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
                     <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
                   </div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Reconciliation Status</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Reconciliation Status</div>
                     <div style={{display:'flex',gap:12}}>
                       {[{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length,c:'#10B981'},{l:'To review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length,c:'#F59E0B'},{l:'Ignored',v:0,c:'#98A2B3'}].map((s:any)=>(
                         <div key={s.l} style={{flex:1,textAlign:'center'}}>
@@ -1185,19 +1185,19 @@ export default function STRPage() {
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Recent Transactions</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Recent Transactions</div>
                     {transactions.length===0?<div style={{textAlign:'center',padding:24,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.slice(0,5).map((t:any)=>(
                       <div key={t.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #F2F4F7'}}>
-                        <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                        <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                         <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:12}}>Quick Actions</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Quick Actions</div>
                     {[{l:'Add Bank Account',d:'Connect or manually add an account'},{l:'Add Transaction',d:'Record income or expense'},{l:'Reconcile',d:'Match transactions to records'}].map(a=>(
                       <div key={a.l} onClick={()=>{if(a.l==='Add Bank Account')setShowAddBank(true);if(a.l==='Add Transaction')setShowAddTx(true);if(a.l==='Reconcile')setBankingTab('Reconciliation')}} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 0',borderBottom:'1px solid #F2F4F7',cursor:'pointer'}}>
-                        <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{a.l}</div><div style={{fontSize:11,color:'#98A2B3'}}>{a.d}</div></div>
+                        <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{a.l}</div><div style={{fontSize:11,color:'#98A2B3'}}>{a.d}</div></div>
                         <span style={{color:'#667085'}}>›</span>
                       </div>
                     ))}
@@ -1209,7 +1209,7 @@ export default function STRPage() {
             {bankingTab==='Bank Accounts'&&(
               <div>
                 {showAddBank&&(
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:20}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add bank account</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={lbl}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={inp}/></div>
@@ -1218,7 +1218,7 @@ export default function STRPage() {
                       <div><label style={lbl}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={inp}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
+                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
                       <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
@@ -1226,19 +1226,19 @@ export default function STRPage() {
                 {bankAccounts.length===0?(
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
                     <div style={{fontSize:32,marginBottom:12}}>🏦</div>
-                    <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No bank accounts connected</div>
+                    <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No bank accounts connected</div>
                     <div style={{fontSize:13,marginBottom:16}}>Add a bank account to start tracking transactions.</div>
-                    <button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>
+                    <button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>
                   </div>
                 ):(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
                     {bankAccounts.map((a:any)=>(
                       <div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                         <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
-                          <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{a.name}</div>
+                          <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div>
                           <button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button>
                         </div>
-                        <div style={{fontSize:28,fontWeight:800,color:'#101828',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div>
+                        <div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div>
                         <div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div>
                       </div>
                     ))}
@@ -1253,13 +1253,13 @@ export default function STRPage() {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:16}}>
                   {[{l:'Imported',v:transactions.length},{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length},{l:'Needs Review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length},{l:'Reconciled',v:Math.round(transactions.filter((t:any)=>t.status==='Reconciled').length/Math.max(transactions.length,1)*100)+'%'},{l:'Total Amount',v:'£'+transactions.reduce((s:number,t:any)=>s+(t.type==='Income'?parseFloat(t.amount||0):0),0).toLocaleString()}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,textAlign:'center'}}>
-                      <div style={{fontSize:20,fontWeight:700,color:'#101828',marginBottom:4}}>{s.v}</div>
+                      <div style={{fontSize:20,fontWeight:700,color:'#323338',marginBottom:4}}>{s.v}</div>
                       <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
                     </div>
                   ))}
                 </div>
                 {showAddTx&&(
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #101828',padding:24,marginBottom:16}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:16}}>
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={lbl}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={inp}/></div>
@@ -1270,22 +1270,22 @@ export default function STRPage() {
                       <div><label style={lbl}>Category</label><select value={txForm.category} onChange={e=>setTxForm({...txForm,category:e.target.value})} style={inp}>{['Rent','Maintenance','Utilities','Insurance','Marketing','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={addTransaction} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add transaction</button>
+                      <button onClick={addTransaction} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add transaction</button>
                       <button onClick={()=>setShowAddTx(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
                 )}
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}>
-                    <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>{transactions.length} transactions</div>
-                    <button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
+                    <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{transactions.length} transactions</div>
+                    <button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
                   </div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 120px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
                     <span>Description</span><span>Account</span><span>Amount</span><span>Type</span><span>Category</span><span>Status</span><span></span>
                   </div>
                   {transactions.length===0?<div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet — add one above</div>:transactions.map((t:any)=>(
                     <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                      <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
+                      <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                       <span style={{fontSize:12,color:'#344054'}}>{bankAccounts.find((a:any)=>a.id===t.account_id)?.name||'—'}</span>
                       <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
                       <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600,display:'inline-block'}}>{t.type}</span>
@@ -1301,7 +1301,7 @@ export default function STRPage() {
             {bankingTab==='Reconciliation'&&(
               <div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-                  {[{l:'To Review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length,c:'#F59E0B'},{l:'High Confidence',v:0,c:'#10B981'},{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length,c:'#101828'}].map((s:any)=>(
+                  {[{l:'To Review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length,c:'#F59E0B'},{l:'High Confidence',v:0,c:'#10B981'},{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length,c:'#323338'}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                       <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                       <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
@@ -1311,15 +1311,15 @@ export default function STRPage() {
                 {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
                     <div style={{fontSize:32,marginBottom:12}}>✅</div>
-                    <div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>All caught up</div>
+                    <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div>
                     <div style={{fontSize:13}}>No incoming transactions are waiting for review.</div>
                   </div>
                 ):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                   <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <div><div style={{fontSize:13,fontWeight:500,color:'#101828'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date} · {t.category}</div></div>
+                    <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date} · {t.category}</div></div>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
                       <span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
-                      <button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#101828',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button>
+                      <button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#A8862E',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button>
                     </div>
                   </div>
                 ))}
@@ -1344,11 +1344,11 @@ export default function STRPage() {
                 <div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Cash Flow ({year})</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Cash Flow ({year})</div>
                       <div style={{display:'flex',gap:16,alignItems:'center'}}>
                         <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Inflows</span></div>
                         <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#EF4444',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Outflows</span></div>
-                        <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#5B7CFA',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
+                        <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#A8862E',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
                       </div>
                     </div>
                     <svg viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:H,overflow:'visible'}}>
@@ -1364,19 +1364,19 @@ export default function STRPage() {
                       <path d={line(cfData.map((d:any)=>d.inflow))+' L'+x(11)+' '+(H-PAD)+' L'+x(0)+' '+(H-PAD)+' Z'} fill='#10B98115'/>
                       <path d={line(cfData.map((d:any)=>d.inflow))} fill='none' stroke='#10B981' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
                       <path d={line(cfData.map((d:any)=>d.outflow))} fill='none' stroke='#EF4444' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-                      <path d={line(cfData.map((d:any)=>d.net))} fill='none' stroke='#5B7CFA' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
+                      <path d={line(cfData.map((d:any)=>d.net))} fill='none' stroke='#A8862E' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
                       {cfData.map((d:any,i:number)=>(
                         <g key={i}>
                           <circle cx={x(i)} cy={y(d.inflow)} r='3' fill='#10B981'/>
                           <circle cx={x(i)} cy={y(d.outflow)} r='3' fill='#EF4444'/>
-                          <circle cx={x(i)} cy={y(d.net)} r='3' fill='#5B7CFA'/>
+                          <circle cx={x(i)} cy={y(d.net)} r='3' fill='#A8862E'/>
                         </g>
                       ))}
                     </svg>
                   </div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#101828'}}>Monthly Breakdown</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Monthly Breakdown</div>
                       <div style={{fontSize:12,color:'#667085'}}>Add transactions to populate</div>
                     </div>
                     <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
@@ -1386,15 +1386,15 @@ export default function STRPage() {
                       cumulative+=d.net
                       return(
                         <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
-                          <span style={{fontWeight:500,color:'#101828'}}>{d.m} {year}</span>
+                          <span style={{fontWeight:500,color:'#323338'}}>{d.m} {year}</span>
                           <span style={{color:'#10B981',fontWeight:500}}>£{d.inflow.toLocaleString()}</span>
                           <span style={{color:'#EF4444',fontWeight:500}}>£{d.outflow.toLocaleString()}</span>
                           <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
-                          <span style={{color:cumulative>=0?'#101828':'#EF4444'}}>£{cumulative.toLocaleString()}</span>
+                          <span style={{color:cumulative>=0?'#323338':'#EF4444'}}>£{cumulative.toLocaleString()}</span>
                         </div>
                       )
                     })}
-                    <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#101828',gap:8,borderTop:'2px solid #E4E7EC'}}>
+                    <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338',gap:8,borderTop:'2px solid #E4E7EC'}}>
                       <span>TOTAL {year}</span>
                       <span style={{color:'#10B981'}}>£{cfData.reduce((s:number,d:any)=>s+d.inflow,0).toLocaleString()}</span>
                       <span style={{color:'#EF4444'}}>£{cfData.reduce((s:number,d:any)=>s+d.outflow,0).toLocaleString()}</span>
@@ -1402,7 +1402,7 @@ export default function STRPage() {
                       <span>—</span>
                     </div>
                   </div>
-                  <div style={{marginTop:12,padding:14,background:'#EEF1FF',borderRadius:10,fontSize:12,color:'#5B7CFA'}}>
+                  <div style={{marginTop:12,padding:14,background:'#FBF4E6',borderRadius:10,fontSize:12,color:'#A8862E'}}>
                     💡 Add transactions in the Transactions tab to populate this chart automatically.
                   </div>
                 </div>
@@ -1414,12 +1414,12 @@ export default function STRPage() {
         {tab==='Compliance' && (<div>
           <div style={{display:'flex',gap:8,marginBottom:20}}>
             {(['property','business'] as const).map(s=>(
-              <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #3B4AFF':'1px solid #D0D5DD',background:complianceScope===s?'#3B4AFF18':'#fff',color:complianceScope===s?'#3B4AFF':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance':'Business Compliance'}</button>
+              <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #A8862E':'1px solid #D0D5DD',background:complianceScope===s?'#D0AE4C18':'#fff',color:complianceScope===s?'#A8862E':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance':'Business Compliance'}</button>
             ))}
           </div>
 
-          {showAddCompliance&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #3B4AFF',padding:24,marginBottom:20}}>
-            <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
+          {showAddCompliance&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+            <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
               <div><label style={lbl}>Scope</label>
                 <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:(e.target.value==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES)[0]})} style={inp}>
@@ -1442,7 +1442,7 @@ export default function STRPage() {
                 await save('str_compliance',payload)
                 setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?STR_COMPLIANCE_TYPES:STR_BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''})
                 setShowAddCompliance(false)
-              }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#3B4AFF',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
+              }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
               <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
             </div>
           </div>)}
@@ -1467,11 +1467,11 @@ export default function STRPage() {
                   {complianceScope==='property'&&<span>Property</span>}
                   <span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
                 </div>
-                {scoped.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#101828',marginBottom:6}}>No {complianceScope} compliance records yet</div><div style={{fontSize:13}}>{complianceScope==='property'?'Track STL licences, fire/gas safety, and EPC per property, with automatic expiry alerts.':'Track what your business needs to legally operate.'}</div></div>):scoped.map((c:any)=>{
+                {scoped.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🛡️</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No {complianceScope} compliance records yet</div><div style={{fontSize:13}}>{complianceScope==='property'?'Track STL licences, fire/gas safety, and EPC per property, with automatic expiry alerts.':'Track what your business needs to legally operate.'}</div></div>):scoped.map((c:any)=>{
                   const status = strComplianceStatus(c.expiry_date)
                   return (
                   <div key={c.id} style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                    {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{c.properties?.name??'—'}</span>}
+                    {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.properties?.name??'—'}</span>}
                     <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
                     <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
                     <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
@@ -1488,27 +1488,27 @@ export default function STRPage() {
           const avgRating = reviews.length ? (reviews.reduce((s:number,r:any)=>s+(parseFloat(r.rating)||0),0)/reviews.length) : 0
           const needsResponse = reviews.filter((r:any)=>!r.responded && parseFloat(r.rating) <= 3)
           const platformColor: Record<string,{bg:string,fg:string}> = {
-            'Airbnb': {bg:'#FEF2F2',fg:'#FF5A5F'}, 'Booking.com': {bg:'#EEF1FF',fg:'#003580'}, 'VRBO': {bg:'#F0FDF4',fg:'#1E88E5'}, 'Direct': {bg:'#F3F4F6',fg:'#6B7280'}, 'Other': {bg:'#F3F4F6',fg:'#6B7280'},
+            'Airbnb': {bg:'#FEF2F2',fg:'#FF5A5F'}, 'Booking.com': {bg:'#FBF4E6',fg:'#003580'}, 'VRBO': {bg:'#F0FDF4',fg:'#1E88E5'}, 'Direct': {bg:'#F3F4F6',fg:'#6B7280'}, 'Other': {bg:'#F3F4F6',fg:'#6B7280'},
           }
           return (
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
               <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Average Rating</div>
-                <div style={{fontSize:26,fontWeight:800,color:'#101828'}}>{avgRating?avgRating.toFixed(1):'—'} <span style={{fontSize:14,color:'#98A2B3',fontWeight:500}}>/ 5</span></div>
+                <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{avgRating?avgRating.toFixed(1):'—'} <span style={{fontSize:14,color:'#98A2B3',fontWeight:500}}>/ 5</span></div>
               </div>
               <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Total Reviews</div>
-                <div style={{fontSize:26,fontWeight:800,color:'#101828'}}>{reviews.length}</div>
+                <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{reviews.length}</div>
               </div>
               <div style={{background:'#fff',border:needsResponse.length>0?'1px solid #FEE2E2':'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Needs Response</div>
-                <div style={{fontSize:26,fontWeight:800,color:needsResponse.length>0?'#DC2626':'#101828'}}>{needsResponse.length}</div>
+                <div style={{fontSize:26,fontWeight:800,color:needsResponse.length>0?'#DC2626':'#323338'}}>{needsResponse.length}</div>
               </div>
             </div>
 
-            {showAddReview&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #3B4AFF',padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 16px'}}>{editingReviewId?'Edit Review':'Log Review'}</h3>
+            {showAddReview&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editingReviewId?'Edit Review':'Log Review'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={lbl}>Property</label><select value={reviewForm.property_id} onChange={e=>setReviewForm({...reviewForm,property_id:e.target.value})} style={inp}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={lbl}>Guest Name</label><input value={reviewForm.guest_name} onChange={e=>setReviewForm({...reviewForm,guest_name:e.target.value})} style={inp}/></div>
@@ -1534,29 +1534,29 @@ export default function STRPage() {
                   setEditingReviewId(null)
                   setShowAddReview(false)
                   await loadAll()
-                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#3B4AFF',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editingReviewId?'Save Changes':'Log Review'}</button>
+                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editingReviewId?'Save Changes':'Log Review'}</button>
                 <button onClick={()=>{setShowAddReview(false);setEditingReviewId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
 
             <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
-              {reviews.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>⭐</div><div style={{fontSize:14,fontWeight:600,color:'#101828'}}>No reviews logged yet</div></div>):reviews.map((r:any)=>(
+              {reviews.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>⭐</div><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>No reviews logged yet</div></div>):reviews.map((r:any)=>(
                 <div key={r.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
-                      <span style={{fontSize:14,fontWeight:700,color:'#101828'}}>{'★'.repeat(Math.round(r.rating||0))}<span style={{color:'#E4E7EC'}}>{'★'.repeat(5-Math.round(r.rating||0))}</span></span>
-                      <span style={{fontSize:13,fontWeight:600,color:'#101828'}}>{r.guest_name||'Guest'}</span>
+                      <span style={{fontSize:14,fontWeight:700,color:'#323338'}}>{'★'.repeat(Math.round(r.rating||0))}<span style={{color:'#E4E7EC'}}>{'★'.repeat(5-Math.round(r.rating||0))}</span></span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{r.guest_name||'Guest'}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:4,background:platformColor[r.platform]?.bg,color:platformColor[r.platform]?.fg}}>{r.platform}</span>
                       {!r.responded&&parseFloat(r.rating)<=3&&<span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:'#FEE2E2',color:'#DC2626'}}>NEEDS RESPONSE</span>}
                     </div>
                     <div style={{display:'flex',gap:6}}>
-                      <button onClick={()=>{setEditingReviewId(r.id);setReviewForm({property_id:r.property_id??'',guest_name:r.guest_name??'',platform:r.platform??'Airbnb',rating:r.rating!=null?String(r.rating):'',review_text:r.review_text??'',review_date:r.review_date??'',response_text:r.response_text??'',responded:r.responded??false});setShowAddReview(true)}} style={{fontSize:11,color:'#3B4AFF',background:'none',border:'1px solid #3B4AFF',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                      <button onClick={()=>{setEditingReviewId(r.id);setReviewForm({property_id:r.property_id??'',guest_name:r.guest_name??'',platform:r.platform??'Airbnb',rating:r.rating!=null?String(r.rating):'',review_text:r.review_text??'',review_date:r.review_date??'',response_text:r.response_text??'',responded:r.responded??false});setShowAddReview(true)}} style={{fontSize:11,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
                       <button onClick={()=>del('str_reviews',r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
                     </div>
                   </div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{r.properties?.name??'—'} {r.review_date?`· ${r.review_date}`:''}</div>
                   {r.review_text&&<div style={{fontSize:13,color:'#344054',marginBottom:r.response_text?8:0}}>{r.review_text}</div>}
-                  {r.response_text&&<div style={{fontSize:12,color:'#667085',background:'#F9FAFB',borderRadius:8,padding:'8px 12px',borderLeft:'2px solid #3B4AFF'}}><strong>Your response:</strong> {r.response_text}</div>}
+                  {r.response_text&&<div style={{fontSize:12,color:'#667085',background:'#F9FAFB',borderRadius:8,padding:'8px 12px',borderLeft:'2px solid #A8862E'}}><strong>Your response:</strong> {r.response_text}</div>}
                 </div>
               ))}
             </div>
@@ -1570,12 +1570,12 @@ export default function STRPage() {
               <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:12 }}>Templates</div>
               <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                 {Object.entries(DEFAULT_TEMPLATES).map(([key,t])=>(
-                  <div key={key} onClick={()=>selectTemplate(key)} style={{ padding:'12px 14px', borderRadius:10, border:'1px solid '+(activeTemplateKey===key?'#101828':'#E4E7EC'), background:activeTemplateKey===key?'#101828':'#fff', cursor:'pointer', fontSize:13, color:activeTemplateKey===key?'#fff':'#344054', fontWeight:activeTemplateKey===key?600:400 }}>{t.label}</div>
+                  <div key={key} onClick={()=>selectTemplate(key)} style={{ padding:'12px 14px', borderRadius:10, border:'1px solid '+(activeTemplateKey===key?'#323338':'#E4E7EC'), background:activeTemplateKey===key?'#A8862E':'#fff', cursor:'pointer', fontSize:13, color:activeTemplateKey===key?'#fff':'#344054', fontWeight:activeTemplateKey===key?600:400 }}>{t.label}</div>
                 ))}
               </div>
             </div>
             <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E4E7EC', padding:28 }}>
-              <div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:4 }}>{DEFAULT_TEMPLATES[activeTemplateKey].label}</div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#323338', marginBottom:4 }}>{DEFAULT_TEMPLATES[activeTemplateKey].label}</div>
               <div style={{ marginBottom:16 }}>
                 <label style={lbl}>Subject</label>
                 <input value={templateSubjectDraft} onChange={e=>setTemplateSubjectDraft(e.target.value)} style={inp} />
@@ -1583,7 +1583,7 @@ export default function STRPage() {
               <label style={lbl}>Message</label>
               <textarea value={templateDraft} onChange={e=>setTemplateDraft(e.target.value)} style={{ width:'100%', minHeight:200, padding:14, borderRadius:10, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', resize:'vertical', boxSizing:'border-box', lineHeight:1.6 }} />
               <div style={{ display:'flex', gap:8, marginTop:12 }}>
-                <button onClick={saveTemplate} disabled={savingTemplate} style={{ padding:'10px 20px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:savingTemplate?0.6:1 }}>{savingTemplate?'Saving…':'Save template'}</button>
+                <button onClick={saveTemplate} disabled={savingTemplate} style={{ padding:'10px 20px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:savingTemplate?0.6:1 }}>{savingTemplate?'Saving…':'Save template'}</button>
                 <button onClick={copyTemplate} style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #D0D5DD', background:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>Copy to clipboard</button>
               </div>
             </div>
@@ -1609,7 +1609,7 @@ export default function STRPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('bookings',form)} disabled={saving||!form.guest_name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.guest_name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Booking'}</button>
+            <button onClick={()=>save('bookings',form)} disabled={saving||!form.guest_name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.guest_name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Booking'}</button>
           </div>
         </Modal>
       )}
@@ -1646,7 +1646,7 @@ export default function STRPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('properties',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
+            <button onClick={()=>save('properties',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
           </div>
         </Modal>
       )}
@@ -1658,7 +1658,7 @@ export default function STRPage() {
           </div>
           <div style={{ display:'flex', gap:10 }}>
             <button onClick={()=>setShowUpgrade(false)} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={purchaseBlock} disabled={upgrading} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#5B7CFA', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:upgrading?0.6:1 }}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+            <button onClick={purchaseBlock} disabled={upgrading} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:upgrading?0.6:1 }}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
           </div>
         </Modal>
       )}
@@ -1676,7 +1676,7 @@ export default function STRPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('cleaning_tasks',form)} disabled={saving||!form.property_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.property_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Task'}</button>
+            <button onClick={()=>save('cleaning_tasks',form)} disabled={saving||!form.property_id} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.property_id?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Task'}</button>
           </div>
         </Modal>
       )}
@@ -1694,7 +1694,7 @@ export default function STRPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('maintenance_tickets',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Create Ticket'}</button>
+            <button onClick={()=>save('maintenance_tickets',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Create Ticket'}</button>
           </div>
         </Modal>
       )}
@@ -1709,7 +1709,7 @@ export default function STRPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('team_members',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#101828', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Member'}</button>
+            <button onClick={()=>save('team_members',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Member'}</button>
           </div>
         </Modal>
       )}

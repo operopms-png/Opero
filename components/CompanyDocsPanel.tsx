@@ -104,7 +104,7 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-        <button onClick={() => setShowAdd(true)} style={{ background: '#101828', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>{copy.addLabel}</button>
+        <button onClick={() => setShowAdd(true)} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>{copy.addLabel}</button>
       </div>
 
       {loading ? (
@@ -119,8 +119,8 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: '#101828' }}>{d.name}</div>
-                <div style={{ fontSize: 11, color: d.body ? '#3B4AFF' : '#98A2B3', marginTop: 2, fontWeight: 600 }}>{d.body ? 'Editable text template' : 'Uploaded file'}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{d.name}</div>
+                <div style={{ fontSize: 11, color: d.body ? '#A8862E' : '#98A2B3', marginTop: 2, fontWeight: 600 }}>{d.body ? 'Editable text template' : 'Uploaded file'}</div>
                 {d.notes && <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{d.notes}</div>}
               </div>
               {d.body ? (
@@ -148,8 +148,8 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setMode('file')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid ' + (mode === 'file' ? '#101828' : '#E4E7EC'), background: mode === 'file' ? '#101828' : '#fff', color: mode === 'file' ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Upload File</button>
-                <button onClick={() => setMode('text')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid ' + (mode === 'text' ? '#101828' : '#E4E7EC'), background: mode === 'text' ? '#101828' : '#fff', color: mode === 'text' ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Write Template (editable)</button>
+                <button onClick={() => setMode('file')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid ' + (mode === 'file' ? '#323338' : '#E4E7EC'), background: mode === 'file' ? '#A8862E' : '#fff', color: mode === 'file' ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Upload File</button>
+                <button onClick={() => setMode('text')} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid ' + (mode === 'text' ? '#323338' : '#E4E7EC'), background: mode === 'text' ? '#A8862E' : '#fff', color: mode === 'text' ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Write Template (editable)</button>
               </div>
 
               {mode === 'file' ? (
@@ -161,7 +161,7 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
                       {uploading ? 'Uploading…' : url ? 'Replace file' : 'Upload file (PDF, DOC, JPG, PNG)'}
                       <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFile} style={{ display: 'none' }} />
                     </label>
-                    {url && <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#3B4AFF', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>View file</a>}
+                    {url && <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#A8862E', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>View file</a>}
                   </div>
                   {url && <div style={{ fontSize: 11, color: '#10B981', marginTop: 4 }}>✓ File uploaded</div>}
                   <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 8 }}>A fixed file — can't have names/dates changed per tenant from inside the portal. Use "Write Template" instead if you need that.</div>
@@ -188,7 +188,7 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={resetForm} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={save} disabled={saving || !name || (mode === 'file' ? !url : !body.trim())} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !name || (mode === 'file' ? !url : !body.trim()) ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>
+              <button onClick={save} disabled={saving || !name || (mode === 'file' ? !url : !body.trim())} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !name || (mode === 'file' ? !url : !body.trim()) ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>
             </div>
           </div>
         </div>

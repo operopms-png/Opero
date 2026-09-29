@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 
 export default function MeetingBookingPage() {
   const params = useParams()
@@ -59,14 +59,14 @@ export default function MeetingBookingPage() {
 
   if (error && !meeting) return (
     <div style={wrap}><div style={card}>
-      <div style={{ fontSize: 18, fontWeight: 700, color: '#101828', marginBottom: 8 }}>Can't load this link</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 8 }}>Can't load this link</div>
       <div style={{ fontSize: 14, color: '#667085' }}>{error}</div>
     </div></div>
   )
 
   if (meeting?.status === 'cancelled') return (
     <div style={wrap}><div style={card}>
-      <div style={{ fontSize: 18, fontWeight: 700, color: '#101828', marginBottom: 8 }}>Meeting cancelled</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 8 }}>Meeting cancelled</div>
       <div style={{ fontSize: 14, color: '#667085' }}>This meeting link is no longer active.</div>
     </div></div>
   )
@@ -76,7 +76,7 @@ export default function MeetingBookingPage() {
     return (
       <div style={wrap}><div style={card}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
-        <div style={{ fontSize: 18, fontWeight: 700, color: '#101828', marginBottom: 8 }}>Meeting confirmed</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 8 }}>Meeting confirmed</div>
         <div style={{ fontSize: 14, color: '#667085', marginBottom: 4 }}>{meeting.title} · {meeting.duration_minutes} minutes</div>
         {when && <div style={{ fontSize: 14, color: '#344054', fontWeight: 500 }}>{when.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</div>}
       </div></div>
@@ -86,7 +86,7 @@ export default function MeetingBookingPage() {
   return (
     <div style={wrap}>
       <div style={card}>
-        <div style={{ fontSize: 20, fontWeight: 700, color: '#101828', marginBottom: 4 }}>{meeting.title}</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: '#323338', marginBottom: 4 }}>{meeting.title}</div>
         <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>{meeting.duration_minutes} minute meeting -- pick a time that works for you.</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>

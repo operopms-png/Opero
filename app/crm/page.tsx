@@ -139,7 +139,7 @@ export default function CRMPage() {
     <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
       <div style={{ width:220, background:'#fff', borderRight:'1px solid #F2F4F7', display:'flex', flexDirection:'column', paddingTop:16, flexShrink:0, minHeight:'100vh' }}>
         <div style={{ padding:'0 16px 16px', borderBottom:'1px solid #F2F4F7' }}>
-          <div style={{ fontSize:13, fontWeight:700, color:'#101828', marginBottom:10 }}>CRM</div>
+          <div style={{ fontSize:13, fontWeight:700, color:'#323338', marginBottom:10 }}>CRM</div>
           <select value={module} onChange={e=>setModule(e.target.value)} style={{ width:'100%', padding:'7px 10px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:12, fontFamily:'inherit', cursor:'pointer' }}>
             <option value="all">All Modules</option>
             <option value="str">Vacation Rentals</option>
@@ -149,7 +149,7 @@ export default function CRMPage() {
         </div>
         <nav style={{ flex:1, padding:'8px 10px', overflowY:'auto' }}>
           {([{label:'Contacts',icon:'👤'},{label:'Companies',icon:'🏢'},{label:'Deals',icon:'💼'},{label:'Tasks',icon:'✓'},{label:'Meetings',icon:'📅'},{label:'Activity Feed',icon:'⚡'},{label:'Inbox',icon:'✉️'},{label:'Calls',icon:'📞'}] as any[]).map((s:any)=>(
-            <button key={s.label} onClick={()=>setSection(s.label)} style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'8px 10px', borderRadius:7, border:'none', background:section===s.label?'#EEF0FF':'transparent', color:section===s.label?'#3B4AFF':'#344054', fontSize:13, fontWeight:section===s.label?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:1 }}>
+            <button key={s.label} onClick={()=>setSection(s.label)} style={{ display:'flex', alignItems:'center', gap:8, width:'100%', padding:'8px 10px', borderRadius:7, border:'none', background:section===s.label?'#FBF4E6':'transparent', color:section===s.label?'#A8862E':'#344054', fontSize:13, fontWeight:section===s.label?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:1 }}>
               <span style={{ fontSize:14 }}>{s.icon}</span>
               {s.label}
               {s.label==='Tasks'&&tasks.filter((t:any)=>t.status==='pending'&&t.due_date<=today).length>0&&(
@@ -163,16 +163,16 @@ export default function CRMPage() {
       <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:'100vh' }}>
         <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:60, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-            <h1 style={{ fontSize:17, fontWeight:600, margin:0, color:'#101828' }}>{section}</h1>
+            <h1 style={{ fontSize:17, fontWeight:600, margin:0, color:'#323338' }}>{section}</h1>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{ padding:'7px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:13, fontFamily:'inherit', width:220, outline:'none' }}/>
           </div>
           <div style={{ display:'flex', gap:8 }}>
-            {section==='Contacts'&&<button onClick={()=>{setModal('contact');setForm({module});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Contact</button>}
-            {section==='Companies'&&<button onClick={()=>{setModal('company');setForm({});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Company</button>}
-            {section==='Deals'&&<button onClick={()=>{setModal('deal');setForm({module,stage:'Lead'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Deal</button>}
-            {section==='Tasks'&&<button onClick={()=>{setModal('task');setForm({module,status:'pending',priority:'medium'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Task</button>}
-            {section==='Meetings'&&<button onClick={()=>{setModal('meeting');setForm({module,status:'scheduled'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Schedule Meeting</button>}
-            {section==='Activity Feed'&&<button onClick={()=>{setModal('activity');setForm({module,type:'note'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Log Activity</button>}
+            {section==='Contacts'&&<button onClick={()=>{setModal('contact');setForm({module});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Contact</button>}
+            {section==='Companies'&&<button onClick={()=>{setModal('company');setForm({});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Company</button>}
+            {section==='Deals'&&<button onClick={()=>{setModal('deal');setForm({module,stage:'Lead'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Deal</button>}
+            {section==='Tasks'&&<button onClick={()=>{setModal('task');setForm({module,status:'pending',priority:'medium'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Add Task</button>}
+            {section==='Meetings'&&<button onClick={()=>{setModal('meeting');setForm({module,status:'scheduled'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Schedule Meeting</button>}
+            {section==='Activity Feed'&&<button onClick={()=>{setModal('activity');setForm({module,type:'note'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'8px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>+ Log Activity</button>}
           </div>
         </div>
 
@@ -183,7 +183,7 @@ export default function CRMPage() {
                 {([{label:'Total',value:filtered(contacts).length},{label:'Guests',value:filtered(contacts).filter((c:any)=>c.type==='guest').length},{label:'Landlords',value:filtered(contacts).filter((c:any)=>c.type==='landlord').length},{label:'Investors',value:filtered(contacts).filter((c:any)=>c.type==='investor').length}] as any[]).map((s:any)=>(
                   <div key={s.label} style={{ background:'#fff', borderRadius:10, border:'1px solid #E4E7EC', padding:'16px 20px' }}>
                     <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:4 }}>{s.label}</div>
-                    <div style={{ fontSize:24, fontWeight:700, color:'#101828' }}>{s.value}</div>
+                    <div style={{ fontSize:24, fontWeight:700, color:'#323338' }}>{s.value}</div>
                   </div>
                 ))}
               </div>
@@ -195,16 +195,16 @@ export default function CRMPage() {
                 filtered(contacts).map((c:any)=>(
                   <div key={c.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 80px 80px 100px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <div style={{ width:32, height:32, borderRadius:'50%', background:'#EEF0FF', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:12, color:'#3B4AFF', flexShrink:0 }}>{c.name.charAt(0)}</div>
-                      <span style={{ fontWeight:500, color:'#101828' }}>{c.name}</span>
+                      <div style={{ width:32, height:32, borderRadius:'50%', background:'#FBF4E6', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:12, color:'#A8862E', flexShrink:0 }}>{c.name.charAt(0)}</div>
+                      <span style={{ fontWeight:500, color:'#323338' }}>{c.name}</span>
                     </div>
                     <span style={{ color:'#667085' }}>{c.email??'—'}</span>
                     <span style={{ color:'#667085' }}>{c.phone??'—'}</span>
-                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#EEF0FF', color:'#3B4AFF', textTransform:'capitalize' }}>{c.type}</span>
+                    <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#FBF4E6', color:'#A8862E', textTransform:'capitalize' }}>{c.type}</span>
                     <span style={{ fontSize:11, color:'#98A2B3', textTransform:'uppercase' }}>{c.module}</span>
                     <div style={{ display:'flex', gap:6 }}>
-                      <button onClick={()=>openSend(c)} style={{ fontSize:11, color:'#fff', background:'#3B4AFF', border:'none', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Send</button>
-                      <button onClick={()=>openEdit('contact',c)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                      <button onClick={()=>openSend(c)} style={{ fontSize:11, color:'#fff', background:'#A8862E', border:'none', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Send</button>
+                      <button onClick={()=>openEdit('contact',c)} style={{ fontSize:11, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                       <button onClick={()=>del('crm_contacts',c.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
                     </div>
                   </div>
@@ -218,12 +218,12 @@ export default function CRMPage() {
               {filtered(companies).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No companies yet</div>:
               filtered(companies).map((c:any)=>(
                 <div key={c.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-                  <div style={{ width:40, height:40, borderRadius:10, background:'#EEF0FF', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:15, color:'#3B4AFF' }}>{c.name.charAt(0)}</div>
+                  <div style={{ width:40, height:40, borderRadius:10, background:'#FBF4E6', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:15, color:'#A8862E' }}>{c.name.charAt(0)}</div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{c.name}</div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{c.name}</div>
                     <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{[c.industry,c.website].filter(Boolean).join(' · ')}</div>
                   </div>
-                  <button onClick={()=>openEdit('company',c)} style={{ fontSize:12, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>openEdit('company',c)} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('crm_companies',c.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                 </div>
               ))}
@@ -246,11 +246,11 @@ export default function CRMPage() {
                     <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                       {sd.map((d:any)=>(
                         <div key={d.id} draggable onDragStart={()=>setDragDeal(d.id)} style={{ background:'#fff', borderRadius:8, border:'1px solid #E4E7EC', padding:'12px 14px', cursor:'grab' }}>
-                          <div style={{ fontWeight:500, fontSize:13, color:'#101828', marginBottom:4 }}>{d.name}</div>
+                          <div style={{ fontWeight:500, fontSize:13, color:'#323338', marginBottom:4 }}>{d.name}</div>
                           <div style={{ fontSize:11, color:'#667085', marginBottom:6 }}>{d.crm_contacts?.name??'—'}</div>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                             <span style={{ fontSize:12, fontWeight:600, color:'#10B981' }}>£{(d.value??0).toLocaleString()}</span>
-                            <button onClick={()=>openEdit('deal',d)} style={{ fontSize:10, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:5, padding:'2px 7px', cursor:'pointer' }}>Edit</button>
+                            <button onClick={()=>openEdit('deal',d)} style={{ fontSize:10, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:5, padding:'2px 7px', cursor:'pointer' }}>Edit</button>
                           </div>
                         </div>
                       ))}
@@ -280,11 +280,11 @@ export default function CRMPage() {
                     <div key={t.id} style={{ background:'#fff', borderRadius:12, border:`1px solid ${overdue?'#FEE2E2':'#E4E7EC'}`, padding:'14px 20px', display:'grid', gridTemplateColumns:'auto 1fr auto auto auto', alignItems:'center', gap:14 }}>
                       <input type="checkbox" checked={t.status==='completed'} onChange={async()=>{await supabase.from('crm_tasks').update({status:t.status==='completed'?'pending':'completed'}).eq('id',t.id);loadAll()}} style={{ width:16, height:16, cursor:'pointer' }}/>
                       <div>
-                        <div style={{ fontWeight:500, fontSize:14, color:t.status==='completed'?'#98A2B3':'#101828', textDecoration:t.status==='completed'?'line-through':'none' }}>{t.title}</div>
+                        <div style={{ fontWeight:500, fontSize:14, color:t.status==='completed'?'#98A2B3':'#323338', textDecoration:t.status==='completed'?'line-through':'none' }}>{t.title}</div>
                         <div style={{ fontSize:11, color:'#667085', marginTop:2 }}>{t.crm_contacts?.name}{t.due_date?` · Due: ${t.due_date}`:''}{overdue?' · Overdue':''}</div>
                       </div>
                       <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:t.priority==='high'?'#FEE2E2':t.priority==='medium'?'#FEF3C7':'#F3F4F6', color:t.priority==='high'?'#DC2626':t.priority==='medium'?'#D97706':'#6B7280', textTransform:'uppercase' }}>{t.priority}</span>
-                      <button onClick={()=>openEdit('task',t)} style={{ fontSize:11, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                      <button onClick={()=>openEdit('task',t)} style={{ fontSize:11, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                       <button onClick={()=>del('crm_tasks',t.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
                     </div>
                   )
@@ -298,13 +298,13 @@ export default function CRMPage() {
               {filtered(meetings).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No meetings scheduled</div>:
               filtered(meetings).map((m:any)=>(
                 <div key={m.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', alignItems:'center', gap:16 }}>
-                  <div style={{ width:44, height:44, borderRadius:10, background:'#EEF0FF', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>📅</div>
+                  <div style={{ width:44, height:44, borderRadius:10, background:'#FBF4E6', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>📅</div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600, fontSize:14, color:'#101828' }}>{m.title}</div>
+                    <div style={{ fontWeight:600, fontSize:14, color:'#323338' }}>{m.title}</div>
                     <div style={{ fontSize:12, color:'#667085', marginTop:2 }}>{m.crm_contacts?.name}{m.date?` · ${m.date}`:''}{m.time?` at ${m.time}`:''}{m.location?` · ${m.location}`:''}</div>
                   </div>
                   <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:m.status==='completed'?'#D1FAE5':'#DBEAFE', color:m.status==='completed'?'#059669':'#2563EB' }}>{m.status}</span>
-                  <button onClick={()=>openEdit('meeting',m)} style={{ fontSize:12, color:'#3B4AFF', background:'none', border:'1px solid #3B4AFF', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
+                  <button onClick={()=>openEdit('meeting',m)} style={{ fontSize:12, color:'#A8862E', background:'none', border:'1px solid #A8862E', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                   <button onClick={()=>del('crm_meetings',m.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                 </div>
               ))}
@@ -316,11 +316,11 @@ export default function CRMPage() {
               {filtered(activities).length===0?<div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No activity logged yet</div>:
               filtered(activities).map((a:any)=>(
                 <div key={a.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'16px 20px', display:'flex', gap:14 }}>
-                  <div style={{ width:36, height:36, borderRadius:'50%', background:a.type==='call'?'#D1FAE5':a.type==='email'?'#DBEAFE':'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>
+                  <div style={{ width:36, height:36, borderRadius:'50%', background:a.type==='call'?'#D1FAE5':a.type==='email'?'#EADBB8':'#F3F4F6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>
                     {a.type==='call'?'📞':a.type==='email'?'✉️':a.type==='meeting'?'📅':'📝'}
                   </div>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:500, fontSize:14, color:'#101828' }}>{a.subject}</div>
+                    <div style={{ fontWeight:500, fontSize:14, color:'#323338' }}>{a.subject}</div>
                     <div style={{ fontSize:13, color:'#667085', marginTop:4, lineHeight:1.5 }}>{a.body}</div>
                     <div style={{ fontSize:11, color:'#98A2B3', marginTop:6 }}>{a.crm_contacts?.name} · {new Date(a.created_at).toLocaleDateString('en-GB')}</div>
                   </div>
@@ -335,7 +335,7 @@ export default function CRMPage() {
               {([{icon:'✉️',title:'Team Email',desc:'Manage and respond to team emails'},{icon:'💬',title:'Chat',desc:'Connect live chat on your website'},{icon:'📋',title:'Forms',desc:'Connect and respond to forms'},{icon:'📘',title:'Facebook Messenger',desc:'Start receiving Messenger conversations'},{icon:'📱',title:'WhatsApp',desc:'Start receiving WhatsApp conversations'},{icon:'📞',title:'Calling',desc:'Start making and receiving calls'}] as any[]).map((c:any)=>(
                 <div key={c.title} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'24px', textAlign:'center' }}>
                   <div style={{ fontSize:32, marginBottom:12 }}>{c.icon}</div>
-                  <div style={{ fontWeight:600, fontSize:14, color:'#101828', marginBottom:6 }}>{c.title}</div>
+                  <div style={{ fontWeight:600, fontSize:14, color:'#323338', marginBottom:6 }}>{c.title}</div>
                   <div style={{ fontSize:12, color:'#667085', lineHeight:1.5 }}>{c.desc}</div>
                   <button style={{ marginTop:16, padding:'8px 20px', borderRadius:8, border:'1px solid #D0D5DD', background:'#fff', fontSize:13, cursor:'pointer', fontFamily:'inherit', color:'#344054' }}>Connect</button>
                 </div>
@@ -346,9 +346,9 @@ export default function CRMPage() {
           {section==='Calls'&&(
             <div style={{ textAlign:'center', padding:60 }}>
               <div style={{ fontSize:48, marginBottom:16 }}>📞</div>
-              <div style={{ fontSize:16, fontWeight:600, color:'#101828', marginBottom:8 }}>Call Logging</div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#323338', marginBottom:8 }}>Call Logging</div>
               <div style={{ fontSize:14, color:'#667085', marginBottom:24 }}>Log calls against contacts and track your outreach history</div>
-              <button onClick={()=>{setModal('activity');setForm({module,type:'call'});setEditId(null)}} style={{ background:'#3B4AFF', color:'#fff', border:'none', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>+ Log a Call</button>
+              <button onClick={()=>{setModal('activity');setForm({module,type:'call'});setEditId(null)}} style={{ background:'#A8862E', color:'#fff', border:'none', borderRadius:8, padding:'10px 24px', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit' }}>+ Log a Call</button>
             </div>
           )}
         </div>
@@ -378,7 +378,7 @@ export default function CRMPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('crm_contacts',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Contact'}</button>
+            <button onClick={()=>save('crm_contacts',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Contact'}</button>
           </div>
         </Modal>
       )}
@@ -395,7 +395,7 @@ export default function CRMPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('crm_companies',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Company'}</button>
+            <button onClick={()=>save('crm_companies',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Company'}</button>
           </div>
         </Modal>
       )}
@@ -430,7 +430,7 @@ export default function CRMPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('crm_deals',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Deal'}</button>
+            <button onClick={()=>save('crm_deals',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Deal'}</button>
           </div>
         </Modal>
       )}
@@ -457,7 +457,7 @@ export default function CRMPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('crm_tasks',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Task'}</button>
+            <button onClick={()=>save('crm_tasks',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Add Task'}</button>
           </div>
         </Modal>
       )}
@@ -484,7 +484,7 @@ export default function CRMPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('crm_meetings',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Schedule'}</button>
+            <button onClick={()=>save('crm_meetings',form)} disabled={saving||!form.title} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.title?0.6:1 }}>{saving?'Saving...':editId?'Save Changes':'Schedule'}</button>
           </div>
         </Modal>
       )}
@@ -508,7 +508,7 @@ export default function CRMPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('crm_activities',form)} disabled={saving||!form.subject} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.subject?0.6:1 }}>{saving?'Saving...':'Log Activity'}</button>
+            <button onClick={()=>save('crm_activities',form)} disabled={saving||!form.subject} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.subject?0.6:1 }}>{saving?'Saving...':'Log Activity'}</button>
           </div>
         </Modal>
       )}
@@ -518,7 +518,7 @@ export default function CRMPage() {
           <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
             <div style={{ display:'flex', gap:8 }}>
               {[{id:'email',label:'Email',avail:!!sendModal.email},{id:'sms',label:'SMS',avail:!!sendModal.phone},{id:'whatsapp',label:'WhatsApp',avail:!!sendModal.phone}].map(ch=>(
-                <button key={ch.id} onClick={()=>setSendForm({...sendForm,channel:ch.id})} style={{ flex:1, padding:'8px', borderRadius:8, border:sendForm.channel===ch.id?'2px solid #3B4AFF':'1px solid #D0D5DD', background:sendForm.channel===ch.id?'#EEF0FF':'#fff', fontSize:13, fontWeight:500, color:sendForm.channel===ch.id?'#3B4AFF':'#344054', cursor:'pointer', fontFamily:'inherit' }}>{ch.label}{!ch.avail&&<span style={{ display:'block', fontSize:10, color:'#98A2B3', fontWeight:400 }}>no contact info</span>}</button>
+                <button key={ch.id} onClick={()=>setSendForm({...sendForm,channel:ch.id})} style={{ flex:1, padding:'8px', borderRadius:8, border:sendForm.channel===ch.id?'2px solid #A8862E':'1px solid #D0D5DD', background:sendForm.channel===ch.id?'#FBF4E6':'#fff', fontSize:13, fontWeight:500, color:sendForm.channel===ch.id?'#A8862E':'#344054', cursor:'pointer', fontFamily:'inherit' }}>{ch.label}{!ch.avail&&<span style={{ display:'block', fontSize:10, color:'#98A2B3', fontWeight:400 }}>no contact info</span>}</button>
               ))}
             </div>
             {sendForm.channel==='email'&&<div><label style={lbl}>Subject</label><input style={inp} value={sendForm.subject} onChange={e=>setSendForm({...sendForm,subject:e.target.value})} placeholder="e.g. Your certificate is ready"/></div>}
@@ -527,7 +527,7 @@ export default function CRMPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>setSendModal(null)} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={sendMessage} disabled={sending||!sendForm.body.trim()} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#3B4AFF', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:sending||!sendForm.body.trim()?0.6:1 }}>{sending?'Sending...':'Send'}</button>
+            <button onClick={sendMessage} disabled={sending||!sendForm.body.trim()} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#A8862E', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:sending||!sendForm.body.trim()?0.6:1 }}>{sending?'Sending...':'Send'}</button>
           </div>
         </Modal>
       )}

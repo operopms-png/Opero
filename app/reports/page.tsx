@@ -40,13 +40,13 @@ export default function ReportsPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#344054" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#101828' }}>Advanced Reports</h1>
+            <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Advanced Reports</h1>
           </div>
           <button onClick={exportCSV} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Export CSV</button>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {(['revenue', 'occupancy'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: tab === t ? '#3B4AFF' : '#667085', borderBottom: tab === t ? '2px solid #3B4AFF' : '2px solid transparent', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t === 'revenue' ? 'Revenue Report' : 'Occupancy'}</button>
+            <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: tab === t ? '#624920' : '#667085', borderBottom: tab === t ? '2px solid #A8862E' : '2px solid transparent', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t === 'revenue' ? 'Revenue Report' : 'Occupancy'}</button>
           ))}
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function ReportsPage() {
               {[{ label: 'Total Revenue', value: `£${totalRevenue.toLocaleString()}` }, { label: 'Total Bookings', value: confirmed.length }, { label: 'Properties', value: properties.length }].map(c => (
                 <div key={c.label} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '20px 24px' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{c.label}</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: '#101828' }}>{c.value}</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: '#323338' }}>{c.value}</div>
                 </div>
               ))}
             </div>
@@ -69,7 +69,7 @@ export default function ReportsPage() {
                 {confirmed.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 14 }}>No bookings yet</div> :
                 confirmed.map(b => (
                   <div key={b.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 100px 100px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', fontSize: 13, color: '#344054', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 500, color: '#101828' }}>{b.guest_name ?? '—'}</span>
+                    <span style={{ fontWeight: 500, color: '#323338' }}>{b.guest_name ?? '—'}</span>
                     <span>{b.properties?.name ?? '—'}</span>
                     <span>{b.check_in ? new Date(b.check_in).toLocaleDateString('en-GB') : '—'}</span>
                     <span>{b.check_out ? new Date(b.check_out).toLocaleDateString('en-GB') : '—'}</span>
@@ -88,11 +88,11 @@ export default function ReportsPage() {
                   return (
                     <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '20px 24px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <span style={{ fontWeight: 600, color: '#101828' }}>{p.name}</span>
+                        <span style={{ fontWeight: 600, color: '#323338' }}>{p.name}</span>
                         <span style={{ fontSize: 13, color: '#667085' }}>{pb.length} bookings · {nights} nights</span>
                       </div>
                       <div style={{ background: '#F2F4F7', borderRadius: 100, height: 8 }}>
-                        <div style={{ background: '#3B4AFF', borderRadius: 100, height: 8, width: `${occ}%` }} />
+                        <div style={{ background: '#A8862E', borderRadius: 100, height: 8, width: `${occ}%` }} />
                       </div>
                       <div style={{ fontSize: 12, color: '#667085', marginTop: 6 }}>{occ}% occupancy</div>
                     </div>

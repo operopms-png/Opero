@@ -50,7 +50,7 @@ function Calendar({ bookedRanges, onSelect, checkIn, checkOut }: {
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
         <button onClick={() => { if(viewMonth===0){setViewMonth(11);setViewYear(y=>y-1)}else setViewMonth(m=>m-1)}}
           style={{width:32,height:32,border:'1px solid #e4e6ef',borderRadius:8,background:'#fff',cursor:'pointer',fontSize:14,color:'#6b7280'}}>‹</button>
-        <div style={{fontWeight:700,fontSize:15,color:'#0a0f1e'}}>{MONTHS[viewMonth]} {viewYear}</div>
+        <div style={{fontWeight:700,fontSize:15,color:'#323338'}}>{MONTHS[viewMonth]} {viewYear}</div>
         <button onClick={() => { if(viewMonth===11){setViewMonth(0);setViewYear(y=>y+1)}else setViewMonth(m=>m+1)}}
           style={{width:32,height:32,border:'1px solid #e4e6ef',borderRadius:8,background:'#fff',cursor:'pointer',fontSize:14,color:'#6b7280'}}>›</button>
       </div>
@@ -72,8 +72,8 @@ function Calendar({ bookedRanges, onSelect, checkIn, checkOut }: {
               style={{
                 textAlign:'center',padding:'8px 4px',borderRadius:8,fontSize:13,fontWeight:sel?700:500,
                 cursor:disabled?'not-allowed':'pointer',
-                background: ci||co ? '#5B7BF8' : sel ? '#EEF3FF' : booked ? '#f3f4f6' : '#fff',
-                color: ci||co ? '#fff' : booked||past ? '#d1d5db' : sel ? '#5B7BF8' : '#0a0f1e',
+                background: ci||co ? '#A8862E' : sel ? '#EEF3FF' : booked ? '#f3f4f6' : '#fff',
+                color: ci||co ? '#fff' : booked||past ? '#d1d5db' : sel ? '#A8862E' : '#323338',
                 textDecoration: booked ? 'line-through' : 'none',
                 border: ci||co ? 'none' : '1px solid #f0f0f0',
               }}>
@@ -160,7 +160,7 @@ export default function BookingPage() {
       <nav style={{background:'#fff',borderBottom:'1px solid #e4e6ef',height:60,display:'flex',alignItems:'center',padding:'0 24px',position:'sticky',top:0,zIndex:10}}>
         <a href="https://www.sangstersgroup.com" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
           <img src="/logo.PNG" alt={BRAND_NAME} style={{width:26,height:26,objectFit:'contain'}}/>
-          <span style={{fontWeight:700,fontSize:15,color:'#0a0f1e'}}>{BRAND_NAME}</span>
+          <span style={{fontWeight:700,fontSize:15,color:'#323338'}}>{BRAND_NAME}</span>
         </a>
         <div style={{marginLeft:'auto',fontSize:13,color:'#9ca3af'}}>🔒 Secure booking</div>
       </nav>
@@ -170,14 +170,14 @@ export default function BookingPage() {
           <div style={{background:'#fff',borderRadius:16,border:'1px solid #e4e6ef',overflow:'hidden',marginBottom:20}}>
             {property.image_url && <img src={property.image_url} alt={property.name} style={{width:'100%',height:220,objectFit:'cover'}}/>}
             <div style={{padding:'20px 24px'}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#5B7BF8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>{property.location}</div>
-              <div style={{fontSize:22,fontWeight:800,color:'#0a0f1e',marginBottom:6}}>{property.name}</div>
+              <div style={{fontSize:11,fontWeight:700,color:'#A8862E',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>{property.location}</div>
+              <div style={{fontSize:22,fontWeight:800,color:'#323338',marginBottom:6}}>{property.name}</div>
               <div style={{fontSize:14,color:'#6b7280',lineHeight:1.6}}>{property.description}</div>
               {property.bedrooms && (
                 <div style={{display:'flex',gap:20,marginTop:14,paddingTop:14,borderTop:'1px solid #f0f0f0'}}>
-                  <div style={{fontSize:13,color:'#6b7280'}}><b style={{color:'#0a0f1e'}}>{property.bedrooms}</b> bed{property.bedrooms>1?'s':''}</div>
-                  <div style={{fontSize:13,color:'#6b7280'}}><b style={{color:'#0a0f1e'}}>{property.bathrooms}</b> bath{property.bathrooms>1?'s':''}</div>
-                  <div style={{fontSize:13,color:'#6b7280'}}>Up to <b style={{color:'#0a0f1e'}}>{property.max_guests}</b> guests</div>
+                  <div style={{fontSize:13,color:'#6b7280'}}><b style={{color:'#323338'}}>{property.bedrooms}</b> bed{property.bedrooms>1?'s':''}</div>
+                  <div style={{fontSize:13,color:'#6b7280'}}><b style={{color:'#323338'}}>{property.bathrooms}</b> bath{property.bathrooms>1?'s':''}</div>
+                  <div style={{fontSize:13,color:'#6b7280'}}>Up to <b style={{color:'#323338'}}>{property.max_guests}</b> guests</div>
                 </div>
               )}
             </div>
@@ -186,7 +186,7 @@ export default function BookingPage() {
           <div style={{display:'flex',gap:0,marginBottom:20,background:'#fff',borderRadius:12,border:'1px solid #e4e6ef',padding:4}}>
             {(['dates','details','payment'] as const).map((s,i) => (
               <div key={s} onClick={() => { if(s==='dates') setStep('dates'); if(s==='details'&&checkIn&&checkOut) setStep('details') }}
-                style={{flex:1,textAlign:'center',padding:'9px',borderRadius:9,fontSize:13,fontWeight:600,cursor:'pointer',background:step===s?'#5B7BF8':'transparent',color:step===s?'#fff':'#6b7280',transition:'all 0.15s'}}>
+                style={{flex:1,textAlign:'center',padding:'9px',borderRadius:9,fontSize:13,fontWeight:600,cursor:'pointer',background:step===s?'#A8862E':'transparent',color:step===s?'#fff':'#6b7280',transition:'all 0.15s'}}>
                 {i+1}. {s.charAt(0).toUpperCase()+s.slice(1)}
               </div>
             ))}
@@ -194,11 +194,11 @@ export default function BookingPage() {
 
           {step === 'dates' && (
             <div style={{background:'#fff',borderRadius:16,border:'1px solid #e4e6ef',padding:24}}>
-              <div style={{fontSize:17,fontWeight:700,color:'#0a0f1e',marginBottom:4}}>Select your dates</div>
+              <div style={{fontSize:17,fontWeight:700,color:'#323338',marginBottom:4}}>Select your dates</div>
               <div style={{fontSize:13,color:'#9ca3af',marginBottom:24}}>Click check-in then check-out date</div>
               <Calendar bookedRanges={bookedRanges} onSelect={handleDateSelect} checkIn={checkIn} checkOut={checkOut}/>
               {checkIn && checkOut && (
-                <button onClick={() => setStep('details')} style={{width:'100%',marginTop:20,padding:'13px',background:'#5B7BF8',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer'}}>Continue →</button>
+                <button onClick={() => setStep('details')} style={{width:'100%',marginTop:20,padding:'13px',background:'#A8862E',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer'}}>Continue →</button>
               )}
               {checkIn && !checkOut && <div style={{marginTop:16,textAlign:'center',fontSize:13,color:'#9ca3af'}}>Now select your check-out date</div>}
             </div>
@@ -206,32 +206,32 @@ export default function BookingPage() {
 
           {step === 'details' && (
             <div style={{background:'#fff',borderRadius:16,border:'1px solid #e4e6ef',padding:24}}>
-              <div style={{fontSize:17,fontWeight:700,color:'#0a0f1e',marginBottom:20}}>Your details</div>
+              <div style={{fontSize:17,fontWeight:700,color:'#323338',marginBottom:20}}>Your details</div>
               {[['name','Full name','John Smith','text'],['email','Email address','john@example.com','email'],['phone','Phone number','+44 7700 900000','tel']].map(([field,label,placeholder,type]) => (
                 <div key={field} style={{marginBottom:16}}>
                   <label style={{display:'block',fontSize:13,fontWeight:600,color:'#374151',marginBottom:6}}>{label}</label>
                   <input type={type} value={(form as any)[field]} onChange={e => setForm(f=>({...f,[field]:e.target.value}))} placeholder={placeholder}
-                    style={{width:'100%',padding:'11px 14px',border:'1.5px solid #e4e6ef',borderRadius:9,fontSize:14,color:'#0a0f1e',outline:'none'}}/>
+                    style={{width:'100%',padding:'11px 14px',border:'1.5px solid #e4e6ef',borderRadius:9,fontSize:14,color:'#323338',outline:'none'}}/>
                 </div>
               ))}
               {error && <div style={{color:'#ef4444',fontSize:13,marginBottom:12}}>{error}</div>}
               <button onClick={() => { if(!form.name||!form.email||!form.phone){setError('Please fill all fields');return} setError(''); setStep('payment') }}
-                style={{width:'100%',padding:'13px',background:'#5B7BF8',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer'}}>Continue to payment →</button>
+                style={{width:'100%',padding:'13px',background:'#A8862E',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer'}}>Continue to payment →</button>
             </div>
           )}
 
           {step === 'payment' && (
             <div style={{background:'#fff',borderRadius:16,border:'1px solid #e4e6ef',padding:24}}>
-              <div style={{fontSize:17,fontWeight:700,color:'#0a0f1e',marginBottom:6}}>Confirm & pay</div>
+              <div style={{fontSize:17,fontWeight:700,color:'#323338',marginBottom:6}}>Confirm & pay</div>
               <div style={{fontSize:13,color:'#9ca3af',marginBottom:20}}>You'll be redirected to Stripe's secure checkout</div>
               <div style={{background:'#f8f9fc',borderRadius:10,padding:16,marginBottom:20}}>
                 {[['Guest',form.name],['Email',form.email],['Phone',form.phone],['Check-in',checkIn!],['Check-out',checkOut!]].map(([l,v]) => (
-                  <div key={l} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#6b7280',marginBottom:8}}><span>{l}</span><span style={{color:'#0a0f1e',fontWeight:600}}>{v}</span></div>
+                  <div key={l} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#6b7280',marginBottom:8}}><span>{l}</span><span style={{color:'#323338',fontWeight:600}}>{v}</span></div>
                 ))}
               </div>
               {error && <div style={{color:'#ef4444',fontSize:13,marginBottom:12}}>{error}</div>}
               <button onClick={handleBooking} disabled={loading}
-                style={{width:'100%',padding:'13px',background:loading?'#9ca3af':'#0a0f1e',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:loading?'not-allowed':'pointer'}}>
+                style={{width:'100%',padding:'13px',background:loading?'#9ca3af':'#323338',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:loading?'not-allowed':'pointer'}}>
                 {loading ? 'Processing...' : `Pay £${totalAmt.toFixed(2)} securely →`}
               </button>
               <div style={{textAlign:'center',marginTop:12,fontSize:11,color:'#9ca3af'}}>🔒 Secured by Stripe · Cancel up to 48hrs before check-in</div>
@@ -243,7 +243,7 @@ export default function BookingPage() {
           <div style={{background:'#fff',borderRadius:16,border:'1px solid #e4e6ef',padding:24}}>
             <div style={{fontSize:11,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14}}>Booking Summary</div>
             <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:16,paddingBottom:16,borderBottom:'1px solid #f0f0f0'}}>
-              <span style={{fontSize:28,fontWeight:800,color:'#0a0f1e'}}>£{nightly}</span>
+              <span style={{fontSize:28,fontWeight:800,color:'#323338'}}>£{nightly}</span>
               <span style={{fontSize:13,color:'#9ca3af'}}> / night</span>
             </div>
             {checkIn && checkOut ? (
@@ -252,23 +252,23 @@ export default function BookingPage() {
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:1}}>
                     <div style={{padding:'10px 12px',background:'#fff',borderRadius:'8px 0 0 8px',border:'1px solid #e4e6ef'}}>
                       <div style={{fontSize:10,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Check-in</div>
-                      <div style={{fontSize:13,fontWeight:700,color:'#0a0f1e'}}>{checkIn}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:'#323338'}}>{checkIn}</div>
                     </div>
                     <div style={{padding:'10px 12px',background:'#fff',borderRadius:'0 8px 8px 0',border:'1px solid #e4e6ef',borderLeft:'none'}}>
                       <div style={{fontSize:10,fontWeight:700,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>Check-out</div>
-                      <div style={{fontSize:13,fontWeight:700,color:'#0a0f1e'}}>{checkOut}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:'#323338'}}>{checkOut}</div>
                     </div>
                   </div>
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:16,paddingBottom:16,borderBottom:'1px solid #f0f0f0'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#6b7280'}}><span>£{nightly} × {n} night{n>1?'s':''}</span><span style={{color:'#0a0f1e',fontWeight:500}}>£{subtotal.toFixed(2)}</span></div>
-                  {cleaning > 0 && <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#6b7280'}}><span>Cleaning fee</span><span style={{color:'#0a0f1e',fontWeight:500}}>£{cleaning.toFixed(2)}</span></div>}
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#6b7280'}}><span>£{nightly} × {n} night{n>1?'s':''}</span><span style={{color:'#323338',fontWeight:500}}>£{subtotal.toFixed(2)}</span></div>
+                  {cleaning > 0 && <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'#6b7280'}}><span>Cleaning fee</span><span style={{color:'#323338',fontWeight:500}}>£{cleaning.toFixed(2)}</span></div>}
                 </div>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:16,fontWeight:800,color:'#0a0f1e',marginBottom:20}}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:16,fontWeight:800,color:'#323338',marginBottom:20}}>
                   <span>Total</span><span>£{totalAmt.toFixed(2)}</span>
                 </div>
                 {step === 'dates' && (
-                  <button onClick={() => setStep('details')} style={{width:'100%',padding:'13px',background:'#5B7BF8',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer'}}>Reserve now →</button>
+                  <button onClick={() => setStep('details')} style={{width:'100%',padding:'13px',background:'#A8862E',color:'#fff',border:'none',borderRadius:10,fontSize:15,fontWeight:700,cursor:'pointer'}}>Reserve now →</button>
                 )}
               </>
             ) : (

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const result: any = await sendEmail(
     chat.email,
     `Your enquiry with ${company}`,
-    `<div style="font-family:Arial,sans-serif;font-size:14px;color:#101828;line-height:1.6">
+    `<div style="font-family:Arial,sans-serif;font-size:14px;color:#323338;line-height:1.6">
       <p>Hi ${esc(chat.name?.split(' ')[0] ?? 'there')},</p>
       ${esc(text).split('\n').map(l => `<p style="margin:0 0 8px">${l || '&nbsp;'}</p>`).join('')}
       <p style="margin-top:16px">${esc(from.replace(/\s*\(.*\)$/, ''))}<br>${esc(company)}</p>

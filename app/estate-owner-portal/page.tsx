@@ -10,7 +10,7 @@ import { supabase, getAccountId } from '../../lib/supabase'
 // Agency -- this covers Dashboard, Properties, Tenancies, Documents,
 // Messages, and Contact & Payment.
 
-const ACCENT = '#5B7CFA'
+const ACCENT = '#A8862E'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
@@ -116,13 +116,13 @@ function EstateOwnerPortalInner() {
       <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '48px 28px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Estate Agency — Owner Portal</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#101828' }}>Select a landlord to preview</h1>
+          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#323338' }}>Select a landlord to preview</h1>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>This is the staff view — pick a landlord to see their portal exactly as they see it.</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pickerLandlords.map(l => (
               <a key={l.id} href={`/estate-owner-portal?landlord_id=${l.id}`} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{l.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{l.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>{l.email ?? '—'}</div>
                 </div>
                 <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>Preview →</span>
@@ -153,15 +153,15 @@ function EstateOwnerPortalInner() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
       {isStaffView && (
-        <div style={{ background: '#EEF1FF', borderBottom: '1px solid #C7D2FE', padding: '8px 28px', fontSize: 13, color: '#3B4AFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FBF4E6', borderBottom: '1px solid #EADBB8', padding: '8px 28px', fontSize: 13, color: '#A8862E', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>👁️ Viewing as {landlord.name} — you can view everything here as staff</span>
-          <a href="/estate?tab=Landlords" style={{ color: '#3B4AFF', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
+          <a href="/estate?tab=Landlords" style={{ color: '#A8862E', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
         </div>
       )}
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Estate Agency — Owner Portal</div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#101828' }}>Welcome, {landlord.name}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#323338' }}>Welcome, {landlord.name}</div>
         </div>
         {!isStaffView && (
           <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
@@ -175,18 +175,18 @@ function EstateOwnerPortalInner() {
 
       <div style={{ padding: 28, maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#101828' }}>{properties.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Your Properties</div></div>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>{properties.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Your Properties</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#059669' }}>{activeTenancies.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Active Tenancies</div></div>
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#101828' }}>£{monthlyRentTotal.toLocaleString()}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Monthly Rent (active)</div></div>
-          <div style={{ background: '#fff', borderRadius: 12, border: expiringDocs ? '1px solid #FEE2E2' : '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: expiringDocs ? '#EF4444' : '#101828' }}>{expiringDocs}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Documents Expired</div></div>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>£{monthlyRentTotal.toLocaleString()}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Monthly Rent (active)</div></div>
+          <div style={{ background: '#fff', borderRadius: 12, border: expiringDocs ? '1px solid #FEE2E2' : '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: expiringDocs ? '#EF4444' : '#323338' }}>{expiringDocs}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Documents Expired</div></div>
         </div>
 
         {tab === 'Dashboard' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 16 }}>Recent Tenancies</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 16 }}>Recent Tenancies</div>
             {tenancies.length === 0 ? <div style={{ color: '#98A2B3', fontSize: 13, textAlign: 'center', padding: 30 }}>No tenancies yet.</div> : tenancies.slice(0, 6).map(t => (
               <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F2F4F7' }}>
-                <div><div style={{ fontSize: 13, fontWeight: 500, color: '#101828' }}>{t.estate_properties?.name ?? '—'} · {t.estate_tenants?.name ?? '—'}</div><div style={{ fontSize: 11, color: '#98A2B3' }}>{t.start_date ?? '—'} → {t.end_date ?? '—'}</div></div>
+                <div><div style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{t.estate_properties?.name ?? '—'} · {t.estate_tenants?.name ?? '—'}</div><div style={{ fontSize: 11, color: '#98A2B3' }}>{t.start_date ?? '—'} → {t.end_date ?? '—'}</div></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>£{parseFloat(t.rent||0).toLocaleString()}/mo</span>
                   <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: t.status==='Active'?'#D1FAE5':'#F3F4F6', color: t.status==='Active'?'#059669':'#6B7280' }}>{t.status}</span>
@@ -200,7 +200,7 @@ function EstateOwnerPortalInner() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {properties.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>No properties assigned yet.</div> : properties.map(p => (
               <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '16px 20px' }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: '#101828' }}>{p.name}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{p.name}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{[p.address, p.city, p.country].filter(Boolean).join(', ')}</div>
               </div>
             ))}
@@ -214,7 +214,7 @@ function EstateOwnerPortalInner() {
             </div>
             {tenancies.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>No tenancies yet.</div> : tenancies.map(t => (
               <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 100px 90px 90px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#101828' }}>{t.estate_properties?.name ?? '—'}</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{t.estate_properties?.name ?? '—'}</span>
                 <span style={{ fontSize: 13, color: '#344054' }}>{t.estate_tenants?.name ?? '—'}</span>
                 <span style={{ fontSize: 12, color: '#667085' }}>{t.start_date ?? '—'}</span>
                 <span style={{ fontSize: 12, color: '#667085' }}>{t.end_date ?? '—'}</span>
@@ -232,7 +232,7 @@ function EstateOwnerPortalInner() {
             </div>
             {documents.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>No documents yet.</div> : documents.map(d => (
               <div key={d.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#101828' }}>{d.file_url ? <a href={d.file_url} target="_blank" rel="noreferrer" style={{ color: '#101828', textDecoration: 'none' }}>{d.name}</a> : d.name}</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{d.file_url ? <a href={d.file_url} target="_blank" rel="noreferrer" style={{ color: '#323338', textDecoration: 'none' }}>{d.name}</a> : d.name}</span>
                 <span style={{ fontSize: 13, color: '#667085' }}>{d.category}</span>
                 <span style={{ fontSize: 13, color: d.expiry_date && d.expiry_date < today ? '#EF4444' : '#344054' }}>{d.expiry_date ?? '—'}</span>
               </div>
@@ -245,28 +245,28 @@ function EstateOwnerPortalInner() {
             <div style={{ flex: 1, overflowY: 'auto' as const, padding: 20, display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
               {messages.length === 0 ? <div style={{ textAlign: 'center' as const, color: '#98A2B3', fontSize: 13, padding: 40 }}>No messages yet — send one to get started.</div> : messages.map(m => (
                 <div key={m.id} style={{ alignSelf: m.sender === 'landlord' ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
-                  <div style={{ background: m.sender === 'landlord' ? ACCENT : '#F2F4F7', color: m.sender === 'landlord' ? '#fff' : '#101828', borderRadius: 12, padding: '10px 14px', fontSize: 13 }}>{m.message}</div>
+                  <div style={{ background: m.sender === 'landlord' ? ACCENT : '#F2F4F7', color: m.sender === 'landlord' ? '#fff' : '#323338', borderRadius: 12, padding: '10px 14px', fontSize: 13 }}>{m.message}</div>
                   <div style={{ fontSize: 10, color: '#98A2B3', marginTop: 3, textAlign: m.sender === 'landlord' ? 'right' as const : 'left' as const }}>{m.sender === 'landlord' ? 'You' : 'Staff'} · {new Date(m.created_at).toLocaleString()}</div>
                 </div>
               ))}
             </div>
             <div style={{ borderTop: '1px solid #E4E7EC', padding: 14, display: 'flex', gap: 10 }}>
               <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ ...inp, flex: 1 }} />
-              <button onClick={sendMessage} disabled={sendingMessage || !newMessage.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: sendingMessage || !newMessage.trim() ? 0.6 : 1 }}>Send</button>
+              <button onClick={sendMessage} disabled={sendingMessage || !newMessage.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: sendingMessage || !newMessage.trim() ? 0.6 : 1 }}>Send</button>
             </div>
           </div>
         )}
 
         {tab === 'Contact & Payment' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 4 }}>Contact Details</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Contact Details</div>
             <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>{isStaffView ? "You're editing this on the landlord's behalf." : 'Keep this up to date so we can reach you.'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
               <div><label style={lbl}>Email</label><input style={inp} value={contactForm.email} onChange={e=>setContactForm({...contactForm,email:e.target.value})}/></div>
               <div><label style={lbl}>Phone</label><input style={inp} value={contactForm.phone} onChange={e=>setContactForm({...contactForm,phone:e.target.value})}/></div>
               <div style={{ gridColumn: 'span 2' }}><label style={lbl}>Notes</label><input style={inp} value={contactForm.notes} onChange={e=>setContactForm({...contactForm,notes:e.target.value})}/></div>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 4 }}>Payment Details</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Payment Details</div>
             <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>Where should rent/payments be sent?</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
               <div><label style={lbl}>Bank Name</label><input style={inp} value={contactForm.bank_name} onChange={e=>setContactForm({...contactForm,bank_name:e.target.value})}/></div>
@@ -274,7 +274,7 @@ function EstateOwnerPortalInner() {
               <div><label style={lbl}>Account Number</label><input style={inp} value={contactForm.account_number} onChange={e=>setContactForm({...contactForm,account_number:e.target.value})}/></div>
               <div><label style={lbl}>Sort Code</label><input style={inp} value={contactForm.sort_code} onChange={e=>setContactForm({...contactForm,sort_code:e.target.value})}/></div>
             </div>
-            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
+            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
           </div>
         )}
       </div>

@@ -7,7 +7,7 @@ import { SITE_URL } from '@/lib/brand'
 // Every conversation from the AI chat box on the business's own website, the leads it captured,
 // the assistant's settings, the install code, and which properties it can show.
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const SITE = SITE_URL
 const CURRENCIES = [
   { v: '', l: 'Don’t show prices (team confirms)' },
@@ -181,11 +181,11 @@ export default function Page() {
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>STAFF CENTRE</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>Website Chats</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>Website Chats</div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {([['chats', `Chats${unread ? ` (${unread})` : ''}`], ['settings', 'Settings & install']] as const).map(([k, l]) => (
-            <button key={k} onClick={() => { setView(k); setNotice('') }} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid ' + (view === k ? ACCENT : '#D0D5DD'), background: view === k ? '#EEF1FF' : '#fff', color: view === k ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>
+            <button key={k} onClick={() => { setView(k); setNotice('') }} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid ' + (view === k ? ACCENT : '#D0D5DD'), background: view === k ? '#FBF4E6' : '#fff', color: view === k ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>
           ))}
         </div>
       </div>
@@ -196,7 +196,7 @@ export default function Page() {
             {[['Conversations', chats.length], ['Leads captured', leads], ['Unread', unread], ['Properties on website', liveCount]].map(([l, v]) => (
               <div key={l as string} style={{ ...card, padding: '14px 16px' }}>
                 <div style={{ fontSize: 12, color: '#667085' }}>{l}</div>
-                <div style={{ fontSize: 22, fontWeight: 700, color: '#101828' }}>{v}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#323338' }}>{v}</div>
               </div>
             ))}
           </div>
@@ -223,7 +223,7 @@ export default function Page() {
                   <button key={c.id} onClick={() => openChat(c.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '12px 14px', border: 'none', borderBottom: '1px solid #F2F4F7', background: openId === c.id ? '#F5F7FF' : '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {!c.staff_read && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F04438', flexShrink: 0 }} />}
-                      <span style={{ fontSize: 13, fontWeight: c.staff_read ? 500 : 700, color: '#101828', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || 'Website visitor'}</span>
+                      <span style={{ fontSize: 13, fontWeight: c.staff_read ? 500 : 700, color: '#323338', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || 'Website visitor'}</span>
                       <span style={{ fontSize: 11, color: '#98A2B3', flexShrink: 0 }}>{ago(c.last_message_at)}</span>
                     </div>
                     <div style={{ fontSize: 12, color: '#667085', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -240,7 +240,7 @@ export default function Page() {
                 <div style={{ margin: 'auto', fontSize: 13, color: '#98A2B3', padding: 40 }}>Select a conversation</div>
               ) : (<>
                 <div style={{ padding: '14px 18px', borderBottom: '1px solid #F2F4F7' }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>{open.name || 'Website visitor'}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>{open.name || 'Website visitor'}</div>
                   <div style={{ fontSize: 12, color: '#667085', marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
                     {open.email && <a href={`mailto:${open.email}`} style={{ color: ACCENT }}>{open.email}</a>}
                     {open.phone && <a href={`tel:${open.phone}`} style={{ color: ACCENT }}>{open.phone}</a>}
@@ -257,7 +257,7 @@ export default function Page() {
                       <div style={{ fontSize: 10.5, color: '#98A2B3', marginBottom: 2, textAlign: m.role === 'visitor' ? 'left' : 'right' }}>
                         {m.role === 'visitor' ? (open.name || 'Visitor') : m.role === 'staff' ? `${m.meta?.by?.replace(/\s*\(.*\)$/, '') || 'Team'} · by email` : 'Assistant'} · {new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                       </div>
-                      <div style={{ fontSize: 13, lineHeight: 1.5, padding: '9px 12px', borderRadius: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: m.role === 'visitor' ? '#fff' : m.role === 'staff' ? '#ECFDF3' : '#EEF1FF', border: '1px solid ' + (m.role === 'visitor' ? '#E4E7EC' : 'transparent'), color: '#101828' }}>
+                      <div style={{ fontSize: 13, lineHeight: 1.5, padding: '9px 12px', borderRadius: 12, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: m.role === 'visitor' ? '#fff' : m.role === 'staff' ? '#ECFDF3' : '#FBF4E6', border: '1px solid ' + (m.role === 'visitor' ? '#E4E7EC' : 'transparent'), color: '#323338' }}>
                         {m.content}
                         {m.meta?.cards?.length ? <div style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>Showed {m.meta.cards.length} propert{m.meta.cards.length === 1 ? 'y' : 'ies'}</div> : null}
                         {m.meta?.form ? <div style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>Asked for contact details: {m.meta.form}</div> : null}
@@ -289,7 +289,7 @@ export default function Page() {
           <div style={{ ...card, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>Assistant</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>Assistant</div>
                 <div style={{ fontSize: 12.5, color: '#667085' }}>It answers from the information below and your live properties. It never makes up prices or promises.</div>
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: '#344054', cursor: 'pointer', flexShrink: 0 }}>
@@ -320,26 +320,26 @@ export default function Page() {
           </div>
 
           <div style={{ ...card, padding: 20 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>Add it to your website</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>Add it to your website</div>
             <div style={{ fontSize: 12.5, color: '#667085', margin: '4px 0 12px', lineHeight: 1.6 }}>
               Paste this once into your website’s footer or “custom code” area (WordPress: a Custom HTML block or your theme’s footer scripts; Elementor: Site Settings → Custom Code; Wix/Squarespace: Custom Code → Body end). It then shows on every page.
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'stretch', flexWrap: 'wrap' }}>
-              <code style={{ flex: '1 1 400px', background: '#101828', color: '#E4E7EC', borderRadius: 8, padding: '10px 12px', fontSize: 12, wordBreak: 'break-all' }}>{snippet}</code>
+              <code style={{ flex: '1 1 400px', background: '#A8862E', color: '#E4E7EC', borderRadius: 8, padding: '10px 12px', fontSize: 12, wordBreak: 'break-all' }}>{snippet}</code>
               <button onClick={() => { navigator.clipboard?.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000) }} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: copied ? '#027A48' : ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{copied ? 'Copied ✓' : 'Copy'}</button>
             </div>
           </div>
 
           <div style={{ ...card, overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #F2F4F7' }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>Properties the assistant can show</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>Properties the assistant can show</div>
               <div style={{ fontSize: 12.5, color: '#667085', marginTop: 2 }}>Switch on the ones visitors can ask about. Furnished apartments show their booked dates; estate agency ones only show while their status is “available”.</div>
             </div>
             {props.length === 0 && <div style={{ padding: 20, fontSize: 13, color: '#98A2B3' }}>No properties yet.</div>}
             {props.map(p => (
               <div key={p.table + p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 20px', borderBottom: '1px solid #F2F4F7' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#101828' }}>{p.name || 'Untitled'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{p.name || 'Untitled'}</div>
                   <div style={{ fontSize: 11.5, color: '#98A2B3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[p.kind, p.where, p.table === 'estate_properties' ? p.status : null].filter(Boolean).join(' · ')}</div>
                 </div>
                 <button onClick={() => toggleProp(p)} aria-pressed={!!p.show_on_website} style={{ width: 42, height: 24, borderRadius: 12, border: 'none', background: p.show_on_website ? ACCENT : '#D0D5DD', position: 'relative', cursor: 'pointer', flexShrink: 0 }}>

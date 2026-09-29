@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-const ACCENT = '#5B7CFA'
+const ACCENT = '#A8862E'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
@@ -9,42 +9,42 @@ const AGENTS = [
   {
     key: 'guest',
     name: 'AI Guest Agent',
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
     desc: 'Answers guest questions 24/7, sends check-in/check-out instructions, Wi-Fi details, house rules, and handles common complaints.',
     capabilities: ['Answer guest questions 24/7','Send check-in/check-out instructions','Provide Wi-Fi details and house rules','Handle common complaints and requests','Respond to Airbnb, Booking.com & Vrbo enquiries','Sync calendars across platforms'],
   },
   {
     key: 'maintenance',
     name: 'AI Maintenance Coordinator',
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>,
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>,
     desc: 'Logs maintenance issues, assigns jobs to contractors, tracks repairs and follows up until work is completed.',
     capabilities: ['Log maintenance issues automatically','Assign jobs to contractors','Track repair progress','Follow up until work is completed','Notify owners of urgent issues'],
   },
   {
     key: 'cleaning',
     name: 'AI Cleaning Coordinator',
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3l18 18M9 9l-6 6a2 2 0 002.83 2.83L12 11.8M14 4l6 6-3.5 3.5L10 7l4-3z"/></svg>,
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3l18 18M9 9l-6 6a2 2 0 002.83 2.83L12 11.8M14 4l6 6-3.5 3.5L10 7l4-3z"/></svg>,
     desc: 'Automatically schedules cleaners after bookings, notifies them of turnovers, tracks completion and generates reports.',
     capabilities: ['Automatically schedule cleaners after bookings','Notify cleaners of turnovers','Track cleaning completion','Generate cleaning reports','Flag missed or late cleans'],
   },
   {
     key: 'revenue',
     name: 'AI Revenue Manager',
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
     desc: 'Adjusts nightly rates automatically, monitors competitor pricing, increases rates during high demand and fills calendar gaps.',
     capabilities: ['Adjust nightly rates automatically','Monitor competitor pricing','Increase rates during high demand periods','Fill calendar gaps with discounts','Suggest minimum stay rules'],
   },
   {
     key: 'owner',
     name: 'AI Owner Relations Manager',
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
     desc: 'Generates monthly income reports, occupancy reports, expense tracking and profit & loss statements for owners.',
     capabilities: ['Monthly income reports','Occupancy reports','Expense tracking','Profit and loss statements','Proactive owner updates'],
   },
   {
     key: 'leads',
     name: 'AI Lead Qualification Agent',
-    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B7CFA" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+    icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A8862E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
     desc: 'Finds landlord leads, qualifies property owners, books appointments automatically and follows up with prospects.',
     capabilities: ['Find landlord leads','Qualify property owners','Book appointments automatically','Follow up with prospects','Score lead quality'],
   },
@@ -183,7 +183,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>AI PROPERTY MANAGER</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>AI Agents</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>AI Agents</div>
         </div>
         <div style={{display:'flex',gap:8}}>
           {section==='Activity Log'&&<button onClick={()=>setShowLogForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Log Activity</button>}
@@ -195,7 +195,7 @@ export default function Page() {
       <div style={{padding:24}}>
 
         {section==='Overview'&&(<div>
-          <div style={{background:'linear-gradient(135deg,#5B7CFA,#3B4AFF)',borderRadius:16,padding:32,color:'#fff',marginBottom:24}}>
+          <div style={{background:'linear-gradient(135deg,#A8862E,#A8862E)',borderRadius:16,padding:32,color:'#fff',marginBottom:24}}>
             <div style={{fontSize:13,opacity:0.85,marginBottom:8,fontWeight:600,textTransform:'uppercase' as const,letterSpacing:'0.06em'}}>AI Property Manager</div>
             <div style={{fontSize:26,fontWeight:700,marginBottom:10}}>{activeCount} of {AGENTS.length} agents active</div>
             <div style={{fontSize:14,opacity:0.9,lineHeight:1.6,maxWidth:600}}>Let AI handle guest communication, maintenance coordination, cleaning scheduling, dynamic pricing, owner reporting and lead qualification — reducing the workload of 2–5 staff while operating 24/7.</div>
@@ -219,7 +219,7 @@ export default function Page() {
                     <div style={{width:16,height:16,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:activeAgents[agent.key]?18:2,transition:'left 0.2s',boxShadow:'0 1px 2px rgba(0,0,0,0.2)'}}></div>
                   </div>
                 </div>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>{agent.name}</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>{agent.name}</div>
                 <div style={{fontSize:12,color:'#667085',lineHeight:1.5}}>{agent.desc}</div>
                 <div style={{marginTop:10,fontSize:11,fontWeight:600,color:activeAgents[agent.key]?'#10B981':'#98A2B3'}}>{activeAgents[agent.key]?'● Active':'○ Inactive'}</div>
               </div>
@@ -240,7 +240,7 @@ export default function Page() {
                   <div style={{display:'flex',gap:14,alignItems:'center'}}>
                     <div style={{transform:'scale(1.4)'}}>{agent.icon}</div>
                     <div>
-                      <div style={{fontSize:18,fontWeight:700,color:'#101828'}}>{agent.name}</div>
+                      <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{agent.name}</div>
                       <div style={{fontSize:13,color:activeAgents[agent.key]?'#10B981':'#98A2B3',fontWeight:600,marginTop:2}}>{activeAgents[agent.key]?'● Active':'○ Inactive'}</div>
                     </div>
                   </div>
@@ -257,19 +257,19 @@ export default function Page() {
                 </div>
               </div>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:20}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:12}}>Recent Activity</div>
+                <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:12}}>Recent Activity</div>
                 {activityLog.filter((l:any)=>l.agent===agent.key).length===0?(
                   <div style={{color:'#98A2B3',fontSize:13,textAlign:'center' as const,padding:30}}>No activity logged for this agent yet.</div>
                 ):activityLog.filter((l:any)=>l.agent===agent.key).slice(0,5).map((l:any)=>(
                   <div key={l.id} style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
-                    <span style={{color:'#101828'}}>{l.action}</span>
+                    <span style={{color:'#323338'}}>{l.action}</span>
                     <span style={{color:'#98A2B3',fontSize:12}}>{l.createdAt}</span>
                   </div>
                 ))}
               </div>
               {agent.key==='guest' && (
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:4}}>Try it live</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Simulates a guest message and gets a real AI-drafted reply using that property's WiFi, house rules, and check-in/out info (edit these under Vacation Rentals → Properties).</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={lbl}>Property</label><select value={guestTest.property_id} onChange={e=>setGuestTest({...guestTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
@@ -280,14 +280,14 @@ export default function Page() {
                   {guestReply && (
                     <div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}>
                       <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft Reply</div>
-                      <div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{guestReply}</div>
+                      <div style={{fontSize:14,color:'#323338',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{guestReply}</div>
                     </div>
                   )}
                 </div>
               )}
               {agent.key==='maintenance' && (
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:4}}>Try it live</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Drafts a contractor assignment message, using your Team list to suggest who's best suited.</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={lbl}>Property</label><select value={maintTest.property_id} onChange={e=>setMaintTest({...maintTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
@@ -296,42 +296,42 @@ export default function Page() {
                   <div style={{marginBottom:12}}><label style={lbl}>Issue Title</label><input value={maintTest.title} onChange={e=>setMaintTest({...maintTest,title:e.target.value})} placeholder="e.g. AC not cooling" style={inp}/></div>
                   <div style={{marginBottom:12}}><label style={lbl}>Description</label><textarea value={maintTest.description} onChange={e=>setMaintTest({...maintTest,description:e.target.value})} rows={2} placeholder="Extra detail (optional)" style={{...inp,resize:'vertical' as const}}/></div>
                   <button onClick={testMaintenanceAgent} disabled={testing||!maintTest.property_id||!maintTest.title.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!maintTest.property_id||!maintTest.title.trim()?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
-                  {maintReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{maintReply}</div></div>)}
+                  {maintReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft</div><div style={{fontSize:14,color:'#323338',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{maintReply}</div></div>)}
                 </div>
               )}
               {agent.key==='cleaning' && (
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:4}}>Try it live</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Drafts a turnover-cleaning checklist for the cleaner, based on the property's house rules and guest capacity.</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={lbl}>Property</label><select value={cleanTest.property_id} onChange={e=>setCleanTest({...cleanTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                     <div><label style={lbl}>Turnover Date</label><input type="date" value={cleanTest.scheduled_date} onChange={e=>setCleanTest({...cleanTest,scheduled_date:e.target.value})} style={inp}/></div>
                   </div>
                   <button onClick={testCleaningAgent} disabled={testing||!cleanTest.property_id||!cleanTest.scheduled_date} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!cleanTest.property_id||!cleanTest.scheduled_date?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
-                  {cleanReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{cleanReply}</div></div>)}
+                  {cleanReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Draft</div><div style={{fontSize:14,color:'#323338',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{cleanReply}</div></div>)}
                 </div>
               )}
               {agent.key==='revenue' && (
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:4}}>Try it live</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Reasons from the property's own last-90-day occupancy and realized rates (no external competitor data source is connected yet) to suggest a rate change.</div>
                   <div style={{marginBottom:12}}><label style={lbl}>Property</label><select value={revTest.property_id} onChange={e=>setRevTest({...revTest,property_id:e.target.value})} style={inp}><option value="">Select…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                   <button onClick={testRevenueAgent} disabled={testing||!revTest.property_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!revTest.property_id?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
-                  {revReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Occupancy {revReply.occupancyPct}% · Avg realized rate £{revReply.avgNightly}</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{revReply.reply}</div></div>)}
+                  {revReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Occupancy {revReply.occupancyPct}% · Avg realized rate £{revReply.avgNightly}</div><div style={{fontSize:14,color:'#323338',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{revReply.reply}</div></div>)}
                 </div>
               )}
               {agent.key==='owner' && (
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:4}}>Try it live</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Drafts a monthly report email using this owner's real last-30-day bookings and their split percentage.</div>
                   <div style={{marginBottom:12}}><label style={lbl}>Owner</label><select value={ownerTest.owner_id} onChange={e=>setOwnerTest({...ownerTest,owner_id:e.target.value})} style={inp}><option value="">Select…</option>{owners.map((o:any)=><option key={o.id} value={o.id}>{o.name}</option>)}</select></div>
                   <button onClick={testOwnerAgent} disabled={testing||!ownerTest.owner_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!ownerTest.owner_id?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
-                  {ownerReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Revenue £{ownerReply.revenue?.toLocaleString()} · Owner Share £{ownerReply.ownerShare?.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{ownerReply.reply}</div></div>)}
+                  {ownerReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Revenue £{ownerReply.revenue?.toLocaleString()} · Owner Share £{ownerReply.ownerShare?.toLocaleString(undefined,{maximumFractionDigits:0})}</div><div style={{fontSize:14,color:'#323338',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{ownerReply.reply}</div></div>)}
                 </div>
               )}
               {agent.key==='leads' && (
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid '+ACCENT,padding:20,marginTop:20}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#101828',marginBottom:4}}>Try it live</div>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338',marginBottom:4}}>Try it live</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:14}}>Scores a landlord/owner inquiry and drafts a qualifying reply. Saves the lead to CRM Contacts if a name is given.</div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={lbl}>Lead Name</label><input value={leadTest.lead_name} onChange={e=>setLeadTest({...leadTest,lead_name:e.target.value})} placeholder="e.g. Michael Chen" style={inp}/></div>
@@ -339,7 +339,7 @@ export default function Page() {
                   </div>
                   <div style={{marginBottom:12}}><label style={lbl}>Inquiry</label><textarea value={leadTest.inquiry} onChange={e=>setLeadTest({...leadTest,inquiry:e.target.value})} rows={3} placeholder="Paste the lead's message…" style={{...inp,resize:'vertical' as const}}/></div>
                   <button onClick={testLeadAgent} disabled={testing||!leadTest.inquiry.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:testing||!leadTest.inquiry.trim()?0.6:1}}>{testing?'Thinking…':'Get AI Reply'}</button>
-                  {leadReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Analysis</div><div style={{fontSize:14,color:'#101828',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{leadReply}</div></div>)}
+                  {leadReply && (<div style={{marginTop:16,padding:16,borderRadius:10,background:'#F9FAFB',border:'1px solid #E4E7EC'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>AI Analysis</div><div style={{fontSize:14,color:'#323338',whiteSpace:'pre-wrap' as const,lineHeight:1.6}}>{leadReply}</div></div>)}
                 </div>
               )}
             </div>
@@ -370,12 +370,12 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'160px 1fr 140px 180px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Agent</span><span>Action</span><span>Property</span><span>Date</span><span></span>
             </div>
-            {activityLog.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🤖</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No activity logged yet</div><div style={{fontSize:13}}>Activate an agent and log its first action.</div></div>):activityLog.map((l:any)=>{
+            {activityLog.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🤖</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No activity logged yet</div><div style={{fontSize:13}}>Activate an agent and log its first action.</div></div>):activityLog.map((l:any)=>{
               const agent = AGENTS.find(a=>a.key===l.agent)
               return(
                 <div key={l.id} style={{display:'grid',gridTemplateColumns:'160px 1fr 140px 180px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <span style={{fontSize:12,fontWeight:600,color:ACCENT}}><span style={{display:'inline-flex',verticalAlign:'middle',transform:'scale(0.55)',marginRight:-6}}>{agent?.icon}</span> {agent?.name}</span>
-                  <span style={{fontSize:13,color:'#101828'}}>{l.action}</span>
+                  <span style={{fontSize:13,color:'#323338'}}>{l.action}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{l.property||'—'}</span>
                   <span style={{fontSize:11,color:'#98A2B3'}}>{l.createdAt}</span>
                   <button onClick={async ()=>{ const {error} = await supabase.from('ai_activity_log').delete().eq('id', l.id); if (error) { alert(error.message); return } setActivityLog(activityLog.filter((x:any)=>x.id!==l.id)) }} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>

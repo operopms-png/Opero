@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 
 // Global browser softphone -- mounted once in app/layout.tsx so it's
 // available on every authenticated page as a floating widget. Other
@@ -209,14 +209,14 @@ export default function Softphone() {
       {open && (
         <div style={{position:'fixed',bottom:88,right:24,width:300,background:'#fff',borderRadius:14,boxShadow:'0 8px 30px rgba(0,0,0,0.18)',border:'1px solid #E4E7EC',zIndex:200,overflow:'hidden',fontFamily:"'Inter',sans-serif"}}>
           <div style={{padding:'14px 18px',borderBottom:'1px solid #F2F4F7',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <div style={{fontSize:13,fontWeight:700,color:'#101828'}}>Calls</div>
+            <div style={{fontSize:13,fontWeight:700,color:'#323338'}}>Calls</div>
             <button onClick={()=>setOpen(false)} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:16}}>×</button>
           </div>
 
           {status==='ringing-in' && (
             <div style={{padding:20,textAlign:'center' as const}}>
               <div style={{fontSize:13,color:'#667085',marginBottom:4}}>Incoming call</div>
-              <div style={{fontSize:16,fontWeight:700,color:'#101828',marginBottom:16}}>{callInfo?.name || callInfo?.phone}</div>
+              <div style={{fontSize:16,fontWeight:700,color:'#323338',marginBottom:16}}>{callInfo?.name || callInfo?.phone}</div>
               <div style={{display:'flex',gap:10,justifyContent:'center'}}>
                 <button onClick={acceptIncoming} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#10B981',color:'#fff',fontWeight:600,cursor:'pointer'}}>Accept</button>
                 <button onClick={rejectIncoming} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#DC2626',color:'#fff',fontWeight:600,cursor:'pointer'}}>Decline</button>
@@ -227,7 +227,7 @@ export default function Softphone() {
           {(status==='calling'||status==='in-call') && (
             <div style={{padding:20,textAlign:'center' as const}}>
               <div style={{fontSize:13,color:'#667085',marginBottom:4}}>{status==='calling'?'Calling…':'In call'}</div>
-              <div style={{fontSize:16,fontWeight:700,color:'#101828'}}>{callInfo?.name || callInfo?.phone}</div>
+              <div style={{fontSize:16,fontWeight:700,color:'#323338'}}>{callInfo?.name || callInfo?.phone}</div>
               {status==='in-call' && <div style={{fontSize:12,color:'#98A2B3',marginTop:2}}>{fmtTime(seconds)}</div>}
               <div style={{display:'flex',gap:10,justifyContent:'center',marginTop:16}}>
                 {status==='in-call' && <button onClick={toggleMute} style={{padding:'10px 16px',borderRadius:8,border:'1px solid #D0D5DD',background:muted?'#F2F4F7':'#fff',color:'#344054',cursor:'pointer'}}>{muted?'Unmute':'Mute'}</button>}

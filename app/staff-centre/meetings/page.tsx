@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const DURATIONS = [15, 30, 60]
 
 function statusStyle(status: string) {
@@ -77,7 +77,7 @@ export default function MeetingsPage() {
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#101828', margin: '0 0 4px' }}>Meetings</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Meetings</h1>
           <div style={{ fontSize: 13, color: '#667085' }}>Create a scheduling link with a fixed duration -- 15, 30 or 60 minutes -- and send it to whoever's booking time with you.</div>
         </div>
         <button onClick={() => setShowNew(true)} style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ New meeting link</button>
@@ -85,7 +85,7 @@ export default function MeetingsPage() {
 
       {showNew && (
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, marginBottom: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#101828', marginBottom: 14 }}>New meeting link</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 14 }}>New meeting link</div>
           <div style={{ display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap' as const }}>
             <div style={{ flex: 1, minWidth: 200 }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Title (optional)</label>
@@ -95,7 +95,7 @@ export default function MeetingsPage() {
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Duration</label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {DURATIONS.map(d => (
-                  <button key={d} onClick={() => setDuration(d)} style={{ padding: '10px 14px', borderRadius: 8, border: `1.5px solid ${duration === d ? ACCENT : '#D0D5DD'}`, background: duration === d ? '#EEF0FF' : '#fff', color: duration === d ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{d} min</button>
+                  <button key={d} onClick={() => setDuration(d)} style={{ padding: '10px 14px', borderRadius: 8, border: `1.5px solid ${duration === d ? ACCENT : '#D0D5DD'}`, background: duration === d ? '#FBF4E6' : '#fff', color: duration === d ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{d} min</button>
                 ))}
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function MeetingsPage() {
           const s = statusStyle(m.status)
           return (
             <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 80px 130px 1.4fr 140px 110px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#101828' }}>{m.title}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#323338' }}>{m.title}</span>
               <span style={{ fontSize: 13, color: '#344054' }}>{m.duration_minutes} min</span>
               <span style={{ fontSize: 11, fontWeight: 600, color: s.color, background: s.bg, borderRadius: 20, padding: '3px 10px', width: 'fit-content' }}>{s.label}</span>
               <span style={{ fontSize: 12, color: '#667085' }}>

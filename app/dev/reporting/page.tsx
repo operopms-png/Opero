@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#3B4AFF'
+const ACCENT = '#A8862E'
 const MODULE = 'dev'
 const LABEL = 'DEVELOPMENTS'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -59,7 +59,7 @@ export default function Page() {
       <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
           <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>{LABEL}</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#101828'}}>Reporting</div>
+          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Reporting</div>
         </div>
         <div style={{display:'flex',gap:8}}>
           {section==='Reports'&&<button onClick={()=>setShowReportForm(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Create Report</button>}
@@ -98,10 +98,10 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 120px 140px 80px 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Report</span><span>Type</span><span>Period</span><span>Format</span><span>Created</span><span></span>
             </div>
-            {reports.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📊</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No reports yet</div><div style={{fontSize:13}}>Create your first report.</div></div>):reports.map((r:any)=>(
+            {reports.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📊</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No reports yet</div><div style={{fontSize:13}}>Create your first report.</div></div>):reports.map((r:any)=>(
               <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 140px 80px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{r.name}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{r.type}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{r.name}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{r.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.period}</span>
                 <span style={{fontSize:11,fontWeight:600,color:'#667085'}}>{r.format}</span>
                 <span style={{fontSize:11,color:'#98A2B3'}}>{new Date(r.created_at).toLocaleDateString()}</span>
@@ -131,10 +131,10 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 200px 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
               <span>Name</span><span>Type</span><span>Frequency</span><span>Recipients</span><span>Next Run</span><span></span>
             </div>
-            {scheduled.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>⏰</div><div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:6}}>No scheduled reports</div></div>):scheduled.map((r:any)=>(
+            {scheduled.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>⏰</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No scheduled reports</div></div>):scheduled.map((r:any)=>(
               <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 200px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#101828'}}>{r.name}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EEF1FF',color:ACCENT,fontWeight:600}}>{r.type}</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{r.name}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{r.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.frequency}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.recipients||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.next_run||'—'}</span>
@@ -149,7 +149,7 @@ export default function Page() {
             {REPORT_TYPES.slice(0,6).map(type=>(
               <div key={type} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,cursor:'pointer'}} onClick={()=>{setReportForm({...reportForm,type,name:type+' Report'});setSection('Reports');setShowReportForm(true)}}>
                 <div style={{fontSize:24,marginBottom:8}}>{type==='Revenue'?'💰':type==='Occupancy'?'🏠':type==='Bookings'?'📅':type==='Expenses'?'💸':type==='P&L'?'📊':'💵'}</div>
-                <div style={{fontSize:14,fontWeight:600,color:'#101828',marginBottom:4}}>{type} Report</div>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>{type} Report</div>
                 <div style={{fontSize:12,color:'#667085'}}>Click to generate</div>
                 <div style={{marginTop:8,fontSize:12,color:ACCENT,fontWeight:600}}>{reports.filter((r:any)=>r.type===type).length} generated</div>
               </div>

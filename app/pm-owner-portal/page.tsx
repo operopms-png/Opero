@@ -3,7 +3,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 
-const ACCENT = '#5B7CFA'
+const ACCENT = '#A8862E'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
@@ -128,13 +128,13 @@ function PMOwnerPortalInner() {
       <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '48px 28px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Landlord Portal</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#101828' }}>Select a landlord to preview</h1>
+          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#323338' }}>Select a landlord to preview</h1>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>This is the staff view — pick a landlord to see and manage their portal exactly as they see it.</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pickerLandlords.map(l => (
               <a key={l.id} href={`/pm-owner-portal?landlord_id=${l.id}`} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#101828' }}>{l.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{l.name}</div>
                   <div style={{ fontSize: 12, color: '#98A2B3' }}>{l.email ?? '—'}</div>
                 </div>
                 <span style={{ fontSize: 12, color: ACCENT, fontWeight: 600 }}>Preview →</span>
@@ -193,15 +193,15 @@ function PMOwnerPortalInner() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
       {isStaffView && (
-        <div style={{ background: '#EEF1FF', borderBottom: '1px solid #C7D2FE', padding: '8px 28px', fontSize: 13, color: '#3B4AFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FBF4E6', borderBottom: '1px solid #EADBB8', padding: '8px 28px', fontSize: 13, color: '#A8862E', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>👁️ Viewing as {landlord.name} — you can view and manage everything here as staff</span>
-          <a href="/pm?tab=Landlords" style={{ color: '#3B4AFF', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
+          <a href="/pm?tab=Landlords" style={{ color: '#A8862E', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
         </div>
       )}
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Landlord Portal</div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: '#101828' }}>Welcome, {landlord.name}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#323338' }}>Welcome, {landlord.name}</div>
         </div>
         {!isStaffView && (
           <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
@@ -215,7 +215,7 @@ function PMOwnerPortalInner() {
 
       <div style={{ padding: 28, maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#101828' }}>{properties.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Your Properties</div></div>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>{properties.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Your Properties</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#059669' }}>£{totalPaid.toLocaleString()}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Total Paid to You</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#D97706' }}>{pendingCount}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Pending Payments</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #FEE2E2', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#EF4444' }}>{overdueCount}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Overdue</div></div>
@@ -223,12 +223,12 @@ function PMOwnerPortalInner() {
 
         {tab === 'Dashboard' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 16 }}>Recent Payments</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 16 }}>Recent Payments</div>
             {payments.length === 0 ? <div style={{ color: '#98A2B3', fontSize: 13, textAlign: 'center', padding: 30 }}>No payments recorded yet.</div> : payments.slice(0, 6).map(p => {
               const s = statusFor(p)
               return (
                 <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F2F4F7' }}>
-                  <div><div style={{ fontSize: 13, fontWeight: 500, color: '#101828' }}>{p.pm_properties?.name ?? '—'} · {p.category}</div><div style={{ fontSize: 11, color: '#98A2B3' }}>Due {p.due_date ?? '—'}</div></div>
+                  <div><div style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{p.pm_properties?.name ?? '—'} · {p.category}</div><div style={{ fontSize: 11, color: '#98A2B3' }}>Due {p.due_date ?? '—'}</div></div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>£{parseFloat(p.amount).toLocaleString()}</span>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: s.bg, color: s.color }}>{s.label}</span>
@@ -243,7 +243,7 @@ function PMOwnerPortalInner() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {properties.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>No properties assigned yet.</div> : properties.map(p => (
               <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '16px 20px' }}>
-                <div style={{ fontWeight: 600, fontSize: 14, color: '#101828' }}>{p.name}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{p.name}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{[p.address, p.city, p.country].filter(Boolean).join(', ')}</div>
               </div>
             ))}
@@ -254,7 +254,7 @@ function PMOwnerPortalInner() {
           <div>
             {isStaffView && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-                <button onClick={() => setShowAddPayment(true)} style={{ background: '#101828', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Payment</button>
+                <button onClick={() => setShowAddPayment(true)} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Payment</button>
               </div>
             )}
             {showAddPayment && (
@@ -268,7 +268,7 @@ function PMOwnerPortalInner() {
                   <div><label style={lbl}>Notes</label><input style={inp} value={payForm.notes} onChange={e=>setPayForm({...payForm,notes:e.target.value})}/></div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={addPayment} disabled={saving} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{saving?'Saving…':'Save'}</button>
+                  <button onClick={addPayment} disabled={saving} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{saving?'Saving…':'Save'}</button>
                   <button onClick={()=>setShowAddPayment(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Cancel</button>
                 </div>
               </div>
@@ -281,7 +281,7 @@ function PMOwnerPortalInner() {
                 const s = statusFor(p)
                 return (
                   <div key={p.id} style={{ display: 'grid', gridTemplateColumns: isStaffView ? '1fr 120px 100px 100px 100px 130px 80px 30px' : '1fr 120px 100px 100px 100px 130px 80px', padding: '13px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 13, color: '#101828' }}>{p.pm_properties?.name ?? '—'}</span>
+                    <span style={{ fontSize: 13, color: '#323338' }}>{p.pm_properties?.name ?? '—'}</span>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: '#F2F4F7', color: '#344054' }}>{p.category}</span>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>£{parseFloat(p.amount).toLocaleString()}</span>
                     <span style={{ fontSize: 12, color: '#667085' }}>{p.due_date ?? '—'}</span>
@@ -308,7 +308,7 @@ function PMOwnerPortalInner() {
                   const isMine = m.sender === 'landlord'
                   return (
                     <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
-                      <div style={{ maxWidth: '70%', background: isMine ? ACCENT : '#F3F4F6', color: isMine ? '#fff' : '#101828', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
+                      <div style={{ maxWidth: '70%', background: isMine ? ACCENT : '#F3F4F6', color: isMine ? '#fff' : '#323338', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
                         <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{isMine ? (landlord?.name ?? 'You') : 'Property Manager'}</div>
                         {parseAttachments(m.attachment_url).length > 0 && (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: m.message ? 8 : 4 }}>
@@ -367,14 +367,14 @@ function PMOwnerPortalInner() {
 
         {tab === 'Contact & Payment' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 4 }}>Contact Details</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Contact Details</div>
             <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>{isStaffView ? "You're editing this on the landlord's behalf." : 'Keep this up to date so we can reach you.'}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
               <div><label style={lbl}>Email</label><input style={inp} value={contactForm.email} onChange={e=>setContactForm({...contactForm,email:e.target.value})}/></div>
               <div><label style={lbl}>Phone</label><input style={inp} value={contactForm.phone} onChange={e=>setContactForm({...contactForm,phone:e.target.value})}/></div>
               <div style={{ gridColumn: 'span 2' }}><label style={lbl}>Address</label><input style={inp} value={contactForm.address} onChange={e=>setContactForm({...contactForm,address:e.target.value})}/></div>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#101828', marginBottom: 4 }}>Payment Details</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Payment Details</div>
             <div style={{ fontSize: 12, color: '#667085', marginBottom: 16 }}>Where should rent share/payments be sent?</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
               <div><label style={lbl}>Bank Name</label><input style={inp} value={contactForm.bank_name} onChange={e=>setContactForm({...contactForm,bank_name:e.target.value})}/></div>
@@ -383,7 +383,7 @@ function PMOwnerPortalInner() {
               <div><label style={lbl}>Sort Code</label><input style={inp} value={contactForm.sort_code} onChange={e=>setContactForm({...contactForm,sort_code:e.target.value})}/></div>
               <div><label style={lbl}>Routing Number (if applicable)</label><input style={inp} value={contactForm.routing_number} onChange={e=>setContactForm({...contactForm,routing_number:e.target.value})}/></div>
             </div>
-            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#101828', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
+            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
           </div>
         )}
       </div>

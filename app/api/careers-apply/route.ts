@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       await sendEmail(
         to,
         `New job application: ${name} for ${role}`.slice(0, 150),
-        `<div style="font-family:Inter,Arial,sans-serif;font-size:14px;color:#101828;line-height:1.6">
+        `<div style="font-family:Inter,Arial,sans-serif;font-size:14px;color:#323338;line-height:1.6">
           <p>Someone applied on your website careers page.</p>
           <table style="border-collapse:collapse;margin:8px 0 14px">
             <tr><td style="padding:2px 16px 2px 0;color:#667085">Role</td><td>${esc(role)}${category ? ` (${esc(category)})` : ''}</td></tr>
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
             <tr><td style="padding:2px 16px 2px 0;color:#667085">Phone</td><td>${esc(phone || '—')}</td></tr>
           </table>
           ${message ? `<p style="white-space:pre-wrap;background:#F9FAFB;border:1px solid #EAECF0;border-radius:8px;padding:12px">${esc(message)}</p>` : ''}
-          <p><a href="${site}/staff-centre/applications" style="display:inline-block;background:#3B4AFF;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Applications</a></p>
+          <p><a href="${site}/staff-centre/applications" style="display:inline-block;background:#A8862E;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Applications</a></p>
         </div>`,
         email,
       )
