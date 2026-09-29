@@ -244,7 +244,7 @@ export default function Sidebar() {
           {!isCollapsed && (
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: '#3A2A10', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail.split('@')[0]}</div>
-              <div style={{ fontSize: 11, color: '#8A6B2E', textTransform: 'capitalize' }}>{plan}</div>
+              <div style={{ fontSize: 11, color: '#8A6B2E' }}>{role}</div>
             </div>
           )}
           {!isCollapsed && (

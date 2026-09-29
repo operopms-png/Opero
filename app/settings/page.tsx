@@ -9,7 +9,7 @@ const NAV = [
   {group:'ACCOUNT',items:[
     {s:'My Account',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>},
     {s:'Team Management',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>},
-    {s:'Billing & Subscriptions',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>},
+    {s:'Payments',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>},
     {s:'System Messages',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>},
   ]}
 ]
@@ -18,10 +18,9 @@ const ROLES = ['Admin','Vacation Rental Team','Property Management Team','Estate
 
 function SettingsInner() {
   const searchParams = useSearchParams()
-  const billingRequired = searchParams.get('billing') === 'required'
   const sectionParam = searchParams.get('section')
   const { role: myRole, hasSettings, loading: roleLoading } = useRole()
-  const [section, setSection] = useState(billingRequired ? 'Billing & Subscriptions' : (sectionParam || 'My Account'))
+  const [section, setSection] = useState(sectionParam === 'Billing & Subscriptions' ? 'Payments' : (sectionParam || 'My Account'))
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [team, setTeam] = useState<any[]>([])
@@ -202,7 +201,7 @@ function SettingsInner() {
             <div key={group.group}>
               <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px'}}>{group.group}</div>
               {group.items.map(({s,i})=>{
-                const locked = billingRequired && s!=='Billing & Subscriptions'
+                const locked = false
                 return (
                 <button key={s} onClick={()=>{if(locked)return; if(s==='Team Chat'){window.location.href='/team-chat';return;} setSection(s)}} disabled={locked} style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',borderRadius:7,border:'none',background:section===s?ACCENT+'18':'transparent',color:locked?'#D0D5DD':section===s?ACCENT:'#344054',fontSize:13,fontWeight:section===s?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:1}}>
                   <span style={{display:'flex',alignItems:'center'}}>{i}</span>{s}
@@ -218,16 +217,6 @@ function SettingsInner() {
           <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#101828'}}>{section}</h1>
         </div>
         <div style={{flex:1,padding:24,overflowY:'auto'}}>
-
-          {billingRequired && (
-            <div style={{background:'#FEF3C7',border:'1px solid #FCD34D',borderRadius:12,padding:'16px 20px',marginBottom:20,display:'flex',alignItems:'center',gap:12}}>
-              <span style={{fontSize:20}}>⚠️</span>
-              <div>
-                <div style={{fontSize:14,fontWeight:600,color:'#92400E'}}>Access restricted — payment required</div>
-                <div style={{fontSize:13,color:'#B45309',marginTop:2}}>Your trial has ended and we couldn't process payment. Update your billing details below to restore full access.</div>
-              </div>
-            </div>
-          )}
 
           {section==='My Account'&&(<div style={{maxWidth:600}}>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
@@ -513,36 +502,7 @@ function SettingsInner() {
             </div>
           </div>)}
 
-          {section==='Billing & Subscriptions'&&(<div style={{maxWidth:700}}>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-                <div>
-                  <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Current plan</h3>
-                  <div style={{fontSize:13,color:'#667085'}}>Your subscription details</div>
-                </div>
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:22,fontWeight:700,color:'#101828'}}>{({aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency',bundle:'All Modules (one-time)',all_monthly:'All Modules (monthly)'} as any)[plan] ?? plan}</div>
-                  <div style={{fontSize:12,color:'#667085'}}>Active</div>
-                </div>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-                {(plan==='bundle'
-                  ? [{l:'All modules included',icon:'✅'},{l:'One-time payment',icon:'💳'},{l:'No recurring fees',icon:'⚡'}]
-                  : plan==='all_monthly'
-                  ? [{l:'All modules included',icon:'✅'},{l:'Billed monthly',icon:'🗓️'},{l:'Cancel anytime',icon:'✋'}]
-                  : [{l:{aipm:'AI Property Manager',invest:'Deal Analyser',str:'Vacation Rentals',pm:'Property Management',dev:'Developments',ea:'Estate Agency'}[plan] ?? plan,icon:'📦'},{l:'Billed monthly',icon:'🗓️'},{l:'Legacy module plan',icon:'📌'}]
-                ).map(f=>(
-                  <div key={f.l} style={{padding:16,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8}}>
-                    <span style={{fontSize:18}}>{f.icon}</span>
-                    <span style={{fontSize:12,fontWeight:500,color:'#344054'}}>{f.l}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Manage subscription</button>
-                <button style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>View invoices</button>
-              </div>
-            </div>
+          {section==='Payments'&&(<div style={{maxWidth:700}}>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                 <div>
@@ -560,25 +520,6 @@ function SettingsInner() {
                   <button onClick={connectStripe} disabled={connectingStripe} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:connectingStripe?0.6:1}}>{connectingStripe?'Redirecting…':connectAccountId?'Finish Stripe setup':'Connect Stripe account'}</button>
                 </div>
               )}
-            </div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Plans</h3>
-              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>One plan unlocks every module — Vacation Rentals, Property Management, Estate Agency, Developments, AI Property Manager, Deal Analyser and the whole Staff Centre.</div>
-
-              <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16}}>
-                <div style={{border:'2px solid '+(plan==='all_monthly'?ACCENT:'#E4E7EC'),borderRadius:12,padding:24,background:plan==='all_monthly'?ACCENT+'08':'#fff'}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>Monthly</div>
-                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, billed every month. Cancel anytime.</div>
-                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£79<span style={{fontSize:14,color:'#98A2B3',fontWeight:400}}>/mo</span></div>
-                  <button onClick={()=>buyPlan('all_monthly')} disabled={buyingPlan==='all_monthly'||plan==='all_monthly'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='all_monthly'?'#F2F4F7':ACCENT,color:plan==='all_monthly'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='all_monthly'?0.6:1}}>{plan==='all_monthly'?'Current plan':buyingPlan==='all_monthly'?'Redirecting…':'Choose monthly'}</button>
-                </div>
-                <div style={{border:'2px solid '+(plan==='bundle'?ACCENT:'#C9A84C'),borderRadius:12,padding:24,background:plan==='bundle'?ACCENT+'08':'#FBF4E6'}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#101828',marginBottom:4}}>One-time payment</div>
-                  <div style={{fontSize:13,color:'#667085',marginBottom:16}}>All modules, pay once, keep it forever — no recurring fees.</div>
-                  <div style={{fontSize:32,fontWeight:700,color:'#101828',marginBottom:16}}>£175.50</div>
-                  <button onClick={()=>buyPlan('bundle')} disabled={buyingPlan==='bundle'||plan==='bundle'} style={{width:'100%',padding:'10px',borderRadius:8,border:'none',background:plan==='bundle'?'#F2F4F7':'#C9A84C',color:plan==='bundle'?'#344054':'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:buyingPlan==='bundle'?0.6:1}}>{plan==='bundle'?'Current plan':buyingPlan==='bundle'?'Redirecting…':'Pay once'}</button>
-                </div>
-              </div>
             </div>
           </div>)}
 

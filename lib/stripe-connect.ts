@@ -3,7 +3,7 @@ import { serviceClient } from '@/lib/admin-auth'
 // Shared Stripe Connect helpers.
 //
 // Each business on Opero connects its own Stripe account (Settings →
-// Billing & Subscriptions). Customer payments are DIRECT charges on that
+// Payments). Customer payments are DIRECT charges on that
 // account: the checkout session is created with { stripeAccount }, so the
 // money, the Stripe fees and any disputes all sit with the business, and
 // Stripe (not Opero) covers unrecoverable losses. Nothing is ever charged on

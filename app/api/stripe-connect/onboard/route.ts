@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
         type: 'account_onboarding',
         account_onboarding: {
           configurations: ['merchant'],
-          refresh_url: `${siteUrl}/settings?section=Billing%20%26%20Subscriptions&stripe_connect=refresh`,
-          return_url: `${siteUrl}/settings?section=Billing%20%26%20Subscriptions&stripe_connect=return`,
+          refresh_url: `${siteUrl}/settings?section=Payments&stripe_connect=refresh`,
+          return_url: `${siteUrl}/settings?section=Payments&stripe_connect=return`,
         },
       },
     })
