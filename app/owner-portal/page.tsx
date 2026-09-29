@@ -48,7 +48,7 @@ const STAGING_STEPS = [
 ]
 
 const NAV = [
-  { section: 'OVERVIEW', items: ['Dashboard', 'My Bookings', 'Calendar'] },
+  { section: 'OVERVIEW', items: ['Dashboard', 'Partners', 'My Bookings', 'Calendar'] },
   { section: 'REPORTS', items: ['Maintenance', 'Statements', 'ROI Per Owner', 'My Properties', 'Finance & Documents', 'Property Onboarding'] },
   { section: 'COMMUNICATION', items: ['Messages', 'Contact & Payment'] },
 ]
@@ -645,7 +645,7 @@ export default function OwnerPortalPage() {
             <div key={group.section}>
               <div style={{ fontSize: 9, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', padding: '12px 16px 4px', letterSpacing: '0.08em' }}>{group.section}</div>
               {group.items.map(item => (
-                <button key={item} onClick={() => setTab(item)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 16px', fontSize: 12, fontWeight: tab === item ? 600 : 400, color: tab === item ? '#5B7CFA' : '#667085', background: tab === item ? '#EEF1FF' : 'transparent', border: 'none', cursor: 'pointer', borderLeft: tab === item ? '2px solid #5B7CFA' : '2px solid transparent' }}>
+                <button key={item} onClick={() => { if (item === 'Partners') { window.location.href = '/staff-centre/partners'; return } setTab(item) }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 16px', fontSize: 12, fontWeight: tab === item ? 600 : 400, color: tab === item ? '#5B7CFA' : '#667085', background: tab === item ? '#EEF1FF' : 'transparent', border: 'none', cursor: 'pointer', borderLeft: tab === item ? '2px solid #5B7CFA' : '2px solid transparent' }}>
                   {item}
                 </button>
               ))}
