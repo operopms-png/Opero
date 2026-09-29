@@ -216,6 +216,7 @@ export default function Sidebar() {
                 const linkHref = itemHasModule ? href : (requiresModule ? '/modules' : '#')
                 return (
                   <Link key={href} href={linkHref}
+                    data-active={active ? '1' : undefined}
                     title={isCollapsed ? label : undefined}
                     onClick={(e: any) => { if (!itemHasModule && !requiresModule) e.preventDefault(); else if (itemHasModule && !hasAccess) e.preventDefault(); else setOpen(false) }}
                     style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#624920' : 'transparent', color: !itemHasModule ? '#9E8445' : !hasAccess ? '#9E8445' : active ? '#FFFFFF' : '#3A2A10', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
@@ -269,7 +270,7 @@ export default function Sidebar() {
         @media(max-width:768px){.desktop-sidebar{display:none!important}.mobile-trigger{display:flex!important}}
         @media(min-width:769px){.mobile-trigger{display:none!important}.mobile-overlay{display:none!important}}
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        .sidebar-nav a:hover { background: #C4A142 !important; }
+        .sidebar-nav a:not([data-active]):hover { background: #C4A142 !important; }
       `}</style>
       {open && <div className="mobile-overlay" onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />}
       <button
