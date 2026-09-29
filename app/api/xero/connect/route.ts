@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
   const clientId = process.env.XERO_CLIENT_ID
-  const redirectUri = process.env.XERO_REDIRECT_URI // e.g. https://helloopero.com/api/xero/callback
+  const redirectUri = process.env.XERO_REDIRECT_URI // e.g. https://<site>/api/xero/callback
 
   if (!clientId || !redirectUri) {
     return NextResponse.json(

@@ -3,7 +3,7 @@ import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 
 // Public route -- no auth required, this is the landing page's lead
-// capture form (public/landing.html). Anyone can hit this, so it only
+// capture form (former public landing page). Anyone can hit this, so it only
 // ever inserts a row; it never reads back other people's submissions.
 export async function POST(req: NextRequest) {
   const body = await req.json()

@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useRole, ROLE_MODULES, getScTabs, resolveAccess } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
+import { BRAND_NAME } from '@/lib/brand'
 
 const NAV_GROUPS = [
   {
@@ -120,8 +121,8 @@ export default function Sidebar() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [plan, setPlan] = useState('starter')
-  const [modules, setModules] = useState<string[]>([])
+  const [plan, setPlan] = useState('bundle')
+  const [modules, setModules] = useState<string[]>(['aipm','invest','str','pm','dev','ea'])
   const [userEmail, setUserEmail] = useState('')
   const [counts, setCounts] = useState<Record<string, number>>({})
   const { role, hasSettings, modules: teamModules } = useRole()
@@ -148,10 +149,8 @@ export default function Sidebar() {
         // Staff and partners use their business's subscription
         const ownerId = (await resolveAccess(user)).businessId
         const { data: sub } = await supabase.from('subscriptions').select('plan, modules').eq('user_id', ownerId).single()
-        if (sub) {
-          if ((sub as any).plan) setPlan((sub as any).plan)
-          if ((sub as any).modules) setModules((sub as any).modules ?? [])
-        }
+        // Internal portal: every module is always on, whatever the subscription row says.
+        void sub
       }
     }
     loadPlan()
@@ -170,8 +169,8 @@ export default function Sidebar() {
       {/* Logo */}
       <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid #DCE4FA', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.PNG" alt="Opero" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          {!isCollapsed && <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>Opero</span>}
+          <img src="/logo.PNG" alt={BRAND_NAME} style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          {!isCollapsed && <span style={{ fontSize: 15, fontWeight: 700, color: '#101828', letterSpacing: '-0.3px' }}>{BRAND_NAME}</span>}
         </div>
         {!isCollapsed && <NotificationBell />}
       </div>

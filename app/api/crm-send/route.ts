@@ -3,6 +3,7 @@ import { serviceClient, requireUser } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 import { sendSms } from '@/lib/send-sms'
 import { sendWhatsapp } from '@/lib/send-whatsapp'
+import { EMAIL_DOMAIN } from '@/lib/brand'
 
 // Sends a message to a CRM contact over email, SMS, or WhatsApp, and logs
 // it to crm_activities so it shows up in that contact's activity feed
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
     let replyTo: string | undefined
     if (contact_id) {
       const { data: contact } = await serviceClient.from('crm_contacts').select('reply_token').eq('id', contact_id).single()
-      if (contact?.reply_token) replyTo = `crm+${contact.reply_token}@helloopero.com`
+      if (contact?.reply_token) replyTo = `crm+${contact.reply_token}@${EMAIL_DOMAIN}`
     }
     result = await sendEmail(to, subject || 'Message from your property manager', `<p>${body.replace(/\n/g, '<br/>')}</p>`, replyTo)
   } else if (channel === 'sms') {

@@ -40,7 +40,7 @@ function ResetPasswordForm() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 32 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: '#101828', margin: '0 0 4px' }}>Set a new password</h1>
-          <p style={{ fontSize: 13, color: '#667085', margin: '0 0 24px' }}>Choose a new password for your Opero account.</p>
+          <p style={{ fontSize: 13, color: '#667085', margin: '0 0 24px' }}>Choose a new password for your account.</p>
 
           {done ? (
             <div>

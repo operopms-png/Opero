@@ -5,6 +5,7 @@
 // secret-protected route for manual testing, since Netlify blocks direct
 // external invocation of scheduled functions).
 import { createClient } from '@supabase/supabase-js'
+import { SITE_URL, EMAIL_FROM } from '@/lib/brand'
 
 const DAY_MS = 86400000
 const COMPLIANCE_WINDOW_DAYS = 30
@@ -22,7 +23,7 @@ async function sendEmail(to: string, subject: string, html: string) {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
-      body: JSON.stringify({ from: 'Opero <notifications@helloopero.com>', to, subject, html }),
+      body: JSON.stringify({ from: EMAIL_FROM, to, subject, html }),
     })
     return { sent: true }
   } catch (err) {
@@ -78,7 +79,7 @@ async function scanEstateAgency(supabase: any, userId: string) {
     ...expiringTenancies.map((t: any) => `<li><strong>Tenancy ending:</strong> ${t.estate_tenants?.name ?? 'tenant'} at ${t.estate_properties?.name ?? 'unknown property'} (ends ${t.end_date})</li>`),
     ...overdueRent.map((r: any) => `<li><strong>Overdue rent:</strong> £${r.amount} — ${r.estate_tenancies?.estate_tenants?.name ?? 'tenant'} at ${r.estate_tenancies?.estate_properties?.name ?? 'unknown property'}</li>`),
   ]
-  const html = `<p>Your Estate Agency account has ${totalIssues} item${totalIssues > 1 ? 's' : ''} needing attention:</p><ul>${rows.join('')}</ul><p><a href="https://helloopero.com/estate">Review in Opero</a></p>`
+  const html = `<p>Your Estate Agency account has ${totalIssues} item${totalIssues > 1 ? 's' : ''} needing attention:</p><ul>${rows.join('')}</ul><p><a href="${SITE_URL}/estate">Review in Sangsters</a></p>`
 
   const emailResult = await sendEmail(email, title, html)
   return { userId, totalIssues, notified: true, emailed: !!(emailResult as any).sent }

@@ -1,5 +1,6 @@
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
+import { SITE_URL } from '@/lib/brand'
 
 // Website AI assistant (the chat box businesses embed on their own website).
 // - Settings, chats and messages live in website_chat_settings / website_chats / website_chat_messages
@@ -235,7 +236,7 @@ export async function saveLead(s: ChatSettings, chatId: string, input: { name?: 
     to = data?.user?.email ?? null
   }
   if (to) {
-    const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://helloopero.com'
+    const site = SITE_URL
     await sendEmail(
       to,
       title.slice(0, 150),

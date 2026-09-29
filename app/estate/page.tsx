@@ -6,6 +6,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
+import { SITE_HOST } from '@/lib/brand'
 const ACCENT = '#3B4AFF'
 
 async function uploadPropertyImage(file: File): Promise<string | null> {
@@ -232,7 +233,7 @@ export default function Page() {
   useEffect(() => { if (allowedTab) setSection(allowedTab) }, [allowedTab])
   const [loading, setLoading] = useState(true)
   const [extraBlocks, setExtraBlocks] = useState(0)
-  const [isBundle, setIsBundle] = useState(false)
+  const [isBundle, setIsBundle] = useState(true) // internal portal: unlimited properties
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
   const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
@@ -383,7 +384,7 @@ export default function Page() {
     const inventoryData = propertyIds.length > 0 ? (inv.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (inv.data ?? [])
     const documentData = propertyIds.length > 0 ? (doc.data ?? []).filter((x: any) => !x.property_id || restrictedIds.includes(x.property_id)) : (doc.data ?? [])
     setExtraBlocks((sub.data as any)?.ea_extra_blocks ?? 0)
-    setIsBundle((sub.data as any)?.plan === 'bundle')
+    setIsBundle(true)
     setProperties(restrictedProps); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
     setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
@@ -2483,7 +2484,7 @@ export default function Page() {
               const result=await res.json()
               setCreatingPortal(false)
               if(!res.ok){alert(result.error||'Could not create portal access');return}
-              alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: helloopero.com/login`)
+              alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalLandlord(null);await loadAll()
             }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
           </div>
@@ -2507,7 +2508,7 @@ export default function Page() {
               const result=await res.json()
               setCreatingTenantPortal(false)
               if(!res.ok){alert(result.error||'Could not create portal access');return}
-              alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: helloopero.com/login`)
+              alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalTenant(null);await loadAll()
             }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
           </div>
@@ -2537,7 +2538,7 @@ export default function Page() {
                   {sendingAddresses.map((a:any)=><option key={a.id} value={a.id}>{a.name} &lt;{a.email}&gt;</option>)}
                 </select>
               ) : (
-                <div style={{fontSize:12,color:'#98A2B3'}}>No sending addresses saved yet — will send from Opero's default address.</div>
+                <div style={{fontSize:12,color:'#98A2B3'}}>No sending addresses saved yet — will send from the default notifications address.</div>
               )}
               {!showAddSendAddress ? (
                 <button onClick={()=>setShowAddSendAddress(true)} style={{fontSize:11,color:ACCENT,background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',marginTop:6,padding:0}}>+ Add a sending address</button>

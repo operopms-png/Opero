@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import PartnerBroadcast from '../../components/PartnerBroadcast'
 import { STAFF_CENTRE_TABS, PARTNER_GRANTABLE_MODULES } from '../../lib/useRole'
 import InvestPage from '../invest/page'
+import { SITE_HOST } from '@/lib/brand'
 
 // Partners
 // --------
@@ -836,7 +837,7 @@ export default function PartnersPage() {
                 <div style={{ fontSize: 13, color: '#667085', marginTop: 2 }}>Share this with new investors. They pay the {PARTNER_FEE} membership and get their own login.</div>
                 {joinLink ? (
                   <div style={{ marginTop: 8, fontSize: 13, background: '#F9FAFB', border: '1px solid #EAECF0', borderRadius: 8, padding: '8px 10px', display: 'inline-block', wordBreak: 'break-all' }}>
-                    {typeof window !== 'undefined' ? window.location.host : 'helloopero.com'}/join/{joinLink.slug}
+                    {typeof window !== 'undefined' ? window.location.host : SITE_HOST}/join/{joinLink.slug}
                   </div>
                 ) : (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>

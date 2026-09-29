@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   const plan = subscription?.plan ?? 'starter'
   const features = PLAN_FEATURES[plan] ?? PLAN_FEATURES.starter
-  const propertyLimit = PLAN_PROPERTY_LIMIT[plan] ?? 5
+  const propertyLimit = Infinity // internal portal: no plan limits
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 
@@ -141,8 +141,8 @@ export default function DashboardPage() {
               <span style={{ fontSize: 13, fontWeight: 600, color: PLAN_COLOR[plan], textTransform: 'capitalize' }}>{plan}</span>
             </div>
           )}
-          {plan !== 'professional' && (
-            <a href="/landing.html#pricing" style={{ padding: '7px 16px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>⚡ Upgrade</a>
+          {false && plan !== 'professional' && (
+            <a href="/settings" style={{ padding: '7px 16px', background: '#5B7BF8', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>⚡ Upgrade</a>
           )}
         </div>
       </div>

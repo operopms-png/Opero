@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStaff, serviceClient } from '@/lib/admin-auth'
+import { SITE_URL } from '@/lib/brand'
 
 export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const { error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(email, {
     data: { name, role },
-    redirectTo: 'https://helloopero.com/login'
+    redirectTo: `${SITE_URL}/login`
   })
   if (inviteError) return NextResponse.json({ error: inviteError.message }, { status: 500 })
 

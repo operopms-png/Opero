@@ -164,7 +164,7 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
                     {url && <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#3B4AFF', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap' }}>View file</a>}
                   </div>
                   {url && <div style={{ fontSize: 11, color: '#10B981', marginTop: 4 }}>✓ File uploaded</div>}
-                  <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 8 }}>A fixed file — can't have names/dates changed per tenant from inside Opero. Use "Write Template" instead if you need that.</div>
+                  <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 8 }}>A fixed file — can't have names/dates changed per tenant from inside the portal. Use "Write Template" instead if you need that.</div>
                 </div>
               ) : (
                 <div>

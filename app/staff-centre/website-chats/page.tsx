@@ -1,13 +1,14 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { SITE_URL } from '@/lib/brand'
 
 // Staff Centre -> Website Chats
 // Every conversation from the AI chat box on the business's own website, the leads it captured,
 // the assistant's settings, the install code, and which properties it can show.
 
 const ACCENT = '#3B4AFF'
-const SITE = 'https://helloopero.com'
+const SITE = SITE_URL
 const CURRENCIES = [
   { v: '', l: 'Don’t show prices (team confirms)' },
   { v: 'GBP', l: 'GBP £' }, { v: 'USD', l: 'USD $' }, { v: 'JMD', l: 'JMD J$' }, { v: 'AED', l: 'AED' }, { v: 'EUR', l: 'EUR €' },

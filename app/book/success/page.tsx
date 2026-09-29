@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { BRAND_NAME } from '@/lib/brand'
 
 function SuccessContent() {
   const params = useSearchParams()
@@ -31,8 +32,8 @@ function SuccessContent() {
           ))}
         </div>
       )}
-      <a href="/landing.html" style={{display:'block',padding:'12px',background:'#0a0f1e',color:'#fff',borderRadius:10,fontSize:14,fontWeight:700,textDecoration:'none'}}>
-        Back to Opero
+      <a href="https://www.sangstersgroup.com" style={{display:'block',padding:'12px',background:'#0a0f1e',color:'#fff',borderRadius:10,fontSize:14,fontWeight:700,textDecoration:'none'}}>
+        Back to {BRAND_NAME}
       </a>
     </div>
   )

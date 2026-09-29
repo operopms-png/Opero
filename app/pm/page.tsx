@@ -8,6 +8,7 @@ import { supabase, getAccountId } from '../../lib/supabase'
 import { downloadCsv } from '@/lib/export-csv'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
+import { SITE_HOST } from '@/lib/brand'
 
 const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Owner Reports','Statements','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
@@ -263,7 +264,7 @@ function PMPageInner() {
   const [complianceForm, setComplianceForm] = useState<any>({scope:'property',property_id:'',type:PROPERTY_COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
   const [loading, setLoading] = useState(true)
   const [extraBlocks, setExtraBlocks] = useState(0)
-  const [isBundle, setIsBundle] = useState(false)
+  const [isBundle, setIsBundle] = useState(true) // internal portal: unlimited properties
   const [viewingPhotos, setViewingPhotos] = useState<string[]|null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
@@ -322,7 +323,7 @@ function PMPageInner() {
       const mods = (sub as any)?.modules ?? []
       setHasModule(mods.includes('pm') || mods.includes('dev'))
       setExtraBlocks((sub as any)?.pm_extra_blocks ?? 0)
-      setIsBundle((sub as any)?.plan === 'bundle')
+      setIsBundle(true)
       await loadAll(accountId)
       setLoading(false)
     }
@@ -2303,7 +2304,7 @@ function PMPageInner() {
               const result=await res.json()
               setCreatingPortal(false)
               if(!res.ok){alert(result.error||'Could not create portal access');return}
-              alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: helloopero.com/login`)
+              alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalLandlord(null);await loadAll()
             }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
           </div>
@@ -2327,7 +2328,7 @@ function PMPageInner() {
               const result=await res.json()
               setCreatingTenantPortal(false)
               if(!res.ok){alert(result.error||'Could not create portal access');return}
-              alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: helloopero.com/login`)
+              alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalTenant(null);await loadAll()
             }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#101828',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
           </div>

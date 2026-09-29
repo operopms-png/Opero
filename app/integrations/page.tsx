@@ -32,7 +32,7 @@ const integrations = [
   {
     id: 'stripe',
     name: 'Stripe',
-    description: 'Process payments and subscriptions. Already configured for your Opero subscription.',
+    description: 'Process payments and subscriptions. Already configured.',
     logo: '💳',
     color: '#635bff',
     bg: '#f5f3ff',
@@ -205,7 +205,7 @@ export default function IntegrationsPage() {
     <div style={{ padding: '2rem', maxWidth: 900, margin: '0 auto', fontFamily: "var(--font, 'Inter', sans-serif)" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');`}</style>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111', marginBottom: 4 }}>Integrations</h1>
-      <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Connect your tools to get the most out of Opero.</p>
+      <p style={{ color: '#666', fontSize: 14, marginBottom: 32 }}>Connect your tools to get the most out of the portal.</p>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
         {integrations.map(int => (

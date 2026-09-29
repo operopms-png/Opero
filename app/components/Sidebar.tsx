@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useEffect, useState } from 'react'
+import { BRAND_NAME } from '@/lib/brand'
 const NAV = [
   { group: 'VACATION RENTALS', items: [
     { label: 'Vacation Rentals', href: '/str', icon: '🏖️' },
@@ -33,7 +34,7 @@ export default function Sidebar() {
         <div style={{ width:28, height:28, background:'#101828', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center' }}>
           <span style={{ color:'#fff', fontSize:14, fontWeight:700 }}>O</span>
         </div>
-        <span style={{ fontSize:15, fontWeight:700, color:'#101828' }}>Opero</span>
+        <span style={{ fontSize:15, fontWeight:700, color:'#101828' }}>{BRAND_NAME}</span>
       </div>
       <nav style={{ flex:1, padding:'8px 10px', overflowY:'auto' }}>
         {NAV.map(group=>(

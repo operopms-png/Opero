@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       // any existing user.
       ...(email ? { customer_email: email } : {}),
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}${successPath}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/landing.html#pricing`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/settings`,
       allow_promotion_codes: true,
     })
     const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })

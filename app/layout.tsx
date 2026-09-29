@@ -16,7 +16,7 @@ const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-port
 // with no working payment method, a renewal failed, or it was cancelled.
 // 'cancelled' (double-l) is kept alongside Stripe's real 'canceled' value
 // since an earlier version of the webhook wrote the non-standard spelling.
-const BLOCKED_STATUSES = ['past_due', 'unpaid', 'incomplete_expired', 'canceled', 'cancelled', 'paused']
+export const BLOCKED_STATUSES = ['past_due', 'unpaid', 'incomplete_expired', 'canceled', 'cancelled', 'paused'] // no longer enforced
 
 const PATH_MODULE: Record<string, string> = {
   '/str': 'str',
@@ -104,16 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           return
         }
       }
-      const ownerId = access.businessId
-      const { data: sub } = await supabase
-        .from('subscriptions')
-        .select('status')
-        .eq('user_id', ownerId)
-        .single()
-      if (role !== 'Partner' && sub && BLOCKED_STATUSES.includes(sub.status) && !pathname?.startsWith('/settings')) {
-        window.location.href = '/settings?billing=required'
-        return
-      }
+      // Internal portal: no billing gate. Access is controlled by role only.
       setChecked(true)
     })
   }, [pathname, isPublicRoute])
@@ -121,8 +112,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <title>Opero — Vacation Rental Operations</title>
-        <meta name="description" content="Operations platform for vacation rental managers" />
+        <title>Sangsters Portal</title>
+        <meta name="description" content="Sangsters staff, owner, landlord, tenant and partner portal" />
       </head>
       <body style={{ margin: 0, background: '#F7F8FA', display: 'flex' }}>
         {isPublicRoute ? (

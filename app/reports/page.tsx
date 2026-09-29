@@ -30,7 +30,7 @@ export default function ReportsPage() {
     confirmed.forEach(b => rows.push([b.guest_name ?? '', b.properties?.name ?? '', b.check_in ?? '', b.check_out ?? '', String(b.total_amount ?? 0), b.status ?? '']))
     const a = document.createElement('a')
     a.href = 'data:text/csv,' + encodeURIComponent(rows.map(r => r.join(',')).join('\n'))
-    a.download = 'opero-report.csv'
+    a.download = 'sangsters-report.csv'
     a.click()
   }
 

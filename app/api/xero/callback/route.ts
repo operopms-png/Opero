@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { SITE_URL } from '@/lib/brand'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('state') // we passed userId as `state` earlier
   const error = req.nextUrl.searchParams.get('error')
 
-  const appUrl = new URL('/integrations', 'https://helloopero.com')
+  const appUrl = new URL('/integrations', SITE_URL)
 
   if (error) {
     appUrl.searchParams.set('xero_error', error)

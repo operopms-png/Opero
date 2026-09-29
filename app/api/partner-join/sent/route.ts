@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 import { alertEmailFor, esc } from '@/lib/partner-bank'
+import { SITE_URL } from '@/lib/brand'
 
 // New partner clicked "I've sent the payment" on /join/<slug>.
 // Records it and emails the business's payment alerts address, once.
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     const to = link ? await alertEmailFor(link) : null
     if (to) {
       const fee = Number(link?.fee_gbp) || 75
-      const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://helloopero.com'
+      const site = SITE_URL
       await sendEmail(
         to,
         `Partner bank transfer to check: ${signup.reference}`,

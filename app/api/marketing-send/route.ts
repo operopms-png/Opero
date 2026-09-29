@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient, requireUser } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
+import { EMAIL_DOMAIN } from '@/lib/brand'
 
 // Sends a marketing_emails row for real via Resend, using the same
 // plus-alias Reply-To pattern CRM's send route uses -- so a reply lands
@@ -22,9 +23,9 @@ export async function POST(req: NextRequest) {
   const { data: settings } = await serviceClient.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id', userId).single()
   const from = settings?.marketing_from_email
     ? `${settings.marketing_from_name || 'Sangsters Group'} <${settings.marketing_from_email}>`
-    : undefined // falls back to sendEmail's default (notifications@helloopero.com) if nothing's configured
+    : undefined // falls back to sendEmail's default (notifications@EMAIL_DOMAIN) if nothing's configured
 
-  const replyTo = `marketing+${email.reply_token}@helloopero.com`
+  const replyTo = `marketing+${email.reply_token}@${EMAIL_DOMAIN}`
   const result = await sendEmail(email.to_recipient, email.subject, `<p>${email.body.replace(/\n/g, '<br/>')}</p>`, replyTo, from)
 
   if (result.error) return NextResponse.json({ error: result.error }, { status: 502 })

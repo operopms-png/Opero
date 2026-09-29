@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { newReference } from '@/lib/partner-bank'
 
-// Public partner sign-up: helloopero.com/join/<slug>
+// Public partner sign-up: <site>/join/<slug>
 // 1. Creates the login straight away but BANNED, so nobody can sign in unpaid.
 // 2. Records a pending sign-up, then either:
 //    - card: sends them to Stripe for the one-time fee (direct charge on the

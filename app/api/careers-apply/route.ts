@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 import { CORS_HEADERS, settingsByKey } from '@/lib/website-chat'
+import { SITE_URL } from '@/lib/brand'
 
 // Public job application form on a business's own website (e.g. the Careers page).
 // POST { key, name, email, phone, role, category, message, website }
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
     if (to) {
       const esc = (v: string) => v.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
-      const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://helloopero.com'
+      const site = SITE_URL
       await sendEmail(
         to,
         `New job application: ${name} for ${role}`.slice(0, 150),

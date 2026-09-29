@@ -4,10 +4,20 @@
 
 [[redirects]]
   from = "/"
-  to = "/opero.html"
-  status = 200
+  to = "/login"
+  status = 302
 
 [[redirects]]
   from = "/index.html"
-  to = "/opero.html"
-  status = 200
+  to = "/login"
+  status = 302
+
+[[redirects]]
+  from = "/opero.html"
+  to = "/login"
+  status = 301
+
+[[redirects]]
+  from = "/landing.html"
+  to = "/login"
+  status = 301

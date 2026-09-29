@@ -4,8 +4,9 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import { BRAND_NAME } from '@/lib/brand'
 
-// Public partner sign-up page: helloopero.com/join/<slug>
+// Public partner sign-up page: <site>/join/<slug>
 // Shows the business's partner pitch and a one-time membership payment:
 // card (Stripe, when the business has connected Stripe) or bank transfer
 // (bank details + unique reference; staff confirm to unlock the account).
@@ -111,8 +112,8 @@ export default function JoinPage() {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{box-sizing:border-box}
         @media(max-width:820px){.join-grid{grid-template-columns:1fr !important}}`}</style>
       <nav style={{ height: 60, background: '#fff', borderBottom: '1px solid #E4E7EC', display: 'flex', alignItems: 'center', padding: '0 24px', gap: 8 }}>
-        <img src="/logo.PNG" alt="Opero" style={{ width: 26, height: 26, objectFit: 'contain' }} />
-        <span style={{ fontWeight: 700, fontSize: 15 }}>Opero</span>
+        <img src="/logo.PNG" alt={BRAND_NAME} style={{ width: 26, height: 26, objectFit: 'contain' }} />
+        <span style={{ fontWeight: 700, fontSize: 15 }}>{BRAND_NAME}</span>
       </nav>
 
       {!loaded ? (

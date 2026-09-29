@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, RadialBarChart, RadialBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts'
+import { BRAND_NAME } from '@/lib/brand'
 
 async function uploadAttachment(file: File, folder: string): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -622,8 +623,8 @@ export default function OwnerPortalPage() {
       <div style={{ width: 220, background: '#fff', borderRight: '1px solid #EAECF0', display: 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
         {/* Logo */}
         <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #EAECF0', textAlign: 'center' }}>
-          <img src="/logo.PNG" alt="Opero" width={44} height={44} style={{ borderRadius: 8, marginBottom: 8 }} />
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#101828' }}>Opero</div>
+          <img src="/logo.PNG" alt={BRAND_NAME} width={44} height={44} style={{ borderRadius: 8, marginBottom: 8 }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#101828' }}>{BRAND_NAME}</div>
           <div style={{ fontSize: 11, color: '#667085' }}>Owner Portal</div>
         </div>
 

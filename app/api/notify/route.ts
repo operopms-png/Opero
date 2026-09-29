@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
+import { BRAND_NAME, SITE_URL } from '@/lib/brand'
 
 const TYPE_TO_ROLE: Record<string, string> = {
   maintenance: 'Maintenance',
@@ -42,8 +43,8 @@ export async function POST(req: NextRequest) {
   const { data: ownerData } = await serviceClient.auth.admin.getUserById(user_id)
   if (ownerData?.user?.email) recipients.push({ email: ownerData.user.email })
 
-  const subject = `Opero: ${title}`
-  const html = `<p>${title}</p>${property_name ? `<p style="color:#667085">${property_name}</p>` : ''}<p><a href="https://helloopero.com${link || ''}">View in Opero</a></p>`
+  const subject = `${BRAND_NAME}: ${title}`
+  const html = `<p>${title}</p>${property_name ? `<p style="color:#667085">${property_name}</p>` : ''}<p><a href="${SITE_URL}${link || ''}">View in ${BRAND_NAME}</a></p>`
 
   await Promise.all(recipients.map(r => sendEmail(r.email, subject, html)))
 

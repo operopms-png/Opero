@@ -4,6 +4,7 @@ import { requireStaffWithBusiness, serviceClient } from '@/lib/admin-auth'
 import { activatePartnerSignup, staffLabel } from '@/lib/partner-activation'
 import { sendEmail } from '@/lib/send-email'
 import { esc } from '@/lib/partner-bank'
+import { SITE_URL } from '@/lib/brand'
 
 // Staff actions on pending bank-transfer partner sign-ups (Partners → Investors):
 //   action 'confirm' → money received: unlock the login, create the partner
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
       return NextResponse.json({ error: err?.message || 'Could not activate' }, { status: 500 })
     }
-    const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://helloopero.com'
+    const site = SITE_URL
     if (signup.email) {
       await sendEmail(
         signup.email,

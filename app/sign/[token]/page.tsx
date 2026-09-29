@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useRef, useState } from 'react'
+import { BRAND_NAME } from '@/lib/brand'
 
 // Handles both PM leases and Estate Agency tenancies through the same
 // public signing page -- the API tells us which "kind" it is and we
@@ -134,7 +135,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '18px 24px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: '#101828', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>O</div>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#101828' }}>Opero</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#101828' }}>{BRAND_NAME}</div>
           <div style={{ fontSize: 13, color: '#667085', marginLeft: 6 }}>Document Signing</div>
         </div>
       </div>

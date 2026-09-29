@@ -1,5 +1,5 @@
-/* Opero website assistant — embed with:
-   <script src="https://helloopero.com/chat-widget.js" data-key="YOUR_PUBLIC_KEY" async></script>
+/* Website assistant — embed with:
+   <script src="https://portal.sangstersgroup.com/chat-widget.js" data-key="YOUR_PUBLIC_KEY" async></script>
    Everything lives inside a shadow root so the website's own styles can't break it (and it can't break the website). */
 (function () {
   if (window.__operoChatLoaded) return
@@ -12,7 +12,7 @@
   })()
   if (!script) return
   var KEY = script.getAttribute('data-key') || ''
-  var API = (function () { try { return new URL(script.src).origin } catch (e) { return 'https://helloopero.com' } })()
+  var API = (function () { try { return new URL(script.src).origin } catch (e) { return 'https://portal.sangstersgroup.com' } })()
   var STORE = 'opero_chat_' + KEY
 
   // ---- small helpers ----

@@ -14,6 +14,7 @@ import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
 import { sendEmail } from './send-email'
 import { sendSmoobuGuestMessage } from './smoobu-client'
+import { EMAIL_DOMAIN } from '@/lib/brand'
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -47,7 +48,7 @@ export async function sendGuestMessage(userId: string, bookingId: string, subjec
     }
   } else {
     if (!booking.guest_email) return { error: 'This booking has no guest email on file.' }
-    const replyTo = booking.reply_token ? `guest+${booking.reply_token}@helloopero.com` : undefined
+    const replyTo = booking.reply_token ? `guest+${booking.reply_token}@${EMAIL_DOMAIN}` : undefined
     const result = await sendEmail(booking.guest_email, subject || 'Message from your host', `<p>${body.replace(/\n/g, '<br/>')}</p>`, replyTo)
     if (result.error) return { error: result.error }
   }

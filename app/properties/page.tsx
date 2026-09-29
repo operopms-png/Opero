@@ -73,7 +73,7 @@ export default function PropertiesPage() {
     setLoading(false)
   }
 
-  const propertyLimit = PLAN_LIMITS[plan] ?? 5
+  const propertyLimit = Infinity // internal portal: no plan limits
   const atLimit = properties.length >= propertyLimit
 
   function openCreate() {
@@ -188,7 +188,7 @@ export default function PropertiesPage() {
               {syncing ? 'Syncing…' : 'Sync iCal'}
             </button>
             {atLimit && plan !== 'professional' && (
-              <a href="/landing.html#pricing" style={{ fontSize: 13, color: '#5B7BF8', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
+              <a href="/settings" style={{ fontSize: 13, color: '#5B7BF8', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
             )}
             <button onClick={openCreate} style={{ background: atLimit ? '#E5E7EB' : '#111827', color: atLimit ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: atLimit ? 'not-allowed' : 'pointer' }}>
               + Add Property
@@ -204,7 +204,7 @@ export default function PropertiesPage() {
               <div style={{ fontSize: 14, fontWeight: 600, color: '#92400E' }}>🚫 You've reached your {planLabel} plan limit of {propertyLimit} properties</div>
               <div style={{ fontSize: 13, color: '#92400E', marginTop: 2, opacity: 0.8 }}>Upgrade to {nextPlan} to add more.</div>
             </div>
-            <a href="/landing.html#pricing" style={{ padding: '9px 18px', background: '#F59E0B', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Upgrade to {nextPlan} →</a>
+            <a href="/settings" style={{ padding: '9px 18px', background: '#F59E0B', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Upgrade to {nextPlan} →</a>
           </div>
         )}
 
@@ -332,7 +332,7 @@ export default function PropertiesPage() {
             <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px' }}>Upgrade to <strong>{nextPlan} ({nextPrice}/mo)</strong> to add more.</p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowUpgradeModal(false)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <a href="/landing.html#pricing" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#5B7BF8', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>Upgrade to {nextPlan} →</a>
+              <a href="/settings" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#5B7BF8', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>Upgrade to {nextPlan} →</a>
             </div>
           </div>
         </div>

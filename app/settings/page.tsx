@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
+import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
 const ACCENT = '#3B4AFF'
 const NAV = [
   {group:'ACCOUNT',items:[
@@ -193,7 +194,7 @@ function SettingsInner() {
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
       <div style={{width:210,background:'#fff',borderRight:'1px solid #F2F4F7',display:'flex',flexDirection:'column',paddingTop:16,flexShrink:0,minHeight:'100vh'}}>
         <div style={{padding:'0 16px 14px',borderBottom:'1px solid #F2F4F7'}}>
-          <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>Opero</div>
+          <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>{BRAND_NAME}</div>
           <div style={{fontSize:14,fontWeight:700,color:'#101828'}}>{section}</div>
         </div>
         <nav style={{flex:1,padding:'8px 10px'}}>
@@ -251,7 +252,7 @@ function SettingsInner() {
             </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>API Key</h3>
-              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>Use this key to connect Opero with external tools and websites. Keep it private — anyone with this key can add contacts to your account.</div>
+              <div style={{fontSize:13,color:'#667085',marginBottom:16}}>Use this key to connect the portal with external tools and websites. Keep it private — anyone with this key can add contacts to your account.</div>
               <div style={{display:'flex',gap:8,marginBottom:20}}>
                 <input value={apiKey} readOnly style={{flex:1,padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:12,fontFamily:'monospace',outline:'none',background:'#F9FAFB',color:'#344054'}}/>
                 <button onClick={copyKey} style={{padding:'9px 16px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054',whiteSpace:'nowrap'}}>{copied?'✓ Copied!':'Copy'}</button>
@@ -270,7 +271,7 @@ function SettingsInner() {
                 </div>
                 <div style={{marginTop:16,background:'#fff',borderRadius:6,border:'1px solid #E4E7EC',padding:14}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.04em'}}>Example fetch call</div>
-                  <pre style={{fontSize:11,color:'#344054',fontFamily:'monospace',margin:0,lineHeight:1.6,overflow:'auto'}}>{`fetch('https://helloopero.com/api/crm-enquiry', {
+                  <pre style={{fontSize:11,color:'#344054',fontFamily:'monospace',margin:0,lineHeight:1.6,overflow:'auto'}}>{`fetch('${SITE_URL}/api/crm-enquiry', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -458,7 +459,7 @@ function SettingsInner() {
                     setCreating(false)
                     if(!res.ok){alert(result.error||'Could not create account');return}
                     setTeam([...team,result.member]);setInviteName('');setInviteEmail('');setInvitePhone('');setStaffPassword('');setAssignedPropertyIds([]);setCustomModules([]);setShowInvite(false)
-                    alert(`Account created. Share these details with ${inviteName}:\n\nEmail: ${inviteEmail}\nPassword: ${staffPassword}\nLogin at: helloopero.com/login`)
+                    alert(`Account created. Share these details with ${inviteName}:\n\nEmail: ${inviteEmail}\nPassword: ${staffPassword}\nLogin at: ${SITE_HOST}/login`)
                   }} disabled={creating} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:creating?0.6:1}}>{creating?'Creating…':'Create account'}</button>
                 )}
                 <button onClick={()=>{setShowInvite(false);setEditingMemberId(null);setCustomModules([])}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
@@ -546,7 +547,7 @@ function SettingsInner() {
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                 <div>
                   <h3 style={{fontSize:15,fontWeight:600,color:'#101828',margin:'0 0 4px'}}>Tenant payment setup</h3>
-                  <div style={{fontSize:13,color:'#667085'}}>Connect your own Stripe account so rent and utility payments tenants make through their portal go directly to your bank, not Opero's.</div>
+                  <div style={{fontSize:13,color:'#667085'}}>Connect your own Stripe account so rent and utility payments tenants make through their portal go directly to your bank.</div>
                 </div>
               </div>
               {connectOnboarded ? (
@@ -585,7 +586,7 @@ function SettingsInner() {
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
               <div>
                 <h2 style={{fontSize:20,fontWeight:700,color:'#101828',margin:'0 0 4px'}}>System Messages</h2>
-                <div style={{fontSize:13,color:'#667085'}}>Platform updates, new features and announcements from Opero.</div>
+                <div style={{fontSize:13,color:'#667085'}}>Platform updates, new features and announcements for the portal.</div>
               </div>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:12}}>

@@ -79,7 +79,7 @@ async function handleLogin() {
 
   // Check owner profile
   const { data: profile } = await client.from('owner_profiles').select('id').eq('user_id', data.user.id).single()
-  window.location.href = profile ? 'https://helloopero.com/owner-portal' : 'https://helloopero.com/dashboard'
+  window.location.href = profile ? '/owner-portal' : '/dashboard'
 }
 
 function showError(msg) {

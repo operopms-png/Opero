@@ -1,3 +1,4 @@
+import { EMAIL_FROM } from '@/lib/brand'
 // Sends transactional email via Resend. Requires RESEND_API_KEY in
 // Netlify env vars. If it's not set, this logs and returns without
 // throwing — so notifications still work in-app even before email
@@ -14,7 +15,7 @@ export async function sendEmail(to: string, subject: string, html: string, reply
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: from || 'Opero <notifications@helloopero.com>',
+      from: from || EMAIL_FROM,
       to,
       subject,
       html,

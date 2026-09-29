@@ -109,7 +109,7 @@ export default function STRPage() {
   const [saving, setSaving] = useState(false)
   const [stats, setStats] = useState({ properties:0, cleaning:0, maintenance:0, revenue:0 })
   const [extraBlocks, setExtraBlocks] = useState(0)
-  const [isBundle, setIsBundle] = useState(false)
+  const [isBundle, setIsBundle] = useState(true) // internal portal: unlimited properties
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
   const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
@@ -228,7 +228,7 @@ export default function STRPage() {
     const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     const { data: subRow } = await supabase.from('subscriptions').select('str_extra_blocks,plan').eq('user_id', userId).single()
     setExtraBlocks((subRow as any)?.str_extra_blocks ?? 0)
-    setIsBundle((subRow as any)?.plan === 'bundle')
+    setIsBundle(true)
     let restrictedProps = propsData ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((p: any) => propertyIds.includes(p.id))
     const ids = restrictedProps.map((p: any) => p.id)
@@ -904,13 +904,13 @@ export default function STRPage() {
 
         {tab==='Integrations' && (
           <div>
-            <p style={{ color:'#667085', fontSize:14, marginBottom:8 }}>Connect your tools to get the most out of Opero.</p>
+            <p style={{ color:'#667085', fontSize:14, marginBottom:8 }}>Connect your tools to get the most out of the portal.</p>
             <p style={{ color:'#98A2B3', fontSize:13, marginBottom:20 }}>Looking for Airbnb/VRBO/Booking.com calendar sync, or linking a property to Smoobu? Both are set per-property now — open a property under <strong>Properties</strong> and scroll down, since each listing/apartment has its own iCal link or Smoobu ID.</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:16 }}>
               {[
                 { id:'xero', name:'Xero', desc:'Sync contacts and financial data with your Xero accounting. Connect your organisation to keep bookkeeping in sync automatically.', logo:'📗', color:'#13B5EA', bg:'#E8FAFF', oauth:true },
                 { id:'pricelabs', name:'PriceLabs', desc:'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.', logo:'📊', color:'#1a56db', bg:'#eff6ff', column:'pricelabs_api_key', placeholder:'Enter your PriceLabs API key', docsUrl:'https://pricelabs.co/users/api_keys', docsLabel:'Get your API key →' },
-                { id:'stripe', name:'Stripe', desc:'Process payments and subscriptions. Already configured for your Opero subscription.', logo:'💳', color:'#635bff', bg:'#f5f3ff', builtIn:true },
+                { id:'stripe', name:'Stripe', desc:'Process payments and subscriptions. Already configured.', logo:'💳', color:'#635bff', bg:'#f5f3ff', builtIn:true },
                 { id:'smoobu', name:'Smoobu', desc:'Pull real bookings and guest messages from your Smoobu account — messages relay into the guest\'s actual Airbnb/Booking.com chat, not just email.', logo:'🗓️', color:'#0084C7', bg:'#E6F5FC', column:'smoobu_api_key', placeholder:'Enter your Smoobu API key', docsUrl:'https://login.smoobu.com/en/settings/api', docsLabel:'Get your API key →' },
                 { id:'paypal', name:'PayPal', desc:'Accept PayPal and PayPal.me payments from guests and owners.', logo:'🅿️', color:'#003087', bg:'#eff6ff', column:'paypal_client_id', placeholder:'Enter your PayPal Client ID', docsUrl:'https://developer.paypal.com/dashboard/', docsLabel:'Get your Client ID →' },
               ].map(int => {
