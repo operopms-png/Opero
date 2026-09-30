@@ -1,20 +1,13 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
+import { C, CrmPage, CrmHeader, Avatar, Loading, btn } from '../../../components/crm/Page'
 
-const ACCENT = '#A8862E'
+const HEAD_H = 62
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7) // 7am - 8pm
-const STATUS_COLORS: Record<string, { bg: string; fg: string; border: string }> = {
-  Working: { bg: '#ECFDF5', fg: '#10B981', border: '#A7F3D0' },
-  Leave: { bg: '#FFFBEB', fg: '#F59E0B', border: '#FDE68A' },
-  Off: { bg: '#F2F4F7', fg: '#98A2B3', border: '#E4E7EC' },
-}
+const STATUS_COLORS: Record<string, string> = { Working: '#00C875', Leave: '#FDAB3D', Off: '#C4C4C4' }
 
-function initials(name: string) {
-  return (name || '?').split(' ').filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join('')
-}
-
-const AVATAR_COLORS = ['#A8862E', '#10B981', '#F59E0B', '#A8862E', '#EC4899', '#2D6A4F', '#DC2626', '#0891B2']
+const AVATAR_COLORS = ['#D0AE4C', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1']
 function avatarColor(name: string) {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
@@ -69,7 +62,7 @@ export default function CalendarPage() {
     await loadShifts()
   }
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
+  if (loading) return <Loading />
 
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(weekStart); d.setDate(d.getDate() + i); return d })
   const shownStaff = team.filter((m: any) => visibleStaff.includes(m.id))
@@ -82,65 +75,55 @@ export default function CalendarPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
-      <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em' }}>STAFF CENTRE</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#323338' }}>Calendar</div>
-        </div>
-      </div>
-
-      <div style={{ padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 10, background: '#fff', borderBottom: '1px solid #E4E7EC' }}>
-        <button onClick={() => { const d = new Date(); const day = d.getDay(); d.setDate(d.getDate() - day + (day === 0 ? -6 : 1)); d.setHours(0, 0, 0, 0); setWeekStart(d) }} style={{ background: '#fff', border: '1px solid #D0D5DD', borderRadius: 8, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, color: '#344054', cursor: 'pointer', fontFamily: 'inherit' }}>Today</button>
-        <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }} style={{ background: '#fff', border: '1px solid #D0D5DD', borderRadius: 8, width: 30, height: 30, fontSize: 13, color: '#344054', cursor: 'pointer' }}>←</button>
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: '#323338', minWidth: 170 }}>
+    <CrmPage fill>
+      <CrmHeader title="Calendar" subtitle="Who's working, on leave or off this week. Click a block to edit it, or set a shift from the panel on the right." />
+      <div style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 8, background: '#fff', borderBottom: '1px solid ' + C.row, flexShrink: 0, flexWrap: 'wrap' }}>
+        <button onClick={() => { const d = new Date(); const day = d.getDay(); d.setDate(d.getDate() - day + (day === 0 ? -6 : 1)); d.setHours(0, 0, 0, 0); setWeekStart(d) }} style={btn('ghost', true)}>Today</button>
+        <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() - 7); setWeekStart(d) }} style={{ ...btn('ghost', true), width: 30, height: 30, padding: 0, justifyContent: 'center' }}>‹</button>
+        <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }} style={{ ...btn('ghost', true), width: 30, height: 30, padding: 0, justifyContent: 'center' }}>›</button>
+        <div style={{ fontSize: 15, fontWeight: 600, color: C.ink, marginLeft: 6 }}>
           {days[0].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {days[6].toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
-        <button onClick={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setWeekStart(d) }} style={{ background: '#fff', border: '1px solid #D0D5DD', borderRadius: 8, width: 30, height: 30, fontSize: 13, color: '#344054', cursor: 'pointer' }}>→</button>
-        <div style={{ padding: '7px 14px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: '#344054' }}>Week view</div>
         <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 12, color: '#667085' }}>
-          <span><span style={{ width: 9, height: 9, borderRadius: 2, background: '#10B981', display: 'inline-block', marginRight: 5 }} />Working</span>
-          <span><span style={{ width: 9, height: 9, borderRadius: 2, background: '#F59E0B', display: 'inline-block', marginRight: 5 }} />Leave</span>
-          <span><span style={{ width: 9, height: 9, borderRadius: 2, background: '#D0D5DD', display: 'inline-block', marginRight: 5 }} />Off</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: C.muted }}>
+          {Object.entries(STATUS_COLORS).map(([k, c]) => <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: c }} />{k}</span>)}
         </div>
       </div>
 
-      <div style={{ display: 'flex', height: 'calc(100vh - 113px)' }}>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         {team.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', flexDirection: 'column' as const, gap: 8 }}>
-            <div style={{ fontSize: 32 }}>📅</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>No team members yet</div>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: C.ink }}>No team members yet</div>
             <div style={{ fontSize: 13 }}>Add staff in Team Management first, then schedule their shifts here.</div>
           </div>
         ) : (
           <>
             <div style={{ flex: 1, overflow: 'auto' as const, position: 'relative' as const }}>
               <div style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', minWidth: 900 }}>
-                <div style={{ position: 'sticky' as const, top: 0, background: '#fff', zIndex: 2, borderBottom: '1px solid #E4E7EC' }} />
+                <div style={{ position: 'sticky' as const, top: 0, background: '#fff', zIndex: 2, borderBottom: '1px solid ' + C.row, height: HEAD_H, boxSizing: 'border-box' as const }} />
                 {days.map((d, i) => {
                   const isToday = d.getTime() === today.getTime()
                   return (
-                    <div key={i} style={{ position: 'sticky' as const, top: 0, background: '#fff', zIndex: 2, borderBottom: '1px solid #E4E7EC', borderLeft: '1px solid #F2F4F7', padding: '10px 8px', textAlign: 'center' as const }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase' as const, letterSpacing: '0.04em' }}>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: isToday ? ACCENT : '#323338', marginTop: 2 }}>{d.getDate()}</div>
+                    <div key={i} style={{ position: 'sticky' as const, top: 0, background: '#fff', zIndex: 2, borderBottom: '1px solid ' + C.row, borderLeft: '1px solid ' + C.row, padding: '8px 8px', textAlign: 'center' as const, height: HEAD_H, boxSizing: 'border-box' as const }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: isToday ? C.goldDark : C.muted }}>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: isToday ? '#fff' : C.ink, background: isToday ? C.goldDark : 'transparent', borderRadius: '50%', width: 30, height: 30, lineHeight: '30px', margin: '2px auto 0' }}>{d.getDate()}</div>
                     </div>
                   )
                 })}
 
                 {HOURS.map(h => (
-                  <>
-                    <div key={'h' + h} style={{ fontSize: 11, color: '#98A2B3', textAlign: 'right' as const, paddingRight: 8, paddingTop: 2, borderTop: '1px solid #F2F4F7', height: 56 }}>
+                  <Fragment key={h}>
+                    <div key={'h' + h} style={{ fontSize: 11, color: C.faint, textAlign: 'right' as const, paddingRight: 8, paddingTop: 2, borderTop: '1px solid ' + C.row, height: 56 }}>
                       {h % 12 === 0 ? 12 : h % 12}{h < 12 ? 'AM' : 'PM'}
                     </div>
                     {days.map((d, di) => (
-                      <div key={h + '-' + di} style={{ borderTop: '1px solid #F2F4F7', borderLeft: '1px solid #F2F4F7', height: 56, position: 'relative' as const }} />
+                      <div key={h + '-' + di} style={{ borderTop: '1px solid ' + C.row, borderLeft: '1px solid ' + C.row, height: 56, position: 'relative' as const }} />
                     ))}
-                  </>
+                  </Fragment>
                 ))}
               </div>
 
-              <div style={{ position: 'absolute' as const, top: 41, left: 56, right: 0, bottom: 0, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', pointerEvents: 'none' as const }}>
+              <div style={{ position: 'absolute' as const, top: HEAD_H, left: 56, right: 0, bottom: 0, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', pointerEvents: 'none' as const }}>
                 {days.map((d, di) => {
                   const dateStr = d.toISOString().slice(0, 10)
                   const dayShifts = shifts.filter((s: any) => s.date === dateStr && visibleStaff.includes(s.staff_id) && s.type !== 'Off')
@@ -154,9 +137,10 @@ export default function CalendarPage() {
                         const staff = team.find((m: any) => m.id === s.staff_id)
                         const c = STATUS_COLORS[s.type] ?? STATUS_COLORS.Off
                         return (
-                          <div key={s.id ?? si} onClick={() => setEditingCell({ staffId: s.staff_id, date: dateStr })} style={{ position: 'absolute' as const, top, height, left: si * 4, right: 4, background: c.bg, border: '1px solid ' + c.border, borderRadius: 6, padding: '4px 6px', fontSize: 10.5, color: c.fg, fontWeight: 600, overflow: 'hidden', pointerEvents: 'auto' as const, cursor: 'pointer' }}>
+                          <div key={s.id ?? si} onClick={() => setEditingCell({ staffId: s.staff_id, date: dateStr })} style={{ position: 'absolute' as const, top, height, left: si * 4, right: 4, background: c, borderRadius: 4, padding: '5px 7px', fontSize: 12, color: '#fff', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,0.12)', overflow: 'hidden', pointerEvents: 'auto' as const, cursor: 'pointer' }}>
                             {staff?.name ?? '—'}
-                            {s.start_time && <div style={{ fontWeight: 400, fontSize: 9.5 }}>{s.start_time.slice(0, 5)}–{s.end_time?.slice(0, 5)}</div>}
+                            {s.type === 'Leave' && <div style={{ fontWeight: 400, fontSize: 11, opacity: 0.9 }}>On leave</div>}
+                            {s.start_time && <div style={{ fontWeight: 400, fontSize: 11, opacity: 0.9 }}>{s.start_time.slice(0, 5)}–{s.end_time?.slice(0, 5)}</div>}
                           </div>
                         )
                       })}
@@ -166,26 +150,26 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div style={{ width: 260, borderLeft: '1px solid #E4E7EC', background: '#fff', padding: 20, overflowY: 'auto' as const }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#323338', marginBottom: 14 }}>Manage view</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase' as const, marginBottom: 8 }}>Staff</div>
+            <div style={{ width: 270, borderLeft: '1px solid ' + C.row, background: '#fff', padding: 20, overflowY: 'auto' as const, flexShrink: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: C.ink, marginBottom: 14 }}>Manage view</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, marginBottom: 8 }}>Staff</div>
               {team.map((m: any) => (
                 <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', fontSize: 13, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={visibleStaff.includes(m.id)} onChange={e => setVisibleStaff(prev => e.target.checked ? [...prev, m.id] : prev.filter(id => id !== m.id))} />
-                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: avatarColor(m.name), color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{initials(m.name)}</div>
-                  <span style={{ color: '#344054' }}>{m.name}</span>
+                  <input type="checkbox" style={{ accentColor: C.goldDark }} checked={visibleStaff.includes(m.id)} onChange={e => setVisibleStaff(prev => e.target.checked ? [...prev, m.id] : prev.filter(id => id !== m.id))} />
+                  <Avatar name={m.name} color={avatarColor(m.name)} size={24} />
+                  <span style={{ color: C.ink, fontSize: 14 }}>{m.name}</span>
                 </label>
               ))}
 
-              <div style={{ height: 1, background: '#F2F4F7', margin: '16px 0' }} />
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase' as const, marginBottom: 8 }}>Set a shift</div>
-              <div style={{ fontSize: 12, color: '#667085', marginBottom: 10 }}>Click a staff member's block on the calendar to edit it, or pick a day below.</div>
+              <div style={{ height: 1, background: C.row, margin: '16px 0' }} />
+              <div style={{ fontSize: 13, fontWeight: 500, color: C.muted, marginBottom: 8 }}>Set a shift</div>
+              <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 10, lineHeight: 1.45 }}>Click a staff member's block on the calendar to edit it, or pick a day below.</div>
               {shownStaff.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
-                  <select id="cal-staff-picker" style={{ padding: '7px 10px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }}>
+                  <select id="cal-staff-picker" style={{ padding: '7px 10px', border: '1px solid ' + C.border, borderRadius: 4, fontSize: 13, fontFamily: 'inherit', color: C.ink, background: '#fff' }}>
                     {shownStaff.map((m: any) => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
-                  <select id="cal-day-picker" style={{ padding: '7px 10px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 12.5, fontFamily: 'inherit' }}>
+                  <select id="cal-day-picker" style={{ padding: '7px 10px', border: '1px solid ' + C.border, borderRadius: 4, fontSize: 13, fontFamily: 'inherit', color: C.ink, background: '#fff' }}>
                     {days.map((d, i) => <option key={i} value={d.toISOString().slice(0, 10)}>{d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</option>)}
                   </select>
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -195,7 +179,7 @@ export default function CalendarPage() {
                         const date = (document.getElementById('cal-day-picker') as HTMLSelectElement).value
                         if (type === 'Working') setShift(staffId, date, 'Working', '09:00', '17:00')
                         else setShift(staffId, date, type)
-                      }} style={{ flex: 1, padding: '7px 0', borderRadius: 6, border: 'none', background: STATUS_COLORS[type].bg, color: STATUS_COLORS[type].fg, fontSize: 11.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{type}</button>
+                      }} style={{ flex: 1, padding: '7px 0', borderRadius: 4, border: 'none', background: STATUS_COLORS[type], color: '#fff', fontSize: 12.5, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>{type}</button>
                     ))}
                   </div>
                 </div>
@@ -204,6 +188,6 @@ export default function CalendarPage() {
           </>
         )}
       </div>
-    </div>
+    </CrmPage>
   )
 }

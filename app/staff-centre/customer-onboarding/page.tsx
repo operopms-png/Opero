@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
+import { C, MODULE_COLOR, CrmPage, CrmHeader, Body, Pill, Avatar, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
 
-const ACCENT = '#A8862E'
 
 type ChecklistItem = { key: string; label: string; auto: boolean }
 
@@ -36,7 +36,7 @@ type ModuleDef = {
 
 const MODULES: ModuleDef[] = [
   {
-    key: 'str', label: 'Vacation Rentals', color: '#A8862E',
+    key: 'str', label: 'Vacation Rentals', color: MODULE_COLOR.str,
     segments: [
       {
         key: 'str_owner', label: 'Client onboarding (owners)', table: 'owner_profiles',
@@ -56,7 +56,7 @@ const MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'pm', label: 'Property Management', color: '#10B981',
+    key: 'pm', label: 'Property Management', color: MODULE_COLOR.pm,
     segments: [
       {
         key: 'pm_landlord', label: 'Landlords', table: 'pm_landlords',
@@ -81,7 +81,7 @@ const MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'ea', label: 'Estate Agency', color: '#F59E0B',
+    key: 'ea', label: 'Estate Agency', color: MODULE_COLOR.ea,
     segments: [
       {
         key: 'ea_landlord', label: 'Landlords', table: 'estate_landlords',
@@ -106,7 +106,7 @@ const MODULES: ModuleDef[] = [
     ],
   },
   {
-    key: 'dev', label: 'Developments', color: '#A8862E',
+    key: 'dev', label: 'Developments', color: MODULE_COLOR.dev,
     segments: [
       {
         key: 'dev_investor', label: 'Off-Plan Buyers / Investors', table: 'dev_investors',
@@ -363,208 +363,167 @@ export default function CustomerOnboardingPage() {
     }).filter(r => !hideComplete || !r.complete)
   }, [customers, autoDone, overrides, seg, hideComplete])
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter',sans-serif", color: '#98A2B3' }}>Loading...</div>
+  if (loading) return <Loading />
+
+  const isProp = seg.key === 'str_property'
+  const noun = isProp ? 'property' : 'client'
+  const extraCol = seg.key === 'str_owner' ? [{ k: 'x', l: 'Properties', w: 240 }] : isProp ? [{ k: 'x', l: 'Client', w: 190 }] : []
+  const cols = [
+    { k: 'n', l: isProp ? 'Property' : 'Client', w: 'minmax(230px,1fr)' },
+    ...extraCol,
+    { k: 'p', l: 'Progress', w: 150 },
+    ...seg.items.map((it, i) => ({ k: it.key, l: <span title={it.label} style={{ fontSize: 12 }}>{isProp ? `${i + 1}. ` : ''}{it.label}{it.auto ? <span style={{ color: C.faint }}> · auto</span> : null}</span>, w: 118 })),
+  ]
+  const inProgress = rows.filter(r => !r.complete)
+  const done = rows.filter(r => r.complete)
+
+  function Tick({ c, item, i }: { c: any; item: ChecklistItem; i: number }) {
+    const d = isDone(c.id, item)
+    const busy = saving === c.id + item.key
+    const stage = isProp ? Math.min(c.staging_stage ?? 0, PROPERTY_STEPS.length) : -1
+    const next = isProp && i === stage
+    const clickable = isProp || !item.auto
+    const color = d ? C.green : next ? C.orange : item.auto ? '#EEF0F4' : C.grey
+    return (
+      <div onClick={() => clickable && toggleManual(c.id, item)}
+        title={isProp ? 'Steps go in order: ticking a step ticks every step before it. The owner sees the same progress in their portal.' : item.auto ? 'Ticks itself from a real record — cannot be ticked by hand' : 'Click to tick / untick'}
+        style={{ width: '100%', height: 30, borderRadius: 4, background: color, color: d || next ? '#fff' : item.auto ? C.faint : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 500, cursor: clickable ? 'pointer' : 'default', opacity: busy ? 0.6 : 1, userSelect: 'none' }}>
+        {d ? '✓ Done' : next ? 'Up next' : item.auto ? 'Auto' : ''}
+      </div>
+    )
+  }
+
+  function rowCells(c: any, doneCount: number, total: number, complete: boolean) {
+    const extra: React.ReactNode[] = []
+    if (seg.key === 'str_owner') extra.push(
+      <div key="x" style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', width: '100%', justifyContent: 'flex-start' }}>
+        {(c.property_ids ?? []).map((pid: string) => {
+          const p = vrProps.find(x => x.id === pid)
+          if (!p) return null
+          return (
+            <span key={pid} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#fff', background: C.gold, borderRadius: 4, padding: '3px 4px 3px 8px', maxWidth: 170 }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+              <button title="Unlink this property" disabled={saving === 'link' + pid} onClick={() => linkProperty(pid, null)} style={{ border: 'none', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
+            </span>
+          )
+        })}
+        {vrProps.some(p => !(c.property_ids ?? []).includes(p.id)) && (
+          <select value="" onChange={e => e.target.value && linkProperty(e.target.value, c.id)} style={{ fontSize: 12, padding: '3px 4px', borderRadius: 4, border: '1px dashed ' + C.border, background: '#fff', color: C.muted, fontFamily: 'inherit', cursor: 'pointer', maxWidth: 120 }}>
+            <option value="">+ Link</option>
+            {vrProps.filter(p => !(c.property_ids ?? []).includes(p.id)).map(p => {
+              const cur = vrOwners.find(o => o.property_ids.includes(p.id))
+              return <option key={p.id} value={p.id}>{p.name}{cur ? ` (moves from ${cur.name})` : ''}</option>
+            })}
+          </select>
+        )}
+      </div>
+    )
+    if (isProp) extra.push(
+      <select key="x" value={vrOwners.find(o => o.property_ids.includes(c.id))?.id ?? ''} disabled={saving === 'link' + c.id} onChange={e => linkProperty(c.id, e.target.value || null)}
+        style={{ width: '100%', fontSize: 13, padding: '5px 6px', borderRadius: 4, border: '1px solid ' + C.row, background: '#fff', color: C.ink, fontFamily: 'inherit', cursor: 'pointer' }}>
+        <option value="">No client linked</option>
+        {vrOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+      </select>
+    )
+    const pct = total ? Math.round(doneCount / total * 100) : 0
+    return [
+      <div key="n" style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <Avatar name={c.name || '?'} color={mod.color} />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name || 'Untitled'}</div>
+          <div style={{ fontSize: 12, color: C.faint, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isProp ? (c.city || c.location || '—') : (c.email ?? '—')}</div>
+        </div>
+      </div>,
+      ...extra,
+      <div key="p" style={{ width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: C.muted, marginBottom: 3 }}><span>{doneCount} of {total}</span><span>{pct}%</span></div>
+        <div style={{ height: 6, background: C.row, borderRadius: 3, overflow: 'hidden' }}><div style={{ width: pct + '%', height: '100%', background: complete ? C.green : C.gold }} /></div>
+      </div>,
+      ...seg.items.map((item, i) => Tick({ c, item, i })),
+    ]
+  }
+
+  const f = (k: keyof typeof addForm) => (e: any) => setAddForm({ ...addForm, [k]: e.target.value })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '40px 48px' }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Staff Centre</div>
-          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#323338', letterSpacing: '-0.01em' }}>Customer Onboarding</h1>
-          <div style={{ fontSize: 14, color: '#667085', maxWidth: 720, lineHeight: 1.5 }}>
-            One checklist per client across every module. Items with a tick icon (●) auto-complete from real records — an uploaded ID, a signed agreement, a logged payment. Everything else is ticked by hand and saved here.
-          </div>
+    <CrmPage>
+      <CrmHeader
+        title="Customer Onboarding"
+        subtitle="One checklist per client across every module. Steps marked auto tick themselves from real records — an uploaded ID, a signed agreement, a logged payment. Everything else is ticked by hand."
+        actions={mod.key === 'str' ? <button onClick={() => { setShowAdd(true); setAddError('') }} style={btn('gold')}>+ Add client</button> : undefined}
+        tabs={MODULES.map(m => ({ k: m.key, l: m.label, color: m.color }))}
+        tab={moduleKey} onTab={k => { setModuleKey(k); setSegmentKey(moduleInfo(k).segments[0].key) }}
+      />
+      <Body>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+          {mod.segments.length > 1 && (
+            <div style={{ display: 'inline-flex', border: '1px solid ' + C.border, borderRadius: 4, overflow: 'hidden' }}>
+              {mod.segments.map((sg, i) => {
+                const on = sg.key === segmentKey
+                return <button key={sg.key} onClick={() => setSegmentKey(sg.key)} style={{ padding: '7px 14px', border: 'none', borderLeft: i ? '1px solid ' + C.border : 'none', background: on ? C.cream : '#fff', color: on ? C.brown : C.muted, fontSize: 13, fontWeight: on ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>{sg.label}</button>
+              })}
+            </div>
+          )}
+          <span style={{ fontSize: 13, color: C.muted }}>{rows.length} {rows.length === 1 ? noun : isProp ? 'properties' : 'clients'}</span>
+          <div style={{ flex: 1 }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: C.muted, cursor: 'pointer' }}>
+            <input type="checkbox" checked={hideComplete} onChange={e => setHideComplete(e.target.checked)} style={{ accentColor: C.goldDark }} />
+            Hide fully onboarded
+          </label>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-          {MODULES.map(m => {
-            const active = m.key === moduleKey
-            return (
-              <button key={m.key} onClick={() => { setModuleKey(m.key); setSegmentKey(m.segments[0].key) }} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid ' + (active ? m.color : '#E4E7EC'), background: active ? m.color : '#fff', color: active ? '#fff' : '#344054', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{m.label}</button>
-            )
-          })}
-        </div>
+        {linkError && <div style={{ background: '#FDE8EC', border: '1px solid #F5B5C1', color: C.red, borderRadius: 4, padding: '9px 14px', fontSize: 13, marginBottom: 14 }}>{linkError}</div>}
 
-        {mod.segments.length > 1 && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-            {mod.segments.map(s => {
-              const active = s.key === segmentKey
-              return (
-                <button key={s.key} onClick={() => setSegmentKey(s.key)} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid ' + (active ? mod.color : '#E4E7EC'), background: active ? mod.color + '14' : '#fff', color: active ? mod.color : '#667085', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{s.label}</button>
-              )
-            })}
-          </div>
+        {rows.length === 0 && done.length === 0 ? <Empty>{isProp ? 'No properties yet.' : hideComplete && customers.length ? 'Everyone here is fully onboarded.' : 'No clients here yet.'}</Empty> : (
+          <>
+            <Group title="In progress" color={C.orange} count={inProgress.length} cols={cols}>
+              {inProgress.length === 0 && <Row cells={[<span key="e" style={{ color: C.faint, fontSize: 13 }}>Nothing in progress</span>, ...cols.slice(1).map(() => '')]} />}
+              {inProgress.map(({ customer: c, doneCount, total, complete }) => <Row key={c.id} cells={rowCells(c, doneCount, total, complete)} />)}
+            </Group>
+            {!hideComplete && done.length > 0 && (
+              <Group title="Fully onboarded" color={C.green} count={done.length} cols={cols}>
+                {done.map(({ customer: c, doneCount, total, complete }) => <Row key={c.id} cells={rowCells(c, doneCount, total, complete)} />)}
+              </Group>
+            )}
+          </>
         )}
+      </Body>
 
-        {mod.key === 'str' && showAdd && (
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Add a client</div>
-            <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 14 }}>Creates their owner portal login and links them to their property. They can sign in straight away with this email and password.</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>First name *</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} value={addForm.first_name} onChange={e => setAddForm({ ...addForm, first_name: e.target.value })} /></div>
-              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Last name</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} value={addForm.last_name} onChange={e => setAddForm({ ...addForm, last_name: e.target.value })} /></div>
-              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Email *</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} type="email" value={addForm.email} onChange={e => setAddForm({ ...addForm, email: e.target.value })} /></div>
-              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Phone</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} value={addForm.phone} onChange={e => setAddForm({ ...addForm, phone: e.target.value })} /></div>
-              <div><label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Portal password * (min 6)</label><input style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, background: '#fff' }} type="text" autoComplete="off" value={addForm.password} onChange={e => setAddForm({ ...addForm, password: e.target.value })} /></div>
-            </div>
-            <div style={{ marginTop: 14 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Property</label>
-              {vrProps.length === 0 ? <div style={{ fontSize: 12.5, color: '#98A2B3' }}>No properties yet. Add one in Vacation Rentals first.</div> : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {vrProps.map(p => {
-                    const on = addForm.property_ids.includes(p.id)
-                    const current = vrOwners.find(o => o.property_ids.includes(p.id))
-                    return (
-                      <button key={p.id} type="button" onClick={() => setAddForm({ ...addForm, property_ids: on ? addForm.property_ids.filter(x => x !== p.id) : [...addForm.property_ids, p.id] })}
-                        title={current ? `Currently linked to ${current.name}. Choosing it moves it to the new client.` : undefined}
-                        style={{ padding: '7px 12px', borderRadius: 20, border: '1px solid ' + (on ? ACCENT : '#D0D5DD'), background: on ? '#FBF4E6' : '#fff', color: on ? ACCENT : '#344054', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {on ? '✓ ' : ''}{p.name}{current ? <span style={{ fontWeight: 400, color: '#98A2B3' }}> · {current.name}</span> : null}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-            {addError && <div style={{ fontSize: 12.5, color: '#B42318', marginTop: 12 }}>{addError}</div>}
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={addClient} disabled={adding} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: adding ? 0.6 : 1 }}>{adding ? 'Adding…' : 'Add client'}</button>
-              <button onClick={() => { setShowAdd(false); setAddError('') }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', color: '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-            </div>
+      {mod.key === 'str' && showAdd && (
+        <Modal title="Add a client" width={620} onClose={() => { setShowAdd(false); setAddError('') }}>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>Creates their owner portal login and links them to their property. They can sign in straight away with this email and password.</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={lbl}>First name *</label><input style={inp} value={addForm.first_name} onChange={f('first_name')} /></div>
+            <div><label style={lbl}>Last name</label><input style={inp} value={addForm.last_name} onChange={f('last_name')} /></div>
+            <div><label style={lbl}>Email *</label><input style={inp} type="email" value={addForm.email} onChange={f('email')} /></div>
+            <div><label style={lbl}>Phone</label><input style={inp} value={addForm.phone} onChange={f('phone')} /></div>
+            <div><label style={lbl}>Portal password * (min 6)</label><input style={inp} type="text" autoComplete="off" value={addForm.password} onChange={f('password')} /></div>
           </div>
-        )}
-        {linkError && <div style={{ background: '#FEF3F2', border: '1px solid #FECDCA', color: '#B42318', borderRadius: 10, padding: '9px 14px', fontSize: 13, marginBottom: 12 }}>{linkError}</div>}
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 13, color: '#667085' }}>{rows.length} {seg.key === 'str_property' ? (rows.length === 1 ? 'property' : 'properties') : (rows.length === 1 ? 'client' : 'clients')}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#344054', cursor: 'pointer' }}>
-              <input type="checkbox" checked={hideComplete} onChange={e => setHideComplete(e.target.checked)} />
-              Hide fully onboarded
-            </label>
-            {mod.key === 'str' && !showAdd && (
-              <button onClick={() => { setShowAdd(true); setAddError('') }} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add client</button>
+          <div style={{ marginTop: 16 }}>
+            <label style={lbl}>Property</label>
+            {vrProps.length === 0 ? <div style={{ fontSize: 13, color: C.faint }}>No properties yet. Add one in Vacation Rentals first.</div> : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {vrProps.map(p => {
+                  const on = addForm.property_ids.includes(p.id)
+                  const current = vrOwners.find(o => o.property_ids.includes(p.id))
+                  return (
+                    <button key={p.id} type="button" onClick={() => setAddForm({ ...addForm, property_ids: on ? addForm.property_ids.filter(x => x !== p.id) : [...addForm.property_ids, p.id] })}
+                      title={current ? `Currently linked to ${current.name}. Choosing it moves it to the new client.` : undefined}
+                      style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid ' + (on ? C.gold : C.border), background: on ? C.gold : '#fff', color: on ? '#fff' : C.ink, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {on ? '✓ ' : ''}{p.name}{current ? <span style={{ opacity: 0.7 }}> · {current.name}</span> : null}
+                    </button>
+                  )
+                })}
+              </div>
             )}
           </div>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {rows.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 80, color: '#98A2B3', fontSize: 14, background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC' }}>{seg.key === 'str_property' ? 'No properties yet' : 'No clients here yet'}</div>
-          ) : seg.key === 'str_property' ? rows.map(({ customer: c }) => {
-            // Same layout as the owner portal's Property Onboarding page
-            const stage = Math.min(c.staging_stage ?? 0, PROPERTY_STEPS.length)
-            return (
-              <div key={c.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #EAECF0', padding: '22px 24px', marginBottom: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{c.name}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 12, color: '#667085' }}>Client:</span>
-                      <select
-                        value={vrOwners.find(o => o.property_ids.includes(c.id))?.id ?? ''}
-                        disabled={saving === 'link' + c.id}
-                        onChange={e => linkProperty(c.id, e.target.value || null)}
-                        style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', color: '#323338', fontFamily: 'inherit', cursor: 'pointer' }}
-                      >
-                        <option value="">No client linked</option>
-                        {vrOwners.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-                      </select>
-                      {(c.city || c.location) && <span style={{ fontSize: 12, color: '#98A2B3' }}>· {c.city || c.location}</span>}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 12, color: '#667085', flexShrink: 0 }}>{stage} of {PROPERTY_STEPS.length} complete</div>
-                </div>
-                <div style={{ height: 6, background: '#F2F4F7', borderRadius: 3, margin: '10px 0 16px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(stage / PROPERTY_STEPS.length) * 100}%`, background: '#A8862E', transition: 'width .2s' }} />
-                </div>
-                {PROPERTY_ITEMS.map((item, i) => {
-                  const done = i < stage
-                  const current = i === stage
-                  const busy = saving === c.id + item.key
-                  return (
-                    <div key={item.key} onClick={() => toggleStep(c.id, item)} title="Click to tick this step (and every step before it). Click a ticked step to untick it." style={{ display: 'flex', gap: 12, cursor: 'pointer', opacity: busy ? 0.6 : 1 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{
-                          width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700,
-                          background: done ? '#10B981' : current ? '#FBF4E6' : '#F2F4F7',
-                          color: done ? '#fff' : current ? '#A8862E' : '#98A2B3',
-                          border: current ? '1px solid #A8862E' : 'none',
-                        }}>{done ? '✓' : i + 1}</div>
-                        {i < PROPERTY_ITEMS.length - 1 && <div style={{ width: 1, flex: 1, minHeight: 16, background: '#EAECF0' }} />}
-                      </div>
-                      <div style={{ paddingBottom: 14, paddingTop: 3, fontSize: 13, color: done || current ? '#323338' : '#667085' }}>{item.label}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            )
-          }) : rows.map(({ customer: c, doneCount, total, complete }) => (
-            <div key={c.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '16px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: mod.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: mod.color, flexShrink: 0 }}>{(c.name ?? '?').charAt(0)}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{c.name}</div>
-                  <div style={{ fontSize: 12, color: '#98A2B3' }}>{c.email ?? '—'}</div>
-                  {seg.key === 'str_owner' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                      {(c.property_ids ?? []).map((pid: string) => {
-                        const p = vrProps.find(x => x.id === pid)
-                        if (!p) return null
-                        return (
-                          <span key={pid} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: '#A8862E', background: '#FBF4E6', borderRadius: 14, padding: '4px 6px 4px 10px' }}>
-                            {p.name}
-                            <button title="Unlink this property" disabled={saving === 'link' + pid} onClick={() => linkProperty(pid, null)} style={{ border: 'none', background: 'none', color: '#A8862E', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
-                          </span>
-                        )
-                      })}
-                      {vrProps.some(p => !(c.property_ids ?? []).includes(p.id)) && (
-                        <select value="" onChange={e => e.target.value && linkProperty(e.target.value, c.id)} style={{ fontSize: 12, padding: '4px 8px', borderRadius: 14, border: '1px dashed #98A2B3', background: '#fff', color: '#344054', fontFamily: 'inherit', cursor: 'pointer' }}>
-                          <option value="">+ Link property</option>
-                          {vrProps.filter(p => !(c.property_ids ?? []).includes(p.id)).map(p => {
-                            const cur = vrOwners.find(o => o.property_ids.includes(p.id))
-                            return <option key={p.id} value={p.id}>{p.name}{cur ? ` (moves from ${cur.name})` : ''}</option>
-                          })}
-                        </select>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div style={{ textAlign: 'right', minWidth: 120 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: complete ? '#10B981' : '#667085', marginBottom: 4 }}>{doneCount} of {total} complete</div>
-                  <div style={{ width: 120, height: 6, borderRadius: 4, background: '#F2F4F7', overflow: 'hidden' }}>
-                    <div style={{ width: `${total ? (doneCount / total) * 100 : 0}%`, height: '100%', background: complete ? '#10B981' : mod.color }} />
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 8 }}>
-                {seg.items.map(item => {
-                  const done = isDone(c.id, item)
-                  const busy = saving === c.id + item.key
-                  return (
-                    <div
-                      key={item.key}
-                      onClick={() => (seg.key === 'str_property' || !item.auto) && toggleManual(c.id, item)}
-                      title={seg.key === 'str_property' ? 'Steps go in order: clicking a step ticks every step before it too. The owner sees the same progress in their portal.' : item.auto ? 'Auto-detected from a real record — cannot be ticked by hand' : 'Click to tick/untick'}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8,
-                        background: done ? '#F0FDF4' : '#FAFAFB', border: '1px solid ' + (done ? '#BBF7D0' : '#F2F4F7'),
-                        cursor: item.auto ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
-                      }}
-                    >
-                      <span style={{
-                        width: 18, height: 18, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: done ? '#10B981' : '#fff', border: '1.5px solid ' + (done ? '#10B981' : '#D0D5DD'), fontSize: 11, color: '#fff', fontWeight: 700,
-                      }}>{done ? '✓' : seg.key === 'str_property' ? <span style={{ color: '#98A2B3', fontSize: 10 }}>{Number(item.key.slice(5)) + 1}</span> : ''}</span>
-                      <span style={{ fontSize: 12.5, color: done ? '#065F46' : '#344054', flex: 1 }}>{item.label}</span>
-                      {item.auto && <span style={{ fontSize: 9, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Auto</span>}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+          {addError && <div style={{ fontSize: 13, color: C.red, marginTop: 12 }}>{addError}</div>}
+          <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'flex-end' }}>
+            <button onClick={() => { setShowAdd(false); setAddError('') }} style={btn('ghost')}>Cancel</button>
+            <button onClick={addClient} disabled={adding} style={{ ...btn('gold'), opacity: adding ? 0.6 : 1 }}>{adding ? 'Adding…' : 'Add client'}</button>
+          </div>
+        </Modal>
+      )}
+    </CrmPage>
   )
 }

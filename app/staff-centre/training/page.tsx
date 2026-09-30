@@ -2,19 +2,14 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { useRole } from '../../../lib/useRole'
+import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
 
-const ACCENT = '#A8862E'
 const TYPES = [
-  { k: 'pdf', l: 'PDF' },
-  { k: 'file', l: 'File' },
-  { k: 'video', l: 'Video' },
+  { k: 'pdf', l: 'PDF', color: '#DF2F4A' },
+  { k: 'file', l: 'File', color: '#579BFC' },
+  { k: 'video', l: 'Video', color: '#9D50DD' },
 ]
-
-function typeIcon(type: string) {
-  if (type === 'video') return '▶'
-  if (type === 'pdf') return '📄' // kept as text glyph only where an icon set isn't worth building for a one-off badge
-  return '📁'
-}
+const GROUP_COLORS = ['#D0AE4C', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1']
 
 // Turns a pasted YouTube/Vimeo link into its embeddable form. Returns
 // null for anything else (an uploaded file's own URL, or a direct .mp4
@@ -46,6 +41,7 @@ export default function TrainingPage() {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
   const [showAdd, setShowAdd] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [watching, setWatching] = useState<string | null>(null)
   const [form, setForm] = useState<{ title: string; description: string; category: string; type: string; url: string }>({ title: '', description: '', category: '', type: 'pdf', url: '' })
 
   useEffect(() => { load() }, [])
@@ -114,7 +110,7 @@ export default function TrainingPage() {
     setMaterials(prev => prev.filter(m => m.id !== id))
   }
 
-  if (loading || roleLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
+  if (loading || roleLoading) return <Loading />
 
   const totalDone = materials.filter(m => completedIds.has(m.id)).length
   const groups: Record<string, any[]> = {}
@@ -123,112 +119,110 @@ export default function TrainingPage() {
     if (!groups[cat]) groups[cat] = []
     groups[cat].push(m)
   }
+  const pct = materials.length ? Math.round(totalDone / materials.length * 100) : 0
+  const cols = [
+    { k: 'n', l: 'Material', w: 'minmax(280px,1.6fr)' },
+    { k: 't', l: 'Type', w: 110 },
+    { k: 'o', l: 'Open', w: 130 },
+    { k: 's', l: 'My status', w: 140 },
+    { k: 'd', l: 'Added', w: 120 },
+    ...(isAdmin ? [{ k: 'x', l: '', w: 56 }] : []),
+  ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Staff Training</h1>
-          <div style={{ fontSize: 13, color: '#667085' }}>
-            {materials.length ? `${totalDone} of ${materials.length} completed` : 'PDFs, files, and videos for the team to work through and check off.'}
+    <CrmPage>
+      <CrmHeader
+        title="Staff Training"
+        subtitle="PDFs, files and videos for the team to work through and tick off."
+        actions={isAdmin ? <button onClick={() => setShowAdd(true)} style={btn('gold')}>+ Add material</button> : undefined}
+      />
+      <Body>
+        {materials.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 24 }}>
+            <Stat label="Materials" value={materials.length} />
+            <Stat label="Completed by you" value={totalDone} />
+            <Stat label="Still to do" value={materials.length - totalDone} />
+            <Stat label="Your progress" value={pct + '%'} highlight />
           </div>
-        </div>
-        {isAdmin && <button onClick={() => setShowAdd(v => !v)} style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{showAdd ? 'Cancel' : '+ Add material'}</button>}
-      </div>
+        )}
+
+        {materials.length === 0 && <Empty>{isAdmin ? 'No training material yet. Click “+ Add material” to add a PDF, file or video.' : 'No training material has been added yet.'}</Empty>}
+
+        {Object.entries(groups).map(([cat, items], gi) => (
+          <Group key={cat} title={cat} color={GROUP_COLORS[gi % GROUP_COLORS.length]} count={items.length} cols={cols}>
+            {items.map(m => {
+              const done = completedIds.has(m.id)
+              const t = TYPES.find(x => x.k === m.type) ?? TYPES[1]
+              const embed = m.type === 'video' ? embedUrl(m.url) : null
+              const open = watching === m.id
+              return (
+                <Row key={m.id} active={open}
+                  cells={[
+                    <div key="n" style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</div>
+                      {m.description && <div style={{ fontSize: 12, color: C.faint, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.description}</div>}
+                    </div>,
+                    <Pill key="t" color={t.color} width={70}>{t.l}</Pill>,
+                    m.type === 'video'
+                      ? <button key="o" onClick={() => setWatching(open ? null : m.id)} style={{ ...btn('ghost', true), minWidth: 96, justifyContent: 'center' }}>{open ? 'Close' : '▶ Watch'}</button>
+                      : <a key="o" href={m.url} target="_blank" rel="noreferrer" style={{ ...btn('ghost', true), minWidth: 96, justifyContent: 'center' }}>{m.type === 'pdf' ? 'Open PDF' : 'Open file'}</a>,
+                    <Pill key="s" color={done ? C.green : C.grey} onClick={() => toggleComplete(m.id)} title="Click to tick / untick" width={112}>{done ? '✓ Done' : 'Not started'}</Pill>,
+                    <span key="d" style={{ fontSize: 13, color: C.muted }}>{m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</span>,
+                    ...(isAdmin ? [<button key="x" onClick={() => { if (confirm('Delete this material?')) deleteMaterial(m.id) }} title="Delete" style={{ ...btn('danger', true), padding: '5px 8px' }}>×</button>] : []),
+                  ]}
+                  below={open ? (
+                    <div style={{ padding: 16 }}>
+                      {embed ? <iframe src={embed} style={{ width: '100%', maxWidth: 640, aspectRatio: '16 / 9', borderRadius: 4, border: 'none' }} allowFullScreen />
+                        : <video src={m.url} controls style={{ width: '100%', maxWidth: 640, borderRadius: 4 }} />}
+                    </div>
+                  ) : undefined}
+                />
+              )
+            })}
+          </Group>
+        ))}
+      </Body>
 
       {isAdmin && showAdd && (
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, marginBottom: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 14 }}>New training material</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Title</label>
-              <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Guest check-in procedure" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Category (optional)</label>
-              <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="e.g. Onboarding, Sales, Compliance" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
-            </div>
+        <Modal title="New training material" width={600} onClose={() => setShowAdd(false)}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+            <div><label style={lbl}>Title *</label><input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Guest check-in procedure" style={inp} /></div>
+            <div><label style={lbl}>Category</label><input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="e.g. Onboarding, Sales" list="training-cats" style={inp} />
+              <datalist id="training-cats">{Object.keys(groups).map(g => <option key={g} value={g} />)}</datalist></div>
           </div>
+          <div style={{ marginBottom: 14 }}><label style={lbl}>Description</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ ...inp, minHeight: 60, resize: 'vertical' }} /></div>
           <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Description (optional)</label>
-            <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 60, resize: 'vertical' as const }} />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Type</label>
+            <label style={lbl}>Type</label>
             <div style={{ display: 'flex', gap: 6 }}>
-              {TYPES.map(t => (
-                <button key={t.k} onClick={() => setForm({ ...form, type: t.k, url: '' })} style={{ padding: '8px 16px', borderRadius: 8, border: `1.5px solid ${form.type === t.k ? ACCENT : '#D0D5DD'}`, background: form.type === t.k ? '#FBF4E6' : '#fff', color: form.type === t.k ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{t.l}</button>
-              ))}
+              {TYPES.map(t => {
+                const on = form.type === t.k
+                return <button key={t.k} onClick={() => setForm({ ...form, type: t.k, url: '' })} style={{ padding: '6px 16px', borderRadius: 4, border: '1px solid ' + (on ? t.color : C.border), background: on ? t.color : '#fff', color: on ? '#fff' : C.ink, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{t.l}</button>
+              })}
             </div>
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 6 }}>
             {form.type === 'video' ? (
               <>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>YouTube / Vimeo link</label>
-                <input value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} placeholder="https://youtube.com/watch?v=..." style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 8 }} />
-                <div style={{ fontSize: 12, color: '#98A2B3', marginBottom: 6 }}>or upload a video file instead:</div>
+                <label style={lbl}>YouTube / Vimeo link</label>
+                <input value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} placeholder="https://youtube.com/watch?v=..." style={{ ...inp, marginBottom: 8 }} />
+                <div style={{ fontSize: 12, color: C.faint, marginBottom: 6 }}>or upload a video file instead:</div>
                 <input type="file" accept="video/*" onChange={e => e.target.files?.[0] && handleFilePicked(e.target.files[0])} />
               </>
             ) : (
               <>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>{form.type === 'pdf' ? 'PDF file' : 'File'}</label>
+                <label style={lbl}>{form.type === 'pdf' ? 'PDF file' : 'File'}</label>
                 <input type="file" accept={form.type === 'pdf' ? 'application/pdf' : undefined} onChange={e => e.target.files?.[0] && handleFilePicked(e.target.files[0])} />
               </>
             )}
-            {uploading && <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 6 }}>Uploading…</div>}
-            {form.url && !uploading && <div style={{ fontSize: 12, color: '#10B981', marginTop: 6 }}>Ready to add.</div>}
+            {uploading && <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>Uploading…</div>}
+            {form.url && !uploading && <div style={{ fontSize: 12, color: C.green, marginTop: 6 }}>Ready to add.</div>}
           </div>
-          <button onClick={addMaterial} disabled={!form.title.trim() || !form.url.trim() || uploading} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: !form.title.trim() || !form.url.trim() || uploading ? 0.6 : 1 }}>Add material</button>
-        </div>
-      )}
-
-      {materials.length === 0 && (
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 40, textAlign: 'center' as const, color: '#98A2B3' }}>
-          {isAdmin ? 'No training material yet -- add a PDF, file, or video above.' : 'No training material has been added yet.'}
-        </div>
-      )}
-
-      {Object.entries(groups).map(([cat, items]) => (
-        <div key={cat} style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 10 }}>{cat}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {items.map(m => {
-              const done = completedIds.has(m.id)
-              const embed = m.type === 'video' ? embedUrl(m.url) : null
-              return (
-                <div key={m.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 18 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: m.type === 'video' ? 12 : 0 }}>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 8, background: '#F2F4F7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{typeIcon(m.type)}</div>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{m.title}</div>
-                        {m.description && <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{m.description}</div>}
-                        {(m.type === 'pdf' || m.type === 'file') && (
-                          <a href={m.url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>{m.type === 'pdf' ? 'Open PDF' : 'Open file'} →</a>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: done ? '#10B981' : '#667085', cursor: 'pointer', whiteSpace: 'nowrap' as const }}>
-                        <input type="checkbox" checked={done} onChange={() => toggleComplete(m.id)} style={{ width: 15, height: 15, cursor: 'pointer' }} />
-                        {done ? 'Completed' : 'Mark as done'}
-                      </label>
-                      {isAdmin && <button onClick={() => deleteMaterial(m.id)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: '#FEE2E2', fontSize: 11, cursor: 'pointer', color: '#EF4444' }}>×</button>}
-                    </div>
-                  </div>
-                  {m.type === 'video' && (
-                    embed ? (
-                      <iframe src={embed} style={{ width: '100%', maxWidth: 560, height: 315, borderRadius: 8, border: 'none' }} allowFullScreen />
-                    ) : (
-                      <video src={m.url} controls style={{ width: '100%', maxWidth: 560, borderRadius: 8 }} />
-                    )
-                  )}
-                </div>
-              )
-            })}
+          <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'flex-end' }}>
+            <button onClick={() => setShowAdd(false)} style={btn('ghost')}>Cancel</button>
+            <button onClick={addMaterial} disabled={!form.title.trim() || !form.url.trim() || uploading} style={{ ...btn('gold'), opacity: !form.title.trim() || !form.url.trim() || uploading ? 0.6 : 1 }}>Add material</button>
           </div>
-        </div>
-      ))}
-    </div>
+        </Modal>
+      )}
+    </CrmPage>
   )
 }

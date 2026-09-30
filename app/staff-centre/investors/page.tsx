@@ -1,37 +1,22 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
+import { C, MODULE_COLOR, CrmPage, CrmHeader, Body, Stat, Pill, Avatar, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
 
-const ACCENT = '#A8862E'
 const MODULES: { k: string; l: string; color: string }[] = [
-  { k: 'str', l: 'Vacation Rentals', color: '#A8862E' },
-  { k: 'pm', l: 'Property Management', color: '#10B981' },
-  { k: 'ea', l: 'Estate Agency', color: '#F59E0B' },
-  { k: 'dev', l: 'Developments', color: '#A8862E' },
+  { k: 'str', l: 'Vacation Rentals', color: MODULE_COLOR.str },
+  { k: 'pm', l: 'Property Management', color: MODULE_COLOR.pm },
+  { k: 'ea', l: 'Estate Agency', color: MODULE_COLOR.ea },
+  { k: 'dev', l: 'Developments', color: MODULE_COLOR.dev },
 ]
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  active: { bg: '#D1FAE5', color: '#059669' },
-  pending: { bg: '#FEF3C7', color: '#D97706' },
-  completed: { bg: '#F3F4F6', color: '#6B7280' },
+const STATUS: Record<string, { l: string; color: string }> = {
+  active: { l: 'Active', color: C.green },
+  pending: { l: 'Pending', color: C.orange },
+  completed: { l: 'Completed', color: C.grey },
 }
-const lbl: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }
-const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }
+const STATUS_ORDER = ['active', 'pending', 'completed']
 
 function moduleInfo(k: string) { return MODULES.find(m => m.k === k) ?? MODULES[3] }
-
-function Modal({ title, onClose, children }: any) {
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 520, margin: '0 16px', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{title}</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#667085' }}>×</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
 
 export default function StaffCentreInvestorsPage() {
   const [loading, setLoading] = useState(true)
@@ -99,94 +84,103 @@ export default function StaffCentreInvestorsPage() {
     await load()
   }
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter',sans-serif", color: '#98A2B3' }}>Loading...</div>
+  async function cycleStatus(i: any) {
+    const next = STATUS_ORDER[(STATUS_ORDER.indexOf(i.status) + 1) % STATUS_ORDER.length]
+    setInvestors(list => list.map(x => x.id === i.id ? { ...x, status: next } : x))
+    const { error } = await supabase.from('dev_investors').update({ status: next }).eq('id', i.id)
+    if (error) { alert(error.message); load() }
+  }
+
+  if (loading) return <Loading />
+
+  const cols = [
+    { k: 'n', l: 'Investor', w: 'minmax(200px,1.4fr)' },
+    { k: 'p', l: 'Project / property', w: 160 },
+    { k: 'i', l: 'Invested', w: 110 },
+    { k: 'b', l: 'Paid back', w: 150 },
+    { k: 't', l: 'Payback terms', w: 160 },
+    { k: 's', l: 'Status', w: 120 },
+    { k: 'a', l: '', w: 290 },
+  ]
+  const groups = MODULES.filter(m => moduleFilter === 'All' || m.k === moduleFilter).map(m => ({ m, list: filtered.filter(i => (i.module ?? 'dev') === m.k) })).filter(g => g.list.length || moduleFilter !== 'All')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '40px 48px' }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Staff Centre</div>
-            <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 700, color: '#323338', letterSpacing: '-0.01em' }}>Investors</h1>
-            <div style={{ fontSize: 14, color: '#667085', maxWidth: 640, lineHeight: 1.5 }}>
-              Every investor across every module, in one place — what they put in, what we agreed to pay back, and every payment made.
-            </div>
-          </div>
-          <button onClick={() => { setForm({ module: 'dev', status: 'active' }); setEditId(null); setModal('investor') }} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Add Investor</button>
+    <CrmPage>
+      <CrmHeader
+        title="Investors"
+        subtitle="Every investor across every module, in one place — what they put in, what we agreed to pay back, and every payment made."
+        actions={<>
+          <button onClick={() => { setForm({}); setEditId(null); setModal('payment') }} style={btn('ghost')}>Log payment</button>
+          <button onClick={() => { setForm({ module: moduleFilter === 'All' ? 'dev' : moduleFilter, status: 'active' }); setEditId(null); setModal('investor') }} style={btn('gold')}>+ Add investor</button>
+        </>}
+        tabs={[{ k: 'All', l: 'All', count: investors.length }, ...MODULES.map(m => ({ k: m.k, l: m.l, count: investors.filter(i => (i.module ?? 'dev') === m.k).length }))]}
+        tab={moduleFilter} onTab={setModuleFilter}
+      />
+      <Body>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 24 }}>
+          <Stat label="Investors" value={filtered.length} />
+          <Stat label="Total investment" value={`£${totalInvestment.toLocaleString()}`} />
+          <Stat label="Paid back so far" value={`£${totalPaidBack.toLocaleString()}`} sub={totalInvestment ? `${Math.round(totalPaidBack / totalInvestment * 100)}% of invested` : undefined} />
+          <Stat label="Still owed" value={`£${Math.max(0, totalInvestment - totalPaidBack).toLocaleString()}`} highlight />
         </div>
 
-        <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-          {['All', ...MODULES.map(m => m.k)].map(k => {
-            const m = k === 'All' ? null : moduleInfo(k)
-            const active = moduleFilter === k
-            return (
-              <button key={k} onClick={() => setModuleFilter(k)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid ' + (active ? (m?.color ?? ACCENT) : '#E4E7EC'), background: active ? (m?.color ?? ACCENT) : '#fff', color: active ? '#fff' : '#344054', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{k === 'All' ? 'All' : m!.l}</button>
-            )
-          })}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 20 }}>
-          {[
-            { label: 'Investors', value: filtered.length },
-            { label: 'Total Investment', value: `£${totalInvestment.toLocaleString()}`, green: true },
-            { label: 'Paid Back So Far', value: `£${totalPaidBack.toLocaleString()}` },
-            { label: 'Avg Investment', value: `£${filtered.length > 0 ? Math.round(totalInvestment / filtered.length).toLocaleString() : 0}` },
-          ].map((c: any) => (
-            <div key={c.label} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '20px 24px' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{c.label}</div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: c.green ? '#10B981' : '#323338' }}>{c.value}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {filtered.length === 0 ? <div style={{ textAlign: 'center', padding: 80, color: '#98A2B3', fontSize: 14, background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC' }}>No investors yet</div> :
-          filtered.map(i => {
-            const paid = paidBackTo(i.id)
-            const invPayments = payments.filter(p => p.investor_id === i.id)
-            const open = expanded === i.id
-            const mod = moduleInfo(i.module ?? 'dev')
-            return (
-              <div key={i.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: mod.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: mod.color, flexShrink: 0 }}>{i.name.charAt(0)}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{i.name}</div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: mod.color + '18', color: mod.color, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{mod.l}</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{i.email} {i.phone ? `· ${i.phone}` : ''}</div>
-                    <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 2 }}>{projectName(i)} · {paybackLabel(i)}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#10B981' }}>£{(i.investment_amount ?? 0).toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>£{paid.toLocaleString()} paid back</div>
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: STATUS_COLORS[i.status]?.bg ?? '#F3F4F6', color: STATUS_COLORS[i.status]?.color ?? '#6B7280' }}>{i.status}</span>
-                  </div>
-                  <button onClick={() => { setForm({ investor_id: i.id }); setEditId(null); setModal('payment') }} style={{ fontSize: 12, color: '#10B981', background: 'none', border: '1px solid #10B981', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}>+ Log Payment</button>
-                  <button onClick={() => setExpanded(open ? null : i.id)} style={{ fontSize: 12, color: '#667085', background: 'none', border: '1px solid #D0D5DD', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>{open ? 'Hide' : `History (${invPayments.length})`}</button>
-                  <button onClick={() => { setForm(i); setEditId(i.id); setModal('investor') }} style={{ fontSize: 12, color: '#A8862E', background: 'none', border: '1px solid #A8862E', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>Edit</button>
-                  <button onClick={() => del('dev_investors', i.id)} style={{ fontSize: 12, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
-                </div>
-                {open && (
-                  <div style={{ borderTop: '1px solid #F2F4F7', padding: '12px 20px 16px', background: '#FAFAFB' }}>
-                    {invPayments.length === 0 ? <div style={{ fontSize: 12, color: '#98A2B3' }}>No payments logged yet.</div> :
-                    invPayments.map(p => (
-                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, padding: '6px 0', borderBottom: '1px solid #F2F4F7' }}>
-                        <span style={{ color: '#667085' }}>{p.date}{p.note ? ` · ${p.note}` : ''}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontWeight: 600, color: '#323338' }}>£{Number(p.amount).toLocaleString()}</span>
-                          <button onClick={() => del('dev_investor_payments', p.id)} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
-                        </div>
+        {filtered.length === 0 && moduleFilter === 'All' ? <Empty>No investors yet. Click “+ Add investor” to add the first one.</Empty> :
+        groups.map(({ m, list }) => (
+          <Group key={m.k} title={m.l} color={m.color} count={list.length} cols={cols}
+            right={<button onClick={() => { setForm({ module: m.k, status: 'active' }); setEditId(null); setModal('investor') }} style={btn('ghost', true)}>+ Add</button>}>
+            {list.length === 0 && <Row cells={[<span key="e" style={{ color: C.faint, fontSize: 13 }}>No investors in {m.l} yet</span>, '', '', '', '', '', '']} />}
+            {list.map(i => {
+              const paid = paidBackTo(i.id)
+              const invPayments = payments.filter(p => p.investor_id === i.id)
+              const open = expanded === i.id
+              const amt = i.investment_amount ?? 0
+              const pct = amt ? Math.min(100, Math.round(paid / amt * 100)) : 0
+              const st = STATUS[i.status] ?? { l: i.status || '—', color: C.grey }
+              return (
+                <Row key={i.id} active={open}
+                  cells={[
+                    <div key="n" style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                      <Avatar name={i.name} color={m.color} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{i.name}</div>
+                        <div style={{ fontSize: 12, color: C.faint, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[i.email, i.phone].filter(Boolean).join(' · ') || 'No contact details'}</div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
+                    </div>,
+                    <span key="p" style={{ fontSize: 13, color: projectName(i) === '—' ? C.faint : C.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{projectName(i)}</span>,
+                    <span key="i" style={{ fontWeight: 600 }}>£{amt.toLocaleString()}</span>,
+                    <div key="b" style={{ width: '100%' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: C.muted, marginBottom: 3 }}><span>£{paid.toLocaleString()}</span><span>{pct}%</span></div>
+                      <div style={{ height: 6, background: C.row, borderRadius: 3, overflow: 'hidden' }}><div style={{ width: pct + '%', height: '100%', background: C.green }} /></div>
+                    </div>,
+                    <span key="t" style={{ fontSize: 13, color: i.payback_value ? C.ink : C.faint }}>{paybackLabel(i)}</span>,
+                    <Pill key="s" color={st.color} onClick={() => cycleStatus(i)} title="Click to change status" width={96}>{st.l}</Pill>,
+                    <div key="a" style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => { setForm({ investor_id: i.id }); setEditId(null); setModal('payment') }} style={btn('ghost', true)}>+ Payment</button>
+                      <button onClick={() => setExpanded(open ? null : i.id)} style={btn('ghost', true)}>{open ? 'Hide' : `History${invPayments.length ? ` (${invPayments.length})` : ''}`}</button>
+                      <button onClick={() => { setForm(i); setEditId(i.id); setModal('investor') }} style={btn('ghost', true)}>Edit</button>
+                      <button onClick={() => del('dev_investors', i.id)} title="Delete" style={{ ...btn('danger', true), padding: '5px 8px' }}>×</button>
+                    </div>,
+                  ]}
+                  below={open ? (
+                    <div style={{ padding: '10px 16px 12px 52px' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 6 }}>Payment history</div>
+                      {invPayments.length === 0 ? <div style={{ fontSize: 13, color: C.faint }}>No payments logged yet.</div> :
+                      invPayments.map(p => (
+                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, padding: '6px 0', borderBottom: '1px solid ' + C.row, maxWidth: 560 }}>
+                          <span style={{ color: C.muted, width: 90 }}>{p.date ? new Date(p.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
+                          <span style={{ flex: 1, color: C.ink }}>{p.note || '—'}</span>
+                          <span style={{ fontWeight: 600 }}>£{Number(p.amount).toLocaleString()}</span>
+                          <button onClick={() => del('dev_investor_payments', p.id)} style={{ fontSize: 12, color: C.red, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : undefined}
+                />
+              )
+            })}
+          </Group>
+        ))}
+      </Body>
 
       {modal === 'investor' && (
         <Modal title={editId ? 'Edit Investor' : 'Add Investor'} onClose={() => { setModal(null); setEditId(null); setForm({}) }}>
@@ -213,7 +207,7 @@ export default function StaffCentreInvestorsPage() {
               <div><label style={lbl}>Investment Amount (£)</label><input type="number" style={inp} value={form.investment_amount ?? ''} onChange={e => setForm({ ...form, investment_amount: parseFloat(e.target.value) })} /></div>
               <div><label style={lbl}>Equity %</label><input type="number" style={inp} value={form.equity_percentage ?? ''} onChange={e => setForm({ ...form, equity_percentage: parseFloat(e.target.value) })} /></div>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 6 }}>Payback terms</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.ink, marginTop: 6 }}>Payback terms</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div><label style={lbl}>Payback Type</label>
                 <select style={{ ...inp, cursor: 'pointer' }} value={form.payback_type ?? 'percentage'} onChange={e => setForm({ ...form, payback_type: e.target.value })}>
@@ -240,8 +234,8 @@ export default function StaffCentreInvestorsPage() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-            <button onClick={() => { setModal(null); setEditId(null); setForm({}) }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-            <button onClick={() => save('dev_investors', form)} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Investor'}</button>
+            <button onClick={() => { setModal(null); setEditId(null); setForm({}) }} style={{ ...btn('ghost'), flex: 1, justifyContent: 'center' }}>Cancel</button>
+            <button onClick={() => save('dev_investors', form)} disabled={saving || !form.name} style={{ ...btn('gold'), flex: 1, justifyContent: 'center', opacity: saving || !form.name ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Investor'}</button>
           </div>
         </Modal>
       )}
@@ -262,11 +256,11 @@ export default function StaffCentreInvestorsPage() {
             <div><label style={lbl}>Note (optional)</label><input style={inp} value={form.note ?? ''} onChange={e => setForm({ ...form, note: e.target.value })} placeholder="e.g. March payback" /></div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-            <button onClick={() => { setModal(null); setEditId(null); setForm({}) }} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-            <button onClick={() => save('dev_investor_payments', form)} disabled={saving || !form.investor_id || !form.amount} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.investor_id || !form.amount ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Log Payment'}</button>
+            <button onClick={() => { setModal(null); setEditId(null); setForm({}) }} style={{ ...btn('ghost'), flex: 1, justifyContent: 'center' }}>Cancel</button>
+            <button onClick={() => save('dev_investor_payments', form)} disabled={saving || !form.investor_id || !form.amount} style={{ ...btn('gold'), flex: 1, justifyContent: 'center', opacity: saving || !form.investor_id || !form.amount ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Log Payment'}</button>
           </div>
         </Modal>
       )}
-    </div>
+    </CrmPage>
   )
 }
