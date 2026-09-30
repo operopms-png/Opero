@@ -608,7 +608,12 @@ function TemplatesEditor({ templates, onChange, flash, sampleEmail }: { template
               {field('closing', 'Sign-off')}
               <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.sign_name} onChange={e => set('sign_name', e.target.checked)} /> Add the sender’s name under the sign-off</label>
               <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.footer_enabled} onChange={e => set('footer_enabled', e.target.checked)} /> Add the company footer</label>
-              {f.footer_enabled && <>
+              {f.footer_enabled && (f.footer_html || '').trim() !== '' && <div style={{ gridColumn: '1 / -1' }}>
+                <label style={label}>Custom footer (HTML)</label>
+                <textarea value={f.footer_html} onChange={e => set('footer_html', e.target.value)} rows={12} style={{ ...input, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 12, resize: 'vertical' }} />
+                <div style={{ fontSize: 11.5, color: C.faint, marginTop: 3 }}>{'{email}'} = this template’s contact email. <button onClick={() => set('footer_html', '')} style={{ border: 'none', background: 'none', color: C.goldDark, cursor: 'pointer', padding: 0, fontSize: 11.5 }}>Switch back to the simple footer</button></div>
+              </div>}
+              {f.footer_enabled && !(f.footer_html || '').trim() && <>
                 {field('company', 'Company name')}
                 {field('phone', 'Office phone')}
                 {field('contact_email', 'Contact email', true, 'Shown in the footer (leave blank to show the address it’s sent from)')}

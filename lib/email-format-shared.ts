@@ -7,6 +7,7 @@ export type EmailFormat = {
   greeting: string; closing: string; sign_name: boolean; footer_enabled: boolean
   company: string; tagline: string; contact_email: string; phone: string; website: string
   address_uk: string; address_jm: string; company_number: string; rating: string; disclaimer: string
+  footer_html: string // custom footer; when set it replaces the built-in layout ({email} = contact email)
 }
 
 export const DEFAULT_FORMAT: EmailFormat = {
@@ -24,6 +25,7 @@ export const DEFAULT_FORMAT: EmailFormat = {
   company_number: '16171490',
   rating: 'We are rated 4.0 out of 5',
   disclaimer: 'This email and any attachments are confidential and intended only for the named recipient. If you received it in error, please let us know and delete it.',
+  footer_html: '',
 }
 export const FORMAT_FIELDS = Object.keys(DEFAULT_FORMAT) as (keyof EmailFormat)[]
 export type EmailTemplate = EmailFormat & { id: string; name: string; is_default: boolean }
@@ -36,6 +38,7 @@ const LOGO = 'https://app.sangstersgroup.com/logo-192.png'
 export function footerHtml(f: EmailFormat, fromEmail: string) {
   if (!f.footer_enabled) return ''
   const email = (f.contact_email || '').trim() || fromEmail
+  if ((f.footer_html || '').trim()) return `<div style="margin-top:22px;font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#323338;max-width:600px">${f.footer_html.replace(/\{email\}/g, esc(email))}</div>`
   const site = f.website ? `https://${f.website.replace(/^https?:\/\//, '')}` : ''
   const line = (label: string, val: string, href?: string) => val ? `<tr><td style="padding:1px 10px 1px 0;color:#A8862E;font-weight:bold;white-space:nowrap;vertical-align:top">${label}</td><td style="padding:1px 0;color:#323338">${href ? `<a href="${href}" style="color:#323338;text-decoration:none">${esc(val)}</a>` : esc(val)}</td></tr>` : ''
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;border-top:3px solid #D0AE4C;font-family:Arial,sans-serif;font-size:12px;line-height:1.45;max-width:600px;width:100%">
@@ -55,6 +58,7 @@ ${f.rating ? `<div style="margin-top:8px;color:#A8862E;font-weight:bold">★ ${e
 export function footerText(f: EmailFormat, fromEmail: string) {
   if (!f.footer_enabled) return ''
   const email = (f.contact_email || '').trim() || fromEmail
+  if ((f.footer_html || '').trim()) return '\n\n--\n' + f.footer_html.replace(/\{email\}/g, email).replace(/<br\s*\/?>|<\/(p|div|tr|h\d)>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&copy;/g, '©').replace(/&nbsp;/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
   return ['', '--', f.company, f.tagline, `Email: ${email}`, f.website && `Website: ${f.website}`, f.phone && `Office: ${f.phone}`, f.address_uk && `London: ${f.address_uk}`, f.address_jm && `Jamaica: ${f.address_jm}`, f.rating, f.company_number && `Company number ${f.company_number}`].filter(x => typeof x === 'string').join('\n')
 }
 
