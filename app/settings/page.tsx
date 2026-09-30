@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
 import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
+import TeamBoard from '@/components/settings/TeamBoard'
 const ACCENT = '#A8862E'
 const NAV = [
   {group:'ACCOUNT',items:[
@@ -201,7 +202,7 @@ function SettingsInner() {
           ))}
         </nav>
       </div>
-      <div style={{flex:1,display:'flex',flexDirection:'column'}}>
+      <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#323338'}}>{section}</h1>
         </div>
@@ -278,31 +279,40 @@ function SettingsInner() {
           </div>)}
 
           {section==='Team Management'&&(<div>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
-              <div>
-                <h2 style={{fontSize:20,fontWeight:700,color:'#323338',margin:'0 0 4px'}}>Team Management</h2>
-                <div style={{fontSize:13,color:'#667085'}}>Add unlimited cleaners and admins. Assign multiple cleaners per property. Everyone gets their own account.</div>
-              </div>
-              <button onClick={()=>{setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setCustomModules([]);setShowInvite(true)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>+ Invite member</button>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total members',v:team.length+1,c:ACCENT},{l:'Admins',v:1+team.filter(t=>t.role==='Admin').length,c:'#323338'},{l:'Cleaners',v:team.filter(t=>t.role==='Cleaning Team').length,c:'#10B981'},{l:'Other',v:team.filter(t=>t.role!=='Cleaning Team'&&t.role!=='Admin').length,c:'#F59E0B'}].map(s=>(
-                <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                  <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
-                  <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
-                </div>
-              ))}
-            </div>
-            {showInvite&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
+            <TeamBoard
+              me={{name:user?.email?.split('@')[0]??'You',email:user?.email??''}}
+              myRole={myRole}
+              team={team}
+              roles={ROLES}
+              propertyCount={allProperties.length}
+              onInvite={()=>{setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setCustomModules([]);setAddMode('invite');setShowInvite(true)}}
+              onEdit={(m:any)=>{
+                setEditingMemberId(m.id);setInviteName(m.name??'');setInviteEmail(m.email??'');setInvitePhone(m.phone??'')
+                setInviteRole(m.role??ROLES[0]);setAssignedPropertyIds(m.property_ids??[]);setCustomModules(m.custom_modules??[]);setAddMode('invite');setShowInvite(true)
+              }}
+              onDelete={async (m:any)=>{
+                if(!confirm(`Remove ${m.name||m.email} from the team? They won't be able to sign in to the staff side any more.`))return
+                const {error}=await supabase.from('team_members').delete().eq('id',m.id)
+                if(error){alert(error.message);return}
+                setTeam(team.filter(t=>t.id!==m.id))
+              }}
+              onRoleChange={async (m:any, role:string)=>{
+                const {error}=await supabase.from('team_members').update({role}).eq('id',m.id)
+                if(error){alert(error.message);return}
+                setTeam(team.map(t=>t.id===m.id?{...t,role}:t))
+              }}
+            />
+            {showInvite&&(<div onMouseDown={e=>{if(e.target===e.currentTarget){setShowInvite(false);setEditingMemberId(null);setCustomModules([])}}} style={{position:'fixed',inset:0,zIndex:900,background:'rgba(41,47,76,0.25)'}}><div style={{position:'absolute',top:0,right:0,bottom:0,width:'min(640px,100vw)',background:'#fff',boxShadow:'-8px 0 30px rgba(0,0,0,0.15)',padding:28,overflowY:'auto',boxSizing:'border-box',fontFamily:"Figtree, Inter, sans-serif"}}>
+              <div style={{display:'flex',justifyContent:'flex-end',marginBottom:4}}><button onClick={()=>{setShowInvite(false);setEditingMemberId(null);setCustomModules([])}} style={{border:'none',background:'none',fontSize:22,cursor:'pointer',color:'#676879'}}>×</button></div>
               {!editingMemberId && (
                 <div style={{display:'flex',gap:8,marginBottom:16}}>
                   <button onClick={()=>setAddMode('invite')} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(addMode==='invite'?ACCENT:'#E4E7EC'),background:addMode==='invite'?ACCENT:'#fff',color:addMode==='invite'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Send email invite</button>
                   <button onClick={()=>setAddMode('create')} style={{padding:'6px 14px',borderRadius:20,border:'1px solid '+(addMode==='create'?ACCENT:'#E4E7EC'),background:addMode==='create'?ACCENT:'#fff',color:addMode==='create'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create account directly</button>
                 </div>
               )}
-              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>{editingMemberId?'Edit team member':addMode==='invite'?'Invite team member':'Create staff account'}</h3>
+              <h3 style={{fontSize:22,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>{editingMemberId?'Edit team member':addMode==='invite'?'Invite team member':'Create staff account'}</h3>
               <div style={{fontSize:12,color:'#667085',marginBottom:16}}>{editingMemberId?'Update their details, role, and assigned properties.':addMode==='invite'?'Sends a real invite email — they set their own password via the link.':"Sets a password now — no email needed. Share the login details with them yourself (text, WhatsApp, in person)."}</div>
-              <div style={{display:'grid',gridTemplateColumns:addMode==='create'&&!editingMemberId?'1fr 1fr 1fr 1fr 160px':'1fr 1fr 1fr 160px',gap:12,marginBottom:16}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Full name</div>
                   <input value={inviteName} onChange={e=>setInviteName(e.target.value)} placeholder="Jane Smith" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
@@ -441,53 +451,7 @@ function SettingsInner() {
                 )}
                 <button onClick={()=>{setShowInvite(false);setEditingMemberId(null);setCustomModules([])}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
-            </div>)}
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
-                <span>Name</span><span>Email</span><span>Role</span><span>Status</span><span></span>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <div style={{display:'flex',alignItems:'center',gap:10}}>
-                  <div style={{width:32,height:32,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:ACCENT}}>{user?.email?.charAt(0).toUpperCase()}</div>
-                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{user?.email?.split('@')[0]}</span>
-                </div>
-                <span style={{fontSize:13,color:'#667085'}}>{user?.email}</span>
-                <span style={{fontSize:12,fontWeight:600,color:ACCENT,background:ACCENT+'18',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>{myRole}</span>
-                <span style={{fontSize:12,color:'#10B981',fontWeight:500}}>● Active</span>
-                <span style={{fontSize:12,color:'#98A2B3'}}>You</span>
-              </div>
-              {team.map(m=>(
-                <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 140px 120px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}>
-                    <div style={{width:32,height:32,borderRadius:'50%',background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#344054'}}>{m.name.charAt(0).toUpperCase()}</div>
-                    <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{m.name}</span>
-                  </div>
-                  <span style={{fontSize:13,color:'#667085'}}>{m.email}</span>
-                  <span style={{fontSize:12,fontWeight:600,color:'#344054',background:'#F2F4F7',padding:'3px 10px',borderRadius:20,display:'inline-block'}}>{m.role}</span>
-                  <span style={{fontSize:12,color:'#F59E0B',fontWeight:500}}>● {m.status}</span>
-                  <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
-                    <a href={`/staff-dashboard?staff_id=${m.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit',textDecoration:'none',whiteSpace:'nowrap' as const}}>👁 View as</a>
-                    <button onClick={()=>{
-                      setEditingMemberId(m.id)
-                      setInviteName(m.name??'')
-                      setInviteEmail(m.email??'')
-                      setInvitePhone(m.phone??'')
-                      setInviteRole(m.role??ROLES[0])
-                      setAssignedPropertyIds(m.property_ids??[])
-                      setCustomModules(m.custom_modules??[])
-                      setAddMode('invite')
-                      setShowInvite(true)
-                    }} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
-                    <button onClick={async ()=>{await supabase.from('team_members').delete().eq('id',m.id);setTeam(team.filter(t=>t.id!==m.id))}} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
-                  </div>
-                </div>
-              ))}
-              {team.length===0&&(<div style={{textAlign:'center',padding:40,color:'#98A2B3'}}>
-                <div style={{fontSize:32,marginBottom:8}}>👥</div>
-                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>No additional team members yet</div>
-                <div style={{fontSize:13}}>Invite cleaners, admins and managers to get started.</div>
-              </div>)}
-            </div>
+            </div></div>)}
           </div>)}
 
           {section==='Payments'&&(<div style={{maxWidth:700}}>
