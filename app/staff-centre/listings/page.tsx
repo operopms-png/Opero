@@ -94,7 +94,7 @@ export default function ListingsPage() {
     ]} />
   }
 
-  const vCols = [{ k: 'n', l: 'Tenant', w: 'minmax(180px,1.2fr)' }, { k: 'p', l: 'Property', w: 'minmax(170px,1fr)' }, { k: 'c', l: 'Contact', w: 230 }, { k: 'w', l: 'Wants', w: 170 }, { k: 'r', l: 'Received', w: 120 }, { k: 't', l: 'Viewing time', w: 200 }, { k: 's', l: 'Status', w: 140 }]
+  const vCols = [{ k: 'n', l: 'Tenant', w: 'minmax(150px,1.2fr)' }, { k: 'p', l: 'Property', w: 'minmax(150px,1fr)' }, { k: 'c', l: 'Contact', w: 200 }, { k: 'w', l: 'Wants', w: 150 }, { k: 'r', l: 'Received', w: 110 }, { k: 't', l: 'Viewing time', w: 190 }, { k: 's', l: 'Status', w: 136 }]
   const viewRow = (v: any) => <Row key={v.id} cells={[
     <div key="n" style={{ minWidth: 0 }}><div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.prospect_name}</div>{v.source && <div style={{ fontSize: 11.5, color: C.faint }}>{v.source}</div>}</div>,
     <span key="p" style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{byProp[v.property_id]?.name ?? '—'}</span>,
