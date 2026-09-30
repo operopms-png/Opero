@@ -331,11 +331,12 @@ export default function STRPage() {
     if (!user) return
     const accountId = await getAccountId(user)
     setIntegrationLoading(prev => ({ ...prev, [id]: true }))
-    const { error } = await supabase.from('integrations').upsert({ user_id: accountId, [column]: value }, { onConflict: 'user_id' })
+    const extra: any = column === 'smoobu_api_key' && !integrationsRow?.smoobu_webhook_token ? { smoobu_webhook_token: crypto.randomUUID().replace(/-/g, '') } : {}
+    const { error } = await supabase.from('integrations').upsert({ user_id: accountId, [column]: value, ...extra }, { onConflict: 'user_id' })
     setIntegrationLoading(prev => ({ ...prev, [id]: false }))
     if (error) { setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'error', text: error.message } })); return }
     setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'success', text: 'Connected!' } }))
-    setIntegrationsRow((prev: any) => ({ ...prev, [column]: value }))
+    setIntegrationsRow((prev: any) => ({ ...prev, [column]: value, ...extra }))
   }
 
   async function disconnectIntegration(id: string, column: string) {
@@ -944,7 +945,20 @@ export default function STRPage() {
                     ) : isConnected ? (
                       int.id === 'smoobu' ? (
                         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                          <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Connected — bookings and guest messages sync every 30 minutes</div>
+                          <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Connected — bookings (dates, guest, price) and guest messages</div>
+                          {integrationsRow?.smoobu_webhook_last_at ? (
+                            <div style={{ fontSize:12, color:'#16a34a' }}>⚡ Instant sync on — last update from Smoobu {new Date(integrationsRow.smoobu_webhook_last_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</div>
+                          ) : integrationsRow?.smoobu_webhook_token ? (
+                            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                              <div style={{ fontSize:11.5, color:'#676879' }}>⚡ Instant sync: waiting for the first update from Smoobu (it arrives with the next booking or message). Until then it syncs every 10 minutes. If nothing arrives, add this in Smoobu under Advanced → API Keys → Webhook URLs:</div>
+                              <div style={{ display:'flex', gap:6 }}>
+                                <input readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/smoobu-webhook?token=${integrationsRow.smoobu_webhook_token}`} onFocus={e=>e.currentTarget.select()} style={{ flex:1, padding:'6px 8px', borderRadius:4, border:'1px solid #D0D4E4', fontSize:11, fontFamily:'inherit', color:'#323338', background:'#F6F7FB' }} />
+                                <button onClick={()=>navigator.clipboard?.writeText(`${window.location.origin}/api/smoobu-webhook?token=${integrationsRow.smoobu_webhook_token}`)} style={{ padding:'6px 10px', background:'#fff', color:int.color, border:`1px solid ${int.color}`, borderRadius:4, fontSize:11.5, cursor:'pointer', fontWeight:600 }}>Copy</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ fontSize:11.5, color:'#676879' }}>Syncs every 10 minutes.</div>
+                          )}
                           {integrationsRow?.smoobu_api_secret ? (
                             <div style={{ fontSize:12, color:'#16a34a' }}>✓ Secure signing on (ready for Smoobu's 31 Oct change)</div>
                           ) : (

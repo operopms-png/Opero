@@ -1,13 +1,14 @@
 // Real Smoobu integration -- pulls bookings (dates, guest, price) and
 // guest messages for every property mapped to a Smoobu apartment ID
 // (properties.smoobu_apartment_id). Used by
-// netlify/functions/sync-smoobu.mts (automatic, every 10 minutes) and
-// app/api/sync-smoobu/route.ts (manual "Sync now").
+// app/api/smoobu-webhook/route.ts (instant: Smoobu calls it the moment a
+// booking or message changes), netlify/functions/sync-smoobu.mts (safety
+// net, every 10 minutes) and app/api/sync-smoobu/route.ts ("Sync now").
 //
 // Auth lives in lib/smoobu-client.ts: HMAC-signed when an API secret is
 // saved, otherwise the legacy Api-Key header (accepted until 31 Oct 2026).
 import { createClient } from '@supabase/supabase-js'
-import { smoobuFetch, sendSmoobuGuestMessage } from './smoobu-client'
+import { smoobuFetch } from './smoobu-client'
 import { maybeAutoReplyToGuest } from './ai-guest-receptionist'
 
 function getServiceClient() {
@@ -33,7 +34,69 @@ function bookingUpsertPayload(b: any, propertyId: string) {
   }
 }
 
-export async function runSmoobuSync() {
+type Creds = { apiKey: string; secret: string | null }
+
+// Saves every message of one Smoobu reservation. Only ever auto-replies to
+// the newest guest message, only if it is genuinely new and recent -- so an
+// import or catch-up never answers old conversations, and a re-sync never
+// answers the same message twice.
+async function syncMessagesFor(supabase: any, userId: string, bookingDbId: string, reservationId: string | number, apiKey: Creds, latestAt = 0) {
+  const msgsRes = await smoobuFetch(apiKey, `/reservations/${reservationId}/messages`)
+  const msgList: any[] = msgsRes.messages ?? []
+  const lastGuestMsgId = [...msgList].filter(x => x.type === 1).map(x => x.id).pop()
+  let count = 0
+  for (const m of msgList) {
+    const smoobuMsgId = `smoobu-${reservationId}-${m.id}`
+    const isGuestMessage = m.type === 1 // 1 = inbox (from guest), 2 = outbox (from host)
+    const { data: existing } = await supabase.from('str_guest_messages').select('id').eq('smoobu_message_id', smoobuMsgId).maybeSingle()
+
+    await supabase.from('str_guest_messages').upsert({
+      user_id: userId,
+      booking_id: bookingDbId,
+      sender: isGuestMessage ? 'guest' : 'staff',
+      subject: m.subject || null,
+      message: m.message || m.messageHtml || '',
+      smoobu_message_id: smoobuMsgId,
+      ...((m.createdAt || m.created_at) ? { created_at: new Date(m.createdAt || m.created_at).toISOString() } : {}),
+    }, { onConflict: 'smoobu_message_id' })
+    count++
+
+    const msgAt = Date.parse(m.createdAt ?? m.created_at ?? '') || 0
+    const recent = (msgAt || latestAt) > Date.now() - 2 * 3600e3
+    if (!existing && isGuestMessage && recent && m.id === lastGuestMsgId) {
+      try {
+        await maybeAutoReplyToGuest(userId, bookingDbId, m.message || m.messageHtml || '')
+      } catch (e) {
+        console.error('[sync-smoobu] auto-reply failed:', e)
+      }
+    }
+  }
+  return count
+}
+
+// Instant sync of ONE reservation (used by the Smoobu webhook): the booking
+// itself (dates, guest, price, cancelled) and its messages. ~2 Smoobu calls,
+// so it answers well inside a webhook's time limit.
+export async function syncSmoobuReservation(userId: string, reservationId: string | number, opts: { messages?: boolean } = {}) {
+  const supabase = getServiceClient()
+  const { data: integ } = await supabase.from('integrations').select('smoobu_api_key, smoobu_api_secret').eq('user_id', userId).maybeSingle()
+  if (!integ?.smoobu_api_key) return { error: 'Smoobu not connected' }
+  const apiKey: Creds = { apiKey: integ.smoobu_api_key, secret: (integ as any).smoobu_api_secret ?? null }
+  const { data: mappedProps } = await supabase.from('properties').select('id, smoobu_apartment_id').eq('user_id', userId).not('smoobu_apartment_id', 'is', null)
+  const apartmentToProperty = new Map((mappedProps ?? []).map((p: any) => [String(p.smoobu_apartment_id), p.id]))
+
+  const full = await smoobuFetch(apiKey, `/reservations/${reservationId}`)
+  const propertyId = apartmentToProperty.get(String(full.apartment?.id))
+  if (!propertyId) return { skipped: 'apartment not linked to a property', apartment: full.apartment?.id }
+  const { error } = await supabase.from('bookings').upsert(bookingUpsertPayload(full, propertyId), { onConflict: 'external_id' })
+  if (error) return { error: error.message }
+  const { data: booking } = await supabase.from('bookings').select('id').eq('external_id', `smoobu-${reservationId}`).maybeSingle()
+  if (!booking) return { error: 'booking not saved' }
+  const messages = opts.messages === false ? 0 : await syncMessagesFor(supabase, userId, booking.id, reservationId, apiKey, Date.now())
+  return { booking: booking.id, messages }
+}
+
+export async function runSmoobuSync(onlyUserId?: string) {
   const supabase = getServiceClient()
   const results: any[] = []
 
@@ -42,11 +105,12 @@ export async function runSmoobuSync() {
     .from('integrations')
     .select('user_id, smoobu_api_key, smoobu_api_secret')
     .not('smoobu_api_key', 'is', null)
+    .match(onlyUserId ? { user_id: onlyUserId } : {})
 
   if (!accounts?.length) return { synced: [] }
 
   for (const account of accounts) {
-    const apiKey = { apiKey: account.smoobu_api_key as string, secret: (account as any).smoobu_api_secret as string | null }
+    const apiKey: Creds = { apiKey: account.smoobu_api_key as string, secret: (account as any).smoobu_api_secret as string | null }
     const userId = account.user_id as string
 
     try {
@@ -137,49 +201,10 @@ export async function runSmoobuSync() {
 
         if (!booking) { threadsSkippedNoBooking++; continue }
 
-        let msgsRes: any
         try {
-          msgsRes = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}/messages`)
+          messagesSynced += await syncMessagesFor(supabase, userId, booking.id, thread.booking.id, apiKey, Date.parse(thread.latest_message?.created_at ?? '') || 0)
         } catch (e) {
           if (threadErrors.length < 5) threadErrors.push(`messages ${thread.booking.id}: ${e instanceof Error ? e.message : String(e)}`)
-          continue
-        }
-        // Only ever auto-reply to the newest guest message in a thread, and
-        // only if the thread's latest activity is recent -- so the first
-        // import (or any catch-up) never answers old conversations.
-        const msgList: any[] = msgsRes.messages ?? []
-        const latestAt = Date.parse(thread.latest_message?.created_at ?? '') || 0
-        const lastGuestMsgId = [...msgList].filter(x => x.type === 1).map(x => x.id).pop()
-        for (const m of msgList) {
-          const smoobuMsgId = `smoobu-${thread.booking.id}-${m.id}`
-          const isGuestMessage = m.type === 1 // 1 = inbox (from guest), 2 = outbox (from host)
-
-          // Only trigger the AI auto-reply for a message that's
-          // genuinely new this run -- otherwise every 30-minute
-          // re-sync would re-process the same already-answered
-          // message and could reply to it again.
-          const { data: existing } = await supabase.from('str_guest_messages').select('id').eq('smoobu_message_id', smoobuMsgId).maybeSingle()
-
-          await supabase.from('str_guest_messages').upsert({
-            user_id: userId,
-            booking_id: booking.id,
-            sender: isGuestMessage ? 'guest' : 'staff',
-            subject: m.subject || null,
-            message: m.message || m.messageHtml || '',
-            smoobu_message_id: smoobuMsgId,
-            ...((m.createdAt || m.created_at) ? { created_at: new Date(m.createdAt || m.created_at).toISOString() } : {}),
-          }, { onConflict: 'smoobu_message_id' })
-          messagesSynced++
-
-          const msgAt = Date.parse(m.createdAt ?? m.created_at ?? '') || 0
-          const recent = (msgAt || latestAt) > Date.now() - 2 * 3600e3
-          if (!existing && isGuestMessage && recent && m.id === lastGuestMsgId) {
-            try {
-              await maybeAutoReplyToGuest(userId, booking.id, m.message || m.messageHtml || '')
-            } catch (e) {
-              console.error('[sync-smoobu] auto-reply failed:', e)
-            }
-          }
         }
       }
 
