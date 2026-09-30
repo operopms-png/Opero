@@ -8,6 +8,7 @@ import MkPanel from '@/components/marketing/MkPanel'
 
 // Staff Centre → Meetings: scheduling links as a CRM-style board.
 // Pick a length (15/30/60 min), copy the link, send it; when they pick a time it shows as Booked.
+// Plus one shareable booking page (/meeting): client requests land here as "New request".
 async function api(method: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/meetings', { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: body ? JSON.stringify(body) : undefined })
@@ -65,9 +66,24 @@ export default function MeetingsPage() {
         {store.loading ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Loading meetings…</div>
           : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load meetings: {store.error}</div>
           : <MkBoardView mk={store} board={MEETINGS_BOARD} onOpen={setOpen}
-              headerRight={<span style={{ fontSize: 12.5, color: BRAND.muted, marginRight: 8 }}>Pick a length, copy the link and send it — it shows as Booked once they choose a time</span>} />}
+              headerRight={<BookingLink />} />}
       </main>
       {open && <MkPanel key={open} mk={store} board={MEETINGS_BOARD} id={open} onClose={() => setOpen(null)} onOpenOther={(_b, id) => setOpen(id)} />}
+    </div>
+  )
+}
+
+// The one link to share with clients (email footer, website, WhatsApp, socials).
+function BookingLink() {
+  const [copied, setCopied] = useState(false)
+  const url = typeof window !== 'undefined' ? `${window.location.origin}/meeting` : '/meeting'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 8 }}>
+      <span style={{ fontSize: 12.5, color: BRAND.muted }}>Client booking link:</span>
+      <code style={{ fontSize: 12.5, background: '#F6F7FB', border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '3px 8px', color: BRAND.ink }}>{url.replace(/^https?:\/\//, '')}</code>
+      <button onClick={() => { navigator.clipboard?.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
+        style={{ border: 'none', background: BRAND.goldDark, color: '#fff', borderRadius: 4, padding: '5px 12px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{copied ? 'Copied ✓' : 'Copy'}</button>
+      <a href="/meeting" target="_blank" rel="noreferrer" style={{ fontSize: 12.5, color: BRAND.goldDark, textDecoration: 'none' }}>Open ↗</a>
     </div>
   )
 }

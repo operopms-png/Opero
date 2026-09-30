@@ -223,21 +223,30 @@ export const WINS_BOARD: MkBoard = {
   ],
 }
 
-// Staff Centre → Meetings: scheduling links. Rows are created / changed through
-// /api/meetings; "Booked" is set by the person who opens the link and picks a time.
-const booked = (r: any) => r.status === 'scheduled'
+// Staff Centre → Meetings: scheduling links + requests from the public booking
+// page (/meeting). Rows are created / changed through /api/meetings; a link is
+// "Booked" when the person picks a time; a request starts as "New request" and
+// staff move it to Contacted / Booked once they've spoken to the client.
+const request = (r: any) => r.source === 'booking_page'
+const booked = (r: any) => r.status === 'scheduled' && !request(r)
 export const MEETINGS_BOARD: MkBoard = {
   key: 'meetings', table: 'meetings', title: 'Meetings', item: 'meeting link', nameField: 'title', groupBy: 'status',
   dateField: 'scheduled_at',
   defaults: { title: '30 min meeting', duration_minutes: 30 },
   cols: [
+    { key: 'status', title: 'Status', type: 'status', width: 150, readonlyWhen: booked, options: [
+      { value: 'requested', label: 'New request', color: '#DF2F4A' }, { value: 'contacted', label: 'Contacted', color: '#A25DDC' },
+      { value: 'pending', label: 'Awaiting booking', color: '#FDAB3D' }, { value: 'scheduled', label: 'Booked', color: '#00C875' }, { value: 'cancelled', label: 'Cancelled', color: '#C4C4C4' }] },
+    { key: 'attendee_name', title: 'Name', type: 'computed', width: 170 },
+    { key: 'attendee_email', title: 'Email', type: 'email', width: 210, readonlyWhen: r => !request(r) },
+    { key: 'attendee_phone', title: 'Phone', type: 'phone', width: 150 },
+    { key: 'topic', title: 'About', type: 'text', width: 180 },
+    { key: 'meeting_type', title: 'Meet by', type: 'status', width: 130, options: [
+      { value: 'Phone call', label: 'Phone call', color: '#579BFC' }, { value: 'Video call', label: 'Video call', color: '#9D50DD' }, { value: 'In person', label: 'In person', color: '#00C875' }] },
+    { key: 'preferred_time', title: 'Preferred time', type: 'text', width: 200, readonlyWhen: () => true },
+    { key: 'scheduled_at', title: 'When', type: 'datetime', width: 170, readonlyWhen: r => !request(r) },
     { key: 'duration_minutes', title: 'Length', type: 'status', width: 110, readonlyWhen: booked, options: [
       { value: 15 as any, label: '15 min', color: '#66CCFF' }, { value: 30 as any, label: '30 min', color: '#579BFC' }, { value: 60 as any, label: '60 min', color: '#225091' }] },
-    { key: 'status', title: 'Status', type: 'status', width: 150, readonlyWhen: booked, options: [
-      { value: 'pending', label: 'Awaiting booking', color: '#FDAB3D' }, { value: 'scheduled', label: 'Booked', color: '#00C875' }, { value: 'cancelled', label: 'Cancelled', color: '#C4C4C4' }] },
-    { key: 'attendee_name', title: 'Booked by', type: 'computed', width: 170 },
-    { key: 'attendee_email', title: 'Their email', type: 'email', width: 210, readonlyWhen: () => true },
-    { key: 'scheduled_at', title: 'When', type: 'datetime', width: 170, readonlyWhen: () => true },
     { key: 'meeting_link', title: 'Link', type: 'computed', width: 130 },
     { key: 'created_by_email', title: 'Created by', type: 'computed', width: 200 },
     { key: 'created_at', title: 'Created', type: 'computed', width: 120 },

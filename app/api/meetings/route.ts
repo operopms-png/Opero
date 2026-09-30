@@ -57,19 +57,32 @@ export async function PATCH(req: NextRequest) {
   const { id } = body
   if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
-  const { data: existing } = await serviceClient.from('meetings').select('id,status').eq('id', id).eq('user_id', auth.businessId).maybeSingle()
+  const { data: existing } = await serviceClient.from('meetings').select('id,status,source').eq('id', id).eq('user_id', auth.businessId).maybeSingle()
   if (!existing) return NextResponse.json({ error: 'Meeting not found' }, { status: 404 })
 
   const patch: Record<string, any> = {}
+  // Requests from the public booking page (/meeting) are handled by staff:
+  // New request -> Contacted -> Booked (staff set the time) or Cancelled.
+  const isRequest = existing.source === 'booking_page'
   if ('status' in body) {
-    if (!['cancelled', 'pending'].includes(body.status)) return NextResponse.json({ error: 'A meeting can only be cancelled or re-opened here — it becomes "Booked" when someone picks a time.' }, { status: 400 })
+    const allowed = isRequest ? ['requested', 'contacted', 'scheduled', 'cancelled'] : ['cancelled', 'pending']
+    if (!allowed.includes(body.status)) return NextResponse.json({ error: isRequest ? 'Choose New request, Contacted, Booked or Cancelled.' : 'A meeting link can only be cancelled or re-opened here — it becomes "Booked" when someone picks a time.' }, { status: 400 })
     patch.status = body.status
+  }
+  if (isRequest) {
+    for (const k of ['attendee_email', 'attendee_phone', 'topic', 'meeting_type'] as const) if (k in body) patch[k] = body[k] ? String(body[k]).trim().slice(0, 300) : null
+    if ('scheduled_at' in body) {
+      patch.scheduled_at = body.scheduled_at || null
+      if (body.scheduled_at && !('status' in body) && existing.status !== 'cancelled') patch.status = 'scheduled'
+    }
+  } else if ('attendee_phone' in body || 'topic' in body || 'meeting_type' in body) {
+    for (const k of ['attendee_phone', 'topic', 'meeting_type'] as const) if (k in body) patch[k] = body[k] ? String(body[k]).trim().slice(0, 300) : null
   }
   if ('title' in body) patch.title = String(body.title ?? '').trim().slice(0, 200) || 'Meeting'
   if ('notes' in body) patch.notes = body.notes ? String(body.notes).slice(0, 5000) : null
   if ('duration_minutes' in body) {
     if (![15, 30, 60].includes(Number(body.duration_minutes))) return NextResponse.json({ error: 'Length must be 15, 30 or 60 minutes' }, { status: 400 })
-    if (existing.status === 'scheduled') return NextResponse.json({ error: 'This meeting is already booked, so its length can’t change.' }, { status: 400 })
+    if (existing.status === 'scheduled' && !isRequest) return NextResponse.json({ error: 'This meeting is already booked, so its length can’t change.' }, { status: 400 })
     patch.duration_minutes = Number(body.duration_minutes)
   }
   if (!Object.keys(patch).length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })

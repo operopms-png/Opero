@@ -144,7 +144,7 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
   if (col.type === 'computed') {
     const t = computedValue(mk, board, col, row)
     if (col.key === 'meeting_link') {
-      if (!row.token) return <div style={base} />
+      if (!row.token || row.source === 'booking_page') return <div style={{ ...base, cursor: 'default', color: BRAND.muted, fontSize: 12.5 }}>{row.source === 'booking_page' ? 'Booking page' : ''}</div>
       const off = row.status === 'cancelled'
       return <div style={base}><button disabled={off} onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/meet/${row.token}`); const b = e.currentTarget; b.textContent = 'Copied ✓'; setTimeout(() => { b.textContent = 'Copy link' }, 1500) }}
         style={{ border: `1px solid ${BRAND.border}`, background: '#fff', borderRadius: 4, padding: '3px 10px', fontSize: 12.5, cursor: off ? 'not-allowed' : 'pointer', opacity: off ? 0.5 : 1, fontFamily: 'inherit', color: BRAND.ink }}>Copy link</button></div>
