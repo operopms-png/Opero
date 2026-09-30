@@ -84,6 +84,7 @@ export default function TeamBoard({ me, myRole, team, roles, propertyCount, onIn
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
         .tm-row:hover, .tm-row:hover .tm-sticky { background: ${BRAND.hover} !important }
+        .tm-editable:hover { background: #FBF4E6 !important }
         .tm-tb:hover { background: ${BRAND.hover} }
         @media (max-width: 900px) { .tm-tiles { grid-template-columns: repeat(2, minmax(0,1fr)) !important } }
       `}</style>
@@ -179,6 +180,7 @@ function Row({ m, color, roles, propertyCount, onEdit, onDelete, onRoleChange }:
           <Avatar name={m.name || m.email} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name || m.email}</span>
           {m.you && <span style={{ fontSize: 11.5, color: BRAND.brown, background: BRAND.selected, border: '1px solid #EADBB8', borderRadius: 10, padding: '0 8px' }}>You</span>}
+          {!m.you && <span style={{ marginLeft: 'auto', marginRight: 10, flexShrink: 0, fontSize: 12, color: BRAND.goldDark, border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '2px 8px', background: '#fff', whiteSpace: 'nowrap' }}>✎ Edit access</span>}
         </div>
       </div>
       <div ref={roleRef} onClick={() => !m.you && setOpen(true)} style={{ ...cell, width: COLS[0].width, padding: 1, cursor: m.you ? 'default' : 'pointer' }}>
@@ -186,8 +188,8 @@ function Row({ m, color, roles, propertyCount, onEdit, onDelete, onRoleChange }:
       </div>
       <div style={{ ...cell, width: COLS[1].width, padding: '0 10px' }}>{m.email ? <a href={`mailto:${m.email}`} style={{ color: BRAND.goldDark, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.email}</a> : ''}</div>
       <div style={{ ...cell, width: COLS[2].width, padding: '0 10px' }}>{m.phone ? <a href={`tel:${String(m.phone).replace(/\s/g, '')}`} style={{ color: BRAND.ink, textDecoration: 'none' }}>{m.phone}</a> : ''}</div>
-      <div title={access} style={{ ...cell, width: COLS[3].width, padding: '0 10px', color: access === 'Role default' ? BRAND.muted : BRAND.ink, whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{access}</div>
-      <div style={{ ...cell, width: COLS[4].width, justifyContent: 'center', color: props === 'All' ? BRAND.muted : BRAND.ink }}>{props}</div>
+      <div title={m.you ? access : `${access} — click to change`} onClick={() => !m.you && onEdit(m)} className={m.you ? undefined : 'tm-editable'} style={{ ...cell, width: COLS[3].width, padding: '0 10px', gap: 6, cursor: m.you ? 'default' : 'pointer', color: access === 'Role default' ? BRAND.muted : BRAND.ink, whiteSpace: 'nowrap' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{access}</span>{!m.you && <span style={{ color: BRAND.goldDark, flexShrink: 0 }}>✎</span>}</div>
+      <div title={m.you ? undefined : 'Click to choose which properties they can see'} onClick={() => !m.you && onEdit(m)} className={m.you ? undefined : 'tm-editable'} style={{ ...cell, width: COLS[4].width, justifyContent: 'center', gap: 6, cursor: m.you ? 'default' : 'pointer', color: props === 'All' ? BRAND.muted : BRAND.ink }}>{props}{!m.you && <span style={{ color: BRAND.goldDark }}>✎</span>}</div>
       <div style={{ ...cell, width: COLS[5].width, padding: 1 }}><Pill text={m.status ?? 'Active'} color={active ? '#00C875' : '#FDAB3D'} /></div>
       <div style={{ ...cell, width: COLS[6].width, gap: 6, justifyContent: 'center' }}>
         {!m.you && <>
