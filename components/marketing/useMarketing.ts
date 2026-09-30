@@ -1,7 +1,7 @@
 'use client'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '@/lib/supabase'
-import { BOARDS, type MkBoardKey } from '@/lib/marketing-boards'
+import { BOARDS } from '@/lib/marketing-boards'
 
 export type EmailStats = { delivered: boolean; opened: number; clicked: number; bounced: boolean; replies: number }
 
@@ -9,7 +9,7 @@ export function useMarketing() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [accountId, setAccountId] = useState<string>('')
-  const [rows, setRows] = useState<Record<MkBoardKey, any[]>>({ campaigns: [], emails: [], social: [], ads: [], templates: [] })
+  const [rows, setRows] = useState<Record<string, any[]>>({ campaigns: [], emails: [], social: [], ads: [], templates: [] })
   const [replies, setReplies] = useState<Record<string, any[]>>({})
   const [events, setEvents] = useState<any[]>([])
   const [people, setPeople] = useState<string[]>([])
@@ -36,7 +36,7 @@ export function useMarketing() {
     const results = await Promise.all(BOARDS.map(b => supabase.from(b.table).select('*').eq('user_id', acc).order('created_at', { ascending: false })))
     const bad = results.find(r => r.error)
     if (bad?.error) { setError(bad.error.message); setLoading(false); return }
-    const next = {} as Record<MkBoardKey, any[]>
+    const next = {} as Record<string, any[]>
     BOARDS.forEach((b, i) => { next[b.key] = results[i].data ?? [] })
     setRows(next)
     await loadEmailExtras(next.emails.map(e => e.id))
@@ -54,16 +54,16 @@ export function useMarketing() {
 
   useEffect(() => { load() }, [load])
 
-  const tableOf = (k: MkBoardKey) => BOARDS.find(b => b.key === k)!.table
+  const tableOf = (k: string) => BOARDS.find(b => b.key === k)!.table
 
-  const update = useCallback(async (k: MkBoardKey, id: string, patch: Record<string, any>) => {
+  const update = useCallback(async (k: string, id: string, patch: Record<string, any>) => {
     let prev: any[] = []
     setRows(r => { prev = r[k]; return { ...r, [k]: r[k].map(x => x.id === id ? { ...x, ...patch } : x) } })
     const { error } = await supabase.from(tableOf(k)).update(patch).eq('id', id)
     if (error) { alert(error.message); setRows(r => ({ ...r, [k]: prev })) }
   }, [])
 
-  const add = useCallback(async (k: MkBoardKey, values: Record<string, any>) => {
+  const add = useCallback(async (k: string, values: Record<string, any>) => {
     const b = BOARDS.find(x => x.key === k)!
     const row = { ...b.defaults, module: 'pm', owner: k === 'templates' ? undefined : me || null, ...values, user_id: accountId }
     if (k === 'templates') delete (row as any).owner
@@ -73,13 +73,13 @@ export function useMarketing() {
     return data
   }, [accountId, me])
 
-  const remove = useCallback(async (k: MkBoardKey, ids: string[]) => {
+  const remove = useCallback(async (k: string, ids: string[]) => {
     const { error } = await supabase.from(tableOf(k)).delete().in('id', ids)
     if (error) { alert(error.message); return }
     setRows(r => ({ ...r, [k]: r[k].filter(x => !ids.includes(x.id)) }))
   }, [])
 
-  const duplicate = useCallback(async (k: MkBoardKey, ids: string[]) => {
+  const duplicate = useCallback(async (k: string, ids: string[]) => {
     const src = rows[k].filter(x => ids.includes(x.id))
     const copies = src.map(({ id, created_at, reply_token, sent_at, ...rest }) => {
       const c: any = { ...rest }

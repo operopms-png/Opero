@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { BRAND } from '@/lib/crm-board'
 import { type MkBoard, fmtDate } from '@/lib/marketing-boards'
 import MkCell from './MkCell'
-import type { Mk } from './useMarketing'
+import type { BoardStore as Mk } from '@/lib/marketing-boards'
 
 // Renders an email body exactly as /api/marketing-send sends it (newlines -> <br/>, wrapped in <p>).
 // Sandboxed iframe: no scripts run.
@@ -27,6 +27,17 @@ const field: React.CSSProperties = { width: '100%', border: `1px solid ${BRAND.b
 const btn: React.CSSProperties = { height: 34, padding: '0 14px', borderRadius: 4, border: `1px solid ${BRAND.border}`, background: '#fff', fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit', color: BRAND.ink }
 const gold: React.CSSProperties = { ...btn, border: 'none', background: BRAND.goldDark, color: '#fff', fontWeight: 600 }
 
+function LongText({ title, value, onSave, placeholder }: { title: string; value: string; onSave: (v: string) => void; placeholder?: string }) {
+  const [t, setT] = useState(value)
+  useEffect(() => setT(value), [value])
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label style={lbl}>{title}</label>
+      <textarea value={t} onChange={e => setT(e.target.value)} onBlur={() => { if (t !== value) onSave(t) }} rows={5} placeholder={placeholder} style={{ ...field, resize: 'vertical' }} />
+    </div>
+  )
+}
+
 export default function MkPanel({ mk, board, id, onClose, onOpenOther }: { mk: Mk; board: MkBoard; id: string; onClose: () => void; onOpenOther: (board: string, id: string) => void }) {
   const row = mk.rows[board.key].find(r => r.id === id)
   const isEmail = board.key === 'emails', isTpl = board.key === 'templates'
@@ -36,12 +47,10 @@ export default function MkPanel({ mk, board, id, onClose, onOpenOther }: { mk: M
   const [name, setName] = useState('')
   const [body, setBody] = useState('')
   const [subject, setSubject] = useState('')
-  const [text, setText] = useState('')   // notes / caption long text
 
   useEffect(() => {
     if (!row) return
     setName(String(row[board.nameField] ?? '')); setBody(row.body ?? ''); setSubject(row.subject ?? '')
-    setText(board.key === 'campaigns' ? row.notes ?? '' : '')
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector('[data-crm-popover]')) onClose() }
@@ -115,12 +124,7 @@ export default function MkPanel({ mk, board, id, onClose, onOpenOther }: { mk: M
                 </div>
               ))}
             </div>
-            {board.key === 'campaigns' && (
-              <div>
-                <label style={lbl}>Notes</label>
-                <textarea value={text} onChange={e => setText(e.target.value)} onBlur={() => { if (text !== (row.notes ?? '')) save({ notes: text || null }) }} rows={5} placeholder="Goals, budget breakdown, who it's aimed at…" style={{ ...field, resize: 'vertical' }} />
-              </div>
-            )}
+            {board.cols.filter(c => c.type === 'longtext').map(c => <LongText key={c.key} title={c.title} value={row[c.key] ?? ''} onSave={v => save({ [c.key]: v || null })} placeholder={board.key === 'campaigns' ? "Goals, budget breakdown, who it's aimed at…" : 'Add notes…'} />)}
             {(isEmail || isTpl) && (
               <div>
                 {isTpl && <div style={{ marginBottom: 14 }}>

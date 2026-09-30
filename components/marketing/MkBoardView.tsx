@@ -5,7 +5,7 @@ import { BRAND } from '@/lib/crm-board'
 import { downloadCsv } from '@/lib/export-csv'
 import { type MkBoard, type MkCol, optionsOf, money } from '@/lib/marketing-boards'
 import MkCell, { Avatar, Pill, cellText } from './MkCell'
-import type { Mk } from './useMarketing'
+import type { BoardStore as Mk } from '@/lib/marketing-boards'
 
 const NAME_W = 340
 const ROW_H = 36
@@ -36,7 +36,7 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
   useEffect(() => writeLS(`mk-hidden-${board.key}`, hidden), [hidden, board.key])
   useEffect(() => writeLS(`mk-group-${board.key}`, groupBy), [groupBy, board.key])
 
-  const cols = board.cols.filter(c => !hidden.includes(c.key))
+  const cols = board.cols.filter(c => !hidden.includes(c.key) && !c.hideInTable)
   const filterCols = board.cols.filter(c => c.type === 'status' || c.type === 'module')
   const hasPerson = board.cols.some(c => c.type === 'person')
   const groupCol = board.cols.find(c => c.key === groupBy) ?? board.cols.find(c => c.key === board.groupBy)!
@@ -229,7 +229,7 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
       {pop === 'hide' && <Popover anchor={a.hide.current} onClose={() => setPop(null)} width={240} align="left">
         <div style={{ padding: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Display columns</div>
-          {board.cols.map(c => <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px', fontSize: 13.5, cursor: 'pointer' }}><input type="checkbox" checked={!hidden.includes(c.key)} onChange={() => setHidden(hidden.includes(c.key) ? hidden.filter(x => x !== c.key) : [...hidden, c.key])} />{c.title}</label>)}
+          {board.cols.filter(c => !c.hideInTable).map(c => <label key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px', fontSize: 13.5, cursor: 'pointer' }}><input type="checkbox" checked={!hidden.includes(c.key)} onChange={() => setHidden(hidden.includes(c.key) ? hidden.filter(x => x !== c.key) : [...hidden, c.key])} />{c.title}</label>)}
         </div>
       </Popover>}
       {pop === 'group' && <Popover anchor={a.group.current} onClose={() => setPop(null)} width={220} align="left">

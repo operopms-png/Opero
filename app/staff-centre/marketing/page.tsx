@@ -1,14 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { BRAND } from '@/lib/crm-board'
-import { BOARDS, boardByKey, type MkBoardKey } from '@/lib/marketing-boards'
+import { BOARDS, boardByKey } from '@/lib/marketing-boards'
 import { useMarketing, type Mk } from '@/components/marketing/useMarketing'
 import MkBoardView from '@/components/marketing/MkBoardView'
 import MkPanel from '@/components/marketing/MkPanel'
 import MkDashboard from '@/components/marketing/MkDashboard'
 import { Modal } from '@/components/crm/Popover'
 
-type View = { kind: 'home' } | { kind: 'dashboard' } | { kind: 'board'; key: MkBoardKey }
+type View = { kind: 'home' } | { kind: 'dashboard' } | { kind: 'board'; key: string }
 
 const ICON: Record<string, React.ReactNode> = {
   home: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" /></svg>,
@@ -25,13 +25,13 @@ export default function MarketingPage() {
   const mk = useMarketing()
   const [view, setViewState] = useState<View>({ kind: 'home' })
   const [panelOpen, setPanelOpen] = useState(true)
-  const [open, setOpen] = useState<{ board: MkBoardKey; id: string } | null>(null)
+  const [open, setOpen] = useState<{ board: string; id: string } | null>(null)
   const [senderModal, setSenderModal] = useState(false)
 
   useEffect(() => {
     if (mk.loading) return
     const sp = new URLSearchParams(window.location.search)
-    const b = sp.get('board') as MkBoardKey | null
+    const b = sp.get('board') as string | null
     if (b && boardByKey(b)) setViewState({ kind: 'board', key: b })
     else if (sp.get('view') === 'dashboard') setViewState({ kind: 'dashboard' })
   }, [mk.loading])
@@ -40,7 +40,7 @@ export default function MarketingPage() {
     setViewState(v)
     window.history.replaceState(null, '', v.kind === 'board' ? `?board=${v.key}` : v.kind === 'dashboard' ? '?view=dashboard' : window.location.pathname)
   }
-  const openItem = (b: string, id: string) => setOpen({ board: b as MkBoardKey, id })
+  const openItem = (b: string, id: string) => setOpen({ board: b as string, id })
 
   if (mk.loading) return <Shell><div style={{ padding: 60, color: BRAND.muted, textAlign: 'center', width: '100%' }}>Loading marketing…</div></Shell>
   if (mk.error) return <Shell><div style={{ padding: 60, color: '#DF2F4A', width: '100%' }}>Couldn’t load marketing: {mk.error}</div></Shell>
@@ -117,8 +117,8 @@ function NavItem({ icon, label, active, onClick, count }: { icon: React.ReactNod
   )
 }
 
-function Home({ mk, onOpen, onDashboard }: { mk: Mk; onOpen: (k: MkBoardKey) => void; onDashboard: () => void }) {
-  const last = (k: MkBoardKey) => mk.rows[k].reduce((a, r) => Math.max(a, new Date(r.created_at).getTime()), 0)
+function Home({ mk, onOpen, onDashboard }: { mk: Mk; onOpen: (k: string) => void; onDashboard: () => void }) {
+  const last = (k: string) => mk.rows[k].reduce((a, r) => Math.max(a, new Date(r.created_at).getTime()), 0)
   const td: React.CSSProperties = { padding: '11px 16px', borderBottom: `1px solid ${BRAND.rowBorder}` }
   return (
     <div style={{ flex: 1, overflow: 'auto' }}>

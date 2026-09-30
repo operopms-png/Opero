@@ -3,7 +3,7 @@
 // reply tracking and open/click tracking keep working exactly as before.
 
 export type MkOption = { value: string; color: string; label?: string }
-export type MkColType = 'status' | 'text' | 'longtext' | 'date' | 'datetime' | 'number' | 'person' | 'module' | 'computed' | 'send'
+export type MkColType = 'status' | 'text' | 'longtext' | 'date' | 'datetime' | 'number' | 'person' | 'module' | 'computed' | 'send' | 'url' | 'email' | 'phone'
 export type MkCol = {
   key: string            // db field (or computed key)
   title: string
@@ -16,7 +16,7 @@ export type MkCol = {
 }
 export type MkBoardKey = 'campaigns' | 'emails' | 'social' | 'ads' | 'templates'
 export type MkBoard = {
-  key: MkBoardKey
+  key: string
   table: string
   title: string
   item: string            // singular noun
@@ -127,6 +127,22 @@ export const BOARDS: MkBoard[] = [
   },
 ]
 
+// What the shared board components (table, Kanban, calendar, item panel) need
+// from a data store. useMarketing and useApplications both provide it.
+export interface BoardStore {
+  rows: Record<string, any[]>
+  replies: Record<string, any[]>
+  events: any[]
+  people: string[]
+  stats: Record<string, { delivered: boolean; opened: number; clicked: number; bounced: boolean; replies: number }>
+  sendingId: string | null
+  update(k: string, id: string, patch: Record<string, any>): Promise<void>
+  add(k: string, values: Record<string, any>): Promise<any>
+  remove(k: string, ids: string[]): Promise<void>
+  duplicate(k: string, ids: string[]): Promise<void>
+  sendEmail(id: string): Promise<void>
+}
+
 export const boardByKey = (k: string) => BOARDS.find(b => b.key === k)
 export const optionCols = (b: MkBoard) => b.cols.filter(c => c.type === 'status' || c.type === 'module' || c.type === 'person')
 export function optionsOf(c: MkCol | undefined, people: string[] = []): MkOption[] {
@@ -147,4 +163,28 @@ export function fmtDate(d: any, withTime = false) {
 export function money(n: any, cur = '£') {
   if (n === null || n === undefined || n === '' || Number.isNaN(Number(n))) return ''
   return cur + Number(n).toLocaleString('en-GB', { maximumFractionDigits: 2 })
+}
+
+// Staff Centre → Applications uses the same board components.
+export const APPLICATIONS_BOARD: MkBoard = {
+  key: 'applications', table: 'job_applications', title: 'Applications', item: 'candidate', nameField: 'candidate_name', groupBy: 'stage',
+  dateField: 'interview_at',
+  defaults: { candidate_name: 'New candidate', role_applied: 'Role to confirm', stage: 'Applied', module: '' },
+  cols: [
+    { key: 'owner', title: 'Owner', type: 'person', width: 90 },
+    { key: 'role_applied', title: 'Role', type: 'text', width: 200 },
+    { key: 'stage', title: 'Stage', type: 'status', width: 140, options: [
+      { value: 'Applied', color: '#579BFC' }, { value: 'Interviewing', color: '#FDAB3D' }, { value: 'Offered', color: '#9D50DD' },
+      { value: 'Hired', color: '#00C875' }, { value: 'Rejected', color: '#DF2F4A' }] },
+    { key: 'module', title: 'Department', type: 'status', width: 170, options: [
+      { value: '', label: 'General / Other', color: '#C4C4C4' },
+      { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
+      { value: 'estate', label: 'Estate Agency', color: '#00C875' }, { value: 'dev', label: 'Developments', color: '#9D50DD' }] },
+    { key: 'email', title: 'Email', type: 'email', width: 210 },
+    { key: 'phone', title: 'Phone', type: 'phone', width: 140 },
+    { key: 'interview_at', title: 'Interview', type: 'datetime', width: 160 },
+    { key: 'resume_url', title: 'CV link', type: 'url', width: 110 },
+    { key: 'created_at', title: 'Applied on', type: 'computed', width: 120 },
+    { key: 'notes', title: 'Notes', type: 'longtext', width: 220, hideInTable: true },
+  ],
 }
