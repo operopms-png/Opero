@@ -36,7 +36,7 @@ export function decrypt(blob: string) {
 }
 
 // ---------- who is calling ----------
-export type Caller = { uid: string; email: string; businessId: string; isAdmin: boolean }
+export type Caller = { uid: string; email: string; businessId: string; isAdmin: boolean; role: string; name: string }
 
 export async function getCaller(req: NextRequest): Promise<Caller | null> {
   const token = (req.headers.get('authorization') ?? '').replace('Bearer ', '')
@@ -45,18 +45,20 @@ export async function getCaller(req: NextRequest): Promise<Caller | null> {
   const { data: { user } } = await asUser.auth.getUser(token)
   if (!user) return null
   const email = (user.email ?? '').toLowerCase()
-  const { data: tm } = await serviceClient.from('team_members').select('user_id,role').eq('email', user.email ?? '').order('created_at', { ascending: false }).limit(1)
+  const { data: tm } = await serviceClient.from('team_members').select('user_id,role,name').eq('email', user.email ?? '').order('created_at', { ascending: false }).limit(1)
   const businessId = tm?.[0]?.user_id ?? user.id
   const isAdmin = businessId === user.id || String(tm?.[0]?.role ?? '').toLowerCase() === 'admin'
-  return { uid: user.id, email, businessId, isAdmin }
+  return { uid: user.id, email, businessId, isAdmin, role: String(tm?.[0]?.role ?? ''), name: String(tm?.[0]?.name ?? '').trim() || (user.user_metadata as any)?.name || email }
 }
 
 export function canAccess(mb: any, c: Caller) {
   if (mb.user_id !== c.businessId) return false
-  return c.isAdmin || (mb.access ?? []).map((x: string) => x.toLowerCase()).includes(c.email)
+  if (c.isAdmin) return true
+  if ((mb.access ?? []).map((x: string) => x.toLowerCase()).includes(c.email)) return true
+  return !!c.role && (mb.access_teams ?? []).map((x: string) => x.toLowerCase()).includes(c.role.toLowerCase())
 }
 
-export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,use_for_marketing,ai_mode,created_at'
+export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,access_teams,use_for_marketing,ai_mode,created_at'
 
 // ---------- connections ----------
 export function imapFor(mb: any, password: string) {
@@ -199,7 +201,7 @@ export async function testConnection(mb: any, password: string) {
 }
 
 // ---------- send ----------
-export type Outgoing = { to: string; cc?: string; bcc?: string; subject: string; html?: string; text?: string; inReplyTo?: string | null; references?: string | null; attachments?: { filename: string; content: string; contentType?: string }[] }
+export type Outgoing = { to: string; cc?: string; bcc?: string; subject: string; html?: string; text?: string; inReplyTo?: string | null; references?: string | null; attachments?: { filename: string; content: string; contentType?: string }[]; sentBy?: string }
 
 export async function sendFromMailbox(mb: any, m: Outgoing) {
   const password = decrypt(mb.password_enc)
@@ -230,7 +232,7 @@ export async function sendFromMailbox(mb: any, m: Outgoing) {
 
   const parsed = await simpleParser(raw)
   const row = toRow(mb, 'Sent', uid ?? 0, parsed, undefined)
-  const { data } = await serviceClient.from('mailbox_messages').insert({ ...row, uid, date: new Date().toISOString() }).select('id').single()
+  const { data } = await serviceClient.from('mailbox_messages').insert({ ...row, uid, date: new Date().toISOString(), sent_by: m.sentBy ?? null }).select('id').single()
   return { id: data?.id as string | undefined }
 }
 

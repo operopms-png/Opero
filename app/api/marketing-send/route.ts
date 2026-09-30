@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     if (!mb || !canAccess(mb, caller)) return NextResponse.json({ error: 'You don’t have access to that sending mailbox' }, { status: 403 })
     if (mb.status !== 'connected' || !mb.password_enc) return NextResponse.json({ error: `${mb.email} isn’t connected. Connect it in Email → Mailbox settings, or clear “Send from”.` }, { status: 400 })
     try {
-      await sendFromMailbox(mb, { to: email.to_recipient, subject: email.subject, html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${email.body.replace(/\n/g, '<br/>')}</div>`, text: email.body })
+      await sendFromMailbox(mb, { sentBy: caller.name + ' (Marketing)', to: email.to_recipient, subject: email.subject, html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${email.body.replace(/\n/g, '<br/>')}</div>`, text: email.body })
     } catch (e: any) { return NextResponse.json({ error: friendlyError(e) }, { status: 502 }) }
     await serviceClient.from('marketing_emails').update({ status: 'Sent', sent_at: new Date().toISOString() }).eq('id', email.id)
     return NextResponse.json({ success: true, via: mb.email })

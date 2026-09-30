@@ -56,3 +56,8 @@ alter table mailboxes enable row level security;
 alter table mailbox_messages enable row level security;
 
 alter table marketing_emails add column if not exists from_mailbox_id uuid;
+
+-- Give a mailbox to whole teams (team_members.role), and record which staff
+-- member sent each email from a shared mailbox.
+alter table mailboxes add column if not exists access_teams text[] not null default '{}';
+alter table mailbox_messages add column if not exists sent_by text;
