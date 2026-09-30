@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireUser } from '@/lib/admin-auth'
+import { getCaller } from '@/lib/mailbox'
 import { sendGuestMessage } from '@/lib/ai-guest-receptionist'
 
 // Thin wrapper -- the actual send logic (Smoobu vs email routing,
 // message logging) lives in sendGuestMessage(), shared with the AI
 // auto-reply path so both go through identical, tested logic.
 export async function POST(req: NextRequest) {
-  const userId = await requireUser(req)
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const caller = await getCaller(req)
+  if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Staff send on behalf of the business account (its Smoobu connection)
+  const userId = caller.businessId
 
-  const { booking_id, subject, body } = await req.json()
+  const json = await req.json()
+  const { booking_id, subject } = json
+  const body: string = json.body ?? json.message
   if (!booking_id || !body?.trim()) {
     return NextResponse.json({ error: 'booking_id and body are required' }, { status: 400 })
   }

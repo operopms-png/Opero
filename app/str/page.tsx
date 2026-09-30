@@ -942,7 +942,25 @@ export default function STRPage() {
                     ) : int.builtIn ? (
                       <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Active on your account</div>
                     ) : isConnected ? (
-                      <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Connected</div>
+                      int.id === 'smoobu' ? (
+                        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                          <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Connected — bookings and guest messages sync every 30 minutes</div>
+                          {integrationsRow?.smoobu_api_secret ? (
+                            <div style={{ fontSize:12, color:'#16a34a' }}>✓ Secure signing on (ready for Smoobu's 31 Oct change)</div>
+                          ) : (
+                            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                              <div style={{ fontSize:11.5, color:'#B76E00' }}>From 31 Oct Smoobu needs an API secret. In Smoobu go to Advanced → API Keys, create a key, and paste the secret shown here (use that new key above too if it differs).</div>
+                              <div style={{ display:'flex', gap:6 }}>
+                                <input type="password" autoComplete="off" placeholder="Smoobu API secret" value={integrationInputs['smoobu_secret']||''} onChange={e=>setIntegrationInputs(prev=>({...prev,smoobu_secret:e.target.value}))} style={{ flex:1, padding:'7px 10px', borderRadius:4, border:'1px solid #D0D4E4', fontSize:12, fontFamily:'inherit' }} />
+                                <button onClick={()=>connectIntegration('smoobu_secret','smoobu_api_secret')} disabled={!integrationInputs['smoobu_secret']} style={{ padding:'7px 12px', background:int.color, color:'#fff', border:'none', borderRadius:4, fontSize:12, cursor:'pointer', fontWeight:600 }}>Save</button>
+                              </div>
+                              {integrationMessages['smoobu_secret'] && <div style={{ fontSize:11, color:integrationMessages['smoobu_secret'].type==='success'?'#16a34a':'#ef4444' }}>{integrationMessages['smoobu_secret'].text}</div>}
+                            </div>
+                          )}
+                          <button onClick={async()=>{ setIntegrationMessages(prev=>({...prev,smoobu_sync:{type:'success',text:'Syncing…'}})); const r=await fetch('/api/sync-smoobu').then(x=>x.json()).catch(()=>null); const a=r?.synced?.[0]; setIntegrationMessages(prev=>({...prev,smoobu_sync: !a ? {type:'error',text:'Sync failed — try again.'} : a.error ? {type:'error',text:a.error} : {type:'success',text:`Synced ${a.bookings} bookings and ${a.messages} messages${a.debug?.threadErrors?.length ? ' (some items had problems)' : ''}.`}})) }} style={{ alignSelf:'flex-start', padding:'6px 12px', background:'#fff', color:int.color, border:`1px solid ${int.color}`, borderRadius:4, fontSize:12, cursor:'pointer', fontWeight:600 }}>Sync now</button>
+                          {integrationMessages['smoobu_sync'] && <div style={{ fontSize:11.5, color:integrationMessages['smoobu_sync'].type==='success'?'#16a34a':'#ef4444' }}>{integrationMessages['smoobu_sync'].text}</div>}
+                        </div>
+                      ) : <div style={{ fontSize:12, color:'#16a34a', fontWeight:500 }}>✓ Connected</div>
                     ) : (
                       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
                         {int.docsUrl && <a href={int.docsUrl} target="_blank" rel="noreferrer" style={{ fontSize:11, color:int.color, textDecoration:'none' }}>{int.docsLabel}</a>}

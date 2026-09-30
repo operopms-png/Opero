@@ -15,6 +15,8 @@ const CHANNELS = [
     table:'estate_tenant_messages', recipientTable:'estate_tenants', idField:'tenant_id', sendRoute:'/api/admin/send-estate-tenant-message', sendBody:'tenant_id' },
   { key:'estate_landlord', label:'EA Landlord', bg:'#EAF3EE', fg:'#2D6A4F',
     table:'estate_landlord_messages', recipientTable:'estate_landlords', idField:'landlord_id', sendRoute:'/api/admin/send-estate-landlord-message', sendBody:'landlord_id' },
+  { key:'str_guest', label:'Guest (Airbnb)', bg:'#FFEDEE', fg:'#E0484E',
+    table:'str_guest_messages', recipientTable:'bookings', idField:'booking_id', sendRoute:'/api/guest-send', sendBody:'booking_id' },
 ]
 const WHATSAPP_BG = '#E7F9F0'
 const WHATSAPP_FG = '#1DA851'
@@ -24,11 +26,11 @@ const TEAM_BG = '#F5F3FF'
 const TEAM_FG = '#A8862E'
 const CALLS_BG = '#FFF1F2'
 const CALLS_FG = '#E11D48'
-const NON_STAFF_SENDER: Record<string,string> = { str_owner:'owner', pm_landlord:'landlord', pm_tenant:'tenant', estate_tenant:'tenant', estate_landlord:'landlord', whatsapp:'contact', sms:'contact' }
+const NON_STAFF_SENDER: Record<string,string> = { str_guest:'guest', str_owner:'owner', pm_landlord:'landlord', pm_tenant:'tenant', estate_tenant:'tenant', estate_landlord:'landlord', whatsapp:'contact', sms:'contact' }
 
 const TABS = ['Unread', 'All'] as const
 // CRM-style label colours for each channel
-const CH_COLOR: Record<string,string> = { team:'#D0AE4C', calls:'#DF2F4A', str_owner:'#00C875', pm_landlord:'#579BFC', pm_tenant:'#66CCFF', estate_tenant:'#9D50DD', estate_landlord:'#784BD1', whatsapp:'#1DA851', sms:'#FDAB3D' }
+const CH_COLOR: Record<string,string> = { str_guest:'#FF5A5F', team:'#D0AE4C', calls:'#DF2F4A', str_owner:'#00C875', pm_landlord:'#579BFC', pm_tenant:'#66CCFF', estate_tenant:'#9D50DD', estate_landlord:'#784BD1', whatsapp:'#1DA851', sms:'#FDAB3D' }
 const CHANNEL_PILLS = [{ key:'team', label:'Team Chat', bg:TEAM_BG, fg:TEAM_FG }, { key:'calls', label:'Calls', bg:CALLS_BG, fg:CALLS_FG }, ...CHANNELS]
 
 function initials(name: string) {
@@ -156,10 +158,17 @@ export default function Page() {
   async function loadExternal(id: { businessId: string }) {
     const allConvos: any[] = []
     for (const ch of CHANNELS) {
-      const recipientQuery = ch.key === 'str_owner'
-        ? supabase.from(ch.recipientTable).select('id,name')
-        : supabase.from(ch.recipientTable).select('id,name').eq('user_id', id.businessId)
-      const { data: recipients } = await recipientQuery
+      let recipients: any[] | null
+      if (ch.key === 'str_guest') {
+        // Airbnb/Booking.com guests: one conversation per booking (synced from Smoobu)
+        const { data } = await supabase.from('bookings').select('id,guest_name,platform,properties!inner(user_id,name)').eq('properties.user_id', id.businessId)
+        recipients = (data ?? []).map((b: any) => ({ id: b.id, name: `${(b.guest_name || 'Guest').trim()} · ${b.properties?.name ?? ''}${b.platform ? ` (${b.platform})` : ''}` }))
+      } else {
+        const recipientQuery = ch.key === 'str_owner'
+          ? supabase.from(ch.recipientTable).select('id,name')
+          : supabase.from(ch.recipientTable).select('id,name').eq('user_id', id.businessId)
+        recipients = (await recipientQuery).data
+      }
       const ids = (recipients??[]).map((r:any)=>r.id)
       if (ids.length===0) continue
       const { data: msgs } = await supabase.from(ch.table).select('*').in(ch.idField, ids).order('created_at',{ascending:false})

@@ -41,13 +41,13 @@ export async function runSmoobuSync() {
   // Every account with a Smoobu key configured.
   const { data: accounts } = await supabase
     .from('integrations')
-    .select('user_id, smoobu_api_key')
+    .select('user_id, smoobu_api_key, smoobu_api_secret')
     .not('smoobu_api_key', 'is', null)
 
   if (!accounts?.length) return { synced: [] }
 
   for (const account of accounts) {
-    const apiKey = account.smoobu_api_key as string
+    const apiKey = { apiKey: account.smoobu_api_key as string, secret: (account as any).smoobu_api_secret as string | null }
     const userId = account.user_id as string
 
     try {
@@ -71,6 +71,7 @@ export async function runSmoobuSync() {
       // doesn't match what Smoobu itself is sending, which is a much
       // more useful thing to see than a silent '0 bookings'.
       const seenApartmentIds = new Set<string>()
+      const threadErrorsEarly: string[] = []
 
       for (const b of bookings) {
         const apartmentId = String(b.apartment?.id)
@@ -78,7 +79,8 @@ export async function runSmoobuSync() {
         const propertyId = apartmentToProperty.get(apartmentId)
         if (!propertyId) continue
 
-        await supabase.from('bookings').upsert(bookingUpsertPayload(b, propertyId), { onConflict: 'external_id' })
+        const { error: bErr } = await supabase.from('bookings').upsert(bookingUpsertPayload(b, propertyId), { onConflict: 'external_id' })
+        if (bErr) { if (threadErrorsEarly.length < 5) threadErrorsEarly.push(`booking ${b.id}: ${bErr.message}`); continue }
         bookingsSynced++
       }
 
@@ -142,7 +144,13 @@ export async function runSmoobuSync() {
           if (threadErrors.length < 5) threadErrors.push(`messages ${thread.booking.id}: ${e instanceof Error ? e.message : String(e)}`)
           continue
         }
-        for (const m of msgsRes.messages ?? []) {
+        // Only ever auto-reply to the newest guest message in a thread, and
+        // only if the thread's latest activity is recent -- so the first
+        // import (or any catch-up) never answers old conversations.
+        const msgList: any[] = msgsRes.messages ?? []
+        const latestAt = Date.parse(thread.latest_message?.created_at ?? '') || 0
+        const lastGuestMsgId = [...msgList].filter(x => x.type === 1).map(x => x.id).pop()
+        for (const m of msgList) {
           const smoobuMsgId = `smoobu-${thread.booking.id}-${m.id}`
           const isGuestMessage = m.type === 1 // 1 = inbox (from guest), 2 = outbox (from host)
 
@@ -159,10 +167,13 @@ export async function runSmoobuSync() {
             subject: m.subject || null,
             message: m.message || m.messageHtml || '',
             smoobu_message_id: smoobuMsgId,
+            ...((m.createdAt || m.created_at) ? { created_at: new Date(m.createdAt || m.created_at).toISOString() } : {}),
           }, { onConflict: 'smoobu_message_id' })
           messagesSynced++
 
-          if (!existing && isGuestMessage) {
+          const msgAt = Date.parse(m.createdAt ?? m.created_at ?? '') || 0
+          const recent = (msgAt || latestAt) > Date.now() - 2 * 3600e3
+          if (!existing && isGuestMessage && recent && m.id === lastGuestMsgId) {
             try {
               await maybeAutoReplyToGuest(userId, booking.id, m.message || m.messageHtml || '')
             } catch (e) {
@@ -174,6 +185,7 @@ export async function runSmoobuSync() {
 
       results.push({
         user_id: userId,
+        v: 2,
         bookings: bookingsSynced,
         messages: messagesSynced,
         // Diagnostics -- remove once this is confirmed working.
@@ -184,7 +196,7 @@ export async function runSmoobuSync() {
           apartmentIdsSeenInResponse: Array.from(seenApartmentIds),
           totalThreadsFromSmoobu: threads.length,
           threadsSkippedNoBooking,
-          threadErrors,
+          threadErrors: [...threadErrorsEarly, ...threadErrors],
         },
       })
     } catch (e) {

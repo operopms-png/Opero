@@ -39,10 +39,10 @@ export async function sendGuestMessage(userId: string, bookingId: string, subjec
   const smoobuMatch = booking.external_id?.match(/^smoobu-(\d+)$/)
 
   if (smoobuMatch) {
-    const { data: integ } = await supabase.from('integrations').select('smoobu_api_key').eq('user_id', userId).single()
+    const { data: integ } = await supabase.from('integrations').select('smoobu_api_key, smoobu_api_secret').eq('user_id', userId).single()
     if (!integ?.smoobu_api_key) return { error: 'Smoobu is not connected for this account.' }
     try {
-      await sendSmoobuGuestMessage(integ.smoobu_api_key, smoobuMatch[1], subject, body)
+      await sendSmoobuGuestMessage({ apiKey: integ.smoobu_api_key, secret: (integ as any).smoobu_api_secret }, smoobuMatch[1], subject, body)
     } catch (e) {
       return { error: e instanceof Error ? e.message : String(e) }
     }
