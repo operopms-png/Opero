@@ -121,7 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body style={{ margin: 0, background: '#F7F8FA', display: 'flex' }}>
         {isPublicRoute ? (
-          <main style={{ flex: 1, minHeight: '100vh' }}>
+          <main style={{ flex: 1, minWidth: 0, minHeight: '100vh' }}>
             {children}
           </main>
         ) : !checked ? (
