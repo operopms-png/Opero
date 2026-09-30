@@ -62,7 +62,6 @@ const NAV_GROUPS = [
       { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance', badge: 'maintenance' },
       { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts', scTab: 'crm', badge: 'crm' },
       { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles', scTab: 'marketing' },
-      { href: '/staff-centre/sales', label: 'Sales', key: 'staffcentre', icon: 'trendingup', scTab: 'sales', badge: 'sales' },
       { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file', scTab: 'applications', badge: 'applications' },
       { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },
       { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup', scTab: 'performance' },

@@ -3,6 +3,16 @@
   node_bundler = "esbuild"
 
 [[redirects]]
+  from = "/staff-centre/sales"
+  to = "/staff-centre/crm"
+  status = 301
+
+[[redirects]]
+  from = "/:module/sales"
+  to = "/staff-centre/crm"
+  status = 301
+
+[[redirects]]
   from = "/"
   to = "/login"
   status = 302

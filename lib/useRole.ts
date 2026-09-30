@@ -54,7 +54,6 @@ export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'maintenance', l: 'Maintenance Board' },
   { k: 'crm',         l: 'CRM' },
   { k: 'marketing',   l: 'Marketing' },
-  { k: 'sales',       l: 'Sales' },
   { k: 'applications', l: 'Applications' },
   { k: 'performance', l: 'Staff Performance' },
   { k: 'hr',          l: 'People & HR' },

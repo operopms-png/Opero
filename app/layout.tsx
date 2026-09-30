@@ -41,7 +41,6 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/maintenance': 'maintenance',
   '/staff-centre/crm': 'crm',
   '/staff-centre/marketing': 'marketing',
-  '/staff-centre/sales': 'sales',
   '/staff-centre/applications': 'applications',
   '/staff-centre/performance': 'performance',
   '/staff-centre/hr': 'hr',

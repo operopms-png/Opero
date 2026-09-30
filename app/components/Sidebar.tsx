@@ -9,19 +9,16 @@ const NAV = [
     { label: 'Vacation Rentals', href: '/str', icon: '🏖️' },
     { label: 'CRM', href: '/str/crm', icon: '👥' },
     { label: 'Marketing', href: '/str/marketing', icon: '📣' },
-    { label: 'Sales', href: '/str/sales', icon: '💰' },
   ]},
   { group: 'PROPERTY MANAGEMENT', items: [
     { label: 'Property Management', href: '/pm', icon: '🏠' },
     { label: 'CRM', href: '/pm/crm', icon: '👥' },
     { label: 'Marketing', href: '/pm/marketing', icon: '📣' },
-    { label: 'Sales', href: '/pm/sales', icon: '💰' },
   ]},
   { group: 'DEVELOPMENTS', items: [
     { label: 'Developments', href: '/dev', icon: '🏗️' },
     { label: 'CRM', href: '/dev/crm', icon: '👥' },
     { label: 'Marketing', href: '/dev/marketing', icon: '📣' },
-    { label: 'Sales', href: '/dev/sales', icon: '💰' },
   ]},
 ]
 export default function Sidebar() {
