@@ -15,6 +15,8 @@ import { getCaller, canAccess, PUBLIC_COLS, encrypt, testConnection, syncMailbox
 
 export const maxDuration = 60
 
+// Strip scripts/handlers from staff-edited footer HTML
+const cleanHtml = (h: string) => String(h).slice(0, 20000).replace(/<(script|style|iframe|object|embed|form)[\s\S]*?<\/\1>/gi, '').replace(/<(script|iframe|object|embed|form)[^>]*>/gi, '').replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '').replace(/javascript:/gi, '')
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status })
 
 async function loadMailbox(id: string) {
@@ -89,7 +91,9 @@ export async function POST(req: NextRequest) {
   const action = body.action
 
   if (['save_template', 'default_template', 'delete_template'].includes(action)) {
-    if (!c.isAdmin) return bad('Only admins can change email templates', 403)
+    // Any staff member can edit template wording; only admins choose the default or delete
+    if (action !== 'save_template' && !c.isAdmin) return bad('Only admins can do that', 403)
+    if (body.template?.footer_html) body.template.footer_html = cleanHtml(body.template.footer_html)
     try {
       let id = body.id as string | undefined
       if (action === 'save_template') id = await saveTemplate(c.businessId, body.template)
@@ -188,7 +192,10 @@ export async function POST(req: NextRequest) {
     }
     try {
       // body_text (+ quoted_text) -> house format with footer; raw html still accepted
-      const out = typeof body.body_text === 'string' ? formatEmail(await getFormat(c.businessId, body.template_id), mb.email, body.body_text, body.quoted_text || undefined) : { html: body.html, text: body.text }
+      let fmt = await getFormat(c.businessId, body.template_id)
+      // Footer changed just for this email (click-to-edit in compose)
+      if (typeof body.footer_override === 'string' && body.footer_override.trim()) fmt = { ...fmt, footer_enabled: true, footer_html: cleanHtml(body.footer_override) }
+      const out = typeof body.body_text === 'string' ? formatEmail(fmt, mb.email, body.body_text, body.quoted_text || undefined) : { html: body.html, text: body.text }
       const r = await sendFromMailbox(mb, { sentBy: c.name, to: body.to, cc: body.cc, bcc: body.bcc, subject: body.subject, html: out.html, text: out.text, inReplyTo, references, attachments: body.attachments })
       return NextResponse.json({ ok: true, id: r.id })
     } catch (e: any) { return bad(friendlyError(e), 502) }

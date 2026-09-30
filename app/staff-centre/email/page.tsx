@@ -35,14 +35,14 @@ function when(d: string) {
 const esc = (s: string) => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 const kb = (n: number) => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'
 
-type Draft = { from: string; to: string; cc: string; subject: string; body: string; template_id?: string; toName?: string | null; reply_to_message_id?: string; quoted?: string; files: { filename: string; content: string; contentType: string; size: number }[] }
+type Draft = { from: string; to: string; cc: string; subject: string; body: string; template_id?: string; footer_override?: string | null; footerRev?: number; toName?: string | null; reply_to_message_id?: string; quoted?: string; files: { filename: string; content: string; contentType: string; size: number }[] }
 
 export default function EmailPage() {
   const [loading, setLoading] = useState(true)
   const [boxes, setBoxes] = useState<any[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [team, setTeam] = useState<any[]>([])
-  const [view, setView] = useState<'mail' | 'settings'>('mail')
+  const [view, setView] = useState<'mail' | 'settings' | 'templates'>('mail')
   const [box, setBox] = useState<string>('all')
   const [folder, setFolder] = useState<'INBOX' | 'Sent'>('INBOX')
   const [unreadOnly, setUnreadOnly] = useState(false)
@@ -151,7 +151,7 @@ export default function EmailPage() {
     setSending(true)
     try {
       // The server wraps this in the chosen template (branded footer) before sending
-      await api('', { action: 'send', id: draft.from, template_id: draft.template_id || null, to: draft.to, cc: draft.cc, subject: draft.subject || '(no subject)', body_text: draft.body, quoted_text: draft.quoted || null, reply_to_message_id: draft.reply_to_message_id, attachments: draft.files.map(f => ({ filename: f.filename, content: f.content, contentType: f.contentType })) })
+      await api('', { action: 'send', id: draft.from, template_id: draft.template_id || null, footer_override: draft.footer_override || null, to: draft.to, cc: draft.cc, subject: draft.subject || '(no subject)', body_text: draft.body, quoted_text: draft.quoted || null, reply_to_message_id: draft.reply_to_message_id, attachments: draft.files.map(f => ({ filename: f.filename, content: f.content, contentType: f.contentType })) })
       setDraft(null)
       flash('Sent from ' + byId(draft.from)?.email)
       if (folder === 'Sent') loadList()
@@ -211,11 +211,22 @@ export default function EmailPage() {
           ))}
           {boxes.length === 0 && <div style={{ fontSize: 12.5, color: C.faint, padding: '4px 8px' }}>No mailboxes shared with you yet.</div>}
           <div style={{ flex: 1 }} />
+          <NavItem on={view === 'templates'} onClick={() => setView('templates')}>Email templates</NavItem>
           {isAdmin && <NavItem on={view === 'settings'} onClick={() => setView('settings')}>Mailbox settings</NavItem>}
           <div style={{ fontSize: 12, color: C.faint, padding: '8px 8px 0' }}>{connected.length} of {boxes.length} connected{syncing ? ' · checking…' : ''}</div>
         </div>
 
-        {view === 'settings' ? (
+        {view === 'templates' ? (
+          <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
+            <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + C.creamLine }}>
+              <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Email templates</h1>
+              <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>The opening line, sign-off and footer that go on every email. Click any words in the preview to change them, then save. You can also change the footer for a single email while writing it.</div>
+            </div>
+            <div style={{ padding: '20px 28px 40px' }}>
+              <TemplatesEditor templates={templates} onChange={setTemplates} flash={flash} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} isAdmin={isAdmin} />
+            </div>
+          </div>
+        ) : view === 'settings' ? (
           <Settings boxes={boxes} team={team} onConnect={setConnectFor} onAccess={setAccessFor} reload={loadBoxes} flash={flash} templates={templates} onTemplates={setTemplates} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} />
         ) : (
           <>
@@ -347,7 +358,7 @@ export default function EmailPage() {
                 const next = tpl(e.target.value)
                 // Swap the pre-filled text only if they haven't started typing
                 const untouched = draft.body === formatted(draft.toName, tpl(draft.template_id))
-                setDraft({ ...draft, template_id: next.id, body: untouched ? formatted(draft.toName, next) : draft.body })
+                setDraft({ ...draft, template_id: next.id, footer_override: null, body: untouched ? formatted(draft.toName, next) : draft.body })
               }} style={{ ...input, cursor: 'pointer' }}>
                 {templates.map(t => <option key={t.id} value={t.id}>{t.name}{t.is_default ? ' (default)' : ''}</option>)}
               </select>
@@ -356,8 +367,9 @@ export default function EmailPage() {
           <textarea value={draft.body} onChange={e => setDraft({ ...draft, body: e.target.value })} autoFocus={!!draft.to} placeholder="Write your message…" style={{ ...input, marginTop: 12, minHeight: 200, resize: 'vertical', fontSize: 14, lineHeight: 1.5 }} />
           {tpl(draft.template_id).footer_enabled && (
             <details style={{ marginTop: 8, fontSize: 12.5, color: C.muted }}>
-              <summary style={{ cursor: 'pointer' }}>✓ Company footer added automatically — preview</summary>
-              <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: '0 12px 12px', marginTop: 6, background: '#fff', overflowX: 'auto' }} dangerouslySetInnerHTML={{ __html: footerHtml(tpl(draft.template_id), byId(draft.from)?.email ?? '') }} />
+              <summary style={{ cursor: 'pointer' }}>✓ Footer added automatically — preview &amp; edit{draft.footer_override ? ' (changed for this email)' : ''}</summary>
+              <div style={{ fontSize: 11.5, color: C.faint, margin: '6px 0 4px' }}>Click any words to change them for this email only.{draft.footer_override && <> <button onClick={() => setDraft({ ...draft, footer_override: null, footerRev: (draft.footerRev || 0) + 1 })} style={{ border: 'none', background: 'none', color: C.goldDark, cursor: 'pointer', padding: 0, fontSize: 11.5 }}>Undo my changes</button></>}</div>
+              <EditableHtml key={(draft.template_id || '') + ':' + (draft.footerRev || 0) + ':' + draft.from} html={draft.footer_override || footerHtml(tpl(draft.template_id), byId(draft.from)?.email ?? '')} onChange={h => setDraft(d => d ? { ...d, footer_override: h } : d)} />
             </details>
           )}
           {draft.quoted && <details style={{ marginTop: 8, fontSize: 12.5, color: C.muted }}><summary style={{ cursor: 'pointer' }}>Show quoted email</summary><pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', maxHeight: 180, overflowY: 'auto', background: C.hover, padding: 10, borderRadius: 4 }}>{draft.quoted}</pre></details>}
@@ -401,7 +413,6 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
         <button onClick={() => setAdding(true)} style={btn('gold')}>+ Add mailbox</button>
       </div>
       <div style={{ padding: '20px 28px 40px' }}>
-        <TemplatesEditor templates={templates} onChange={onTemplates} flash={flash} sampleEmail={sampleEmail} />
         {adding && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center' }}>
             <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="name@sangstersgroup.com" style={{ ...input, width: 320 }} autoFocus />
@@ -550,14 +561,16 @@ function AccessModal({ mb, team, onClose, onDone }: any) {
 // and branded footer (added on send). The default is pre-selected for staff and
 // used for AI replies and Marketing.
 const BLANK_T: EmailTemplate = { ...DEFAULT_FORMAT, id: '', name: '', is_default: false }
-function TemplatesEditor({ templates, onChange, flash, sampleEmail }: { templates: EmailTemplate[]; onChange: (t: EmailTemplate[]) => void; flash: (t: string) => void; sampleEmail: string }) {
-  const [open, setOpen] = useState(false)
+function TemplatesEditor({ templates, onChange, flash, sampleEmail, isAdmin }: { templates: EmailTemplate[]; onChange: (t: EmailTemplate[]) => void; flash: (t: string) => void; sampleEmail: string; isAdmin: boolean }) {
+  const open = true
+  const [showCode, setShowCode] = useState(false)
+  const [rev, setRev] = useState(0) // bump to reload the click-to-edit footer
   const [selId, setSelId] = useState<string>(templates.find(t => t.is_default)?.id ?? templates[0]?.id ?? '')
   const [f, setF] = useState<EmailTemplate>(templates.find(t => t.id === selId) ?? templates[0] ?? BLANK_T)
   const [busy, setBusy] = useState(false)
   const saved = templates.find(t => t.id === f.id)
   const dirty = !saved || JSON.stringify(saved) !== JSON.stringify(f)
-  useEffect(() => { const t = templates.find(x => x.id === selId); if (t) setF(t) }, [templates, selId])
+  useEffect(() => { const t = templates.find(x => x.id === selId); if (t) { setF(t); setRev(r => r + 1) } }, [templates, selId])
   const pick = (t: EmailTemplate) => { if (dirty && f.id && !confirm('Discard your unsaved changes to this template?')) return; setSelId(t.id); setF(t) }
   const set = (k: keyof EmailTemplate, v: any) => setF(p => ({ ...p, [k]: v }))
   const field = (k: keyof EmailTemplate, lbl: string, wide = false, hint?: string) => (
@@ -585,12 +598,11 @@ function TemplatesEditor({ templates, onChange, flash, sampleEmail }: { template
   const sample = `${f.greeting.replace('{name}', 'Sarah')}\n\nThank you for your message. [Your message here]\n\n${f.closing}${f.sign_name ? '\nYour name' : ''}`
   return (
     <div style={{ border: '1px solid ' + C.row, borderLeft: '6px solid ' + C.gold, borderRadius: 4, marginBottom: 22, background: '#fff' }}>
-      <div onClick={() => setOpen(o => !o)} style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+      <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 500, color: C.brown }}>Email templates <span style={{ fontSize: 12.5, color: C.muted, fontWeight: 400 }}>· {templates.length}</span></div>
           <div style={{ fontSize: 12.5, color: C.muted }}>Staff pick a template when writing an email; <b style={{ fontWeight: 500 }}>{def?.name}</b> is the default and is also used for AI replies and Marketing.</div>
         </div>
-        <span style={{ fontSize: 13, color: C.goldDark }}>{open ? 'Close' : 'Edit'}</span>
       </div>
       {open && (
         <div style={{ borderTop: '1px solid ' + C.row, padding: '12px 14px 16px' }}>
@@ -608,10 +620,12 @@ function TemplatesEditor({ templates, onChange, flash, sampleEmail }: { template
               {field('closing', 'Sign-off')}
               <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.sign_name} onChange={e => set('sign_name', e.target.checked)} /> Add the sender’s name under the sign-off</label>
               <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.footer_enabled} onChange={e => set('footer_enabled', e.target.checked)} /> Add the company footer</label>
-              {f.footer_enabled && (f.footer_html || '').trim() !== '' && <div style={{ gridColumn: '1 / -1' }}>
-                <label style={label}>Custom footer (HTML)</label>
-                <textarea value={f.footer_html} onChange={e => set('footer_html', e.target.value)} rows={12} style={{ ...input, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 12, resize: 'vertical' }} />
-                <div style={{ fontSize: 11.5, color: C.faint, marginTop: 3 }}>{'{email}'} = this template’s contact email. <button onClick={() => set('footer_html', '')} style={{ border: 'none', background: 'none', color: C.goldDark, cursor: 'pointer', padding: 0, fontSize: 11.5 }}>Switch back to the simple footer</button></div>
+              {f.footer_enabled && (f.footer_html || '').trim() !== '' && <div style={{ gridColumn: '1 / -1', fontSize: 12.5, color: C.muted, background: C.cream, border: '1px solid ' + C.creamLine, borderRadius: 4, padding: '8px 10px' }}>
+                This template has a designed footer. <b style={{ fontWeight: 500, color: C.brown }}>Click any words in the preview to change them</b>, then press Save template.
+                {isAdmin && <div style={{ marginTop: 6 }}>
+                  <button onClick={() => setShowCode(v => !v)} style={{ border: 'none', background: 'none', color: C.goldDark, cursor: 'pointer', padding: 0, fontSize: 12 }}>{showCode ? 'Hide HTML code' : 'Edit HTML code'}</button>
+                  {showCode && <textarea value={f.footer_html} onChange={e => set('footer_html', e.target.value)} rows={10} style={{ ...input, marginTop: 6, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 11.5, resize: 'vertical' }} />}
+                </div>}
               </div>}
               {f.footer_enabled && !(f.footer_html || '').trim() && <>
                 {field('company', 'Company name')}
@@ -627,10 +641,10 @@ function TemplatesEditor({ templates, onChange, flash, sampleEmail }: { template
               </>}
               <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
                 <button onClick={() => run({ action: 'save_template', template: f }, f.id ? 'Template saved' : 'Template added')} disabled={busy || !f.name.trim()} style={{ ...btn('gold'), opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : f.id ? 'Save template' : 'Add template'}</button>
-                {f.id && !f.is_default && <button onClick={() => run({ action: 'default_template', id: f.id }, `${f.name} is now the default`)} disabled={busy} style={btn('ghost')}>Make default</button>}
+                {isAdmin && f.id && !f.is_default && <button onClick={() => run({ action: 'default_template', id: f.id }, `${f.name} is now the default`)} disabled={busy} style={btn('ghost')}>Make default</button>}
                 {f.id && f.is_default && <span style={{ fontSize: 12.5, color: C.goldDark, alignSelf: 'center' }}>★ Default template</span>}
                 <div style={{ flex: 1 }} />
-                {f.id && templates.length > 1 && <button onClick={() => confirm(`Delete the “${f.name}” template?`) && run({ action: 'delete_template', id: f.id }, 'Template deleted')} disabled={busy} style={btn('danger')}>Delete</button>}
+                {isAdmin && f.id && templates.length > 1 && <button onClick={() => confirm(`Delete the “${f.name}” template?`) && run({ action: 'delete_template', id: f.id }, 'Template deleted')} disabled={busy} style={btn('danger')}>Delete</button>}
                 {!f.id && <button onClick={() => { const d = templates.find(t => t.is_default) ?? templates[0]; if (d) { setSelId(d.id); setF(d) } }} style={btn('ghost')}>Cancel</button>}
               </div>
             </div>
@@ -638,12 +652,28 @@ function TemplatesEditor({ templates, onChange, flash, sampleEmail }: { template
               <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Preview</div>
               <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: 16, background: '#fff', overflowX: 'auto' }}>
                 <div style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, lineHeight: 1.5, color: '#323338', whiteSpace: 'pre-wrap' }}>{sample}</div>
-                <div dangerouslySetInnerHTML={{ __html: footerHtml(f, sampleEmail) }} />
+                {(f.footer_html || '').trim() && f.footer_enabled
+                  ? <EditableHtml key={f.id + (showCode ? ':code' : '') + ':' + rev} html={f.footer_html} onChange={h => set('footer_html', h)} />
+                  : <div dangerouslySetInnerHTML={{ __html: footerHtml(f, sampleEmail) }} />}
               </div>
             </div>
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+// Click-to-edit HTML (email footers): keeps the design and images, lets people
+// change the words. Uncontrolled while typing so the cursor doesn't jump.
+function EditableHtml({ html, onChange }: { html: string; onChange: (h: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (ref.current && ref.current.innerHTML !== html) ref.current.innerHTML = html }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div ref={ref} contentEditable suppressContentEditableWarning spellCheck
+      onInput={e => onChange((e.currentTarget as HTMLDivElement).innerHTML)}
+      onClick={e => { if ((e.target as HTMLElement).closest('a')) e.preventDefault() }}
+      title="Click to change the words"
+      style={{ outline: '1px dashed ' + C.creamLine, outlineOffset: 4, borderRadius: 2, cursor: 'text', marginTop: 4 }} />
   )
 }
