@@ -571,6 +571,7 @@ function FormatEditor({ format, onSaved, flash, sampleEmail }: { format: EmailFo
             {f.footer_enabled && <>
               {field('company', 'Company name')}
               {field('phone', 'Office phone')}
+              {field('contact_email', 'Contact email', true, 'Shown in every footer (leave blank to show the address it’s sent from)')}
               {field('tagline', 'Tagline', true)}
               {field('website', 'Website')}
               {field('company_number', 'Company number')}

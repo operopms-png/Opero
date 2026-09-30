@@ -5,7 +5,7 @@
 
 export type EmailFormat = {
   greeting: string; closing: string; sign_name: boolean; footer_enabled: boolean
-  company: string; tagline: string; phone: string; website: string
+  company: string; tagline: string; contact_email: string; phone: string; website: string
   address_uk: string; address_jm: string; company_number: string; rating: string; disclaimer: string
 }
 
@@ -16,6 +16,7 @@ export const DEFAULT_FORMAT: EmailFormat = {
   footer_enabled: true,
   company: 'Sangsters Group',
   tagline: 'Global real estate leaders · #FeelAtHomeAnywhere',
+  contact_email: 'contact.us@sangstersgroup.com',
   phone: '020 7164 0329',
   website: 'www.sangstersgroup.com',
   address_uk: 'Tallis House, 2 Tallis St, Blackfriars, London EC4Y 0AB, United Kingdom',
@@ -29,9 +30,11 @@ export const FORMAT_FIELDS = Object.keys(DEFAULT_FORMAT) as (keyof EmailFormat)[
 const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const LOGO = 'https://app.sangstersgroup.com/logo-192.png'
 
-// Email-safe (table + inline styles) footer. `email` is the address it's sent from.
-export function footerHtml(f: EmailFormat, email: string) {
+// Email-safe (table + inline styles) footer. Shows the company contact email;
+// falls back to the sending address if that's left blank.
+export function footerHtml(f: EmailFormat, fromEmail: string) {
   if (!f.footer_enabled) return ''
+  const email = (f.contact_email || '').trim() || fromEmail
   const site = f.website ? `https://${f.website.replace(/^https?:\/\//, '')}` : ''
   const line = (label: string, val: string, href?: string) => val ? `<tr><td style="padding:1px 10px 1px 0;color:#A8862E;font-weight:bold;white-space:nowrap;vertical-align:top">${label}</td><td style="padding:1px 0;color:#323338">${href ? `<a href="${href}" style="color:#323338;text-decoration:none">${esc(val)}</a>` : esc(val)}</td></tr>` : ''
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;border-top:3px solid #D0AE4C;font-family:Arial,sans-serif;font-size:12px;line-height:1.45;max-width:600px;width:100%">
@@ -48,8 +51,9 @@ ${f.rating ? `<div style="margin-top:8px;color:#A8862E;font-weight:bold">★ ${e
 </table>`
 }
 
-export function footerText(f: EmailFormat, email: string) {
+export function footerText(f: EmailFormat, fromEmail: string) {
   if (!f.footer_enabled) return ''
+  const email = (f.contact_email || '').trim() || fromEmail
   return ['', '--', f.company, f.tagline, `Email: ${email}`, f.website && `Website: ${f.website}`, f.phone && `Office: ${f.phone}`, f.address_uk && `London: ${f.address_uk}`, f.address_jm && `Jamaica: ${f.address_jm}`, f.rating, f.company_number && `Company number ${f.company_number}`].filter(x => typeof x === 'string').join('\n')
 }
 
