@@ -123,7 +123,7 @@ const NAV_GROUPS = [
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
   { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
-  { label: 'REPORTS', items: ['Landlord Reports','Reports','Owner Reports','Landlord Statements'] },
+  { label: 'REPORTS', items: ['Landlord Reports','Reports'] },
 ]
 const STUB_SECTIONS: string[] = []
 const DOCUMENT_CATEGORIES = [

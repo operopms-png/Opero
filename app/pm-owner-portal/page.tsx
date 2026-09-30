@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
 const ACCENT = '#A8862E'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -188,7 +189,7 @@ function PMOwnerPortalInner() {
     await loadAll(landlord)
   }
 
-  const TABS = ['Dashboard', 'Properties', 'Statements', 'Messages', 'Contact & Payment']
+  const TABS = ['Dashboard', 'Reports', 'Properties', 'Payments', 'Messages', 'Contact & Payment']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -239,6 +240,8 @@ function PMOwnerPortalInner() {
           </div>
         )}
 
+        {tab === 'Reports' && <LandlordReportsInbox mode="pm" landlordId={landlord.id} />}
+
         {tab === 'Properties' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {properties.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>No properties assigned yet.</div> : properties.map(p => (
@@ -250,7 +253,7 @@ function PMOwnerPortalInner() {
           </div>
         )}
 
-        {tab === 'Statements' && (
+        {tab === 'Payments' && (
           <div>
             {isStaffView && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
@@ -277,7 +280,7 @@ function PMOwnerPortalInner() {
               <div style={{ display: 'grid', gridTemplateColumns: isStaffView ? '1fr 120px 100px 100px 100px 130px 80px 30px' : '1fr 120px 100px 100px 100px 130px 80px', padding: '10px 20px', background: '#F9FAFB', borderBottom: '1px solid #E4E7EC', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase', gap: 8 }}>
                 <span>Property</span><span>Category</span><span>Amount</span><span>Due</span><span>Paid</span><span>Status</span><span>Receipt</span>{isStaffView && <span></span>}
               </div>
-              {payments.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>No statements yet.</div> : payments.map(p => {
+              {payments.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>No payments yet.</div> : payments.map(p => {
                 const s = statusFor(p)
                 return (
                   <div key={p.id} style={{ display: 'grid', gridTemplateColumns: isStaffView ? '1fr 120px 100px 100px 100px 130px 80px 30px' : '1fr 120px 100px 100px 100px 130px 80px', padding: '13px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>

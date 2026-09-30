@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
 // Mirrors app/pm-owner-portal closely -- same layout, same staff-preview
 // pattern via ?landlord_id=. Messages now use estate_landlord_messages
@@ -148,7 +149,7 @@ function EstateOwnerPortalInner() {
   const monthlyRentTotal = activeTenancies.reduce((s, t) => s + (parseFloat(t.rent) || 0), 0)
   const expiringDocs = documents.filter(d => d.expiry_date && d.expiry_date < today).length
 
-  const TABS = ['Dashboard', 'Properties', 'Tenancies', 'Documents', 'Messages', 'Contact & Payment']
+  const TABS = ['Dashboard', 'Reports', 'Properties', 'Tenancies', 'Documents', 'Messages', 'Contact & Payment']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -195,6 +196,8 @@ function EstateOwnerPortalInner() {
             ))}
           </div>
         )}
+
+        {tab === 'Reports' && <LandlordReportsInbox mode="ea" landlordId={landlord.id} />}
 
         {tab === 'Properties' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
