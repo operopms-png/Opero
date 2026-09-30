@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto'
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 import { SITE_URL } from '@/lib/brand'
+import { addCrmLead } from '@/lib/crm-lead'
 
 // Public "book a meeting" link (/meeting). Anyone can open it and send a
 // meeting request; it lands in Staff Centre → Meetings as "New request" so
@@ -57,6 +58,11 @@ export async function POST(req: NextRequest) {
     notes: message || null,
   }).select('id').single()
   if (error) return bad('Sorry, something went wrong — please try again.', 500)
+
+  // Add them to the CRM (contact + Pipeline deal), matched to the topic
+  const TOPIC_CRM: Record<string, [string, string]> = { 'Property management': ['pm', 'Landlord'], 'Buying or selling': ['estate', 'contact'], 'Letting / renting': ['estate', 'Tenant'], 'Holiday lets & co-hosting': ['str', 'landlord'], 'Investing & partnerships': ['Invest', 'investor'], 'Property development': ['dev', 'contact'] }
+  const [mod, typ] = TOPIC_CRM[topic] ?? ['str', 'contact']
+  await addCrmLead({ businessId: p.business_id, name, email, phone, source: 'Meeting booking link', module: mod, type: typ, notes: [`Meeting request${topic ? `: ${topic}` : ''}`, type && `Prefers: ${type}`, when && `When: ${when}`, message].filter(Boolean).join('\n'), dealName: `${name} — ${topic || 'meeting request'}` }).catch(e => console.error('[meeting-request] crm', e))
 
   // Tell the team (bell notification + email to the alert address)
   const summary = [`${name} <${email}>${phone ? ` · ${phone}` : ''}`, topic && `About: ${topic}`, type && `Prefers: ${type}`, when && `When: ${when}`, message && `\n${message}`].filter(Boolean).join('\n')

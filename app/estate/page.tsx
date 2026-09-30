@@ -8,7 +8,12 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
+import ListingEditor from '@/components/estate/ListingEditor'
+import { CURRENCIES } from '@/lib/listings-shared'
 const ACCENT = '#A8862E'
+// Blank property form (the listing fields feed the public /homes page)
+const EMPTY_PROP = {name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:'',listed:false,currency:'JMD',available_from:'',description:'',features:[] as string[],photo_captions:{} as Record<string,string>}
+const curSym = (c?: string) => (CURRENCIES[c || 'JMD'] ?? CURRENCIES.JMD).symbol
 
 async function uploadPropertyImage(file: File): Promise<string | null> {
   const ext = file.name.split('.').pop()
@@ -134,7 +139,7 @@ const DOCUMENT_CATEGORIES = [
   { value:'statement', label:'Statement' },
   { value:'other', label:'Other' },
 ]
-const VIEWING_STATUSES = ['Scheduled','Completed','Cancelled','No Show']
+const VIEWING_STATUSES = ['Requested','Scheduled','Completed','Cancelled','No Show'] // 'Requested' = came in from the listings link
 const INVENTORY_TYPES = ['Check-in','Check-out','Mid-term Inspection']
 const COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
@@ -227,6 +232,8 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 export default function Page() {
   const [periodTab, setPeriodTab] = useState<'CURRENT_MONTH'|'LAST_MONTH'|'CURRENT_YEAR'|'12_MONTHS'>('CURRENT_MONTH')
   const [section, setSection] = useState('Dashboard')
+  // Deep links like /estate?section=Viewings (used by alerts)
+  useEffect(() => { const q = new URLSearchParams(window.location.search).get('section'); if (q) setSection(q) }, [])
   const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'estate')
 
@@ -246,7 +253,7 @@ export default function Page() {
   const [showAddTenant, setShowAddTenant] = useState(false)
   const [showAddTenancy, setShowAddTenancy] = useState(false)
   const [editItem, setEditItem] = useState<any>(null)
-  const [prop, setProp] = useState({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})
+  const [prop, setProp] = useState<any>(EMPTY_PROP)
   const [ten, setTen] = useState({name:'',email:'',phone:'',property_id:'',unit_id:'',id_type:'',id_url:'',status:'active'})
   const [tenancy, setTenancy] = useState({property:'',tenant:'',start:'',end:'',rent:'',deposit:'',status:'Active',document_url:''})
   const [landlords, setLandlords] = useState<any[]>([])
@@ -663,7 +670,7 @@ export default function Page() {
     if(!editItem && !isBundle && properties.length >= propertyLimit) { setShowAddProperty(false); setShowUpgrade(true); return }
     await saveRecord('estate_properties', prop, editItem?.id)
     setEditItem(null)
-    setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})
+    setProp(EMPTY_PROP)
     setShowAddProperty(false)
   }
   async function purchaseBlock() {
@@ -930,6 +937,7 @@ export default function Page() {
           </div>)}
 
           {section==='Properties'&&(<div>
+            <ListingsLinkBar count={properties.filter((x:any)=>x.listed&&!['rented','archived'].includes(String(x.status||'').toLowerCase())).length}/>
             {showAddProperty&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit property':'Add property'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
@@ -938,17 +946,14 @@ export default function Page() {
                 <div><label style={labelStyle}>Type</label><select value={prop.type} onChange={e=>setProp({...prop,type:e.target.value})} style={inputStyle}>{['Apartment','House','Studio','Commercial','HMO','Other'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={{...labelStyle,display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>Bedrooms</label><select value={prop.bedrooms} onChange={e=>setProp({...prop,bedrooms:e.target.value})} style={inputStyle}>{['Studio','1','2','3','4','5','6+'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={{...labelStyle,display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>Bathrooms</label><select value={prop.bathrooms} onChange={e=>setProp({...prop,bathrooms:e.target.value})} style={inputStyle}>{['1','2','3','4','5','6+'].map(t=><option key={t}>{t}</option>)}</select></div>
-                <div><label style={labelStyle}>Monthly rent (£)</label><input value={prop.rent} onChange={e=>setProp({...prop,rent:e.target.value})} placeholder="0.00" type="number" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Monthly rent ({curSym(prop.currency)})</label><input value={prop.rent} onChange={e=>setProp({...prop,rent:e.target.value})} placeholder="0.00" type="number" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Status</label><select value={prop.status} onChange={e=>setProp({...prop,status:e.target.value})} style={inputStyle}>{['Available','Rented','Maintenance','Archived'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={labelStyle}>Owner</label><select value={prop.owner_id||''} onChange={e=>setProp({...prop,owner_id:e.target.value})} style={inputStyle}><option value="">No owner linked</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
               </div>
-              <div style={{marginBottom:12}}>
-                <label style={labelStyle}>Photos</label>
-                <PropertyImagePicker urls={parsePropertyImages(prop.image_urls)} onChange={urls=>setProp({...prop,image_urls:JSON.stringify(urls)})}/>
-              </div>
+              <ListingEditor value={prop} onChange={patch=>setProp((cur:any)=>({...cur,...patch}))} rentLabel="the rent" propertyId={editItem?.id}/>
               <div style={{display:'flex',gap:8}}>
                 <button onClick={addProperty} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add property'}</button>
-                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp({name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp(EMPTY_PROP)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
@@ -981,15 +986,15 @@ export default function Page() {
                         {photos.length > 1 && <span style={{position:'absolute',bottom:-2,right:-2,background:'rgba(0,0,0,0.7)',color:'#fff',fontSize:9,fontWeight:600,padding:'1px 4px',borderRadius:4}}>+{photos.length-1}</span>}
                       </div>
                     : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
-                  <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{p.name}</div>
+                  <div style={{fontSize:13,fontWeight:500,color:'#323338',display:'flex',alignItems:'center',gap:6,minWidth:0}}><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</span>{p.listed&&<a href={`/homes/${p.id}`} target="_blank" rel="noreferrer" title="Shown on the listings link — open" style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:'#FBF4E6',color:ACCENT,textDecoration:'none',flexShrink:0}}>Listed ↗</a>}</div>
                   <span style={{fontSize:12,color:'#344054'}}>{p.type}</span>
                   <span style={{fontSize:12,color:'#667085',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.address||'—'}</span>
                   <span style={{fontSize:12,color:'#344054',display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms}</span>
                   <span style={{fontSize:12,color:'#344054',display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>{p.bathrooms||'—'}</span>
-                  <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{p.rent?'£'+p.rent:'—'}</span>
+                  <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{p.rent?curSym(p.currency)+Number(p.rent).toLocaleString('en-GB'):'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:p.status==='Rented'?'#FEF3C7':p.status==='Available'?'#ECFDF5':'#F2F4F7',color:p.status==='Rented'?'#F59E0B':p.status==='Available'?'#10B981':'#667085',display:'inline-block'}}>{p.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(p);setProp({name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||'',owner_id:p.owner_id||''});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>{setEditItem(p);setProp({...EMPTY_PROP,name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||'',owner_id:p.owner_id||'',listed:!!p.listed,currency:p.currency||'JMD',available_from:p.available_from||'',description:p.description||'',features:p.features||[],photo_captions:p.photo_captions||{}});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_properties',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
@@ -1245,7 +1250,7 @@ export default function Page() {
                   <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{bk.prospect_name}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{bk.estate_properties?.name||'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{bk.scheduled_at?new Date(bk.scheduled_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'}</span>
-                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:bk.status==='Completed'?'#D1FAE5':bk.status==='Cancelled'||bk.status==='No Show'?'#FEE2E2':'#DBEAFE',color:bk.status==='Completed'?'#059669':bk.status==='Cancelled'||bk.status==='No Show'?'#DC2626':'#2563EB'}}>{bk.status}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:bk.status==='Requested'?'#FEF3C7':bk.status==='Completed'?'#D1FAE5':bk.status==='Cancelled'||bk.status==='No Show'?'#FEE2E2':'#DBEAFE',color:bk.status==='Requested'?'#B45309':bk.status==='Completed'?'#059669':bk.status==='Cancelled'||bk.status==='No Show'?'#DC2626':'#2563EB'}}>{bk.status}</span>
                   <button onClick={()=>delRecord('estate_viewings',bk.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                 </div>
               ))}
@@ -1525,6 +1530,7 @@ export default function Page() {
           </div>)}
 
           {section==='Vacancies'&&(<div>
+            <ListingsLinkBar count={properties.filter((x:any)=>x.listed&&!['rented','archived'].includes(String(x.status||'').toLowerCase())).length}/>
             {/* Stats */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
               <div style={{background:'linear-gradient(135deg,'+ACCENT+',#1B4332)',borderRadius:10,padding:20,color:'#fff'}}>
@@ -2577,6 +2583,20 @@ export default function Page() {
         </Modal>
         )
       })()}
+    </div>
+  )
+}
+
+// Shareable lettings link (public /homes page) with a copy button
+function ListingsLinkBar({ count }: { count: number }) {
+  const [copied, setCopied] = useState(false)
+  const url = typeof window !== 'undefined' ? `${window.location.origin}/homes` : '/homes'
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'#FBF4E6',border:'1px solid #F0E3C4',borderRadius:10,padding:'10px 14px',marginBottom:16}}>
+      <div style={{flex:'1 1 260px',fontSize:13,color:'#624920'}}><b style={{fontWeight:600}}>Listings link for tenants</b> · {count} {count===1?'property':'properties'} showing. Switch a property on under <i>Edit → Photos &amp; listing</i>.</div>
+      <code style={{fontSize:12.5,background:'#fff',border:'1px solid #E4E7EC',borderRadius:6,padding:'5px 9px',color:'#323338'}}>{url.replace(/^https?:\/\//,'')}</code>
+      <button onClick={()=>{navigator.clipboard?.writeText(url);setCopied(true);setTimeout(()=>setCopied(false),1500)}} style={{padding:'6px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{copied?'Copied ✓':'Copy link'}</button>
+      <a href="/homes" target="_blank" rel="noreferrer" style={{fontSize:12.5,color:ACCENT,fontWeight:600,textDecoration:'none'}}>Open ↗</a>
     </div>
   )
 }
