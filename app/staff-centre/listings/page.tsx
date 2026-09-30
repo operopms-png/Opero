@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
 import ListingEditor, { parseUrls, type ListingFields } from '../../../components/estate/ListingEditor'
-import { money } from '../../../lib/listings-shared'
+import { CURRENCIES } from '../../../lib/listings-shared'
 
 const HIDDEN = ['rented', 'archived', 'let agreed']
 const V_STATUS: Record<string, string> = { Requested: '#FDAB3D', Scheduled: '#579BFC', Completed: '#00C875', Cancelled: '#C4C4C4', 'No Show': '#DF2F4A' }
@@ -45,6 +45,12 @@ export default function ListingsPage() {
   const gone = props.filter(p => hidden(p))
   const openReq = views.filter(v => v.status === 'Requested')
 
+  // Inline edits (rent, currency) straight from the table
+  async function saveField(p: any, patch: any) {
+    setProps(ps => ps.map(x => x.id === p.id ? { ...x, ...patch } : x))
+    const { error } = await supabase.from('estate_properties').update(patch).eq('id', p.id)
+    if (error) { flash(error.message); load() } else flash('Saved')
+  }
   async function toggle(p: any) {
     const next = !p.listed
     setProps(ps => ps.map(x => x.id === p.id ? { ...x, listed: next } : x))
@@ -70,7 +76,7 @@ export default function ListingsPage() {
 
   if (loading) return <Loading />
 
-  const cols = [{ k: 'n', l: 'Property', w: 'minmax(240px,1.6fr)' }, { k: 'a', l: 'Area', w: 170 }, { k: 'r', l: 'Rent / month', w: 130 }, { k: 's', l: 'Status', w: 120 }, { k: 'l', l: 'On link', w: 100 }, { k: 'p', l: 'Photos', w: 80 }, { k: 'q', l: 'Requests', w: 90 }, { k: 'x', l: '', w: 230 }]
+  const cols = [{ k: 'n', l: 'Property', w: 'minmax(240px,1.6fr)' }, { k: 'a', l: 'Area', w: 170 }, { k: 'r', l: 'Rent / month', w: 190 }, { k: 's', l: 'Status', w: 120 }, { k: 'l', l: 'On link', w: 100 }, { k: 'p', l: 'Photos', w: 80 }, { k: 'q', l: 'Requests', w: 90 }, { k: 'x', l: '', w: 230 }]
   const propRow = (p: any) => {
     const photos = parseUrls(p.image_urls)
     return <Row key={p.id} cells={[
@@ -79,7 +85,7 @@ export default function ListingsPage() {
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
       </div>,
       <span key="a" style={{ fontSize: 13, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.address || '—'}</span>,
-      <span key="r" style={{ fontWeight: 600, color: C.goldDark }}>{p.rent ? money(Number(p.rent), p.currency || 'JMD') : '—'}</span>,
+      <RentCell key="r" p={p} onSave={(patch: any) => saveField(p, patch)} />,
       <Pill key="s" width={96} color={String(p.status).toLowerCase() === 'available' ? C.green : hidden(p) ? C.grey : '#FDAB3D'}>{p.status || '—'}</Pill>,
       hidden(p) ? <span key="l" style={{ fontSize: 12, color: C.faint }}>Hidden</span> : <Pill key="l" width={70} color={p.listed ? C.green : C.grey} onClick={() => toggle(p)} title="Show or hide on the listings link">{p.listed ? 'On' : 'Off'}</Pill>,
       <span key="p" style={{ fontSize: 13, color: photos.length ? C.ink : C.red }}>{photos.length || 'None'}</span>,
@@ -149,5 +155,23 @@ export default function ListingsPage() {
       )}
       {toast && <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.ink, color: '#fff', padding: '10px 18px', borderRadius: 6, fontSize: 13.5, zIndex: 80 }}>{toast}</div>}
     </CrmPage>
+  )
+}
+
+// Click the rent to change it; pick the currency next to it. Saves on Enter or when you click away.
+function RentCell({ p, onSave }: { p: any; onSave: (patch: any) => void }) {
+  const [edit, setEdit] = useState(false)
+  const [val, setVal] = useState(p.rent ?? '')
+  useEffect(() => { setVal(p.rent ?? '') }, [p.rent])
+  const commit = () => { setEdit(false); const v = String(val).replace(/[^0-9.]/g, ''); if (v !== String(p.rent ?? '')) onSave({ rent: v === '' ? null : v }) }
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
+      <select value={p.currency || 'JMD'} onChange={e => onSave({ currency: e.target.value })} title="Currency" style={{ border: '1px solid ' + C.row, borderRadius: 4, fontSize: 12, padding: '3px 2px', background: '#fff', cursor: 'pointer', fontFamily: 'inherit', color: C.muted }}>
+        {Object.entries(CURRENCIES).map(([k, c]) => <option key={k} value={k}>{c.symbol.trim()}</option>)}
+      </select>
+      {edit
+        ? <input autoFocus inputMode="decimal" value={val} onChange={e => setVal(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') { setVal(p.rent ?? ''); setEdit(false) } }} style={{ ...inp, padding: '4px 6px', fontSize: 13, width: 100 }} />
+        : <button onClick={() => setEdit(true)} title="Click to change the rent" style={{ border: '1px dashed transparent', background: 'none', cursor: 'text', fontWeight: 600, color: p.rent ? C.goldDark : C.faint, fontSize: 14, fontFamily: 'inherit', padding: '3px 4px', borderRadius: 4 }} onMouseOver={e => (e.currentTarget.style.borderColor = C.border)} onMouseOut={e => (e.currentTarget.style.borderColor = 'transparent')}>{p.rent ? Number(p.rent).toLocaleString('en-GB') : 'Add rent'}</button>}
+    </div>
   )
 }
