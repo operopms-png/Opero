@@ -51,7 +51,7 @@ const NAV_GROUPS = [
       { href: '/staff-centre/partners', label: 'Partners', key: 'staffcentre', icon: 'users', scTab: 'partners', badge: 'partners' },
       { href: '/ai-manager', label: 'AI Property Manager', key: 'ai', icon: 'sparkles', requiresModule: 'aipm', requiresModulePrice: '£9.99/mo' },
       { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
-      { href: '/invest', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
+      { href: '/invest?section=Watchlist', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
       { href: '/staff-centre/investors', label: 'Investors', key: 'staffcentre', icon: 'revenue', scTab: 'investors' },
       { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', key: 'staffcentre', icon: 'report', scTab: 'customeronboarding' },
       { href: '/staff-centre/meetings', label: 'Meetings', key: 'staffcentre', icon: 'phone', scTab: 'meetings', badge: 'meetings' },
@@ -124,6 +124,20 @@ export default function Sidebar() {
   const [modules, setModules] = useState<string[]>(['aipm','invest','str','pm','dev','ea'])
   const [userEmail, setUserEmail] = useState('')
   const [counts, setCounts] = useState<Record<string, number>>({})
+  const [search, setSearch] = useState('')
+  useEffect(() => {
+    const read = () => setSearch(window.location.search)
+    const h: any = window.history
+    if (!h.__operoNav) {
+      h.__operoNav = true
+      for (const m of ['pushState', 'replaceState'] as const) {
+        const orig = h[m].bind(h)
+        h[m] = (...args: any[]) => { const r = orig(...args); setTimeout(() => window.dispatchEvent(new Event('opero:nav')), 0); return r }
+      }
+    }
+    read(); window.addEventListener('popstate', read); window.addEventListener('opero:nav', read)
+    return () => { window.removeEventListener('popstate', read); window.removeEventListener('opero:nav', read) }
+  }, [pathname])
   const { role, hasSettings, modules: teamModules } = useRole()
 
   // Red counts on menu items: things waiting for attention in each area
@@ -211,7 +225,9 @@ export default function Sidebar() {
                 const itemHasModule = itemAllowed({ requiresModule, scTab })
                 if (isPartner && (!itemHasModule || String(href).startsWith('/settings'))) return null
                 const hasAccess = itemHasModule && features.includes(key)
-                const active = pathname === href.split('?')[0]
+                const [hp, hq] = href.split('?')
+                const cur = new URLSearchParams(search).get('section')
+                const active = pathname === hp && (hq ? new URLSearchParams(hq).get('section') === cur : !NAV_GROUPS.some((g: any) => g.items.some((it: any) => { const [p2, q2] = String(it.href).split('?'); return p2 === hp && q2 && new URLSearchParams(q2).get('section') === cur })))
                 const linkHref = itemHasModule ? href : (requiresModule ? '/modules' : '#')
                 return (
                   <Link key={href + label} href={linkHref}

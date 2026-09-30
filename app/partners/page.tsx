@@ -50,25 +50,23 @@ const normPhone = (p?: string | null) => (p ?? '').replace(/\D/g, '')
 function Stat({ label, value, sub, dark }: { label: string; value: string; sub?: string; dark?: boolean }) {
   // Same tile as the Staff Centre dashboard; `dark` marks the key figure in the accent colour
   return (
-    <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 20 }}>
-      <div style={{ fontSize: 12, fontWeight: 500, color: '#667085', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, color: dark ? ACCENT : TEXT }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>{sub}</div>}
+    <div style={{ background: dark ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', border: `1px solid ${dark ? '#EADBB8' : '#E6E9EF'}`, borderRadius: 8, padding: 16 }}>
+      <div style={{ fontSize: 12.5, color: dark ? '#8A6B2E' : '#676879', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: dark ? '#624920' : TEXT }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: dark ? '#8A6B2E' : '#676879', marginTop: 2 }}>{sub}</div>}
     </div>
   )
 }
 
 function Pill({ status, label }: { status: string; label?: string }) {
-  const map: Record<string, [string, string]> = {
-    paid: ['#D1FAE5', '#059669'], sent: ['#FEF3C7', '#D97706'], draft: ['#F3F4F6', '#6B7280'],
-    live: ['#D1FAE5', '#059669'], active: ['#D1FAE5', '#059669'], onboarding: ['#FEF3C7', '#D97706'],
-    logged: ['#FBF4E6', '#A8862E'], screening: ['#FEF3C7', '#D97706'], approved: ['#EADBB8', '#A8862E'],
-    rejected: ['#FEE2E2', '#DC2626'], completed: ['#D1FAE5', '#059669'], cancelled: ['#F3F4F6', '#6B7280'],
-    pending: ['#FEF3C7', '#D97706'], payable: ['#EADBB8', '#A8862E'], clawed_back: ['#FEE2E2', '#DC2626'],
-    none: ['#F3F4F6', '#6B7280'], paused: ['#F3F4F6', '#6B7280'], duplicate: ['#FEE2E2', '#DC2626'],
+  // CRM-style solid status label
+  const map: Record<string, string> = {
+    paid: '#00C875', sent: '#FDAB3D', draft: '#C4C4C4', live: '#00C875', active: '#00C875', onboarding: '#FDAB3D',
+    logged: '#579BFC', screening: '#FDAB3D', approved: '#D0AE4C', rejected: '#DF2F4A', completed: '#00C875', cancelled: '#C4C4C4',
+    pending: '#FDAB3D', payable: '#D0AE4C', clawed_back: '#DF2F4A', none: '#C4C4C4', paused: '#C4C4C4', duplicate: '#DF2F4A',
   }
-  const [bg, color] = map[(status ?? '').toLowerCase()] ?? ['#F3F4F6', '#6B7280']
-  return <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 20, background: bg, color, whiteSpace: 'nowrap' }}>{label ?? status ?? '—'}</span>
+  const bg = map[(status ?? '').toLowerCase()] ?? '#C4C4C4'
+  return <span style={{ fontSize: 12, fontWeight: 500, padding: '2px 10px', borderRadius: 3, background: bg, color: '#fff', whiteSpace: 'nowrap' }}>{label ?? status ?? '—'}</span>
 }
 
 function Bar({ pct }: { pct: number }) {
@@ -512,33 +510,34 @@ export default function PartnersPage() {
     await loadStaff(businessId)
   }
 
-  const card: React.CSSProperties = { background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 20 }
+  const card: React.CSSProperties = { background: '#fff', border: '1px solid #E6E9EF', borderRadius: 8, padding: 20 }
   const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }
   const formGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }
-  const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }
-  const btnGold: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }
-  const btnGhost: React.CSSProperties = { background: '#fff', color: '#344054', border: '1px solid #D0D5DD', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }
-  const chip = (on: boolean): React.CSSProperties => ({ padding: '8px 14px', borderRadius: 8, border: `1px solid ${on ? '#EADBB8' : '#E4E7EC'}`, background: on ? '#EADBB8' : '#fff', color: on ? ACCENT : '#344054', fontSize: 13, fontWeight: on ? 600 : 500, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' })
+  const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #D0D4E4', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }
+  const btnGold: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 4, padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }
+  const btnGhost: React.CSSProperties = { background: '#fff', color: '#323338', border: '1px solid #D0D4E4', borderRadius: 4, padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }
+  const chip = (on: boolean): React.CSSProperties => ({ padding: '10px 4px', margin: '0 8px -1px 0', border: 'none', borderBottom: `2px solid ${on ? ACCENT : 'transparent'}`, background: 'none', color: on ? TEXT : '#676879', fontSize: 14, fontWeight: on ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' })
 
   if (loading) {
     return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', fontFamily: "'Inter', sans-serif" }}>Loading…</div>
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: PAGE_BG, fontFamily: "'Inter', sans-serif", color: TEXT, padding: '24px 28px' }}>
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "Figtree, Inter, -apple-system, sans-serif", color: TEXT }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');`}</style>
 
-      {/* Header — same as the Staff Centre dashboard */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+      {/* Header — CRM-style cream band */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid #EADBB8' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: '0 0 4px' }}>{isStaff ? 'Partners' : `Welcome, ${profile?.name?.split(' ')[0] ?? 'Partner'}`}</h1>
-          <div style={{ fontSize: 13, color: '#667085' }}>
+          <h1 style={{ fontSize: 26, fontWeight: 500, color: '#624920', margin: '0 0 2px' }}>{isStaff ? 'Partners' : `Welcome, ${profile?.name?.split(' ')[0] ?? 'Partner'}`}</h1>
+          <div style={{ fontSize: 13.5, color: '#8A6B2E' }}>
             {isStaff ? 'Investors, the Agent Programme and the partners broadcast — all in one place.' : 'Your investment, payouts and partner updates.'}
           </div>
         </div>
         <a href="/owner-portal" style={btnGold}>Owner Portal →</a>
       </div>
 
-      <div>
+      <div style={{ padding: '20px 28px 40px' }}>
 
         {/* Membership paywall — investors pay once before the portal unlocks */}
         {locked && (
@@ -573,7 +572,7 @@ export default function PartnersPage() {
         })()}
 
         {/* Tabs */}
-        {!locked && <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto' }}>
+        {!locked && <div style={{ display: 'flex', gap: 14, marginBottom: 20, overflowX: 'auto', borderBottom: '1px solid #E6E9EF' }}>
           {isStaff
             ? STAFF_TABS.map(t => {
                 const n = t === 'Investors' ? pendingSignups.filter(s => s.marked_sent_at).length : 0

@@ -32,17 +32,27 @@ const VERDICT_COLORS: Record<string,{color:string;bg:string;border:string}> = {
   REJECT: { color:'#EF4444', bg:'#FEE2E2', border:'#FDA29B' },
 }
 const RULE_STATUS_COLORS: Record<string,string> = {
-  PASS:'#10B981', FAIL:'#EF4444', REVIEW:'#F59E0B', MISSING:'#98A2B3',
+  PASS:'#10B981', FAIL:'#EF4444', REVIEW:'#F59E0B', MISSING:'#9699A6',
 }
 const CONFIDENCE_COLORS: Record<string,{color:string;bg:string}> = {
   VERIFIED:     { color:'#10B981', bg:'#ECFDF5' },
   USER_PROVIDED:{ color:'#A8862E', bg:'#FBF4E6' },
   ESTIMATED:    { color:'#F59E0B', bg:'#FEF3C7' },
-  MISSING:      { color:'#98A2B3', bg:'#F2F4F7' },
+  MISSING:      { color:'#9699A6', bg:'#E6E9EF' },
 }
 
 export default function InvestPage() {
   const [section, setSection] = useState('Deal Analyser')
+  useEffect(() => {
+    const read = () => { const q = new URLSearchParams(window.location.search).get('section'); const want = q && SECTIONS.includes(q) ? q : 'Deal Analyser'; setSection(cur => { if (cur !== want) { setResult(null); setStrategy(null) } return want }) }
+    read(); window.addEventListener('popstate', read); window.addEventListener('opero:nav', read)
+    return () => { window.removeEventListener('popstate', read); window.removeEventListener('opero:nav', read) }
+  }, [])
+  const goSection = (s: string) => {
+    setSection(s); setResult(null); setStrategy(null)
+    const url = s === 'Deal Analyser' ? '/invest' : '/invest?section=' + encodeURIComponent(s)
+    if (window.location.pathname + window.location.search !== url) window.history.replaceState(window.history.state, '', url)
+  }
   const [strategy, setStrategy] = useState<string|null>(null)
   const [form, setForm] = useState<any>({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'})
   const [result, setResult] = useState<any>(null)
@@ -78,9 +88,10 @@ export default function InvestPage() {
     })
   }, [])
 
-  const inp = {width:'100%',padding:'10px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:14,fontFamily:'inherit',boxSizing:'border-box' as const}
+  const inp = {width:'100%',padding:'10px 12px',border:'1px solid #D0D4E4',borderRadius:8,fontSize:14,fontFamily:'inherit',boxSizing:'border-box' as const}
   const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
   const BLUE = '#A8862E'
+  const WATCH_COLOR: Record<string,string> = { Watching:'#579BFC', Offered:'#FDAB3D', 'Under Offer':'#9D50DD', Purchased:'#00C875', Passed:'#DF2F4A' }
 
   async function authHeaders() {
     const { data: { session } } = await supabase.auth.getSession()
@@ -211,27 +222,26 @@ export default function InvestPage() {
   ) : null
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
+    <div style={{minHeight:'100vh',background:'#fff',fontFamily:"'Figtree',sans-serif",color:'#323338'}}>
       {/* Header */}
-      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 32px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div style={{display:'flex',alignItems:'center',gap:24}}>
-          <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>💹 Invest</div>
-          <div style={{display:'flex',gap:4}}>
-            {SECTIONS.map(s=>(
-              <button key={s} onClick={()=>{setSection(s);setResult(null);setStrategy(null)}} style={{padding:'6px 14px',borderRadius:7,border:'none',background:section===s?BLUE:'transparent',color:section===s?'#fff':'#667085',fontSize:13,fontWeight:section===s?600:400,cursor:'pointer',fontFamily:'inherit'}}>{s}</button>
-            ))}
-          </div>
+      <div style={{padding:'22px 28px 0',background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',borderBottom:'1px solid #EADBB8'}}>
+        <h1 style={{fontSize:26,fontWeight:500,color:'#624920',margin:'0 0 2px'}}>Invest</h1>
+        <div style={{fontSize:13,color:'#8A7248',marginBottom:12}}>Analyse deals, keep the ones worth comparing and track properties you are watching.</div>
+        <div style={{display:'flex',gap:22}}>
+          {SECTIONS.map(s=>(
+            <button key={s} onClick={()=>goSection(s)} style={{padding:'8px 2px',marginBottom:-1,border:'none',borderBottom:'2px solid '+(section===s?BLUE:'transparent'),background:'none',color:section===s?'#323338':'#676879',fontSize:14,fontWeight:section===s?600:400,cursor:'pointer',fontFamily:'inherit'}}>{s}{s==='Saved Deals'&&savedDeals.length>0?` (${savedDeals.length})`:''}{s==='Watchlist'&&watchlist.length>0?` (${watchlist.length})`:''}</button>
+          ))}
         </div>
       </div>
 
-      <div style={{padding:32,maxWidth:1100,margin:'0 auto'}}>
+      <div style={{padding:'24px 28px 40px',maxWidth:1200}}>
 
         {/* DEAL ANALYSER */}
         {section==='Deal Analyser'&&(
           <div>
             <div style={{marginBottom:24}}>
-              <div style={{fontSize:22,fontWeight:700,color:'#323338',marginBottom:4}}>Deal Analyser</div>
-              <div style={{fontSize:14,color:'#667085'}}>Select a strategy and enter the deal details to analyse returns.</div>
+              <div style={{fontSize:18,fontWeight:600,color:'#323338',marginBottom:4}}>Deal Analyser</div>
+              <div style={{fontSize:14,color:'#676879'}}>Select a strategy and enter the deal details to analyse returns.</div>
             </div>
 
             {/* Strategy picker */}
@@ -240,10 +250,10 @@ export default function InvestPage() {
                 <div style={{fontSize:13,fontWeight:600,color:'#344054',marginBottom:12}}>Select your investment strategy</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
                   {STRATEGIES.map(s=>(
-                    <div key={s.id} onClick={()=>setStrategy(s.id)} style={{background:'#fff',borderRadius:12,border:'2px solid #E4E7EC',padding:20,cursor:'pointer',transition:'all 0.15s'}} onMouseEnter={e=>(e.currentTarget.style.borderColor=BLUE)} onMouseLeave={e=>(e.currentTarget.style.borderColor='#E4E7EC')}>
+                    <div key={s.id} onClick={()=>setStrategy(s.id)} style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,cursor:'pointer',transition:'all 0.15s'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#D0AE4C';e.currentTarget.style.background='#FFFCF5'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='#E6E9EF';e.currentTarget.style.background='#fff'}}>
                       <div style={{marginBottom:12,color:BLUE}}>{STRATEGY_ICONS[s.id]}</div>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>{s.label}</div>
-                      <div style={{fontSize:12,color:'#667085'}}>{s.desc}</div>
+                      <div style={{fontSize:12,color:'#676879'}}>{s.desc}</div>
                     </div>
                   ))}
                 </div>
@@ -254,10 +264,10 @@ export default function InvestPage() {
             {strategy&&!result&&(
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
-                  <button onClick={()=>setStrategy(null)} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← Back</button>
+                  <button onClick={()=>setStrategy(null)} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← Back</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} Analysis</div>
                 </div>
-                <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:28}}>
+                <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="e.g. 12 High Street, London" style={inp}/></div>
                     {strategy!=='r2r'&&<div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
@@ -282,12 +292,12 @@ export default function InvestPage() {
                       <div>
                         <label style={lbl}>Resident Rent (£/mo, per unit)</label>
                         <input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="e.g. 950" style={inp}/>
-                        <button onClick={estimateMarketRent} disabled={estimating} style={{marginTop:6,padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054',opacity:estimating?0.6:1}}>{estimating?'Searching…':'🔍 Estimate market rent'}</button>
+                        <button onClick={estimateMarketRent} disabled={estimating} style={{marginTop:6,padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054',opacity:estimating?0.6:1}}>{estimating?'Searching…':'🔍 Estimate market rent'}</button>
                         {estimateError&&<div style={{fontSize:12,color:'#EF4444',marginTop:6}}>{estimateError}</div>}
                         {marketEstimate&&(
-                          <div style={{marginTop:8,padding:'12px 14px',borderRadius:8,background:'#F9FAFB',border:'1px solid #E4E7EC',fontSize:12,color:'#344054',whiteSpace:'pre-wrap',lineHeight:1.6}}>
+                          <div style={{marginTop:8,padding:'12px 14px',borderRadius:8,background:'#F7F8FA',border:'1px solid #E6E9EF',fontSize:12,color:'#344054',whiteSpace:'pre-wrap',lineHeight:1.6}}>
                             {marketEstimate}
-                            <div style={{fontSize:11,color:'#98A2B3',marginTop:8,fontStyle:'italic'}}>AI-assisted estimate based on a live web search — verify against current listings before offering a lease.</div>
+                            <div style={{fontSize:11,color:'#9699A6',marginTop:8,fontStyle:'italic'}}>AI-assisted estimate based on a live web search — verify against current listings before offering a lease.</div>
                           </div>
                         )}
                       </div>
@@ -323,7 +333,7 @@ export default function InvestPage() {
                       <div><label style={lbl}>Monthly Expenses (% of rent)</label><input value={form.expenses||'20'} onChange={e=>setForm({...form,expenses:e.target.value})} type="number" placeholder="20" style={inp}/></div>
                     )}
                   </div>
-                  <button onClick={analyse} style={{width:'100%',padding:'14px',borderRadius:10,border:'none',background:BLUE,color:'#fff',fontSize:15,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>▶ Start Deal Analysis</button>
+                  <button onClick={analyse} style={{width:'100%',padding:'14px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:15,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>▶ Start Deal Analysis</button>
                 </div>
               </div>
             )}
@@ -332,41 +342,41 @@ export default function InvestPage() {
             {result&&(
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
-                  <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'6px 12px',borderRadius:7,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
+                  <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
                 </div>
 
                 {/* Key metrics */}
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-                  {result.monthlyCashflow!==undefined&&<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>Monthly Cash Flow</div>
+                  {result.monthlyCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Monthly Cash Flow</div>
                     <div style={{fontSize:28,fontWeight:800,color:result.monthlyCashflow>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.monthlyCashflow).toFixed(0)}</div>
-                    <div style={{fontSize:11,color:'#98A2B3',marginTop:4}}>{result.monthlyCashflow>=0?'positive':'negative'}</div>
+                    <div style={{fontSize:11,color:'#9699A6',marginTop:4}}>{result.monthlyCashflow>=0?'positive':'negative'}</div>
                   </div>}
-                  {result.annualCashflow!==undefined&&<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>Annual Cash Flow</div>
+                  {result.annualCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Annual Cash Flow</div>
                     <div style={{fontSize:28,fontWeight:800,color:result.annualCashflow>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.annualCashflow).toFixed(0)}</div>
                   </div>}
-                  {result.grossYield!==undefined&&<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>Gross Yield</div>
+                  {result.grossYield!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Gross Yield</div>
                     <div style={{fontSize:28,fontWeight:800,color:BLUE}}>{result.grossYield.toFixed(2)}%</div>
                   </div>}
-                  {result.roi!==undefined&&<div style={{background:score?.bg||'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>ROI</div>
+                  {result.roi!==undefined&&<div style={{background:score?.bg||'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>ROI</div>
                     <div style={{fontSize:28,fontWeight:800,color:score?.color||BLUE}}>{result.roi.toFixed(2)}%</div>
                   </div>}
-                  {result.profit!==undefined&&<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                    <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>Profit</div>
+                  {result.profit!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Profit</div>
                     <div style={{fontSize:28,fontWeight:800,color:result.profit>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.profit).toFixed(0)}</div>
                   </div>}
                 </div>
 
                 {/* Stress Test */}
                 {getStressScenarios(strategy!)&&(
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:20}}>
+                  <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24,marginBottom:20}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>Stress Test</div>
-                    <div style={{fontSize:12,color:'#98A2B3',marginBottom:16}}>How this deal holds up if interest rates rise or rent falls — the same checks a lender runs before funding.</div>
+                    <div style={{fontSize:12,color:'#9699A6',marginBottom:16}}>How this deal holds up if interest rates rise or rent falls — the same checks a lender runs before funding.</div>
                     <div style={{overflowX:'auto'}}>
                       <div style={{display:'grid',gridTemplateColumns:'140px repeat('+getStressScenarios(strategy!)!.length+',1fr)',minWidth:560,gap:8}}>
                         <div></div>
@@ -374,21 +384,21 @@ export default function InvestPage() {
                           <div key={sc.key} style={{fontSize:11,fontWeight:700,color:sc.key==='worst'?'#EF4444':sc.key==='base'?'#323338':'#F59E0B',textAlign:'center',padding:'6px 4px',background:sc.key==='worst'?'#FEE2E2':sc.key==='base'?'#F9FAFB':'#FEF3C7',borderRadius:6}}>{sc.label}</div>
                         ))}
 
-                        <div style={{fontSize:12,color:'#667085',display:'flex',alignItems:'center'}}>Monthly Cash Flow</div>
+                        <div style={{fontSize:12,color:'#676879',display:'flex',alignItems:'center'}}>Monthly Cash Flow</div>
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.monthlyCashflow
                           return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:14,fontWeight:700,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+'£'+Math.abs(v).toFixed(0):'—'}</div>
                         })}
 
-                        <div style={{fontSize:12,color:'#667085',display:'flex',alignItems:'center'}}>Annual Cash Flow</div>
+                        <div style={{fontSize:12,color:'#676879',display:'flex',alignItems:'center'}}>Annual Cash Flow</div>
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.annualCashflow
                           return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:13,fontWeight:600,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+'£'+Math.abs(v).toFixed(0):'—'}</div>
                         })}
 
-                        <div style={{fontSize:12,color:'#667085',display:'flex',alignItems:'center'}}>ROI</div>
+                        <div style={{fontSize:12,color:'#676879',display:'flex',alignItems:'center'}}>ROI</div>
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.roi
@@ -396,13 +406,13 @@ export default function InvestPage() {
                         })}
                       </div>
                     </div>
-                    {strategy==='r2r'&&<div style={{fontSize:10.5,color:'#98A2B3',marginTop:10}}>Void scenario is approximated as an equivalent income reduction, not a literal empty month.</div>}
+                    {strategy==='r2r'&&<div style={{fontSize:10.5,color:'#9699A6',marginTop:10}}>Void scenario is approximated as an equivalent income reduction, not a literal empty month.</div>}
                   </div>
                 )}
 
                 {/* Breakdown */}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Investment Breakdown</div>
                     {[
                       result.depositAmt!==undefined&&{l:'Deposit',v:'£'+result.depositAmt.toFixed(0)},
@@ -415,13 +425,13 @@ export default function InvestPage() {
                       result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:'£'+result.saleCosts.toFixed(0)},
                       result.totalCost!==undefined&&{l:'Total Cost',v:'£'+result.totalCost.toFixed(0),bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
-                      <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>
-                        <span style={{fontSize:13,color:'#667085'}}>{item.l}</span>
+                      <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
+                        <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
                         <span style={{fontSize:13,fontWeight:item.bold?700:500,color:'#323338'}}>{item.v}</span>
                       </div>
                     ))}
                   </div>
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                  <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Monthly P&L</div>
                     {[
                       result.totalRent!==undefined&&{l:'Total Rental Income',v:'£'+(result.totalRent||0).toFixed(0),c:'#10B981'},
@@ -431,8 +441,8 @@ export default function InvestPage() {
                       result.monthlyExpenses!==undefined&&{l:strategy==='r2r'?'Total Fixed Costs':'Expenses',v:'-£'+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
                       result.monthlyCashflow!==undefined&&{l:strategy==='r2r'?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+'£'+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
-                      <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>
-                        <span style={{fontSize:13,color:'#667085'}}>{item.l}</span>
+                      <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
+                        <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
                         <span style={{fontSize:13,fontWeight:item.bold?700:500,color:item.c||'#323338'}}>{item.v}</span>
                       </div>
                     ))}
@@ -441,7 +451,7 @@ export default function InvestPage() {
 
                 {strategy==='r2r'&&result.breakdown&&(
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
-                    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                    <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Fixed Cost Breakdown</div>
                       {[
                         {l:'Landlord Rent',v:result.breakdown.landlordRent},
@@ -455,8 +465,8 @@ export default function InvestPage() {
                         {l:'Platform/Marketing',v:result.breakdown.marketing},
                         {l:'Vacancy Allowance',v:result.breakdown.vacancy},
                       ].filter(item=>item.v>0).map((item,i)=>(
-                        <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7'}}>
-                          <span style={{fontSize:13,color:'#667085'}}>{item.l}</span>
+                        <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
+                          <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
                           <span style={{fontSize:13,fontWeight:500,color:'#EF4444'}}>-£{item.v.toFixed(0)}</span>
                         </div>
                       ))}
@@ -465,78 +475,78 @@ export default function InvestPage() {
                         <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>-£{result.monthlyExpenses.toFixed(0)}</span>
                       </div>
                     </div>
-                    <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                    <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Furniture Payback</div>
                       {result.furnitureCost>0?(
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
-                            <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#98A2B3'}}> months</span></div>
-                            <div style={{fontSize:12,color:'#667085',marginTop:4}}>to recover £{result.furnitureCost.toFixed(0)} of furniture investment</div>
+                            <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#9699A6'}}> months</span></div>
+                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to recover £{result.furnitureCost.toFixed(0)} of furniture investment</div>
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
                             <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>
-                            <div style={{fontSize:12,color:'#667085'}}>Your {result.leaseMonths}-month lease leaves {(result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after furniture is paid off.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
+                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {(result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after furniture is paid off.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
                           </div>
                         </>):(
                           <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is £0 or negative — furniture investment will never be recovered at these numbers.</div>
                         )
                       ):(
-                        <div style={{fontSize:13,color:'#98A2B3'}}>Enter a furniture investment amount to see payback period.</div>
+                        <div style={{fontSize:13,color:'#9699A6'}}>Enter a furniture investment amount to see payback period.</div>
                       )}
                     </div>
                   </div>
                 )}
 
                 <div style={{display:'flex',gap:12,marginBottom:24}}>
-                  <button onClick={saveDeal} style={{padding:'12px 24px',borderRadius:10,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>💾 Save Deal</button>
-                  <button onClick={getVerdict} disabled={!savedDealId||verdictLoading} style={{padding:'12px 24px',borderRadius:10,border:'1px solid '+(savedDealId?BLUE:'#D0D5DD'),background:'#fff',color:savedDealId?BLUE:'#98A2B3',fontSize:14,fontWeight:600,cursor:savedDealId&&!verdictLoading?'pointer':'not-allowed',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Analysing…':'🤖 Get AI Verdict'}</button>
-                  <button onClick={()=>{setResult(null);setStrategy(null);setForm({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'});setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'12px 24px',borderRadius:10,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Start New Analysis</button>
+                  <button onClick={saveDeal} style={{padding:'12px 24px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>💾 Save Deal</button>
+                  <button onClick={getVerdict} disabled={!savedDealId||verdictLoading} style={{padding:'12px 24px',borderRadius:4,border:'1px solid '+(savedDealId?BLUE:'#D0D4E4'),background:'#fff',color:savedDealId?BLUE:'#9699A6',fontSize:14,fontWeight:600,cursor:savedDealId&&!verdictLoading?'pointer':'not-allowed',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Analysing…':'🤖 Get AI Verdict'}</button>
+                  <button onClick={()=>{setResult(null);setStrategy(null);setForm({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'});setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'12px 24px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Start New Analysis</button>
                 </div>
-                {!savedDealId&&<div style={{fontSize:12,color:'#98A2B3',marginTop:-16,marginBottom:20}}>Save the deal first to unlock the AI verdict.</div>}
+                {!savedDealId&&<div style={{fontSize:12,color:'#9699A6',marginTop:-16,marginBottom:20}}>Save the deal first to unlock the AI verdict.</div>}
                 {verdictError&&<div style={{fontSize:13,color:'#EF4444',marginBottom:20}}>{verdictError}</div>}
 
                 {/* AI Deal Decision Engine verdict panel */}
                 {verdict&&(()=>{
                   const vc = VERDICT_COLORS[verdict.status] || VERDICT_COLORS.REVIEW
                   return (
-                  <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:28,marginBottom:24}}>
+                  <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:28,marginBottom:24}}>
                     <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
                       <span style={{padding:'6px 16px',borderRadius:20,background:vc.bg,color:vc.color,border:'1px solid '+vc.border,fontSize:14,fontWeight:800,letterSpacing:0.5}}>{verdict.status}</span>
                       <div style={{fontSize:16,fontWeight:700,color:'#323338'}}>AI Deal Verdict</div>
                       {verdict.override_status&&(
-                        <span style={{marginLeft:'auto',fontSize:12,fontWeight:600,color:'#667085'}}>Human decision: <b style={{color:'#323338'}}>{verdict.override_status.replace('_',' ')}</b></span>
+                        <span style={{marginLeft:'auto',fontSize:12,fontWeight:600,color:'#676879'}}>Human decision: <b style={{color:'#323338'}}>{verdict.override_status.replace('_',' ')}</b></span>
                       )}
                     </div>
 
                     {verdict.ai_summary&&(
-                      <div style={{padding:'14px 16px',borderRadius:8,background:'#F9FAFB',border:'1px solid #E4E7EC',fontSize:13,color:'#344054',whiteSpace:'pre-wrap',lineHeight:1.7,marginBottom:20}}>{verdict.ai_summary}</div>
+                      <div style={{padding:'14px 16px',borderRadius:8,background:'#F7F8FA',border:'1px solid #E6E9EF',fontSize:13,color:'#344054',whiteSpace:'pre-wrap',lineHeight:1.7,marginBottom:20}}>{verdict.ai_summary}</div>
                     )}
                     {verdict.ai_error&&<div style={{fontSize:12,color:'#F59E0B',marginBottom:16}}>AI narration unavailable ({verdict.ai_error}) — the deterministic result below is still valid.</div>}
 
                     {/* Rule-by-rule table */}
                     <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Rule Checks</div>
-                    <div style={{border:'1px solid #E4E7EC',borderRadius:8,overflow:'hidden',marginBottom:20}}>
-                      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'8px 14px',background:'#F9FAFB',fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase'}}>
+                    <div style={{border:'1px solid #E6E9EF',borderRadius:8,overflow:'hidden',marginBottom:20}}>
+                      <div style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'8px 14px',background:'#F7F8FA',fontSize:11,fontWeight:700,color:'#676879',textTransform:'uppercase'}}>
                         <span>Rule</span><span>Result</span><span>Value</span><span>Threshold</span>
                       </div>
                       {(verdict.rule_results||[]).map((r:any,i:number)=>(
-                        <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'10px 14px',borderTop:'1px solid #F2F4F7',fontSize:12.5,alignItems:'center'}}>
+                        <div key={i} style={{display:'grid',gridTemplateColumns:'1fr 90px 100px 140px',padding:'10px 14px',borderTop:'1px solid #E6E9EF',fontSize:12.5,alignItems:'center'}}>
                           <span style={{color:'#344054'}}>{r.rule}</span>
                           <span style={{fontWeight:700,color:RULE_STATUS_COLORS[r.result]||'#667085'}}>{r.result}</span>
                           <span style={{color:'#323338'}}>{r.value}</span>
-                          <span style={{color:'#98A2B3'}}>{r.threshold}</span>
+                          <span style={{color:'#9699A6'}}>{r.threshold}</span>
                         </div>
                       ))}
                     </div>
 
                     {/* Break-even occupancy */}
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
-                      <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:18}}>
-                        <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:6}}>Break-even Occupancy</div>
+                      <div style={{background:'#F7F8FA',borderRadius:4,border:'1px solid #E6E9EF',padding:18}}>
+                        <div style={{fontSize:11,fontWeight:700,color:'#676879',textTransform:'uppercase',marginBottom:6}}>Break-even Occupancy</div>
                         <div style={{fontSize:22,fontWeight:800,color:'#323338'}}>{verdict.break_even!==null&&verdict.break_even!==undefined?verdict.break_even+'%':'N/A'}</div>
                       </div>
-                      <div style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:18}}>
-                        <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:6}}>Missing Fields</div>
+                      <div style={{background:'#F7F8FA',borderRadius:4,border:'1px solid #E6E9EF',padding:18}}>
+                        <div style={{fontSize:11,fontWeight:700,color:'#676879',textTransform:'uppercase',marginBottom:6}}>Missing Fields</div>
                         <div style={{fontSize:22,fontWeight:800,color:(verdict.missing_fields||[]).length>0?'#F59E0B':'#10B981'}}>{(verdict.missing_fields||[]).length}</div>
                       </div>
                     </div>
@@ -566,11 +576,11 @@ export default function InvestPage() {
                     <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Due-Diligence Checklist</div>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
                       {Object.entries(verdict.checklist||{}).map(([group,items]:any)=>(
-                        <div key={group} style={{background:'#F9FAFB',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
-                          <div style={{fontSize:11,fontWeight:700,color:'#667085',textTransform:'uppercase',marginBottom:10}}>{group}</div>
+                        <div key={group} style={{background:'#F7F8FA',borderRadius:4,border:'1px solid #E6E9EF',padding:16}}>
+                          <div style={{fontSize:11,fontWeight:700,color:'#676879',textTransform:'uppercase',marginBottom:10}}>{group}</div>
                           {items.map((it:any,i:number)=>(
                             <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 0',fontSize:12.5,color:'#344054'}}>
-                              <span style={{width:14,height:14,borderRadius:3,border:'1.5px solid #D0D5DD',flexShrink:0}}></span>
+                              <span style={{width:14,height:14,borderRadius:3,border:'1.5px solid #D0D4E4',flexShrink:0}}></span>
                               {it.item}
                             </div>
                           ))}
@@ -579,15 +589,15 @@ export default function InvestPage() {
                     </div>
 
                     {/* Human override */}
-                    <div style={{borderTop:'1px solid #E4E7EC',paddingTop:20}}>
+                    <div style={{borderTop:'1px solid #E6E9EF',paddingTop:20}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Human Decision</div>
                       <textarea value={overrideReason} onChange={e=>setOverrideReason(e.target.value)} placeholder="Optional reason for your decision..." style={{...inp,minHeight:60,marginBottom:12,resize:'vertical' as const}}/>
                       <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
-                        <button onClick={()=>submitOverride('APPROVED')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#10B981',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='APPROVED'?'Saving…':'✓ Approve for Next Stage'}</button>
-                        <button onClick={()=>submitOverride('DUE_DILIGENCE')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#F59E0B',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='DUE_DILIGENCE'?'Saving…':'🔍 Send to Due Diligence'}</button>
-                        <button onClick={()=>submitOverride('REJECTED')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#EF4444',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='REJECTED'?'Saving…':'✕ Reject'}</button>
-                        <button onClick={()=>setResult(null)} style={{padding:'10px 18px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',color:'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✎ Edit Assumptions</button>
-                        <button onClick={getVerdict} disabled={verdictLoading} style={{padding:'10px 18px',borderRadius:8,border:'1px solid '+BLUE,background:'#fff',color:BLUE,fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Re-running…':'↻ Re-run Analysis'}</button>
+                        <button onClick={()=>submitOverride('APPROVED')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:4,border:'none',background:'#10B981',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='APPROVED'?'Saving…':'✓ Approve for Next Stage'}</button>
+                        <button onClick={()=>submitOverride('DUE_DILIGENCE')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:4,border:'none',background:'#F59E0B',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='DUE_DILIGENCE'?'Saving…':'🔍 Send to Due Diligence'}</button>
+                        <button onClick={()=>submitOverride('REJECTED')} disabled={!!overrideSaving} style={{padding:'10px 18px',borderRadius:4,border:'none',background:'#EF4444',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:overrideSaving?0.6:1}}>{overrideSaving==='REJECTED'?'Saving…':'✕ Reject'}</button>
+                        <button onClick={()=>setResult(null)} style={{padding:'10px 18px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',color:'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✎ Edit Assumptions</button>
+                        <button onClick={getVerdict} disabled={verdictLoading} style={{padding:'10px 18px',borderRadius:4,border:'1px solid '+BLUE,background:'#fff',color:BLUE,fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Re-running…':'↻ Re-run Analysis'}</button>
                       </div>
                     </div>
                   </div>
@@ -601,27 +611,26 @@ export default function InvestPage() {
         {/* SAVED DEALS */}
         {section==='Saved Deals'&&(
           <div>
-            <div style={{fontSize:22,fontWeight:700,color:'#323338',marginBottom:20}}>Saved Deals</div>
+            <div style={{fontSize:18,fontWeight:600,color:'#323338',marginBottom:16}}>Saved Deals</div>
             {savedDeals.length===0?(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
-                <div style={{fontSize:40,marginBottom:12}}>💾</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No saved deals yet</div>
+              <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:60,textAlign:'center',color:'#9699A6'}}>
+                                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No saved deals yet</div>
                 <div style={{fontSize:13}}>Run an analysis and save deals to compare them here.</div>
               </div>
             ):(
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
                 {savedDeals.map(d=>(
-                  <div key={d.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
+                  <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{d.address||'Deal #'+d.id}</div>
                       <button onClick={()=>deleteDeal(d.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444'}}>×</button>
                     </div>
-                    <div style={{fontSize:12,color:'#667085',marginBottom:12}}>{STRATEGIES.find(s=>s.id===d.strategy)?.label} · £{parseFloat(d.price).toLocaleString()}</div>
+                    <div style={{fontSize:12,color:'#676879',marginBottom:12}}>{STRATEGIES.find(s=>s.id===d.strategy)?.label} · £{parseFloat(d.price).toLocaleString()}</div>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                      {d.monthlyCashflow!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F9FAFB',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:d.monthlyCashflow>=0?'#10B981':'#EF4444'}}>£{Math.abs(d.monthlyCashflow).toFixed(0)}/mo</div><div style={{fontSize:10,color:'#98A2B3'}}>CASH FLOW</div></div>}
-                      {d.roi!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F9FAFB',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:BLUE}}>{d.roi.toFixed(1)}%</div><div style={{fontSize:10,color:'#98A2B3'}}>ROI</div></div>}
+                      {d.monthlyCashflow!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F7F8FA',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:d.monthlyCashflow>=0?'#10B981':'#EF4444'}}>£{Math.abs(d.monthlyCashflow).toFixed(0)}/mo</div><div style={{fontSize:10,color:'#9699A6'}}>CASH FLOW</div></div>}
+                      {d.roi!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F7F8FA',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:BLUE}}>{d.roi.toFixed(1)}%</div><div style={{fontSize:10,color:'#9699A6'}}>ROI</div></div>}
                     </div>
-                    <div style={{fontSize:11,color:'#98A2B3',marginTop:8}}>Saved {d.savedAt}</div>
+                    <div style={{fontSize:11,color:'#9699A6',marginTop:8}}>Saved {d.savedAt}</div>
                   </div>
                 ))}
               </div>
@@ -633,11 +642,11 @@ export default function InvestPage() {
         {section==='Watchlist'&&(
           <div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>Watchlist</div>
-              <button onClick={()=>setShowAddWatch(true)} style={{padding:'9px 18px',borderRadius:8,border:'none',background:BLUE,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Property</button>
+              <div style={{fontSize:18,fontWeight:600,color:'#323338'}}>Watchlist</div>
+              <button onClick={()=>setShowAddWatch(true)} style={{padding:'9px 18px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Property</button>
             </div>
             {showAddWatch&&(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid '+BLUE,padding:24,marginBottom:20}}>
+              <div style={{background:'#fff',borderRadius:8,border:'1px solid '+BLUE,padding:24,marginBottom:20}}>
                 <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add to watchlist</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={lbl}>Address *</label><input value={watchForm.address} onChange={e=>setWatchForm({...watchForm,address:e.target.value})} placeholder="e.g. 12 High St" style={inp}/></div>
@@ -646,31 +655,30 @@ export default function InvestPage() {
                   <div><label style={lbl}>Notes</label><input value={watchForm.notes} onChange={e=>setWatchForm({...watchForm,notes:e.target.value})} placeholder="Any notes..." style={inp}/></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={addToWatchlist} style={{padding:'9px 20px',borderRadius:8,border:'none',background:BLUE,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
-                  <button onClick={()=>setShowAddWatch(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                  <button onClick={addToWatchlist} style={{padding:'9px 20px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
+                  <button onClick={()=>setShowAddWatch(false)} style={{padding:'9px 20px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
             )}
             {watchlist.length===0?(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center',color:'#98A2B3'}}>
-                <div style={{fontSize:40,marginBottom:12}}>👁️</div>
-                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No properties on watchlist</div>
+              <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:60,textAlign:'center',color:'#9699A6'}}>
+                                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No properties on watchlist</div>
                 <div style={{fontSize:13}}>Add properties you are tracking.</div>
               </div>
             ):(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 140px 120px 1fr 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+              <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',overflow:'hidden'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 140px 130px 1fr 110px',padding:'9px 16px',background:'#fff',borderBottom:'1px solid #E6E9EF',borderLeft:'4px solid #D0AE4C',fontSize:12.5,fontWeight:500,color:'#676879',gap:8}}>
                   <span>Address</span><span>Price</span><span>Status</span><span>Notes</span><span></span>
                 </div>
                 {watchlist.map(w=>(
-                  <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 120px 1fr 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                  <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 130px 1fr 110px',padding:'8px 16px',borderBottom:'1px solid #E6E9EF',borderLeft:'4px solid #D0AE4C',alignItems:'center',gap:8}}>
                     <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.address}</span>
-                    <span style={{fontSize:13,fontWeight:600,color:BLUE}}>{w.price?'£'+parseFloat(w.price).toLocaleString():'—'}</span>
-                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:w.status==='Watching'?'#EFF6FF':w.status==='Purchased'?'#ECFDF5':w.status==='Passed'?'#FEE2E2':'#FEF3C7',color:w.status==='Watching'?'#A8862E':w.status==='Purchased'?'#10B981':w.status==='Passed'?'#EF4444':'#F59E0B'}}>{w.status}</span>
-                    <span style={{fontSize:12,color:'#667085'}}>{w.notes||'—'}</span>
+                    <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.price?'£'+parseFloat(w.price).toLocaleString():'—'}</span>
+                    <span style={{fontSize:12,fontWeight:500,padding:'5px 8px',borderRadius:4,textAlign:'center',color:'#fff',background:WATCH_COLOR[w.status]||'#C4C4C4'}}>{w.status}</span>
+                    <span style={{fontSize:12,color:'#676879'}}>{w.notes||'—'}</span>
                     <div style={{display:'flex',gap:6}}>
-                      <button onClick={()=>{setSection('Deal Analyser');setForm({...form,address:w.address,price:w.price})}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FBF4E6',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:BLUE,fontWeight:600}}>Analyse</button>
-                      <button onClick={()=>deleteWatch(w.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                      <button onClick={()=>{setSection('Deal Analyser');setForm({...form,address:w.address,price:w.price})}} style={{padding:'4px 8px',borderRadius:4,border:'none',background:'#FBF4E6',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:BLUE,fontWeight:600}}>Analyse</button>
+                      <button onClick={()=>deleteWatch(w.id)} style={{padding:'4px 8px',borderRadius:4,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                     </div>
                   </div>
                 ))}
