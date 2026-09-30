@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
-import { normalizeRole } from '../../lib/useRole'
+import { supabase, getAccountId } from '../../lib/supabase'
+import { normalizeRole, resolveAccess } from '../../lib/useRole'
 
 const ACCENT = '#A8862E'
 
@@ -13,9 +13,25 @@ function startOfWeek(d: Date) {
   return new Date(date.setDate(diff))
 }
 
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+function fmtDate(d?: string | null) {
+  if (!d) return 'unscheduled'
+  const x = new Date(d.length === 10 ? d + 'T00:00:00' : d)
+  return isNaN(x.getTime()) ? d : x.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// Which team the admin picker lists: ?team=cleaning (default) or ?team=maintenance
+const TEAMS: Record<string, { role: string; title: string; singular: string }> = {
+  cleaning: { role: 'Cleaning Team', title: 'Cleaners Portal', singular: 'cleaner' },
+  maintenance: { role: 'Maintenance Team', title: 'Maintenance Portal', singular: 'maintenance person' },
+}
+
 function StaffDashboardInner() {
   const searchParams = useSearchParams()
   const viewingStaffId = searchParams.get('staff_id')
+  const teamKey = TEAMS[searchParams.get('team') ?? ''] ? (searchParams.get('team') as string) : 'cleaning'
+  const [picker, setPicker] = useState<any[] | null>(null)
+  const [weekOffset, setWeekOffset] = useState(0)
   const [loading, setLoading] = useState(true)
   const [member, setMember] = useState<any>(null)
   const [isStaffView, setIsStaffView] = useState(false)
@@ -34,8 +50,9 @@ function StaffDashboardInner() {
         // Only allowed if the logged-in user actually owns that staff
         // member's account (same business) -- prevents anyone guessing
         // a staff_id and peeking into another business's team.
-        const { data } = await supabase.from('team_members').select('*').eq('id', viewingStaffId).eq('user_id', user.id).single()
-        if (!data) { window.location.href = '/settings'; return }
+        const accountId = await getAccountId(user)
+        const { data } = await supabase.from('team_members').select('*').eq('id', viewingStaffId).eq('user_id', accountId).maybeSingle()
+        if (!data) { window.location.href = '/staff-dashboard?team=' + teamKey; return }
         m = data
         setIsStaffView(true)
       } else {
@@ -48,7 +65,22 @@ function StaffDashboardInner() {
           .order('created_at', { ascending: false })
           .limit(1)
         m = rows?.[0]
-        if (!m) { window.location.href = '/login'; return }
+        const ownRole = normalizeRole(m?.role)
+        if (!m || (ownRole !== 'Cleaning Team' && ownRole !== 'Maintenance Team')) {
+          // Not a cleaner/maintenance login: this is staff looking at the
+          // portal, so show the picker (tenants/landlords go to their own portal).
+          const access = await resolveAccess(user)
+          if (access.portalPath) { window.location.href = access.portalPath; return }
+          if (access.role === 'Partner') { window.location.href = '/staff-centre/partners'; return }
+          const accountId = await getAccountId(user)
+          const { data: team } = await supabase.from('team_members').select('id,name,email,role,phone').eq('user_id', accountId).order('name')
+          const list = (team ?? []).filter((t: any) => normalizeRole(t.role) === TEAMS[teamKey].role && t.name?.trim() && t.email?.includes('@'))
+          const ws = startOfWeek(new Date()); const we = new Date(ws); we.setDate(we.getDate() + 6)
+          const { data: wk } = list.length ? await supabase.from('staff_shifts').select('staff_id,type').in('staff_id', list.map((t: any) => t.id)).gte('date', ymd(ws)).lte('date', ymd(we)) : { data: [] as any[] }
+          setPicker(list.map((t: any) => ({ ...t, shiftsThisWeek: (wk ?? []).filter((x: any) => x.staff_id === t.id && x.type === 'Working').length })))
+          setLoading(false)
+          return
+        }
       }
 
       m.role = normalizeRole(m.role)
@@ -93,24 +125,12 @@ function StaffDashboardInner() {
           supabase.from('estate_cleaning_tasks').select('*, estate_properties(name)').in('property_id', safe(eaIds)),
         ])
         results.push(
-          ...(str.data ?? []).map((t: any) => ({ id: t.id, table: 'cleaning_tasks', title: `Cleaning — ${t.scheduled_date ?? 'unscheduled'}`, property: t.properties?.name, status: t.status, priority: null })),
-          ...(pm.data ?? []).map((t: any) => ({ id: t.id, table: 'pm_cleaning_tasks', title: `Cleaning — ${t.scheduled_date ?? 'unscheduled'}`, property: t.pm_properties?.name, status: t.status, priority: null })),
-          ...(ea.data ?? []).map((t: any) => ({ id: t.id, table: 'estate_cleaning_tasks', title: `Cleaning — ${t.scheduled_date ?? 'unscheduled'}`, property: t.estate_properties?.name, status: t.status, priority: null })),
+          ...(str.data ?? []).map((t: any) => ({ id: t.id, table: 'cleaning_tasks', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.properties?.name, status: t.status, priority: null })),
+          ...(pm.data ?? []).map((t: any) => ({ id: t.id, table: 'pm_cleaning_tasks', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.pm_properties?.name, status: t.status, priority: null })),
+          ...(ea.data ?? []).map((t: any) => ({ id: t.id, table: 'estate_cleaning_tasks', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.estate_properties?.name, status: t.status, priority: null })),
         )
       }
       setItems(results)
-
-      const weekStart = startOfWeek(new Date())
-      const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6)
-      const fmt = (d: Date) => d.toISOString().slice(0, 10)
-      const { data: shiftRows } = await supabase
-        .from('staff_shifts')
-        .select('*')
-        .eq('staff_id', m.id)
-        .gte('date', fmt(weekStart))
-        .lte('date', fmt(weekEnd))
-        .order('date', { ascending: true })
-      setShifts(shiftRows ?? [])
 
       const { data: taskRows } = await supabase
         .from('staff_tasks')
@@ -122,7 +142,16 @@ function StaffDashboardInner() {
 
       setLoading(false)
     })
-  }, [viewingStaffId])
+  }, [viewingStaffId, teamKey])
+
+  useEffect(() => {
+    if (!member) return
+    const weekStart = startOfWeek(new Date()); weekStart.setDate(weekStart.getDate() + weekOffset * 7)
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6)
+    supabase.from('staff_shifts').select('*').eq('staff_id', member.id)
+      .gte('date', ymd(weekStart)).lte('date', ymd(weekEnd)).order('date', { ascending: true })
+      .then(({ data }) => setShifts(data ?? []))
+  }, [member, weekOffset])
 
   async function updateStatus(item: any, status: string) {
     await supabase.from(item.table).update({ status }).eq('id', item.id)
@@ -137,6 +166,34 @@ function StaffDashboardInner() {
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
 
+  if (picker) {
+    const team = TEAMS[teamKey]
+    return (
+      <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '48px 16px' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <a href="/staff-centre/portal-access" style={{ fontSize: 13, color: ACCENT, textDecoration: 'none', fontWeight: 600 }}>← Portal Access</a>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#98A2B3', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '18px 0 6px' }}>{team.title}</div>
+          <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#323338' }}>Select a {team.singular} to preview</h1>
+          <div style={{ fontSize: 13, color: '#667085', marginBottom: 22 }}>This is the staff view — pick a {team.singular} to see their schedule and jobs exactly as they see it.</div>
+          {picker.length === 0 ? (
+            <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: 40, textAlign: 'center', color: '#98A2B3', fontSize: 14 }}>No one on the {team.role} yet. Add them in Settings → Team Management.</div>
+          ) : picker.map((t: any) => (
+            <a key={t.id} href={`/staff-dashboard?team=${teamKey}&staff_id=${t.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: '#fff', border: '1px solid #E4E7EC', borderRadius: 10, padding: '14px 18px', marginBottom: 10, textDecoration: 'none' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{t.name}</div>
+                <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 2 }}>{t.email}{` · ${t.shiftsThisWeek} shift${t.shiftsThisWeek === 1 ? '' : 's'} this week`}</div>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: ACCENT, whiteSpace: 'nowrap' }}>Preview →</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const weekStartShown = startOfWeek(new Date()); weekStartShown.setDate(weekStartShown.getDate() + weekOffset * 7)
+  const exitHref = '/staff-dashboard?team=' + (member.role === 'Maintenance Team' ? 'maintenance' : 'cleaning')
+
   const open = items.filter(i => i.status === 'open' || i.status === 'pending').length
   const inProgress = items.filter(i => i.status === 'in_progress').length
   const done = items.filter(i => i.status === 'completed' || i.status === 'resolved' || i.status === 'closed').length
@@ -146,7 +203,7 @@ function StaffDashboardInner() {
       {isStaffView && (
         <div style={{ background: ACCENT, color: '#fff', padding: '8px 28px', fontSize: 12, fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>👁 Staff Preview — Viewing as {member.name}</span>
-          <a href="/settings" style={{ color: '#fff', textDecoration: 'underline' }}>Exit preview</a>
+          <a href={exitHref} style={{ color: '#fff', textDecoration: 'underline' }}>← Back to the list</a>
         </div>
       )}
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -157,7 +214,7 @@ function StaffDashboardInner() {
         <div style={{ display: 'flex', gap: 10 }}>
           {!isStaffView && <a href="/team-chat" style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>💬 Team Chat</a>}
           {isStaffView ? (
-            <a href="/settings" style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054', textDecoration: 'none' }}>Exit preview</a>
+            <a href={exitHref} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054', textDecoration: 'none' }}>Exit preview</a>
           ) : (
             <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Sign out</button>
           )}
@@ -166,14 +223,21 @@ function StaffDashboardInner() {
 
       <div style={{ padding: 28, maxWidth: 900, margin: '0 auto' }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#323338' }}>My Schedule — This Week</div>
+          <div style={{ padding: '10px 20px', borderBottom: '1px solid #E4E7EC', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' as const }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{isStaffView ? `${member.name}${/s$/i.test(member.name ?? '') ? "'" : "'s"} schedule` : 'My Schedule'} — {weekOffset === 0 ? 'This Week' : `w/c ${weekStartShown.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => setWeekOffset(w => w - 1)} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>← Prev</button>
+              {weekOffset !== 0 && <button onClick={() => setWeekOffset(0)} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #A8862E', background: '#FBF4E6', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#624920' }}>This week</button>}
+              <button onClick={() => setWeekOffset(w => w + 1)} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Next →</button>
+            </div>
+          </div>
           <div style={{ display: 'flex', overflowX: 'auto' as const }}>
             {Array.from({ length: 7 }, (_, i) => {
-              const d = startOfWeek(new Date())
+              const d = new Date(weekStartShown)
               d.setDate(d.getDate() + i)
-              const dateStr = d.toISOString().slice(0, 10)
+              const dateStr = ymd(d)
               const shift = shifts.find(s => s.date === dateStr)
-              const isToday = dateStr === new Date().toISOString().slice(0, 10)
+              const isToday = dateStr === ymd(new Date())
               const type = shift?.type ?? 'Off'
               const colors: Record<string, { bg: string; fg: string }> = {
                 Working: { bg: '#ECFDF5', fg: '#10B981' },
@@ -182,7 +246,7 @@ function StaffDashboardInner() {
               }
               const c = colors[type] ?? colors.Off
               return (
-                <div key={dateStr} style={{ flex: '1 0 110px', padding: '14px 8px', textAlign: 'center' as const, borderRight: '1px solid #F2F4F7', background: isToday ? '#FAFBFF' : '#fff' }}>
+                <div key={dateStr} style={{ flex: '1 0 110px', padding: '14px 8px', textAlign: 'center' as const, borderRight: '1px solid #F2F4F7', background: isToday ? '#FBF4E6' : '#fff' }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: isToday ? ACCENT : '#98A2B3', textTransform: 'uppercase' as const, marginBottom: 8 }}>{d.toLocaleDateString('en-GB', { weekday: 'short' })} {d.getDate()}</div>
                   <div style={{ background: c.bg, color: c.fg, fontSize: 12, fontWeight: 600, padding: '6px 4px', borderRadius: 6 }}>
                     {type === 'Working' && shift?.start_time ? `${shift.start_time.slice(0,5)}–${shift.end_time?.slice(0,5) ?? ''}` : type}
@@ -203,7 +267,7 @@ function StaffDashboardInner() {
                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #F2F4F7' }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 500, color: '#323338' }}>{t.title}</div>
-                    <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{t.due_date ? `Due ${t.due_date}` : 'No due date'}{t.notes ? ` · ${t.notes}` : ''}</div>
+                    <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{t.due_date ? `Due ${fmtDate(t.due_date)}` : 'No due date'}{t.notes ? ` · ${t.notes}` : ''}</div>
                   </div>
                   <select value={t.status} onChange={e => updateMyTaskStatus(t.id, e.target.value)} style={{ background: c.bg, color: c.fg, fontSize: 12, fontWeight: 600, padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {['On track', 'At risk', 'Off track', 'Done'].map(s => <option key={s}>{s}</option>)}

@@ -8,12 +8,13 @@ const MODULES: { k: string; l: string; color: string }[] = [
   { k: 'pm', l: 'Property Management', color: '#10B981' },
   { k: 'ea', l: 'Estate Agency', color: '#F59E0B' },
   { k: 'dev', l: 'Developments', color: '#A8862E' },
+  { k: 'staff', l: 'Staff', color: '#624920' },
   { k: 'other', l: 'Other', color: '#667085' },
 ]
 const lbl: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }
 const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }
 
-function moduleInfo(k: string) { return MODULES.find(m => m.k === k) ?? MODULES[4] }
+function moduleInfo(k: string) { return MODULES.find(m => m.k === k) ?? MODULES[MODULES.length - 1] }
 
 // The real portals every account already has, seeded into client_portals
 // once (on first visit, if the table is still empty for that account) so
@@ -26,6 +27,7 @@ const SEED_PORTALS = [
   { module: 'ea', name: 'Estate Agency — Landlord Portal', url: '/estate-owner-portal', live: true, sort_order: 3 },
   { module: 'ea', name: 'Estate Agency — Tenant Portal', url: '/estate-tenant-portal', live: true, sort_order: 4 },
   { module: 'dev', name: 'Developments — Investors Portal', url: '/dev-investor-portal', live: false, sort_order: 5 },
+  { module: 'staff', name: 'Cleaners Portal', url: '/staff-dashboard?team=cleaning', live: true, sort_order: 6 },
 ]
 
 function Modal({ title, onClose, children }: any) {
