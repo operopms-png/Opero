@@ -1,14 +1,11 @@
-// Real Smoobu integration -- pulls bookings and guest messages for
-// every property that's been manually mapped to a Smoobu apartment
-// ID (properties.smoobu_apartment_id). Used by both
-// netlify/functions/sync-smoobu.mts (the real automatic run, every
-// 30 minutes -- messages matter more time-sensitively than iCal
-// dates) and app/api/sync-smoobu/route.ts (manual trigger/testing).
+// Real Smoobu integration -- pulls bookings (dates, guest, price) and
+// guest messages for every property mapped to a Smoobu apartment ID
+// (properties.smoobu_apartment_id). Used by
+// netlify/functions/sync-smoobu.mts (automatic, every 10 minutes) and
+// app/api/sync-smoobu/route.ts (manual "Sync now").
 //
-// Legacy Api-Key auth (Smoobu's simpler scheme) is used here rather
-// than HMAC -- legacy auth is deprecated but not sunset until
-// 2026-09-25, and HMAC's per-request signing is meaningfully more
-// complex to get right. Worth migrating before that date.
+// Auth lives in lib/smoobu-client.ts: HMAC-signed when an API secret is
+// saved, otherwise the legacy Api-Key header (accepted until 31 Oct 2026).
 import { createClient } from '@supabase/supabase-js'
 import { smoobuFetch, sendSmoobuGuestMessage } from './smoobu-client'
 import { maybeAutoReplyToGuest } from './ai-guest-receptionist'
