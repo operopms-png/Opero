@@ -1,209 +1,125 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { supabase, getAccountId } from '../../../lib/supabase'
+import { useMemo, useState } from 'react'
+import { BRAND, initials, avatarColor } from '@/lib/crm-board'
+import { WINS_BOARD, money } from '@/lib/marketing-boards'
+import { useTableBoard } from '@/components/applications/useApplications'
+import MkBoardView from '@/components/marketing/MkBoardView'
+import MkPanel from '@/components/marketing/MkPanel'
 
-const ACCENT = '#A8862E'
-const CATEGORIES = [
-  { key:'Deal Closed', label:'Deal Closed', icon:'🤝', color:'#A8862E' },
-  { key:'Client Onboarded (Short-Term)', label:'Client Onboarded — Short-Term', icon:'🏠', color:'#10B981' },
-  { key:'Client Onboarded (Long-Term)', label:'Client Onboarded — Long-Term', icon:'🏢', color:'#059669' },
-  { key:'Joint Venture Secured', label:'Joint Venture Secured', icon:'🔗', color:'#A8862E' },
-  { key:'Investor Secured', label:'Investor Secured', icon:'💰', color:'#F59E0B' },
-  { key:'Tenant Secured', label:'Tenant Secured (Vacancy Filled)', icon:'🔑', color:'#2D6A4F' },
-]
-const MODULES = [
-  { key:'', label:'—' },
-  { key:'str', label:'Vacation Rentals' },
-  { key:'pm', label:'Property Management' },
-  { key:'estate', label:'Estate Agency' },
-  { key:'dev', label:'Developments' },
-]
-const PERIODS = ['This Month','This Quarter','This Year','All Time']
-
-function periodStart(period: string) {
-  const now = new Date()
-  if (period==='This Month') return new Date(now.getFullYear(), now.getMonth(), 1)
-  if (period==='This Quarter') return new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1)
-  if (period==='This Year') return new Date(now.getFullYear(), 0, 1)
+// Staff Centre → Staff Performance: leaderboard + a CRM-style board of wins.
+// Deals set to "Closed won" in CRM → Transactions are logged here automatically.
+const PERIODS = ['This Month', 'This Quarter', 'This Year', 'All Time'] as const
+function periodStart(p: string) {
+  const n = new Date()
+  if (p === 'This Month') return new Date(n.getFullYear(), n.getMonth(), 1)
+  if (p === 'This Quarter') return new Date(n.getFullYear(), Math.floor(n.getMonth() / 3) * 3, 1)
+  if (p === 'This Year') return new Date(n.getFullYear(), 0, 1)
   return null
 }
+const catColor = (c: string) => WINS_BOARD.cols.find(x => x.key === 'category')!.options!.find(o => o.value === c)?.color ?? '#C4C4C4'
+const catLabel = (c: string) => { const o = WINS_BOARD.cols.find(x => x.key === 'category')!.options!.find(o => o.value === c); return o?.label ?? o?.value ?? c }
 
-function initials(name: string) {
-  return (name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]?.toUpperCase()).join('')
-}
+export default function PerformancePage() {
+  const store = useTableBoard(WINS_BOARD, { order: 'date_achieved', ownerField: 'staff_name' })
+  const [period, setPeriod] = useState<string>('This Month')
+  const [open, setOpen] = useState<string | null>(null)
 
-const AVATAR_COLORS = ['#A8862E','#10B981','#F59E0B','#A8862E','#EC4899','#2D6A4F','#DC2626','#0891B2']
-function avatarColor(name: string) {
-  let hash = 0
-  for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash<<5)-hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
+  const all = store.rows.wins ?? []
+  const inPeriod = useMemo(() => {
+    const s = periodStart(period)
+    return s ? all.filter(w => new Date(String(w.date_achieved) + 'T00:00:00') >= s) : all
+  }, [all, period])
+  const view = useMemo(() => ({ ...store, rows: { wins: inPeriod } }), [store, inPeriod])
 
-export default function Page() {
-  const [loading, setLoading] = useState(true)
-  const [wins, setWins] = useState<any[]>([])
-  const [period, setPeriod] = useState('This Month')
-  const [categoryFilter, setCategoryFilter] = useState('All')
-  const [showAddWin, setShowAddWin] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({staff_name:'',category:CATEGORIES[0].key,title:'',value:'',module:'',date_achieved:new Date().toISOString().slice(0,10),notes:''})
+  const board = useMemo(() => {
+    const by: Record<string, { name: string; count: number; value: number; cats: Record<string, number> }> = {}
+    for (const w of inPeriod) {
+      const k = w.staff_name || 'Unassigned'
+      by[k] ??= { name: k, count: 0, value: 0, cats: {} }
+      by[k].count++; by[k].value += Number(w.value) || 0
+      by[k].cats[w.category] = (by[k].cats[w.category] ?? 0) + 1
+    }
+    return Object.values(by).sort((a, b) => b.count - a.count || b.value - a.value)
+  }, [inPeriod])
 
-  useEffect(()=>{ load() },[])
-
-  async function load() {
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { window.location.href='/login'; return }
-    const accountId = await getAccountId(user)
-    const { data } = await supabase.from('staff_performance_wins').select('*').eq('user_id',accountId).order('date_achieved',{ascending:false})
-    setWins(data ?? [])
-    setLoading(false)
-  }
-
-  async function saveWin() {
-    if (!form.staff_name.trim() || !form.title.trim()) return
-    setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    const accountId = await getAccountId(user!)
-    const payload = { ...form, value: form.value ? parseFloat(form.value) : null, module: form.module || null, user_id: accountId }
-    const { error } = await supabase.from('staff_performance_wins').insert([payload])
-    setSaving(false)
-    if (error) { alert(error.message); return }
-    setForm({staff_name:'',category:CATEGORIES[0].key,title:'',value:'',module:'',date_achieved:new Date().toISOString().slice(0,10),notes:''})
-    setShowAddWin(false)
-    await load()
-  }
-
-  async function delWin(id: string) {
-    if (!confirm('Delete this win?')) return
-    await supabase.from('staff_performance_wins').delete().eq('id',id)
-    setWins(prev=>prev.filter((w:any)=>w.id!==id))
-  }
-
-  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
-
-  const start = periodStart(period)
-  const filtered = wins
-    .filter((w:any)=>!start || new Date(w.date_achieved) >= start)
-    .filter((w:any)=>categoryFilter==='All' || w.category===categoryFilter)
-
-  const byStaff: Record<string, { name:string, count:number, value:number, byCategory: Record<string,number> }> = {}
-  for (const w of filtered) {
-    if (!byStaff[w.staff_name]) byStaff[w.staff_name] = { name:w.staff_name, count:0, value:0, byCategory:{} }
-    byStaff[w.staff_name].count++
-    byStaff[w.staff_name].value += parseFloat(w.value)||0
-    byStaff[w.staff_name].byCategory[w.category] = (byStaff[w.staff_name].byCategory[w.category]||0)+1
-  }
-  const leaderboard = Object.values(byStaff).sort((a,b)=>b.value-a.value || b.count-a.count)
-
-  const totalWins = filtered.length
-  const totalValue = filtered.reduce((s:number,w:any)=>s+(parseFloat(w.value)||0),0)
+  const total = inPeriod.reduce((s, w) => s + (Number(w.value) || 0), 0)
+  const tiles = [
+    { l: 'Total wins', v: inPeriod.length, hl: true },
+    { l: 'Total value', v: money(total) || '£0' },
+    { l: 'Deals closed', v: inPeriod.filter(w => w.category === 'Deal Closed').length },
+    { l: 'Staff on the board', v: board.filter(b => b.name !== 'Unassigned').length },
+  ]
+  const medal = ['🥇', '🥈', '🥉']
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
-      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Staff Performance</div>
-        </div>
-        <button onClick={()=>setShowAddWin(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Log a Win</button>
-      </div>
-
-      <div style={{padding:24}}>
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap' as const,gap:10}}>
-          <div style={{display:'flex',gap:8}}>
-            {PERIODS.map(p=>(
-              <button key={p} onClick={()=>setPeriod(p)} style={{padding:'7px 14px',borderRadius:20,border:period===p?'1px solid '+ACCENT:'1px solid #E4E7EC',background:period===p?ACCENT+'12':'#fff',color:period===p?ACCENT:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{p}</button>
-            ))}
-          </div>
-          <select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)} style={{padding:'7px 12px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:12,fontFamily:'inherit'}}>
-            <option value="All">All categories</option>
-            {CATEGORIES.map(c=><option key={c.key} value={c.key}>{c.label}</option>)}
-          </select>
-        </div>
-
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:24}}>
-          <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Total Wins</div>
-            <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{totalWins}</div>
-          </div>
-          <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Total Value</div>
-            <div style={{fontSize:26,fontWeight:800,color:'#10B981'}}>£{totalValue.toLocaleString()}</div>
-          </div>
-          <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:6}}>Staff on the Board</div>
-            <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{leaderboard.length}</div>
-          </div>
-        </div>
-
-        {showAddWin&&(
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:24}}>
-            <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Log a Win</h3>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-              <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Staff Member *</label><input value={form.staff_name} onChange={e=>setForm({...form,staff_name:e.target.value})} placeholder="e.g. Safiya Reid" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
-              <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category *</label>
-                <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>
-                  {CATEGORIES.map(c=><option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
-                </select>
+    <div style={{ height: '100vh', width: '100%', contain: 'inline-size', overflowY: 'auto', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: BRAND.ink, background: '#fff' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+        .crm-hover-show { opacity: 0; transition: opacity .1s }
+        .crm-row:hover .crm-hover-show, .crm-colhead:hover .crm-hover-show { opacity: 1 }
+        .crm-row:hover, .crm-row:hover .crm-sticky { background: ${BRAND.hover} !important }
+        .crm-nav:hover { background: ${BRAND.hover} }
+        .crm-tb:hover { background: ${BRAND.hover} }
+        @media (max-width: 900px) { .perf-tiles { grid-template-columns: repeat(2, minmax(0,1fr)) !important } }
+      `}</style>
+      {store.loading ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Loading staff performance…</div>
+        : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load staff performance: {store.error}</div>
+        : <>
+          <div style={{ background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid #EADBB8', padding: '22px 28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: BRAND.brown }}>Staff Performance</h1>
+                <div style={{ fontSize: 13.5, color: '#8A6B2E', marginTop: 2 }}>Who’s winning. Deals set to “Closed won” in the CRM are added automatically.</div>
               </div>
-              <div style={{gridColumn:'span 2'}}><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>What happened? *</label><input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="e.g. Closed sale on 12 Elm Road" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
-              <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Value (£, optional)</label><input type="number" value={form.value} onChange={e=>setForm({...form,value:e.target.value})} placeholder="Deal size, investment, annual rent..." style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
-              <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Module</label>
-                <select value={form.module} onChange={e=>setForm({...form,module:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>
-                  {MODULES.map(m=><option key={m.key} value={m.key}>{m.label}</option>)}
-                </select>
-              </div>
-              <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input type="date" value={form.date_achieved} onChange={e=>setForm({...form,date_achieved:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
-              <div style={{gridColumn:'span 2'}}><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Notes</label><input value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
-            </div>
-            <div style={{display:'flex',gap:8}}>
-              <button onClick={saveWin} disabled={saving||!form.staff_name.trim()||!form.title.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.staff_name.trim()||!form.title.trim()?0.6:1}}>{saving?'Saving…':'Log Win'}</button>
-              <button onClick={()=>setShowAddWin(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-            </div>
-          </div>
-        )}
-
-        <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:12}}>🏆 Leaderboard — {period}</div>
-        <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden',marginBottom:32}}>
-          {leaderboard.length===0?(
-            <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>🏆</div><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>No wins logged for this period yet</div></div>
-          ):leaderboard.map((s,i)=>(
-            <div key={s.name} style={{display:'flex',alignItems:'center',gap:16,padding:'16px 20px',borderBottom:'1px solid #F2F4F7',background:i===0?'#FFFBEB':'transparent'}}>
-              <div style={{width:28,textAlign:'center' as const,fontSize:i<3?18:13,fontWeight:700,color:i===0?'#F59E0B':i===1?'#94A3B8':i===2?'#B45309':'#98A2B3'}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
-              <div style={{width:40,height:40,borderRadius:'50%',background:avatarColor(s.name)+'22',color:avatarColor(s.name),fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{initials(s.name)}</div>
-              <div style={{flex:1}}>
-                <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{s.name}</div>
-                <div style={{fontSize:11,color:'#667085',marginTop:2}}>{Object.entries(s.byCategory).map(([cat,n])=>`${CATEGORIES.find(c=>c.key===cat)?.icon||''} ${n}`).join('   ')}</div>
-              </div>
-              <div style={{textAlign:'right' as const}}>
-                <div style={{fontSize:16,fontWeight:800,color:'#10B981'}}>£{s.value.toLocaleString()}</div>
-                <div style={{fontSize:11,color:'#98A2B3'}}>{s.count} win{s.count===1?'':'s'}</div>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {PERIODS.map(p => (
+                  <button key={p} onClick={() => setPeriod(p)} style={{ height: 32, padding: '0 14px', borderRadius: 16, border: period === p ? `1px solid ${BRAND.goldDark}` : `1px solid #EADBB8`, background: period === p ? BRAND.goldDark : '#fff', color: period === p ? '#fff' : BRAND.ink, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>{p}</button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:12}}>Recent Activity</div>
-        <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-          {filtered.length===0?(
-            <div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>Nothing logged for this period yet.</div>
-          ):filtered.map((w:any)=>{
-            const cat = CATEGORIES.find(c=>c.key===w.category)
-            return (
-              <div key={w.id} style={{display:'flex',alignItems:'center',gap:14,padding:'13px 20px',borderBottom:'1px solid #F2F4F7'}}>
-                <span style={{fontSize:18}}>{cat?.icon||'⭐'}</span>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{w.title}</div>
-                  <div style={{fontSize:11,color:'#667085',marginTop:2}}>{w.staff_name} · {cat?.label||w.category} · {w.date_achieved}{w.module?` · ${MODULES.find(m=>m.key===w.module)?.label}`:''}</div>
+          <div style={{ padding: '20px 28px 4px' }}>
+            <div className="perf-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12, marginBottom: 20 }}>
+              {tiles.map(t => (
+                <div key={t.l} style={{ border: `1px solid ${t.hl ? '#EADBB8' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', borderRadius: 8, padding: 16 }}>
+                  <div style={{ fontSize: 12.5, color: t.hl ? '#8A6B2E' : BRAND.muted }}>{t.l}</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: t.hl ? BRAND.brown : BRAND.ink }}>{t.v}</div>
                 </div>
-                {w.value>0&&<span style={{fontSize:13,fontWeight:700,color:'#10B981'}}>£{parseFloat(w.value).toLocaleString()}</span>}
-                <button onClick={()=>delWin(w.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+              ))}
+            </div>
+
+            <div style={{ border: `1px solid ${BRAND.rowBorder}`, borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
+              <div style={{ padding: '12px 18px', fontSize: 16, fontWeight: 500, borderBottom: `1px solid ${BRAND.rowBorder}` }}>🏆 Leaderboard — {period}</div>
+              {board.length === 0 ? <div style={{ padding: 30, textAlign: 'center', color: BRAND.muted, fontSize: 14 }}>No wins yet for {period.toLowerCase()}.</div>
+                : board.map((b, i) => (
+                  <div key={b.name} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderBottom: i < board.length - 1 ? `1px solid ${BRAND.rowBorder}` : 'none', background: i === 0 ? BRAND.selected : '#fff', flexWrap: 'wrap' }}>
+                    <span style={{ width: 26, fontSize: 18, textAlign: 'center' }}>{medal[i] ?? <span style={{ fontSize: 13, color: BRAND.muted }}>{i + 1}</span>}</span>
+                    <span style={{ width: 36, height: 36, borderRadius: '50%', background: b.name === 'Unassigned' ? '#C4C4C4' : avatarColor(b.name), color: '#fff', fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{initials(b.name)}</span>
+                    <div style={{ minWidth: 160 }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 600, color: b.name === 'Unassigned' ? BRAND.muted : BRAND.ink }}>{b.name}</div>
+                      <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                        {Object.entries(b.cats).map(([c, n]) => <span key={c} title={catLabel(c)} style={{ background: catColor(c), color: '#fff', fontSize: 11.5, borderRadius: 3, padding: '1px 7px' }}>{catLabel(c)} · {n}</span>)}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 120, maxWidth: 360 }}>
+                      <div style={{ background: '#F1F2F6', borderRadius: 4, height: 8, overflow: 'hidden' }}><div style={{ width: `${(b.count / board[0].count) * 100}%`, height: '100%', background: BRAND.gold }} /></div>
+                    </div>
+                    <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                      <div style={{ fontSize: 17, fontWeight: 700, color: BRAND.brown }}>{money(b.value) || '£0'}</div>
+                      <div style={{ fontSize: 12, color: BRAND.muted }}>{b.count} {b.count === 1 ? 'win' : 'wins'}</div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 500 }}>
+            <MkBoardView mk={view} board={WINS_BOARD} onOpen={setOpen}
+              headerRight={<span style={{ fontSize: 12.5, color: BRAND.muted, marginRight: 8 }}>Showing {period.toLowerCase()}</span>} />
+          </div>
+        </>}
+      {open && <MkPanel key={open} mk={store} board={WINS_BOARD} id={open} onClose={() => setOpen(null)} onOpenOther={(_b, id) => setOpen(id)} />}
     </div>
   )
 }

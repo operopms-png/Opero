@@ -26,6 +26,7 @@ export function computedValue(mk: Mk, board: MkBoard, col: MkCol, row: any): str
     if (col.key === 'replies') return String(s.replies)
   }
   if (col.key === 'created_at') return fmtDate(row.created_at)
+  if (col.key === 'source') return String(row.notes ?? '').startsWith('Auto-logged from CRM') ? 'CRM deal (auto)' : 'Logged by hand'
   if (col.key === 'ctr') {
     const i = Number(row.impressions) || 0, c = Number(row.clicks) || 0
     return i ? `${((c / i) * 100).toFixed(1)}%` : ''
@@ -88,13 +89,13 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
 
   if (col.type === 'person') {
     return (
-      <div ref={ref} style={base} onClick={() => setOpen(true)}>
-        {v ? <Avatar name={v} /> : <span style={{ width: 26, height: 26, borderRadius: '50%', border: '1px dashed #C3C6D4', color: '#C3C6D4', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>+</span>}
+      <div ref={ref} style={{ ...base, gap: 6, justifyContent: col.width >= 110 ? 'flex-start' : 'center', padding: col.width >= 110 ? '0 8px' : 0 }} onClick={() => !locked && setOpen(true)}>
+        {v ? <><Avatar name={v} />{col.width >= 110 && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{v}</span>}</> : <span style={{ width: 26, height: 26, borderRadius: '50%', border: '1px dashed #C3C6D4', color: '#C3C6D4', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>+</span>}
         {open && (
           <Popover anchor={ref.current} onClose={() => setOpen(false)} width={240}>
             <div style={{ padding: 6 }}>
               {mk.people.map(p => <button key={p} style={{ ...menuItem, fontWeight: p === v ? 600 : 400 }} onClick={() => { setOpen(false); set(p) }}><Avatar name={p} size={22} />{p}</button>)}
-              {v && <button style={{ ...menuItem, color: BRAND.muted }} onClick={() => { setOpen(false); set(null) }}>× Remove owner</button>}
+              {v && <button style={{ ...menuItem, color: BRAND.muted }} onClick={() => { setOpen(false); set(col.key === 'staff_name' ? 'Unassigned' : null) }}>× Remove</button>}
             </div>
           </Popover>
         )}

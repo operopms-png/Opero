@@ -27,13 +27,13 @@ const field: React.CSSProperties = { width: '100%', border: `1px solid ${BRAND.b
 const btn: React.CSSProperties = { height: 34, padding: '0 14px', borderRadius: 4, border: `1px solid ${BRAND.border}`, background: '#fff', fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit', color: BRAND.ink }
 const gold: React.CSSProperties = { ...btn, border: 'none', background: BRAND.goldDark, color: '#fff', fontWeight: 600 }
 
-function LongText({ title, value, onSave, placeholder }: { title: string; value: string; onSave: (v: string) => void; placeholder?: string }) {
+function LongText({ title, value, onSave, placeholder, disabled }: { title: string; value: string; onSave: (v: string) => void; placeholder?: string; disabled?: boolean }) {
   const [t, setT] = useState(value)
   useEffect(() => setT(value), [value])
   return (
     <div style={{ marginBottom: 16 }}>
       <label style={lbl}>{title}</label>
-      <textarea value={t} onChange={e => setT(e.target.value)} onBlur={() => { if (t !== value) onSave(t) }} rows={5} placeholder={placeholder} style={{ ...field, resize: 'vertical' }} />
+      <textarea value={t} disabled={disabled} onChange={e => setT(e.target.value)} onBlur={() => { if (t !== value) onSave(t) }} rows={5} placeholder={placeholder} style={{ ...field, resize: 'vertical', background: disabled ? '#FAFAFB' : '#fff' }} />
     </div>
   )
 }
@@ -124,7 +124,7 @@ export default function MkPanel({ mk, board, id, onClose, onOpenOther }: { mk: M
                 </div>
               ))}
             </div>
-            {board.cols.filter(c => c.type === 'longtext').map(c => <LongText key={c.key} title={c.title} value={row[c.key] ?? ''} onSave={v => save({ [c.key]: v || null })} placeholder={board.key === 'campaigns' ? "Goals, budget breakdown, who it's aimed at…" : 'Add notes…'} />)}
+            {board.cols.filter(c => c.type === 'longtext').map(c => <LongText key={c.key} disabled={c.readonlyWhen?.(row)} title={c.title} value={row[c.key] ?? ''} onSave={v => save({ [c.key]: v || null })} placeholder={board.key === 'campaigns' ? "Goals, budget breakdown, who it's aimed at…" : 'Add notes…'} />)}
             {(isEmail || isTpl) && (
               <div>
                 {isTpl && <div style={{ marginBottom: 14 }}>

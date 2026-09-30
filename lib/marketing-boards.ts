@@ -188,3 +188,30 @@ export const APPLICATIONS_BOARD: MkBoard = {
     { key: 'notes', title: 'Notes', type: 'longtext', width: 220, hideInTable: true },
   ],
 }
+
+// Staff Centre → Staff Performance: each row is a win. Wins logged from CRM
+// deals (Closed won) are kept in step by the database, so their staff/value
+// are edited on the deal, not here.
+const autoWin = (r: any) => String(r.notes ?? '').startsWith('Auto-logged from CRM')
+export const WINS_BOARD: MkBoard = {
+  key: 'wins', table: 'staff_performance_wins', title: 'Wins', item: 'win', nameField: 'title', groupBy: 'category',
+  dateField: 'date_achieved',
+  defaults: { title: 'New win', category: 'Deal Closed', staff_name: 'Unassigned' },
+  cols: [
+    { key: 'staff_name', title: 'Staff member', type: 'person', width: 160, readonlyWhen: autoWin },
+    { key: 'category', title: 'Category', type: 'status', width: 230, options: [
+      { value: 'Deal Closed', color: '#A8862E' },
+      { value: 'Client Onboarded (Short-Term)', label: 'Client Onboarded — Short-Term', color: '#00C875' },
+      { value: 'Client Onboarded (Long-Term)', label: 'Client Onboarded — Long-Term', color: '#037F4C' },
+      { value: 'Joint Venture Secured', color: '#9D50DD' },
+      { value: 'Investor Secured', color: '#FDAB3D' },
+      { value: 'Tenant Secured', label: 'Tenant Secured (Vacancy Filled)', color: '#579BFC' }] },
+    { key: 'value', title: 'Value', type: 'number', width: 120, currency: '£', readonlyWhen: autoWin },
+    { key: 'module', title: 'Department', type: 'status', width: 170, options: [
+      { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
+      { value: 'estate', label: 'Estate Agency', color: '#00C875' }, { value: 'dev', label: 'Developments', color: '#9D50DD' }] },
+    { key: 'date_achieved', title: 'Date', type: 'date', width: 130 },
+    { key: 'source', title: 'Source', type: 'computed', width: 150 },
+    { key: 'notes', title: 'Notes', type: 'longtext', width: 220, hideInTable: true, readonlyWhen: autoWin },
+  ],
+}
