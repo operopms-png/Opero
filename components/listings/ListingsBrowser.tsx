@@ -45,7 +45,7 @@ export default function ListingsBrowser({ homes }: { homes: Listing[] }) {
 
   const sel: React.CSSProperties = { padding: '11px 12px', border: '1px solid #D5D8E0', borderRadius: 9, font: 'inherit', fontSize: 14.5, background: '#fff', color: BRAND.ink, minWidth: 0, flex: '1 1 160px', cursor: 'pointer' }
   return (
-    <div style={{ fontFamily: "Figtree, -apple-system, 'Segoe UI', sans-serif", color: BRAND.ink, minHeight: '100vh' }}>
+    <div style={{ fontFamily: "Figtree, -apple-system, 'Segoe UI', sans-serif", color: BRAND.ink, minHeight: '100vh', background: '#fff', overflowX: 'clip' }}>
       <style>{pageCss}</style>
       <TopBar />
       <div style={{ background: `linear-gradient(160deg, ${BRAND.cream}, #fff 70%)`, padding: '36px 20px 24px' }}>

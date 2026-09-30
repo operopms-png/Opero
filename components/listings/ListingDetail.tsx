@@ -22,8 +22,8 @@ export default function ListingDetail({ home }: { home: Listing }) {
 
   const key = (label: string, value: string) => value ? <div style={{ background: '#F7F8FA', borderRadius: 10, padding: '10px 12px', fontSize: 12.5, color: BRAND.muted }}>{label}<b style={{ display: 'block', color: BRAND.ink, fontSize: 15, marginTop: 2 }}>{value}</b></div> : null
   return (
-    <div style={{ fontFamily: "Figtree, -apple-system, 'Segoe UI', sans-serif", color: BRAND.ink, minHeight: '100vh' }}>
-      <style>{pageCss + `.lst-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:30px} @media (max-width:820px){.lst-grid{grid-template-columns:1fr}.lst-hero{height:300px!important}}`}</style>
+    <div style={{ fontFamily: "Figtree, -apple-system, 'Segoe UI', sans-serif", color: BRAND.ink, minHeight: '100vh', background: '#fff', overflowX: 'clip' }}>
+      <style>{pageCss + `.lst-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:30px} @media (max-width:820px){.lst-grid{grid-template-columns:minmax(0,1fr)}}`}</style>
       <TopBar />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '14px 20px 50px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 10 }}>
@@ -32,7 +32,7 @@ export default function ListingDetail({ home }: { home: Listing }) {
         </div>
 
         <div style={{ borderRadius: 16, overflow: 'hidden' }} className="lst-hero-wrap">
-          <PhotoSlider photos={home.photos} height={460} big index={i} onIndex={setI} onOpen={k => setFull(k)}>
+          <PhotoSlider photos={home.photos} height="clamp(250px, 58vw, 460px)" big index={i} onIndex={setI} onOpen={k => setFull(k)}>
             {home.photos.length > 0 && <button onClick={() => setFull(i)} style={{ position: 'absolute', top: 14, right: 14, background: '#fff', border: 'none', borderRadius: 8, padding: '7px 11px', fontSize: 13, fontWeight: 600, color: BRAND.brown, cursor: 'pointer', zIndex: 3, fontFamily: 'inherit' }}>⤢ Full screen</button>}
           </PhotoSlider>
         </div>
@@ -51,7 +51,7 @@ export default function ListingDetail({ home }: { home: Listing }) {
           <div>
             <h1 style={{ margin: 0, fontSize: 'clamp(24px, 3.4vw, 30px)', color: BRAND.brown }}>{name}</h1>
             <div style={{ color: BRAND.muted, fontSize: 15.5, marginTop: 3 }}>{areaOf(home.address)}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, margin: '18px 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, margin: '18px 0' }}>
               {key('Rent', home.rent ? `${money(home.rent, home.currency)} / month` : 'On request')}
               {key('Bedrooms', bedLabel(home.bedrooms).replace(' bed', ''))}
               {key('Bathrooms', home.bathrooms)}
@@ -91,7 +91,7 @@ function ViewingForm({ home }: { home: Listing }) {
     setBusy(false)
   }
   return (
-    <div style={{ border: `1px solid ${BRAND.line}`, borderRadius: 14, padding: 20, alignSelf: 'start', boxShadow: '0 6px 20px rgba(98,73,32,.07)', position: 'sticky', top: 84, background: '#fff' }}>
+    <div style={{ border: `1px solid ${BRAND.line}`, borderRadius: 14, padding: 20, alignSelf: 'start', boxShadow: '0 6px 20px rgba(98,73,32,.07)', position: 'sticky', top: 84, background: '#fff', minWidth: 0 }}>
       <div style={{ fontSize: 24, fontWeight: 700, color: BRAND.brown }}>{home.rent ? <>{money(home.rent, home.currency)} <span style={{ fontSize: 14, color: BRAND.muted, fontWeight: 500 }}>/ month</span></> : 'Price on request'}</div>
       {done ? (
         <div style={{ textAlign: 'center', padding: '20px 0 6px' }}>
@@ -106,7 +106,7 @@ function ViewingForm({ home }: { home: Listing }) {
           <div><label style={lbl}>Email *</label><input className="lst-in" type="email" style={inp} value={f.email} onChange={e => set('email', e.target.value)} required autoComplete="email" /></div>
           <div><label style={lbl}>Phone</label><input className="lst-in" type="tel" style={inp} value={f.phone} onChange={e => set('phone', e.target.value)} autoComplete="tel" /></div>
           <div><label style={lbl}>When suits you?</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
               <input className="lst-in" type="date" min={today} style={inp} value={f.day} onChange={e => set('day', e.target.value)} aria-label="Preferred day" />
               <select className="lst-in" style={{ ...inp, cursor: 'pointer' }} value={f.part} onChange={e => set('part', e.target.value)} aria-label="Time of day">{['Any time', 'Morning', 'Afternoon', 'Evening'].map(p => <option key={p}>{p}</option>)}</select>
             </div>
