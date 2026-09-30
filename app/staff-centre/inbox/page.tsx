@@ -27,6 +27,8 @@ const CALLS_FG = '#E11D48'
 const NON_STAFF_SENDER: Record<string,string> = { str_owner:'owner', pm_landlord:'landlord', pm_tenant:'tenant', estate_tenant:'tenant', estate_landlord:'landlord', whatsapp:'contact', sms:'contact' }
 
 const TABS = ['Unread', 'All'] as const
+// CRM-style label colours for each channel
+const CH_COLOR: Record<string,string> = { team:'#D0AE4C', calls:'#DF2F4A', str_owner:'#00C875', pm_landlord:'#579BFC', pm_tenant:'#66CCFF', estate_tenant:'#9D50DD', estate_landlord:'#784BD1', whatsapp:'#1DA851', sms:'#FDAB3D' }
 const CHANNEL_PILLS = [{ key:'team', label:'Team Chat', bg:TEAM_BG, fg:TEAM_FG }, { key:'calls', label:'Calls', bg:CALLS_BG, fg:CALLS_FG }, ...CHANNELS]
 
 function initials(name: string) {
@@ -70,6 +72,7 @@ export default function Page() {
   const [newConvoName, setNewConvoName] = useState('')
   const [newConvoMembers, setNewConvoMembers] = useState<string[]>([])
   const [creatingConvo, setCreatingConvo] = useState(false)
+  const [search, setSearch] = useState('')
 
   useEffect(()=>{ init() },[])
   useEffect(()=>{ if (activeWaConnection) loadWaConversations(activeWaConnection) }, [activeWaConnection])
@@ -293,186 +296,195 @@ export default function Page() {
     setFilter('team')
   }
 
-  if (loading || !identity) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
+  if (loading || !identity) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#9699A6',fontFamily:'Figtree, Inter, sans-serif'}}>Loading conversations…</div>
 
+  const q = search.trim().toLowerCase()
   const tabFiltered = tab==='Unread' ? conversations.filter(c=>c.unread) : conversations
-  const filtered = filter==='All' ? tabFiltered : tabFiltered.filter(c=>c.channel===filter)
+  const filtered = (filter==='All' ? tabFiltered : tabFiltered.filter(c=>c.channel===filter))
+    .filter(c => !q || `${c.recipientName} ${c.lastMessage} ${c.channelLabel}`.toLowerCase().includes(q))
   const sorted = [...filtered].sort((a,b)=>new Date(b.lastAt).getTime()-new Date(a.lastAt).getTime())
   const unreadCount = conversations.filter(c=>c.unread).length
   const isOpenTeam = openConvo?.channel === 'team'
   const canCallOpenTeam = isOpenTeam && !!openConvo?.teamMemberEmail
   const isOpenCalls = openConvo?.channel === 'calls'
+  const navChannels = [...CHANNEL_PILLS.map(c=>({key:c.key,label:c.label})), ...(waConnections.length ? [{key:'whatsapp',label:'WhatsApp'},{key:'sms',label:'SMS'}] : [])]
+  const current = tab==='Unread' ? 'Unread' : filter==='All' ? 'All conversations' : (navChannels.find(c=>c.key===filter)?.label ?? 'Conversations')
+  const col = (c:any) => CH_COLOR[c?.channel] ?? '#C4C4C4'
+  const INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4', CREAM = '#FBF4E6'
+  const navBtn = (active:boolean): React.CSSProperties => ({display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',border:active?`1px solid ${ACCENT}`:'1px solid transparent',borderRadius:4,background:active?CREAM:'none',color:INK,fontSize:13.5,cursor:'pointer',fontFamily:'inherit',textAlign:'left'})
+  const Pill = ({c}:{c:any}) => <span style={{background:col(c),color:'#fff',fontSize:11.5,fontWeight:500,borderRadius:3,padding:'1px 8px',whiteSpace:'nowrap'}}>{c.channelLabel}</span>
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
-      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Conversations {unreadCount>0&&<span style={{marginLeft:8,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
+    <div style={{display:'flex',height:'100vh',width:'100%',contain:'inline-size',fontFamily:'Figtree, Inter, -apple-system, sans-serif',color:INK,background:'#fff'}}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap'); .ib-nav:hover{background:#F5F6F8} .ib-row:hover{background:#F5F6F8} @media (max-width: 1100px){ .ib-details{display:none !important} } @media (max-width: 900px){ .ib-ws{display:none !important} }`}</style>
+
+      {/* workspace nav */}
+      <aside className="ib-ws" style={{width:232,flexShrink:0,borderRight:`1px solid ${LINE}`,padding:'14px 10px',display:'flex',flexDirection:'column',gap:2,overflowY:'auto'}}>
+        <div style={{fontSize:13,color:MUTED,padding:'0 6px 10px'}}>Workspace</div>
+        <div style={{display:'flex',alignItems:'center',gap:8,height:34,border:`1px solid ${BORDER}`,borderRadius:4,padding:'0 8px',fontSize:13.5,marginBottom:10,whiteSpace:'nowrap'}}>
+          <span style={{width:20,height:20,borderRadius:4,background:'#D0AE4C',color:'#624920',fontSize:11,fontWeight:700,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>S</span>Sangsters Inbox
         </div>
-        {identity.isAdmin && (
-          <button onClick={()=>setShowNewConvo(true)} style={{padding:'8px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:12.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New Team Conversation</button>
+        {identity.isAdmin && <button onClick={()=>setShowNewConvo(true)} style={{height:32,borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:13.5,fontWeight:500,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New team conversation</button>}
+        <button className="ib-nav" onClick={()=>{setTab('Unread');setFilter('All')}} style={navBtn(tab==='Unread')}><span style={{flex:1}}>Unread</span>{unreadCount>0&&<span style={{background:'#DF2F4A',color:'#fff',fontSize:11,fontWeight:600,borderRadius:9,padding:'0 7px'}}>{unreadCount}</span>}</button>
+        <button className="ib-nav" onClick={()=>{setTab('All');setFilter('All')}} style={navBtn(tab==='All'&&filter==='All')}><span style={{flex:1}}>All conversations</span><span style={{fontSize:11.5,color:MUTED}}>{conversations.length}</span></button>
+        <div style={{fontSize:12,color:MUTED,padding:'14px 10px 4px'}}>Channels</div>
+        {navChannels.map(ch=>{
+          const n = conversations.filter(c=>c.channel===ch.key).length
+          const u = conversations.filter(c=>c.channel===ch.key&&c.unread).length
+          return (
+            <button key={ch.key} className="ib-nav" onClick={()=>{setTab('All');setFilter(ch.key)}} style={navBtn(tab==='All'&&filter===ch.key)}>
+              <span style={{width:10,height:10,borderRadius:3,background:CH_COLOR[ch.key]??'#C4C4C4'}}/>
+              <span style={{flex:1}}>{ch.label}</span>
+              {u>0?<span style={{background:'#DF2F4A',color:'#fff',fontSize:11,fontWeight:600,borderRadius:9,padding:'0 7px'}}>{u}</span>:<span style={{fontSize:11.5,color:MUTED}}>{n||''}</span>}
+            </button>
+          )
+        })}
+        {(filter==='whatsapp'||filter==='sms') && waConnections.length>1 && (
+          <div style={{padding:'8px 10px',display:'flex',flexDirection:'column',gap:4}}>
+            <div style={{fontSize:12,color:MUTED}}>Number</div>
+            {waConnections.map((c:any)=>{
+              const active = filter==='whatsapp' ? activeWaConnection===c.id : activeSmsConnection===c.id
+              return <button key={c.id} onClick={()=>{ if(filter==='whatsapp') setActiveWaConnection(c.id); else setActiveSmsConnection(c.id); setOpenConvo(null) }} style={{...navBtn(active),fontSize:12.5,padding:'5px 8px'}}>{c.label}</button>
+            })}
+          </div>
         )}
-      </div>
+      </aside>
 
-      <div style={{display:'flex',height:'calc(100vh - 56px)'}}>
-        <div style={{width:340,borderRight:'1px solid #E4E7EC',background:'#fff',overflowY:'auto' as const,display:'flex',flexDirection:'column' as const}}>
-          <div style={{display:'flex',borderBottom:'1px solid #F2F4F7'}}>
-            {TABS.map(t=>(
-              <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:'12px 0',border:'none',borderBottom:tab===t?`2px solid ${ACCENT}`:'2px solid transparent',background:'#fff',color:tab===t?ACCENT:'#667085',fontSize:12.5,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{t}{t==='Unread'&&unreadCount>0?` (${unreadCount})`:''}</button>
-            ))}
+      {/* conversation list */}
+      <div style={{width:360,flexShrink:0,borderRight:`1px solid ${LINE}`,display:'flex',flexDirection:'column',minHeight:0}}>
+        <div style={{padding:'16px 18px 10px',borderBottom:`1px solid ${LINE}`}}>
+          <div style={{display:'flex',alignItems:'baseline',gap:8}}>
+            <h1 style={{margin:0,fontSize:22,fontWeight:500}}>{current}</h1>
+            <span style={{fontSize:12.5,color:MUTED}}>{sorted.length}</span>
           </div>
-
-          <div style={{display:'flex',gap:6,padding:14,flexWrap:'wrap' as const,borderBottom:'1px solid #F2F4F7'}}>
-            <button onClick={()=>setFilter('All')} style={{padding:'5px 12px',borderRadius:16,border:filter==='All'?'1px solid '+ACCENT:'1px solid #E4E7EC',background:filter==='All'?ACCENT+'12':'#fff',color:filter==='All'?ACCENT:'#667085',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>All</button>
-            {CHANNEL_PILLS.map(ch=>(
-              <button key={ch.key} onClick={()=>setFilter(ch.key)} style={{padding:'5px 12px',borderRadius:16,border:filter===ch.key?'1px solid '+ch.fg:'1px solid #E4E7EC',background:filter===ch.key?ch.bg:'#fff',color:filter===ch.key?ch.fg:'#667085',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{ch.label}</button>
-            ))}
-            {waConnections.length>0 && (
-              <button onClick={()=>setFilter('whatsapp')} style={{padding:'5px 12px',borderRadius:16,border:filter==='whatsapp'?'1px solid '+WHATSAPP_FG:'1px solid #E4E7EC',background:filter==='whatsapp'?WHATSAPP_BG:'#fff',color:filter==='whatsapp'?WHATSAPP_FG:'#667085',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>WhatsApp</button>
-            )}
-            {waConnections.length>0 && (
-              <button onClick={()=>setFilter('sms')} style={{padding:'5px 12px',borderRadius:16,border:filter==='sms'?'1px solid '+SMS_FG:'1px solid #E4E7EC',background:filter==='sms'?SMS_BG:'#fff',color:filter==='sms'?SMS_FG:'#667085',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>SMS</button>
-            )}
-          </div>
-          {filter==='whatsapp' && waConnections.length>1 && (
-            <div style={{display:'flex',gap:6,padding:'0 14px 14px',flexWrap:'wrap' as const}}>
-              {waConnections.map((c:any)=>(
-                <button key={c.id} onClick={()=>{setActiveWaConnection(c.id);setOpenConvo(null)}} style={{padding:'4px 10px',borderRadius:14,border:activeWaConnection===c.id?'1px solid '+WHATSAPP_FG:'1px solid #E4E7EC',background:activeWaConnection===c.id?WHATSAPP_FG:'#fff',color:activeWaConnection===c.id?'#fff':'#667085',fontSize:10,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{c.label}</button>
-              ))}
-            </div>
-          )}
-          {filter==='sms' && waConnections.length>1 && (
-            <div style={{display:'flex',gap:6,padding:'0 14px 14px',flexWrap:'wrap' as const}}>
-              {waConnections.map((c:any)=>(
-                <button key={c.id} onClick={()=>{setActiveSmsConnection(c.id);setOpenConvo(null)}} style={{padding:'4px 10px',borderRadius:14,border:activeSmsConnection===c.id?'1px solid '+SMS_FG:'1px solid #E4E7EC',background:activeSmsConnection===c.id?SMS_FG:'#fff',color:activeSmsConnection===c.id?'#fff':'#667085',fontSize:10,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{c.label}</button>
-              ))}
-            </div>
-          )}
-
-          <div style={{flex:1,overflowY:'auto' as const}}>
-            {sorted.length===0?(
-              <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',fontSize:13}}>{tab==='Unread' ? 'All caught up.' : 'No conversations yet.'}</div>
-            ):sorted.map((c:any)=>(
-              <div key={c.channel+c.recipientId} onClick={()=>openThread(c)} style={{padding:'14px 18px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openConvo?.recipientId===c.recipientId&&openConvo?.channel===c.channel?'#FBF4E6':'transparent',display:'flex',gap:10}}>
-                <div style={{width:36,height:36,borderRadius:'50%',background:c.channelBg,color:c.channelFg,fontSize:c.channel==='calls'?16:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{c.channel==='calls' ? '📞' : initials(c.recipientName)}</div>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="⌕  Search conversations" style={{marginTop:10,width:'100%',height:32,border:`1px solid ${BORDER}`,borderRadius:4,padding:'0 10px',fontSize:13.5,fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}/>
+        </div>
+        <div style={{flex:1,overflowY:'auto'}}>
+          {sorted.length===0?(
+            <div style={{textAlign:'center',padding:60,color:MUTED,fontSize:13.5}}>{tab==='Unread' ? 'All caught up.' : q ? 'Nothing matches that search.' : 'No conversations yet.'}</div>
+          ):sorted.map((c:any)=>{
+            const sel = openConvo?.recipientId===c.recipientId&&openConvo?.channel===c.channel
+            return (
+              <div key={c.channel+c.recipientId} className={sel?'':'ib-row'} onClick={()=>openThread(c)} style={{padding:'12px 16px',borderBottom:`1px solid ${LINE}`,cursor:'pointer',background:sel?CREAM:'#fff',boxShadow:sel?`inset 3px 0 0 ${ACCENT}`:'none',display:'flex',gap:10}}>
+                <div style={{width:36,height:36,borderRadius:'50%',background:col(c),color:'#fff',fontSize:c.channel==='calls'?15:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{c.channel==='calls' ? '📞' : initials(c.recipientName)}</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontSize:13,fontWeight:c.unread?700:500,color:'#323338'}}>{c.recipientName}</span>
-                    <span style={{fontSize:10,color:'#98A2B3',flexShrink:0}}>{relativeTime(c.lastAt)}</span>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
+                    <span style={{fontSize:13.5,fontWeight:c.unread?700:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.recipientName}</span>
+                    <span style={{fontSize:11.5,color:MUTED,flexShrink:0}}>{relativeTime(c.lastAt)}</span>
                   </div>
-                  <div style={{fontSize:11,fontWeight:600,color:c.channelFg,margin:'2px 0'}}>{c.channelLabel}</div>
-                  <div style={{fontSize:12,color:c.unread?'#344054':'#98A2B3',whiteSpace:'nowrap' as const,overflow:'hidden',textOverflow:'ellipsis',fontWeight:c.unread?600:400}}>{c.lastMessage}</div>
+                  <div style={{margin:'4px 0'}}><Pill c={c}/></div>
+                  <div style={{fontSize:12.5,color:c.unread?INK:MUTED,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontWeight:c.unread?600:400}}>{c.lastMessage}</div>
                 </div>
-                {c.unread&&<div style={{width:8,height:8,borderRadius:'50%',background:ACCENT,flexShrink:0,marginTop:4}}/>}
+                {c.unread&&<div style={{width:8,height:8,borderRadius:'50%',background:'#DF2F4A',flexShrink:0,marginTop:5}}/>}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* thread */}
+      <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',background:'#F6F7FB'}}>
+        {!openConvo?(
+          <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,color:MUTED,fontSize:14}}>
+            <div style={{width:56,height:56,borderRadius:12,background:CREAM,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>💬</div>
+            Pick a conversation to read and reply
+          </div>
+        ):isOpenCalls?(
+          <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,padding:24}}>
+            <div style={{width:64,height:64,borderRadius:'50%',background:col(openConvo),color:'#fff',fontSize:26,display:'flex',alignItems:'center',justifyContent:'center'}}>📞</div>
+            <div style={{textAlign:'center'}}>
+              <div style={{fontSize:22,fontWeight:500}}>{openConvo.recipientName}</div>
+              <div style={{fontSize:13.5,color:MUTED,marginTop:4}}>{openConvo.callDirection==='outbound'?'Outgoing call':'Incoming call'} · {CALL_STATUS_LABEL[openConvo.callStatus] ?? openConvo.callStatus}</div>
+              <div style={{fontSize:13.5,color:MUTED,marginTop:2}}>Duration: {fmtDuration(openConvo.callDuration)}</div>
+              <div style={{fontSize:12.5,color:MUTED,marginTop:8}}>{new Date(openConvo.lastAt).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+            {openConvo.callPhone && <CallButton phone={openConvo.callPhone} name={openConvo.recipientName} size={22}/>}
+          </div>
+        ):(
+          <>
+            <div style={{padding:'14px 24px',borderBottom:`1px solid ${LINE}`,background:'#fff',display:'flex',alignItems:'center',gap:12}}>
+              <div style={{width:36,height:36,borderRadius:'50%',background:col(openConvo),color:'#fff',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(openConvo.recipientName)}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:18,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{openConvo.recipientName}</div>
+                <div style={{marginTop:2}}><Pill c={openConvo}/></div>
+              </div>
+              {(openConvo.channel==='whatsapp'||openConvo.channel==='sms') && <CallButton phone={openConvo.recipientId} name={openConvo.recipientName} size={18}/>}
+              {canCallOpenTeam && (
+                <button onClick={()=>window.dispatchEvent(new CustomEvent('opero:call', { detail: { teamMemberEmail: openConvo.teamMemberEmail, name: openConvo.teamMemberName } }))} title={`Call ${openConvo.teamMemberName}`}
+                  style={{height:32,padding:'0 12px',border:`1px solid ${BORDER}`,borderRadius:4,background:'#fff',cursor:'pointer',fontSize:13.5,fontFamily:'inherit'}}>📞 Call</button>
+              )}
+            </div>
+            <div style={{flex:1,overflowY:'auto',padding:24,display:'flex',flexDirection:'column',gap:12}}>
+              {thread.length===0 && <div style={{textAlign:'center',color:MUTED,fontSize:13.5,padding:30}}>No messages yet — say hello below.</div>}
+              {thread.map((msg:any)=>{
+                const isStaff = openConvo.channel==='team' ? msg.sender===identity.email : msg.sender !== NON_STAFF_SENDER[openConvo.channel]
+                const label = openConvo.channel==='team' ? (isStaff?'You':msg.senderName) : (isStaff?'Staff':openConvo.recipientName)
+                return (
+                  <div key={msg.id} style={{alignSelf:isStaff?'flex-end':'flex-start',maxWidth:'70%'}}>
+                    <div style={{background:isStaff?ACCENT:'#fff',color:isStaff?'#fff':INK,border:isStaff?'none':`1px solid ${LINE}`,borderRadius:8,padding:'10px 14px',fontSize:13.5,lineHeight:1.5,whiteSpace:'pre-wrap',boxShadow:'0 1px 2px rgba(0,0,0,0.04)'}}>{msg.message}{msg.attachment_url && <a href={msg.attachment_url} target="_blank" rel="noreferrer" style={{display:'block',marginTop:msg.message?6:0,color:isStaff?'#fff':ACCENT,textDecoration:'underline',fontSize:13}}>📎 {/\.(png|jpe?g|gif|webp)(\?|$)/i.test(msg.attachment_url)?'Photo':'Attachment'}</a>}{!msg.message && !msg.attachment_url && <span style={{opacity:0.7,fontStyle:'italic'}}>(empty message)</span>}</div>
+                    <div style={{fontSize:11.5,color:MUTED,marginTop:4,textAlign:isStaff?'right':'left'}}>{label} · {new Date(msg.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{padding:16,background:'#fff',borderTop:`1px solid ${LINE}`}}>
+              <div style={{border:`1px solid ${BORDER}`,borderRadius:8,padding:10,display:'flex',gap:10,alignItems:'flex-end'}}>
+                <textarea value={reply} onChange={e=>setReply(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendReply() } }} rows={2} placeholder={`Reply to ${openConvo.recipientName}…  (Enter to send, Shift+Enter for a new line)`} style={{flex:1,border:'none',outline:'none',resize:'none',fontSize:13.5,fontFamily:'inherit',color:INK}}/>
+                <button onClick={sendReply} disabled={sending||!reply.trim()} style={{height:32,padding:'0 16px',borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:13.5,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sending||!reply.trim()?0.6:1}}>{sending?'Sending…':'Send'}</button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {openConvo && !isOpenCalls && (
+        <div className="ib-details" style={{width:260,flexShrink:0,borderLeft:`1px solid ${LINE}`,background:'#fff',overflowY:'auto'}}>
+          <div style={{padding:'14px 18px',fontSize:15,fontWeight:500,borderBottom:`1px solid ${LINE}`}}>Details</div>
+          <div style={{border:`1px solid ${LINE}`,borderRadius:6,margin:16,overflow:'hidden',fontSize:13.5}}>
+            {[
+              ['Name', openConvo.recipientName],
+              ['Channel', <Pill key="p" c={openConvo}/>],
+              ...((openConvo.channel==='whatsapp'||openConvo.channel==='sms') ? [['Phone', openConvo.recipientId]] : []),
+              ['Last message', relativeTime(openConvo.lastAt)],
+            ].map(([k,v]:any)=>(
+              <div key={k} style={{display:'flex',borderBottom:`1px solid ${LINE}`,minHeight:36}}>
+                <div style={{width:96,flexShrink:0,background:'#FAFAFB',color:MUTED,padding:'9px 10px',borderRight:`1px solid ${LINE}`}}>{k}</div>
+                <div style={{padding:'9px 10px',minWidth:0,overflow:'hidden',textOverflow:'ellipsis'}}>{v}</div>
               </div>
             ))}
           </div>
-        </div>
-
-        <div style={{flex:1,display:'flex',flexDirection:'column' as const}}>
-          {!openConvo?(
-            <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3',fontSize:13}}>Select a conversation</div>
-          ):isOpenCalls?(
-            <div style={{flex:1,display:'flex',flexDirection:'column' as const,alignItems:'center',justifyContent:'center',gap:16,padding:24}}>
-              <div style={{width:64,height:64,borderRadius:'50%',background:CALLS_BG,color:CALLS_FG,fontSize:26,display:'flex',alignItems:'center',justifyContent:'center'}}>📞</div>
-              <div style={{textAlign:'center' as const}}>
-                <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{openConvo.recipientName}</div>
-                <div style={{fontSize:13,color:'#667085',marginTop:4}}>{openConvo.callDirection==='outbound'?'Outgoing call':'Incoming call'} · {CALL_STATUS_LABEL[openConvo.callStatus] ?? openConvo.callStatus}</div>
-                <div style={{fontSize:13,color:'#667085',marginTop:2}}>Duration: {fmtDuration(openConvo.callDuration)}</div>
-                <div style={{fontSize:12,color:'#98A2B3',marginTop:8}}>{new Date(openConvo.lastAt).toLocaleString()}</div>
-              </div>
-              {openConvo.callPhone && <CallButton phone={openConvo.callPhone} name={openConvo.recipientName} size={22}/>}
-            </div>
-          ):(
-            <>
-              <div style={{padding:'16px 24px',borderBottom:'1px solid #E4E7EC',background:'#fff',display:'flex',alignItems:'center',gap:10}}>
-                <div style={{width:32,height:32,borderRadius:'50%',background:openConvo.channelBg,color:openConvo.channelFg,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(openConvo.recipientName)}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{openConvo.recipientName}</div>
-                  <div style={{fontSize:11,color:openConvo.channelFg,fontWeight:600}}>{openConvo.channelLabel}</div>
+          {openConvo.channel==='team' && (
+            <div style={{padding:'0 16px 16px'}}>
+              <div style={{fontSize:12.5,color:MUTED,marginBottom:6}}>Members ({openConvo.members?.length ?? 0})</div>
+              {(openConvo.members ?? []).map((m:any)=>(
+                <div key={m.member_email} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 0'}}>
+                  <div style={{width:26,height:26,borderRadius:'50%',background:'#D0AE4C',color:'#fff',fontSize:10.5,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(m.member_name)}</div>
+                  <span style={{fontSize:13.5}}>{m.member_name}{m.member_email===identity.email?' (you)':''}</span>
                 </div>
-                {(openConvo.channel==='whatsapp'||openConvo.channel==='sms') && <CallButton phone={openConvo.recipientId} name={openConvo.recipientName} size={18}/>}
-                {canCallOpenTeam && (
-                  <button
-                    onClick={()=>window.dispatchEvent(new CustomEvent('opero:call', { detail: { teamMemberEmail: openConvo.teamMemberEmail, name: openConvo.teamMemberName } }))}
-                    title={`Call ${openConvo.teamMemberName}`}
-                    style={{background:'none',border:'none',cursor:'pointer',color:TEAM_FG,fontSize:18,padding:2,lineHeight:1}}
-                  >📞</button>
-                )}
-              </div>
-              <div style={{flex:1,overflowY:'auto' as const,padding:24,display:'flex',flexDirection:'column' as const,gap:10}}>
-                {thread.map((msg:any)=>{
-                  const isStaff = openConvo.channel==='team' ? msg.sender===identity.email : msg.sender !== NON_STAFF_SENDER[openConvo.channel]
-                  const label = openConvo.channel==='team' ? (isStaff?'You':msg.senderName) : (isStaff?'Staff':openConvo.recipientName)
-                  return (
-                    <div key={msg.id} style={{alignSelf:isStaff?'flex-end':'flex-start',maxWidth:'65%'}}>
-                      <div style={{background:isStaff?ACCENT:'#F2F4F7',color:isStaff?'#fff':'#323338',borderRadius:12,padding:'10px 14px',fontSize:13}}>{msg.message}</div>
-                      <div style={{fontSize:10,color:'#98A2B3',marginTop:3,textAlign:isStaff?'right' as const:'left' as const}}>{label} · {new Date(msg.created_at).toLocaleString()}</div>
-                    </div>
-                  )
-                })}
-              </div>
-              <div style={{borderTop:'1px solid #E4E7EC',padding:16,display:'flex',gap:10,background:'#fff'}}>
-                <input value={reply} onChange={e=>setReply(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendReply()} placeholder="Type a reply…" style={{flex:1,padding:'10px 14px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit'}}/>
-                <button onClick={sendReply} disabled={sending||!reply.trim()} style={{padding:'10px 22px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:sending||!reply.trim()?0.6:1}}>Send</button>
-              </div>
-            </>
+              ))}
+            </div>
           )}
         </div>
-
-        {openConvo && !isOpenCalls && (
-          <div style={{width:280,borderLeft:'1px solid #E4E7EC',background:'#fff',padding:24,overflowY:'auto' as const}}>
-            <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:16}}>Details</div>
-            <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',marginBottom:20}}>
-              <div style={{width:64,height:64,borderRadius:'50%',background:openConvo.channelBg,color:openConvo.channelFg,fontSize:20,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:10}}>{initials(openConvo.recipientName)}</div>
-              <div style={{fontSize:15,fontWeight:700,color:'#323338',textAlign:'center' as const}}>{openConvo.recipientName}</div>
-              <div style={{fontSize:11,fontWeight:600,color:openConvo.channelFg,marginTop:2}}>{openConvo.channelLabel}</div>
-            </div>
-            {openConvo.channel==='team' ? (
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase' as const,marginBottom:8}}>Members ({openConvo.members?.length ?? 0})</div>
-                {(openConvo.members ?? []).map((m:any)=>(
-                  <div key={m.member_email} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0'}}>
-                    <div style={{width:24,height:24,borderRadius:'50%',background:'#F2F4F7',color:'#667085',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(m.member_name)}</div>
-                    <span style={{fontSize:12,color:'#344054'}}>{m.member_name}{m.member_email===identity.email?' (you)':''}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <>
-                <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase' as const,marginBottom:6}}>Channel</div>
-                <div style={{fontSize:13,color:'#344054',marginBottom:16}}>{openConvo.channelLabel}</div>
-                {(openConvo.channel==='whatsapp'||openConvo.channel==='sms') && (
-                  <>
-                    <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase' as const,marginBottom:6}}>Phone</div>
-                    <div style={{fontSize:13,color:'#344054'}}>{openConvo.recipientId}</div>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      )}
 
       {showNewConvo && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={e=>e.target===e.currentTarget&&setShowNewConvo(false)}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 24, width: 400 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#323338', marginBottom: 16 }}>New Team Conversation</div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4, display: 'block' }}>Name</label>
-            <input value={newConvoName} onChange={(e) => setNewConvoName(e.target.value)} placeholder="e.g. Maintenance Team" style={{ width: '100%', padding: '9px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' as const, marginBottom: 14 }} />
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 6, display: 'block' }}>Members</label>
-            <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #E4E7EC', borderRadius: 8, padding: 8, marginBottom: 16 }}>
-              {team.length === 0 ? <div style={{ fontSize: 12, color: '#98A2B3', padding: 8 }}>No staff added in Team Management yet.</div> : team.map((m: any) => (
-                <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 4px', fontSize: 13, cursor: 'pointer' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(41,47,76,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }} onClick={e=>e.target===e.currentTarget&&setShowNewConvo(false)}>
+          <div style={{ background: '#fff', borderRadius: 10, padding: 24, width: 420, maxWidth: '100%', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
+            <div style={{ fontSize: 22, fontWeight: 500, marginBottom: 16 }}>New team conversation</div>
+            <label style={{ fontSize: 13, color: MUTED, marginBottom: 4, display: 'block' }}>Name</label>
+            <input value={newConvoName} onChange={(e) => setNewConvoName(e.target.value)} placeholder="e.g. Maintenance Team" style={{ width: '100%', height: 36, padding: '0 10px', border: `1px solid ${BORDER}`, borderRadius: 4, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 14 }} />
+            <label style={{ fontSize: 13, color: MUTED, marginBottom: 6, display: 'block' }}>Members</label>
+            <div style={{ maxHeight: 220, overflowY: 'auto', border: `1px solid ${LINE}`, borderRadius: 6, padding: 6, marginBottom: 16 }}>
+              {team.length === 0 ? <div style={{ fontSize: 13, color: MUTED, padding: 8 }}>No staff added in Team Management yet.</div> : team.map((m: any) => (
+                <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 4px', fontSize: 13.5, cursor: 'pointer' }}>
                   <input type="checkbox" checked={newConvoMembers.includes(m.id)} onChange={(e) => setNewConvoMembers((prev) => e.target.checked ? [...prev, m.id] : prev.filter((id) => id !== m.id))} />
-                  {m.name} <span style={{ color: '#98A2B3', fontSize: 11 }}>({m.role})</span>
+                  {m.name} <span style={{ color: MUTED, fontSize: 12 }}>({m.role})</span>
                 </label>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setShowNewConvo(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={createConversation} disabled={creatingConvo || !newConvoName.trim() || newConvoMembers.length === 0} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: creatingConvo || !newConvoName.trim() || newConvoMembers.length === 0 ? 0.6 : 1 }}>{creatingConvo ? 'Creating…' : 'Create'}</button>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowNewConvo(false)} style={{ height: 34, padding: '0 16px', borderRadius: 4, border: `1px solid ${BORDER}`, background: '#fff', fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+              <button onClick={createConversation} disabled={creatingConvo || !newConvoName.trim() || newConvoMembers.length === 0} style={{ height: 34, padding: '0 16px', borderRadius: 4, border: 'none', background: ACCENT, color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: creatingConvo || !newConvoName.trim() || newConvoMembers.length === 0 ? 0.6 : 1 }}>{creatingConvo ? 'Creating…' : 'Create'}</button>
             </div>
           </div>
         </div>
