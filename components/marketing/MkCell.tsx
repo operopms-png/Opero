@@ -26,7 +26,7 @@ export function computedValue(mk: Mk, board: MkBoard, col: MkCol, row: any): str
     if (col.key === 'replies') return String(s.replies)
   }
   if (col.key === 'created_at') return fmtDate(row.created_at)
-  if (col.key === 'source') return String(row.notes ?? '').startsWith('Auto-logged from CRM') ? 'CRM deal (auto)' : 'Logged by hand'
+  if (col.key === 'source') return String(row.notes ?? '').startsWith('Auto-logged from CRM') ? (String(row.notes).includes('Contacts') ? 'CRM lead (auto)' : 'CRM deal (auto)') : 'Logged by hand'
   if (col.key === 'ctr') {
     const i = Number(row.impressions) || 0, c = Number(row.clicks) || 0
     return i ? `${((c / i) * 100).toFixed(1)}%` : ''

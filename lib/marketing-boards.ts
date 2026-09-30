@@ -196,7 +196,7 @@ const autoWin = (r: any) => String(r.notes ?? '').startsWith('Auto-logged from C
 export const WINS_BOARD: MkBoard = {
   key: 'wins', table: 'staff_performance_wins', title: 'Wins', item: 'win', nameField: 'title', groupBy: 'category',
   dateField: 'date_achieved',
-  defaults: { title: 'New win', category: 'Deal Closed', staff_name: 'Unassigned' },
+  defaults: { title: 'New win', category: 'Deal Closed', staff_name: 'Unassigned' },  // date_achieved defaults to today in the database
   cols: [
     { key: 'staff_name', title: 'Staff member', type: 'person', width: 160, readonlyWhen: autoWin },
     { key: 'category', title: 'Category', type: 'status', width: 230, options: [

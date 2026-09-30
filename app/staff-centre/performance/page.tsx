@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { BRAND, initials, avatarColor } from '@/lib/crm-board'
-import { WINS_BOARD, money } from '@/lib/marketing-boards'
+import { WINS_BOARD, money, fmtDate } from '@/lib/marketing-boards'
 import { useTableBoard } from '@/components/applications/useApplications'
 import MkBoardView from '@/components/marketing/MkBoardView'
 import MkPanel from '@/components/marketing/MkPanel'
@@ -32,10 +32,11 @@ export default function PerformancePage() {
   const view = useMemo(() => ({ ...store, rows: { wins: inPeriod } }), [store, inPeriod])
 
   const board = useMemo(() => {
-    const by: Record<string, { name: string; count: number; value: number; cats: Record<string, number> }> = {}
+    const by: Record<string, { name: string; count: number; value: number; cats: Record<string, number>; last: string }> = {}
     for (const w of inPeriod) {
       const k = w.staff_name || 'Unassigned'
-      by[k] ??= { name: k, count: 0, value: 0, cats: {} }
+      by[k] ??= { name: k, count: 0, value: 0, cats: {}, last: '' }
+      if (String(w.date_achieved ?? '') > by[k].last) by[k].last = String(w.date_achieved ?? '')
       by[k].count++; by[k].value += Number(w.value) || 0
       by[k].cats[w.category] = (by[k].cats[w.category] ?? 0) + 1
     }
@@ -69,7 +70,7 @@ export default function PerformancePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: BRAND.brown }}>Staff Performance</h1>
-                <div style={{ fontSize: 13.5, color: '#8A6B2E', marginTop: 2 }}>Who’s winning. Deals set to “Closed won” in the CRM are added automatically.</div>
+                <div style={{ fontSize: 13.5, color: '#8A6B2E', marginTop: 2 }}>Who’s winning. CRM deals set to “Closed won” and leads set to “Won” are added automatically for the agent on them, with the amount and date.</div>
               </div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {PERIODS.map(p => (
@@ -107,7 +108,7 @@ export default function PerformancePage() {
                     </div>
                     <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
                       <div style={{ fontSize: 17, fontWeight: 700, color: BRAND.brown }}>{money(b.value) || '£0'}</div>
-                      <div style={{ fontSize: 12, color: BRAND.muted }}>{b.count} {b.count === 1 ? 'win' : 'wins'}</div>
+                      <div style={{ fontSize: 12, color: BRAND.muted }}>{b.count} {b.count === 1 ? 'win' : 'wins'}{b.last ? ` · latest ${fmtDate(b.last)}` : ''}</div>
                     </div>
                   </div>
                 ))}
