@@ -672,7 +672,8 @@ function EditableHtml({ html, onChange }: { html: string; onChange: (h: string) 
   return (
     <div ref={ref} contentEditable suppressContentEditableWarning spellCheck
       onInput={e => onChange((e.currentTarget as HTMLDivElement).innerHTML)}
-      onClick={e => { if ((e.target as HTMLElement).closest('a')) e.preventDefault() }}
+      onClick={e => { const a = (e.target as HTMLElement).closest('a'); if (!a) return; e.preventDefault(); if (e.metaKey || e.ctrlKey) window.open(a.href, '_blank', 'noopener') }}
+      onMouseOver={e => { const a = (e.target as HTMLElement).closest('a'); if (a) a.title = `Links to ${a.href} — Ctrl/Cmd-click to open` }}
       title="Click to change the words"
       style={{ outline: '1px dashed ' + C.creamLine, outlineOffset: 4, borderRadius: 2, cursor: 'text', marginTop: 4 }} />
   )
