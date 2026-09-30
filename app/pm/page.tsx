@@ -1708,11 +1708,11 @@ function PMPageInner() {
                 : messages.length===0
                 ? <div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:14}}>No messages yet</div>
                 : messages.map((m:any,i:number)=>{
-                  const isMine = m.sender==='staff'
+                  const isMine = m.sender==='staff'||m.sender==='ai'
                   return (
                   <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',justifyContent:isMine?'flex-end':'flex-start'}}>
                     <div style={{maxWidth:'70%',background:isMine?'#A8862E':'#F3F4F6',color:isMine?'#fff':'#323338',borderRadius:10,padding:'10px 14px',fontSize:13}}>
-                      <div style={{fontSize:10,opacity:0.7,marginBottom:3,textTransform:'uppercase'}}>{isMine?'You':(msgLandlord?.name??'Landlord')}</div>
+                      <div style={{fontSize:10,opacity:0.7,marginBottom:3,textTransform:'uppercase'}}>{m.sender==='ai'?'AI receptionist':isMine?'You':(msgLandlord?.name??'Landlord')}</div>
                       {parseAttachments(m.attachment_url).length>0&&(
                         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:m.message?8:4}}>
                           {parseAttachments(m.attachment_url).map((url:string,ai:number)=>(

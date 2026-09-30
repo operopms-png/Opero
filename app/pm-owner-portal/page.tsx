@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { pingReceptionist } from '@/lib/receptionist-client'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
 const ACCENT = '#A8862E'
@@ -83,6 +84,10 @@ function PMOwnerPortalInner() {
     setSendingMsg(false)
     if (error) { alert(error.message); return }
     setMessages(prev => [...prev, { landlord_id: landlord.id, sender: 'landlord', message: text, attachment_url: attachmentJson, created_at: new Date().toISOString() }])
+    if (!isStaffView && await pingReceptionist('pm_landlord', landlord.id)) {
+      const { data } = await supabase.from('pm_landlord_messages').select('*').eq('landlord_id', landlord.id).order('created_at', { ascending: true })
+      if (data) setMessages(data)
+    }
   }
 
   useEffect(() => {

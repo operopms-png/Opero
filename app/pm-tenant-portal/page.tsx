@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { pingReceptionist } from '@/lib/receptionist-client'
 
 const ACCENT = '#A8862E'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -146,6 +147,10 @@ function PMTenantPortalInner() {
     setNewMessage('')
     const { data: msgs } = await supabase.from('pm_tenant_messages').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: true })
     setMessages(msgs ?? [])
+    if (await pingReceptionist('pm_tenant', tenant.id)) {
+      const { data: again } = await supabase.from('pm_tenant_messages').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: true })
+      setMessages(again ?? [])
+    }
   }
 
   async function submitRenewalRequest() {

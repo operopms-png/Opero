@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
+import { processNewEmails } from '@/lib/receptionist'
 import { getCaller, canAccess, PUBLIC_COLS, encrypt, testConnection, syncMailbox, sendFromMailbox, setSeen, fetchAttachment, friendlyError } from '@/lib/mailbox'
 
 // Everything about connected mailboxes goes through here so access is
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
     const which = sp.get('messages')!
     const ids = which === 'all' ? mine.map(m => m.id) : mine.filter(m => m.id === which).map(m => m.id)
     if (!ids.length) return NextResponse.json({ messages: [] })
-    let q = serviceClient.from('mailbox_messages').select('id,mailbox_id,folder,from_name,from_email,to_list,subject,snippet,date,seen,attachments').in('mailbox_id', ids).eq('folder', sp.get('folder') || 'INBOX').order('date', { ascending: false }).limit(60)
+    let q = serviceClient.from('mailbox_messages').select('id,mailbox_id,folder,from_name,from_email,to_list,subject,snippet,date,seen,attachments,ai_category,ai_status').in('mailbox_id', ids).eq('folder', sp.get('folder') || 'INBOX').order('date', { ascending: false }).limit(60)
     if (sp.get('before')) q = q.lt('date', sp.get('before')!)
     if (sp.get('unread') === '1') q = q.eq('seen', false)
     const term = (sp.get('q') || '').trim().replace(/[%,()]/g, ' ')
@@ -123,6 +124,7 @@ export async function POST(req: NextRequest) {
     if (body.display_name !== undefined) patch.display_name = body.display_name || null
     if (Array.isArray(body.access)) patch.access = body.access.map((x: string) => String(x).toLowerCase())
     if (body.use_for_marketing !== undefined) patch.use_for_marketing = !!body.use_for_marketing
+    if (['off', 'draft', 'auto'].includes(body.ai_mode)) patch.ai_mode = body.ai_mode
     if (body.disconnect) Object.assign(patch, { password_enc: null, status: 'not_connected', last_error: null })
     if (body.email && body.email !== mb.email) {
       if (mb.status === 'connected') return bad('Disconnect the mailbox before changing its address')
@@ -149,7 +151,7 @@ export async function POST(req: NextRequest) {
     }
     const fresh = Date.now() - 45_000
     const due = list.filter(m => m.status === 'connected' && (body.force || !m.last_synced_at || new Date(m.last_synced_at).getTime() < fresh))
-    const results = await Promise.all(due.map(async m => ({ id: m.id, ...(await syncMailbox(m)) })))
+    const results = await Promise.all(due.map(async m => { const r = await syncMailbox(m); if (!r.error) await processNewEmails(m, 2).catch(() => {}); return { id: m.id, ...r } }))
     return NextResponse.json({ results })
   }
 

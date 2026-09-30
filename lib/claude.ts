@@ -1,4 +1,4 @@
-export async function callClaude(system: string, userMessage: string, maxTokens = 500): Promise<{ text?: string; error?: string }> {
+export async function callClaude(system: string, userMessage: string, maxTokens = 500, model = 'claude-sonnet-4-6'): Promise<{ text?: string; error?: string }> {
   if (!process.env.ANTHROPIC_API_KEY) return { error: 'ANTHROPIC_API_KEY is not configured on the server' }
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -9,7 +9,7 @@ export async function callClaude(system: string, userMessage: string, maxTokens 
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
+      model,
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: userMessage }],

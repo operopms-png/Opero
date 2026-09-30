@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { pingReceptionist } from '@/lib/receptionist-client'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
 // Mirrors app/pm-owner-portal closely -- same layout, same staff-preview
@@ -108,6 +109,10 @@ function EstateOwnerPortalInner() {
     const { data } = await supabase.from('estate_landlord_messages').select('*').eq('landlord_id', landlord.id).order('created_at', { ascending: true })
     setMessages(data ?? [])
     setSendingMessage(false)
+    if (!isStaffView && await pingReceptionist('estate_landlord', landlord.id)) {
+      const { data: again } = await supabase.from('estate_landlord_messages').select('*').eq('landlord_id', landlord.id).order('created_at', { ascending: true })
+      setMessages(again ?? [])
+    }
   }
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>

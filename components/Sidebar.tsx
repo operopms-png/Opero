@@ -55,6 +55,7 @@ const NAV_GROUPS = [
       { href: '/staff-centre/investors', label: 'Investors', key: 'staffcentre', icon: 'revenue', scTab: 'investors' },
       { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', key: 'staffcentre', icon: 'report', scTab: 'customeronboarding' },
       { href: '/staff-centre/meetings', label: 'Meetings', key: 'staffcentre', icon: 'phone', scTab: 'meetings', badge: 'meetings' },
+      { href: '/staff-centre/receptionist', label: 'AI Receptionist', key: 'staffcentre', icon: 'sparkles', scTab: 'inbox' },
       { href: '/staff-centre/email', label: 'Email', key: 'staffcentre', icon: 'mail', scTab: 'inbox' },
       { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox', badge: 'inbox' },
       { href: '/staff-centre/website-chats', label: 'Website Chats', key: 'staffcentre', icon: 'globe', scTab: 'inbox', badge: 'webchat' },

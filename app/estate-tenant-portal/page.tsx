@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { pingReceptionist } from '@/lib/receptionist-client'
 
 // Mirrors app/pm-tenant-portal closely -- same tabs, same layout, same
 // staff-preview pattern via ?tenant_id=. Schema differences from PM:
@@ -152,6 +153,10 @@ function EstateTenantPortalInner() {
     setNewMessage('')
     const { data: msgs } = await supabase.from('estate_tenant_messages').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: true })
     setMessages(msgs ?? [])
+    if (await pingReceptionist('estate_tenant', tenant.id)) {
+      const { data: again } = await supabase.from('estate_tenant_messages').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: true })
+      setMessages(again ?? [])
+    }
   }
 
   async function submitRenewalRequest() {

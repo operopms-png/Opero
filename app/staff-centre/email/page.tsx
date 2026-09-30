@@ -19,6 +19,7 @@ async function api(path: string, body?: any) {
   return d
 }
 
+const CAT_COLOR: Record<string, string> = { Enquiry: '#579BFC', Booking: '#00C875', Viewing: '#9D50DD', Maintenance: '#FDAB3D', Tenant: '#66CCFF', Landlord: '#784BD1', Invoice: '#C4C4C4', 'Job application': '#037F4C', Complaint: '#DF2F4A', Spam: '#9699A6' }
 const COLORS = ['#D0AE4C', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1', '#FF7575', '#037F4C', '#BB3354']
 const colorFor = (s: string) => { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length] }
 function when(d: string) {
@@ -236,6 +237,9 @@ export default function EmailPage() {
                       <div style={{ fontSize: 13, fontWeight: m.seen ? 400 : 600, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.subject || '(no subject)'}</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                         {box === 'all' && mbx && <span style={{ fontSize: 11, color: '#fff', background: colorFor(mbx.email), borderRadius: 3, padding: '1px 6px', flexShrink: 0 }}>{mbx.email.split('@')[0]}</span>}
+                        {m.ai_category && m.ai_category !== 'Other' && <span style={{ fontSize: 11, color: '#fff', background: CAT_COLOR[m.ai_category] ?? C.grey, borderRadius: 3, padding: '1px 6px', flexShrink: 0 }}>{m.ai_category}</span>}
+                        {m.ai_status === 'drafted' && <span title="AI reply ready" style={{ fontSize: 11, color: C.goldDark, border: '1px solid ' + C.gold, borderRadius: 3, padding: '0 5px', flexShrink: 0 }}>AI draft</span>}
+                        {m.ai_status === 'replied' && <span title="AI replied" style={{ fontSize: 11, color: '#00854D', border: '1px solid #A6E9C9', borderRadius: 3, padding: '0 5px', flexShrink: 0 }}>AI replied</span>}
                         <span style={{ fontSize: 12.5, color: C.faint, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.snippet}</span>
                       </div>
                     </div>
@@ -286,6 +290,16 @@ export default function EmailPage() {
                       </div>
                     )}
                   </div>
+                  {msg.ai_draft && (
+                    <div style={{ margin: '12px 24px 0', border: '1px solid ' + (msg.ai_status === 'replied' ? '#A6E9C9' : C.creamLine), background: msg.ai_status === 'replied' ? '#E6F9F0' : C.cream, borderRadius: 6, padding: '10px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: msg.ai_status === 'replied' ? '#00854D' : C.brown }}>{msg.ai_status === 'replied' ? 'The AI receptionist already replied' : 'AI receptionist drafted a reply'}</span>
+                        <div style={{ flex: 1 }} />
+                        {msg.ai_status !== 'replied' && <button onClick={() => { compose('reply'); setDraft(d => d ? { ...d, body: msg.ai_draft } : d) }} style={btn('gold', true)}>Use this reply</button>}
+                      </div>
+                      <div style={{ fontSize: 13, whiteSpace: 'pre-wrap', color: C.ink, maxHeight: 160, overflowY: 'auto' }}>{msg.ai_draft}</div>
+                    </div>
+                  )}
                   <iframe title="Email" sandbox="allow-popups allow-popups-to-escape-sandbox" srcDoc={frameDoc} style={{ flex: 1, border: 'none', width: '100%', padding: '8px 18px', boxSizing: 'border-box' }} />
                 </>
               )}
@@ -339,7 +353,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash }: any) {
   const [editing, setEditing] = useState<string | null>(null)
   const [nameDraft, setNameDraft] = useState('')
   const act = async (body: any, ok?: string) => { try { await api('', body); if (ok) flash(ok); await reload() } catch (e: any) { flash(e.message) } }
-  const cols = 'minmax(220px,1.4fr) 150px 130px minmax(150px,1fr) 90px 180px'
+  const cols = 'minmax(220px,1.4fr) 150px 130px minmax(150px,1fr) 90px 120px 180px'
   return (
     <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
       <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
@@ -358,9 +372,9 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash }: any) {
           </div>
         )}
         <div style={{ overflowX: 'auto' }}>
-          <div style={{ minWidth: 920 }}>
+          <div style={{ minWidth: 1040 }}>
             <div style={{ display: 'grid', gridTemplateColumns: cols, borderLeft: '6px solid ' + C.gold, borderTop: '1px solid ' + C.row, borderRight: '1px solid ' + C.row, fontSize: 13, color: C.muted }}>
-              {['Address', 'Shown as', 'Status', 'Who can see it', 'Marketing', ''].map((h, i) => <div key={i} style={{ padding: '8px 10px', borderLeft: i ? '1px solid ' + C.row : 'none', borderBottom: '1px solid ' + C.row, textAlign: i ? 'center' : 'left' }}>{h}</div>)}
+              {['Address', 'Shown as', 'Status', 'Who can see it', 'Marketing', 'AI replies', ''].map((h, i) => <div key={i} style={{ padding: '8px 10px', borderLeft: i ? '1px solid ' + C.row : 'none', borderBottom: '1px solid ' + C.row, textAlign: i ? 'center' : 'left' }}>{h}</div>)}
             </div>
             {boxes.map((b: any) => (
               <div key={b.id} style={{ display: 'grid', gridTemplateColumns: cols, borderLeft: '6px solid ' + C.gold, borderRight: '1px solid ' + C.row, fontSize: 14 }}>
@@ -386,6 +400,9 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash }: any) {
                 </div>
                 <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Pill width={60} color={b.use_for_marketing ? C.green : C.grey} onClick={() => act({ action: 'update', id: b.id, use_for_marketing: !b.use_for_marketing })} title="Can Marketing send from this address?">{b.use_for_marketing ? 'Yes' : 'No'}</Pill>
+                </div>
+                <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Pill width={96} color={b.ai_mode === 'auto' ? C.green : b.ai_mode === 'draft' ? C.gold : C.grey} onClick={() => act({ action: 'update', id: b.id, ai_mode: b.ai_mode === 'off' || !b.ai_mode ? 'draft' : b.ai_mode === 'draft' ? 'auto' : 'off' })} title="Off → Drafts (staff approve) → Auto-reply">{b.ai_mode === 'auto' ? 'Auto-reply' : b.ai_mode === 'draft' ? 'Drafts' : 'Off'}</Pill>
                 </div>
                 <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <button onClick={() => onConnect(b)} style={btn(b.status === 'connected' ? 'ghost' : 'gold', true)}>{b.status === 'connected' ? 'Reconnect' : 'Connect'}</button>

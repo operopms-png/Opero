@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { voiceIdentityFor } from '@/lib/voice-identity'
+import { getSettings, isOpen } from '@/lib/receptionist'
 
 function xmlEscape(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -34,6 +35,14 @@ export async function POST(req: NextRequest) {
     return new NextResponse(twiml, { headers: { 'Content-Type': 'text/xml' } })
   }
 
+  // AI Receptionist (Staff Centre → AI Receptionist → Phone)
+  const ai = await getSettings(conn.user_id)
+  const aiUrl = `${origin}/api/receptionist/voice?biz=${conn.user_id}`
+  if (ai && (ai.phone_mode === 'always' || (ai.phone_mode === 'out_of_hours' && !isOpen(ai)))) {
+    return new NextResponse(`<?xml version="1.0" encoding="UTF-8"?><Response><Redirect method="POST">${xmlEscape(aiUrl)}</Redirect></Response>`, { headers: { 'Content-Type': 'text/xml' } })
+  }
+  const noAnswer = ai && ai.phone_mode === 'no_answer' ? ` timeout="${ai.phone_ring_seconds || 20}" action="${xmlEscape(`${origin}/api/receptionist/voice/after-dial?biz=${conn.user_id}`)}"` : ''
+
   let staffAuthId = conn.user_id
   if (conn.connected_by_email) {
     const { data: authUser } = await serviceClient.auth.admin.listUsers({ perPage: 1000 })
@@ -43,6 +52,6 @@ export async function POST(req: NextRequest) {
   const identity = voiceIdentityFor(staffAuthId)
 
   const statusCallback = `${origin}/api/voice/status?user_id=${conn.user_id}&connection_id=${conn.id}&contact_phone=${encodeURIComponent(from)}&staff_identity=${identity}`
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="${xmlEscape(from)}"><Client statusCallback="${xmlEscape(statusCallback)}" statusCallbackEvent="initiated ringing answered completed">${xmlEscape(identity)}</Client></Dial></Response>`
+  const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="${xmlEscape(from)}"${noAnswer}><Client statusCallback="${xmlEscape(statusCallback)}" statusCallbackEvent="initiated ringing answered completed">${xmlEscape(identity)}</Client></Dial></Response>`
   return new NextResponse(twiml, { headers: { 'Content-Type': 'text/xml' } })
 }

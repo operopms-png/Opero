@@ -56,7 +56,7 @@ export function canAccess(mb: any, c: Caller) {
   return c.isAdmin || (mb.access ?? []).map((x: string) => x.toLowerCase()).includes(c.email)
 }
 
-export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,use_for_marketing,created_at'
+export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,use_for_marketing,ai_mode,created_at'
 
 // ---------- connections ----------
 export function imapFor(mb: any, password: string) {
@@ -110,6 +110,7 @@ function toRow(mb: any, folder: string, uid: number, parsed: ParsedMail, flags: 
     body_html: html.length > 600_000 ? null : (html || null),
     body_text: text.slice(0, 200_000) || null,
     attachments: (parsed.attachments ?? []).filter(a => a.contentDisposition !== 'inline' || !a.cid).map((a, i) => ({ index: i, filename: a.filename || `attachment-${i + 1}`, size: a.size, contentType: a.contentType })),
+    is_bulk: (() => { const h: any = parsed.headers; const auto = String(h?.get?.('auto-submitted') ?? '').toLowerCase(); const prec = String(h?.get?.('precedence') ?? '').toLowerCase(); return !!h?.get?.('list-unsubscribe') || !!h?.get?.('list-id') || (auto !== '' && auto !== 'no') || /bulk|list|junk/.test(prec) })(),
     date: (parsed.date ?? new Date()).toISOString(),
     seen: folder !== 'INBOX' || !!flags?.has('\\Seen'),
   }
