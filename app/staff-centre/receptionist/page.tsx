@@ -4,6 +4,7 @@
 // each channel, a "try it" chat, and a log of everything it handled.
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import PropertyManagerAgents from '../../../components/ai/PropertyManagerAgents'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, btn, input, label } from '../../../components/crm/Page'
 
 async function api(body?: any) {
@@ -56,6 +57,7 @@ export default function ReceptionistPage() {
   const [loading, setLoading] = useState(true)
   const [d, setD] = useState<any>(null)
   const [tab, setTab] = useState('activity')
+  useEffect(() => { const t = new URLSearchParams(window.location.search).get('tab'); if (t) setTab(t) }, [])
   const [s, setS] = useState<any>(null)          // editable copy of settings
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -112,10 +114,10 @@ export default function ReceptionistPage() {
   return (
     <CrmPage>
       <CrmHeader
-        title="AI Receptionist"
-        subtitle={<>{s.assistant_name} answers {SHOW_PHONE ? 'calls, ' : ''}emails, tenant &amp; landlord messages and website chat using your company knowledge. {liveChannels.length ? <>Live on: <b style={{ color: C.brown }}>{liveChannels.join(', ')}</b>.</> : 'Not switched on for any channel yet.'} Office is <b style={{ color: C.brown }}>{d.open ? 'open' : 'closed'}</b> now.</>}
+        title="AI Assistant"
+        subtitle={<>The receptionist ({s.assistant_name}) answers {SHOW_PHONE ? 'calls, ' : ''}emails, tenant &amp; landlord messages and website chat using your company knowledge; the property manager agents help with guests, maintenance, cleaning, pricing, owner reports and leads. {liveChannels.length ? <>Live on: <b style={{ color: C.brown }}>{liveChannels.join(', ')}</b>.</> : 'Not switched on for any channel yet.'} Office is <b style={{ color: C.brown }}>{d.open ? 'open' : 'closed'}</b> now.</>}
         actions={!d.aiReady ? <Pill color={C.red} width={0}>AI key missing on server</Pill> : undefined}
-        tabs={[{ k: 'activity', l: 'Activity', count: stats.follow || undefined }, { k: 'channels', l: 'Channels' }, { k: 'knowledge', l: 'Knowledge & hours' }, { k: 'try', l: 'Try it' }]}
+        tabs={[{ k: 'activity', l: 'Activity', count: stats.follow || undefined }, { k: 'channels', l: 'Channels' }, { k: 'knowledge', l: 'Knowledge & hours' }, { k: 'try', l: 'Try it' }, { k: 'agents', l: 'Property manager' }]}
         tab={tab} onTab={setTab}
       />
       <Body>
@@ -285,6 +287,7 @@ export default function ReceptionistPage() {
             <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>Uses your saved knowledge — save changes in “Knowledge &amp; hours” first. Nothing here is sent to anyone.</div>
           </div>
         )}
+        {tab === 'agents' && <PropertyManagerAgents />}
       </Body>
       {toast && <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.ink, color: '#fff', padding: '10px 18px', borderRadius: 6, fontSize: 13.5, zIndex: 80 }}>{toast}</div>}
     </CrmPage>
