@@ -1,149 +1,92 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { supabase, getAccountId } from '../../../lib/supabase'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { supabase, getAccountId } from '@/lib/supabase'
+import { BRAND } from '@/lib/crm-board'
+import { MAINTENANCE_BOARD } from '@/lib/hr-boards'
+import type { BoardStore } from '@/lib/marketing-boards'
+import MkBoardView from '@/components/marketing/MkBoardView'
+import MkPanel from '@/components/marketing/MkPanel'
 
-const ACCENT = '#A8862E'
-const MODULES = [
-  { key:'str', label:'Vacation Rentals', bg:'#FBF4E6', fg:'#A8862E' },
-  { key:'pm', label:'Property Management', bg:'#FBF4E6', fg:'#A8862E' },
-  { key:'estate', label:'Estate Agency', bg:'#EAF3EE', fg:'#2D6A4F' },
-]
-const PRIORITY_STYLE: Record<string,{bg:string,fg:string,border:string}> = {
-  urgent: { bg:'#FEE2E2', fg:'#DC2626', border:'#DC2626' },
-  high:   { bg:'#FFEDD5', fg:'#EA580C', border:'#EA580C' },
-  medium: { bg:'#FEF3C7', fg:'#D97706', border:'#D97706' },
-  low:    { bg:'#F3F4F6', fg:'#6B7280', border:'#9CA3AF' },
-}
+// Staff Centre → Maintenance Board: all maintenance jobs from the three modules on one CRM-style board.
+const TABLE: Record<string, string> = { str: 'maintenance_tickets', pm: 'pm_maintenance', estate: 'estate_maintenance' }
+const EDITABLE = ['priority', 'status', 'description', 'title']
 
-function relativeTime(iso: string) {
-  const diffMs = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diffMs/60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins/60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours/24)
-  return `${days} day${days===1?'':'s'} ago`
-}
-
-export default function Page() {
+function useMaintenance(): BoardStore & { loading: boolean; error: string | null } {
   const [loading, setLoading] = useState(true)
-  const [tickets, setTickets] = useState<any[]>([])
-  const [moduleFilter, setModuleFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('Open')
+  const [error, setError] = useState<string | null>(null)
+  const [list, setList] = useState<any[]>([])
+  const ref = useRef(list); ref.current = list
 
-  useEffect(()=>{ load() },[])
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { window.location.href = '/login'; return }
+      const acc = await getAccountId(user)
+      const [pm, ea, props] = await Promise.all([
+        supabase.from('pm_maintenance').select('*,pm_properties(name)').eq('user_id', acc),
+        supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id', acc),
+        // maintenance_tickets has no user_id: scope it through the business's own properties
+        supabase.from('properties').select('id').eq('user_id', acc),
+      ])
+      if (pm.error || ea.error) { setError((pm.error ?? ea.error)!.message); setLoading(false); return }
+      const ids = (props.data ?? []).map((p: any) => p.id)
+      const { data: team } = await supabase.from('team_members').select('id,name').eq('user_id', acc)
+      const who = (v: any) => (team ?? []).find((t: any) => t.id === v)?.name ?? (typeof v === 'string' && !/^[0-9a-f-]{36}$/i.test(v) ? v : '')
+      const str = ids.length ? await supabase.from('maintenance_tickets').select('*,properties(name)').in('property_id', ids) : { data: [] as any[] }
+      const all = [
+        ...(pm.data ?? []).map((m: any) => ({ ...m, _id: m.id, id: 'pm:' + m.id, module: 'pm', propertyName: m.pm_properties?.name, assignee: who(m.assigned_to) })),
+        ...(ea.data ?? []).map((m: any) => ({ ...m, _id: m.id, id: 'estate:' + m.id, module: 'estate', propertyName: m.estate_properties?.name, assignee: who(m.assigned_to) })),
+        ...((str.data ?? []) as any[]).map((m: any) => ({ ...m, _id: m.id, id: 'str:' + m.id, module: 'str', propertyName: m.properties?.name, title: m.title || m.issue_type || m.category || 'Maintenance issue', assignee: who(m.assigned_to) })),
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      setList(all); setLoading(false)
+    })()
+  }, [])
 
-  async function load() {
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { window.location.href='/login'; return }
-    const accountId = await getAccountId(user)
+  const update = useCallback(async (_k: string, id: string, patch: Record<string, any>) => {
+    const row = ref.current.find(r => r.id === id); if (!row) return
+    const clean = Object.fromEntries(Object.entries(patch).filter(([k]) => EDITABLE.includes(k)))
+    if (!Object.keys(clean).length) return
+    const prev = ref.current
+    setList(l => l.map(r => r.id === id ? { ...r, ...clean } : r))
+    const { error } = await supabase.from(TABLE[row.module]).update(clean).eq('id', row._id)
+    if (error) { alert(error.message); setList(prev) }
+  }, [])
+  const remove = useCallback(async (_k: string, ids: string[]) => {
+    for (const id of ids) {
+      const row = ref.current.find(r => r.id === id); if (!row) continue
+      const { error } = await supabase.from(TABLE[row.module]).delete().eq('id', row._id)
+      if (error) { alert(error.message); return }
+    }
+    setList(l => l.filter(r => !ids.includes(r.id)))
+  }, [])
+  return { loading, error, rows: { maintenance: list }, replies: {}, events: [], people: [], stats: {}, sendingId: null, update, add: async () => null, remove, duplicate: async () => {}, sendEmail: async () => {} }
+}
 
-    const [pmRes, eaRes, strProps] = await Promise.all([
-      supabase.from('pm_maintenance').select('*,pm_properties(name)').eq('user_id',accountId).order('created_at',{ascending:false}),
-      supabase.from('estate_maintenance').select('*,estate_properties(name)').eq('user_id',accountId).order('created_at',{ascending:false}),
-      // maintenance_tickets has no user_id column -- scoped via the
-      // business's own properties instead, same pattern str/page.tsx
-      // itself uses.
-      supabase.from('properties').select('id,name').eq('user_id',accountId),
-    ])
-    const strPropIds = (strProps.data??[]).map((p:any)=>p.id)
-    const strRes = strPropIds.length
-      ? await supabase.from('maintenance_tickets').select('*,properties(name)').in('property_id',strPropIds).order('created_at',{ascending:false})
-      : { data: [] }
-
-    const all = [
-      ...(pmRes.data??[]).map((m:any)=>({ ...m, module:'pm', propertyName: m.pm_properties?.name })),
-      ...(eaRes.data??[]).map((m:any)=>({ ...m, module:'estate', propertyName: m.estate_properties?.name })),
-      ...(strRes.data??[]).map((m:any)=>({ ...m, module:'str', propertyName: m.properties?.name })),
-    ]
-    all.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime())
-    setTickets(all)
-    setLoading(false)
-  }
-
-  async function updateStatus(ticket: any, status: string) {
-    const table = ticket.module==='pm' ? 'pm_maintenance' : ticket.module==='estate' ? 'estate_maintenance' : 'maintenance_tickets'
-    await supabase.from(table).update({ status }).eq('id', ticket.id)
-    setTickets(prev=>prev.map(t=>t.id===ticket.id&&t.module===ticket.module?{...t,status}:t))
-  }
-
-  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
-
-  const filtered = tickets
-    .filter((t:any)=>moduleFilter==='All'||t.module===moduleFilter)
-    .filter((t:any)=>statusFilter==='All'||(statusFilter==='Open'?t.status!=='resolved'&&t.status!=='closed':t.status===statusFilter))
-  const urgentCount = tickets.filter((t:any)=>t.priority==='urgent'&&t.status!=='resolved'&&t.status!=='closed').length
-  const openCount = tickets.filter((t:any)=>t.status!=='resolved'&&t.status!=='closed').length
-
+export default function MaintenanceBoardPage() {
+  const store = useMaintenance()
+  const [open, setOpen] = useState<string | null>(null)
+  const openJobs = store.rows.maintenance.filter(r => r.status !== 'resolved' && r.status !== 'closed')
+  const urgent = openJobs.filter(r => r.priority === 'urgent').length
   return (
-    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
-      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>Maintenance Board</div>
-        </div>
-      </div>
-
-      <div style={{padding:24}}>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:20}}>
-          <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>Open Jobs</div>
-            <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{openCount}</div>
-          </div>
-          <div style={{background:'#fff',border:urgentCount>0?'1px solid #FEE2E2':'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>Urgent</div>
-            <div style={{fontSize:26,fontWeight:800,color:urgentCount>0?'#DC2626':'#323338'}}>{urgentCount}</div>
-          </div>
-          <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}>
-            <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.05em',marginBottom:6}}>Total Tickets</div>
-            <div style={{fontSize:26,fontWeight:800,color:'#323338'}}>{tickets.length}</div>
-          </div>
-        </div>
-
-        <div style={{display:'flex',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap' as const,gap:10}}>
-          <div style={{display:'flex',gap:8}}>
-            <button onClick={()=>setModuleFilter('All')} style={{padding:'6px 14px',borderRadius:20,border:moduleFilter==='All'?'1px solid '+ACCENT:'1px solid #E4E7EC',background:moduleFilter==='All'?ACCENT+'12':'#fff',color:moduleFilter==='All'?ACCENT:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>All</button>
-            {MODULES.map(m=>(
-              <button key={m.key} onClick={()=>setModuleFilter(m.key)} style={{padding:'6px 14px',borderRadius:20,border:moduleFilter===m.key?'1px solid '+m.fg:'1px solid #E4E7EC',background:moduleFilter===m.key?m.bg:'#fff',color:moduleFilter===m.key?m.fg:'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{m.label}</button>
-            ))}
-          </div>
-          <div style={{display:'flex',gap:8}}>
-            {['Open','All'].map(s=>(
-              <button key={s} onClick={()=>setStatusFilter(s)} style={{padding:'6px 14px',borderRadius:20,border:statusFilter===s?'1px solid #A8862E':'1px solid #E4E7EC',background:statusFilter===s?'#A8862E':'#fff',color:statusFilter===s?'#fff':'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s}</button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
-          {filtered.length===0?(
-            <div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>
-              <div style={{fontSize:36,marginBottom:12}}>🔧</div>
-              <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>Nothing here</div>
-            </div>
-          ):filtered.map((t:any)=>{
-            const p = PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.medium
-            const mod = MODULES.find(m=>m.key===t.module)
-            return (
-              <div key={t.module+t.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',borderLeft:'3px solid '+p.border,padding:'14px 20px',display:'flex',alignItems:'center',gap:14}}>
-                <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4,background:p.bg,color:p.fg,letterSpacing:'0.03em',textTransform:'uppercase' as const}}>{t.priority}</span>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{t.title}</div>
-                  <div style={{fontSize:12,color:'#667085',marginTop:2}}>{t.propertyName??'—'} · {mod?.label} {t.assigned_to?`· ${t.assigned_to}`:''}</div>
-                </div>
-                <span style={{fontSize:11,color:'#98A2B3'}}>{relativeTime(t.created_at)}</span>
-                <select value={t.status} onChange={e=>updateStatus(t,e.target.value)} style={{fontSize:12,padding:'5px 10px',borderRadius:6,border:'1px solid #E4E7EC',fontFamily:'inherit',cursor:'pointer'}}>
-                  <option value="open">Open</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+    <div style={{ display: 'flex', height: '100vh', width: '100%', contain: 'inline-size', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: BRAND.ink, background: '#fff' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+        .crm-hover-show { opacity: 0; transition: opacity .1s }
+        .crm-row:hover .crm-hover-show, .crm-colhead:hover .crm-hover-show { opacity: 1 }
+        .crm-row:hover, .crm-row:hover .crm-sticky { background: ${BRAND.hover} !important }
+        .crm-nav:hover { background: ${BRAND.hover} }
+        .crm-tb:hover { background: ${BRAND.hover} }
+      `}</style>
+      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {store.loading ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Loading maintenance…</div>
+          : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load maintenance: {store.error}</div>
+          : <MkBoardView mk={store} board={MAINTENANCE_BOARD} onOpen={setOpen}
+              headerRight={<span style={{ display: 'inline-flex', gap: 8, marginRight: 8 }}>
+                <span style={{ background: '#579BFC', color: '#fff', borderRadius: 3, padding: '3px 10px', fontSize: 12.5 }}>{openJobs.length} open</span>
+                <span style={{ background: urgent ? '#DF2F4A' : '#C4C4C4', color: '#fff', borderRadius: 3, padding: '3px 10px', fontSize: 12.5 }}>{urgent} urgent</span>
+              </span>} />}
+      </main>
+      {open && <MkPanel key={open} mk={store} board={MAINTENANCE_BOARD} id={open} onClose={() => setOpen(null)} onOpenOther={(_b, id) => setOpen(id)} />}
     </div>
   )
 }

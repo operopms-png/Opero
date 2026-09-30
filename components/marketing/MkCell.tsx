@@ -26,11 +26,19 @@ export function computedValue(mk: Mk, board: MkBoard, col: MkCol, row: any): str
     if (col.key === 'replies') return String(s.replies)
   }
   if (col.key === 'created_at') return fmtDate(row.created_at)
+  if (col.key === 'propertyName') return row.propertyName ?? ''
+  if (col.key === 'assignee') return row.assignee ?? ''
+  if (col.key === 'age') { if (!row.created_at) return ''; const d = Math.floor((Date.now() - new Date(row.created_at).getTime()) / 86400000); return d <= 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d} days ago` }
   if (col.key === 'attendee_name') return row.attendee_name ?? ''
   if (col.key === 'created_by_email') return row.created_by_email ?? ''
   if (col.key === 'meeting_link') return row.token ? 'Copy link' : ''
   if (col.key === 'stars') { const r = Math.round(Number(row.rating) || 0); return r ? '★'.repeat(Math.min(r, 5)) + '☆'.repeat(Math.max(0, 5 - r)) : '' }
   if (col.key === 'progress_bar') { const p = Math.max(0, Math.min(100, Number(row.progress_pct) || 0)); return `${p}%` }
+  if (col.key === 'due_flag') {
+    if (!row.due_date || row.status === 'Done') return row.status === 'Done' ? 'Done' : ''
+    const d = Math.ceil((new Date(row.due_date + 'T00:00:00').getTime() - new Date(new Date().toDateString()).getTime()) / 86400000)
+    return d < 0 ? `Overdue ${-d}d` : d === 0 ? 'Due today' : `In ${d} days`
+  }
   if (col.key === 'expiry_flag') {
     if (!row.expiry_date) return ''
     const d = (new Date(row.expiry_date + 'T00:00:00').getTime() - Date.now()) / 86400000
@@ -145,7 +153,7 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
       const p = Math.max(0, Math.min(100, Number(row.progress_pct) || 0))
       return <div style={{ ...base, cursor: 'default', gap: 8, padding: '0 10px' }}><div style={{ flex: 1, height: 8, background: '#F1F2F6', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${p}%`, height: '100%', background: p >= 100 ? '#00C875' : BRAND.gold }} /></div><span style={{ fontSize: 12, color: BRAND.muted }}>{p}%</span></div>
     }
-    const color = t === 'Bounced' || t === 'Expired' ? '#DF2F4A' : t === 'Yes' || t === 'Valid' ? '#00A35E' : t.startsWith('Expires in') ? '#D97706' : col.key === 'stars' ? '#D0AE4C' : BRAND.ink
+    const color = t === 'Bounced' || t === 'Expired' || t.startsWith('Overdue') ? '#DF2F4A' : t === 'Due today' ? '#D97706' : t === 'Yes' || t === 'Valid' ? '#00A35E' : t.startsWith('Expires in') ? '#D97706' : col.key === 'stars' ? '#D0AE4C' : BRAND.ink
     return <div style={{ ...base, cursor: 'default', color, letterSpacing: col.key === 'stars' ? 2 : undefined }}>{t}</div>
   }
 

@@ -98,7 +98,7 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '12px 0', flexWrap: 'wrap' }}>
-          <button onClick={() => newItem()} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 500, padding: '0 14px', marginRight: 8 }}>New {board.item}</button>
+          {!board.noCreate && <button onClick={() => newItem()} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 500, padding: '0 14px', marginRight: 8 }}>New {board.item}</button>}
           {searchOpen || search
             ? <input autoFocus value={search} onChange={e => setSearch(e.target.value)} onBlur={() => setSearchOpen(false)} placeholder="Search this board" style={{ height: 32, width: 200, border: `1px solid ${BRAND.goldDark}`, borderRadius: 4, padding: '0 10px', fontFamily: 'inherit', fontSize: 13.5 }} />
             : <button onClick={() => setSearchOpen(true)} className="crm-tb" style={tb}>⌕ Search</button>}
@@ -164,13 +164,13 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
                           </div>
                         )
                       })}
-                      <AddRow board={board} color={g.color} onAdd={name => mk.add(board.key, { ...(board.nameRef ? {} : { [board.nameField]: name }), ...(g.id !== '__none' ? { [groupCol.key]: g.id } : {}) }).then(r => { if (r && board.nameRef) onOpen(r.id); return r })} />
+                      {!board.noCreate && <AddRow board={board} color={g.color} onAdd={name => mk.add(board.key, { ...(board.nameRef ? {} : { [board.nameField]: name }), ...(g.id !== '__none' ? { [groupCol.key]: g.id } : {}) }).then(r => { if (r && board.nameRef) onOpen(r.id); return r })} />}
                       <Summary cols={cols} items={g.items} />
                     </>}
                   </div>
                 )
               })}
-              {rows.length === 0 && <div style={{ padding: '30px 0', color: BRAND.muted, fontSize: 14 }}>No {board.item}s yet — click <b>New {board.item}</b> to add the first one.</div>}
+              {rows.length === 0 && <div style={{ padding: '30px 0', color: BRAND.muted, fontSize: 14 }}>No {board.item}s yet{board.noCreate ? '.' : <> — click <b>New {board.item}</b> to add the first one.</>}</div>}
             </div>
           </div>
         )}
@@ -182,7 +182,7 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
         <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: '#fff', boxShadow: '0 6px 24px rgba(0,0,0,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', zIndex: 800, overflow: 'hidden' }}>
           <div style={{ background: BRAND.goldDark, color: '#fff', fontSize: 22, fontWeight: 500, padding: '12px 18px' }}>{selected.size}</div>
           <div style={{ padding: '0 16px', fontSize: 14 }}>{plural(board.item[0].toUpperCase() + board.item.slice(1), selected.size)} selected</div>
-          <button onClick={async () => { await mk.duplicate(board.key, [...selected]); setSelected(new Set()) }} className="crm-tb" style={tb}>⧉ Duplicate</button>
+          {!board.noCreate && <button onClick={async () => { await mk.duplicate(board.key, [...selected]); setSelected(new Set()) }} className="crm-tb" style={tb}>⧉ Duplicate</button>}
           <button ref={a.move} onClick={() => setPop('move')} className="crm-tb" style={tb}>→ Set {groupCol.title.toLowerCase()}</button>
           <button onClick={async () => { if (confirm(`Delete ${selected.size} ${plural(board.item, selected.size)}? This can't be undone.`)) { await mk.remove(board.key, [...selected]); setSelected(new Set()) } }} className="crm-tb" style={{ ...tb, color: '#DF2F4A' }}>🗑 Delete</button>
           <button onClick={() => setSelected(new Set())} style={{ ...tb, borderLeft: `1px solid ${BRAND.rowBorder}`, borderRadius: 0, height: 52, padding: '0 16px' }}>×</button>

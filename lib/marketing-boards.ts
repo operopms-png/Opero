@@ -26,6 +26,7 @@ export type MkBoard = {
   dateField?: string      // for the calendar view
   endField?: string
   nameRef?: string        // when the row's name is a 'ref' column (e.g. an employee), its key
+  noCreate?: boolean      // rows come from elsewhere (no New / Add row / Duplicate)
   cols: MkCol[]
   defaults: Record<string, any>
 }
