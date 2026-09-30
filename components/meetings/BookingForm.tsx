@@ -23,7 +23,8 @@ export default function BookingForm({ code }: { code?: string }) {
 
   const today = new Date().toISOString().slice(0, 10)
   const niceDate = f.date ? new Date(f.date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : ''
-  const preferred = [niceDate, f.part !== 'Any time' || niceDate ? f.part.toLowerCase() : 'any time', f.when_note].filter(Boolean).join(', ').replace(/^any time$/, 'Any time')
+  const joined = [niceDate, f.part.toLowerCase(), f.when_note].filter(Boolean).join(', ')
+  const preferred = joined.charAt(0).toUpperCase() + joined.slice(1)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setErr('')

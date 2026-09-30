@@ -230,7 +230,7 @@ export const WINS_BOARD: MkBoard = {
 const request = (r: any) => r.source === 'booking_page'
 const booked = (r: any) => r.status === 'scheduled' && !request(r)
 export const MEETINGS_BOARD: MkBoard = {
-  key: 'meetings', table: 'meetings', title: 'Meetings', item: 'meeting link', nameField: 'title', groupBy: 'status',
+  key: 'meetings', table: 'meetings', title: 'Meetings', item: 'meeting', nameField: 'title', groupBy: 'status',
   dateField: 'scheduled_at',
   defaults: { title: '30 min meeting', duration_minutes: 30 },
   cols: [
