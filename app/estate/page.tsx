@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import TenantDocuments from '@/components/TenantDocuments'
 import { supabase, getAccountId } from '../../lib/supabase'
+import LandlordStatements from '@/components/reports/LandlordStatements'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
@@ -122,7 +123,7 @@ const NAV_GROUPS = [
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
   { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
-  { label: 'REPORTS', items: ['Reports','Owner Reports','Landlord Statements'] },
+  { label: 'REPORTS', items: ['Landlord Reports','Reports','Owner Reports','Landlord Statements'] },
 ]
 const STUB_SECTIONS: string[] = []
 const DOCUMENT_CATEGORIES = [
@@ -1962,6 +1963,8 @@ export default function Page() {
 
             </div>
           )}
+
+          {section==='Landlord Reports'&&<LandlordStatements mode="ea" />}
 
           {section==='Reports'&&(() => {
             const year = new Date().getFullYear()
