@@ -27,6 +27,8 @@ function bookingUpsertPayload(b: any, propertyId: string) {
     guest_name: b['guest-name'],
     guest_email: b.email || null,
     guest_phone: b.phone || null,
+    // Booking price as Smoobu reports it (what the guest pays for the stay)
+    total_amount: b.price != null && b.price !== '' ? Number(b.price) : null,
     platform: b.channel?.name || 'Smoobu',
     source: 'smoobu',
     external_id: `smoobu-${b.id}`,
@@ -97,9 +99,9 @@ export async function runSmoobuSync() {
         const propertyId = apartmentToProperty.get(String(thread.apartment?.id))
         if (!propertyId) continue
 
-        let { data: booking } = await supabase
+        let { data: booking }: { data: { id: any; total_amount?: any } | null } = await supabase
           .from('bookings')
-          .select('id')
+          .select('id, total_amount')
           .eq('external_id', `smoobu-${thread.booking?.id}`)
           .maybeSingle()
 
@@ -109,7 +111,8 @@ export async function runSmoobuSync() {
         // and never re-modified). Rather than silently dropping the
         // thread's messages, fetch that one booking directly from
         // Smoobu and upsert it, same as the main loop does.
-        if (!booking && thread.booking?.id) {
+        // Also refetch older bookings saved before prices were synced.
+        if ((!booking || booking.total_amount == null) && thread.booking?.id) {
           try {
             const fullBooking = await smoobuFetch(apiKey, `/reservations/${thread.booking.id}`)
             const externalId = `smoobu-${thread.booking.id}`

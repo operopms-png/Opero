@@ -1,4 +1,4 @@
-// Runs every 30 minutes -- more frequent than sync-ical's 2 hours,
+// Runs every 10 minutes -- more frequent than sync-ical's 2 hours,
 // since guest messages are time-sensitive in a way booking dates
 // aren't. See lib/sync-smoobu.ts for the actual logic. Netlify blocks
 // direct external invocation of scheduled functions, so for manual
@@ -6,7 +6,7 @@
 import { schedule } from '@netlify/functions'
 import { runSmoobuSync } from '../../lib/sync-smoobu'
 
-export const handler = schedule('*/30 * * * *', async () => {
+export const handler = schedule('*/10 * * * *', async () => {
   const result = await runSmoobuSync()
   const errors = result.synced.filter((r: any) => r.error)
   if (errors.length) console.error('[sync-smoobu] errors:', errors)
