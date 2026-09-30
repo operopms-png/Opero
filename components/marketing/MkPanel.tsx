@@ -95,7 +95,9 @@ export default function MkPanel({ mk, board, id, onClose, onOpenOther }: { mk: M
             <div style={{ fontSize: 12, color: BRAND.muted }}>{board.title}{sent ? ' · Sent ' + fmtDate(row.sent_at, true) : ''}</div>
             <button onClick={async () => { if (confirm(`Delete this ${board.item}? This can't be undone.`)) { await mk.remove(board.key, [id]); onClose() } }} style={{ marginLeft: 'auto', border: 'none', background: 'none', color: '#DF2F4A', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>🗑 Delete</button>
           </div>
-          {board.key === 'social'
+          {board.nameRef
+            ? <div style={{ fontSize: 22, fontWeight: 600, margin: '6px 0 10px' }}>{(mk.refs?.[board.cols.find(c => c.key === board.nameRef)?.ref ?? ''] ?? []).find(o => o.value === row[board.nameRef!])?.label ?? `${board.item[0].toUpperCase() + board.item.slice(1)} — choose below`}</div>
+            : board.key === 'social'
             ? <div style={{ fontSize: 13, color: BRAND.muted, margin: '8px 0 10px' }}>Social post</div>
             : <input value={name} disabled={sent} onChange={e => setName(e.target.value)} onBlur={() => { const t = name.trim(); if (t && t !== row[board.nameField]) save({ [board.nameField]: t }) }} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
                 style={{ width: '100%', fontSize: 22, fontWeight: 600, border: '1px solid transparent', borderRadius: 4, padding: '4px 6px', margin: '6px 0 10px -6px', fontFamily: 'inherit', outline: 'none', color: BRAND.ink, background: '#fff' }}

@@ -1,461 +1,181 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase, getAccountId } from '../../../lib/supabase'
+import { BRAND, initials, avatarColor } from '@/lib/crm-board'
+import { HR_BOARDS, hrBoard } from '@/lib/hr-boards'
+import { fmtDate } from '@/lib/marketing-boards'
+import { useMultiBoards } from '@/components/boards/useMultiBoards'
+import MkBoardView from '@/components/marketing/MkBoardView'
+import MkPanel from '@/components/marketing/MkPanel'
 
-const ACCENT = '#A8862E'
-const SECTIONS = ['Dashboard','Employees','Onboarding','Performance','Training','Discipline','Time Tracking','HR Requests','Company Goals']
-const inp: React.CSSProperties = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}
-const lbl: React.CSSProperties = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}
-const cardStyle: React.CSSProperties = {background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:20}
+// Staff Centre → People & HR: a CRM-style workspace with one board per HR record type.
+type View = { kind: 'home' } | { kind: 'board'; key: string }
 
-function initials(name: string) {
-  return (name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]?.toUpperCase()).join('')
+const ICON: Record<string, React.ReactNode> = {
+  home: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" /></svg>,
+  employees: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6" /><circle cx="17.5" cy="9" r="2.5" /><path d="M16 14.2c3 .2 5.5 2.3 5.5 5.3" /></svg>,
+  onboarding: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" /></svg>,
+  reviews: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" /></svg>,
+  training: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c3 2 9 2 12 0v-5" /></svg>,
+  discipline: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 3l9 16H3z" /><path d="M12 10v4M12 17v.5" /></svg>,
+  time: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>,
+  requests: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 9h8M8 13h8M8 17h5" /></svg>,
+  goals: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></svg>,
 }
-const AVATAR_COLORS = ['#A8862E','#10B981','#F59E0B','#A8862E','#EC4899','#2D6A4F','#DC2626','#0891B2']
-function avatarColor(name: string) {
-  let hash = 0
-  for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash<<5)-hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-function StatusBadge({ status, colors }: { status: string, colors: Record<string,{bg:string,fg:string}> }) {
-  const c = colors[status] ?? { bg:'#F2F4F7', fg:'#6B7280' }
-  return <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:20,background:c.bg,color:c.fg,width:'fit-content'}}>{status}</span>
-}
+const today = () => new Date().toISOString().slice(0, 10)
 
-export default function Page() {
-  const [loading, setLoading] = useState(true)
-  const [section, setSection] = useState('Dashboard')
-  const [userId, setUserId] = useState('')
-  const [employees, setEmployees] = useState<any[]>([])
-  const [onboarding, setOnboarding] = useState<any[]>([])
-  const [reviews, setReviews] = useState<any[]>([])
-  const [training, setTraining] = useState<any[]>([])
-  const [discipline, setDiscipline] = useState<any[]>([])
-  const [timeEntries, setTimeEntries] = useState<any[]>([])
-  const [requests, setRequests] = useState<any[]>([])
-  const [goals, setGoals] = useState<any[]>([])
+export default function HrPage() {
+  const store = useMultiBoards(HR_BOARDS, {
+    refs: rows => ({ employees: (rows.employees ?? []).map(e => ({ value: e.id, label: e.full_name, color: '#D0AE4C' })).sort((a, b) => a.label.localeCompare(b.label)) }),
+    patch: (k, row, p) => {
+      // keep the "done" dates filled in automatically
+      if (k === 'onboarding' && 'status' in p) return { ...p, completed_date: p.status === 'Complete' ? (row.completed_date ?? today()) : null }
+      if (k === 'requests' && 'status' in p) return { ...p, resolved_date: p.status !== 'Pending' ? (row.resolved_date ?? today()) : null }
+      if (k === 'goals' && 'status' in p && p.status === 'Achieved') return { ...p, progress_pct: 100 }
+      return p
+    },
+  })
+  const [view, setViewState] = useState<View>({ kind: 'home' })
+  const [panelOpen, setPanelOpen] = useState(true)
+  const [open, setOpen] = useState<{ board: string; id: string } | null>(null)
 
-  const [showForm, setShowForm] = useState(false)
-  const [editId, setEditId] = useState<string|null>(null)
-  const [form, setForm] = useState<any>({})
+  useEffect(() => {
+    if (store.loading) return
+    const b = new URLSearchParams(window.location.search).get('board')
+    if (b && hrBoard(b)) setViewState({ kind: 'board', key: b })
+  }, [store.loading])
+  const setView = (v: View) => { setViewState(v); window.history.replaceState(null, '', v.kind === 'board' ? `?board=${v.key}` : window.location.pathname) }
 
-  useEffect(()=>{ load() },[])
-
-  async function load() {
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { window.location.href='/login'; return }
-    const accountId = await getAccountId(user)
-    setUserId(accountId)
-    const [emp, ob, perf, tr, disc, time, req, gl] = await Promise.all([
-      supabase.from('hr_employees').select('*').eq('user_id',accountId).order('full_name'),
-      supabase.from('hr_onboarding_tasks').select('*').eq('user_id',accountId).order('due_date',{ascending:true}),
-      supabase.from('hr_performance_reviews').select('*').eq('user_id',accountId).order('review_date',{ascending:false}),
-      supabase.from('hr_training_records').select('*').eq('user_id',accountId).order('expiry_date',{ascending:true}),
-      supabase.from('hr_discipline_records').select('*').eq('user_id',accountId).order('date_issued',{ascending:false}),
-      supabase.from('hr_time_entries').select('*').eq('user_id',accountId).order('entry_date',{ascending:false}),
-      supabase.from('hr_requests').select('*').eq('user_id',accountId).order('created_at',{ascending:false}),
-      supabase.from('hr_company_goals').select('*').eq('user_id',accountId).order('target_date',{ascending:true}),
-    ])
-    setEmployees(emp.data??[]); setOnboarding(ob.data??[]); setReviews(perf.data??[]); setTraining(tr.data??[])
-    setDiscipline(disc.data??[]); setTimeEntries(time.data??[]); setRequests(req.data??[]); setGoals(gl.data??[])
-    setLoading(false)
-  }
-
-  function empName(id: string) { return employees.find((e:any)=>e.id===id)?.full_name ?? '—' }
-
-  async function saveRecord(table: string, setter: (v:any)=>void, resetForm: any) {
-    if (!userId) return
-    // Empty text inputs come through as '' -- fine for text columns, but
-    // Postgres rejects '' for numeric/uuid columns (e.g. Salary, Rating,
-    // Progress %, or an unselected employee/owner dropdown). Convert any
-    // blank field to null before it hits the database.
-    const cleaned = Object.fromEntries(Object.entries(form).map(([k,v])=>[k, v==='' ? null : v]))
-    const { error } = editId
-      ? await supabase.from(table).update(cleaned).eq('id',editId)
-      : await supabase.from(table).insert([{...cleaned,user_id:userId}])
-    if (error) { alert(error.message); return }
-    setForm(resetForm); setEditId(null); setShowForm(false)
-    await load()
-  }
-
-  async function delRecord(table: string, id: string, setter: (fn:(prev:any[])=>any[])=>void) {
-    if (!confirm('Delete this record?')) return
-    await supabase.from(table).delete().eq('id',id)
-    setter(prev=>prev.filter((r:any)=>r.id!==id))
-  }
-
-  function openAdd(defaults: any) { setEditId(null); setForm(defaults); setShowForm(true) }
-  function openEdit(record: any) { setEditId(record.id); setForm(record); setShowForm(true) }
-  function closeForm() { setShowForm(false); setEditId(null); setForm({}) }
-
-  if (loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
-
-  const EMPLOYEE_STATUS_COLORS = {'Active':{bg:'#D1FAE5',fg:'#059669'},'On Leave':{bg:'#FEF3C7',fg:'#D97706'},'Terminated':{bg:'#FEE2E2',fg:'#DC2626'}}
-  const activeEmployees = employees.filter((e:any)=>e.status==='Active')
-  const pendingRequests = requests.filter((r:any)=>r.status==='Pending')
-  const openDiscipline = discipline.filter((d:any)=>new Date(d.date_issued) >= new Date(Date.now()-90*86400000))
-  const expiringTraining = training.filter((t:any)=>t.expiry_date && new Date(t.expiry_date) <= new Date(Date.now()+30*86400000) && new Date(t.expiry_date) >= new Date())
-  const pendingOnboarding = onboarding.filter((o:any)=>o.status==='Pending')
+  const board = view.kind === 'board' ? hrBoard(view.key) : undefined
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif"}}>
-      <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 28px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <div>
-          <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em'}}>STAFF CENTRE</div>
-          <div style={{fontSize:15,fontWeight:700,color:'#323338'}}>People &amp; HR</div>
+    <div style={{ display: 'flex', height: '100vh', width: '100%', contain: 'inline-size', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: BRAND.ink, background: '#fff' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+        .crm-hover-show { opacity: 0; transition: opacity .1s }
+        .crm-row:hover .crm-hover-show, .crm-colhead:hover .crm-hover-show { opacity: 1 }
+        .crm-row:hover, .crm-row:hover .crm-sticky { background: ${BRAND.hover} !important }
+        .crm-nav:hover { background: ${BRAND.hover} }
+        .crm-tb:hover { background: ${BRAND.hover} }
+        @media (max-width: 1100px) { .hr-tiles { grid-template-columns: repeat(3, minmax(0,1fr)) !important } }
+        @media (max-width: 900px) { .hr-ws { display: none !important } .hr-row { grid-template-columns: 1fr !important } }
+      `}</style>
+      {panelOpen ? (
+        <aside className="hr-ws" style={{ width: 232, flexShrink: 0, borderRight: `1px solid ${BRAND.rowBorder}`, padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 6px 10px' }}>
+            <span style={{ fontSize: 13, color: BRAND.muted }}>Workspace</span>
+            <button onClick={() => setPanelOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: BRAND.muted }}>«</button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '0 8px', fontSize: 13.5, marginBottom: 12, whiteSpace: 'nowrap' }}>
+            <span style={{ width: 20, height: 20, borderRadius: 4, background: BRAND.gold, color: BRAND.brown, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>S</span>
+            Sangsters People & HR
+          </div>
+          <Nav icon={ICON.home} label="HR dashboard" active={view.kind === 'home'} onClick={() => setView({ kind: 'home' })} />
+          {HR_BOARDS.map(b => <Nav key={b.key} icon={ICON[b.key]} label={b.title} count={store.rows[b.key]?.length} active={view.kind === 'board' && view.key === b.key} onClick={() => setView({ kind: 'board', key: b.key })} />)}
+        </aside>
+      ) : <button onClick={() => setPanelOpen(true)} style={{ width: 28, flexShrink: 0, border: 'none', borderRight: `1px solid ${BRAND.rowBorder}`, background: '#fff', cursor: 'pointer', color: BRAND.muted }}>»</button>}
+
+      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {store.loading ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Loading People & HR…</div>
+          : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load People & HR: {store.error}</div>
+          : view.kind === 'home' ? <Dashboard store={store} go={k => setView({ kind: 'board', key: k })} openItem={(b, id) => setOpen({ board: b, id })} />
+          : board && <MkBoardView key={board.key} mk={store} board={board} onOpen={id => setOpen({ board: board.key, id })} />}
+      </main>
+      {open && hrBoard(open.board) && <MkPanel key={open.id} mk={store} board={hrBoard(open.board)!} id={open.id} onClose={() => setOpen(null)} onOpenOther={(b, id) => setOpen({ board: b, id })} />}
+    </div>
+  )
+}
+
+function Nav({ icon, label, active, onClick, count }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void; count?: number }) {
+  return (
+    <button className="crm-nav" onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', border: active ? `1px solid ${BRAND.goldDark}` : '1px solid transparent', borderRadius: 4, background: active ? BRAND.selected : 'none', color: BRAND.ink, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+      <span style={{ color: BRAND.muted, display: 'flex' }}>{icon}</span>
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+      {count ? <span style={{ fontSize: 11.5, color: BRAND.muted }}>{count}</span> : null}
+    </button>
+  )
+}
+
+function Dashboard({ store, go, openItem }: { store: ReturnType<typeof useMultiBoards>; go: (k: string) => void; openItem: (b: string, id: string) => void }) {
+  const r = store.rows
+  const emp = (id: string) => (r.employees ?? []).find(e => e.id === id)?.full_name ?? '—'
+  const now = Date.now()
+  const days = (d: string) => (new Date(d + 'T00:00:00').getTime() - now) / 86400000
+  const active = (r.employees ?? []).filter(e => e.status === 'Active')
+  const pendingOnb = (r.onboarding ?? []).filter(o => o.status === 'Pending')
+  const pendingReq = (r.requests ?? []).filter(x => x.status === 'Pending')
+  const disc90 = (r.discipline ?? []).filter(d => d.date_issued && days(d.date_issued) >= -90)
+  const expiring = (r.training ?? []).filter(t => t.expiry_date && days(t.expiry_date) <= 60)
+  const goals = r.goals ?? []
+  const tiles = [
+    { l: 'Active employees', v: active.length, k: 'employees', hl: true },
+    { l: 'Pending onboarding', v: pendingOnb.length, k: 'onboarding' },
+    { l: 'Pending HR requests', v: pendingReq.length, k: 'requests' },
+    { l: 'Discipline (90 days)', v: disc90.length, k: 'discipline' },
+    { l: 'Training expiring (60 days)', v: expiring.length, k: 'training' },
+  ]
+  const card: React.CSSProperties = { border: `1px solid ${BRAND.rowBorder}`, borderRadius: 8, overflow: 'hidden', background: '#fff' }
+  const head: React.CSSProperties = { padding: '12px 18px', fontSize: 15.5, fontWeight: 500, borderBottom: `1px solid ${BRAND.rowBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }
+  const link: React.CSSProperties = { border: 'none', background: 'none', color: BRAND.goldDark, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }
+  const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderBottom: `1px solid ${BRAND.rowBorder}`, cursor: 'pointer', fontSize: 13.5 }
+  const empty = (t: string) => <div style={{ padding: 24, color: BRAND.muted, fontSize: 13.5, textAlign: 'center' }}>{t}</div>
+  return (
+    <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={{ height: 120, background: `linear-gradient(135deg, ${BRAND.selected}, #F3E6C8)` }} />
+      <div style={{ padding: '0 32px 40px', marginTop: -40 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
+          <div style={{ width: 80, height: 80, borderRadius: 10, background: '#fff', border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', overflow: 'hidden', flexShrink: 0 }}><img src="/logo.PNG" alt="Sangsters" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+          <div style={{ paddingBottom: 4 }}>
+            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500 }}>People & HR</h1>
+            <div style={{ fontSize: 13.5, color: BRAND.muted }}>Employees, onboarding, reviews, training, requests and goals in one place</div>
+          </div>
         </div>
-      </div>
-      <div style={{display:'flex',gap:0,padding:'0 28px',background:'#fff',borderBottom:'1px solid #E4E7EC',overflowX:'auto' as const}}>
-        {SECTIONS.map(s=><button key={s} onClick={()=>{setSection(s);closeForm()}} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:section===s?600:400,color:section===s?ACCENT:'#667085',borderBottom:section===s?'2px solid '+ACCENT:'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap' as const}}>{s}</button>)}
-      </div>
-
-      <div style={{padding:24,maxWidth:1100}}>
-
-        {section==='Dashboard'&&(
-          <div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:14,marginBottom:24}}>
-              {[
-                {label:'Active Employees',value:activeEmployees.length,color:'#323338'},
-                {label:'Pending Onboarding',value:pendingOnboarding.length,color:'#D97706'},
-                {label:'Pending HR Requests',value:pendingRequests.length,color:pendingRequests.length>0?'#DC2626':'#323338'},
-                {label:'Discipline (90d)',value:openDiscipline.length,color:openDiscipline.length>0?'#DC2626':'#323338'},
-                {label:'Training Expiring Soon',value:expiringTraining.length,color:expiringTraining.length>0?'#D97706':'#323338'},
-              ].map(s=>(
-                <div key={s.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'16px 18px'}}>
-                  <div style={{fontSize:22,fontWeight:800,color:s.color}}>{s.value}</div>
-                  <div style={{fontSize:11,color:'#667085',marginTop:4}}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:12}}>Team</div>
-            <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
-              {employees.length===0?<div style={{color:'#98A2B3',fontSize:13,textAlign:'center' as const,padding:40,background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>No employees added yet.</div>:
-              employees.map((e:any)=>(
-                <div key={e.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'14px 18px',display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{width:36,height:36,borderRadius:'50%',background:avatarColor(e.full_name)+'22',color:avatarColor(e.full_name),fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(e.full_name)}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{e.full_name}</div>
-                    <div style={{fontSize:11,color:'#667085'}}>{e.role}{e.department?` · ${e.department}`:''}</div>
-                  </div>
-                  <StatusBadge status={e.status} colors={EMPLOYEE_STATUS_COLORS}/>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {section==='Employees'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({full_name:'',role:'',department:'',employment_type:'Full-Time',status:'Active',start_date:'',email:'',phone:'',salary:'',notes:''})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Employee</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Employee':'Add Employee'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div><label style={lbl}>Full Name *</label><input style={inp} value={form.full_name??''} onChange={e=>setForm({...form,full_name:e.target.value})}/></div>
-                <div><label style={lbl}>Role</label><input style={inp} value={form.role??''} onChange={e=>setForm({...form,role:e.target.value})}/></div>
-                <div><label style={lbl}>Department</label><input style={inp} value={form.department??''} onChange={e=>setForm({...form,department:e.target.value})}/></div>
-                <div><label style={lbl}>Employment Type</label><select style={inp} value={form.employment_type??'Full-Time'} onChange={e=>setForm({...form,employment_type:e.target.value})}><option>Full-Time</option><option>Part-Time</option><option>Contractor</option></select></div>
-                <div><label style={lbl}>Status</label><select style={inp} value={form.status??'Active'} onChange={e=>setForm({...form,status:e.target.value})}><option>Active</option><option>On Leave</option><option>Terminated</option></select></div>
-                <div><label style={lbl}>Start Date</label><input type="date" style={inp} value={form.start_date??''} onChange={e=>setForm({...form,start_date:e.target.value})}/></div>
-                <div><label style={lbl}>Email</label><input type="email" style={inp} value={form.email??''} onChange={e=>setForm({...form,email:e.target.value})}/></div>
-                <div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})}/></div>
-                <div><label style={lbl}>Salary (£/yr)</label><input type="number" style={inp} value={form.salary??''} onChange={e=>setForm({...form,salary:e.target.value})}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_employees',setEmployees,{})} disabled={!form.full_name?.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.full_name?.trim()?0.6:1}}>{editId?'Save Changes':'Add Employee'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1.3fr 1fr 1fr 100px 100px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Name</span><span>Role</span><span>Department</span><span>Type</span><span>Status</span><span></span></div>
-            {employees.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No employees yet.</div>:
-            employees.map((e:any)=>(
-              <div key={e.id} style={{display:'grid',gridTemplateColumns:'1.3fr 1fr 1fr 100px 100px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.full_name}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{e.role||'—'}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{e.department||'—'}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{e.employment_type}</span>
-                <StatusBadge status={e.status} colors={EMPLOYEE_STATUS_COLORS}/>
-                <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
-                  <button onClick={()=>openEdit(e)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
-                  <button onClick={()=>delRecord('hr_employees',e.id,setEmployees)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
-                </div>
+        <div className="hr-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0,1fr))', gap: 12, marginBottom: 18 }}>
+          {tiles.map(t => (
+            <button key={t.l} onClick={() => go(t.k)} style={{ textAlign: 'left', border: `1px solid ${t.hl ? '#EADBB8' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', borderRadius: 8, padding: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <div style={{ fontSize: 12.5, color: t.hl ? '#8A6B2E' : BRAND.muted }}>{t.l}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: t.hl ? BRAND.brown : BRAND.ink }}>{t.v}</div>
+            </button>
+          ))}
+        </div>
+        <div className="hr-row" style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div style={card}>
+            <div style={head}>Team <button style={link} onClick={() => go('employees')}>Open Employees →</button></div>
+            {(r.employees ?? []).length === 0 ? empty('No employees yet.') : (r.employees ?? []).map(e => (
+              <div key={e.id} className="crm-nav" style={row} onClick={() => openItem('employees', e.id)}>
+                <span style={{ width: 32, height: 32, borderRadius: '50%', background: avatarColor(e.full_name), color: '#fff', fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{initials(e.full_name)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 500 }}>{e.full_name}</div><div style={{ fontSize: 12.5, color: BRAND.muted }}>{[e.role, e.department].filter(Boolean).join(' · ')}</div></div>
+                <span style={{ background: e.status === 'Active' ? '#00C875' : e.status === 'On Leave' ? '#FDAB3D' : '#C4C4C4', color: '#fff', fontSize: 12, borderRadius: 3, padding: '2px 10px' }}>{e.status}</span>
               </div>
             ))}
           </div>
-        </div>)}
-
-        {section==='Onboarding'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({employee_id:'',task:'',status:'Pending',due_date:''})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Task</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Task':'Add Onboarding Task'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div><label style={lbl}>Employee *</label><select style={inp} value={form.employee_id??''} onChange={e=>setForm({...form,employee_id:e.target.value})}><option value="">Select…</option>{employees.map((e:any)=><option key={e.id} value={e.id}>{e.full_name}</option>)}</select></div>
-                <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.due_date??''} onChange={e=>setForm({...form,due_date:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Task *</label><input style={inp} value={form.task??''} onChange={e=>setForm({...form,task:e.target.value})} placeholder="e.g. Collect signed contract, IT setup, induction training"/></div>
-                <div><label style={lbl}>Status</label><select style={inp} value={form.status??'Pending'} onChange={e=>setForm({...form,status:e.target.value})}><option>Pending</option><option>Complete</option></select></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_onboarding_tasks',setOnboarding,{})} disabled={!form.task?.trim()||!form.employee_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.task?.trim()||!form.employee_id?0.6:1}}>{editId?'Save Changes':'Add Task'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1.3fr 110px 100px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Employee</span><span>Task</span><span>Due</span><span>Status</span><span></span></div>
-            {onboarding.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No onboarding tasks yet.</div>:
-            onboarding.map((o:any)=>(
-              <div key={o.id} style={{display:'grid',gridTemplateColumns:'1fr 1.3fr 110px 100px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(o.employee_id)}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{o.task}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{o.due_date||'—'}</span>
-                <select value={o.status} onChange={async e=>{await supabase.from('hr_onboarding_tasks').update({status:e.target.value,completed_date:e.target.value==='Complete'?new Date().toISOString().slice(0,10):null}).eq('id',o.id);load()}} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'1px solid #E4E7EC',background:o.status==='Complete'?'#D1FAE5':'#FEF3C7',color:o.status==='Complete'?'#059669':'#D97706'}}><option>Pending</option><option>Complete</option></select>
-                <button onClick={()=>delRecord('hr_onboarding_tasks',o.id,setOnboarding)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
+          <div style={card}>
+            <div style={head}>Needs attention</div>
+            {[
+              ...pendingReq.map(x => ({ b: 'requests', id: x.id, t: x.title, s: `${x.type} request · ${emp(x.employee_id)}`, c: '#FDAB3D' })),
+              ...pendingOnb.map(x => ({ b: 'onboarding', id: x.id, t: x.task, s: `Onboarding · ${emp(x.employee_id)}${x.due_date ? ` · due ${fmtDate(x.due_date)}` : ''}`, c: '#579BFC' })),
+              ...expiring.map(x => ({ b: 'training', id: x.id, t: x.training_name, s: `${days(x.expiry_date) < 0 ? 'Expired' : 'Expires'} ${fmtDate(x.expiry_date)} · ${emp(x.employee_id)}`, c: '#DF2F4A' })),
+            ].slice(0, 10).map(x => (
+              <div key={x.b + x.id} className="crm-nav" style={row} onClick={() => openItem(x.b, x.id)}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: x.c, flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}><div style={{ fontWeight: 500 }}>{x.t}</div><div style={{ fontSize: 12.5, color: BRAND.muted }}>{x.s}</div></div>
               </div>
             ))}
+            {pendingReq.length + pendingOnb.length + expiring.length === 0 && empty('Nothing waiting — all clear.')}
           </div>
-        </div>)}
-
-        {section==='Performance'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({employee_id:'',review_date:new Date().toISOString().slice(0,10),reviewer:'',rating:'',strengths:'',improvements:'',goals:''})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Log Review</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Review':'Log Performance Review'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div><label style={lbl}>Employee *</label><select style={inp} value={form.employee_id??''} onChange={e=>setForm({...form,employee_id:e.target.value})}><option value="">Select…</option>{employees.map((e:any)=><option key={e.id} value={e.id}>{e.full_name}</option>)}</select></div>
-                <div><label style={lbl}>Review Date</label><input type="date" style={inp} value={form.review_date??''} onChange={e=>setForm({...form,review_date:e.target.value})}/></div>
-                <div><label style={lbl}>Reviewer</label><input style={inp} value={form.reviewer??''} onChange={e=>setForm({...form,reviewer:e.target.value})}/></div>
-                <div><label style={lbl}>Rating (out of 5)</label><input type="number" min="1" max="5" step="0.5" style={inp} value={form.rating??''} onChange={e=>setForm({...form,rating:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Strengths</label><textarea style={{...inp,resize:'vertical' as const}} rows={2} value={form.strengths??''} onChange={e=>setForm({...form,strengths:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Areas for Improvement</label><textarea style={{...inp,resize:'vertical' as const}} rows={2} value={form.improvements??''} onChange={e=>setForm({...form,improvements:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Goals for Next Period</label><textarea style={{...inp,resize:'vertical' as const}} rows={2} value={form.goals??''} onChange={e=>setForm({...form,goals:e.target.value})}/></div>
+        </div>
+        <div style={card}>
+          <div style={head}>Company goals <button style={link} onClick={() => go('goals')}>Open Company goals →</button></div>
+          {goals.length === 0 ? empty('No goals yet.') : goals.map(g => {
+            const p = Math.max(0, Math.min(100, Number(g.progress_pct) || 0))
+            return (
+              <div key={g.id} className="crm-nav" style={row} onClick={() => openItem('goals', g.id)}>
+                <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 500 }}>{g.title}</div><div style={{ fontSize: 12.5, color: BRAND.muted }}>{g.owner_employee_id ? emp(g.owner_employee_id) : 'No owner'}{g.target_date ? ` · target ${fmtDate(g.target_date)}` : ''}</div></div>
+                <div style={{ width: 180, height: 8, background: '#F1F2F6', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${p}%`, height: '100%', background: p >= 100 ? '#00C875' : BRAND.gold }} /></div>
+                <span style={{ width: 40, textAlign: 'right', color: BRAND.muted, fontSize: 12.5 }}>{p}%</span>
               </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_performance_reviews',setReviews,{})} disabled={!form.employee_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.employee_id?0.6:1}}>{editId?'Save Changes':'Log Review'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
-            {reviews.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>No reviews logged yet.</div>:
-            reviews.map((r:any)=>(
-              <div key={r.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                  <div><span style={{fontSize:13,fontWeight:700,color:'#323338'}}>{empName(r.employee_id)}</span><span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{r.review_date}{r.reviewer?` · Reviewed by ${r.reviewer}`:''}</span></div>
-                  <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                    {r.rating&&<span style={{fontSize:13,fontWeight:700,color:'#F59E0B'}}>{'★'.repeat(Math.round(r.rating))}<span style={{color:'#E4E7EC'}}>{'★'.repeat(5-Math.round(r.rating))}</span></span>}
-                    <button onClick={()=>openEdit(r)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
-                    <button onClick={()=>delRecord('hr_performance_reviews',r.id,setReviews)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
-                  </div>
-                </div>
-                {r.strengths&&<div style={{fontSize:12,color:'#344054',marginBottom:4}}><strong>Strengths:</strong> {r.strengths}</div>}
-                {r.improvements&&<div style={{fontSize:12,color:'#344054',marginBottom:4}}><strong>To improve:</strong> {r.improvements}</div>}
-                {r.goals&&<div style={{fontSize:12,color:'#344054'}}><strong>Goals:</strong> {r.goals}</div>}
-              </div>
-            ))}
-          </div>
-        </div>)}
-
-        {section==='Training'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({employee_id:'',training_name:'',provider:'',status:'Scheduled',completed_date:'',expiry_date:''})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Training</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Training':'Add Training Record'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div><label style={lbl}>Employee *</label><select style={inp} value={form.employee_id??''} onChange={e=>setForm({...form,employee_id:e.target.value})}><option value="">Select…</option>{employees.map((e:any)=><option key={e.id} value={e.id}>{e.full_name}</option>)}</select></div>
-                <div><label style={lbl}>Training Name *</label><input style={inp} value={form.training_name??''} onChange={e=>setForm({...form,training_name:e.target.value})} placeholder="e.g. Fire Safety, First Aid"/></div>
-                <div><label style={lbl}>Provider</label><input style={inp} value={form.provider??''} onChange={e=>setForm({...form,provider:e.target.value})}/></div>
-                <div><label style={lbl}>Status</label><select style={inp} value={form.status??'Scheduled'} onChange={e=>setForm({...form,status:e.target.value})}><option>Scheduled</option><option>Completed</option><option>Expired</option></select></div>
-                <div><label style={lbl}>Completed Date</label><input type="date" style={inp} value={form.completed_date??''} onChange={e=>setForm({...form,completed_date:e.target.value})}/></div>
-                <div><label style={lbl}>Expiry Date</label><input type="date" style={inp} value={form.expiry_date??''} onChange={e=>setForm({...form,expiry_date:e.target.value})}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_training_records',setTraining,{})} disabled={!form.training_name?.trim()||!form.employee_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.training_name?.trim()||!form.employee_id?0.6:1}}>{editId?'Save Changes':'Add Training'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1.2fr 100px 110px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Employee</span><span>Training</span><span>Status</span><span>Expires</span><span></span></div>
-            {training.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No training records yet.</div>:
-            training.map((t:any)=>{
-              const expSoon = t.expiry_date && new Date(t.expiry_date) <= new Date(Date.now()+30*86400000) && new Date(t.expiry_date) >= new Date()
-              return (
-              <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 1.2fr 100px 110px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(t.employee_id)}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{t.training_name}{t.provider?` (${t.provider})`:''}</span>
-                <StatusBadge status={t.status} colors={{'Scheduled':{bg:'#FBF4E6',fg:'#A8862E'},'Completed':{bg:'#D1FAE5',fg:'#059669'},'Expired':{bg:'#FEE2E2',fg:'#DC2626'}}}/>
-                <span style={{fontSize:12,color:expSoon?'#D97706':'#667085',fontWeight:expSoon?600:400}}>{t.expiry_date||'—'}</span>
-                <button onClick={()=>delRecord('hr_training_records',t.id,setTraining)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
-              </div>
-            )})}
-          </div>
-        </div>)}
-
-        {section==='Discipline'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({employee_id:'',type:'Verbal Warning',date_issued:new Date().toISOString().slice(0,10),reason:'',issued_by:'',resolution:''})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Record</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Record':'Add Disciplinary Record'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div><label style={lbl}>Employee *</label><select style={inp} value={form.employee_id??''} onChange={e=>setForm({...form,employee_id:e.target.value})}><option value="">Select…</option>{employees.map((e:any)=><option key={e.id} value={e.id}>{e.full_name}</option>)}</select></div>
-                <div><label style={lbl}>Type</label><select style={inp} value={form.type??'Verbal Warning'} onChange={e=>setForm({...form,type:e.target.value})}><option>Verbal Warning</option><option>Written Warning</option><option>Final Warning</option><option>Performance Improvement Plan</option><option>Other</option></select></div>
-                <div><label style={lbl}>Date Issued</label><input type="date" style={inp} value={form.date_issued??''} onChange={e=>setForm({...form,date_issued:e.target.value})}/></div>
-                <div><label style={lbl}>Issued By</label><input style={inp} value={form.issued_by??''} onChange={e=>setForm({...form,issued_by:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Reason</label><textarea style={{...inp,resize:'vertical' as const}} rows={2} value={form.reason??''} onChange={e=>setForm({...form,reason:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Resolution / Follow-up</label><textarea style={{...inp,resize:'vertical' as const}} rows={2} value={form.resolution??''} onChange={e=>setForm({...form,resolution:e.target.value})}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_discipline_records',setDiscipline,{})} disabled={!form.employee_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.employee_id?0.6:1}}>{editId?'Save Changes':'Add Record'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>
-            {discipline.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>No disciplinary records.</div>:
-            discipline.map((d:any)=>(
-              <div key={d.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-                  <div><span style={{fontSize:13,fontWeight:700,color:'#323338'}}>{empName(d.employee_id)}</span> <StatusBadge status={d.type} colors={{'Verbal Warning':{bg:'#FEF3C7',fg:'#D97706'},'Written Warning':{bg:'#FFEDD5',fg:'#EA580C'},'Final Warning':{bg:'#FEE2E2',fg:'#DC2626'},'Performance Improvement Plan':{bg:'#FBF4E6',fg:'#A8862E'}}}/> <span style={{fontSize:12,color:'#98A2B3',marginLeft:6}}>{d.date_issued}{d.issued_by?` · Issued by ${d.issued_by}`:''}</span></div>
-                  <button onClick={()=>delRecord('hr_discipline_records',d.id,setDiscipline)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
-                </div>
-                {d.reason&&<div style={{fontSize:12,color:'#344054',marginBottom:4}}>{d.reason}</div>}
-                {d.resolution&&<div style={{fontSize:12,color:'#667085'}}><strong>Resolution:</strong> {d.resolution}</div>}
-              </div>
-            ))}
-          </div>
-        </div>)}
-
-        {section==='Time Tracking'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({employee_id:'',entry_date:new Date().toISOString().slice(0,10),clock_in:'',clock_out:'',hours:'',notes:''})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Entry</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Entry':'Add Time Entry'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div><label style={lbl}>Employee *</label><select style={inp} value={form.employee_id??''} onChange={e=>setForm({...form,employee_id:e.target.value})}><option value="">Select…</option>{employees.map((e:any)=><option key={e.id} value={e.id}>{e.full_name}</option>)}</select></div>
-                <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.entry_date??''} onChange={e=>setForm({...form,entry_date:e.target.value})}/></div>
-                <div><label style={lbl}>Clock In</label><input type="time" style={inp} value={form.clock_in??''} onChange={e=>setForm({...form,clock_in:e.target.value})}/></div>
-                <div><label style={lbl}>Clock Out</label><input type="time" style={inp} value={form.clock_out??''} onChange={e=>setForm({...form,clock_out:e.target.value})}/></div>
-                <div><label style={lbl}>Hours (auto or manual)</label><input type="number" step="0.25" style={inp} value={form.hours??''} onChange={e=>setForm({...form,hours:e.target.value})}/></div>
-                <div><label style={lbl}>Notes</label><input style={inp} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_time_entries',setTimeEntries,{})} disabled={!form.employee_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.employee_id?0.6:1}}>{editId?'Save Changes':'Add Entry'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 100px 90px 90px 80px 1fr 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Employee</span><span>Date</span><span>In</span><span>Out</span><span>Hours</span><span>Notes</span><span></span></div>
-            {timeEntries.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No time entries yet.</div>:
-            timeEntries.map((t:any)=>(
-              <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 90px 90px 80px 1fr 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(t.employee_id)}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{t.entry_date}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{t.clock_in||'—'}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{t.clock_out||'—'}</span>
-                <span style={{fontSize:12,fontWeight:600,color:'#323338'}}>{t.hours??'—'}</span>
-                <span style={{fontSize:12,color:'#98A2B3'}}>{t.notes||''}</span>
-                <button onClick={()=>delRecord('hr_time_entries',t.id,setTimeEntries)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
-              </div>
-            ))}
-          </div>
-        </div>)}
-
-        {section==='HR Requests'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({employee_id:'',type:'Holiday',title:'',description:'',status:'Pending',start_date:'',end_date:''})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Request</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Request':'Add HR Request'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div><label style={lbl}>Employee *</label><select style={inp} value={form.employee_id??''} onChange={e=>setForm({...form,employee_id:e.target.value})}><option value="">Select…</option>{employees.map((e:any)=><option key={e.id} value={e.id}>{e.full_name}</option>)}</select></div>
-                <div><label style={lbl}>Type</label><select style={inp} value={form.type??'Holiday'} onChange={e=>setForm({...form,type:e.target.value})}><option>Holiday</option><option>Sick Leave</option><option>Expense</option><option>General</option></select></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})}/></div>
-                <div><label style={lbl}>Start Date</label><input type="date" style={inp} value={form.start_date??''} onChange={e=>setForm({...form,start_date:e.target.value})}/></div>
-                <div><label style={lbl}>End Date</label><input type="date" style={inp} value={form.end_date??''} onChange={e=>setForm({...form,end_date:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical' as const}} rows={2} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_requests',setRequests,{})} disabled={!form.title?.trim()||!form.employee_id} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.title?.trim()||!form.employee_id?0.6:1}}>{editId?'Save Changes':'Add Request'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 100px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}><span>Employee</span><span>Request</span><span>Type</span><span>Dates</span><span>Status</span></div>
-            {requests.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}>No requests yet.</div>:
-            requests.map((r:any)=>(
-              <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 100px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{empName(r.employee_id)}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{r.title}</span>
-                <span style={{fontSize:12,color:'#667085'}}>{r.type}</span>
-                <span style={{fontSize:11,color:'#98A2B3'}}>{r.start_date?`${r.start_date}${r.end_date?' – '+r.end_date:''}`:'—'}</span>
-                <select value={r.status} onChange={async e=>{await supabase.from('hr_requests').update({status:e.target.value,resolved_date:e.target.value!=='Pending'?new Date().toISOString().slice(0,10):null}).eq('id',r.id);load()}} style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:6,border:'1px solid #E4E7EC',background:r.status==='Approved'?'#D1FAE5':r.status==='Denied'?'#FEE2E2':'#FEF3C7',color:r.status==='Approved'?'#059669':r.status==='Denied'?'#DC2626':'#D97706'}}><option>Pending</option><option>Approved</option><option>Denied</option></select>
-              </div>
-            ))}
-          </div>
-        </div>)}
-
-        {section==='Company Goals'&&(<div>
-          <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-            <button onClick={()=>openAdd({title:'',description:'',owner_employee_id:'',target_date:'',status:'Not Started',progress_pct:0})} style={{padding:'8px 18px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Goal</button>
-          </div>
-          {showForm&&(
-            <div style={cardStyle}>
-              <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{editId?'Edit Goal':'Add Company Goal'}</h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})}/></div>
-                <div><label style={lbl}>Owner</label><select style={inp} value={form.owner_employee_id??''} onChange={e=>setForm({...form,owner_employee_id:e.target.value})}><option value="">Unassigned</option>{employees.map((e:any)=><option key={e.id} value={e.id}>{e.full_name}</option>)}</select></div>
-                <div><label style={lbl}>Target Date</label><input type="date" style={inp} value={form.target_date??''} onChange={e=>setForm({...form,target_date:e.target.value})}/></div>
-                <div><label style={lbl}>Status</label><select style={inp} value={form.status??'Not Started'} onChange={e=>setForm({...form,status:e.target.value})}><option>Not Started</option><option>In Progress</option><option>Achieved</option><option>Missed</option></select></div>
-                <div><label style={lbl}>Progress (%)</label><input type="number" min="0" max="100" style={inp} value={form.progress_pct??0} onChange={e=>setForm({...form,progress_pct:e.target.value})}/></div>
-                <div style={{gridColumn:'span 2'}}><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical' as const}} rows={2} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})}/></div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveRecord('hr_company_goals',setGoals,{})} disabled={!form.title?.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:!form.title?.trim()?0.6:1}}>{editId?'Save Changes':'Add Goal'}</button>
-                <button onClick={closeForm} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
-              </div>
-            </div>
-          )}
-          <div style={{display:'flex',flexDirection:'column' as const,gap:10}}>
-            {goals.length===0?<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}>No company goals yet.</div>:
-            goals.map((g:any)=>(
-              <div key={g.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px'}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                  <div>
-                    <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{g.title}</div>
-                    <div style={{fontSize:11,color:'#98A2B3',marginTop:2}}>{g.owner_employee_id?empName(g.owner_employee_id):'Unassigned'}{g.target_date?` · Target: ${g.target_date}`:''}</div>
-                  </div>
-                  <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                    <StatusBadge status={g.status} colors={{'Not Started':{bg:'#F2F4F7',fg:'#6B7280'},'In Progress':{bg:'#FBF4E6',fg:'#A8862E'},'Achieved':{bg:'#D1FAE5',fg:'#059669'},'Missed':{bg:'#FEE2E2',fg:'#DC2626'}}}/>
-                    <button onClick={()=>openEdit(g)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
-                    <button onClick={()=>delRecord('hr_company_goals',g.id,setGoals)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
-                  </div>
-                </div>
-                {g.description&&<div style={{fontSize:12,color:'#667085',marginBottom:10}}>{g.description}</div>}
-                <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',width:`${g.progress_pct??0}%`,background:g.status==='Achieved'?'#10B981':g.status==='Missed'?'#EF4444':ACCENT}}/></div>
-                <div style={{fontSize:11,color:'#98A2B3',marginTop:4}}>{g.progress_pct??0}% complete</div>
-              </div>
-            ))}
-          </div>
-        </div>)}
-
+            )
+          })}
+        </div>
       </div>
     </div>
   )

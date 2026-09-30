@@ -1,134 +1,73 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { BRAND } from '@/lib/crm-board'
+import { MEETINGS_BOARD, type BoardStore } from '@/lib/marketing-boards'
+import MkBoardView from '@/components/marketing/MkBoardView'
+import MkPanel from '@/components/marketing/MkPanel'
 
-const ACCENT = '#A8862E'
-const DURATIONS = [15, 30, 60]
+// Staff Centre → Meetings: scheduling links as a CRM-style board.
+// Pick a length (15/30/60 min), copy the link, send it; when they pick a time it shows as Booked.
+async function api(method: string, body?: any) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/meetings', { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: body ? JSON.stringify(body) : undefined })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok || data.error) throw new Error(data.error || 'Something went wrong')
+  return data
+}
 
-function statusStyle(status: string) {
-  if (status === 'scheduled') return { bg: '#ECFDF5', color: '#10B981', label: 'Scheduled' }
-  if (status === 'cancelled') return { bg: '#FEF2F2', color: '#B42318', label: 'Cancelled' }
-  return { bg: '#FFFBEB', color: '#B54708', label: 'Awaiting booking' }
+function useMeetings(): BoardStore & { loading: boolean; error: string | null } {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [list, setList] = useState<any[]>([])
+  const ref = useRef(list); ref.current = list
+
+  useEffect(() => { api('GET').then(d => setList(d.meetings ?? [])).catch(e => setError(e.message)).finally(() => setLoading(false)) }, [])
+
+  const update = useCallback(async (_k: string, id: string, patch: Record<string, any>) => {
+    const prev = ref.current
+    setList(l => l.map(m => m.id === id ? { ...m, ...patch } : m))
+    try { await api('PATCH', { id, ...patch }) } catch (e: any) { alert(e.message); setList(prev) }
+  }, [])
+  const add = useCallback(async (_k: string, values: Record<string, any>) => {
+    const duration = [15, 30, 60].includes(Number(values.duration_minutes)) ? Number(values.duration_minutes) : 30
+    try {
+      const d = await api('POST', { title: values.title ?? `${duration} min meeting`, duration_minutes: duration })
+      setList(l => [d.meeting, ...l])
+      return d.meeting
+    } catch (e: any) { alert(e.message); return null }
+  }, [])
+  const remove = useCallback(async (_k: string, ids: string[]) => {
+    try { await api('DELETE', { ids }); setList(l => l.filter(m => !ids.includes(m.id))) } catch (e: any) { alert(e.message) }
+  }, [])
+  const duplicate = useCallback(async (_k: string, ids: string[]) => {
+    for (const m of ref.current.filter(x => ids.includes(x.id))) {
+      try { const d = await api('POST', { title: `${m.title} (copy)`, duration_minutes: m.duration_minutes }); setList(l => [d.meeting, ...l]) } catch (e: any) { alert(e.message); return }
+    }
+  }, [])
+  return { loading, error, rows: { meetings: list }, replies: {}, events: [], people: [], stats: {}, sendingId: null, update, add, remove, duplicate, sendEmail: async () => {} }
 }
 
 export default function MeetingsPage() {
-  const [loading, setLoading] = useState(true)
-  const [meetings, setMeetings] = useState<any[]>([])
-  const [showNew, setShowNew] = useState(false)
-  const [title, setTitle] = useState('')
-  const [duration, setDuration] = useState(30)
-  const [creating, setCreating] = useState(false)
-  const [copiedId, setCopiedId] = useState('')
-  const [error, setError] = useState('')
-
-  useEffect(() => { load() }, [])
-
-  async function authHeader() {
-    const { data: { session } } = await supabase.auth.getSession()
-    return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
-  }
-
-  async function load() {
-    setLoading(true)
-    const res = await fetch('/api/meetings', { headers: await authHeader() })
-    const data = await res.json()
-    setMeetings(data.meetings ?? [])
-    setLoading(false)
-  }
-
-  async function createLink() {
-    setCreating(true)
-    setError('')
-    const res = await fetch('/api/meetings', {
-      method: 'POST',
-      headers: await authHeader(),
-      body: JSON.stringify({ title, duration_minutes: duration }),
-    })
-    const data = await res.json()
-    if (data.error) setError(data.error)
-    else {
-      setShowNew(false)
-      setTitle('')
-      setDuration(30)
-      await load()
-    }
-    setCreating(false)
-  }
-
-  async function cancelMeeting(id: string) {
-    await fetch('/api/meetings', {
-      method: 'PATCH',
-      headers: await authHeader(),
-      body: JSON.stringify({ id, status: 'cancelled' }),
-    })
-    await load()
-  }
-
-  function copyLink(id: string, token: string) {
-    const url = `${window.location.origin}/meet/${token}`
-    navigator.clipboard.writeText(url)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(''), 1500)
-  }
-
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
-
+  const store = useMeetings()
+  const [open, setOpen] = useState<string | null>(null)
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Meetings</h1>
-          <div style={{ fontSize: 13, color: '#667085' }}>Create a scheduling link with a fixed duration -- 15, 30 or 60 minutes -- and send it to whoever's booking time with you.</div>
-        </div>
-        <button onClick={() => setShowNew(true)} style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ New meeting link</button>
-      </div>
-
-      {showNew && (
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, marginBottom: 20 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 14 }}>New meeting link</div>
-          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap' as const }}>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Title (optional)</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Owner intro call" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Duration</label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {DURATIONS.map(d => (
-                  <button key={d} onClick={() => setDuration(d)} style={{ padding: '10px 14px', borderRadius: 8, border: `1.5px solid ${duration === d ? ACCENT : '#D0D5DD'}`, background: duration === d ? '#FBF4E6' : '#fff', color: duration === d ? ACCENT : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{d} min</button>
-                ))}
-              </div>
-            </div>
-            <button onClick={createLink} disabled={creating} style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: creating ? 0.6 : 1 }}>{creating ? 'Creating…' : 'Create link'}</button>
-            <button onClick={() => { setShowNew(false); setError('') }} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', color: '#344054', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-          </div>
-          {error && <div style={{ marginTop: 12, fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
-        </div>
-      )}
-
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 80px 130px 1.4fr 140px 110px', padding: '10px 20px', background: '#F9FAFB', borderBottom: '1px solid #E4E7EC', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase', gap: 8 }}>
-          <span>Title</span><span>Length</span><span>Status</span><span>Attendee / time</span><span>Link</span><span></span>
-        </div>
-        {meetings.length === 0 && <div style={{ padding: 24, fontSize: 13, color: '#98A2B3' }}>No meeting links yet -- create one above.</div>}
-        {meetings.map(m => {
-          const s = statusStyle(m.status)
-          return (
-            <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 80px 130px 1.4fr 140px 110px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#323338' }}>{m.title}</span>
-              <span style={{ fontSize: 13, color: '#344054' }}>{m.duration_minutes} min</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: s.color, background: s.bg, borderRadius: 20, padding: '3px 10px', width: 'fit-content' }}>{s.label}</span>
-              <span style={{ fontSize: 12, color: '#667085' }}>
-                {m.status === 'scheduled' && m.scheduled_at
-                  ? `${m.attendee_name} · ${new Date(m.scheduled_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
-                  : '—'}
-              </span>
-              <button onClick={() => copyLink(m.id, m.token)} disabled={m.status === 'cancelled'} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', color: '#344054', fontSize: 12, cursor: m.status === 'cancelled' ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: m.status === 'cancelled' ? 0.5 : 1 }}>{copiedId === m.id ? 'Copied!' : 'Copy link'}</button>
-              {m.status !== 'cancelled' && <button onClick={() => cancelMeeting(m.id)} style={{ padding: '6px 10px', borderRadius: 6, border: 'none', background: 'none', color: '#B42318', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>}
-            </div>
-          )
-        })}
-      </div>
+    <div style={{ display: 'flex', height: '100vh', width: '100%', contain: 'inline-size', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: BRAND.ink, background: '#fff' }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
+        .crm-hover-show { opacity: 0; transition: opacity .1s }
+        .crm-row:hover .crm-hover-show, .crm-colhead:hover .crm-hover-show { opacity: 1 }
+        .crm-row:hover, .crm-row:hover .crm-sticky { background: ${BRAND.hover} !important }
+        .crm-nav:hover { background: ${BRAND.hover} }
+        .crm-tb:hover { background: ${BRAND.hover} }
+      `}</style>
+      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {store.loading ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Loading meetings…</div>
+          : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load meetings: {store.error}</div>
+          : <MkBoardView mk={store} board={MEETINGS_BOARD} onOpen={setOpen}
+              headerRight={<span style={{ fontSize: 12.5, color: BRAND.muted, marginRight: 8 }}>Pick a length, copy the link and send it — it shows as Booked once they choose a time</span>} />}
+      </main>
+      {open && <MkPanel key={open} mk={store} board={MEETINGS_BOARD} id={open} onClose={() => setOpen(null)} onOpenOther={(_b, id) => setOpen(id)} />}
     </div>
   )
 }

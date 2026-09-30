@@ -37,7 +37,7 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
   useEffect(() => writeLS(`mk-group-${board.key}`, groupBy), [groupBy, board.key])
 
   const cols = board.cols.filter(c => !hidden.includes(c.key) && !c.hideInTable)
-  const filterCols = board.cols.filter(c => c.type === 'status' || c.type === 'module')
+  const filterCols = board.cols.filter(c => c.type === 'status' || c.type === 'module' || c.type === 'ref')
   const hasPerson = board.cols.some(c => c.type === 'person')
   const groupCol = board.cols.find(c => c.key === groupBy) ?? board.cols.find(c => c.key === board.groupBy)!
 
@@ -57,10 +57,10 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
   }, [rows, search, person, filter, sort, board, mk])
 
   const groups = useMemo(() => {
-    const opts = optionsOf(groupCol, mk.people)
+    const opts = optionsOf(groupCol, mk.people, mk.refs)
     const out = opts.map(o => ({ id: o.value, title: o.label ?? o.value, color: o.color, items: visible.filter(r => r[groupCol.key] === o.value) }))
     const rest = visible.filter(r => !opts.some(o => o.value === r[groupCol.key]))
-    if (rest.length) out.push({ id: '__none', title: groupCol.type === 'person' ? 'No owner' : 'Other', color: '#C4C4C4', items: rest })
+    if (rest.length) out.push({ id: '__none', title: groupCol.type === 'person' ? 'No owner' : groupCol.type === 'ref' ? `No ${groupCol.title.toLowerCase()}` : 'Other', color: '#C4C4C4', items: rest })
     return out.filter(g => g.items.length || groupCol.type !== 'person')
   }, [visible, groupCol, mk.people])
 
@@ -164,7 +164,7 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
                           </div>
                         )
                       })}
-                      <AddRow board={board} color={g.color} onAdd={name => mk.add(board.key, { [board.nameField]: name, ...(g.id !== '__none' ? { [groupCol.key]: g.id } : {}) })} />
+                      <AddRow board={board} color={g.color} onAdd={name => mk.add(board.key, { ...(board.nameRef ? {} : { [board.nameField]: name }), ...(g.id !== '__none' ? { [groupCol.key]: g.id } : {}) }).then(r => { if (r && board.nameRef) onOpen(r.id); return r })} />
                       <Summary cols={cols} items={g.items} />
                     </>}
                   </div>
@@ -204,7 +204,7 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
             return (
               <div key={c.key}>
                 <div style={{ fontSize: 12.5, fontWeight: 600, color: BRAND.muted, marginBottom: 4 }}>{c.title}</div>
-                {[...optionsOf(c), { value: '__empty', label: 'Blank', color: '#C4C4C4' }].map(o => (
+                {[...optionsOf(c, mk.people, mk.refs), { value: '__empty', label: 'Blank', color: '#C4C4C4' }].map(o => (
                   <label key={o.value} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 2px', fontSize: 13.5, cursor: 'pointer' }}>
                     <input type="checkbox" checked={cur.includes(o.value)} onChange={() => setFilter({ ...filter, [c.key]: cur.includes(o.value) ? cur.filter(x => x !== o.value) : [...cur, o.value] })} />
                     <span style={{ width: 12, height: 12, borderRadius: 3, background: o.color }} />{o.label ?? o.value}
@@ -234,12 +234,12 @@ export default function MkBoardView({ mk, board, onOpen, headerRight }: { mk: Mk
       </Popover>}
       {pop === 'group' && <Popover anchor={a.group.current} onClose={() => setPop(null)} width={220} align="left">
         <div style={{ padding: 6 }}>
-          {board.cols.filter(c => c.type === 'status' || c.type === 'module' || c.type === 'person').map(c => <button key={c.key} style={{ ...menuItem, fontWeight: groupBy === c.key ? 600 : 400 }} onClick={() => { setGroupBy(c.key); setCollapsed([]); setPop(null) }}>{c.title}{groupBy === c.key ? ' ✓' : ''}</button>)}
+          {board.cols.filter(c => c.type === 'status' || c.type === 'module' || c.type === 'person' || c.type === 'ref').map(c => <button key={c.key} style={{ ...menuItem, fontWeight: groupBy === c.key ? 600 : 400 }} onClick={() => { setGroupBy(c.key); setCollapsed([]); setPop(null) }}>{c.title}{groupBy === c.key ? ' ✓' : ''}</button>)}
         </div>
       </Popover>}
       {pop === 'move' && <Popover anchor={a.move.current} onClose={() => setPop(null)} width={220}>
         <div style={{ padding: 6 }}>
-          {optionsOf(groupCol, mk.people).map(o => <button key={o.value} style={menuItem} onClick={async () => {
+          {optionsOf(groupCol, mk.people, mk.refs).map(o => <button key={o.value} style={menuItem} onClick={async () => {
             setPop(null)
             const ids = [...selected].filter(id => !groupCol.readonlyWhen?.(rows.find(r => r.id === id)))
             await Promise.all(ids.map(id => mk.update(board.key, id, { [groupCol.key]: o.value })))
@@ -264,6 +264,10 @@ function NameCell({ mk, board, row }: { mk: Mk; board: MkBoard; row: any }) {
   const [draft, setDraft] = useState('')
   const name = String(row[board.nameField] ?? '')
   const locked = board.key === 'emails' && row.status === 'Sent'
+  if (board.nameRef) {
+    const col = board.cols.find(c => c.key === board.nameRef)!
+    return <div style={{ flex: 1, height: '100%', paddingLeft: 8, minWidth: 0 }}><MkCell mk={mk} board={board} col={{ ...col, width: 400 }} row={row} /></div>
+  }
   if (editing) {
     const save = () => { setEditing(false); const t = draft.trim(); if (t && t !== name) mk.update(board.key, row.id, { [board.nameField]: t }) }
     return <input autoFocus value={draft} onChange={e => setDraft(e.target.value)} onBlur={save} onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
@@ -280,6 +284,15 @@ function AddRow({ board, color, onAdd }: { board: MkBoard; color: string; onAdd:
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const submit = async () => { const t = draft.trim(); if (!t || busy) return; setBusy(true); await onAdd(t); setDraft(''); setBusy(false) }
+  if (board.nameRef) return (
+    <div style={{ display: 'flex', height: ROW_H, borderBottom: `1px solid ${BRAND.rowBorder}` }}>
+      <div style={{ position: 'sticky', left: 0, zIndex: 2, display: 'flex', background: '#fff' }}>
+        <div style={{ width: 6, background: color, opacity: 0.5, borderBottomLeftRadius: 6 }} />
+        <div style={{ width: 36, borderRight: `1px solid ${BRAND.rowBorder}` }} />
+        <button disabled={busy} onClick={async () => { setBusy(true); await onAdd(''); setBusy(false) }} style={{ width: NAME_W, border: 'none', background: 'none', textAlign: 'left', paddingLeft: 22, color: BRAND.muted, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add {board.item}</button>
+      </div>
+    </div>
+  )
   return (
     <div style={{ display: 'flex', height: ROW_H, borderBottom: `1px solid ${BRAND.rowBorder}` }}>
       <div style={{ position: 'sticky', left: 0, zIndex: 2, display: 'flex', background: '#fff' }}>
@@ -324,7 +337,7 @@ function Summary({ cols, items }: { cols: MkCol[]; items: any[] }) {
 function Kanban({ mk, board, groupCol, items, onOpen }: { mk: Mk; board: MkBoard; groupCol: MkCol; items: any[]; onOpen: (id: string) => void }) {
   const [drag, setDrag] = useState<string | null>(null)
   const [over, setOver] = useState<string | null>(null)
-  const lanes = [...optionsOf(groupCol, mk.people), { value: '__none', label: 'Blank', color: '#C4C4C4' }]
+  const lanes = [...optionsOf(groupCol, mk.people, mk.refs), { value: '__none', label: 'Blank', color: '#C4C4C4' }]
   const inLane = (l: string) => items.filter(r => l === '__none' ? !lanes.some(x => x.value === r[groupCol.key]) : r[groupCol.key] === l)
   const shown = board.cols.filter(c => c.key !== groupCol.key && c.type !== 'send' && c.type !== 'longtext').slice(0, 4)
   return (

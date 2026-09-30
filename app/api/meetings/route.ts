@@ -46,22 +46,45 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ meeting: data })
 }
 
-// Cancel a meeting link (staff-side) -- keeps the row (and whatever got
-// booked on it) instead of deleting, so it still shows in the list with
-// a clear "Cancelled" status rather than just disappearing.
+// Update a meeting link (staff-side): cancel / re-open it, rename it, change the
+// length while nobody has booked yet, or edit notes. Cancelling keeps the row (and
+// whatever got booked on it) so it still shows with a clear "Cancelled" status.
 export async function PATCH(req: NextRequest) {
   const auth = await requireStaffWithBusiness(req)
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id, status } = await req.json()
-  if (!id || !['cancelled', 'pending'].includes(status)) {
-    return NextResponse.json({ error: 'id and a valid status are required' }, { status: 400 })
-  }
+  const body = await req.json()
+  const { id } = body
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
-  const { data: existing } = await serviceClient.from('meetings').select('id').eq('id', id).eq('user_id', auth.businessId).maybeSingle()
+  const { data: existing } = await serviceClient.from('meetings').select('id,status').eq('id', id).eq('user_id', auth.businessId).maybeSingle()
   if (!existing) return NextResponse.json({ error: 'Meeting not found' }, { status: 404 })
 
-  const { error } = await serviceClient.from('meetings').update({ status }).eq('id', id)
+  const patch: Record<string, any> = {}
+  if ('status' in body) {
+    if (!['cancelled', 'pending'].includes(body.status)) return NextResponse.json({ error: 'A meeting can only be cancelled or re-opened here — it becomes "Booked" when someone picks a time.' }, { status: 400 })
+    patch.status = body.status
+  }
+  if ('title' in body) patch.title = String(body.title ?? '').trim().slice(0, 200) || 'Meeting'
+  if ('notes' in body) patch.notes = body.notes ? String(body.notes).slice(0, 5000) : null
+  if ('duration_minutes' in body) {
+    if (![15, 30, 60].includes(Number(body.duration_minutes))) return NextResponse.json({ error: 'Length must be 15, 30 or 60 minutes' }, { status: 400 })
+    if (existing.status === 'scheduled') return NextResponse.json({ error: 'This meeting is already booked, so its length can’t change.' }, { status: 400 })
+    patch.duration_minutes = Number(body.duration_minutes)
+  }
+  if (!Object.keys(patch).length) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
+
+  const { error } = await serviceClient.from('meetings').update(patch).eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
+
+export async function DELETE(req: NextRequest) {
+  const auth = await requireStaffWithBusiness(req)
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { ids } = await req.json()
+  if (!Array.isArray(ids) || !ids.length) return NextResponse.json({ error: 'ids are required' }, { status: 400 })
+  const { error } = await serviceClient.from('meetings').delete().in('id', ids).eq('user_id', auth.businessId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }

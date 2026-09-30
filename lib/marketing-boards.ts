@@ -3,7 +3,7 @@
 // reply tracking and open/click tracking keep working exactly as before.
 
 export type MkOption = { value: string; color: string; label?: string }
-export type MkColType = 'status' | 'text' | 'longtext' | 'date' | 'datetime' | 'number' | 'person' | 'module' | 'computed' | 'send' | 'url' | 'email' | 'phone'
+export type MkColType = 'status' | 'text' | 'longtext' | 'date' | 'datetime' | 'number' | 'person' | 'module' | 'computed' | 'send' | 'url' | 'email' | 'phone' | 'ref'
 export type MkCol = {
   key: string            // db field (or computed key)
   title: string
@@ -12,6 +12,7 @@ export type MkCol = {
   options?: MkOption[]
   currency?: string
   readonlyWhen?: (row: any) => boolean
+  ref?: string            // for 'ref' columns: which list in store.refs to pick from
   hideInTable?: boolean
 }
 export type MkBoardKey = 'campaigns' | 'emails' | 'social' | 'ads' | 'templates'
@@ -24,6 +25,7 @@ export type MkBoard = {
   groupBy: string         // default grouping column (an option column)
   dateField?: string      // for the calendar view
   endField?: string
+  nameRef?: string        // when the row's name is a 'ref' column (e.g. an employee), its key
   cols: MkCol[]
   defaults: Record<string, any>
 }
@@ -141,12 +143,14 @@ export interface BoardStore {
   remove(k: string, ids: string[]): Promise<void>
   duplicate(k: string, ids: string[]): Promise<void>
   sendEmail(id: string): Promise<void>
+  refs?: Record<string, MkOption[]>
 }
 
 export const boardByKey = (k: string) => BOARDS.find(b => b.key === k)
-export const optionCols = (b: MkBoard) => b.cols.filter(c => c.type === 'status' || c.type === 'module' || c.type === 'person')
-export function optionsOf(c: MkCol | undefined, people: string[] = []): MkOption[] {
+export const optionCols = (b: MkBoard) => b.cols.filter(c => c.type === 'status' || c.type === 'module' || c.type === 'person' || c.type === 'ref')
+export function optionsOf(c: MkCol | undefined, people: string[] = [], refs?: Record<string, MkOption[]>): MkOption[] {
   if (!c) return []
+  if (c.type === 'ref') return refs?.[c.ref ?? ''] ?? []
   if (c.type === 'module') return MODULES
   if (c.type === 'person') return people.map(p => ({ value: p, color: '#D0AE4C' }))
   return c.options ?? []
@@ -213,5 +217,27 @@ export const WINS_BOARD: MkBoard = {
     { key: 'date_achieved', title: 'Date', type: 'date', width: 130 },
     { key: 'source', title: 'Source', type: 'computed', width: 150 },
     { key: 'notes', title: 'Notes', type: 'longtext', width: 220, hideInTable: true, readonlyWhen: autoWin },
+  ],
+}
+
+// Staff Centre → Meetings: scheduling links. Rows are created / changed through
+// /api/meetings; "Booked" is set by the person who opens the link and picks a time.
+const booked = (r: any) => r.status === 'scheduled'
+export const MEETINGS_BOARD: MkBoard = {
+  key: 'meetings', table: 'meetings', title: 'Meetings', item: 'meeting link', nameField: 'title', groupBy: 'status',
+  dateField: 'scheduled_at',
+  defaults: { title: '30 min meeting', duration_minutes: 30 },
+  cols: [
+    { key: 'duration_minutes', title: 'Length', type: 'status', width: 110, readonlyWhen: booked, options: [
+      { value: 15 as any, label: '15 min', color: '#66CCFF' }, { value: 30 as any, label: '30 min', color: '#579BFC' }, { value: 60 as any, label: '60 min', color: '#225091' }] },
+    { key: 'status', title: 'Status', type: 'status', width: 150, readonlyWhen: booked, options: [
+      { value: 'pending', label: 'Awaiting booking', color: '#FDAB3D' }, { value: 'scheduled', label: 'Booked', color: '#00C875' }, { value: 'cancelled', label: 'Cancelled', color: '#C4C4C4' }] },
+    { key: 'attendee_name', title: 'Booked by', type: 'computed', width: 170 },
+    { key: 'attendee_email', title: 'Their email', type: 'email', width: 210, readonlyWhen: () => true },
+    { key: 'scheduled_at', title: 'When', type: 'datetime', width: 170, readonlyWhen: () => true },
+    { key: 'meeting_link', title: 'Link', type: 'computed', width: 130 },
+    { key: 'created_by_email', title: 'Created by', type: 'computed', width: 200 },
+    { key: 'created_at', title: 'Created', type: 'computed', width: 120 },
+    { key: 'notes', title: 'Notes', type: 'longtext', width: 220, hideInTable: true },
   ],
 }

@@ -26,6 +26,16 @@ export function computedValue(mk: Mk, board: MkBoard, col: MkCol, row: any): str
     if (col.key === 'replies') return String(s.replies)
   }
   if (col.key === 'created_at') return fmtDate(row.created_at)
+  if (col.key === 'attendee_name') return row.attendee_name ?? ''
+  if (col.key === 'created_by_email') return row.created_by_email ?? ''
+  if (col.key === 'meeting_link') return row.token ? 'Copy link' : ''
+  if (col.key === 'stars') { const r = Math.round(Number(row.rating) || 0); return r ? '★'.repeat(Math.min(r, 5)) + '☆'.repeat(Math.max(0, 5 - r)) : '' }
+  if (col.key === 'progress_bar') { const p = Math.max(0, Math.min(100, Number(row.progress_pct) || 0)); return `${p}%` }
+  if (col.key === 'expiry_flag') {
+    if (!row.expiry_date) return ''
+    const d = (new Date(row.expiry_date + 'T00:00:00').getTime() - Date.now()) / 86400000
+    return d < 0 ? 'Expired' : d <= 60 ? `Expires in ${Math.ceil(d)} days` : 'Valid'
+  }
   if (col.key === 'source') return String(row.notes ?? '').startsWith('Auto-logged from CRM') ? (String(row.notes).includes('Contacts') ? 'CRM lead (auto)' : 'CRM deal (auto)') : 'Logged by hand'
   if (col.key === 'ctr') {
     const i = Number(row.impressions) || 0, c = Number(row.clicks) || 0
@@ -38,6 +48,7 @@ export function cellText(mk: Mk, board: MkBoard, col: MkCol, row: any): string {
   const v = row[col.key]
   switch (col.type) {
     case 'module': return moduleLabel(v)
+    case 'ref': return optionsOf(col, mk.people, mk.refs).find(o => o.value === v)?.label ?? ''
     case 'date': return fmtDate(v)
     case 'datetime': return fmtDate(v, true)
     case 'number': return col.currency ? money(v, col.currency) : v == null ? '' : String(v)
@@ -87,6 +98,25 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
     )
   }
 
+  if (col.type === 'ref') {
+    const opts = optionsOf(col, mk.people, mk.refs)
+    const o = opts.find(x => x.value === v)
+    return (
+      <div ref={ref} style={{ ...base, gap: 8, justifyContent: 'flex-start', padding: '0 10px' }} onClick={() => !locked && setOpen(true)}>
+        {o ? <><Avatar name={o.label ?? o.value} size={24} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.label}</span></> : <span style={{ color: '#9699A6' }}>{v ? 'Unknown' : `+ Choose ${col.title.toLowerCase()}`}</span>}
+        {open && (
+          <Popover anchor={ref.current} onClose={() => setOpen(false)} width={260}>
+            <div style={{ padding: 6 }}>
+              {opts.length === 0 && <div style={{ padding: 10, fontSize: 13, color: BRAND.muted }}>Nothing to pick yet.</div>}
+              {opts.map(p => <button key={p.value} style={{ ...menuItem, fontWeight: p.value === v ? 600 : 400 }} onClick={() => { setOpen(false); set(p.value) }}><Avatar name={p.label ?? p.value} size={22} />{p.label}</button>)}
+              {v && <button style={{ ...menuItem, color: BRAND.muted }} onClick={() => { setOpen(false); set(null) }}>× Clear</button>}
+            </div>
+          </Popover>
+        )}
+      </div>
+    )
+  }
+
   if (col.type === 'person') {
     return (
       <div ref={ref} style={{ ...base, gap: 6, justifyContent: col.width >= 110 ? 'flex-start' : 'center', padding: col.width >= 110 ? '0 8px' : 0 }} onClick={() => !locked && setOpen(true)}>
@@ -105,7 +135,18 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
 
   if (col.type === 'computed') {
     const t = computedValue(mk, board, col, row)
-    return <div style={{ ...base, cursor: 'default', color: t === 'Bounced' ? '#DF2F4A' : t === 'Yes' ? '#00A35E' : BRAND.ink }}>{t}</div>
+    if (col.key === 'meeting_link') {
+      if (!row.token) return <div style={base} />
+      const off = row.status === 'cancelled'
+      return <div style={base}><button disabled={off} onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/meet/${row.token}`); const b = e.currentTarget; b.textContent = 'Copied ✓'; setTimeout(() => { b.textContent = 'Copy link' }, 1500) }}
+        style={{ border: `1px solid ${BRAND.border}`, background: '#fff', borderRadius: 4, padding: '3px 10px', fontSize: 12.5, cursor: off ? 'not-allowed' : 'pointer', opacity: off ? 0.5 : 1, fontFamily: 'inherit', color: BRAND.ink }}>Copy link</button></div>
+    }
+    if (col.key === 'progress_bar') {
+      const p = Math.max(0, Math.min(100, Number(row.progress_pct) || 0))
+      return <div style={{ ...base, cursor: 'default', gap: 8, padding: '0 10px' }}><div style={{ flex: 1, height: 8, background: '#F1F2F6', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${p}%`, height: '100%', background: p >= 100 ? '#00C875' : BRAND.gold }} /></div><span style={{ fontSize: 12, color: BRAND.muted }}>{p}%</span></div>
+    }
+    const color = t === 'Bounced' || t === 'Expired' ? '#DF2F4A' : t === 'Yes' || t === 'Valid' ? '#00A35E' : t.startsWith('Expires in') ? '#D97706' : col.key === 'stars' ? '#D0AE4C' : BRAND.ink
+    return <div style={{ ...base, cursor: 'default', color, letterSpacing: col.key === 'stars' ? 2 : undefined }}>{t}</div>
   }
 
   if (col.type === 'send') {
