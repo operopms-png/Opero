@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { processNewEmails } from '@/lib/receptionist'
-import { getFormat, formatEmail, FORMAT_FIELDS } from '@/lib/email-format'
+import { getFormat, formatEmail, listTemplates, saveTemplate, setDefaultTemplate, deleteTemplate } from '@/lib/email-format'
 import { getCaller, canAccess, PUBLIC_COLS, encrypt, testConnection, syncMailbox, sendFromMailbox, setSeen, fetchAttachment, friendlyError } from '@/lib/mailbox'
 
 // Everything about connected mailboxes goes through here so access is
@@ -10,8 +10,8 @@ import { getCaller, canAccess, PUBLIC_COLS, encrypt, testConnection, syncMailbox
 //   GET  ?messages=<id|all>&folder=INBOX|Sent&q=&before=  -> message list
 //   GET  ?message=<id>           -> one message (marks it read)
 //   GET  ?attachment=<id>&index= -> attachment file
-//   POST {action: connect|update|sync|send|seen|add|remove|save_format}
-// Sends use the house email format (lib/email-format.ts): body + branded footer.
+//   POST {action: connect|update|sync|send|seen|add|remove|save_template|default_template|delete_template}
+// Sends use the chosen email template (lib/email-format.ts): body + branded footer.
 
 export const maxDuration = 60
 
@@ -78,8 +78,8 @@ export async function GET(req: NextRequest) {
     const { data } = await serviceClient.from('team_members').select('name,email,role').eq('user_id', c.businessId).order('name')
     team = data ?? []
   }
-  const format = await getFormat(c.businessId)
-  return NextResponse.json({ mailboxes: mine.map(m => ({ ...m, unread: unread[m.id] ?? 0 })), isAdmin: c.isAdmin, team, format, me: { name: c.name } })
+  const templates = await listTemplates(c.businessId)
+  return NextResponse.json({ mailboxes: mine.map(m => ({ ...m, unread: unread[m.id] ?? 0 })), isAdmin: c.isAdmin, team, templates, me: { name: c.name } })
 }
 
 export async function POST(req: NextRequest) {
@@ -88,13 +88,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const action = body.action
 
-  if (action === 'save_format') {
-    if (!c.isAdmin) return bad('Only admins can change the email format', 403)
-    const patch: any = { business_id: c.businessId, updated_at: new Date().toISOString() }
-    for (const k of FORMAT_FIELDS) if (body.format?.[k] !== undefined) patch[k] = typeof body.format[k] === 'string' ? body.format[k].slice(0, 2000) : !!body.format[k]
-    const { error } = await serviceClient.from('email_format').upsert(patch, { onConflict: 'business_id' })
-    if (error) return bad(error.message, 500)
-    return NextResponse.json({ format: await getFormat(c.businessId) })
+  if (['save_template', 'default_template', 'delete_template'].includes(action)) {
+    if (!c.isAdmin) return bad('Only admins can change email templates', 403)
+    try {
+      let id = body.id as string | undefined
+      if (action === 'save_template') id = await saveTemplate(c.businessId, body.template)
+      if (action === 'default_template' && id) await setDefaultTemplate(c.businessId, id)
+      if (action === 'delete_template' && id) await deleteTemplate(c.businessId, id)
+      return NextResponse.json({ templates: await listTemplates(c.businessId), id })
+    } catch (e: any) { return bad(e.message) }
   }
 
   if (action === 'add') {
@@ -186,7 +188,7 @@ export async function POST(req: NextRequest) {
     }
     try {
       // body_text (+ quoted_text) -> house format with footer; raw html still accepted
-      const out = typeof body.body_text === 'string' ? formatEmail(await getFormat(c.businessId), mb.email, body.body_text, body.quoted_text || undefined) : { html: body.html, text: body.text }
+      const out = typeof body.body_text === 'string' ? formatEmail(await getFormat(c.businessId, body.template_id), mb.email, body.body_text, body.quoted_text || undefined) : { html: body.html, text: body.text }
       const r = await sendFromMailbox(mb, { sentBy: c.name, to: body.to, cc: body.cc, bcc: body.bcc, subject: body.subject, html: out.html, text: out.text, inReplyTo, references, attachments: body.attachments })
       return NextResponse.json({ ok: true, id: r.id })
     } catch (e: any) { return bad(friendlyError(e), 502) }

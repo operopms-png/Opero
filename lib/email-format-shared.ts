@@ -26,6 +26,7 @@ export const DEFAULT_FORMAT: EmailFormat = {
   disclaimer: 'This email and any attachments are confidential and intended only for the named recipient. If you received it in error, please let us know and delete it.',
 }
 export const FORMAT_FIELDS = Object.keys(DEFAULT_FORMAT) as (keyof EmailFormat)[]
+export type EmailTemplate = EmailFormat & { id: string; name: string; is_default: boolean }
 
 const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const LOGO = 'https://app.sangstersgroup.com/logo-192.png'

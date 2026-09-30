@@ -3,12 +3,13 @@
 // Read the inbox, reply, forward and compose from any connected address;
 // admins connect mailboxes and choose which staff can see each one.
 // All mail goes through /api/mailboxes, which checks access server-side.
-// New emails open pre-filled with the house format (greeting, sign-off) and the
-// branded footer is added on send -- admins edit it under Mailbox settings.
+// New emails open pre-filled with the chosen email template (greeting, sign-off)
+// and its branded footer is added on send -- admins manage templates under
+// Mailbox settings → Email templates; staff pick one when writing.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { C, CrmPage, Modal, Pill, Avatar, btn, input, label } from '../../../components/crm/Page'
-import { DEFAULT_FORMAT, footerHtml, type EmailFormat } from '../../../lib/email-format-shared'
+import { DEFAULT_FORMAT, footerHtml, type EmailTemplate } from '../../../lib/email-format-shared'
 
 async function api(path: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -34,7 +35,7 @@ function when(d: string) {
 const esc = (s: string) => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 const kb = (n: number) => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'
 
-type Draft = { from: string; to: string; cc: string; subject: string; body: string; reply_to_message_id?: string; quoted?: string; files: { filename: string; content: string; contentType: string; size: number }[] }
+type Draft = { from: string; to: string; cc: string; subject: string; body: string; template_id?: string; toName?: string | null; reply_to_message_id?: string; quoted?: string; files: { filename: string; content: string; contentType: string; size: number }[] }
 
 export default function EmailPage() {
   const [loading, setLoading] = useState(true)
@@ -56,7 +57,7 @@ export default function EmailPage() {
   const [connectFor, setConnectFor] = useState<any | null>(null)
   const [accessFor, setAccessFor] = useState<any | null>(null)
   const [toast, setToast] = useState('')
-  const [format, setFormat] = useState<EmailFormat>(DEFAULT_FORMAT)
+  const [templates, setTemplates] = useState<EmailTemplate[]>([{ ...DEFAULT_FORMAT, id: '', name: 'Standard', is_default: true }])
   const [me, setMe] = useState<{ name: string }>({ name: '' })
   const reqId = useRef(0)
 
@@ -68,7 +69,7 @@ export default function EmailPage() {
   async function loadBoxes() {
     const d = await api('')
     setBoxes(d.mailboxes); setIsAdmin(d.isAdmin); setTeam(d.team ?? [])
-    if (d.format) setFormat(d.format); if (d.me) setMe(d.me)
+    if (d.templates?.length) setTemplates(d.templates); if (d.me) setMe(d.me)
     return d.mailboxes as any[]
   }
   async function loadList() {
@@ -117,8 +118,11 @@ export default function EmailPage() {
     setTimeout(() => URL.revokeObjectURL(url), 5000)
   }
 
-  // Pre-filled body in the house format: greeting, space to write, sign-off, name.
-  function formatted(toName?: string | null) {
+  const defaultT = templates.find(t => t.is_default) || templates[0]
+  const tpl = (id?: string) => templates.find(t => t.id === id) || defaultT
+
+  // Pre-filled body from a template: greeting, space to write, sign-off, name.
+  function formatted(toName?: string | null, format: EmailTemplate = defaultT) {
     const first = toName && !toName.includes('@') ? toName.replace(/["']/g, '').trim().split(/\s+/)[0] : ''
     const greeting = format.greeting.replace('{name}', first).replace(/\s+,/, ' ,').replace(/ {2,}/g, ' ')
     const signName = format.sign_name && me.name && !me.name.includes('@') ? '\n' + me.name : ''
@@ -128,16 +132,16 @@ export default function EmailPage() {
   function compose(kind: 'new' | 'reply' | 'replyAll' | 'forward') {
     const fromId = (msg && byId(msg.mailbox_id)?.status === 'connected') ? msg.mailbox_id : (current?.status === 'connected' ? current.id : connected[0]?.id)
     if (!fromId) { flash('Connect a mailbox first (Mailbox settings).'); return }
-    if (kind === 'new' || !msg) { setDraft({ from: fromId, to: '', cc: '', subject: '', body: formatted(), files: [] }); return }
+    if (kind === 'new' || !msg) { setDraft({ from: fromId, to: '', cc: '', subject: '', body: formatted(), template_id: defaultT.id, files: [] }); return }
     const me = (byId(msg.mailbox_id)?.email ?? '').toLowerCase()
     const sender = msg.from_name ? `${msg.from_name} <${msg.from_email}>` : msg.from_email
     const others = [msg.to_list, msg.cc_list].filter(Boolean).join(', ').split(',').map((s: string) => s.trim()).filter((s: string) => s && !s.toLowerCase().includes(me))
     const quoted = `On ${new Date(msg.date).toLocaleString('en-GB')}, ${sender} wrote:`
     const subj = msg.subject || ''
     if (kind === 'forward') {
-      setDraft({ from: fromId, to: '', cc: '', subject: /^fwd?:/i.test(subj) ? subj : 'Fwd: ' + subj, body: formatted(), quoted: `---------- Forwarded message ----------\nFrom: ${sender}\nDate: ${new Date(msg.date).toLocaleString('en-GB')}\nSubject: ${subj}\nTo: ${msg.to_list ?? ''}\n\n${msg.body_text ?? ''}`, files: [] })
+      setDraft({ from: fromId, to: '', cc: '', subject: /^fwd?:/i.test(subj) ? subj : 'Fwd: ' + subj, body: formatted(), template_id: defaultT.id, quoted: `---------- Forwarded message ----------\nFrom: ${sender}\nDate: ${new Date(msg.date).toLocaleString('en-GB')}\nSubject: ${subj}\nTo: ${msg.to_list ?? ''}\n\n${msg.body_text ?? ''}`, files: [] })
     } else {
-      setDraft({ from: fromId, to: msg.folder === 'Sent' ? (msg.to_list ?? '') : sender, cc: kind === 'replyAll' ? others.join(', ') : '', subject: /^re:/i.test(subj) ? subj : 'Re: ' + subj, body: formatted(msg.folder === 'Sent' ? null : msg.from_name), reply_to_message_id: msg.id, quoted: `${quoted}\n${(msg.body_text ?? '').split('\n').map((l: string) => '> ' + l).join('\n')}`, files: [] })
+      setDraft({ from: fromId, to: msg.folder === 'Sent' ? (msg.to_list ?? '') : sender, cc: kind === 'replyAll' ? others.join(', ') : '', subject: /^re:/i.test(subj) ? subj : 'Re: ' + subj, body: formatted(msg.folder === 'Sent' ? null : msg.from_name), template_id: defaultT.id, toName: msg.folder === 'Sent' ? null : msg.from_name, reply_to_message_id: msg.id, quoted: `${quoted}\n${(msg.body_text ?? '').split('\n').map((l: string) => '> ' + l).join('\n')}`, files: [] })
     }
   }
 
@@ -146,8 +150,8 @@ export default function EmailPage() {
     if (!draft.to.trim()) { flash('Add who it’s going to.'); return }
     setSending(true)
     try {
-      // The server wraps this in the house format (branded footer) before sending
-      await api('', { action: 'send', id: draft.from, to: draft.to, cc: draft.cc, subject: draft.subject || '(no subject)', body_text: draft.body, quoted_text: draft.quoted || null, reply_to_message_id: draft.reply_to_message_id, attachments: draft.files.map(f => ({ filename: f.filename, content: f.content, contentType: f.contentType })) })
+      // The server wraps this in the chosen template (branded footer) before sending
+      await api('', { action: 'send', id: draft.from, template_id: draft.template_id || null, to: draft.to, cc: draft.cc, subject: draft.subject || '(no subject)', body_text: draft.body, quoted_text: draft.quoted || null, reply_to_message_id: draft.reply_to_message_id, attachments: draft.files.map(f => ({ filename: f.filename, content: f.content, contentType: f.contentType })) })
       setDraft(null)
       flash('Sent from ' + byId(draft.from)?.email)
       if (folder === 'Sent') loadList()
@@ -212,7 +216,7 @@ export default function EmailPage() {
         </div>
 
         {view === 'settings' ? (
-          <Settings boxes={boxes} team={team} onConnect={setConnectFor} onAccess={setAccessFor} reload={loadBoxes} flash={flash} format={format} onFormat={setFormat} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} />
+          <Settings boxes={boxes} team={team} onConnect={setConnectFor} onAccess={setAccessFor} reload={loadBoxes} flash={flash} templates={templates} onTemplates={setTemplates} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} />
         ) : (
           <>
             {/* Message list */}
@@ -337,12 +341,23 @@ export default function EmailPage() {
             <input value={draft.cc} onChange={e => setDraft({ ...draft, cc: e.target.value })} style={input} />
             <span style={{ color: C.muted }}>Subject</span>
             <input value={draft.subject} onChange={e => setDraft({ ...draft, subject: e.target.value })} style={input} />
+            {templates.length > 1 && <>
+              <span style={{ color: C.muted }}>Template</span>
+              <select value={tpl(draft.template_id).id} onChange={e => {
+                const next = tpl(e.target.value)
+                // Swap the pre-filled text only if they haven't started typing
+                const untouched = draft.body === formatted(draft.toName, tpl(draft.template_id))
+                setDraft({ ...draft, template_id: next.id, body: untouched ? formatted(draft.toName, next) : draft.body })
+              }} style={{ ...input, cursor: 'pointer' }}>
+                {templates.map(t => <option key={t.id} value={t.id}>{t.name}{t.is_default ? ' (default)' : ''}</option>)}
+              </select>
+            </>}
           </div>
           <textarea value={draft.body} onChange={e => setDraft({ ...draft, body: e.target.value })} autoFocus={!!draft.to} placeholder="Write your message…" style={{ ...input, marginTop: 12, minHeight: 200, resize: 'vertical', fontSize: 14, lineHeight: 1.5 }} />
-          {format.footer_enabled && (
+          {tpl(draft.template_id).footer_enabled && (
             <details style={{ marginTop: 8, fontSize: 12.5, color: C.muted }}>
               <summary style={{ cursor: 'pointer' }}>✓ Company footer added automatically — preview</summary>
-              <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: '0 12px 12px', marginTop: 6, background: '#fff', overflowX: 'auto' }} dangerouslySetInnerHTML={{ __html: footerHtml(format, byId(draft.from)?.email ?? '') }} />
+              <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: '0 12px 12px', marginTop: 6, background: '#fff', overflowX: 'auto' }} dangerouslySetInnerHTML={{ __html: footerHtml(tpl(draft.template_id), byId(draft.from)?.email ?? '') }} />
             </details>
           )}
           {draft.quoted && <details style={{ marginTop: 8, fontSize: 12.5, color: C.muted }}><summary style={{ cursor: 'pointer' }}>Show quoted email</summary><pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', maxHeight: 180, overflowY: 'auto', background: C.hover, padding: 10, borderRadius: 4 }}>{draft.quoted}</pre></details>}
@@ -369,7 +384,7 @@ export default function EmailPage() {
 }
 
 // ---------- Mailbox settings (admins) ----------
-function Settings({ boxes, team, onConnect, onAccess, reload, flash, format, onFormat, sampleEmail }: any) {
+function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, onTemplates, sampleEmail }: any) {
   const [adding, setAdding] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
@@ -386,7 +401,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, format, onF
         <button onClick={() => setAdding(true)} style={btn('gold')}>+ Add mailbox</button>
       </div>
       <div style={{ padding: '20px 28px 40px' }}>
-        <FormatEditor format={format} onSaved={onFormat} flash={flash} sampleEmail={sampleEmail} />
+        <TemplatesEditor templates={templates} onChange={onTemplates} flash={flash} sampleEmail={sampleEmail} />
         {adding && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center' }}>
             <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="name@sangstersgroup.com" style={{ ...input, width: 320 }} autoFocus />
@@ -531,65 +546,95 @@ function AccessModal({ mb, team, onClose, onDone }: any) {
   )
 }
 
-// House email format: greeting/sign-off pre-filled in every new email and the
-// branded footer added on send (staff emails, AI replies and Marketing).
-function FormatEditor({ format, onSaved, flash, sampleEmail }: { format: EmailFormat; onSaved: (f: EmailFormat) => void; flash: (t: string) => void; sampleEmail: string }) {
+// Email templates: each has its own greeting/sign-off (pre-filled when writing)
+// and branded footer (added on send). The default is pre-selected for staff and
+// used for AI replies and Marketing.
+const BLANK_T: EmailTemplate = { ...DEFAULT_FORMAT, id: '', name: '', is_default: false }
+function TemplatesEditor({ templates, onChange, flash, sampleEmail }: { templates: EmailTemplate[]; onChange: (t: EmailTemplate[]) => void; flash: (t: string) => void; sampleEmail: string }) {
   const [open, setOpen] = useState(false)
-  const [f, setF] = useState<EmailFormat>(format)
-  const [saving, setSaving] = useState(false)
-  useEffect(() => { setF(format) }, [format])
-  const set = (k: keyof EmailFormat, v: any) => setF(p => ({ ...p, [k]: v }))
-  const field = (k: keyof EmailFormat, lbl: string, wide = false, hint?: string) => (
+  const [selId, setSelId] = useState<string>(templates.find(t => t.is_default)?.id ?? templates[0]?.id ?? '')
+  const [f, setF] = useState<EmailTemplate>(templates.find(t => t.id === selId) ?? templates[0] ?? BLANK_T)
+  const [busy, setBusy] = useState(false)
+  const saved = templates.find(t => t.id === f.id)
+  const dirty = !saved || JSON.stringify(saved) !== JSON.stringify(f)
+  useEffect(() => { const t = templates.find(x => x.id === selId); if (t) setF(t) }, [templates, selId])
+  const pick = (t: EmailTemplate) => { if (dirty && f.id && !confirm('Discard your unsaved changes to this template?')) return; setSelId(t.id); setF(t) }
+  const set = (k: keyof EmailTemplate, v: any) => setF(p => ({ ...p, [k]: v }))
+  const field = (k: keyof EmailTemplate, lbl: string, wide = false, hint?: string) => (
     <div style={{ gridColumn: wide ? '1 / -1' : undefined }}>
       <label style={label}>{lbl}</label>
       <input value={String(f[k] ?? '')} onChange={e => set(k, e.target.value)} style={input} />
       {hint && <div style={{ fontSize: 11.5, color: C.faint, marginTop: 3 }}>{hint}</div>}
     </div>
   )
-  async function save() {
-    setSaving(true)
-    try { const d = await api('', { action: 'save_format', format: f }); onSaved(d.format); flash('Email format saved — every new email uses it now.') } catch (e: any) { flash(e.message) }
-    setSaving(false)
+  async function run(body: any, ok: string) {
+    setBusy(true)
+    try {
+      const d = await api('', body); onChange(d.templates)
+      if (body.action === 'delete_template') { const n = d.templates.find((t: EmailTemplate) => t.is_default) ?? d.templates[0]; if (n) { setSelId(n.id); setF(n) } }
+      else if (d.id) setSelId(d.id)
+      flash(ok)
+    } catch (e: any) { flash(e.message) }
+    setBusy(false)
   }
+  function addNew() {
+    const base = templates.find(t => t.is_default) ?? templates[0] ?? BLANK_T
+    setSelId(''); setF({ ...base, id: '', name: 'New template', is_default: false })
+  }
+  const def = templates.find(t => t.is_default) ?? templates[0]
   const sample = `${f.greeting.replace('{name}', 'Sarah')}\n\nThank you for your message. [Your message here]\n\n${f.closing}${f.sign_name ? '\nYour name' : ''}`
   return (
     <div style={{ border: '1px solid ' + C.row, borderLeft: '6px solid ' + C.gold, borderRadius: 4, marginBottom: 22, background: '#fff' }}>
       <div onClick={() => setOpen(o => !o)} style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 500, color: C.brown }}>Email format</div>
-          <div style={{ fontSize: 12.5, color: C.muted }}>Every email starts with “{format.greeting.replace('{name}', 'Name')}”, ends with “{format.closing}”{format.sign_name ? ' and the sender’s name' : ''}{format.footer_enabled ? ', plus the company footer' : ''}. Applies to staff emails, AI replies and Marketing.</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: C.brown }}>Email templates <span style={{ fontSize: 12.5, color: C.muted, fontWeight: 400 }}>· {templates.length}</span></div>
+          <div style={{ fontSize: 12.5, color: C.muted }}>Staff pick a template when writing an email; <b style={{ fontWeight: 500 }}>{def?.name}</b> is the default and is also used for AI replies and Marketing.</div>
         </div>
         <span style={{ fontSize: 13, color: C.goldDark }}>{open ? 'Close' : 'Edit'}</span>
       </div>
       {open && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 20, padding: '4px 14px 16px', borderTop: '1px solid ' + C.row }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 12px', alignContent: 'start', paddingTop: 12 }}>
-            {field('greeting', 'Opening line', false, '{name} = the person’s first name')}
-            {field('closing', 'Sign-off')}
-            <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.sign_name} onChange={e => set('sign_name', e.target.checked)} /> Add the sender’s name under the sign-off</label>
-            <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.footer_enabled} onChange={e => set('footer_enabled', e.target.checked)} /> Add the company footer to every email</label>
-            {f.footer_enabled && <>
-              {field('company', 'Company name')}
-              {field('phone', 'Office phone')}
-              {field('contact_email', 'Contact email', true, 'Shown in every footer (leave blank to show the address it’s sent from)')}
-              {field('tagline', 'Tagline', true)}
-              {field('website', 'Website')}
-              {field('company_number', 'Company number')}
-              {field('address_uk', 'London address', true)}
-              {field('address_jm', 'Jamaica address', true)}
-              {field('rating', 'Rating line', true)}
-              {field('disclaimer', 'Small print', true)}
-            </>}
-            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: 4 }}>
-              <button onClick={save} disabled={saving} style={{ ...btn('gold'), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save format'}</button>
-              <button onClick={() => setF(format)} style={btn('ghost')}>Reset changes</button>
-            </div>
+        <div style={{ borderTop: '1px solid ' + C.row, padding: '12px 14px 16px' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+            {templates.map(t => (
+              <button key={t.id} onClick={() => pick(t)} style={{ ...btn(t.id === f.id ? 'gold' : 'ghost', true) }}>{t.name}{t.is_default ? ' ★' : ''}</button>
+            ))}
+            {!f.id && <button style={btn('gold', true)}>{f.name || 'New template'}</button>}
+            <button onClick={addNew} style={{ ...btn('ghost', true), borderStyle: 'dashed' }}>+ New template</button>
           </div>
-          <div style={{ paddingTop: 12, minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Preview</div>
-            <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: 16, background: '#fff', overflowX: 'auto' }}>
-              <div style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, lineHeight: 1.5, color: '#323338', whiteSpace: 'pre-wrap' }}>{sample}</div>
-              <div dangerouslySetInnerHTML={{ __html: footerHtml(f, sampleEmail) }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 12px', alignContent: 'start' }}>
+              {field('name', 'Template name', true, 'e.g. Standard, Tenants, Investors, Short reply')}
+              {field('greeting', 'Opening line', false, '{name} = the person’s first name')}
+              {field('closing', 'Sign-off')}
+              <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.sign_name} onChange={e => set('sign_name', e.target.checked)} /> Add the sender’s name under the sign-off</label>
+              <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.footer_enabled} onChange={e => set('footer_enabled', e.target.checked)} /> Add the company footer</label>
+              {f.footer_enabled && <>
+                {field('company', 'Company name')}
+                {field('phone', 'Office phone')}
+                {field('contact_email', 'Contact email', true, 'Shown in the footer (leave blank to show the address it’s sent from)')}
+                {field('tagline', 'Tagline', true)}
+                {field('website', 'Website')}
+                {field('company_number', 'Company number')}
+                {field('address_uk', 'London address', true)}
+                {field('address_jm', 'Jamaica address', true)}
+                {field('rating', 'Rating line', true)}
+                {field('disclaimer', 'Small print', true)}
+              </>}
+              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                <button onClick={() => run({ action: 'save_template', template: f }, f.id ? 'Template saved' : 'Template added')} disabled={busy || !f.name.trim()} style={{ ...btn('gold'), opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : f.id ? 'Save template' : 'Add template'}</button>
+                {f.id && !f.is_default && <button onClick={() => run({ action: 'default_template', id: f.id }, `${f.name} is now the default`)} disabled={busy} style={btn('ghost')}>Make default</button>}
+                {f.id && f.is_default && <span style={{ fontSize: 12.5, color: C.goldDark, alignSelf: 'center' }}>★ Default template</span>}
+                <div style={{ flex: 1 }} />
+                {f.id && templates.length > 1 && <button onClick={() => confirm(`Delete the “${f.name}” template?`) && run({ action: 'delete_template', id: f.id }, 'Template deleted')} disabled={busy} style={btn('danger')}>Delete</button>}
+                {!f.id && <button onClick={() => { const d = templates.find(t => t.is_default) ?? templates[0]; if (d) { setSelId(d.id); setF(d) } }} style={btn('ghost')}>Cancel</button>}
+              </div>
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Preview</div>
+              <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: 16, background: '#fff', overflowX: 'auto' }}>
+                <div style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, lineHeight: 1.5, color: '#323338', whiteSpace: 'pre-wrap' }}>{sample}</div>
+                <div dangerouslySetInnerHTML={{ __html: footerHtml(f, sampleEmail) }} />
+              </div>
             </div>
           </div>
         </div>
