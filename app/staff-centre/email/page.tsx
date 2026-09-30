@@ -3,9 +3,12 @@
 // Read the inbox, reply, forward and compose from any connected address;
 // admins connect mailboxes and choose which staff can see each one.
 // All mail goes through /api/mailboxes, which checks access server-side.
+// New emails open pre-filled with the house format (greeting, sign-off) and the
+// branded footer is added on send -- admins edit it under Mailbox settings.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { C, CrmPage, Modal, Pill, Avatar, btn, input, label } from '../../../components/crm/Page'
+import { DEFAULT_FORMAT, footerHtml, type EmailFormat } from '../../../lib/email-format-shared'
 
 async function api(path: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -53,6 +56,8 @@ export default function EmailPage() {
   const [connectFor, setConnectFor] = useState<any | null>(null)
   const [accessFor, setAccessFor] = useState<any | null>(null)
   const [toast, setToast] = useState('')
+  const [format, setFormat] = useState<EmailFormat>(DEFAULT_FORMAT)
+  const [me, setMe] = useState<{ name: string }>({ name: '' })
   const reqId = useRef(0)
 
   const connected = boxes.filter(b => b.status === 'connected')
@@ -63,6 +68,7 @@ export default function EmailPage() {
   async function loadBoxes() {
     const d = await api('')
     setBoxes(d.mailboxes); setIsAdmin(d.isAdmin); setTeam(d.team ?? [])
+    if (d.format) setFormat(d.format); if (d.me) setMe(d.me)
     return d.mailboxes as any[]
   }
   async function loadList() {
@@ -111,19 +117,27 @@ export default function EmailPage() {
     setTimeout(() => URL.revokeObjectURL(url), 5000)
   }
 
+  // Pre-filled body in the house format: greeting, space to write, sign-off, name.
+  function formatted(toName?: string | null) {
+    const first = toName && !toName.includes('@') ? toName.replace(/["']/g, '').trim().split(/\s+/)[0] : ''
+    const greeting = format.greeting.replace('{name}', first).replace(/\s+,/, ' ,').replace(/ {2,}/g, ' ')
+    const signName = format.sign_name && me.name && !me.name.includes('@') ? '\n' + me.name : ''
+    return `${greeting}\n\n\n\n${format.closing}${signName}`
+  }
+
   function compose(kind: 'new' | 'reply' | 'replyAll' | 'forward') {
     const fromId = (msg && byId(msg.mailbox_id)?.status === 'connected') ? msg.mailbox_id : (current?.status === 'connected' ? current.id : connected[0]?.id)
     if (!fromId) { flash('Connect a mailbox first (Mailbox settings).'); return }
-    if (kind === 'new' || !msg) { setDraft({ from: fromId, to: '', cc: '', subject: '', body: '', files: [] }); return }
+    if (kind === 'new' || !msg) { setDraft({ from: fromId, to: '', cc: '', subject: '', body: formatted(), files: [] }); return }
     const me = (byId(msg.mailbox_id)?.email ?? '').toLowerCase()
     const sender = msg.from_name ? `${msg.from_name} <${msg.from_email}>` : msg.from_email
     const others = [msg.to_list, msg.cc_list].filter(Boolean).join(', ').split(',').map((s: string) => s.trim()).filter((s: string) => s && !s.toLowerCase().includes(me))
     const quoted = `On ${new Date(msg.date).toLocaleString('en-GB')}, ${sender} wrote:`
     const subj = msg.subject || ''
     if (kind === 'forward') {
-      setDraft({ from: fromId, to: '', cc: '', subject: /^fwd?:/i.test(subj) ? subj : 'Fwd: ' + subj, body: '', quoted: `---------- Forwarded message ----------\nFrom: ${sender}\nDate: ${new Date(msg.date).toLocaleString('en-GB')}\nSubject: ${subj}\nTo: ${msg.to_list ?? ''}\n\n${msg.body_text ?? ''}`, files: [] })
+      setDraft({ from: fromId, to: '', cc: '', subject: /^fwd?:/i.test(subj) ? subj : 'Fwd: ' + subj, body: formatted(), quoted: `---------- Forwarded message ----------\nFrom: ${sender}\nDate: ${new Date(msg.date).toLocaleString('en-GB')}\nSubject: ${subj}\nTo: ${msg.to_list ?? ''}\n\n${msg.body_text ?? ''}`, files: [] })
     } else {
-      setDraft({ from: fromId, to: msg.folder === 'Sent' ? (msg.to_list ?? '') : sender, cc: kind === 'replyAll' ? others.join(', ') : '', subject: /^re:/i.test(subj) ? subj : 'Re: ' + subj, body: '', reply_to_message_id: msg.id, quoted: `${quoted}\n${(msg.body_text ?? '').split('\n').map((l: string) => '> ' + l).join('\n')}`, files: [] })
+      setDraft({ from: fromId, to: msg.folder === 'Sent' ? (msg.to_list ?? '') : sender, cc: kind === 'replyAll' ? others.join(', ') : '', subject: /^re:/i.test(subj) ? subj : 'Re: ' + subj, body: formatted(msg.folder === 'Sent' ? null : msg.from_name), reply_to_message_id: msg.id, quoted: `${quoted}\n${(msg.body_text ?? '').split('\n').map((l: string) => '> ' + l).join('\n')}`, files: [] })
     }
   }
 
@@ -132,9 +146,8 @@ export default function EmailPage() {
     if (!draft.to.trim()) { flash('Add who it’s going to.'); return }
     setSending(true)
     try {
-      const text = draft.body + (draft.quoted ? '\n\n' + draft.quoted : '')
-      const html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${esc(draft.body).replace(/\n/g, '<br>')}</div>` + (draft.quoted ? `<br><div style="color:#676879;border-left:2px solid #D0D4E4;padding-left:10px;margin-top:10px;font-family:Arial,sans-serif;font-size:13px">${esc(draft.quoted).replace(/\n/g, '<br>')}</div>` : '')
-      await api('', { action: 'send', id: draft.from, to: draft.to, cc: draft.cc, subject: draft.subject || '(no subject)', text, html, reply_to_message_id: draft.reply_to_message_id, attachments: draft.files.map(f => ({ filename: f.filename, content: f.content, contentType: f.contentType })) })
+      // The server wraps this in the house format (branded footer) before sending
+      await api('', { action: 'send', id: draft.from, to: draft.to, cc: draft.cc, subject: draft.subject || '(no subject)', body_text: draft.body, quoted_text: draft.quoted || null, reply_to_message_id: draft.reply_to_message_id, attachments: draft.files.map(f => ({ filename: f.filename, content: f.content, contentType: f.contentType })) })
       setDraft(null)
       flash('Sent from ' + byId(draft.from)?.email)
       if (folder === 'Sent') loadList()
@@ -199,7 +212,7 @@ export default function EmailPage() {
         </div>
 
         {view === 'settings' ? (
-          <Settings boxes={boxes} team={team} onConnect={setConnectFor} onAccess={setAccessFor} reload={loadBoxes} flash={flash} />
+          <Settings boxes={boxes} team={team} onConnect={setConnectFor} onAccess={setAccessFor} reload={loadBoxes} flash={flash} format={format} onFormat={setFormat} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} />
         ) : (
           <>
             {/* Message list */}
@@ -326,6 +339,12 @@ export default function EmailPage() {
             <input value={draft.subject} onChange={e => setDraft({ ...draft, subject: e.target.value })} style={input} />
           </div>
           <textarea value={draft.body} onChange={e => setDraft({ ...draft, body: e.target.value })} autoFocus={!!draft.to} placeholder="Write your message…" style={{ ...input, marginTop: 12, minHeight: 200, resize: 'vertical', fontSize: 14, lineHeight: 1.5 }} />
+          {format.footer_enabled && (
+            <details style={{ marginTop: 8, fontSize: 12.5, color: C.muted }}>
+              <summary style={{ cursor: 'pointer' }}>✓ Company footer added automatically — preview</summary>
+              <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: '0 12px 12px', marginTop: 6, background: '#fff', overflowX: 'auto' }} dangerouslySetInnerHTML={{ __html: footerHtml(format, byId(draft.from)?.email ?? '') }} />
+            </details>
+          )}
           {draft.quoted && <details style={{ marginTop: 8, fontSize: 12.5, color: C.muted }}><summary style={{ cursor: 'pointer' }}>Show quoted email</summary><pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', maxHeight: 180, overflowY: 'auto', background: C.hover, padding: 10, borderRadius: 4 }}>{draft.quoted}</pre></details>}
           {draft.files.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
@@ -350,7 +369,7 @@ export default function EmailPage() {
 }
 
 // ---------- Mailbox settings (admins) ----------
-function Settings({ boxes, team, onConnect, onAccess, reload, flash }: any) {
+function Settings({ boxes, team, onConnect, onAccess, reload, flash, format, onFormat, sampleEmail }: any) {
   const [adding, setAdding] = useState(false)
   const [newEmail, setNewEmail] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
@@ -367,6 +386,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash }: any) {
         <button onClick={() => setAdding(true)} style={btn('gold')}>+ Add mailbox</button>
       </div>
       <div style={{ padding: '20px 28px 40px' }}>
+        <FormatEditor format={format} onSaved={onFormat} flash={flash} sampleEmail={sampleEmail} />
         {adding && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center' }}>
             <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="name@sangstersgroup.com" style={{ ...input, width: 320 }} autoFocus />
@@ -508,5 +528,71 @@ function AccessModal({ mb, team, onClose, onDone }: any) {
         <button onClick={save} disabled={busy} style={btn('gold')}>{busy ? 'Saving…' : 'Save'}</button>
       </div>
     </Modal>
+  )
+}
+
+// House email format: greeting/sign-off pre-filled in every new email and the
+// branded footer added on send (staff emails, AI replies and Marketing).
+function FormatEditor({ format, onSaved, flash, sampleEmail }: { format: EmailFormat; onSaved: (f: EmailFormat) => void; flash: (t: string) => void; sampleEmail: string }) {
+  const [open, setOpen] = useState(false)
+  const [f, setF] = useState<EmailFormat>(format)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => { setF(format) }, [format])
+  const set = (k: keyof EmailFormat, v: any) => setF(p => ({ ...p, [k]: v }))
+  const field = (k: keyof EmailFormat, lbl: string, wide = false, hint?: string) => (
+    <div style={{ gridColumn: wide ? '1 / -1' : undefined }}>
+      <label style={label}>{lbl}</label>
+      <input value={String(f[k] ?? '')} onChange={e => set(k, e.target.value)} style={input} />
+      {hint && <div style={{ fontSize: 11.5, color: C.faint, marginTop: 3 }}>{hint}</div>}
+    </div>
+  )
+  async function save() {
+    setSaving(true)
+    try { const d = await api('', { action: 'save_format', format: f }); onSaved(d.format); flash('Email format saved — every new email uses it now.') } catch (e: any) { flash(e.message) }
+    setSaving(false)
+  }
+  const sample = `${f.greeting.replace('{name}', 'Sarah')}\n\nThank you for your message. [Your message here]\n\n${f.closing}${f.sign_name ? '\nYour name' : ''}`
+  return (
+    <div style={{ border: '1px solid ' + C.row, borderLeft: '6px solid ' + C.gold, borderRadius: 4, marginBottom: 22, background: '#fff' }}>
+      <div onClick={() => setOpen(o => !o)} style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: C.brown }}>Email format</div>
+          <div style={{ fontSize: 12.5, color: C.muted }}>Every email starts with “{format.greeting.replace('{name}', 'Name')}”, ends with “{format.closing}”{format.sign_name ? ' and the sender’s name' : ''}{format.footer_enabled ? ', plus the company footer' : ''}. Applies to staff emails, AI replies and Marketing.</div>
+        </div>
+        <span style={{ fontSize: 13, color: C.goldDark }}>{open ? 'Close' : 'Edit'}</span>
+      </div>
+      {open && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 20, padding: '4px 14px 16px', borderTop: '1px solid ' + C.row }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 12px', alignContent: 'start', paddingTop: 12 }}>
+            {field('greeting', 'Opening line', false, '{name} = the person’s first name')}
+            {field('closing', 'Sign-off')}
+            <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.sign_name} onChange={e => set('sign_name', e.target.checked)} /> Add the sender’s name under the sign-off</label>
+            <label style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, cursor: 'pointer' }}><input type="checkbox" checked={f.footer_enabled} onChange={e => set('footer_enabled', e.target.checked)} /> Add the company footer to every email</label>
+            {f.footer_enabled && <>
+              {field('company', 'Company name')}
+              {field('phone', 'Office phone')}
+              {field('tagline', 'Tagline', true)}
+              {field('website', 'Website')}
+              {field('company_number', 'Company number')}
+              {field('address_uk', 'London address', true)}
+              {field('address_jm', 'Jamaica address', true)}
+              {field('rating', 'Rating line', true)}
+              {field('disclaimer', 'Small print', true)}
+            </>}
+            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: 4 }}>
+              <button onClick={save} disabled={saving} style={{ ...btn('gold'), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save format'}</button>
+              <button onClick={() => setF(format)} style={btn('ghost')}>Reset changes</button>
+            </div>
+          </div>
+          <div style={{ paddingTop: 12, minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Preview</div>
+            <div style={{ border: '1px solid ' + C.row, borderRadius: 4, padding: 16, background: '#fff', overflowX: 'auto' }}>
+              <div style={{ fontFamily: 'Arial,sans-serif', fontSize: 14, lineHeight: 1.5, color: '#323338', whiteSpace: 'pre-wrap' }}>{sample}</div>
+              <div dangerouslySetInnerHTML={{ __html: footerHtml(f, sampleEmail) }} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

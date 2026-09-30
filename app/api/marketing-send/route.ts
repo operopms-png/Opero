@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { getCaller, canAccess, sendFromMailbox, friendlyError } from '@/lib/mailbox'
 import { sendEmail } from '@/lib/send-email'
+import { getFormat, footerHtml, footerText } from '@/lib/email-format'
 import { EMAIL_DOMAIN } from '@/lib/brand'
 
 // Sends a marketing_emails row for real via Resend, using the same
@@ -32,7 +33,8 @@ export async function POST(req: NextRequest) {
     if (!mb || !canAccess(mb, caller)) return NextResponse.json({ error: 'You don’t have access to that sending mailbox' }, { status: 403 })
     if (mb.status !== 'connected' || !mb.password_enc) return NextResponse.json({ error: `${mb.email} isn’t connected. Connect it in Email → Mailbox settings, or clear “Send from”.` }, { status: 400 })
     try {
-      await sendFromMailbox(mb, { sentBy: caller.name + ' (Marketing)', to: email.to_recipient, subject: email.subject, html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${email.body.replace(/\n/g, '<br/>')}</div>`, text: email.body })
+      const fmt = await getFormat(mb.user_id)
+      await sendFromMailbox(mb, { sentBy: caller.name + ' (Marketing)', to: email.to_recipient, subject: email.subject, html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${email.body.replace(/\n/g, '<br/>')}</div>` + footerHtml(fmt, mb.email), text: email.body + footerText(fmt, mb.email) })
     } catch (e: any) { return NextResponse.json({ error: friendlyError(e) }, { status: 502 }) }
     await serviceClient.from('marketing_emails').update({ status: 'Sent', sent_at: new Date().toISOString() }).eq('id', email.id)
     return NextResponse.json({ success: true, via: mb.email })

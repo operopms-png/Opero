@@ -6,6 +6,7 @@ import { serviceClient } from '@/lib/admin-auth'
 import { callClaude } from '@/lib/claude'
 import { sendEmail } from '@/lib/send-email'
 import { sendFromMailbox } from '@/lib/mailbox'
+import { getFormat, formatEmail } from '@/lib/email-format'
 import { SITE_URL } from '@/lib/brand'
 
 export const FAST_MODEL = 'claude-haiku-4-5-20251001'
@@ -119,7 +120,7 @@ Reply ONLY with JSON: {"should_reply": boolean, "category": "Enquiry"|"Booking"|
     if (!out.should_reply || !out.reply) { patch.ai_status = 'skipped' }
     else if (mb.ai_mode === 'auto' && !out.needs_staff && mb.status === 'connected') {
       try {
-        await sendFromMailbox(mb, { sentBy: s.assistant_name + ' (AI)', to: m.from_name ? `${m.from_name} <${m.from_email}>` : m.from_email, subject: /^re:/i.test(m.subject || '') ? m.subject : `Re: ${m.subject || ''}`, text: out.reply, html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5">${esc(out.reply).replace(/\n/g, '<br>')}</div>`, inReplyTo: m.message_id, references: [m.references_ids, m.message_id].filter(Boolean).join(' ') || null })
+        await sendFromMailbox(mb, { sentBy: s.assistant_name + ' (AI)', to: m.from_name ? `${m.from_name} <${m.from_email}>` : m.from_email, subject: /^re:/i.test(m.subject || '') ? m.subject : `Re: ${m.subject || ''}`, ...formatEmail(await getFormat(mb.user_id), mb.email, out.reply), inReplyTo: m.message_id, references: [m.references_ids, m.message_id].filter(Boolean).join(' ') || null })
         Object.assign(patch, { ai_status: 'replied', ai_draft: out.reply }); action = 'replied'
       } catch { Object.assign(patch, { ai_status: 'drafted', ai_draft: out.reply }); action = 'drafted' }
     } else { Object.assign(patch, { ai_status: 'drafted', ai_draft: out.reply }); action = 'drafted' }
