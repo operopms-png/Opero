@@ -13,6 +13,7 @@ export type MkCol = {
   currency?: string
   readonlyWhen?: (row: any) => boolean
   ref?: string            // for 'ref' columns: which list in store.refs to pick from
+  emptyLabel?: string     // what an empty 'ref' cell says instead of "+ Choose …"
   hideInTable?: boolean
 }
 export type MkBoardKey = 'campaigns' | 'emails' | 'social' | 'ads' | 'templates'
@@ -68,6 +69,7 @@ export const BOARDS: MkBoard[] = [
     cols: [
       { key: 'owner', title: 'Owner', type: 'person', width: 90 },
       { key: 'to_recipient', title: 'To', type: 'text', width: 210, readonlyWhen: r => r.status === 'Sent' },
+      { key: 'from_mailbox_id', title: 'Send from', type: 'ref', ref: 'mailboxes', emptyLabel: 'Default sender', width: 210, readonlyWhen: r => r.status === 'Sent' },
       { key: 'module', title: 'Module', type: 'module', width: 170 },
       { key: 'status', title: 'Status', type: 'status', width: 130, readonlyWhen: r => r.status === 'Sent', options: [
         { value: 'Draft', color: DRAFT }, { value: 'Scheduled', color: AMBER }, { value: 'Sent', color: LIVE }] },

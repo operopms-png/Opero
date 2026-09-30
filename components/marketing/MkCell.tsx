@@ -111,7 +111,7 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
     const o = opts.find(x => x.value === v)
     return (
       <div ref={ref} style={{ ...base, gap: 8, justifyContent: 'flex-start', padding: '0 10px' }} onClick={() => !locked && setOpen(true)}>
-        {o ? <><Avatar name={o.label ?? o.value} size={24} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.label}</span></> : <span style={{ color: '#9699A6' }}>{v ? 'Unknown' : `+ Choose ${col.title.toLowerCase()}`}</span>}
+        {o ? <><Avatar name={o.label ?? o.value} size={24} /><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.label}</span></> : <span style={{ color: '#9699A6' }}>{v ? 'Unknown' : (col.emptyLabel ?? `+ Choose ${col.title.toLowerCase()}`)}</span>}
         {open && (
           <Popover anchor={ref.current} onClose={() => setOpen(false)} width={260}>
             <div style={{ padding: 6 }}>

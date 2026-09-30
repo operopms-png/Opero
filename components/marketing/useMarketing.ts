@@ -13,6 +13,14 @@ export function useMarketing() {
   const [replies, setReplies] = useState<Record<string, any[]>>({})
   const [events, setEvents] = useState<any[]>([])
   const [people, setPeople] = useState<string[]>([])
+  const [senders, setSenders] = useState<{ value: string; label: string; color: string }[]>([])
+  // Connected company mailboxes marketing can send from (Email → Mailbox settings)
+  useEffect(() => { (async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/mailboxes', { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } }).catch(() => null)
+    const d = res && res.ok ? await res.json().catch(() => ({})) : {}
+    setSenders((d.mailboxes ?? []).filter((m: any) => m.status === 'connected' && m.use_for_marketing).map((m: any) => ({ value: m.id, label: m.email, color: '#D0AE4C' })))
+  })() }, [])
   const [me, setMe] = useState<string>('')
   const [sendSettings, setSendSettings] = useState({ marketing_from_email: '', marketing_from_name: 'Sangsters Group' })
   const [sendingId, setSendingId] = useState<string | null>(null)
@@ -128,6 +136,6 @@ export function useMarketing() {
     return m
   }, [rows.emails, events, replies])
 
-  return { loading, error, accountId, rows, replies, events, people, me, stats, sendSettings, sendingId, update, add, remove, duplicate, sendEmail, saveSendSettings, reload: load }
+  return { loading, error, accountId, rows, replies, events, people, me, refs: { mailboxes: senders }, stats, sendSettings, sendingId, update, add, remove, duplicate, sendEmail, saveSendSettings, reload: load }
 }
 export type Mk = ReturnType<typeof useMarketing>
