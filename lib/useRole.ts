@@ -88,6 +88,9 @@ export type Access = {
   propertyIds: string[]
   businessId: string
   isPartner: boolean
+  // Set when the person is a tenant or landlord with no staff record:
+  // they belong in their own portal, never in the staff side of the app.
+  portalPath?: string
 }
 
 // Single source of truth for who someone is when they sign in.
@@ -120,6 +123,18 @@ export async function resolveAccess(user: { id: string; email?: string | null })
       businessId: owner.business_id ?? user.id,
       isPartner: true,
     }
+  }
+  const portals: [string, string][] = [
+    ['pm_landlords', '/pm-owner-portal'],
+    ['estate_landlords', '/estate-owner-portal'],
+    ['pm_tenants', '/pm-tenant-portal'],
+    ['estate_tenants', '/estate-tenant-portal'],
+  ]
+  const hits = await Promise.all(portals.map(([table]) =>
+    supabase.from(table).select('id').eq('portal_user_id', user.id).limit(1)))
+  const hit = hits.findIndex(r => (r.data?.length ?? 0) > 0)
+  if (hit >= 0) {
+    return { role: 'Viewer', customModules: [], propertyIds: [], businessId: user.id, isPartner: false, portalPath: portals[hit][1] }
   }
   return { role: 'Admin', customModules: null, propertyIds: [], businessId: user.id, isPartner: false }
 }

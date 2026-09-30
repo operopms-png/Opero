@@ -61,6 +61,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setChecked(true); return }
       const access = await resolveAccess(user)
+      // Staff only: tenants and landlords are sent back to their own portal
+      if (access.portalPath) {
+        window.location.href = access.portalPath
+        return
+      }
       const role = access.role
       const customModules = access.customModules
       if (role === 'Cleaning Team' || role === 'Maintenance Team') {
