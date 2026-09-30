@@ -225,6 +225,7 @@ export default function EmailPage() {
                   <div style={{ padding: 40, textAlign: 'center', color: C.faint, fontSize: 14 }}>{listLoading ? 'Loading…' : connected.length === 0 ? (isAdmin ? 'No mailboxes connected yet. Open Mailbox settings to connect one.' : 'No mailboxes connected yet.') : q ? 'Nothing matches your search.' : 'No emails here.'}</div>
                 ) : list.map(m => {
                   const who = folder === 'Sent' ? ('To: ' + (m.to_list || '—')) : (m.from_name || m.from_email || 'Unknown')
+                  const by = folder === 'Sent' && m.sent_by ? m.sent_by : null
                   const on = m.id === openId
                   const mbx = byId(m.mailbox_id)
                   return (
@@ -240,6 +241,7 @@ export default function EmailPage() {
                         {m.ai_category && m.ai_category !== 'Other' && <span style={{ fontSize: 11, color: '#fff', background: CAT_COLOR[m.ai_category] ?? C.grey, borderRadius: 3, padding: '1px 6px', flexShrink: 0 }}>{m.ai_category}</span>}
                         {m.ai_status === 'drafted' && <span title="AI reply ready" style={{ fontSize: 11, color: C.goldDark, border: '1px solid ' + C.gold, borderRadius: 3, padding: '0 5px', flexShrink: 0 }}>AI draft</span>}
                         {m.ai_status === 'replied' && <span title="AI replied" style={{ fontSize: 11, color: '#00854D', border: '1px solid #A6E9C9', borderRadius: 3, padding: '0 5px', flexShrink: 0 }}>AI replied</span>}
+                        {by && <span title="Sent by" style={{ fontSize: 11, color: C.brown, background: C.cream, border: '1px solid ' + C.creamLine, borderRadius: 3, padding: '0 5px', flexShrink: 0 }}>by {by}</span>}
                         <span style={{ fontSize: 12.5, color: C.faint, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.snippet}</span>
                       </div>
                     </div>
@@ -274,6 +276,7 @@ export default function EmailPage() {
                       <div style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
                         <div><b style={{ fontWeight: 600 }}>{msg.from_name || msg.from_email}</b> {msg.from_name && <span style={{ color: C.faint }}>&lt;{msg.from_email}&gt;</span>}</div>
                         <div style={{ color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>To: {msg.to_list || '—'}{msg.cc_list ? ` · Cc: ${msg.cc_list}` : ''}</div>
+                        {msg.sent_by && <div style={{ color: C.brown }}>Sent by {msg.sent_by} from the portal</div>}
                       </div>
                       <div style={{ textAlign: 'right', fontSize: 12.5, color: C.muted }}>
                         <div>{new Date(msg.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
@@ -395,6 +398,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash }: any) {
                 </div>
                 <div onClick={() => onAccess(b)} title="Choose who can see this mailbox" style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', cursor: 'pointer', fontSize: 12.5 }}>
                   <span style={{ color: C.muted }}>Admins</span>
+                  {(b.access_teams ?? []).map((r: string) => <span key={'t' + r} style={{ background: C.cream, border: '1px solid ' + C.creamLine, color: C.brown, borderRadius: 10, padding: '1px 7px' }}>{r}</span>)}
                   {(b.access ?? []).map((e: string) => { const t = team.find((x: any) => x.email?.toLowerCase() === e); return <span key={e} style={{ background: C.hover, border: '1px solid ' + C.row, borderRadius: 10, padding: '1px 7px' }}>{t?.name || e}</span> })}
                   <span style={{ color: C.goldDark }}>+</span>
                 </div>
@@ -456,26 +460,45 @@ function ConnectModal({ mb, onClose, onDone }: any) {
 
 function AccessModal({ mb, team, onClose, onDone }: any) {
   const [sel, setSel] = useState<string[]>(mb.access ?? [])
+  const [teams, setTeams] = useState<string[]>(mb.access_teams ?? [])
   const [busy, setBusy] = useState(false)
   const staff = team.filter((t: any) => String(t.role ?? '').toLowerCase() !== 'admin' && t.email)
+  const roles = Array.from(new Set(staff.map((t: any) => String(t.role ?? '').trim()).filter(Boolean))) as string[]
   async function save() {
     setBusy(true)
-    try { await api('', { action: 'update', id: mb.id, access: sel }); onDone() } catch (e: any) { alert(e.message) }
+    try { await api('', { action: 'update', id: mb.id, access: sel, access_teams: teams }); onDone() } catch (e: any) { alert(e.message) }
     setBusy(false)
   }
+  const box: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid ' + C.row, cursor: 'pointer', fontSize: 14 }
   return (
     <Modal title={`Who can see ${mb.email}`} onClose={onClose}>
-      <div style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>Admins always see every mailbox. Tick any other staff who should see this one and send from it.</div>
-      <div style={{ maxHeight: 340, overflowY: 'auto', border: '1px solid ' + C.row, borderRadius: 4 }}>
+      <div style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>Admins always see every mailbox. Give it to a whole team (anyone added to that team later gets it too), or to individual staff.</div>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Teams</div>
+      <div style={{ border: '1px solid ' + C.row, borderRadius: 4, marginBottom: 14 }}>
+        {roles.length === 0 && <div style={{ padding: 12, fontSize: 13, color: C.faint }}>No teams yet — set staff roles in Team Management.</div>}
+        {roles.map(r => {
+          const on = teams.includes(r)
+          const n = staff.filter((t: any) => String(t.role ?? '').trim() === r).length
+          return (
+            <label key={r} style={box}>
+              <input type="checkbox" checked={on} onChange={() => setTeams(x => on ? x.filter(y => y !== r) : [...x, r])} style={{ accentColor: C.goldDark }} />
+              <span style={{ flex: 1 }}>{r}</span><span style={{ fontSize: 12, color: C.faint }}>{n} {n === 1 ? 'person' : 'people'}</span>
+            </label>
+          )
+        })}
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Individual staff</div>
+      <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid ' + C.row, borderRadius: 4 }}>
         {staff.length === 0 && <div style={{ padding: 16, fontSize: 13, color: C.faint }}>No non-admin staff yet.</div>}
         {staff.map((t: any) => {
           const e = t.email.toLowerCase()
           const on = sel.includes(e)
+          const viaTeam = teams.includes(String(t.role ?? '').trim())
           return (
-            <label key={e} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid ' + C.row, cursor: 'pointer', fontSize: 14 }}>
-              <input type="checkbox" checked={on} onChange={() => setSel(s => on ? s.filter(x => x !== e) : [...s, e])} style={{ accentColor: C.goldDark }} />
+            <label key={e} style={{ ...box, opacity: viaTeam ? 0.6 : 1 }}>
+              <input type="checkbox" checked={on || viaTeam} disabled={viaTeam} onChange={() => setSel(s => on ? s.filter(x => x !== e) : [...s, e])} style={{ accentColor: C.goldDark }} />
               <Avatar name={t.name || e} color={colorFor(e)} size={24} />
-              <span style={{ flex: 1 }}>{t.name || e}<span style={{ color: C.faint, fontSize: 12 }}> · {t.role}</span></span>
+              <span style={{ flex: 1 }}>{t.name || e}<span style={{ color: C.faint, fontSize: 12 }}> · {viaTeam ? 'via team' : t.role}</span></span>
             </label>
           )
         })}

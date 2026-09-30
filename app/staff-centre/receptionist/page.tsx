@@ -49,6 +49,9 @@ function Card({ title, color, status, children }: { title: string; color: string
   )
 }
 
+// Calling is built but hidden until a phone number is set up.
+const SHOW_PHONE = false
+
 export default function ReceptionistPage() {
   const [loading, setLoading] = useState(true)
   const [d, setD] = useState<any>(null)
@@ -59,7 +62,7 @@ export default function ReceptionistPage() {
   const [toast, setToast] = useState('')
   const [filter, setFilter] = useState<'all' | 'follow'>('follow')
   const [open, setOpen] = useState<string | null>(null)
-  const [testCh, setTestCh] = useState('phone')
+  const [testCh, setTestCh] = useState(SHOW_PHONE ? 'phone' : 'email')
   const [chat, setChat] = useState<{ role: 'user' | 'ai'; text: string; note?: string }[]>([])
   const [typing, setTyping] = useState('')
   const [thinking, setThinking] = useState(false)
@@ -88,7 +91,7 @@ export default function ReceptionistPage() {
   if (loading || !s) return <CrmPage><div style={{ padding: 60, color: C.faint }}>Loading…</div></CrmPage>
   const admin = d.isAdmin
   const on = (m: string) => m && m !== 'off'
-  const liveChannels = [on(s.phone_mode) && d.phones.length > 0 && 'Phone', d.mailboxes.some((m: any) => m.ai_mode !== 'off') && 'Email', on(s.portal_mode) && 'Tenants & landlords', d.websiteChat?.enabled && 'Website chat'].filter(Boolean)
+  const liveChannels = [SHOW_PHONE && on(s.phone_mode) && d.phones.length > 0 && 'Phone', d.mailboxes.some((m: any) => m.ai_mode !== 'off') && 'Email', on(s.portal_mode) && 'Tenants & landlords', d.websiteChat?.enabled && 'Website chat'].filter(Boolean)
 
   const shown = log.filter(l => l.action !== 'skipped' && (filter === 'all' || (l.needs_staff && !l.resolved)))
   const groups = Object.keys(CH).map(k => ({ k, rows: shown.filter(l => l.channel === k) })).filter(g => g.rows.length)
@@ -110,7 +113,7 @@ export default function ReceptionistPage() {
     <CrmPage>
       <CrmHeader
         title="AI Receptionist"
-        subtitle={<>{s.assistant_name} answers calls, emails, tenant &amp; landlord messages and website chat using your company knowledge. {liveChannels.length ? <>Live on: <b style={{ color: C.brown }}>{liveChannels.join(', ')}</b>.</> : 'Not switched on for any channel yet.'} Office is <b style={{ color: C.brown }}>{d.open ? 'open' : 'closed'}</b> now.</>}
+        subtitle={<>{s.assistant_name} answers {SHOW_PHONE ? 'calls, ' : ''}emails, tenant &amp; landlord messages and website chat using your company knowledge. {liveChannels.length ? <>Live on: <b style={{ color: C.brown }}>{liveChannels.join(', ')}</b>.</> : 'Not switched on for any channel yet.'} Office is <b style={{ color: C.brown }}>{d.open ? 'open' : 'closed'}</b> now.</>}
         actions={!d.aiReady ? <Pill color={C.red} width={0}>AI key missing on server</Pill> : undefined}
         tabs={[{ k: 'activity', l: 'Activity', count: stats.follow || undefined }, { k: 'channels', l: 'Channels' }, { k: 'knowledge', l: 'Knowledge & hours' }, { k: 'try', l: 'Try it' }]}
         tab={tab} onTab={setTab}
@@ -168,7 +171,7 @@ export default function ReceptionistPage() {
         {tab === 'channels' && (
           <div style={{ maxWidth: 980 }}>
             {!admin && <div style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>Only admins can change these settings.</div>}
-            <Card title="Phone calls" color={CH.phone.c} status={<Pill width={0} color={!on(s.phone_mode) ? C.grey : d.phones.length ? C.green : C.orange}>{!on(s.phone_mode) ? 'Off' : d.phones.length ? 'On' : 'Waiting for a phone number'}</Pill>}>
+            {SHOW_PHONE && <Card title="Phone calls" color={CH.phone.c} status={<Pill width={0} color={!on(s.phone_mode) ? C.grey : d.phones.length ? C.green : C.orange}>{!on(s.phone_mode) ? 'Off' : d.phones.length ? 'On' : 'Waiting for a phone number'}</Pill>}>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>Answers your business line, handles questions, takes messages, notes viewing requests and puts callers through to staff. Every call is written up with a transcript.</div>
               <ModePicker disabled={!admin} value={s.phone_mode} onChange={v => quick({ phone_mode: v })} options={[{ v: 'off', l: 'Off', c: C.grey }, { v: 'no_answer', l: 'When nobody answers', c: C.gold }, { v: 'out_of_hours', l: 'Out of hours', c: C.purple }, { v: 'always', l: 'Every call', c: C.green }]} />
               {d.phones.length === 0 ? (
@@ -183,7 +186,7 @@ export default function ReceptionistPage() {
                 <div><label style={label}>“When nobody answers”: ring staff for (seconds)</label><input disabled={!admin} type="number" value={s.phone_ring_seconds} onChange={e => set('phone_ring_seconds', e.target.value)} style={input} /></div>
               </div>
               {admin && dirty && <div style={{ marginTop: 12 }}><button onClick={() => save()} disabled={saving} style={btn('gold', true)}>{saving ? 'Saving…' : 'Save phone settings'}</button></div>}
-            </Card>
+            </Card>}
 
             <Card title="Email" color={CH.email.c} status={<Pill width={0} color={d.mailboxes.some((m: any) => m.ai_mode !== 'off') ? C.green : C.grey}>{d.mailboxes.filter((m: any) => m.ai_mode !== 'off').length} of {d.mailboxes.length} mailboxes</Pill>}>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}><b>Drafts:</b> the AI writes a reply for each new email and staff send it with one click. <b>Auto-reply:</b> it sends the reply itself when it’s confident, and leaves a draft when a person needs to decide. Newsletters, receipts and no-reply emails are ignored.</div>
@@ -261,7 +264,7 @@ export default function ReceptionistPage() {
           <div style={{ maxWidth: 760 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 13, color: C.muted }}>Pretend to be a</span>
-              <ModePicker value={testCh} onChange={v => { setTestCh(v); setChat([]) }} options={[{ v: 'phone', l: 'Caller', c: CH.phone.c }, { v: 'email', l: 'Email sender', c: CH.email.c }, { v: 'portal', l: 'Tenant / landlord', c: CH.portal.c }, { v: 'website', l: 'Website visitor', c: CH.website.c }]} />
+              <ModePicker value={testCh} onChange={v => { setTestCh(v); setChat([]) }} options={[...(SHOW_PHONE ? [{ v: 'phone', l: 'Caller', c: CH.phone.c }] : []), { v: 'email', l: 'Email sender', c: CH.email.c }, { v: 'portal', l: 'Tenant / landlord', c: CH.portal.c }, { v: 'website', l: 'Website visitor', c: CH.website.c }]} />
               <div style={{ flex: 1 }} />
               {chat.length > 0 && <button onClick={() => setChat([])} style={btn('ghost', true)}>Start again</button>}
             </div>

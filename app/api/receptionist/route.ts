@@ -29,14 +29,14 @@ export async function GET(req: NextRequest) {
   const s = await ensureSettings(c.businessId)
   const [log, mbs, phones, chat] = await Promise.all([
     serviceClient.from('ai_receptionist_log').select('*').eq('business_id', c.businessId).neq('action', 'processing').order('created_at', { ascending: false }).limit(200),
-    serviceClient.from('mailboxes').select('id,email,status,ai_mode,user_id,access').eq('user_id', c.businessId).order('email'),
+    serviceClient.from('mailboxes').select('id,email,status,ai_mode,user_id,access,access_teams').eq('user_id', c.businessId).order('email'),
     serviceClient.from('whatsapp_connections').select('id,phone_number').eq('user_id', c.businessId),
     serviceClient.from('website_chat_settings').select('enabled,assistant_name').eq('business_id', c.businessId).maybeSingle(),
   ])
   return NextResponse.json({
     settings: s, open: isOpen(s), isAdmin: c.isAdmin,
     log: log.data ?? [],
-    mailboxes: (mbs.data ?? []).filter(m => canAccess(m, c)).map(({ access, user_id, ...m }) => m),
+    mailboxes: (mbs.data ?? []).filter(m => canAccess(m, c)).map(({ access, access_teams, user_id, ...m }) => m),
     phones: phones.data ?? [],
     websiteChat: chat.data ?? null,
     aiReady: !!process.env.ANTHROPIC_API_KEY,
