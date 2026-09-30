@@ -190,8 +190,8 @@ export const APPLICATIONS_BOARD: MkBoard = {
 }
 
 // Staff Centre → Staff Performance: each row is a win. Wins logged from CRM
-// deals (Closed won) are kept in step by the database, so their staff/value
-// are edited on the deal, not here.
+// deals (Closed won) are kept in step by the database: the staff member is set on
+// the deal, and editing the value here also updates the deal's Price.
 const autoWin = (r: any) => String(r.notes ?? '').startsWith('Auto-logged from CRM')
 export const WINS_BOARD: MkBoard = {
   key: 'wins', table: 'staff_performance_wins', title: 'Wins', item: 'win', nameField: 'title', groupBy: 'category',
@@ -206,7 +206,7 @@ export const WINS_BOARD: MkBoard = {
       { value: 'Joint Venture Secured', color: '#9D50DD' },
       { value: 'Investor Secured', color: '#FDAB3D' },
       { value: 'Tenant Secured', label: 'Tenant Secured (Vacancy Filled)', color: '#579BFC' }] },
-    { key: 'value', title: 'Value', type: 'number', width: 120, currency: '£', readonlyWhen: autoWin },
+    { key: 'value', title: 'Value', type: 'number', width: 120, currency: '£' },
     { key: 'module', title: 'Department', type: 'status', width: 170, options: [
       { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
       { value: 'estate', label: 'Estate Agency', color: '#00C875' }, { value: 'dev', label: 'Developments', color: '#9D50DD' }] },
