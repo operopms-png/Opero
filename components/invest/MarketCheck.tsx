@@ -74,17 +74,39 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
   async function check() {
     if (!form.address?.trim()) { setErr('Add the property’s location (street, town or postcode) first.'); return }
     setLoading(true); setErr(null)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/deal-market', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ strategy, strategyLabel, location: form.address, bedrooms: form.bedrooms, propertyType: form.propertyType, letting: strategy === 'r2r' ? form.termType || 'long' : undefined, metrics }),
-      })
+    const { data: { session } } = await supabase.auth.getSession()
+    const base = { strategy, strategyLabel, location: form.address, bedrooms: form.bedrooms, propertyType: form.propertyType, letting: strategy === 'r2r' ? form.termType || 'long' : undefined }
+    // One search per figure plus an area overview, all at once
+    const call = async (body: any) => {
+      const res = await fetch('/api/deal-market', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ ...base, ...body }) })
       const d = await res.json().catch(() => null)
-      if (!d) throw new Error('The search took too long — try again.')
+      if (!d) throw new Error('That search took too long')
       if (d.error) throw new Error(d.error)
-      onMarket(d.market)
-    } catch (e: any) { setErr(e.message || 'Something went wrong') }
+      return d.part
+    }
+    const jobs = [call({ mode: 'overview', metrics }), ...metrics.map(m => call({ mode: 'metric', metrics: [m] }))]
+    const got = await Promise.allSettled(jobs)
+    const ok = got.map(g => g.status === 'fulfilled' ? g.value : null)
+    const ov = ok[0] || {}
+    const parts = ok.slice(1)
+    if (!parts.some(Boolean) && !ok[0]) {
+      const r = got.find(g => g.status === 'rejected') as PromiseRejectedResult | undefined
+      setErr((r?.reason?.message || 'The market search failed') + ' — try again.'); setLoading(false); return
+    }
+    const rank: Record<string, number> = { High: 3, Medium: 2, Low: 1 }
+    const confs = ok.filter(Boolean).map((p: any) => p.confidence).filter(Boolean)
+    const confidence = confs.length ? confs.reduce((a: string, b: string) => rank[b] < rank[a] ? b : a) : 'Low'
+    const seen = new Set<string>()
+    const comparables = parts.flatMap((p: any) => p?.comparables || []).filter((c: any) => { const k = (c.url || c.title).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true })
+    const srcSeen = new Set(comparables.map((c: any) => c.url).filter(Boolean))
+    const sources = ok.flatMap((p: any) => p?.sources || []).filter((x: any) => { if (srcSeen.has(x.url)) return false; srcSeen.add(x.url); return true }).slice(0, 8)
+    const missing = metrics.filter((_, i) => !parts[i]).map(m => m.label)
+    onMarket({
+      checkedAt: new Date().toISOString(), location: form.address, bedrooms: form.bedrooms || null, propertyType: form.propertyType || null,
+      metrics, benchmarks: parts.filter(Boolean).map((p: any) => p.benchmark), comparables, sources,
+      area: ov.area || '', demand: ov.demand || '', watch_outs: ov.watch_outs || [],
+      confidence, confidence_reason: [ov.confidence_reason, missing.length ? `Couldn’t get market data for: ${missing.join(', ')}.` : ''].filter(Boolean).join(' '),
+    })
     setLoading(false)
   }
 
@@ -112,7 +134,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
         <button onClick={check} disabled={loading} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: C.gd, color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: loading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: loading ? 0.7 : 1, whiteSpace: 'nowrap' }}>{loading ? 'Searching…' : market ? '↻ Check again' : '🔍 Check local market'}</button>
       </div>
       {err && <div style={{ fontSize: 12.5, color: C.red, marginTop: 8 }}>{err}</div>}
-      {loading && <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 8, background: C.cream, fontSize: 13, color: C.brown }}>Searching sale, rental, room and short-let listings near {form.address}… this usually takes 30–60 seconds.</div>}
+      {loading && <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 8, background: C.cream, fontSize: 13, color: C.brown }}>Searching sale, rental, room and short-let listings near {form.address}… this usually takes under a minute.</div>}
       {stale && !loading && <div style={{ marginTop: 10, fontSize: 12, color: '#9A6400' }}>Your figures or location have changed since this check — run it again to update the comparison.</div>}
 
       {market && !loading && (

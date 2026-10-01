@@ -7,33 +7,38 @@ import { requireUser } from '@/lib/admin-auth'
 // plus the comparables themselves with links. Links are only kept if they
 // came back from the web search, so the AI can't invent a listing URL.
 //
-// POST { strategy, strategyLabel, location, bedrooms, propertyType, letting, metrics:[{key,label,value,unit,compare}] }
+// POST { mode:'metric'|'overview', strategy, strategyLabel, location, bedrooms, propertyType, letting, metrics:[{key,label,value,unit,compare}] }
+// The browser calls this once per figure plus once for the overview, all at
+// the same time, so each search stays inside the 60s server limit.
 // The response is streamed: spaces every few seconds to keep the connection
 // open during the searches, then the JSON.
 
-export const maxDuration = 120
+export const maxDuration = 60
 
 type Metric = { key: string; label: string; value: number; unit: string; compare: string }
 
-const SYSTEM = `You are a property market analyst for an investor working in the UK and Jamaica.
-Use web search to find REAL, CURRENT comparable listings near the given location (Rightmove, Zoopla, OnTheMarket, SpareRoom, Airbnb, Booking.com, Realtor.com Jamaica, Terra Caribbean, Jamaica property portals, Facebook Marketplace listings that are indexed, etc.).
-Run several focused searches — one for each kind of comparable the metrics need (sale prices, whole-property rents, room rents, nightly rates).
+const BASE = `You are a property market analyst for an investor working in the UK and Jamaica.
+Use web search to find REAL, CURRENT listings near the given location (Rightmove, Zoopla, OnTheMarket, SpareRoom, Airbnb, Booking.com, Realtor.com, Terra Caribbean, Jamaica property portals, etc.). Be quick: at most 2 searches.
+Reply with ONLY a JSON object, no prose before or after.
+All money in GBP. If listings are in JMD or USD, convert to GBP at the current rate and keep the original in price_text.
+Only use listings you actually saw in search results, with their real URL. Never invent a listing, price or URL.`
 
-Then reply with ONLY a JSON object, no prose before or after, in this shape:
+const METRIC_SHAPE = `JSON shape:
 {
- "area": "one sentence describing the local market",
- "benchmarks": [ { "key": "<metric key>", "low": number, "typical": number, "high": number, "basis": "what this is based on, e.g. '7 two-bed flats to rent within 1 mile'", "count": number } ],
- "comparables": [ { "type": "For sale" | "Sold" | "To rent" | "Room" | "Short let" | "Land", "title": "short description", "location": "street/area", "beds": number|null, "price": number, "unit": "£" | "£/month" | "£/room/month" | "£/night", "price_text": "as shown on the listing, original currency", "url": "the exact listing or page URL you found", "source": "site name" } ],
- "demand": "2-3 sentences on demand, who rents/buys here, seasonality",
- "watch_outs": [ "short points: licensing, Article 4, oversupply, flood risk, crime, service charges — only what you actually found or is standard for this area" ],
- "confidence": "High" | "Medium" | "Low",
- "confidence_reason": "one sentence"
+ "benchmark": { "low": number, "typical": number, "high": number, "basis": "what this is based on, e.g. '7 two-bed flats to rent within 1 mile'", "count": number },
+ "comparables": [ { "type": "For sale" | "Sold" | "To rent" | "Room" | "Short let" | "Land", "title": "short description", "location": "street/area", "beds": number|null, "price": number, "unit": "<same unit as the metric>", "price_text": "as shown on the listing", "url": "exact URL you found", "source": "site name" } ],
+ "confidence": "High" | "Medium" | "Low"
 }
-Rules:
-- Every benchmark must use the same unit as the metric. All numbers in GBP. If listings are in JMD or USD, convert to GBP at the current rate and keep the original in price_text.
-- Give 6-12 comparables, most relevant first. Only include listings you actually saw in search results, with their real URL. Never invent a listing, price or URL.
-- If you cannot find enough data for a metric, give your best range from what you found, lower the count, and say so in basis. Use Low confidence if the data is thin.
-- Match bedrooms and property type as closely as possible; widen the area only if needed and say so in basis.`
+Give 3-6 comparables, closest match first. The benchmark must be in the same unit as the metric. Match bedrooms and property type as closely as you can; if you had to widen the search, say so in basis. If data is thin, give your best range, a low count and Low confidence.`
+
+const OVERVIEW_SHAPE = `JSON shape:
+{
+ "area": "one or two sentences describing this local property market",
+ "demand": "2-3 sentences on demand for this strategy here: who rents or buys, how fast things let or sell, seasonality",
+ "watch_outs": [ "short points relevant to this strategy here: licensing / Article 4, oversupply, flood risk, crime, service charges, planning — only what you found or is standard for the area" ],
+ "confidence": "High" | "Medium" | "Low",
+ "confidence_reason": "one sentence on how solid the local data is"
+}`
 
 async function run(b: any) {
   if (!process.env.ANTHROPIC_API_KEY) return { error: 'The AI isn’t configured on the server' }
@@ -41,25 +46,33 @@ async function run(b: any) {
   if (!location) return { error: 'Add the property’s location first' }
   const metrics: Metric[] = (Array.isArray(b.metrics) ? b.metrics : []).filter((m: any) => m && m.key && Number(m.value) > 0).slice(0, 6)
 
+  const overview = b.mode === 'overview'
+  const m = metrics[0]
+  if (!overview && !m) return { error: 'No figure to compare' }
   const user = `Deal strategy: ${b.strategyLabel || b.strategy}
 Location: ${location}
 Property type: ${b.propertyType || 'not given'}
 Bedrooms: ${b.bedrooms || 'not given'}
 ${b.letting ? `Letting type: ${b.letting}\n` : ''}
-Metrics to benchmark (the investor's own figures — find what the local market says for each):
-${metrics.map(m => `- key "${m.key}": ${m.label} = ${m.value} ${m.unit}. Compare against: ${m.compare}`).join('\n') || '- none given; just describe sale prices and rents for this property type'}
+` + (overview
+    ? 'Describe the local market for this strategy and return the JSON.'
+    : `The investor's figure: ${m.label} = ${m.value} ${m.unit}.\nFind what the local market says by searching for: ${m.compare}.\nReturn the JSON.`)
 
-Find comparables and return the JSON.`
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6', max_tokens: 3500, system: SYSTEM,
-      messages: [{ role: 'user', content: user }],
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
-    }),
-  })
+  // Stop well before the 60s server limit so we can still answer
+  const ctrl = new AbortController(); const stop = setTimeout(() => ctrl.abort(), 52000)
+  let res: Response
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6', max_tokens: overview ? 900 : 1600, system: BASE + '\n\n' + (overview ? OVERVIEW_SHAPE : METRIC_SHAPE),
+        messages: [{ role: 'user', content: user }],
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
+      }),
+    })
+  } catch { clearTimeout(stop); return { error: 'That search took too long' } }
+  clearTimeout(stop)
   if (!res.ok) return { error: `The market search is unavailable right now (${res.status})` }
   const data = await res.json()
 
@@ -74,26 +87,24 @@ Find comparables and return the JSON.`
   let out: any
   try { out = JSON.parse(text.slice(s, e + 1)) } catch { return { error: 'The market search didn’t come back in the right shape — try again.' } }
 
-  const num = (v: any) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null }
-  const benchmarks = (Array.isArray(out.benchmarks) ? out.benchmarks : [])
-    .filter((x: any) => metrics.some(m => m.key === x?.key))
-    .map((x: any) => ({ key: String(x.key), low: num(x.low), typical: num(x.typical), high: num(x.high), basis: String(x.basis || '').slice(0, 240), count: Number(x.count) || 0 }))
-  const comparables = (Array.isArray(out.comparables) ? out.comparables : []).slice(0, 14).map((x: any) => {
+  const num = (v: any) => { const x = Number(v); return Number.isFinite(x) && x > 0 ? Math.round(x * 100) / 100 : null }
+  const conf = ['High', 'Medium', 'Low'].includes(out.confidence) ? out.confidence : 'Low'
+  const sources = [...found.values()].slice(0, 6).map(v => ({ url: v.url, title: v.title || host(v.url) }))
+  if (overview) return {
+    part: { area: String(out.area || '').slice(0, 400), demand: String(out.demand || '').slice(0, 800),
+      watch_outs: (Array.isArray(out.watch_outs) ? out.watch_outs : []).slice(0, 8).map((x: any) => String(x).slice(0, 220)),
+      confidence: conf, confidence_reason: String(out.confidence_reason || '').slice(0, 240), sources },
+  }
+  const bm = out.benchmark || {}
+  const comparables = (Array.isArray(out.comparables) ? out.comparables : []).slice(0, 8).map((x: any) => {
     const u = typeof x.url === 'string' ? clean(x.url) : ''
     const ok = u && (found.has(u) || [...found.keys()].some(f => f.includes('/') && (f.startsWith(u + '/') || u.startsWith(f + '/'))))
-    return { type: String(x.type || '').slice(0, 20), title: String(x.title || '').slice(0, 140), location: String(x.location || '').slice(0, 100), beds: Number(x.beds) || null, price: num(x.price), unit: String(x.unit || '£').slice(0, 16), price_text: String(x.price_text || '').slice(0, 60), url: ok ? x.url : null, source: String(x.source || '').slice(0, 40) }
+    return { type: String(x.type || '').slice(0, 20), title: String(x.title || '').slice(0, 140), location: String(x.location || '').slice(0, 100), beds: Number(x.beds) || null, price: num(x.price), unit: m.unit, price_text: String(x.price_text || '').slice(0, 60), url: ok ? x.url : null, source: String(x.source || '').slice(0, 40), metric: m.key }
   }).filter((x: any) => x.title && x.price)
-  const used = new Set(comparables.map((x: any) => x.url && clean(x.url)).filter(Boolean))
-  const sources = [...found.entries()].filter(([k]) => !used.has(k)).slice(0, 8).map(([, v]) => ({ url: v.url, title: v.title || host(v.url) }))
-
   return {
-    market: {
-      checkedAt: new Date().toISOString(), location, bedrooms: b.bedrooms || null, propertyType: b.propertyType || null,
-      metrics, benchmarks, comparables, sources,
-      area: String(out.area || '').slice(0, 400), demand: String(out.demand || '').slice(0, 800),
-      watch_outs: (Array.isArray(out.watch_outs) ? out.watch_outs : []).slice(0, 8).map((x: any) => String(x).slice(0, 220)),
-      confidence: ['High', 'Medium', 'Low'].includes(out.confidence) ? out.confidence : 'Low',
-      confidence_reason: String(out.confidence_reason || '').slice(0, 240),
+    part: {
+      benchmark: { key: m.key, low: num(bm.low), typical: num(bm.typical), high: num(bm.high), basis: String(bm.basis || '').slice(0, 240), count: Number(bm.count) || 0 },
+      comparables, confidence: conf, sources,
     },
   }
 }
