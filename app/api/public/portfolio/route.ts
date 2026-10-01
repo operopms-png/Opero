@@ -51,11 +51,12 @@ export async function GET() {
       photos: pics.slice(0, 12),
       book_url: !isLet && r.airbnb_url ? r.airbnb_url : null,
       rent_url: homesUrl,
-      rent: kind === 'rent' && r.listed && Number(r.rent) > 0 ? `${SYMBOL[r.currency] ?? ''}${Number(r.rent).toLocaleString('en-GB')}/month` : null,
+      // rent set in the portal (Estate Agency / Staff Centre → Listings) shows on the website for every available property
+      rent: !isLet && Number(r.rent) > 0 ? `${SYMBOL[r.currency] ?? ''}${Number(r.rent).toLocaleString('en-GB')}/month` : null,
       photo_count: pics.length,
       url: (!isLet && (r.airbnb_url || homesUrl)) || null,
       enquire_url: `${APP}/meeting`,
     }
   })
-  return NextResponse.json({ properties, updated: new Date().toISOString() }, { headers: { ...CORS, 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } })
+  return NextResponse.json({ properties, updated: new Date().toISOString() }, { headers: { ...CORS, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' } })
 }

@@ -160,7 +160,7 @@
       if (!list.length) { box.innerHTML = '<div class="sgp-empty">Properties coming soon.</div>'; return }
       box.innerHTML = list.map(function (p) {
         return '<div class="sgp-card">' + img(p) + '<div class="sgp-body"><div class="sgp-loc">' + esc(p.location || '') + '</div><div class="sgp-title">' + esc(p.title) + '</div>' +
-          '<div class="sgp-specs">' + specs(p) + '</div>' +
+          '<div class="sgp-specs">' + specs(p) + '</div>' + (p.rent ? '<div class="sgp-rent">' + esc(p.rent) + '</div>' : '') +
           ctaLink(p, 'sgp-btn') + '</div></div>'
       }).join('')
       bindLightbox(root, list)
