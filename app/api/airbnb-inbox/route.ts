@@ -3,13 +3,16 @@ import { serviceClient } from '@/lib/admin-auth'
 import { getCaller, canAccess, sendFromMailbox, fetchReplyTo, importFromSender, friendlyError, type Caller } from '@/lib/mailbox'
 import { parseAirbnbEmail, isAirbnbReplyAddress, airbnbThreadUrl, airbnbRoomUrl, type AbItem } from '@/lib/airbnb-mail'
 import { addCrmLead } from '@/lib/crm-lead'
+import { callClaude } from '@/lib/claude'
+import { listScripts } from '@/lib/scripts'
+import { scriptsForAi } from '@/lib/scripts-shared'
 
 // Airbnb Inbox: the chats our guest-side Airbnb account (e.g. hello@, used to
 // message hosts about our services) has with hosts. Built from the Airbnb
 // notification emails in the connected mailboxes; replies go to the email's
 // Reply-To address, which Airbnb posts into the same chat.
 //   GET                         -> threads (+ messages) from mailboxes I can use
-//   POST {action: reply|import|crm|status|read}
+//   POST {action: reply|import|crm|status|read|ai_draft}
 
 export const maxDuration = 60
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status })
@@ -167,6 +170,31 @@ export async function POST(req: NextRequest) {
     } catch (e: any) { return bad(friendlyError(e), 502) }
     await saveState(c, t.key, { read_at: new Date().toISOString(), status: 'open' })
     return NextResponse.json({ ok: true })
+  }
+
+  if (action === 'ai_draft') {
+    // Drafts the next message from our scripts; staff check it and press Send.
+    const scripts = await listScripts(c.businessId, 'airbnb')
+    const guides = (await listScripts(c.businessId)).filter(x => x.kind === 'guide' && x.ai_use)
+    const rules = scriptsForAi([...scripts, ...guides.filter(g => !scripts.some(x => x.id === g.id))])
+    const convo = t.items.slice(-14).map(i => i.kind === 'event' ? `[Airbnb notice: ${i.text}]` : `${i.kind === 'you' ? 'US' : `HOST (${t.host || 'host'})`}: ${i.text}`).join('\n\n')
+    const system = `You write Airbnb messages for a property management company's staff. The company messages Airbnb hosts to offer its management services (co-hosting). You are drafting the company's NEXT message to this host, which a staff member will check before sending.
+Rules:
+- Plain text only, no markdown. Warm, confident, honest, brief. British English.
+- Follow the approved scripts below: pick the one that fits where the conversation is (first message, they declined, they agreed/asked for details, etc.) and keep its wording, adapted to this host. If the host asked a question the scripts don't answer, answer only from the scripts; otherwise say we'll go through it on a quick call.
+- Never include phone numbers, email addresses or web links (Airbnb blocks them). Don't invent prices, figures or promises that aren't in the scripts.
+- Greet the host by first name if known: ${t.host || 'unknown'}.
+- Output ONLY the message text.${rules || '\n\n(No scripts have been added yet — write a short, polite reply.)'}`
+    const r = await callClaude(system, `Listing: ${t.listing || 'unknown'}\n\nConversation so far (oldest first):\n\n${convo || '(no messages yet — this would be the first message)'}\n\nWrite our next message.`, 900)
+    if (!r.text) return bad(r.error ? 'The AI isn’t available right now: ' + r.error.slice(0, 120) : 'The AI couldn’t write a draft', 502)
+    const used = scripts.filter(x => x.ai_use && x.kind !== 'guide')
+    const draft = r.text.trim().replace(/^["“]|["”]$/g, '')
+    // which script it leaned on (best word overlap), shown to staff
+    const words = (x: string) => new Set(x.toLowerCase().match(/[a-z]{4,}/g) ?? [])
+    const dw = words(draft)
+    let best: { name: string; score: number } | null = null
+    for (const x of used) { const w = words(x.body); let n = 0; w.forEach(v => { if (dw.has(v)) n++ }); const score = n / Math.max(8, w.size); if (!best || score > best.score) best = { name: x.name, score } }
+    return NextResponse.json({ ok: true, draft, from: best && best.score > 0.25 ? best.name : null })
   }
 
   if (action === 'crm') {

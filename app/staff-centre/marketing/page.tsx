@@ -7,8 +7,9 @@ import MkBoardView from '@/components/marketing/MkBoardView'
 import MkPanel from '@/components/marketing/MkPanel'
 import MkDashboard from '@/components/marketing/MkDashboard'
 import { Modal } from '@/components/crm/Popover'
+import ScriptsView from '@/components/marketing/ScriptsView'
 
-type View = { kind: 'home' } | { kind: 'dashboard' } | { kind: 'board'; key: string }
+type View = { kind: 'home' } | { kind: 'dashboard' } | { kind: 'scripts' } | { kind: 'board'; key: string }
 
 const ICON: Record<string, React.ReactNode> = {
   home: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" /></svg>,
@@ -17,6 +18,7 @@ const ICON: Record<string, React.ReactNode> = {
   social: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" /></svg>,
   ads: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 15l2.5-6L12 15M7.8 13h3.4M15 9v6h1.5a2.5 2.5 0 000-5H15" /></svg>,
   templates: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>,
+  scripts: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M7 4h10a2 2 0 012 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 012-2z" /><path d="M9 9h6M9 13h4" /></svg>,
   dashboard: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 16v-3M12 16V8M17 16v-5" /></svg>,
 }
 const tb: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 10px', border: 'none', background: 'none', borderRadius: 4, fontSize: 13.5, color: BRAND.ink, cursor: 'pointer', fontFamily: 'inherit' }
@@ -34,11 +36,12 @@ export default function MarketingPage() {
     const b = sp.get('board') as string | null
     if (b && boardByKey(b)) setViewState({ kind: 'board', key: b })
     else if (sp.get('view') === 'dashboard') setViewState({ kind: 'dashboard' })
+    else if (sp.get('view') === 'scripts') setViewState({ kind: 'scripts' })
   }, [mk.loading])
 
   const setView = (v: View) => {
     setViewState(v)
-    window.history.replaceState(null, '', v.kind === 'board' ? `?board=${v.key}` : v.kind === 'dashboard' ? '?view=dashboard' : window.location.pathname)
+    window.history.replaceState(null, '', v.kind === 'board' ? `?board=${v.key}` : v.kind === 'dashboard' ? '?view=dashboard' : v.kind === 'scripts' ? '?view=scripts' : window.location.pathname)
   }
   const openItem = (b: string, id: string) => setOpen({ board: b as string, id })
 
@@ -62,6 +65,7 @@ export default function MarketingPage() {
           </div>
           <NavItem icon={ICON.home} label="Workspace home" active={view.kind === 'home'} onClick={() => setView({ kind: 'home' })} />
           {BOARDS.map(b => <NavItem key={b.key} icon={ICON[b.key]} label={b.title} count={mk.rows[b.key].length} active={view.kind === 'board' && view.key === b.key} onClick={() => setView({ kind: 'board', key: b.key })} />)}
+          <NavItem icon={ICON.scripts} label="Scripts" active={view.kind === 'scripts'} onClick={() => setView({ kind: 'scripts' })} />
           <NavItem icon={ICON.dashboard} label="Marketing dashboard" active={view.kind === 'dashboard'} onClick={() => setView({ kind: 'dashboard' })} />
         </aside>
       ) : (
@@ -69,7 +73,8 @@ export default function MarketingPage() {
       )}
 
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#fff' }}>
-        {view.kind === 'home' && <Home mk={mk} onOpen={k => setView({ kind: 'board', key: k })} onDashboard={() => setView({ kind: 'dashboard' })} />}
+        {view.kind === 'scripts' && <ScriptsView />}
+        {view.kind === 'home' && <Home mk={mk} onOpen={k => setView({ kind: 'board', key: k })} onDashboard={() => setView({ kind: 'dashboard' })} onScripts={() => setView({ kind: 'scripts' })} />}
         {view.kind === 'dashboard' && (
           <div style={{ flex: 1, overflow: 'auto', padding: '18px 24px 40px', background: '#F6F7FB' }}>
             <h1 style={{ fontSize: 26, fontWeight: 500, margin: '0 0 14px' }}>Marketing dashboard</h1>
@@ -117,7 +122,7 @@ function NavItem({ icon, label, active, onClick, count }: { icon: React.ReactNod
   )
 }
 
-function Home({ mk, onOpen, onDashboard }: { mk: Mk; onOpen: (k: string) => void; onDashboard: () => void }) {
+function Home({ mk, onOpen, onDashboard, onScripts }: { mk: Mk; onOpen: (k: string) => void; onDashboard: () => void; onScripts: () => void }) {
   const last = (k: string) => mk.rows[k].reduce((a, r) => Math.max(a, new Date(r.created_at).getTime()), 0)
   const td: React.CSSProperties = { padding: '11px 16px', borderBottom: `1px solid ${BRAND.rowBorder}` }
   return (
@@ -137,6 +142,7 @@ function Home({ mk, onOpen, onDashboard }: { mk: Mk; onOpen: (k: string) => void
           <button onClick={() => onOpen('campaigns')} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 600, padding: '0 14px' }}>+ New campaign</button>
           <button onClick={() => onOpen('emails')} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.emails} Write an email</button>
           <button onClick={onDashboard} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.dashboard} Open dashboard</button>
+          <button onClick={onScripts} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.scripts} Scripts</button>
         </div>
         <div style={{ border: `1px solid ${BRAND.rowBorder}`, borderRadius: 8, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 520 }}>

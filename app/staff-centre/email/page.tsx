@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { C, CrmPage, Modal, Pill, Avatar, btn, input, label } from '../../../components/crm/Page'
 import { DEFAULT_FORMAT, footerHtml, type EmailTemplate } from '../../../lib/email-format-shared'
+import ScriptPicker from '../../../components/scripts/ScriptPicker'
 
 async function api(path: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -60,6 +61,29 @@ export default function EmailPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([{ ...DEFAULT_FORMAT, id: '', name: 'Standard', is_default: true }])
   const [me, setMe] = useState<{ name: string }>({ name: '' })
   const reqId = useRef(0)
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
+  const caret = useRef<number | null>(null)
+
+  // Put a script into the email body: at the cursor if they've clicked in the
+  // box, otherwise in the gap between the greeting and the sign-off. The
+  // template already says "Hi Name," so a script's own greeting is dropped.
+  function insertScript(text: string) {
+    setDraft(d => {
+      if (!d) return d
+      const hasGreeting = /^\s*(hi|hello|dear|good (morning|afternoon|evening))\b/i.test(d.body)
+      let t = text.trim()
+      if (hasGreeting) { const m = t.match(/^(hi|hello|dear|good (morning|afternoon|evening))\b[^,!\n]*[,!]?\s*/i); if (m) { t = t.slice(m[0].length); t = t.charAt(0).toUpperCase() + t.slice(1) } }
+      const at = caret.current
+      if (at != null && at > 0 && at <= d.body.length) {
+        const before = d.body.slice(0, at), after = d.body.slice(at)
+        caret.current = at + t.length
+        return { ...d, body: before + t + after }
+      }
+      const gap = d.body.indexOf('\n\n\n\n')
+      if (gap >= 0) return { ...d, body: d.body.slice(0, gap) + '\n\n' + t + '\n\n' + d.body.slice(gap + 4) }
+      return { ...d, body: d.body ? d.body.replace(/\s*$/, '') + '\n\n' + t : t }
+    })
+  }
 
   const connected = boxes.filter(b => b.status === 'connected')
   const byId = (id: string) => boxes.find(b => b.id === id)
@@ -130,6 +154,7 @@ export default function EmailPage() {
   }
 
   function compose(kind: 'new' | 'reply' | 'replyAll' | 'forward') {
+    caret.current = null
     const fromId = (msg && byId(msg.mailbox_id)?.status === 'connected') ? msg.mailbox_id : (current?.status === 'connected' ? current.id : connected[0]?.id)
     if (!fromId) { flash('Connect a mailbox first (Mailbox settings).'); return }
     if (kind === 'new' || !msg) { setDraft({ from: fromId, to: '', cc: '', subject: '', body: formatted(), template_id: defaultT.id, files: [] }); return }
@@ -364,7 +389,11 @@ export default function EmailPage() {
               </select>
             </>}
           </div>
-          <textarea value={draft.body} onChange={e => setDraft({ ...draft, body: e.target.value })} autoFocus={!!draft.to} placeholder="Write your message…" style={{ ...input, marginTop: 12, minHeight: 200, resize: 'vertical', fontSize: 14, lineHeight: 1.5 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+            <ScriptPicker where="email" name={draft.toName} onInsert={insertScript} />
+            <span style={{ fontSize: 12, color: C.faint }}>Insert a ready-made script from Marketing → Scripts</span>
+          </div>
+          <textarea ref={bodyRef} value={draft.body} onChange={e => { caret.current = e.target.selectionStart; setDraft({ ...draft, body: e.target.value }) }} onSelect={e => { caret.current = (e.target as HTMLTextAreaElement).selectionStart }} autoFocus={!!draft.to} placeholder="Write your message…" style={{ ...input, marginTop: 8, minHeight: 200, resize: 'vertical', fontSize: 14, lineHeight: 1.5 }} />
           {tpl(draft.template_id).footer_enabled && (
             <details style={{ marginTop: 8, fontSize: 12.5, color: C.muted }}>
               <summary style={{ cursor: 'pointer' }}>✓ Footer added automatically — preview &amp; edit{draft.footer_override ? ' (changed for this email)' : ''}</summary>

@@ -8,6 +8,8 @@ import { sendEmail } from '@/lib/send-email'
 import { sendFromMailbox } from '@/lib/mailbox'
 import { getFormat, formatEmail } from '@/lib/email-format'
 import { SITE_URL } from '@/lib/brand'
+import { listScripts } from '@/lib/scripts'
+import { scriptsForAi } from '@/lib/scripts-shared'
 
 export const FAST_MODEL = 'claude-haiku-4-5-20251001'
 
@@ -99,6 +101,7 @@ export async function processNewEmails(mb: any, limit = 4) {
   const { data: own } = await serviceClient.from('mailboxes').select('email').eq('user_id', mb.user_id)
   const ownAddrs = new Set((own ?? []).map((o: any) => o.email.toLowerCase()))
   let handled = 0
+  let scriptRules: string | null = null // Marketing → Scripts marked "AI can use" (Email)
   for (const m of rows ?? []) {
     if (m.is_bulk || !m.from_email || AUTOMATED.test(m.from_email) || ownAddrs.has(m.from_email)) {
       await serviceClient.from('mailbox_messages').update({ ai_status: 'skipped' }).eq('id', m.id)
@@ -106,7 +109,8 @@ export async function processNewEmails(mb: any, limit = 4) {
     }
     const logId = await claim(s.business_id, 'email', m.id, { contact_name: m.from_name, contact: m.from_email, subject: m.subject, link: '/staff-centre/email' })
     if (!logId) continue
-    const system = basePrompt(s, `email, writing from ${mb.email}`) + `
+    if (scriptRules === null) { const all = await listScripts(mb.user_id).catch(() => []); scriptRules = scriptsForAi(all.filter(x => x.kind === 'guide' || x.show_email)) }
+    const system = basePrompt(s, `email, writing from ${mb.email}`) + scriptRules + `
 
 Reply ONLY with JSON: {"should_reply": boolean, "category": "Enquiry"|"Booking"|"Viewing"|"Maintenance"|"Tenant"|"Landlord"|"Invoice"|"Job application"|"Complaint"|"Spam"|"Other", "needs_staff": boolean, "summary": "one line for staff", "reply": "the email body (plain text, no subject line), signed '${s.assistant_name}, ${s.company_name || ''}'"}
 - should_reply=false for spam, adverts, receipts, automated emails, or anything that needs no answer.

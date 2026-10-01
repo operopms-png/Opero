@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { C, CrmPage, CrmHeader, Empty, Loading, btn } from '../../../components/crm/Page'
+import ScriptPicker from '../../../components/scripts/ScriptPicker'
 
 async function call(body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -29,6 +30,7 @@ export default function AirbnbInboxPage() {
   const [busy, setBusy] = useState('')
   const [toast, setToast] = useState('')
   const [narrow, setNarrow] = useState(false)
+  const [aiNote, setAiNote] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(''), 3500) }
 
@@ -54,6 +56,14 @@ export default function AirbnbInboxPage() {
     setBusy(label)
     try { const r = await call(body); if (ok) flash(ok); await load(); return r } catch (e: any) { flash(e.message) } finally { setBusy('') }
   }
+  const aiDraft = async () => {
+    if (!cur) return
+    if (text.trim() && !confirm('Replace what you’ve written with an AI draft?')) return
+    setBusy('ai'); setAiNote('')
+    try { const r = await call({ action: 'ai_draft', key: cur.key }); setText(r.draft); setAiNote(r.from ? `✦ Drafted from your script “${r.from}”. Check it, then press Send.` : '✦ AI draft. Check it, then press Send.') }
+    catch (e: any) { flash(e.message) } finally { setBusy('') }
+  }
+  useEffect(() => { setText(''); setAiNote('') }, [sel])
   const send = async () => {
     if (!cur || !text.trim()) return
     const r = await act('send', { action: 'reply', key: cur.key, text }, 'Sent — it will appear in the Airbnb chat')
@@ -141,10 +151,15 @@ export default function AirbnbInboxPage() {
             <div style={{ borderTop: '1px solid ' + C.row, padding: 12, background: '#fff' }}>
               {cur.threadId ? (
                 <>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <ScriptPicker where="airbnb" name={cur.host} property={cur.listing} up onInsert={t => { setText(x => x.trim() ? x.replace(/\s*$/, '') + '\n\n' + t : t); setAiNote('') }} />
+                    <button onClick={aiDraft} disabled={!!busy} style={{ padding: '5px 10px', borderRadius: 4, border: '1px solid #C9A8EC', background: '#FBF7FF', color: '#7A35B8', fontSize: 12.5, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>{busy === 'ai' ? '✦ Writing…' : '✦ AI reply'}</button>
+                  </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                     <textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) send() }} placeholder={`Message ${cur.host || 'the host'}…`} rows={3} style={{ flex: 1, resize: 'vertical', padding: '9px 11px', border: '1px solid ' + C.border, borderRadius: 6, fontSize: 14, fontFamily: 'inherit', lineHeight: 1.5, minHeight: 60 }} />
                     <button style={{ ...btn('gold'), background: AIRBNB, borderColor: AIRBNB }} disabled={!!busy || !text.trim()} onClick={send}>{busy === 'send' ? 'Sending…' : 'Send'}</button>
                   </div>
+                  {aiNote && <div style={{ fontSize: 12, color: '#7A35B8', marginTop: 6 }}>{aiNote}</div>}
                   <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>Sent through Airbnb as plain text — no email signature is added. Airbnb may hide phone numbers, emails and links in chats.</div>
                 </>
               ) : <div style={{ fontSize: 13, color: C.muted }}>This is a booking notice without a chat. Reply to this host in Airbnb.</div>}
