@@ -106,6 +106,7 @@ function toRow(mb: any, folder: string, uid: number, parsed: ParsedMail, flags: 
     in_reply_to: (parsed.inReplyTo as any) ?? null,
     references_ids: Array.isArray(parsed.references) ? parsed.references.join(' ') : (parsed.references ?? null),
     from_name: from?.name || null, from_email: from?.address?.toLowerCase() || null,
+    reply_to: parsed.replyTo?.value?.[0]?.address?.toLowerCase() || null,
     to_list: addr(parsed.to) || null, cc_list: addr(parsed.cc) || null,
     subject: parsed.subject ?? '(no subject)',
     snippet: text.replace(/\s+/g, ' ').slice(0, 180),
@@ -234,6 +235,48 @@ export async function sendFromMailbox(mb: any, m: Outgoing) {
   const row = toRow(mb, 'Sent', uid ?? 0, parsed, undefined)
   const { data } = await serviceClient.from('mailbox_messages').insert({ ...row, uid, date: new Date().toISOString(), sent_by: m.sentBy ?? null }).select('id').single()
   return { id: data?.id as string | undefined }
+}
+
+// ---------- older mail from one sender (e.g. Airbnb) ----------
+// The normal sync only keeps the latest ~60 inbox emails. This pulls in older
+// INBOX mail from a sender domain so it can be grouped (Airbnb Inbox).
+export async function importFromSender(mb: any, fromDomain: string, sinceDays = 365, max = 120) {
+  if (!mb.password_enc) return { added: 0 }
+  const client = imapFor(mb, decrypt(mb.password_enc))
+  client.on('error', () => {})
+  try {
+    await client.connect()
+    const lock = await client.getMailboxLock('INBOX')
+    try {
+      const uids = ((await client.search({ from: fromDomain, since: new Date(Date.now() - sinceDays * 864e5) }, { uid: true })) || []) as number[]
+      const pick = uids.sort((a, b) => b - a).slice(0, max)
+      if (!pick.length) return { added: 0, found: 0 }
+      const rows: any[] = []
+      for await (const msg of client.fetch(pick.join(','), { uid: true, flags: true, source: true }, { uid: true })) {
+        try { rows.push({ ...toRow(mb, 'INBOX', msg.uid, await simpleParser(msg.source as Buffer), msg.flags as any), ai_status: 'skipped' }) } catch {}
+      }
+      for (let i = 0; i < rows.length; i += 25) {
+        const { error } = await serviceClient.from('mailbox_messages').upsert(rows.slice(i, i + 25), { onConflict: 'mailbox_id,folder,uid' })
+        if (error) console.error('[mailbox] import failed', error.message)
+      }
+      return { added: rows.length, found: uids.length }
+    } finally { lock.release() }
+  } finally { try { await client.logout() } catch {} }
+}
+
+// Reply-To of an already-synced message (rows synced before reply_to was stored)
+export async function fetchReplyTo(mb: any, uid: number): Promise<string | null> {
+  if (!mb.password_enc || !uid) return null
+  const client = imapFor(mb, decrypt(mb.password_enc))
+  client.on('error', () => {})
+  try {
+    await client.connect()
+    const lock = await client.getMailboxLock('INBOX')
+    try {
+      const msg: any = await client.fetchOne(String(uid), { envelope: true }, { uid: true })
+      return msg?.envelope?.replyTo?.[0]?.address?.toLowerCase() ?? null
+    } finally { lock.release() }
+  } catch { return null } finally { try { await client.logout() } catch {} }
 }
 
 // ---------- server-side message actions ----------

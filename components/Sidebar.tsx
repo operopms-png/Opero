@@ -58,6 +58,7 @@ const NAV_GROUPS = [
       { href: '/staff-centre/smart-home', label: 'Smart Home', key: 'staffcentre', icon: 'globe', scTab: 'smarthome' },
       { href: '/staff-centre/receptionist', label: 'AI Assistant', key: 'staffcentre', icon: 'sparkles', scTab: 'inbox' },
       { href: '/staff-centre/email', label: 'Email', key: 'staffcentre', icon: 'mail', scTab: 'inbox' },
+      { href: '/staff-centre/airbnb', label: 'Airbnb Inbox', key: 'staffcentre', icon: 'message', scTab: 'inbox' },
       { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox', badge: 'inbox' },
       { href: '/staff-centre/website-chats', label: 'Website Chats', key: 'staffcentre', icon: 'globe', scTab: 'inbox', badge: 'webchat' },
       { href: '/staff-centre/portal-access', label: 'Portal Access', key: 'staffcentre', icon: 'globe', scTab: 'portalaccess' },

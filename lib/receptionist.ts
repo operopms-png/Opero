@@ -88,7 +88,7 @@ export async function alertStaff(s: Settings, title: string, message: string, li
 const esc = (t: string) => String(t ?? '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 
 // ---------- EMAIL ----------
-const AUTOMATED = /(no-?reply|do-?not-?reply|mailer-daemon|postmaster|notifications?@|alerts?@|bounce|newsletter|marketing@|billing@|invoice)/i
+const AUTOMATED = /(no-?reply|do-?not-?reply|mailer-daemon|postmaster|notifications?@|alerts?@|bounce|newsletter|marketing@|billing@|invoice|@([\w-]+\.)*airbnb\.com$)/i
 
 export async function processNewEmails(mb: any, limit = 4) {
   if (!mb || mb.ai_mode === 'off' || !mb.ai_mode) return { handled: 0 }
