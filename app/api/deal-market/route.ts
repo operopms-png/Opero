@@ -33,9 +33,9 @@ Give 3-6 comparables, closest match first. The benchmark must be in the same uni
 
 const OVERVIEW_SHAPE = `JSON shape:
 {
- "area": "one or two sentences describing this local property market",
+ "area": "two sentences max describing this local property market",
  "demand": "2-3 sentences on demand for this strategy here: who rents or buys, how fast things let or sell, seasonality",
- "watch_outs": [ "short points relevant to this strategy here: licensing / Article 4, oversupply, flood risk, crime, service charges, planning — only what you found or is standard for the area" ],
+ "watch_outs": [ "up to 5 points, each under 25 words, relevant to this strategy here: licensing / Article 4, oversupply, flood risk, crime, service charges, planning — only what you found or is standard for the area" ],
  "confidence": "High" | "Medium" | "Low",
  "confidence_reason": "one sentence on how solid the local data is"
 }`
@@ -66,7 +66,7 @@ ${b.letting ? `Letting type: ${b.letting}\n` : ''}
       method: 'POST', signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6', max_tokens: overview ? 900 : 1600, system: BASE + '\n\n' + (overview ? OVERVIEW_SHAPE : METRIC_SHAPE),
+        model: 'claude-sonnet-4-6', max_tokens: overview ? 1800 : 2400, system: BASE + '\n\n' + (overview ? OVERVIEW_SHAPE : METRIC_SHAPE),
         messages: [{ role: 'user', content: user }],
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
       }),
@@ -84,7 +84,7 @@ ${b.letting ? `Letting type: ${b.letting}\n` : ''}
   }
   const text = (data.content ?? []).filter((x: any) => x.type === 'text').map((x: any) => x.text).join('\n')
   const out = extractJSON(text)
-  if (!out) { console.error('deal-market parse', data.stop_reason, text.slice(0, 800)); return { error: 'The market search didn’t come back in the right shape — try again.', debug: process.env.MARKET_DEBUG ? undefined : { stop: data.stop_reason, text: text.slice(-600) } } }
+  if (!out) { console.error('deal-market parse', data.stop_reason, text.slice(-400)); return { error: 'The market search didn’t come back in the right shape — try again.' } }
 
   const num = (v: any) => { const x = Number(v); return Number.isFinite(x) && x > 0 ? Math.round(x * 100) / 100 : null }
   const conf = ['High', 'Medium', 'Low'].includes(out.confidence) ? out.confidence : 'Low'
