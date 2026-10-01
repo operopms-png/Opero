@@ -8,11 +8,11 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
-import ListingEditor from '@/components/estate/ListingEditor'
+import ListingEditor, { WebsiteEditor, EMPTY_WEBSITE } from '@/components/estate/ListingEditor'
 import { CURRENCIES } from '@/lib/listings-shared'
 const ACCENT = '#A8862E'
 // Blank property form (the listing fields feed the public /homes page)
-const EMPTY_PROP = {name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:'',listed:false,currency:'JMD',available_from:'',description:'',features:[] as string[],photo_captions:{} as Record<string,string>}
+const EMPTY_PROP = {name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:'',listed:false,currency:'JMD',available_from:'',description:'',features:[] as string[],photo_captions:{} as Record<string,string>,...EMPTY_WEBSITE}
 const curSym = (c?: string) => (CURRENCIES[c || 'JMD'] ?? CURRENCIES.JMD).symbol
 
 async function uploadPropertyImage(file: File): Promise<string | null> {
@@ -951,6 +951,7 @@ export default function Page() {
                 <div><label style={labelStyle}>Owner</label><select value={prop.owner_id||''} onChange={e=>setProp({...prop,owner_id:e.target.value})} style={inputStyle}><option value="">No owner linked</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
               </div>
               <ListingEditor value={prop} onChange={patch=>setProp((cur:any)=>({...cur,...patch}))} rentLabel="the rent" propertyId={editItem?.id}/>
+              <WebsiteEditor value={prop} onChange={patch=>setProp((cur:any)=>({...cur,...patch}))}/>
               <div style={{display:'flex',gap:8}}>
                 <button onClick={addProperty} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save changes':'Add property'}</button>
                 <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp(EMPTY_PROP)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
@@ -994,7 +995,7 @@ export default function Page() {
                   <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{p.rent?curSym(p.currency)+Number(p.rent).toLocaleString('en-GB'):'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:p.status==='Rented'?'#FEF3C7':p.status==='Available'?'#ECFDF5':'#F2F4F7',color:p.status==='Rented'?'#F59E0B':p.status==='Available'?'#10B981':'#667085',display:'inline-block'}}>{p.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(p);setProp({...EMPTY_PROP,name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||'',owner_id:p.owner_id||'',listed:!!p.listed,currency:p.currency||'JMD',available_from:p.available_from||'',description:p.description||'',features:p.features||[],photo_captions:p.photo_captions||{}});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>{setEditItem(p);setProp({...EMPTY_PROP,name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||'',owner_id:p.owner_id||'',listed:!!p.listed,currency:p.currency||'JMD',available_from:p.available_from||'',description:p.description||'',features:p.features||[],photo_captions:p.photo_captions||{},show_on_website:!!p.show_on_website,web_title:p.web_title||'',web_area:p.web_area||'',country:p.country||'',guests:p.guests!=null?String(p.guests):'',airbnb_url:p.airbnb_url||'',web_badge:p.web_badge||'',lat:p.lat!=null?String(p.lat):'',lng:p.lng!=null?String(p.lng):'',web_sort:String(p.web_sort??0)});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_properties',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>

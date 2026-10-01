@@ -135,3 +135,41 @@ export default function ListingEditor({ value, onChange, rentLabel, propertyId }
     </div>
   )
 }
+
+// ---------- Website (sangstersgroup.com property search + home page) ----------
+export type WebsiteFields = { show_on_website: boolean; web_title: string; web_area: string; country: string; guests: string; airbnb_url: string; web_badge: string; lat: string; lng: string; web_sort: string }
+export const EMPTY_WEBSITE: WebsiteFields = { show_on_website: false, web_title: '', web_area: '', country: 'Jamaica', guests: '', airbnb_url: '', web_badge: '', lat: '', lng: '', web_sort: '0' }
+
+export function WebsiteEditor({ value, onChange }: { value: WebsiteFields; onChange: (patch: Partial<WebsiteFields>) => void }) {
+  const input: React.CSSProperties = { width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', color: '#323338', background: '#fff' }
+  const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 500, color: '#344054', marginBottom: 5 }
+  const f = (k: keyof WebsiteFields, l: string, ph = '', hint?: string, type = 'text') => (
+    <div><label style={label}>{l}</label><input type={type} value={String(value[k] ?? '')} onChange={e => onChange({ [k]: e.target.value } as any)} placeholder={ph} style={input} />{hint && <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{hint}</div>}</div>
+  )
+  return (
+    <div style={{ border: `1px solid ${LINE}`, borderRadius: 10, padding: 16, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: CREAM, border: '1px solid #F0E3C4', borderRadius: 8, padding: '10px 12px', marginBottom: value.show_on_website ? 14 : 0 }}>
+        <div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: BROWN }}>Show on sangstersgroup.com</div>
+          <div style={{ fontSize: 12, color: '#8A7248' }}>Appears on the website’s property search and home page. Rented properties show as “Currently let”.</div>
+        </div>
+        <button type="button" role="switch" aria-checked={value.show_on_website} onClick={() => onChange({ show_on_website: !value.show_on_website })} style={{ width: 46, height: 26, borderRadius: 13, border: 'none', background: value.show_on_website ? '#00C875' : '#C4C4C4', position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
+          <span style={{ position: 'absolute', top: 3, left: value.show_on_website ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .15s' }} />
+        </button>
+      </div>
+      {value.show_on_website && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+          {f('web_title', 'Website name', 'e.g. Seawind on the Bay', 'Leave blank to use the property name')}
+          {f('web_area', 'Area', 'e.g. Rose Hall, Montego Bay')}
+          {f('country', 'Country', 'Jamaica')}
+          {f('guests', 'Guests', 'e.g. 4', undefined, 'number')}
+          {f('airbnb_url', 'Airbnb link', 'https://www.airbnb.com/h/…', 'Adds a “Book on Airbnb” button')}
+          {f('web_badge', 'Badge', 'e.g. Featured, Flagship, UK', 'Small label on the photo (optional)')}
+          {f('lat', 'Map latitude', 'e.g. 18.5205', 'Right-click the spot in Google Maps to copy these')}
+          {f('lng', 'Map longitude', 'e.g. -77.8002')}
+          {f('web_sort', 'Order on website', '0', 'Lower numbers show first', 'number')}
+        </div>
+      )}
+    </div>
+  )
+}
