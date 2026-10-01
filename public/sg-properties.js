@@ -22,7 +22,10 @@
     if (document.getElementById('sgp-css')) return
     var s = document.createElement('style'); s.id = 'sgp-css'
     s.textContent = [
-      '.sgp,.sgp *,.sgp-modal,.sgp-modal *,.sgp-lb,.sgp-lb *{box-sizing:border-box}.sgp{font-family:inherit;color:' + INK + '}',
+      '.sgp,.sgp *,.sgp-modal,.sgp-modal *,.sgp-lb,.sgp-lb *{box-sizing:border-box}.sgp{font-family:inherit;color:' + INK + ';background:#fff;padding:24px;border-radius:4px}',
+      '[data-sg-properties]{background:#fff}',
+      '.sgp-map img,.sgp-map .leaflet-tile{max-width:none !important;max-height:none !important;width:256px;height:256px;box-shadow:none !important;border:none !important;border-radius:0 !important;padding:0 !important;margin:0 !important}',
+      '.sgp-map .leaflet-marker-icon,.sgp-map .leaflet-marker-icon img{width:auto;height:auto}',
       '.sgp-search{display:flex;gap:10px;background:#fff;border:1px solid ' + LINE + ';border-radius:4px;padding:10px;margin:0 0 22px}',
       '.sgp-search input{flex:1;border:none;outline:none;font:inherit;font-size:14px;padding:8px 10px;min-width:0;background:transparent}',
       '.sgp-search button{background:#111;color:#fff;border:none;border-radius:3px;padding:0 22px;font:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer}',
@@ -209,6 +212,9 @@
         map = L.map(root.querySelector('.sgp-map'), { scrollWheelZoom: false, worldCopyJump: true }).setView([30, -20], 2)
         root.querySelector('.sgp-map').addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('[data-enq-pop]'); if (!a) return; e.preventDefault(); var p = all.filter(function (x) { return x.id === a.getAttribute('data-enq-pop') })[0]; if (p) enquiry(p) })
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap contributors' }).addTo(map)
+        var mapEl = root.querySelector('.sgp-map')
+        setTimeout(function () { map.invalidateSize() }, 300); setTimeout(function () { map.invalidateSize() }, 1500)
+        if (window.ResizeObserver) new ResizeObserver(function () { map.invalidateSize() }).observe(mapEl)
         // zoomed out: one pin per country with a count; zoomed in: each property
         var groups = {}
         list.forEach(function (p) { if (p.lat == null || p.lng == null) return; var c = p.country || 'Other'; (groups[c] = groups[c] || []).push(p) })
