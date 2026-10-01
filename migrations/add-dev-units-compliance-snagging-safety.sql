@@ -1,4 +1,5 @@
 -- Run this in Supabase SQL Editor (project mzjsxrlgnthelwwtfkke)
+-- Policies match dev_projects: the owner or any team member of that business.
 --
 -- Four new real features for Developments: Units/Plots (the actual
 -- sellable/lettable breakdown of a project, which didn't exist at
@@ -93,18 +94,18 @@ ALTER TABLE dev_health_safety ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "owner manages own dev units" ON dev_units;
 CREATE POLICY "owner manages own dev units" ON dev_units
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  FOR ALL USING ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email')))) WITH CHECK ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email'))));
 
 DROP POLICY IF EXISTS "owner manages own dev compliance" ON dev_compliance;
 CREATE POLICY "owner manages own dev compliance" ON dev_compliance
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  FOR ALL USING ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email')))) WITH CHECK ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email'))));
 
 DROP POLICY IF EXISTS "owner manages own dev snagging" ON dev_snagging;
 CREATE POLICY "owner manages own dev snagging" ON dev_snagging
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  FOR ALL USING ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email')))) WITH CHECK ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email'))));
 
 DROP POLICY IF EXISTS "owner manages own dev health safety" ON dev_health_safety;
 CREATE POLICY "owner manages own dev health safety" ON dev_health_safety
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  FOR ALL USING ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email')))) WITH CHECK ((auth.uid() = user_id) OR (user_id IN (SELECT tm.user_id FROM team_members tm WHERE tm.email = (auth.jwt() ->> 'email'))));
 
 NOTIFY pgrst, 'reload schema';

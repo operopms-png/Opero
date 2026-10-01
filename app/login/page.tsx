@@ -75,15 +75,15 @@ function LoginForm() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        const { data: ownerProfile } = await supabase.from('owner_profiles').select('id').eq('user_id', session.user.id).single()
+        const { data: ownerProfile } = await supabase.from('owner_profiles').select('id').eq('user_id', session.user.id).maybeSingle()
         if (ownerProfile) { window.location.href = '/staff-centre/partners'; return }
-        const { data: landlordProfile } = await supabase.from('pm_landlords').select('id').eq('portal_user_id', session.user.id).single()
+        const { data: landlordProfile } = await supabase.from('pm_landlords').select('id').eq('portal_user_id', session.user.id).maybeSingle()
         if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
-        const { data: estateLandlordProfile } = await supabase.from('estate_landlords').select('id').eq('portal_user_id', session.user.id).single()
+        const { data: estateLandlordProfile } = await supabase.from('estate_landlords').select('id').eq('portal_user_id', session.user.id).maybeSingle()
         if (estateLandlordProfile) { window.location.href = '/estate-owner-portal'; return }
-        const { data: tenantProfile } = await supabase.from('pm_tenants').select('id').eq('portal_user_id', session.user.id).single()
+        const { data: tenantProfile } = await supabase.from('pm_tenants').select('id').eq('portal_user_id', session.user.id).maybeSingle()
         if (tenantProfile) { window.location.href = '/pm-tenant-portal'; return }
-        const { data: estateTenantProfile } = await supabase.from('estate_tenants').select('id').eq('portal_user_id', session.user.id).single()
+        const { data: estateTenantProfile } = await supabase.from('estate_tenants').select('id').eq('portal_user_id', session.user.id).maybeSingle()
         if (estateTenantProfile) { window.location.href = '/estate-tenant-portal'; return }
         const { data: teamRows } = await supabase.from('team_members').select('role, custom_modules').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
         const staffRole = normalizeRole(teamRows?.[0]?.role)
