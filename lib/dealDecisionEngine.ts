@@ -131,7 +131,7 @@ export function runRuleChecks(
     })
   }
 
-  const upfront = (baseResult.depositAmt ?? 0) + (baseResult.furnitureCost ?? 0)
+  const upfront = baseResult.totalUpfront ?? ((baseResult.depositAmt ?? 0) + (baseResult.furnitureCost ?? 0))
   if (rules.maxUpfrontCash !== undefined && upfront > 0) {
     results.push({
       rule: 'Upfront cash required',

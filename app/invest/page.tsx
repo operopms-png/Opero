@@ -139,7 +139,7 @@ export default function InvestPage() {
     let r: any = {}
     if(strategy==='btl'||strategy==='brrr') r = calcBTL(form)
     else if(strategy==='hmo') r = calcHMO(form)
-    else if(isR2R) r = calcR2R(form)
+    else if(isR2R) r = calcR2R(isR2HMO ? {...form, currentRooms: form.bedrooms} : {...form, currentRooms: '', conversionCost: '', conversionMonths: ''})
     else if(strategy==='flip') r = calcFlip(form)
     else if(strategy==='land') r = calcLand(form)
     else if(strategy==='social'||strategy==='supported') r = calcBTL({...form, expenses:'10'})
@@ -284,7 +284,7 @@ export default function InvestPage() {
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="Street, town or postcode — used for the local market check" style={inp}/></div>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1.4fr',gap:10}}>
-                      <div><label style={lbl}>Bedrooms</label><input value={form.bedrooms||''} onChange={e=>setForm({...form,bedrooms:e.target.value})} type="number" placeholder="e.g. 3" style={inp}/></div>
+                      <div><label style={lbl}>{isR2HMO?'Bedrooms now (as rented)':'Bedrooms'}</label><input value={form.bedrooms||''} onChange={e=>setForm({...form,bedrooms:e.target.value,...(isR2HMO?{currentRooms:e.target.value}:{})})} type="number" placeholder="e.g. 3" style={inp}/></div>
                       <div><label style={lbl}>Property Type</label><select value={form.propertyType||''} onChange={e=>setForm({...form,propertyType:e.target.value})} style={inp}><option value="">Any</option>{['House','Terraced house','Semi-detached house','Detached house','Flat / apartment','Bungalow','Townhouse','Villa','Land'].map(t=><option key={t}>{t}</option>)}</select></div>
                     </div>
                     {!isR2R&&<div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
@@ -305,7 +305,7 @@ export default function InvestPage() {
 
                     {isR2R&&(<>
                       <div><label style={lbl}>Rent You Pay Landlord (£/mo) *</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 480" style={inp}/></div>
-                      <div><label style={lbl}>{isR2HMO?'Number of Rooms':'Number of Units'}</label><input value={form.rooms||(isR2HMO?'5':'1')} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
+                      <div><label style={lbl}>{isR2HMO?'Rooms after conversion (rooms you let)':'Number of Units'}</label><input value={form.rooms||(isR2HMO?'5':'1')} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
                       <div>
                         <label style={lbl}>{isR2HMO?'Rent Per Room (£/mo, bills included)':'Resident Rent (£/mo, per unit)'}</label>
                         <input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="e.g. 950" style={inp}/>
@@ -330,6 +330,10 @@ export default function InvestPage() {
                       <div><label style={lbl}>Platform/Marketing (£/mo)</label><input value={form.marketingCost||''} onChange={e=>setForm({...form,marketingCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
                       <div><label style={lbl}>Vacancy Allowance (£/mo)</label><input value={form.vacancyCost||''} onChange={e=>setForm({...form,vacancyCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
                       <div><label style={lbl}>{isR2HMO?'Setup Costs — furniture, HMO licence, fire safety (£)':'Furniture Investment (£)'}</label><input value={form.setupCost||''} onChange={e=>setForm({...form,setupCost:e.target.value})} type="number" placeholder="e.g. 3500" style={inp}/></div>
+                      {isR2HMO&&<>
+                        <div><label style={lbl}>Conversion Cost — walls, doors, fire doors, extra bathrooms (£)</label><input value={form.conversionCost||''} onChange={e=>setForm({...form,conversionCost:e.target.value})} type="number" placeholder="0 if no conversion" style={inp}/></div>
+                        <div><label style={lbl}>Months to Convert (no rent coming in)</label><input value={form.conversionMonths||''} onChange={e=>setForm({...form,conversionMonths:e.target.value})} type="number" placeholder="e.g. 2" style={inp}/></div>
+                      </>}
                     </>)}
 
                     {(strategy==='flip'||strategy==='brrr')&&(
@@ -389,6 +393,49 @@ export default function InvestPage() {
                   </div>}
                 </div>
 
+                {isR2HMO&&result.asIs&&(()=>{
+                  const a=result.asIs, gbp=(v:number|null|undefined)=>v==null?'—':(v<0?'-':'')+'£'+Math.abs(Math.round(v)).toLocaleString('en-GB')
+                  const rows:[string,string,string,boolean?][]=[
+                    ['Rooms let', String(a.rooms), String(result.rooms)],
+                    ['Room income / month', gbp(a.totalIncome), gbp(result.totalIncome)],
+                    ['Costs / month', gbp(result.monthlyExpenses), gbp(result.monthlyExpenses)],
+                    ['Profit / month', gbp(a.monthlyCashflow), gbp(result.monthlyCashflow), true],
+                    ['Profit / year', gbp(a.annualCashflow), gbp(result.annualCashflow), true],
+                    ['Upfront cash', gbp(a.upfront), gbp(result.totalUpfront)],
+                    ['Payback', a.paybackMonths!=null?a.paybackMonths.toFixed(1)+' months':'Never', result.paybackMonths!=null?result.paybackMonths.toFixed(1)+' months':'Never'],
+                    ['Profit over the '+result.leaseMonths+'-month lease', gbp(a.leaseProfit), gbp(result.leaseProfit), true],
+                  ]
+                  const better = result.leaseProfit > a.leaseProfit
+                  return (
+                    <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,marginBottom:24}}>
+                      <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:4}}>
+                        <div style={{fontSize:16,fontWeight:700,color:'#323338'}}>🔨 As is vs converted</div>
+                        <span style={{fontSize:12,fontWeight:700,padding:'3px 10px',borderRadius:12,background:better?'#E6F7EF':'#FDECEC',color:better?'#0E7C55':'#EF4444'}}>{better?'Converting pays':'Converting doesn’t pay'}</span>
+                      </div>
+                      <div style={{fontSize:12.5,color:'#676879',marginBottom:14}}>The {a.rooms}-bed as you rent it, against converting it to {result.rooms} rooms at £{parseFloat(form.subletRent)||0} a room.</div>
+                      <div style={{overflowX:'auto'}}>
+                        <table style={{width:'100%',borderCollapse:'collapse',fontSize:13.5,minWidth:460}}>
+                          <thead><tr><th style={{textAlign:'left',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}></th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}>As is ({a.rooms} rooms)</th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#624920',fontWeight:700,borderBottom:'1px solid #E6E9EF',background:'#FBF4E6'}}>Converted ({result.rooms} rooms)</th></tr></thead>
+                          <tbody>{rows.map(([l,x,y,money],i)=>(
+                            <tr key={i}><td style={{padding:'8px 10px',color:'#676879',borderBottom:'1px solid #F0F1F5'}}>{l}</td>
+                              <td style={{padding:'8px 10px',textAlign:'right',fontWeight:600,color:money?(x.startsWith('-')?'#EF4444':'#10B981'):'#323338',borderBottom:'1px solid #F0F1F5'}}>{x}</td>
+                              <td style={{padding:'8px 10px',textAlign:'right',fontWeight:700,color:money?(y.startsWith('-')?'#EF4444':'#10B981'):'#323338',borderBottom:'1px solid #F0F1F5',background:'#FFFCF5'}}>{y}</td></tr>
+                          ))}</tbody>
+                        </table>
+                      </div>
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,marginTop:14}}>
+                        <div style={{background:'#F7F8FA',borderRadius:8,padding:'10px 14px'}}><div style={{fontSize:11.5,color:'#676879'}}>Extra profit from converting</div><div style={{fontSize:20,fontWeight:800,color:(result.extraMonthly||0)>=0?'#10B981':'#EF4444'}}>{gbp(result.extraMonthly)}<span style={{fontSize:12,fontWeight:600,color:'#9699A6'}}> /month</span></div></div>
+                        <div style={{background:'#F7F8FA',borderRadius:8,padding:'10px 14px'}}><div style={{fontSize:11.5,color:'#676879'}}>Conversion pays for itself in</div><div style={{fontSize:20,fontWeight:800,color:'#323338'}}>{result.conversionPayback!=null?result.conversionPayback.toFixed(1)+' months':'—'}</div>{result.conversionPayback!=null&&<div style={{fontSize:11.5,color:result.conversionPayback<=result.leaseMonths?'#0E7C55':'#EF4444',fontWeight:600}}>{result.conversionPayback<=result.leaseMonths?'✓ within your lease':'⚠ longer than your lease'}</div>}</div>
+                        <div style={{background:'#F7F8FA',borderRadius:8,padding:'10px 14px'}}><div style={{fontSize:11.5,color:'#676879'}}>Extra profit over the lease</div><div style={{fontSize:20,fontWeight:800,color:result.leaseProfit-a.leaseProfit>=0?'#10B981':'#EF4444'}}>{gbp(result.leaseProfit-a.leaseProfit)}</div></div>
+                      </div>
+                      {result.rooms>a.rooms&&<div style={{marginTop:14,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',fontSize:12.5,color:'#7A5A12',lineHeight:1.6}}>
+                        <b>Before converting:</b> get the landlord’s written consent to the works and to letting by the room; check the HMO licence for {result.rooms} occupants{result.rooms>=7?' and planning — 7+ unrelated sharers usually needs planning permission in the UK (sui generis)':''}; check minimum room sizes, fire doors, alarms and enough bathrooms and kitchen space for {result.rooms} people. In Jamaica, check with the parish council on use and building approval.
+                      </div>}
+                      {!result.conversionCost&&result.rooms>a.rooms&&<div style={{marginTop:8,fontSize:12,color:'#9A6400'}}>No conversion cost entered — add it above for a true comparison.</div>}
+                    </div>
+                  )
+                })()}
+
                 <MarketCheck strategy={strategy!} strategyLabel={STRATEGIES.find(s=>s.id===strategy)?.label} form={form} setForm={setForm} market={market} onMarket={gotMarket} />
 
                 {/* Stress Test */}
@@ -440,6 +487,9 @@ export default function InvestPage() {
                       result.totalInvested!==undefined&&{l:'Total Invested',v:'£'+result.totalInvested.toFixed(0),bold:true},
                       result.setupCost!==undefined&&{l:'Setup Cost',v:'£'+(form.setupCost||0)},
                       result.furnitureCost!==undefined&&{l:isR2HMO?'Setup Costs (furniture, licence, safety)':'Furniture Investment',v:'£'+result.furnitureCost.toFixed(0)},
+                      result.conversionCost>0&&{l:'Conversion Cost',v:'£'+result.conversionCost.toFixed(0)},
+                      result.holdingCost>0&&{l:`Rent & bills while converting (${result.conversionMonths} mo)`,v:'£'+result.holdingCost.toFixed(0)},
+                      result.totalUpfront!==undefined&&(result.conversionCost>0||result.holdingCost>0)&&{l:'Total Upfront',v:'£'+result.totalUpfront.toFixed(0),bold:true},
                       result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:'£'+result.purchaseCosts.toFixed(0)},
                       result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:'£'+result.saleCosts.toFixed(0)},
                       result.totalCost!==undefined&&{l:'Total Cost',v:'£'+result.totalCost.toFixed(0),bold:true},
@@ -496,15 +546,15 @@ export default function InvestPage() {
                     </div>
                     <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>{isR2HMO?'Setup Cost Payback':'Furniture Payback'}</div>
-                      {result.furnitureCost>0?(
+                      {(result.totalUpfront??result.furnitureCost)>0?(
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
                             <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#9699A6'}}> months</span></div>
-                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to recover £{result.furnitureCost.toFixed(0)} {isR2HMO?' of setup costs':' of furniture investment'}</div>
+                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to recover £{(result.totalUpfront??result.furnitureCost).toFixed(0)} {isR2HMO?(result.conversionCost>0||result.holdingCost>0?' of setup and conversion costs':' of setup costs'):' of furniture investment'}{result.conversionMonths>0?` (includes ${result.conversionMonths} months converting)`:''}</div>
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
                             <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>
-                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {(result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2HMO?'setup costs are':'furniture is'} paid off.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
+                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {Math.max(0,result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2HMO?'setup costs are':'furniture is'} paid off{result.leaseProfit!==undefined?` — about £${Math.round(result.leaseProfit).toLocaleString('en-GB')} profit over the whole lease`:''}.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
                           </div>
                         </>):(
                           <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is £0 or negative — furniture investment will never be recovered at these numbers.</div>

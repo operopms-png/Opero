@@ -44,9 +44,52 @@ export function calcHMO(d: any) {
   return { depositAmt, loanAmt, monthlyMortgage, monthlyExpenses, monthlyCashflow, annualCashflow, grossYield, roi, totalInvested, totalRent }
 }
 
+// Rent to Rent / Rent to HMO.
+// For Rent to HMO you can rent an N-bed house and convert it into more
+// lettable rooms: `rooms` is the rooms you let (after conversion),
+// `currentRooms` the bedrooms as rented, `conversionCost` the building work
+// and `conversionMonths` the time with no income while you still pay rent.
 export function calcR2R(d: any) {
+  const base = r2rCore(d, parseInt(d.rooms) || 1)
+  const currentRooms = parseInt(d.currentRooms) || 0
+  const conversionCost = parseFloat(d.conversionCost) || 0
+  const conversionMonths = Math.max(0, parseFloat(d.conversionMonths) || 0)
+  const leaseMonths = parseInt(d.leaseMonths) || 12
+  const furnitureCost = parseFloat(d.setupCost) || 0
+  const b = base.breakdown
+  // While converting you still pay the landlord and the property's bills
+  const holdingCost = conversionMonths * (b.landlordRent + b.utilities + b.propertyTax + b.insurance)
+  const totalUpfront = furnitureCost + conversionCost + holdingCost
+  const roi = totalUpfront > 0 ? (base.annualCashflow / totalUpfront * 100) : 0
+  const paybackMonths = base.monthlyCashflow > 0 ? totalUpfront / base.monthlyCashflow + conversionMonths : null
+  const withinLeaseTerm = paybackMonths !== null ? paybackMonths <= leaseMonths : null
+  const earningMonths = Math.max(0, leaseMonths - conversionMonths)
+  const leaseProfit = base.monthlyCashflow * earningMonths - totalUpfront
+
+  // Same house let as it is, with no conversion — for the side-by-side
+  let asIs: any = null
+  const units = parseInt(d.rooms) || 1
+  if (currentRooms > 0 && currentRooms !== units) {
+    const a = r2rCore(d, currentRooms)
+    const aPayback = a.monthlyCashflow > 0 ? furnitureCost / a.monthlyCashflow : null
+    asIs = {
+      rooms: currentRooms, totalIncome: a.totalIncome, monthlyCashflow: a.monthlyCashflow, annualCashflow: a.annualCashflow,
+      upfront: furnitureCost, roi: furnitureCost > 0 ? a.annualCashflow / furnitureCost * 100 : 0,
+      paybackMonths: aPayback, leaseProfit: a.monthlyCashflow * leaseMonths - furnitureCost,
+    }
+  }
+  const extraMonthly = asIs ? base.monthlyCashflow - asIs.monthlyCashflow : null
+  const conversionPayback = asIs && extraMonthly && extraMonthly > 0 ? (conversionCost + holdingCost) / extraMonthly + conversionMonths : null
+
+  return {
+    ...base, roi, furnitureCost, conversionCost, conversionMonths, holdingCost, totalUpfront,
+    paybackMonths, leaseMonths, withinLeaseTerm, earningMonths, leaseProfit,
+    rooms: units, currentRooms: currentRooms || null, asIs, extraMonthly, conversionPayback,
+  }
+}
+
+function r2rCore(d: any, units: number) {
   const landlordRent = parseFloat(d.rent)||0
-  const units = parseInt(d.rooms)||1
   const residentRent = parseFloat(d.subletRent)||0
   const wifi = parseFloat(d.wifiCost)||0
   const utilities = parseFloat(d.utilitiesCost)||0
@@ -57,20 +100,11 @@ export function calcR2R(d: any) {
   const maintenance = parseFloat(d.maintenanceCost)||0
   const marketing = parseFloat(d.marketingCost)||0
   const vacancy = parseFloat(d.vacancyCost)||0
-  const furnitureCost = parseFloat(d.setupCost)||0
-  const leaseMonths = parseInt(d.leaseMonths)||12
-
   const totalIncome = residentRent * units
   const fixedCosts = landlordRent + wifi + utilities + management + insurance + propertyTax + cleaning + maintenance + marketing + vacancy
   const monthlyCashflow = totalIncome - fixedCosts
-  const annualCashflow = monthlyCashflow * 12
-  const roi = furnitureCost > 0 ? (annualCashflow/furnitureCost*100) : 0
-  const paybackMonths = monthlyCashflow > 0 ? furnitureCost / monthlyCashflow : null
-  const withinLeaseTerm = paybackMonths !== null ? paybackMonths <= leaseMonths : null
-
   return {
-    monthlyCashflow, annualCashflow, roi, totalIncome, monthlyExpenses: fixedCosts,
-    furnitureCost, paybackMonths, leaseMonths, withinLeaseTerm,
+    monthlyCashflow, annualCashflow: monthlyCashflow * 12, totalIncome, monthlyExpenses: fixedCosts,
     breakdown: { landlordRent, wifi, utilities, management, insurance, propertyTax, cleaning, maintenance, marketing, vacancy },
   }
 }
