@@ -40,7 +40,8 @@ function joinLines(lines: string[]) {
 const indent = (l: string) => l.length - l.trimStart().length
 const INVISIBLE = /[\u034f\u00ad\u200b-\u200f\u2060-\u2069\ufeff]/g
 // "Natoya invited you to book Spurtree Villa for Aug 3 – 4" -> [name, listing]
-function invitation(body: string): [string, string] | null {
+function invitation(raw: string): [string, string] | null {
+  const body = raw.replace(/([^\n])[ \t]*\n(?![ \t]*\n)[ \t]*/g, '$1 ') // unwrap hard-wrapped lines
   const all = [...body.matchAll(/([A-Z][\w’'-]+) invited you to book ([^\n!]+?)(?:\s+for [A-Z][a-z]{2,8}\.? \d|[.!]?\s*(?:\n|$))/g)]
   const m = all.find(x => !/^their\b/i.test(x[2]))
   return m ? [m[1], m[2].trim()] : null

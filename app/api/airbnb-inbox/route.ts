@@ -80,7 +80,7 @@ async function buildThreads(c: Caller): Promise<{ threads: Thread[]; mailboxes: 
     const sameHost = all.filter(x => e.host && x.host && norm(x.host) === norm(e.host))
     let t = all.find(x => e.listing && x.listing && norm(x.listing) === norm(e.listing)) ?? (sameHost.length === 1 ? sameHost[0] : undefined)
     if (!t) {
-      const key = 'l:' + norm(e.listing || e.host || e.subject)
+      const key = 'l:' + norm(e.host || e.listing || e.subject)
       t = byKey.get(key)
       if (!t) { t = { key, threadId: null, host: e.host, listing: e.listing, roomId: e.roomId, mailboxId: e.mailboxId, mailboxEmail: mbEmail(e.mailboxId), items: [], lastAt: e.item.at ?? '', lastText: '', lastFromHost: null, lastEmailId: null, subject: e.subject, status: 'open', unread: false, crmContactId: null, airbnbUrl: null, listingUrl: e.roomId ? airbnbRoomUrl(e.roomId) : null }; byKey.set(key, t) }
     }
