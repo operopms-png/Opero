@@ -39,8 +39,29 @@ export async function POST(req: NextRequest) {
   }
 
   if (b.action === 'send') {
+    // Web searches can take 30s+. Send a space every few seconds so the
+    // connection isn't dropped for inactivity; the JSON follows at the end
+    // (leading whitespace is fine for JSON parsing).
+    const enc = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(ctl) {
+        const tick = setInterval(() => { try { ctl.enqueue(enc.encode(' ')) } catch {} }, 4000)
+        let out: any
+        try { out = await send(c, b) } catch (e: any) { out = { error: e?.message || 'Something went wrong' } }
+        clearInterval(tick)
+        ctl.enqueue(enc.encode(JSON.stringify(out)))
+        ctl.close()
+      },
+    })
+    return new Response(stream, { headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' } })
+  }
+
+  return bad('Unknown action')
+}
+
+async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: any): Promise<any> {
     const message = String(b.message || '').trim().slice(0, 8000)
-    if (!message) return bad('Type a question first')
+    if (!message) return { error: 'Type a question first' }
     const kind = b.kind === 'deal' ? 'deal' : 'general'
     let chat: any = null
     if (b.id) {
@@ -52,18 +73,15 @@ export async function POST(req: NextRequest) {
     const messages: ChatMsg[] = [...history, { role: 'user', content: message, at: new Date().toISOString() }]
     const portal = b.use_portal === false ? null : await portalContext(c).catch(() => null)
     const r = await askClaude(systemPrompt({ c, portal, web, deal: kind === 'deal' ? b.deal : undefined }), messages, web)
-    if (!r.text) return bad(r.error || 'The AI couldn’t answer', 502)
+    if (!r.text) return { error: r.error || 'The AI couldn’t answer' }
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
       await serviceClient.from('ai_chats').update({ messages, title, updated_at: new Date().toISOString() }).eq('id', chat.id)
     } else {
       const { data, error } = await serviceClient.from('ai_chats').insert({ business_id: c.businessId, user_email: c.email, kind, ref: b.ref ? String(b.ref).slice(0, 80) : null, title, messages }).select('*').single()
-      if (error) return bad(error.message, 500)
+      if (error) return { error: error.message }
       chat = data
     }
-    return NextResponse.json({ chat: { ...chat, messages, title } })
-  }
-
-  return bad('Unknown action')
+    return { chat: { ...chat, messages, title } }
 }

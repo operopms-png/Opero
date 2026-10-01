@@ -103,7 +103,7 @@ export async function askClaude(system: string, messages: ChatMsg[], web: boolea
     model: 'claude-sonnet-4-6', max_tokens: 2000, system,
     messages: messages.slice(-20).map(m => ({ role: m.role, content: m.content })),
   }
-  if (web) body.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 4 }]
+  if (web) body.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }]
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },

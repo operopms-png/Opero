@@ -10,7 +10,8 @@ const C = { gold: '#D0AE4C', gd: '#A8862E', brown: '#624920', cream: '#FBF4E6', 
 async function api(body?: any, qs = '') {
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/ask-ai' + qs, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: body ? JSON.stringify(body) : undefined })
-  const d = await res.json().catch(() => ({}))
+  const d = await res.json().catch(() => null)
+  if (!d) throw new Error(res.status >= 500 ? 'The AI took too long to answer — try again, or turn off Search the web for a quicker reply.' : 'Something went wrong')
   if (!res.ok || d.error) throw new Error(d.error || 'Something went wrong')
   return d
 }
@@ -38,7 +39,7 @@ export function md(src: string) {
       continue
     }
     if (/^\s*[-*•]\s+/.test(l)) { const items: string[] = []; while (i < lines.length && /^\s*[-*•]\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*[-*•]\s+/, '')); i++ } out.push('<ul>' + items.map(x => `<li>${inline(x)}</li>`).join('') + '</ul>'); continue }
-    if (/^\s*\d+[.)]\s+/.test(l)) { const items: string[] = []; while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*\d+[.)]\s+/, '')); i++ } out.push('<ol>' + items.map(x => `<li>${inline(x)}</li>`).join('') + '</ol>'); continue }
+    if (/^\s*\d+[.)]\s+/.test(l)) { const start = parseInt(l.trim(), 10) || 1; const items: string[] = []; while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*\d+[.)]\s+/, '')); i++ } out.push(`<ol start="${start}">` + items.map(x => `<li>${inline(x)}</li>`).join('') + '</ol>'); continue }
     const h = l.match(/^(#{1,4})\s+(.*)$/)
     if (h) { out.push(`<h${Math.min(6, h[1].length + 2)}>${inline(h[2])}</h${Math.min(6, h[1].length + 2)}>`); i++; continue }
     if (/^\s*(---|\*\*\*)\s*$/.test(l)) { out.push('<hr>'); i++; continue }
