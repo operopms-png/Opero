@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, applyStress } from '../../lib/dealCalculators'
 import AskChat from '../../components/ai/AskChat'
+import MarketCheck from '../../components/invest/MarketCheck'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
   btl:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -75,6 +76,7 @@ export default function InvestPage() {
   // Deal Decision Engine state
   const [savedDealId, setSavedDealId] = useState<string|null>(null)
   const [verdict, setVerdict] = useState<any>(null)
+  const [market, setMarket] = useState<any>(null)
   const [verdictLoading, setVerdictLoading] = useState(false)
   const [verdictError, setVerdictError] = useState<string|null>(null)
   const [overrideReason, setOverrideReason] = useState('')
@@ -115,7 +117,7 @@ export default function InvestPage() {
         headers: await authHeaders(),
         body: JSON.stringify({
           location: form.address,
-          propertyType: 'Apartment',
+          propertyType: form.propertyType || 'Apartment',
           bedrooms: form.bedrooms,
           bathrooms: form.bathrooms,
           furnished: true,
@@ -150,11 +152,16 @@ export default function InvestPage() {
     setVerdictError(null)
   }
 
+  async function gotMarket(m: any) {
+    setMarket(m)
+    if (savedDealId) await supabase.from('investment_deals').update({ market_check: m }).eq('id', savedDealId)
+  }
+
   async function saveDeal() {
     if(!result || !userId) return
     const dealData = { ...form, ...result, savedAt: new Date().toLocaleDateString() }
     const { data, error } = await supabase.from('investment_deals').insert({
-      user_id: userId, strategy: result.strategy, address: form.address || null, data: dealData,
+      user_id: userId, strategy: result.strategy, address: form.address || null, data: dealData, market_check: market,
     }).select().single()
     if (error) { alert(error.message); return }
     setSavedDeals([{ id: data.id, strategy: data.strategy, address: data.address, savedAt: new Date(data.created_at).toLocaleDateString(), ...dealData }, ...savedDeals])
@@ -275,7 +282,11 @@ export default function InvestPage() {
                 </div>
                 <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
-                    <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="e.g. 12 High Street, London" style={inp}/></div>
+                    <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="Street, town or postcode — used for the local market check" style={inp}/></div>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1.4fr',gap:10}}>
+                      <div><label style={lbl}>Bedrooms</label><input value={form.bedrooms||''} onChange={e=>setForm({...form,bedrooms:e.target.value})} type="number" placeholder="e.g. 3" style={inp}/></div>
+                      <div><label style={lbl}>Property Type</label><select value={form.propertyType||''} onChange={e=>setForm({...form,propertyType:e.target.value})} style={inp}><option value="">Any</option>{['House','Terraced house','Semi-detached house','Detached house','Flat / apartment','Bungalow','Townhouse','Villa','Land'].map(t=><option key={t}>{t}</option>)}</select></div>
+                    </div>
                     {!isR2R&&<div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
 
                     {(strategy==='btl'||strategy==='brrr'||strategy==='hmo'||strategy==='social'||strategy==='supported')&&(<>
@@ -348,7 +359,7 @@ export default function InvestPage() {
             {result&&(
               <div>
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
-                  <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
+                  <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null);setMarket(null)}} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
                 </div>
@@ -377,6 +388,8 @@ export default function InvestPage() {
                     <div style={{fontSize:28,fontWeight:800,color:result.profit>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.profit).toFixed(0)}</div>
                   </div>}
                 </div>
+
+                <MarketCheck strategy={strategy!} strategyLabel={STRATEGIES.find(s=>s.id===strategy)?.label} form={form} setForm={setForm} market={market} onMarket={gotMarket} />
 
                 {/* Stress Test */}
                 {getStressScenarios(strategy!)&&(
@@ -506,7 +519,7 @@ export default function InvestPage() {
                 <div style={{display:'flex',gap:12,marginBottom:24}}>
                   <button onClick={saveDeal} style={{padding:'12px 24px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>💾 Save Deal</button>
                   <button onClick={getVerdict} disabled={!savedDealId||verdictLoading} style={{padding:'12px 24px',borderRadius:4,border:'1px solid '+(savedDealId?BLUE:'#D0D4E4'),background:'#fff',color:savedDealId?BLUE:'#9699A6',fontSize:14,fontWeight:600,cursor:savedDealId&&!verdictLoading?'pointer':'not-allowed',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Analysing…':'🤖 Get AI Verdict'}</button>
-                  <button onClick={()=>{setResult(null);setStrategy(null);setForm({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'});setSavedDealId(null);setVerdict(null);setVerdictError(null)}} style={{padding:'12px 24px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Start New Analysis</button>
+                  <button onClick={()=>{setResult(null);setStrategy(null);setForm({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'});setSavedDealId(null);setVerdict(null);setVerdictError(null);setMarket(null)}} style={{padding:'12px 24px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Start New Analysis</button>
                 </div>
                 {!savedDealId&&<div style={{fontSize:12,color:'#9699A6',marginTop:-16,marginBottom:20}}>Save the deal first to unlock the AI verdict.</div>}
                 {verdictError&&<div style={{fontSize:13,color:'#EF4444',marginBottom:20}}>{verdictError}</div>}
@@ -613,13 +626,14 @@ export default function InvestPage() {
                 {/* Talk to AI about this deal */}
                 <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,marginTop:24}}>
                   <div style={{fontSize:16,fontWeight:700,color:'#323338',marginBottom:2}}>💬 Talk to AI about this deal</div>
-                  <div style={{fontSize:12.5,color:'#676879',marginBottom:12}}>Ask what it thinks, what could go wrong or what to negotiate. It sees these figures, the stress tests{verdict?' and the AI Verdict above':''}, and can check the web for local rents and prices.</div>
+                  <div style={{fontSize:12.5,color:'#676879',marginBottom:12}}>Ask what it thinks, what could go wrong or what to negotiate. It sees these figures, the stress tests{market?', the local market check':''}{verdict?' and the AI Verdict above':''}, and can check the web for local rents and prices.</div>
                   <AskChat key={(savedDealId||'new')+':'+JSON.stringify(result).length} kind="deal" compact refId={savedDealId}
                     deal={{
                       strategy: STRATEGIES.find(s=>s.id===strategy)?.label || strategy,
                       inputs: form,
                       results: result,
                       stress: (getStressScenarios(strategy!)||[]).map(sc=>{ const r:any = applyStress(strategy!, form, sc); return { scenario: sc.label, monthlyCashflow: r?.monthlyCashflow, annualCashflow: r?.annualCashflow } }),
+                      localMarket: market ? { location: market.location, confidence: market.confidence, area: market.area, benchmarks: market.benchmarks, comparables: (market.comparables||[]).map((c:any)=>({type:c.type,title:c.title,location:c.location,beds:c.beds,price:c.price,unit:c.unit,source:c.source,url:c.url})), demand: market.demand, watchOuts: market.watch_outs } : null,
                       aiVerdict: verdict ? { status: verdict.status, summary: verdict.ai_summary, override: verdict.override_status, risks: verdict.risk_flags, breakEven: verdict.break_even } : null,
                     }}
                     suggestions={['What do you think of this deal?','What are the biggest risks?','What should I negotiate on?','Do you agree with the AI Verdict?']} />
