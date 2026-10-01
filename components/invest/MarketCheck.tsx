@@ -9,7 +9,7 @@ import { supabase } from '../../lib/supabase'
 const C = { gold: '#D0AE4C', gd: '#A8862E', brown: '#624920', cream: '#FBF4E6', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', green: '#10B981', red: '#EF4444', amber: '#F59E0B' }
 
 // cost = you pay it (lower than market is good); income = you earn it (higher than market is optimistic)
-type Metric = { key: string; label: string; value: number; unit: string; compare: string; dir: 'cost' | 'income' }
+type Metric = { key: string; label: string; value: number; unit: string; compare: string; dir: 'cost' | 'income'; ref?: boolean }
 
 const n = (v: any) => { const x = parseFloat(v); return Number.isFinite(x) && x > 0 ? x : 0 }
 
@@ -17,7 +17,7 @@ export function dealMetrics(strategy: string, form: any): Metric[] {
   const beds = form.bedrooms ? `${form.bedrooms}-bed ` : ''
   const type = (form.propertyType || 'property').toLowerCase()
   const out: Metric[] = []
-  const add = (m: Metric) => { if (m.value > 0) out.push(m) }
+  const add = (m: Metric) => { if (m.value > 0 || m.ref) out.push(m) }
   const isR2R = strategy === 'r2r' || strategy === 'r2hmo'
   if (!isR2R) add({ key: 'price', label: strategy === 'land' ? 'Land price' : 'Purchase price', value: n(form.price), unit: '£', dir: 'cost', compare: strategy === 'land' ? 'land / plots for sale nearby of similar size' : `asking and recent sold prices for ${beds}${type} nearby` })
   if (['btl', 'brrr', 'social', 'supported'].includes(strategy)) add({ key: 'rent', label: 'Monthly rent', value: n(form.rent), unit: '£/month', dir: 'income', compare: `${beds}${type} to rent nearby (long let, per calendar month)` })
@@ -30,12 +30,15 @@ export function dealMetrics(strategy: string, form: any): Metric[] {
   }
   if (strategy === 'flip' || strategy === 'brrr') add({ key: 'sale', label: strategy === 'brrr' ? 'End value after refurb' : 'Sale price after refurb', value: n(form.salePrice), unit: '£', dir: 'income', compare: `recent SOLD prices of refurbished ${beds}${type} nearby` })
   if (strategy === 'land') add({ key: 'gdv', label: 'Gross development value', value: n(form.gdv), unit: '£', dir: 'income', compare: 'new-build homes for sale or recently sold nearby, scaled to the planned scheme' })
+  // Always check what the property would rent for locally, even when the deal has no rent figure
+  if (strategy !== 'land' && !out.some(m => m.key === 'rent' || m.key === 'landlord')) add({ key: 'rent_ref', label: 'Local rent for this property', value: 0, unit: '£/month', dir: 'income', ref: true, compare: `whole ${beds}${type} to rent nearby on a long let, per calendar month (unfurnished and furnished)` })
   return out
 }
 
 const money = (v: number | null | undefined, unit = '£') => v == null ? '—' : '£' + Math.round(v).toLocaleString('en-GB') + (unit.replace('£', '') || '')
 
 function verdict(m: Metric, b: any) {
+  if (!m.value) return { text: 'Market rent', color: '#0E7C55', bg: '#E6F7EF' }
   if (!b?.typical) return { text: 'No market figure', color: C.faint, bg: '#F3F4F7' }
   const diff = (m.value - b.typical) / b.typical * 100
   const pct = Math.abs(Math.round(diff))
@@ -47,14 +50,14 @@ function verdict(m: Metric, b: any) {
 
 function RangeBar({ m, b }: { m: Metric; b: any }) {
   if (!b?.low || !b?.high) return null
-  const lo = Math.min(b.low, m.value) * 0.92, hi = Math.max(b.high, m.value) * 1.08
+  const lo = Math.min(b.low, m.value || b.low) * 0.92, hi = Math.max(b.high, m.value || b.high) * 1.08
   const pos = (v: number) => `${((v - lo) / (hi - lo)) * 100}%`
   return (
     <div style={{ position: 'relative', height: 34, marginTop: 6 }}>
       <div style={{ position: 'absolute', top: 12, left: 0, right: 0, height: 6, borderRadius: 3, background: '#EEF0F4' }} />
       <div style={{ position: 'absolute', top: 12, left: pos(b.low), width: `calc(${pos(b.high)} - ${pos(b.low)})`, height: 6, borderRadius: 3, background: '#E9D9A8' }} />
       {b.typical && <div title="Market typical" style={{ position: 'absolute', top: 8, left: pos(b.typical), width: 2, height: 14, background: C.brown, transform: 'translateX(-1px)' }} />}
-      <div title="Your figure" style={{ position: 'absolute', top: 6, left: pos(m.value), width: 18, height: 18, borderRadius: '50%', background: C.gd, border: '3px solid #fff', boxShadow: '0 0 0 1px ' + C.gd, transform: 'translateX(-9px)' }} />
+      {m.value > 0 && <div title="Your figure" style={{ position: 'absolute', top: 6, left: pos(m.value), width: 18, height: 18, borderRadius: '50%', background: C.gd, border: '3px solid #fff', boxShadow: '0 0 0 1px ' + C.gd, transform: 'translateX(-9px)' }} />}
       <div style={{ position: 'absolute', top: 24, left: pos(b.low), fontSize: 10.5, color: C.faint, transform: 'translateX(-50%)' }}>{money(b.low)}</div>
       <div style={{ position: 'absolute', top: 24, left: pos(b.high), fontSize: 10.5, color: C.faint, transform: 'translateX(-50%)' }}>{money(b.high)}</div>
     </div>
@@ -151,10 +154,11 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
                     <span style={{ fontSize: 11.5, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: v.bg, color: v.color }}>{v.text}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 18, marginTop: 6, alignItems: 'baseline' }}>
-                    <div><div style={{ fontSize: 10.5, color: C.faint, textTransform: 'uppercase', letterSpacing: '.04em' }}>Yours</div><div style={{ fontSize: 19, fontWeight: 800, color: C.ink }}>{money(m.value, m.unit)}</div></div>
+                    <div><div style={{ fontSize: 10.5, color: C.faint, textTransform: 'uppercase', letterSpacing: '.04em' }}>Yours</div><div style={{ fontSize: 19, fontWeight: 800, color: C.ink }}>{m.value ? money(m.value, m.unit) : 'Not entered'}</div></div>
                     <div><div style={{ fontSize: 10.5, color: C.faint, textTransform: 'uppercase', letterSpacing: '.04em' }}>Market typical</div><div style={{ fontSize: 19, fontWeight: 800, color: C.brown }}>{money(b?.typical, m.unit)}</div></div>
                   </div>
                   <RangeBar m={m} b={b} />
+                  {m.key === 'rent_ref' && b?.typical && n(form.price) > 0 && <div style={{ fontSize: 12.5, fontWeight: 700, color: C.brown, marginTop: 4 }}>Gross yield at market rent: {((b.typical * 12) / n(form.price) * 100).toFixed(1)}%</div>}
                   {b?.basis && <div style={{ fontSize: 11.5, color: C.faint, marginTop: 4, lineHeight: 1.45 }}>{b.basis}</div>}
                 </div>
               ) })}

@@ -15,7 +15,7 @@ import { requireUser } from '@/lib/admin-auth'
 
 export const maxDuration = 60
 
-type Metric = { key: string; label: string; value: number; unit: string; compare: string }
+type Metric = { key: string; label: string; value: number; unit: string; compare: string; ref?: boolean }
 
 const BASE = `You are a property market analyst for an investor working in the UK and Jamaica.
 Use web search to find REAL, CURRENT listings near the given location (Rightmove, Zoopla, OnTheMarket, SpareRoom, Airbnb, Booking.com, Realtor.com, Terra Caribbean, Jamaica property portals, etc.). Be quick: at most 2 searches.
@@ -44,7 +44,7 @@ async function run(b: any) {
   if (!process.env.ANTHROPIC_API_KEY) return { error: 'The AI isn’t configured on the server' }
   const location = String(b.location || '').trim().slice(0, 200)
   if (!location) return { error: 'Add the property’s location first' }
-  const metrics: Metric[] = (Array.isArray(b.metrics) ? b.metrics : []).filter((m: any) => m && m.key && Number(m.value) > 0).slice(0, 6)
+  const metrics: Metric[] = (Array.isArray(b.metrics) ? b.metrics : []).filter((m: any) => m && m.key && (Number(m.value) > 0 || m.ref)).slice(0, 6)
 
   const overview = b.mode === 'overview'
   const m = metrics[0]
@@ -56,7 +56,7 @@ Bedrooms: ${b.bedrooms || 'not given'}
 ${b.letting ? `Letting type: ${b.letting}\n` : ''}
 ` + (overview
     ? 'Describe the local market for this strategy and return the JSON.'
-    : `The investor's figure: ${m.label} = ${m.value} ${m.unit}.\nFind what the local market says by searching for: ${m.compare}.\nReturn the JSON.`)
+    : (Number(m.value) > 0 ? `The investor's figure: ${m.label} = ${m.value} ${m.unit}.\n` : `The investor hasn't entered this figure — just find the local market level (${m.unit}).\n`) + `Find what the local market says by searching for: ${m.compare}.\nReturn the JSON.`)
 
   // Stop well before the 60s server limit so we can still answer
   const ctrl = new AbortController(); const stop = setTimeout(() => ctrl.abort(), 52000)
