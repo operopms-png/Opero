@@ -11,13 +11,14 @@ const DEFAULT_RULES: Record<string, DecisionRules> = {
   social:    { minBaseSurplus: 200, minStressedSurplus: 0,   maxUpfrontCash: 30000, minROI: 5 },
   supported: { minBaseSurplus: 200, minStressedSurplus: 0,   maxUpfrontCash: 30000, minROI: 5 },
   r2r:       { minBaseSurplus: 500, minStressedSurplus: 200, maxUpfrontCash: 10000, maxBreakEvenOccupancyPct: 80 },
+  r2hmo:     { minBaseSurplus: 800, minStressedSurplus: 300, maxUpfrontCash: 15000, maxBreakEvenOccupancyPct: 80 },
 }
 
 function runCalc(strategy: string, form: any) {
   if (strategy === 'btl' || strategy === 'brrr') return calcBTL(form)
   if (strategy === 'social' || strategy === 'supported') return calcBTL({ ...form, expenses: form.expenses || '10' })
   if (strategy === 'hmo') return calcHMO(form)
-  if (strategy === 'r2r') return calcR2R(form)
+  if (strategy === 'r2r' || strategy === 'r2hmo') return calcR2R(form)
   if (strategy === 'flip') return calcFlip(form)
   if (strategy === 'land') return calcLand(form)
   return {}

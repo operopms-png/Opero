@@ -52,7 +52,7 @@ export function classifyConfidence(form: any, strategy: string): FieldConfidence
   track('price', 'Price / asking rent', v => `£${v}`)
   track('rent', 'Landlord rent (r2r) / rent (other)', v => `£${v}`)
   if (strategy === 'hmo') track('rentPerRoom', 'Rent per room', v => `£${v}`)
-  if (strategy === 'r2r') track('subletRent', 'Resident/sublet rent', v => `£${v}`)
+  if (strategy === 'r2r' || strategy === 'r2hmo') track('subletRent', 'Resident/sublet rent', v => `£${v}`)
   track('deposit', 'Deposit %', v => `${v}%`)
   track('expenses', 'Operating expenses %', v => `${v}%`)
   track('refurb', 'Refurb/setup cost', v => `£${v}`)
@@ -74,7 +74,7 @@ export function classifyConfidence(form: any, strategy: string): FieldConfidence
 // strategies (btl/brrr/social/supported) occupancy is effectively binary
 // (let or not), so break-even there is reported as N/A.
 export function findBreakEvenOccupancy(strategy: string, form: any): number | null {
-  if (strategy !== 'hmo' && strategy !== 'r2r') return null
+  if (strategy !== 'hmo' && strategy !== 'r2r' && strategy !== 'r2hmo') return null
 
   const fullResult = strategy === 'hmo' ? calcHMO(form) : calcR2R(form)
   if (fullResult.monthlyCashflow <= 0) return null // doesn't break even even at 100% occupancy
@@ -161,7 +161,7 @@ export function runRuleChecks(
       value: `${breakEven}%`,
       threshold: `${rules.maxBreakEvenOccupancyPct}% maximum`,
     })
-  } else if ((strategy === 'hmo' || strategy === 'r2r') && rules.maxBreakEvenOccupancyPct !== undefined) {
+  } else if ((strategy === 'hmo' || strategy === 'r2r' || strategy === 'r2hmo') && rules.maxBreakEvenOccupancyPct !== undefined) {
     results.push({ rule: 'Break-even occupancy', result: 'MISSING', value: 'Could not be calculated', threshold: `${rules.maxBreakEvenOccupancyPct}% maximum` })
   }
 
@@ -174,7 +174,7 @@ export function runRuleChecks(
 }
 
 export function buildChecklist(strategy: string): Record<string, { item: string; checked: boolean }[]> {
-  const isSublease = strategy === 'r2r'
+  const isSublease = strategy === 'r2r' || strategy === 'r2hmo'
   const checklist: Record<string, { item: string; checked: boolean }[]> = {
     LICENSING: [
       { item: 'Licence requirement confirmed', checked: false },

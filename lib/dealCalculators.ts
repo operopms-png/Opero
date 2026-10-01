@@ -106,6 +106,7 @@ export function calcLand(d: any) {
 // plays, not "will this cash flow every month" plays, so they're
 // intentionally excluded rather than stress-tested for cash flow.
 export function getStressScenarios(strategy: string) {
+  if (strategy === 'r2hmo') strategy = 'r2r' // Rent to HMO uses the Rent to Rent maths
   if (['btl','brrr','social','supported','hmo'].includes(strategy)) {
     return [
       { key:'base',  label:'Base Case',       ratePts:0, rentPct:0   },
@@ -126,6 +127,7 @@ export function getStressScenarios(strategy: string) {
 }
 
 export function applyStress(strategy: string, form: any, scenario: { ratePts?: number; rentPct?: number }) {
+  if (strategy === 'r2hmo') strategy = 'r2r'
   const f = { ...form }
   if (scenario.ratePts) {
     const baseRate = parseFloat(f.mortgageRate) || (strategy==='hmo' ? 5.5 : 5)

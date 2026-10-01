@@ -8,6 +8,7 @@ const STRATEGY_ICONS: Record<string,React.ReactElement> = {
   flip:      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>,
   brrr:      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>,
   hmo:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M1 22V9l7-7 7 7v13"/><path d="M15 22V13h4v9"/><path d="M19 6l4 3"/></svg>,
+  r2hmo:     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21V10l9-7 9 7v11"/><path d="M8 21v-6h3v6M13 21v-6h3v6"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>,
   r2r:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
   social:    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>,
   supported: <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg>,
@@ -19,6 +20,7 @@ const STRATEGIES = [
   { id:'brrr', label:'BRRR', desc:'Buy, Refurb, Rent, Refinance, Repeat' },
   { id:'hmo', label:'HMO', desc:'House in Multiple Occupation — rent by room' },
   { id:'r2r', label:'Rent to Rent', desc:'Sublet a property you rent from a landlord' },
+  { id:'r2hmo', label:'Rent to HMO', desc:'Rent a whole property and let it room by room' },
   { id:'social', label:'Social Housing', desc:'Long-term lets to councils or housing associations' },
   { id:'supported', label:'Supported Living', desc:'Specialist accommodation for vulnerable adults' },
   { id:'land', label:'Land Purchase', desc:'Buy land for development or planning gain' },
@@ -54,6 +56,9 @@ export default function InvestPage() {
     if (window.location.pathname + window.location.search !== url) window.history.replaceState(window.history.state, '', url)
   }
   const [strategy, setStrategy] = useState<string|null>(null)
+  // Rent to HMO = Rent to Rent maths, counted per room (bills usually included)
+  const isR2R = strategy==='r2r' || strategy==='r2hmo'
+  const isR2HMO = strategy==='r2hmo'
   const [form, setForm] = useState<any>({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'})
   const [result, setResult] = useState<any>(null)
   const [marketEstimate, setMarketEstimate] = useState<string|null>(null)
@@ -127,11 +132,11 @@ export default function InvestPage() {
 
   function analyse() {
     if(!strategy) return
-    if(strategy==='r2r' ? !form.rent : !form.price) return
+    if(isR2R ? !form.rent : !form.price) return
     let r: any = {}
     if(strategy==='btl'||strategy==='brrr') r = calcBTL(form)
     else if(strategy==='hmo') r = calcHMO(form)
-    else if(strategy==='r2r') r = calcR2R(form)
+    else if(isR2R) r = calcR2R(form)
     else if(strategy==='flip') r = calcFlip(form)
     else if(strategy==='land') r = calcLand(form)
     else if(strategy==='social'||strategy==='supported') r = calcBTL({...form, expenses:'10'})
@@ -270,7 +275,7 @@ export default function InvestPage() {
                 <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="e.g. 12 High Street, London" style={inp}/></div>
-                    {strategy!=='r2r'&&<div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
+                    {!isR2R&&<div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
 
                     {(strategy==='btl'||strategy==='brrr'||strategy==='hmo'||strategy==='social'||strategy==='supported')&&(<>
                       <div><label style={lbl}>Deposit (%)</label><input value={form.deposit||'25'} onChange={e=>setForm({...form,deposit:e.target.value})} type="number" placeholder="25" style={inp}/></div>
@@ -286,11 +291,11 @@ export default function InvestPage() {
                       <div><label style={lbl}>Rent Per Room (£/mo)</label><input value={form.rentPerRoom||''} onChange={e=>setForm({...form,rentPerRoom:e.target.value})} type="number" placeholder="600" style={inp}/></div>
                     </>)}
 
-                    {strategy==='r2r'&&(<>
+                    {isR2R&&(<>
                       <div><label style={lbl}>Rent You Pay Landlord (£/mo) *</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 480" style={inp}/></div>
-                      <div><label style={lbl}>Number of Units</label><input value={form.rooms||'1'} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
+                      <div><label style={lbl}>{isR2HMO?'Number of Rooms':'Number of Units'}</label><input value={form.rooms||(isR2HMO?'5':'1')} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
                       <div>
-                        <label style={lbl}>Resident Rent (£/mo, per unit)</label>
+                        <label style={lbl}>{isR2HMO?'Rent Per Room (£/mo, bills included)':'Resident Rent (£/mo, per unit)'}</label>
                         <input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="e.g. 950" style={inp}/>
                         <button onClick={estimateMarketRent} disabled={estimating} style={{marginTop:6,padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054',opacity:estimating?0.6:1}}>{estimating?'Searching…':'🔍 Estimate market rent'}</button>
                         {estimateError&&<div style={{fontSize:12,color:'#EF4444',marginTop:6}}>{estimateError}</div>}
@@ -307,12 +312,12 @@ export default function InvestPage() {
                       <div><label style={lbl}>Utilities Allowance (£/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
                       <div><label style={lbl}>Management/Operations (£/mo)</label><input value={form.managementCost||''} onChange={e=>setForm({...form,managementCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
                       <div><label style={lbl}>Insurance (£/mo)</label><input value={form.insuranceCost||''} onChange={e=>setForm({...form,insuranceCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
-                      <div><label style={lbl}>Property Tax/Fees (£/mo)</label><input value={form.propertyTaxCost||''} onChange={e=>setForm({...form,propertyTaxCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>{isR2HMO?'Council Tax / Property Fees (£/mo)':'Property Tax/Fees (£/mo)'}</label><input value={form.propertyTaxCost||''} onChange={e=>setForm({...form,propertyTaxCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
                       <div><label style={lbl}>Cleaning/Operations (£/mo)</label><input value={form.cleaningCost||''} onChange={e=>setForm({...form,cleaningCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
                       <div><label style={lbl}>Maintenance Reserve (£/mo)</label><input value={form.maintenanceCost||''} onChange={e=>setForm({...form,maintenanceCost:e.target.value})} type="number" placeholder="e.g. 40" style={inp}/></div>
                       <div><label style={lbl}>Platform/Marketing (£/mo)</label><input value={form.marketingCost||''} onChange={e=>setForm({...form,marketingCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
                       <div><label style={lbl}>Vacancy Allowance (£/mo)</label><input value={form.vacancyCost||''} onChange={e=>setForm({...form,vacancyCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
-                      <div><label style={lbl}>Furniture Investment (£)</label><input value={form.setupCost||''} onChange={e=>setForm({...form,setupCost:e.target.value})} type="number" placeholder="e.g. 3500" style={inp}/></div>
+                      <div><label style={lbl}>{isR2HMO?'Setup Costs — furniture, HMO licence, fire safety (£)':'Furniture Investment (£)'}</label><input value={form.setupCost||''} onChange={e=>setForm({...form,setupCost:e.target.value})} type="number" placeholder="e.g. 3500" style={inp}/></div>
                     </>)}
 
                     {(strategy==='flip'||strategy==='brrr')&&(
@@ -325,11 +330,11 @@ export default function InvestPage() {
                       <div><label style={lbl}>Gross Development Value (£)</label><input value={form.gdv||''} onChange={e=>setForm({...form,gdv:e.target.value})} type="number" placeholder="e.g. 300000" style={inp}/></div>
                     </>)}
 
-                    {strategy!=='r2r'&&strategy!=='land'&&(
+                    {!isR2R&&strategy!=='land'&&(
                       <div><label style={lbl}>Refurb Cost (£)</label><input value={form.refurb||''} onChange={e=>setForm({...form,refurb:e.target.value})} type="number" placeholder="0" style={inp}/></div>
                     )}
 
-                    {strategy!=='r2r'&&strategy!=='land'&&strategy!=='flip'&&(
+                    {!isR2R&&strategy!=='land'&&strategy!=='flip'&&(
                       <div><label style={lbl}>Monthly Expenses (% of rent)</label><input value={form.expenses||'20'} onChange={e=>setForm({...form,expenses:e.target.value})} type="number" placeholder="20" style={inp}/></div>
                     )}
                   </div>
@@ -406,7 +411,7 @@ export default function InvestPage() {
                         })}
                       </div>
                     </div>
-                    {strategy==='r2r'&&<div style={{fontSize:10.5,color:'#9699A6',marginTop:10}}>Void scenario is approximated as an equivalent income reduction, not a literal empty month.</div>}
+                    {isR2R&&<div style={{fontSize:10.5,color:'#9699A6',marginTop:10}}>Void scenario is approximated as an equivalent income reduction, not a literal empty month.</div>}
                   </div>
                 )}
 
@@ -438,8 +443,8 @@ export default function InvestPage() {
                       result.totalIncome!==undefined&&{l:'Resident Rent Income',v:'£'+(result.totalIncome||0).toFixed(0),c:'#10B981'},
                       result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:'£'+(parseFloat(form.rent)||0).toFixed(0),c:'#10B981'},
                       result.monthlyMortgage!==undefined&&{l:'Mortgage Payment',v:'-£'+result.monthlyMortgage.toFixed(0),c:'#EF4444'},
-                      result.monthlyExpenses!==undefined&&{l:strategy==='r2r'?'Total Fixed Costs':'Expenses',v:'-£'+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
-                      result.monthlyCashflow!==undefined&&{l:strategy==='r2r'?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+'£'+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
+                      result.monthlyExpenses!==undefined&&{l:isR2R?'Total Fixed Costs':'Expenses',v:'-£'+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
+                      result.monthlyCashflow!==undefined&&{l:isR2R?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+'£'+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
                         <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
@@ -449,7 +454,7 @@ export default function InvestPage() {
                   </div>
                 </div>
 
-                {strategy==='r2r'&&result.breakdown&&(
+                {isR2R&&result.breakdown&&(
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Fixed Cost Breakdown</div>
