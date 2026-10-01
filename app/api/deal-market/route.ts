@@ -84,7 +84,7 @@ ${b.letting ? `Letting type: ${b.letting}\n` : ''}
   }
   const text = (data.content ?? []).filter((x: any) => x.type === 'text').map((x: any) => x.text).join('\n')
   const out = extractJSON(text)
-  if (!out) return { error: 'The market search didn’t come back in the right shape — try again.' }
+  if (!out) { console.error('deal-market parse', data.stop_reason, text.slice(0, 800)); return { error: 'The market search didn’t come back in the right shape — try again.', debug: process.env.MARKET_DEBUG ? undefined : { stop: data.stop_reason, text: text.slice(-600) } } }
 
   const num = (v: any) => { const x = Number(v); return Number.isFinite(x) && x > 0 ? Math.round(x * 100) / 100 : null }
   const conf = ['High', 'Medium', 'Low'].includes(out.confidence) ? out.confidence : 'Low'
