@@ -38,7 +38,7 @@ export function md(src: string) {
       if (rows.length) out.push('<div class="ak-tw"><table><thead><tr>' + rows[0].map(h => `<th>${inline(h)}</th>`).join('') + '</tr></thead><tbody>' + rows.slice(1).map(r => '<tr>' + r.map(x => `<td>${inline(x)}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>')
       continue
     }
-    if (/^\s*[-*•]\s+/.test(l)) { const items: string[] = []; while (i < lines.length && /^\s*[-*•]\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*[-*•]\s+/, '')); i++ } out.push('<ul>' + items.map(x => `<li>${inline(x)}</li>`).join('') + '</ul>'); continue }
+    if (/^\s*[-*•]\s+/.test(l)) { const items: string[] = []; while (i < lines.length && /^\s*[-*•]\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*[-*•]\s+/, '')); i++ } out.push('<ul>' + items.map(x => `<li>${inline(x.replace(/^\[ \]\s*/, '☐ ').replace(/^\[[xX]\]\s*/, '☑ '))}</li>`).join('') + '</ul>'); continue }
     if (/^\s*\d+[.)]\s+/.test(l)) { const start = parseInt(l.trim(), 10) || 1; const items: string[] = []; while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) { items.push(lines[i].replace(/^\s*\d+[.)]\s+/, '')); i++ } out.push(`<ol start="${start}">` + items.map(x => `<li>${inline(x)}</li>`).join('') + '</ol>'); continue }
     const h = l.match(/^(#{1,4})\s+(.*)$/)
     if (h) { out.push(`<h${Math.min(6, h[1].length + 2)}>${inline(h[2])}</h${Math.min(6, h[1].length + 2)}>`); i++; continue }
