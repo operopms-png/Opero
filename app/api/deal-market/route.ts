@@ -83,9 +83,8 @@ ${b.letting ? `Letting type: ${b.letting}\n` : ''}
     if (blk.type === 'text' && Array.isArray(blk.citations)) for (const ci of blk.citations) if (ci?.url && !found.has(clean(ci.url))) found.set(clean(ci.url), { url: ci.url, title: ci.title || '' })
   }
   const text = (data.content ?? []).filter((x: any) => x.type === 'text').map((x: any) => x.text).join('\n')
-  const s = text.indexOf('{'), e = text.lastIndexOf('}')
-  let out: any
-  try { out = JSON.parse(text.slice(s, e + 1)) } catch { return { error: 'The market search didn’t come back in the right shape — try again.' } }
+  const out = extractJSON(text)
+  if (!out) return { error: 'The market search didn’t come back in the right shape — try again.' }
 
   const num = (v: any) => { const x = Number(v); return Number.isFinite(x) && x > 0 ? Math.round(x * 100) / 100 : null }
   const conf = ['High', 'Medium', 'Low'].includes(out.confidence) ? out.confidence : 'Low'
@@ -107,6 +106,20 @@ ${b.letting ? `Letting type: ${b.letting}\n` : ''}
       comparables, confidence: conf, sources,
     },
   }
+}
+
+// The model sometimes writes a sentence (with braces or citations) around the
+// JSON. Try a fenced block first, then every '{' that parses to the last '}'.
+function extractJSON(text: string): any {
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+  const tries = fence ? [fence[1], text] : [text]
+  for (const t of tries) {
+    const end = t.lastIndexOf('}')
+    for (let i = t.indexOf('{'); i !== -1 && i < end; i = t.indexOf('{', i + 1)) {
+      try { const o = JSON.parse(t.slice(i, end + 1)); if (o && typeof o === 'object') return o } catch {}
+    }
+  }
+  return null
 }
 
 function host(u: string) { try { return new URL(u).hostname.replace(/^www\./, '') } catch { return u } }
