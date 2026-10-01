@@ -22,7 +22,7 @@
     if (document.getElementById('sgp-css')) return
     var s = document.createElement('style'); s.id = 'sgp-css'
     s.textContent = [
-      '.sgp,.sgp *{box-sizing:border-box}.sgp{font-family:inherit;color:' + INK + '}',
+      '.sgp,.sgp *,.sgp-modal,.sgp-modal *,.sgp-lb,.sgp-lb *{box-sizing:border-box}.sgp{font-family:inherit;color:' + INK + '}',
       '.sgp-search{display:flex;gap:10px;background:#fff;border:1px solid ' + LINE + ';border-radius:4px;padding:10px;margin:0 0 22px}',
       '.sgp-search input{flex:1;border:none;outline:none;font:inherit;font-size:14px;padding:8px 10px;min-width:0;background:transparent}',
       '.sgp-search button{background:#111;color:#fff;border:none;border-radius:3px;padding:0 22px;font:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer}',
