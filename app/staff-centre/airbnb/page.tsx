@@ -18,6 +18,16 @@ async function call(body?: any) {
 const AIRBNB = '#FF385C'
 const short = (d?: string | null) => { if (!d) return ''; const x = new Date(d); const days = (Date.now() - x.getTime()) / 864e5; return days < 1 ? x.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : days < 7 ? x.toLocaleDateString('en-GB', { weekday: 'short' }) : x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }
 const full = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+// Where the host stands (AI reading of their latest message)
+const STAGE: Record<string, { l: string; c: string; bg: string }> = {
+  agreed: { l: '✓ Interested', c: '#00854D', bg: '#E3F8EE' },
+  question: { l: '? Has a question', c: '#B26A00', bg: '#FFF1DB' },
+  declined: { l: '✕ Declined', c: '#676879', bg: '#EEF0F4' },
+  unclear: { l: '• Needs a look', c: '#2F6FD6', bg: '#E8F1FF' },
+  waiting: { l: '⏳ Waiting for host', c: '#9699A6', bg: '#F5F6F8' },
+  new: { l: 'No reply yet', c: '#9699A6', bg: '#F5F6F8' },
+}
+const StageTag = ({ s, big }: { s: string; big?: boolean }) => { const x = STAGE[s] ?? STAGE.new; return <span style={{ fontSize: big ? 12.5 : 11, fontWeight: 600, color: x.c, background: x.bg, borderRadius: 3, padding: big ? '3px 8px' : '1px 6px', whiteSpace: 'nowrap', flexShrink: 0 }}>{x.l}</span> }
 const initials = (n?: string | null) => (n || '?').split(/[\s-]+/).map(s => s[0]).join('').slice(0, 2).toUpperCase()
 
 export default function AirbnbInboxPage() {
@@ -26,6 +36,8 @@ export default function AirbnbInboxPage() {
   const [tab, setTab] = useState<'open' | 'done'>('open')
   const [sel, setSel] = useState<string | null>(null)
   const [q, setQ] = useState('')
+  const [stageF, setStageF] = useState('')
+  const [reading, setReading] = useState(false)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState('')
   const [toast, setToast] = useState('')
@@ -35,6 +47,14 @@ export default function AirbnbInboxPage() {
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(''), 3500) }
 
   const load = useCallback(() => call().then(x => { setD(x); setErr('') }).catch(e => setErr(e.message)), [])
+  // let the AI tag new host replies (a few at a time), then refresh
+  const analysing = useRef(false)
+  useEffect(() => {
+    if (!d || analysing.current || !d.threads?.some((t: any) => t.needsAnalysis)) return
+    analysing.current = true; setReading(true)
+    // keep going while it's making progress; stop (until next visit) if the AI can't read the rest
+    call({ action: 'analyse' }).then(r => load().then(() => { if (r.left && r.done) analysing.current = false; else setReading(false) })).catch(() => setReading(false))
+  }, [d, load])
   useEffect(() => {
     load()
     const i = setInterval(load, 60000)
@@ -43,7 +63,8 @@ export default function AirbnbInboxPage() {
   }, [load])
 
   const threads: any[] = d?.threads ?? []
-  const list = useMemo(() => threads.filter(t => t.status === tab && (!q || `${t.host} ${t.listing} ${t.lastText}`.toLowerCase().includes(q.toLowerCase()))), [threads, tab, q])
+  const list = useMemo(() => threads.filter(t => t.status === tab && (!stageF || t.stage === stageF) && (!q || `${t.host} ${t.listing} ${t.lastText}`.toLowerCase().includes(q.toLowerCase()))), [threads, tab, q, stageF])
+  const stageCount = (k: string) => threads.filter(t => t.status === tab && t.stage === k).length
   const cur = threads.find(t => t.key === sel) ?? null
 
   useEffect(() => { if (!narrow && !sel && list.length) setSel(list[0].key) }, [narrow, sel, list])
@@ -91,6 +112,14 @@ export default function AirbnbInboxPage() {
           <div style={{ width: narrow ? '100%' : 340, flexShrink: 0, borderRight: narrow ? 'none' : '1px solid ' + C.row, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <div style={{ padding: 12, borderBottom: '1px solid ' + C.row }}>
               <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search hosts, listings, messages" style={{ width: '100%', padding: '8px 10px', border: '1px solid ' + C.border, borderRadius: 4, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
+                {['', 'agreed', 'question', 'unclear', 'declined', 'waiting'].map(k => (
+                  <button key={k || 'all'} onClick={() => setStageF(k)} style={{ fontSize: 11.5, padding: '3px 8px', borderRadius: 12, border: '1px solid ' + (stageF === k ? C.ink : C.border), background: stageF === k ? C.ink : '#fff', color: stageF === k ? '#fff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {k ? STAGE[k].l : 'All'}{k ? ` ${stageCount(k)}` : ''}
+                  </button>
+                ))}
+              </div>
+              {reading && <div style={{ fontSize: 11.5, color: '#7A35B8', marginTop: 6 }}>✦ AI is reading new replies…</div>}
             </div>
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {!list.length && <div style={{ padding: 24, color: C.muted, fontSize: 14, lineHeight: 1.6 }}>{threads.length ? 'Nothing here.' : <>No Airbnb chats yet. When a host replies to your Airbnb account, the message email arrives in your mailbox and shows here. Press <b>Load older messages</b> to bring in past ones.</>}</div>}
@@ -105,6 +134,7 @@ export default function AirbnbInboxPage() {
                     <span style={{ display: 'block', fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.listing || '—'}</span>
                     <span style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 2 }}>
                       <span style={{ fontSize: 13, color: t.unread ? C.ink : C.faint, fontWeight: t.unread ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{t.lastText}</span>
+                      <StageTag s={t.stage} />
                       {t.unread && <span style={{ width: 8, height: 8, borderRadius: '50%', background: AIRBNB, flexShrink: 0 }} />}
                     </span>
                   </span>
@@ -119,7 +149,7 @@ export default function AirbnbInboxPage() {
             <div style={{ padding: '12px 18px', borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               {narrow && <button onClick={() => setSel(null)} style={{ ...btn('ghost', true), padding: '4px 10px' }}>‹ Back</button>}
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 16 }}>{cur.host || 'Host'}</div>
+                <div style={{ fontWeight: 600, fontSize: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>{cur.host || 'Host'} <StageTag s={cur.stage} big /></div>
                 <div style={{ fontSize: 13, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cur.listing || ''}{cur.mailboxEmail ? ` · via ${cur.mailboxEmail}` : ''}</div>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -132,6 +162,12 @@ export default function AirbnbInboxPage() {
               </div>
             </div>
 
+            {(cur.stageSummary || cur.stageNext) && (
+              <div style={{ padding: '8px 18px', borderBottom: '1px solid ' + C.row, background: '#FBF7FF', fontSize: 13, color: C.ink, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                <span><b style={{ color: '#7A35B8' }}>✦ Where it stands:</b> {cur.stageSummary}</span>
+                {cur.stageNext && <span style={{ color: C.muted }}><b>Next:</b> {cur.stageNext}</span>}
+              </div>
+            )}
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 18px 8px', background: '#FAFAFB' }}>
               {cur.items.map((it: any, i: number) => it.kind === 'event'
                 ? <div key={i} style={{ textAlign: 'center', fontSize: 12.5, color: C.muted, margin: '10px auto 14px', maxWidth: 520, lineHeight: 1.5 }}>{it.text}{it.at && <span style={{ color: C.faint }}> · {short(it.at)}</span>}</div>
