@@ -5,6 +5,7 @@
 // local low / typical / high, with the comparable listings and links.
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { symOf, curOf } from '../../lib/currency'
 
 const C = { gold: '#D0AE4C', gd: '#A8862E', brown: '#624920', cream: '#FBF4E6', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', green: '#10B981', red: '#EF4444', amber: '#F59E0B' }
 
@@ -14,28 +15,30 @@ type Metric = { key: string; label: string; value: number; unit: string; compare
 const n = (v: any) => { const x = parseFloat(v); return Number.isFinite(x) && x > 0 ? x : 0 }
 
 export function dealMetrics(strategy: string, form: any): Metric[] {
+  const S = symOf(form)
   const beds = form.bedrooms ? `${form.bedrooms}-bed ` : ''
   const type = (form.propertyType || 'property').toLowerCase()
   const out: Metric[] = []
   const add = (m: Metric) => { if (m.value > 0 || m.ref) out.push(m) }
   const isR2R = strategy === 'r2r' || strategy === 'r2hmo'
-  if (!isR2R) add({ key: 'price', label: strategy === 'land' ? 'Land price' : 'Purchase price', value: n(form.price), unit: '£', dir: 'cost', compare: strategy === 'land' ? 'land / plots for sale nearby of similar size' : `asking and recent sold prices for ${beds}${type} nearby` })
-  if (['btl', 'brrr', 'social', 'supported'].includes(strategy)) add({ key: 'rent', label: 'Monthly rent', value: n(form.rent), unit: '£/month', dir: 'income', compare: `${beds}${type} to rent nearby (long let, per calendar month)` })
-  if (strategy === 'hmo') add({ key: 'room', label: 'Rent per room', value: n(form.rentPerRoom), unit: '£/room/month', dir: 'income', compare: 'rooms to rent in house shares / HMOs nearby (SpareRoom etc.), bills included' })
-  if (isR2R) add({ key: 'landlord', label: 'Rent you pay the landlord', value: n(form.rent), unit: '£/month', dir: 'cost', compare: `whole ${beds}${type} to rent nearby on a normal long let (what the landlord could get elsewhere)` })
-  if (strategy === 'r2hmo') add({ key: 'room', label: 'Rent per room', value: n(form.subletRent), unit: '£/room/month', dir: 'income', compare: 'rooms to rent in house shares / HMOs nearby (SpareRoom etc.), bills included' })
+  if (!isR2R) add({ key: 'price', label: strategy === 'land' ? 'Land price' : 'Purchase price', value: n(form.price), unit: S + '', dir: 'cost', compare: strategy === 'land' ? 'land / plots for sale nearby of similar size' : `asking and recent sold prices for ${beds}${type} nearby` })
+  if (['btl', 'brrr', 'social', 'supported'].includes(strategy)) add({ key: 'rent', label: 'Monthly rent', value: n(form.rent), unit: S + '/month', dir: 'income', compare: `${beds}${type} to rent nearby (long let, per calendar month)` })
+  if (strategy === 'hmo') add({ key: 'room', label: 'Rent per room', value: n(form.rentPerRoom), unit: S + '/room/month', dir: 'income', compare: 'rooms to rent in house shares / HMOs nearby (SpareRoom etc.), bills included' })
+  if (isR2R) add({ key: 'landlord', label: 'Rent you pay the landlord', value: n(form.rent), unit: S + '/month', dir: 'cost', compare: `whole ${beds}${type} to rent nearby on a normal long let (what the landlord could get elsewhere)` })
+  if (strategy === 'r2hmo') add({ key: 'room', label: 'Rent per room', value: n(form.subletRent), unit: S + '/room/month', dir: 'income', compare: 'rooms to rent in house shares / HMOs nearby (SpareRoom etc.), bills included' })
   if (strategy === 'r2r') {
     const t = form.termType || 'long'
-    add({ key: 'resident', label: t === 'airbnb' ? 'Short-let income per unit' : 'Resident rent per unit', value: n(form.subletRent), unit: '£/month', dir: 'income', compare: t === 'airbnb' ? `monthly revenue of comparable Airbnb / short lets nearby (nightly rate × occupancy × 30); mention the nightly rates in basis` : t === 'short' ? `furnished serviced-accommodation / corporate lets nearby, monthly` : `furnished ${beds}${type} to rent nearby, per month` })
+    add({ key: 'resident', label: t === 'airbnb' ? 'Short-let income per unit' : 'Resident rent per unit', value: n(form.subletRent), unit: S + '/month', dir: 'income', compare: t === 'airbnb' ? `monthly revenue of comparable Airbnb / short lets nearby (nightly rate × occupancy × 30); mention the nightly rates in basis` : t === 'short' ? `furnished serviced-accommodation / corporate lets nearby, monthly` : `furnished ${beds}${type} to rent nearby, per month` })
   }
-  if (strategy === 'flip' || strategy === 'brrr') add({ key: 'sale', label: strategy === 'brrr' ? 'End value after refurb' : 'Sale price after refurb', value: n(form.salePrice), unit: '£', dir: 'income', compare: `recent SOLD prices of refurbished ${beds}${type} nearby` })
-  if (strategy === 'land') add({ key: 'gdv', label: 'Gross development value', value: n(form.gdv), unit: '£', dir: 'income', compare: 'new-build homes for sale or recently sold nearby, scaled to the planned scheme' })
+  if (strategy === 'flip' || strategy === 'brrr') add({ key: 'sale', label: strategy === 'brrr' ? 'End value after refurb' : 'Sale price after refurb', value: n(form.salePrice), unit: S + '', dir: 'income', compare: `recent SOLD prices of refurbished ${beds}${type} nearby` })
+  if (strategy === 'land') add({ key: 'gdv', label: 'Gross development value', value: n(form.gdv), unit: S + '', dir: 'income', compare: 'new-build homes for sale or recently sold nearby, scaled to the planned scheme' })
   // Always check what the property would rent for locally, even when the deal has no rent figure
-  if (strategy !== 'land' && !out.some(m => m.key === 'rent' || m.key === 'landlord')) add({ key: 'rent_ref', label: 'Local rent for this property', value: 0, unit: '£/month', dir: 'income', ref: true, compare: `whole ${beds}${type} to rent nearby on a long let, per calendar month (unfurnished and furnished)` })
+  if (strategy !== 'land' && !out.some(m => m.key === 'rent' || m.key === 'landlord')) add({ key: 'rent_ref', label: 'Local rent for this property', value: 0, unit: S + '/month', dir: 'income', ref: true, compare: `whole ${beds}${type} to rent nearby on a long let, per calendar month (unfurnished and furnished)` })
   return out
 }
 
-const money = (v: number | null | undefined, unit = '£') => v == null ? '—' : '£' + Math.round(v).toLocaleString('en-GB') + (unit.replace('£', '') || '')
+// unit looks like 'J$/month' — symbol first, then the period
+const money = (v: number | null | undefined, unit = '£') => { const m = unit.match(/^(J\$|\$|£)(.*)$/); const sym = m ? m[1] : '£'; return v == null ? '—' : sym + Math.round(v).toLocaleString('en-GB') + (m ? m[2] : '') }
 
 function verdict(m: Metric, b: any) {
   if (!m.value) return { text: 'Market rent', color: '#0E7C55', bg: '#E6F7EF' }
@@ -58,8 +61,8 @@ function RangeBar({ m, b }: { m: Metric; b: any }) {
       <div style={{ position: 'absolute', top: 12, left: pos(b.low), width: `calc(${pos(b.high)} - ${pos(b.low)})`, height: 6, borderRadius: 3, background: '#E9D9A8' }} />
       {b.typical && <div title="Market typical" style={{ position: 'absolute', top: 8, left: pos(b.typical), width: 2, height: 14, background: C.brown, transform: 'translateX(-1px)' }} />}
       {m.value > 0 && <div title="Your figure" style={{ position: 'absolute', top: 6, left: pos(m.value), width: 18, height: 18, borderRadius: '50%', background: C.gd, border: '3px solid #fff', boxShadow: '0 0 0 1px ' + C.gd, transform: 'translateX(-9px)' }} />}
-      <div style={{ position: 'absolute', top: 24, left: pos(b.low), fontSize: 10.5, color: C.faint, transform: 'translateX(-50%)' }}>{money(b.low)}</div>
-      <div style={{ position: 'absolute', top: 24, left: pos(b.high), fontSize: 10.5, color: C.faint, transform: 'translateX(-50%)' }}>{money(b.high)}</div>
+      <div style={{ position: 'absolute', top: 24, left: pos(b.low), fontSize: 10.5, color: C.faint, transform: 'translateX(-50%)' }}>{money(b.low, m.unit.match(/^(J\$|\$|£)/)?.[0])}</div>
+      <div style={{ position: 'absolute', top: 24, left: pos(b.high), fontSize: 10.5, color: C.faint, transform: 'translateX(-50%)' }}>{money(b.high, m.unit.match(/^(J\$|\$|£)/)?.[0])}</div>
     </div>
   )
 }
@@ -78,7 +81,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
     if (!form.address?.trim()) { setErr('Add the property’s location (street, town or postcode) first.'); return }
     setLoading(true); setErr(null)
     const { data: { session } } = await supabase.auth.getSession()
-    const base = { strategy, strategyLabel, location: form.address, bedrooms: form.bedrooms, propertyType: form.propertyType, letting: strategy === 'r2r' ? form.termType || 'long' : undefined }
+    const base = { strategy, strategyLabel, currency: curOf(form), location: form.address, bedrooms: form.bedrooms, propertyType: form.propertyType, letting: strategy === 'r2r' ? form.termType || 'long' : undefined }
     // One search per figure plus an area overview, all at once
     const call = async (body: any) => {
       const res = await fetch('/api/deal-market', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ ...base, ...body }) })
@@ -175,7 +178,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}><span style={{ fontSize: 11, fontWeight: 700, color: TYPE_COL[c.type] || C.muted, background: (TYPE_COL[c.type] || C.muted) + '14', padding: '2px 7px', borderRadius: 4 }}>{c.type}</span></td>
                     <td style={{ padding: '9px 12px' }}><div style={{ fontWeight: 600, color: C.ink }}>{c.title}</div>{c.location && <div style={{ fontSize: 12, color: C.faint }}>{c.location}</div>}</td>
                     <td style={{ padding: '9px 12px', color: C.muted }}>{c.beds ?? '—'}</td>
-                    <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}><div style={{ fontWeight: 700, color: C.ink }}>{money(c.price, c.unit)}</div>{c.price_text && !c.price_text.startsWith('£') && <div style={{ fontSize: 11.5, color: C.faint }}>{c.price_text}</div>}</td>
+                    <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}><div style={{ fontWeight: 700, color: C.ink }}>{money(c.price, c.unit)}</div>{c.price_text && !c.price_text.startsWith(c.unit.match(/^(J\$|\$|£)/)?.[0] || '£') && <div style={{ fontSize: 11.5, color: C.faint }}>{c.price_text}</div>}</td>
                     <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>{c.url ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: C.gd, fontWeight: 600, textDecoration: 'none' }}>{c.source || 'View'} ↗</a> : <span style={{ color: C.faint }}>{c.source || '—'}</span>}</td>
                   </tr>
                 ))}</tbody>

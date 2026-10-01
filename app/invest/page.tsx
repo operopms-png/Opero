@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, applyStress } from '../../lib/dealCalculators'
 import AskChat from '../../components/ai/AskChat'
 import MarketCheck from '../../components/invest/MarketCheck'
+import { CURRENCIES, curOf, symOf, type Cur } from '../../lib/currency'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
   btl:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -29,6 +30,9 @@ const STRATEGIES = [
 ]
 
 const SECTIONS = ['Deal Analyser','Saved Deals','Watchlist']
+
+// Money fields converted when you switch currency
+const MONEY_FIELDS = ['price','rent','rentPerRoom','subletRent','landlordDeposit','advanceRent','wifiCost','utilitiesCost','managementCost','insuranceCost','propertyTaxCost','cleaningCost','maintenanceCost','marketingCost','vacancyCost','setupCost','conversionCost','salePrice','planningCost','buildCost','gdv','refurb']
 
 const VERDICT_COLORS: Record<string,{color:string;bg:string;border:string}> = {
   PASS:   { color:'#10B981', bg:'#ECFDF5', border:'#A7F3D0' },
@@ -61,7 +65,10 @@ export default function InvestPage() {
   // Rent to HMO = Rent to Rent maths, counted per room (bills usually included)
   const isR2R = strategy==='r2r' || strategy==='r2hmo'
   const isR2HMO = strategy==='r2hmo'
+  const [fx, setFx] = useState<Record<Cur, number> | null>(null)
+  useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => d?.rates && setFx(d.rates)).catch(() => {}) }, [])
   const [form, setForm] = useState<any>({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'})
+  const S = symOf(form)
   const [result, setResult] = useState<any>(null)
   const [marketEstimate, setMarketEstimate] = useState<string|null>(null)
   const [estimating, setEstimating] = useState(false)
@@ -122,6 +129,7 @@ export default function InvestPage() {
           bathrooms: form.bathrooms,
           furnished: true,
           termType: form.termType || 'long',
+          currency: curOf(form),
         }),
       })
       const data = await res.json()
@@ -133,8 +141,34 @@ export default function InvestPage() {
     setEstimating(false)
   }
 
-  function analyse() {
-    let F = form
+  // Switch currency: converts every figure you've entered at today's rate
+  function switchCurrency(to: Cur) {
+    const from = curOf(form)
+    if (to === from) return
+    const rates = fx || { GBP: 1, USD: 1.34, JMD: 210 }
+    const k = rates[to] / rates[from]
+    const f: any = { ...form, currency: to }
+    for (const m of MONEY_FIELDS) { const v = parseFloat(form[m]); if (form[m] !== undefined && form[m] !== '' && Number.isFinite(v)) f[m] = String(Math.round(v * k * 100) / 100) }
+    setForm(f); setMarket(null); setMarketEstimate(null)
+    if (result) analyse(f)
+  }
+
+  const CurrencySwitch = () => {
+    const cur = curOf(form)
+    return (
+      <div style={{display:'flex',alignItems:'center',gap:8,marginLeft:'auto'}}>
+        <div style={{display:'inline-flex',border:'1px solid #D0D4E4',borderRadius:8,overflow:'hidden'}}>
+          {(Object.keys(CURRENCIES) as Cur[]).map(c=>(
+            <button key={c} onClick={()=>switchCurrency(c)} style={{padding:'6px 12px',border:'none',borderLeft:c==='GBP'?'none':'1px solid #D0D4E4',background:cur===c?BLUE:'#fff',color:cur===c?'#fff':'#344054',fontSize:12.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{CURRENCIES[c].label}</button>
+          ))}
+        </div>
+        {fx&&cur!=='GBP'&&<span style={{fontSize:11.5,color:'#9699A6'}}>£1 = {CURRENCIES[cur].sym}{fx[cur].toFixed(cur==='JMD'?0:2)}</span>}
+      </div>
+    )
+  }
+
+  function analyse(F0?: any) {
+    let F = F0 || form
     if(!strategy) return
     if(isR2R ? !F.rent : !F.price) return
     // Use the figures shown in the boxes, including their defaults
@@ -286,6 +320,7 @@ export default function InvestPage() {
                 <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
                   <button onClick={()=>setStrategy(null)} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← Back</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} Analysis</div>
+                  <CurrencySwitch/>
                 </div>
                 <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
@@ -294,7 +329,7 @@ export default function InvestPage() {
                       <div><label style={lbl}>{isR2HMO?'Bedrooms now (as rented)':'Bedrooms'}</label><input value={form.bedrooms||''} onChange={e=>setForm({...form,bedrooms:e.target.value,...(isR2HMO?{currentRooms:e.target.value}:{})})} type="number" placeholder="e.g. 3" style={inp}/></div>
                       <div><label style={lbl}>Property Type</label><select value={form.propertyType||''} onChange={e=>setForm({...form,propertyType:e.target.value})} style={inp}><option value="">Any</option>{['House','Terraced house','Semi-detached house','Detached house','Flat / apartment','Bungalow','Townhouse','Villa','Land'].map(t=><option key={t}>{t}</option>)}</select></div>
                     </div>
-                    {!isR2R&&<div><label style={lbl}>Purchase Price (£) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
+                    {!isR2R&&<div><label style={lbl}>Purchase Price ({S}) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
 
                     {(strategy==='btl'||strategy==='brrr'||strategy==='hmo'||strategy==='social'||strategy==='supported')&&(<>
                       <div><label style={lbl}>Deposit (%)</label><input value={form.deposit||'25'} onChange={e=>setForm({...form,deposit:e.target.value})} type="number" placeholder="25" style={inp}/></div>
@@ -302,19 +337,19 @@ export default function InvestPage() {
                     </>)}
 
                     {(strategy==='btl'||strategy==='brrr'||strategy==='social'||strategy==='supported')&&(
-                      <div><label style={lbl}>Monthly Rent (£)</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 1200" style={inp}/></div>
+                      <div><label style={lbl}>Monthly Rent ({S})</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 1200" style={inp}/></div>
                     )}
 
                     {strategy==='hmo'&&(<>
                       <div><label style={lbl}>Number of Rooms</label><input value={form.rooms||'4'} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="4" style={inp}/></div>
-                      <div><label style={lbl}>Rent Per Room (£/mo)</label><input value={form.rentPerRoom||''} onChange={e=>setForm({...form,rentPerRoom:e.target.value})} type="number" placeholder="600" style={inp}/></div>
+                      <div><label style={lbl}>Rent Per Room ({S}/mo)</label><input value={form.rentPerRoom||''} onChange={e=>setForm({...form,rentPerRoom:e.target.value})} type="number" placeholder="600" style={inp}/></div>
                     </>)}
 
                     {isR2R&&(<>
-                      <div><label style={lbl}>Rent You Pay Landlord (£/mo) *</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 480" style={inp}/></div>
+                      <div><label style={lbl}>Rent You Pay Landlord ({S}/mo) *</label><input value={form.rent||''} onChange={e=>setForm({...form,rent:e.target.value})} type="number" placeholder="e.g. 480" style={inp}/></div>
                       <div><label style={lbl}>{isR2HMO?'Rooms after conversion (rooms you let)':'Number of Units'}</label><input value={form.rooms||(isR2HMO?'5':'1')} onChange={e=>setForm({...form,rooms:e.target.value})} type="number" placeholder="1" style={inp}/></div>
                       <div>
-                        <label style={lbl}>{isR2HMO?'Rent Per Room (£/mo, bills included)':'Resident Rent (£/mo, per unit)'}</label>
+                        <label style={lbl}>{isR2HMO?'Rent Per Room ('+S+'/mo, bills included)':'Resident Rent ('+S+'/mo, per unit)'}</label>
                         <input value={form.subletRent||''} onChange={e=>setForm({...form,subletRent:e.target.value})} type="number" placeholder="e.g. 950" style={inp}/>
                         <button onClick={estimateMarketRent} disabled={estimating} style={{marginTop:6,padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054',opacity:estimating?0.6:1}}>{estimating?'Searching…':'🔍 Estimate market rent'}</button>
                         {estimateError&&<div style={{fontSize:12,color:'#EF4444',marginTop:6}}>{estimateError}</div>}
@@ -326,44 +361,44 @@ export default function InvestPage() {
                         )}
                       </div>
                       <div><label style={lbl}>Lease Term (months)</label><input value={form.leaseMonths||'24'} onChange={e=>setForm({...form,leaseMonths:e.target.value})} type="number" placeholder="24" style={inp}/></div>
-                      <div><label style={lbl}>Deposit to Landlord (£)</label><input value={form.landlordDeposit??''} onChange={e=>setForm({...form,landlordDeposit:e.target.value})} type="number" placeholder={form.rent?`${form.rent} (1 month’s rent)`:'1 month’s rent'} style={inp}/></div>
-                      <div><label style={lbl}>Rent Paid in Advance (£)</label><input value={form.advanceRent??''} onChange={e=>setForm({...form,advanceRent:e.target.value})} type="number" placeholder={form.rent?`${form.rent} (1 month’s rent)`:'1 month’s rent'} style={inp}/></div>
+                      <div><label style={lbl}>Deposit to Landlord ({S})</label><input value={form.landlordDeposit??''} onChange={e=>setForm({...form,landlordDeposit:e.target.value})} type="number" placeholder={form.rent?`${form.rent} (1 month’s rent)`:'1 month’s rent'} style={inp}/></div>
+                      <div><label style={lbl}>Rent Paid in Advance ({S})</label><input value={form.advanceRent??''} onChange={e=>setForm({...form,advanceRent:e.target.value})} type="number" placeholder={form.rent?`${form.rent} (1 month’s rent)`:'1 month’s rent'} style={inp}/></div>
                       <div><label style={lbl}>Letting Type</label><select value={form.termType||'long'} onChange={e=>setForm({...form,termType:e.target.value})} style={inp}><option value="long">Long-term residential</option><option value="short">Short-term / serviced accommodation</option><option value="airbnb">Airbnb / short-let (nightly)</option></select></div>
-                      <div><label style={lbl}>Wi-Fi/Internet (£/mo)</label><input value={form.wifiCost||''} onChange={e=>setForm({...form,wifiCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
-                      <div><label style={lbl}>Utilities Allowance (£/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
-                      <div><label style={lbl}>Management/Operations (£/mo)</label><input value={form.managementCost||''} onChange={e=>setForm({...form,managementCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
-                      <div><label style={lbl}>Insurance (£/mo)</label><input value={form.insuranceCost||''} onChange={e=>setForm({...form,insuranceCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
-                      <div><label style={lbl}>{isR2HMO?'Council Tax / Property Fees (£/mo)':'Property Tax/Fees (£/mo)'}</label><input value={form.propertyTaxCost||''} onChange={e=>setForm({...form,propertyTaxCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
-                      <div><label style={lbl}>Cleaning/Operations (£/mo)</label><input value={form.cleaningCost||''} onChange={e=>setForm({...form,cleaningCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
-                      <div><label style={lbl}>Maintenance Reserve (£/mo)</label><input value={form.maintenanceCost||''} onChange={e=>setForm({...form,maintenanceCost:e.target.value})} type="number" placeholder="e.g. 40" style={inp}/></div>
-                      <div><label style={lbl}>Platform/Marketing (£/mo)</label><input value={form.marketingCost||''} onChange={e=>setForm({...form,marketingCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
-                      <div><label style={lbl}>Vacancy Allowance (£/mo)</label><input value={form.vacancyCost||''} onChange={e=>setForm({...form,vacancyCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
-                      <div><label style={lbl}>{isR2HMO?'Setup Costs — furniture, HMO licence, fire safety (£)':'Furniture Investment (£)'}</label><input value={form.setupCost||''} onChange={e=>setForm({...form,setupCost:e.target.value})} type="number" placeholder="e.g. 3500" style={inp}/></div>
+                      <div><label style={lbl}>Wi-Fi/Internet ({S}/mo)</label><input value={form.wifiCost||''} onChange={e=>setForm({...form,wifiCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
+                      <div><label style={lbl}>Utilities Allowance ({S}/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
+                      <div><label style={lbl}>Management/Operations ({S}/mo)</label><input value={form.managementCost||''} onChange={e=>setForm({...form,managementCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Insurance ({S}/mo)</label><input value={form.insuranceCost||''} onChange={e=>setForm({...form,insuranceCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>{isR2HMO?'Council Tax / Property Fees ('+S+'/mo)':'Property Tax/Fees ('+S+'/mo)'}</label><input value={form.propertyTaxCost||''} onChange={e=>setForm({...form,propertyTaxCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Cleaning/Operations ({S}/mo)</label><input value={form.cleaningCost||''} onChange={e=>setForm({...form,cleaningCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
+                      <div><label style={lbl}>Maintenance Reserve ({S}/mo)</label><input value={form.maintenanceCost||''} onChange={e=>setForm({...form,maintenanceCost:e.target.value})} type="number" placeholder="e.g. 40" style={inp}/></div>
+                      <div><label style={lbl}>Platform/Marketing ({S}/mo)</label><input value={form.marketingCost||''} onChange={e=>setForm({...form,marketingCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Vacancy Allowance ({S}/mo)</label><input value={form.vacancyCost||''} onChange={e=>setForm({...form,vacancyCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
+                      <div><label style={lbl}>{isR2HMO?'Setup Costs — furniture, HMO licence, fire safety ('+S+')':'Furniture Investment ('+S+')'}</label><input value={form.setupCost||''} onChange={e=>setForm({...form,setupCost:e.target.value})} type="number" placeholder="e.g. 3500" style={inp}/></div>
                       {isR2HMO&&<>
-                        <div><label style={lbl}>Conversion Cost — walls, doors, fire doors, extra bathrooms (£)</label><input value={form.conversionCost||''} onChange={e=>setForm({...form,conversionCost:e.target.value})} type="number" placeholder="0 if no conversion" style={inp}/></div>
+                        <div><label style={lbl}>Conversion Cost — walls, doors, fire doors, extra bathrooms ({S})</label><input value={form.conversionCost||''} onChange={e=>setForm({...form,conversionCost:e.target.value})} type="number" placeholder="0 if no conversion" style={inp}/></div>
                         <div><label style={lbl}>Months to Convert (no rent coming in)</label><input value={form.conversionMonths||''} onChange={e=>setForm({...form,conversionMonths:e.target.value})} type="number" placeholder="e.g. 2" style={inp}/></div>
                       </>}
                     </>)}
 
                     {(strategy==='flip'||strategy==='brrr')&&(
-                      <div><label style={lbl}>Sale / GDV Price (£)</label><input value={form.salePrice||''} onChange={e=>setForm({...form,salePrice:e.target.value})} type="number" placeholder="e.g. 200000" style={inp}/></div>
+                      <div><label style={lbl}>Sale / GDV Price ({S})</label><input value={form.salePrice||''} onChange={e=>setForm({...form,salePrice:e.target.value})} type="number" placeholder="e.g. 200000" style={inp}/></div>
                     )}
 
                     {strategy==='land'&&(<>
-                      <div><label style={lbl}>Planning Cost (£)</label><input value={form.planningCost||''} onChange={e=>setForm({...form,planningCost:e.target.value})} type="number" placeholder="5000" style={inp}/></div>
-                      <div><label style={lbl}>Build Cost (£)</label><input value={form.buildCost||''} onChange={e=>setForm({...form,buildCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
-                      <div><label style={lbl}>Gross Development Value (£)</label><input value={form.gdv||''} onChange={e=>setForm({...form,gdv:e.target.value})} type="number" placeholder="e.g. 300000" style={inp}/></div>
+                      <div><label style={lbl}>Planning Cost ({S})</label><input value={form.planningCost||''} onChange={e=>setForm({...form,planningCost:e.target.value})} type="number" placeholder="5000" style={inp}/></div>
+                      <div><label style={lbl}>Build Cost ({S})</label><input value={form.buildCost||''} onChange={e=>setForm({...form,buildCost:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Gross Development Value ({S})</label><input value={form.gdv||''} onChange={e=>setForm({...form,gdv:e.target.value})} type="number" placeholder="e.g. 300000" style={inp}/></div>
                     </>)}
 
                     {!isR2R&&strategy!=='land'&&(
-                      <div><label style={lbl}>Refurb Cost (£)</label><input value={form.refurb||''} onChange={e=>setForm({...form,refurb:e.target.value})} type="number" placeholder="0" style={inp}/></div>
+                      <div><label style={lbl}>Refurb Cost ({S})</label><input value={form.refurb||''} onChange={e=>setForm({...form,refurb:e.target.value})} type="number" placeholder="0" style={inp}/></div>
                     )}
 
                     {!isR2R&&strategy!=='land'&&strategy!=='flip'&&(
                       <div><label style={lbl}>Monthly Expenses (% of rent)</label><input value={form.expenses||'20'} onChange={e=>setForm({...form,expenses:e.target.value})} type="number" placeholder="20" style={inp}/></div>
                     )}
                   </div>
-                  <button onClick={analyse} style={{width:'100%',padding:'14px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:15,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>▶ Start Deal Analysis</button>
+                  <button onClick={()=>analyse()} style={{width:'100%',padding:'14px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:15,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>▶ Start Deal Analysis</button>
                 </div>
               </div>
             )}
@@ -375,19 +410,20 @@ export default function InvestPage() {
                   <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null);setMarket(null)}} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
+                  <CurrencySwitch/>
                 </div>
 
-                {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#7A5A12'}}>⚠ No setup or conversion costs entered, so ROI is based only on the £{(result.totalUpfront||0).toFixed(0)} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
+                {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#7A5A12'}}>⚠ No setup or conversion costs entered, so ROI is based only on the {S}{(result.totalUpfront||0).toFixed(0)} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
                 {/* Key metrics */}
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
                   {result.monthlyCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Monthly Cash Flow</div>
-                    <div style={{fontSize:28,fontWeight:800,color:result.monthlyCashflow>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.monthlyCashflow).toFixed(0)}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:result.monthlyCashflow>=0?'#10B981':'#EF4444'}}>{S}{Math.abs(result.monthlyCashflow).toFixed(0)}</div>
                     <div style={{fontSize:11,color:'#9699A6',marginTop:4}}>{result.monthlyCashflow>=0?'positive':'negative'}</div>
                   </div>}
                   {result.annualCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Annual Cash Flow</div>
-                    <div style={{fontSize:28,fontWeight:800,color:result.annualCashflow>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.annualCashflow).toFixed(0)}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:result.annualCashflow>=0?'#10B981':'#EF4444'}}>{S}{Math.abs(result.annualCashflow).toFixed(0)}</div>
                   </div>}
                   {result.grossYield!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Gross Yield</div>
@@ -399,12 +435,12 @@ export default function InvestPage() {
                   </div>}
                   {result.profit!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Profit</div>
-                    <div style={{fontSize:28,fontWeight:800,color:result.profit>=0?'#10B981':'#EF4444'}}>£{Math.abs(result.profit).toFixed(0)}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:result.profit>=0?'#10B981':'#EF4444'}}>{S}{Math.abs(result.profit).toFixed(0)}</div>
                   </div>}
                 </div>
 
                 {isR2HMO&&result.asIs&&(()=>{
-                  const a=result.asIs, gbp=(v:number|null|undefined)=>v==null?'—':(v<0?'-':'')+'£'+Math.abs(Math.round(v)).toLocaleString('en-GB')
+                  const a=result.asIs, gbp=(v:number|null|undefined)=>v==null?'—':(v<0?'-':'')+S+Math.abs(Math.round(v)).toLocaleString('en-GB')
                   const rows:[string,string,string,boolean?][]=[
                     ['Rooms let', String(a.rooms), String(result.rooms)],
                     ['Room income / month', gbp(a.totalIncome), gbp(result.totalIncome)],
@@ -422,7 +458,7 @@ export default function InvestPage() {
                         <div style={{fontSize:16,fontWeight:700,color:'#323338'}}>🔨 As is vs converted</div>
                         <span style={{fontSize:12,fontWeight:700,padding:'3px 10px',borderRadius:12,background:better?'#E6F7EF':'#FDECEC',color:better?'#0E7C55':'#EF4444'}}>{better?'Converting pays':'Converting doesn’t pay'}</span>
                       </div>
-                      <div style={{fontSize:12.5,color:'#676879',marginBottom:14}}>The {a.rooms}-bed as you rent it, against converting it to {result.rooms} rooms at £{parseFloat(form.subletRent)||0} a room.</div>
+                      <div style={{fontSize:12.5,color:'#676879',marginBottom:14}}>The {a.rooms}-bed as you rent it, against converting it to {result.rooms} rooms at {S}{parseFloat(form.subletRent)||0} a room.</div>
                       <div style={{overflowX:'auto'}}>
                         <table style={{width:'100%',borderCollapse:'collapse',fontSize:13.5,minWidth:460}}>
                           <thead><tr><th style={{textAlign:'left',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}></th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}>As is ({a.rooms} rooms)</th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#624920',fontWeight:700,borderBottom:'1px solid #E6E9EF',background:'#FBF4E6'}}>Converted ({result.rooms} rooms)</th></tr></thead>
@@ -464,14 +500,14 @@ export default function InvestPage() {
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.monthlyCashflow
-                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:14,fontWeight:700,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+'£'+Math.abs(v).toFixed(0):'—'}</div>
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:14,fontWeight:700,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+S+Math.abs(v).toFixed(0):'—'}</div>
                         })}
 
                         <div style={{fontSize:12,color:'#676879',display:'flex',alignItems:'center'}}>Annual Cash Flow</div>
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.annualCashflow
-                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:13,fontWeight:600,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+'£'+Math.abs(v).toFixed(0):'—'}</div>
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:13,fontWeight:600,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+S+Math.abs(v).toFixed(0):'—'}</div>
                         })}
 
                         <div style={{fontSize:12,color:'#676879',display:'flex',alignItems:'center'}}>ROI</div>
@@ -491,20 +527,20 @@ export default function InvestPage() {
                   <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Investment Breakdown</div>
                     {[
-                      result.depositAmt!==undefined&&{l:'Deposit',v:'£'+result.depositAmt.toFixed(0)},
-                      result.loanAmt!==undefined&&{l:'Mortgage Amount',v:'£'+result.loanAmt.toFixed(0)},
-                      form.refurb&&{l:'Refurb Cost',v:'£'+parseFloat(form.refurb).toFixed(0)},
-                      result.totalInvested!==undefined&&{l:'Total Invested',v:'£'+result.totalInvested.toFixed(0),bold:true},
-                      result.setupCost!==undefined&&{l:'Setup Cost',v:'£'+(form.setupCost||0)},
-                      result.furnitureCost!==undefined&&{l:isR2HMO?'Setup Costs (furniture, licence, safety)':'Furniture Investment',v:'£'+result.furnitureCost.toFixed(0)},
-                      result.landlordDeposit>0&&{l:'Deposit to landlord (returned at the end)',v:'£'+result.landlordDeposit.toFixed(0)},
-                      result.advanceRent>0&&{l:'Rent in advance',v:'£'+result.advanceRent.toFixed(0)},
-                      result.conversionCost>0&&{l:'Conversion Cost',v:'£'+result.conversionCost.toFixed(0)},
-                      result.holdingCost>0&&{l:`Rent & bills while converting (${result.conversionMonths} mo)`,v:'£'+result.holdingCost.toFixed(0)},
-                      result.totalUpfront!==undefined&&{l:'Total Upfront Cash',v:'£'+result.totalUpfront.toFixed(0),bold:true},
-                      result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:'£'+result.purchaseCosts.toFixed(0)},
-                      result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:'£'+result.saleCosts.toFixed(0)},
-                      result.totalCost!==undefined&&{l:'Total Cost',v:'£'+result.totalCost.toFixed(0),bold:true},
+                      result.depositAmt!==undefined&&{l:'Deposit',v:S+result.depositAmt.toFixed(0)},
+                      result.loanAmt!==undefined&&{l:'Mortgage Amount',v:S+result.loanAmt.toFixed(0)},
+                      form.refurb&&{l:'Refurb Cost',v:S+parseFloat(form.refurb).toFixed(0)},
+                      result.totalInvested!==undefined&&{l:'Total Invested',v:S+result.totalInvested.toFixed(0),bold:true},
+                      result.setupCost!==undefined&&{l:'Setup Cost',v:S+(form.setupCost||0)},
+                      result.furnitureCost!==undefined&&{l:isR2HMO?'Setup Costs (furniture, licence, safety)':'Furniture Investment',v:S+result.furnitureCost.toFixed(0)},
+                      result.landlordDeposit>0&&{l:'Deposit to landlord (returned at the end)',v:S+result.landlordDeposit.toFixed(0)},
+                      result.advanceRent>0&&{l:'Rent in advance',v:S+result.advanceRent.toFixed(0)},
+                      result.conversionCost>0&&{l:'Conversion Cost',v:S+result.conversionCost.toFixed(0)},
+                      result.holdingCost>0&&{l:`Rent & bills while converting (${result.conversionMonths} mo)`,v:S+result.holdingCost.toFixed(0)},
+                      result.totalUpfront!==undefined&&{l:'Total Upfront Cash',v:S+result.totalUpfront.toFixed(0),bold:true},
+                      result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:S+result.purchaseCosts.toFixed(0)},
+                      result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:S+result.saleCosts.toFixed(0)},
+                      result.totalCost!==undefined&&{l:'Total Cost',v:S+result.totalCost.toFixed(0),bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
                         <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
@@ -515,12 +551,12 @@ export default function InvestPage() {
                   <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Monthly P&L</div>
                     {[
-                      result.totalRent!==undefined&&{l:'Total Rental Income',v:'£'+(result.totalRent||0).toFixed(0),c:'#10B981'},
-                      result.totalIncome!==undefined&&{l:isR2HMO?`Room Rent Income (${form.rooms||'?'} rooms)`:'Resident Rent Income',v:'£'+(result.totalIncome||0).toFixed(0),c:'#10B981'},
-                      result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:'£'+(parseFloat(form.rent)||0).toFixed(0),c:'#10B981'},
-                      result.monthlyMortgage!==undefined&&{l:'Mortgage Payment',v:'-£'+result.monthlyMortgage.toFixed(0),c:'#EF4444'},
-                      result.monthlyExpenses!==undefined&&{l:isR2R?'Total Fixed Costs':'Expenses',v:'-£'+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
-                      result.monthlyCashflow!==undefined&&{l:isR2R?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+'£'+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
+                      result.totalRent!==undefined&&{l:'Total Rental Income',v:S+(result.totalRent||0).toFixed(0),c:'#10B981'},
+                      result.totalIncome!==undefined&&{l:isR2HMO?`Room Rent Income (${form.rooms||'?'} rooms)`:'Resident Rent Income',v:S+(result.totalIncome||0).toFixed(0),c:'#10B981'},
+                      result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:S+(parseFloat(form.rent)||0).toFixed(0),c:'#10B981'},
+                      result.monthlyMortgage!==undefined&&{l:'Mortgage Payment',v:('-'+S)+result.monthlyMortgage.toFixed(0),c:'#EF4444'},
+                      result.monthlyExpenses!==undefined&&{l:isR2R?'Total Fixed Costs':'Expenses',v:('-'+S)+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
+                      result.monthlyCashflow!==undefined&&{l:isR2R?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+S+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
                         <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
@@ -548,12 +584,12 @@ export default function InvestPage() {
                       ].filter(item=>item.v>0).map((item,i)=>(
                         <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
                           <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
-                          <span style={{fontSize:13,fontWeight:500,color:'#EF4444'}}>-£{item.v.toFixed(0)}</span>
+                          <span style={{fontSize:13,fontWeight:500,color:'#EF4444'}}>-{S}{item.v.toFixed(0)}</span>
                         </div>
                       ))}
                       <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0'}}>
                         <span style={{fontSize:13,fontWeight:700,color:'#323338'}}>Total Fixed Costs</span>
-                        <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>-£{result.monthlyExpenses.toFixed(0)}</span>
+                        <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>-{S}{result.monthlyExpenses.toFixed(0)}</span>
                       </div>
                     </div>
                     <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
@@ -562,14 +598,14 @@ export default function InvestPage() {
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
                             <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#9699A6'}}> months</span></div>
-                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to get back £{(result.paybackBase??result.furnitureCost).toFixed(0)} you put in{result.landlordDeposit>0?' (deposit'+(result.furnitureCost>0?', setup':'')+(result.conversionCost>0?', conversion':'')+')':''}{result.conversionMonths>0?` (includes ${result.conversionMonths} months converting)`:''}</div>
+                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to get back {S}{(result.paybackBase??result.furnitureCost).toFixed(0)} you put in{result.landlordDeposit>0?' (deposit'+(result.furnitureCost>0?', setup':'')+(result.conversionCost>0?', conversion':'')+')':''}{result.conversionMonths>0?` (includes ${result.conversionMonths} months converting)`:''}</div>
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
                             <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>
-                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {Math.max(0,result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2R?'your upfront cash is':'furniture is'} paid back{result.leaseProfit!==undefined?` — about £${Math.round(result.leaseProfit).toLocaleString('en-GB')} profit over the whole lease`:''}.{!result.withinLeaseTerm&&' Negotiate a longer lease (24–36 months) or lower the upfront costs before going ahead.'}</div>
+                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {Math.max(0,result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2R?'your upfront cash is':'furniture is'} paid back{result.leaseProfit!==undefined?` — about '+S+'${Math.round(result.leaseProfit).toLocaleString('en-GB')} profit over the whole lease`:''}.{!result.withinLeaseTerm&&' Negotiate a longer lease (24–36 months) or lower the upfront costs before going ahead.'}</div>
                           </div>
                         </>):(
-                          <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is £0 or negative — furniture investment will never be recovered at these numbers.</div>
+                          <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is {S}0 or negative — upfront cash will never be recovered at these numbers.</div>
                         )
                       ):(
                         <div style={{fontSize:13,color:'#9699A6'}}>Enter a furniture investment amount to see payback period.</div>
@@ -692,6 +728,7 @@ export default function InvestPage() {
                   <AskChat key={(savedDealId||'new')+':'+JSON.stringify(result).length} kind="deal" compact refId={savedDealId}
                     deal={{
                       strategy: STRATEGIES.find(s=>s.id===strategy)?.label || strategy,
+                      currency: CURRENCIES[curOf(form)].label,
                       inputs: form,
                       results: result,
                       stress: (getStressScenarios(strategy!)||[]).map(sc=>{ const r:any = applyStress(strategy!, form, sc); return { scenario: sc.label, monthlyCashflow: r?.monthlyCashflow, annualCashflow: r?.annualCashflow } }),
@@ -722,9 +759,9 @@ export default function InvestPage() {
                       <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{d.address||'Deal #'+d.id}</div>
                       <button onClick={()=>deleteDeal(d.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444'}}>×</button>
                     </div>
-                    <div style={{fontSize:12,color:'#676879',marginBottom:12}}>{STRATEGIES.find(s=>s.id===d.strategy)?.label} · £{parseFloat(d.price).toLocaleString()}</div>
+                    <div style={{fontSize:12,color:'#676879',marginBottom:12}}>{STRATEGIES.find(s=>s.id===d.strategy)?.label} · {symOf(d)}{parseFloat(d.price).toLocaleString()}</div>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                      {d.monthlyCashflow!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F7F8FA',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:d.monthlyCashflow>=0?'#10B981':'#EF4444'}}>£{Math.abs(d.monthlyCashflow).toFixed(0)}/mo</div><div style={{fontSize:10,color:'#9699A6'}}>CASH FLOW</div></div>}
+                      {d.monthlyCashflow!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F7F8FA',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:d.monthlyCashflow>=0?'#10B981':'#EF4444'}}>{symOf(d)}{Math.abs(d.monthlyCashflow).toFixed(0)}/mo</div><div style={{fontSize:10,color:'#9699A6'}}>CASH FLOW</div></div>}
                       {d.roi!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F7F8FA',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:BLUE}}>{d.roi.toFixed(1)}%</div><div style={{fontSize:10,color:'#9699A6'}}>ROI</div></div>}
                     </div>
                     <div style={{fontSize:11,color:'#9699A6',marginTop:8}}>Saved {d.savedAt}</div>

@@ -20,7 +20,7 @@ type Metric = { key: string; label: string; value: number; unit: string; compare
 const BASE = `You are a property market analyst for an investor working in the UK and Jamaica.
 Use web search to find REAL, CURRENT listings near the given location (Rightmove, Zoopla, OnTheMarket, SpareRoom, Airbnb, Booking.com, Realtor.com, Terra Caribbean, Jamaica property portals, etc.). Be quick: at most 2 searches.
 Reply with ONLY a JSON object, no prose before or after.
-All money in GBP. If listings are in JMD or USD, convert to GBP at the current rate and keep the original in price_text.
+All money in {CUR}. If listings are in another currency, convert to {CUR} at the current rate and keep the original in price_text.
 Only use listings you actually saw in search results, with their real URL. Never invent a listing, price or URL.`
 
 const METRIC_SHAPE = `JSON shape:
@@ -47,6 +47,7 @@ async function run(b: any) {
   const metrics: Metric[] = (Array.isArray(b.metrics) ? b.metrics : []).filter((m: any) => m && m.key && (Number(m.value) > 0 || m.ref)).slice(0, 6)
 
   const overview = b.mode === 'overview'
+  const cur = ({ GBP: 'GBP (£)', JMD: 'Jamaican dollars (J$)', USD: 'US dollars ($)' } as Record<string, string>)[b.currency] || 'GBP (£)'
   const m = metrics[0]
   if (!overview && !m) return { error: 'No figure to compare' }
   const user = `Deal strategy: ${b.strategyLabel || b.strategy}
@@ -66,7 +67,7 @@ ${b.letting ? `Letting type: ${b.letting}\n` : ''}
       method: 'POST', signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6', max_tokens: overview ? 1800 : 2400, system: BASE + '\n\n' + (overview ? OVERVIEW_SHAPE : METRIC_SHAPE),
+        model: 'claude-sonnet-4-6', max_tokens: overview ? 1800 : 2400, system: BASE.replaceAll('{CUR}', cur) + '\n\n' + (overview ? OVERVIEW_SHAPE : METRIC_SHAPE),
         messages: [{ role: 'user', content: user }],
         tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }],
       }),

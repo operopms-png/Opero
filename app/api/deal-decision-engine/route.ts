@@ -3,6 +3,7 @@ import { requireUser, serviceClient } from '@/lib/admin-auth'
 import { callClaude } from '@/lib/claude'
 import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand } from '@/lib/dealCalculators'
 import { runDecisionEngine, DecisionRules } from '@/lib/dealDecisionEngine'
+import { curOf, symOf, ratesPerGBP } from '@/lib/currency'
 
 const DEFAULT_RULES: Record<string, DecisionRules> = {
   btl:       { minBaseSurplus: 200, minStressedSurplus: 0,   maxUpfrontCash: 30000, minROI: 5 },
@@ -65,7 +66,12 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
 
   const userRules = rulesRow?.rules?.[strategy]
-  const rules: DecisionRules = userRules || DEFAULT_RULES[strategy] || {}
+  const baseRules: DecisionRules = userRules || DEFAULT_RULES[strategy] || {}
+  // Thresholds are set in £; scale the money ones when the deal is in J$ or $
+  const cur = curOf(form)
+  const fx = cur === 'GBP' ? 1 : (await ratesPerGBP())[cur]
+  const scale = (v?: number) => v === undefined ? undefined : Math.round(v * fx)
+  const rules: DecisionRules = cur === 'GBP' ? baseRules : { ...baseRules, minBaseSurplus: scale(baseRules.minBaseSurplus), minStressedSurplus: scale(baseRules.minStressedSurplus), maxUpfrontCash: scale(baseRules.maxUpfrontCash) }
 
   const baseResult = runCalc(strategy, form)
   const engineOutput = runDecisionEngine(strategy, form, baseResult, rules)
@@ -95,7 +101,7 @@ RULE RESULTS:
 ${engineOutput.ruleResults.map(r => `- ${r.rule}: ${r.result} (value: ${r.value}, threshold: ${r.threshold})`).join('\n')}
 
 STRESS TEST RESULTS:
-${engineOutput.stressResults.map(s => `- ${s.label}: monthly cashflow £${s.monthlyCashflow.toFixed(0)}`).join('\n')}
+${engineOutput.stressResults.map(s => `- ${s.label}: monthly cashflow ${symOf(form)}${s.monthlyCashflow.toFixed(0)}`).join('\n')}
 
 BREAK-EVEN OCCUPANCY: ${engineOutput.breakEvenOccupancy !== null ? engineOutput.breakEvenOccupancy + '%' : 'N/A for this strategy'}
 

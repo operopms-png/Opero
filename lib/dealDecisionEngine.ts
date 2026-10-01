@@ -1,3 +1,4 @@
+import { symOf } from './currency'
 // Deterministic Deal Decision Engine.
 //
 // This file does NOT recompute the deal's financials from scratch -- it
@@ -35,6 +36,7 @@ export interface FieldConfidence {
 // wants to mark a field ESTIMATED/VERIFIED, they can set
 // form._fieldConfidence = { fieldName: 'ESTIMATED' | 'VERIFIED' }.
 export function classifyConfidence(form: any, strategy: string): FieldConfidence[] {
+  const S = symOf(form)
   const overrides: Record<string, ConfidenceLevel> = form._fieldConfidence || {}
   const out: FieldConfidence[] = []
 
@@ -49,13 +51,13 @@ export function classifyConfidence(form: any, strategy: string): FieldConfidence
   }
 
   track('address', 'Property address')
-  track('price', 'Price / asking rent', v => `£${v}`)
-  track('rent', 'Landlord rent (r2r) / rent (other)', v => `£${v}`)
-  if (strategy === 'hmo') track('rentPerRoom', 'Rent per room', v => `£${v}`)
-  if (strategy === 'r2r' || strategy === 'r2hmo') track('subletRent', 'Resident/sublet rent', v => `£${v}`)
+  track('price', 'Price / asking rent', v => `${S}${v}`)
+  track('rent', 'Landlord rent (r2r) / rent (other)', v => `${S}${v}`)
+  if (strategy === 'hmo') track('rentPerRoom', 'Rent per room', v => `${S}${v}`)
+  if (strategy === 'r2r' || strategy === 'r2hmo') track('subletRent', 'Resident/sublet rent', v => `${S}${v}`)
   track('deposit', 'Deposit %', v => `${v}%`)
   track('expenses', 'Operating expenses %', v => `${v}%`)
-  track('refurb', 'Refurb/setup cost', v => `£${v}`)
+  track('refurb', 'Refurb/setup cost', v => `${S}${v}`)
   track('mortgageRate', 'Mortgage/finance rate', v => `${v}%`)
 
   // Known-important fields the current form doesn't collect -- always
@@ -107,7 +109,8 @@ export function runRuleChecks(
   baseResult: any,
   stressedWorstResult: any,
   breakEven: number | null,
-  rules: DecisionRules
+  rules: DecisionRules,
+  S = '£'
 ): RuleResult[] {
   const results: RuleResult[] = []
 
@@ -116,8 +119,8 @@ export function runRuleChecks(
     results.push({
       rule: 'Base monthly surplus',
       result: baseSurplus >= rules.minBaseSurplus ? 'PASS' : 'FAIL',
-      value: `£${baseSurplus.toFixed(0)}`,
-      threshold: `£${rules.minBaseSurplus} minimum`,
+      value: `${S}${baseSurplus.toFixed(0)}`,
+      threshold: `${S}${rules.minBaseSurplus} minimum`,
     })
   }
 
@@ -126,8 +129,8 @@ export function runRuleChecks(
     results.push({
       rule: 'Stressed monthly surplus (worst case)',
       result: stressedSurplus >= rules.minStressedSurplus ? 'PASS' : 'FAIL',
-      value: `£${stressedSurplus.toFixed(0)}`,
-      threshold: `£${rules.minStressedSurplus} minimum`,
+      value: `${S}${stressedSurplus.toFixed(0)}`,
+      threshold: `${S}${rules.minStressedSurplus} minimum`,
     })
   }
 
@@ -136,8 +139,8 @@ export function runRuleChecks(
     results.push({
       rule: 'Upfront cash required',
       result: upfront <= rules.maxUpfrontCash ? 'PASS' : 'FAIL',
-      value: `£${upfront.toFixed(0)}`,
-      threshold: `£${rules.maxUpfrontCash} maximum`,
+      value: `${S}${upfront.toFixed(0)}`,
+      threshold: `${S}${rules.maxUpfrontCash} maximum`,
     })
   }
 
@@ -238,7 +241,7 @@ export function runDecisionEngine(strategy: string, form: any, baseResult: any, 
   const worst = stressResults.find(s => s.key === 'worst') || null
 
   const breakEven = findBreakEvenOccupancy(strategy, form)
-  const ruleResults = runRuleChecks(strategy, baseResult, worst, breakEven, rules)
+  const ruleResults = runRuleChecks(strategy, baseResult, worst, breakEven, rules, symOf(form))
   const status = decideStatus(ruleResults)
   const fieldConfidence = classifyConfidence(form, strategy)
   const checklist = buildChecklist(strategy)
