@@ -51,8 +51,10 @@ export async function GET() {
       photos: pics.slice(0, 12),
       book_url: !isLet && r.airbnb_url ? r.airbnb_url : null,
       rent_url: homesUrl,
-      rent: !isLet && r.listed && Number(r.rent) > 0 ? `${SYMBOL[r.currency] ?? ''}${Number(r.rent).toLocaleString('en-GB')}/month` : null,
+      rent: kind === 'rent' && r.listed && Number(r.rent) > 0 ? `${SYMBOL[r.currency] ?? ''}${Number(r.rent).toLocaleString('en-GB')}/month` : null,
+      photo_count: pics.length,
       url: (!isLet && (r.airbnb_url || homesUrl)) || null,
+      enquire_url: `${APP}/meeting`,
     }
   })
   return NextResponse.json({ properties, updated: new Date().toISOString() }, { headers: { ...CORS, 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } })
