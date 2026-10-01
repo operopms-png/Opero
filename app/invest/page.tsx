@@ -425,7 +425,7 @@ export default function InvestPage() {
                       form.refurb&&{l:'Refurb Cost',v:'£'+parseFloat(form.refurb).toFixed(0)},
                       result.totalInvested!==undefined&&{l:'Total Invested',v:'£'+result.totalInvested.toFixed(0),bold:true},
                       result.setupCost!==undefined&&{l:'Setup Cost',v:'£'+(form.setupCost||0)},
-                      result.furnitureCost!==undefined&&{l:'Furniture Investment',v:'£'+result.furnitureCost.toFixed(0)},
+                      result.furnitureCost!==undefined&&{l:isR2HMO?'Setup Costs (furniture, licence, safety)':'Furniture Investment',v:'£'+result.furnitureCost.toFixed(0)},
                       result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:'£'+result.purchaseCosts.toFixed(0)},
                       result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:'£'+result.saleCosts.toFixed(0)},
                       result.totalCost!==undefined&&{l:'Total Cost',v:'£'+result.totalCost.toFixed(0),bold:true},
@@ -440,7 +440,7 @@ export default function InvestPage() {
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Monthly P&L</div>
                     {[
                       result.totalRent!==undefined&&{l:'Total Rental Income',v:'£'+(result.totalRent||0).toFixed(0),c:'#10B981'},
-                      result.totalIncome!==undefined&&{l:'Resident Rent Income',v:'£'+(result.totalIncome||0).toFixed(0),c:'#10B981'},
+                      result.totalIncome!==undefined&&{l:isR2HMO?`Room Rent Income (${form.rooms||'?'} rooms)`:'Resident Rent Income',v:'£'+(result.totalIncome||0).toFixed(0),c:'#10B981'},
                       result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:'£'+(parseFloat(form.rent)||0).toFixed(0),c:'#10B981'},
                       result.monthlyMortgage!==undefined&&{l:'Mortgage Payment',v:'-£'+result.monthlyMortgage.toFixed(0),c:'#EF4444'},
                       result.monthlyExpenses!==undefined&&{l:isR2R?'Total Fixed Costs':'Expenses',v:'-£'+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
@@ -464,7 +464,7 @@ export default function InvestPage() {
                         {l:'Utilities Allowance',v:result.breakdown.utilities},
                         {l:'Management/Operations',v:result.breakdown.management},
                         {l:'Insurance',v:result.breakdown.insurance},
-                        {l:'Property Tax/Fees',v:result.breakdown.propertyTax},
+                        {l:isR2HMO?'Council Tax / Fees':'Property Tax/Fees',v:result.breakdown.propertyTax},
                         {l:'Cleaning/Operations',v:result.breakdown.cleaning},
                         {l:'Maintenance Reserve',v:result.breakdown.maintenance},
                         {l:'Platform/Marketing',v:result.breakdown.marketing},
@@ -481,16 +481,16 @@ export default function InvestPage() {
                       </div>
                     </div>
                     <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Furniture Payback</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>{isR2HMO?'Setup Cost Payback':'Furniture Payback'}</div>
                       {result.furnitureCost>0?(
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
                             <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#9699A6'}}> months</span></div>
-                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to recover £{result.furnitureCost.toFixed(0)} of furniture investment</div>
+                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to recover £{result.furnitureCost.toFixed(0)} {isR2HMO?' of setup costs':' of furniture investment'}</div>
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
                             <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>
-                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {(result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after furniture is paid off.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
+                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {(result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2HMO?'setup costs are':'furniture is'} paid off.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
                           </div>
                         </>):(
                           <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is £0 or negative — furniture investment will never be recovered at these numbers.</div>
