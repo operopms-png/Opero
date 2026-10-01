@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import PropertyManagerAgents from '../../../components/ai/PropertyManagerAgents'
+import AskChat from '../../../components/ai/AskChat'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, btn, input, label } from '../../../components/crm/Page'
 
 async function api(body?: any) {
@@ -56,7 +57,7 @@ const SHOW_PHONE = false
 export default function ReceptionistPage() {
   const [loading, setLoading] = useState(true)
   const [d, setD] = useState<any>(null)
-  const [tab, setTab] = useState('activity')
+  const [tab, setTab] = useState('ask')
   useEffect(() => { const t = new URLSearchParams(window.location.search).get('tab'); if (t) setTab(t) }, [])
   const [s, setS] = useState<any>(null)          // editable copy of settings
   const [dirty, setDirty] = useState(false)
@@ -117,10 +118,15 @@ export default function ReceptionistPage() {
         title="AI Assistant"
         subtitle={<>The receptionist ({s.assistant_name}) answers {SHOW_PHONE ? 'calls, ' : ''}emails, tenant &amp; landlord messages and website chat using your company knowledge; the property manager agents help with guests, maintenance, cleaning, pricing, owner reports and leads. {liveChannels.length ? <>Live on: <b style={{ color: C.brown }}>{liveChannels.join(', ')}</b>.</> : 'Not switched on for any channel yet.'} Office is <b style={{ color: C.brown }}>{d.open ? 'open' : 'closed'}</b> now.</>}
         actions={!d.aiReady ? <Pill color={C.red} width={0}>AI key missing on server</Pill> : undefined}
-        tabs={[{ k: 'activity', l: 'Activity', count: stats.follow || undefined }, { k: 'channels', l: 'Channels' }, { k: 'knowledge', l: 'Knowledge & hours' }, { k: 'try', l: 'Try it' }, { k: 'agents', l: 'Property manager' }]}
+        tabs={[{ k: 'ask', l: 'Ask AI' }, { k: 'activity', l: 'Activity', count: stats.follow || undefined }, { k: 'channels', l: 'Channels' }, { k: 'knowledge', l: 'Knowledge & hours' }, { k: 'try', l: 'Try it' }, { k: 'agents', l: 'Property manager' }]}
         tab={tab} onTab={setTab}
       />
       <Body>
+        {tab === 'ask' && (
+          <div style={{ height: 'calc(100vh - 200px)', minHeight: 520, display: 'flex' }}>
+            <AskChat showHistory suggestions={['Which properties are available and what’s the rent?', 'Which leases end in the next 60 days?', 'Summarise the interested Airbnb hosts', 'Market rent for a 2-bed in Mandeville']} />
+          </div>
+        )}
         {tab === 'activity' && (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 12, marginBottom: 20 }}>

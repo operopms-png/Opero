@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, applyStress } from '../../lib/dealCalculators'
+import AskChat from '../../components/ai/AskChat'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
   btl:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -608,6 +609,21 @@ export default function InvestPage() {
                   </div>
                   )
                 })()}
+
+                {/* Talk to AI about this deal */}
+                <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,marginTop:24}}>
+                  <div style={{fontSize:16,fontWeight:700,color:'#323338',marginBottom:2}}>💬 Talk to AI about this deal</div>
+                  <div style={{fontSize:12.5,color:'#676879',marginBottom:12}}>Ask what it thinks, what could go wrong or what to negotiate. It sees these figures, the stress tests{verdict?' and the AI Verdict above':''}, and can check the web for local rents and prices.</div>
+                  <AskChat key={(savedDealId||'new')+':'+JSON.stringify(result).length} kind="deal" compact refId={savedDealId}
+                    deal={{
+                      strategy: STRATEGIES.find(s=>s.id===strategy)?.label || strategy,
+                      inputs: form,
+                      results: result,
+                      stress: (getStressScenarios(strategy!)||[]).map(sc=>{ const r:any = applyStress(strategy!, form, sc); return { scenario: sc.label, monthlyCashflow: r?.monthlyCashflow, annualCashflow: r?.annualCashflow } }),
+                      aiVerdict: verdict ? { status: verdict.status, summary: verdict.ai_summary, override: verdict.override_status, risks: verdict.risk_flags, breakEven: verdict.break_even } : null,
+                    }}
+                    suggestions={['What do you think of this deal?','What are the biggest risks?','What should I negotiate on?','Do you agree with the AI Verdict?']} />
+                </div>
               </div>
             )}
           </div>
