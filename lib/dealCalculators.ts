@@ -54,15 +54,16 @@ export function calcR2R(d: any) {
   const currentRooms = parseInt(d.currentRooms) || 0
   const conversionCost = parseFloat(d.conversionCost) || 0
   const conversionMonths = Math.max(0, parseFloat(d.conversionMonths) || 0)
-  const leaseMonths = parseInt(d.leaseMonths) || 12
+  const leaseMonths = parseInt(d.leaseMonths) || 24
   const furnitureCost = parseFloat(d.setupCost) || 0
   const b = base.breakdown
   // While converting you still pay the landlord and the property's bills
   const holdingCost = conversionMonths * (b.landlordRent + b.utilities + b.propertyTax + b.insurance)
   // Paid to the landlord before you get the keys (default 1 month each)
-  const months = (v: any) => v === undefined || v === null || v === '' ? 1 : Math.max(0, parseFloat(v) || 0)
-  const landlordDeposit = months(d.landlordDepositMonths) * b.landlordRent
-  const advanceRent = months(d.advanceRentMonths) * b.landlordRent
+  // £ amounts; left blank = one month's rent each
+  const amt = (v: any) => v === undefined || v === null || v === '' ? b.landlordRent : Math.max(0, parseFloat(v) || 0)
+  const landlordDeposit = amt(d.landlordDeposit)
+  const advanceRent = amt(d.advanceRent)
   const sunkCost = furnitureCost + conversionCost + holdingCost          // spent, not coming back
   const totalUpfront = sunkCost + landlordDeposit + advanceRent          // cash needed on day one
   const paybackBase = sunkCost + landlordDeposit                         // advance rent is month 1's rent, already in costs

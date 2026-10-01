@@ -134,18 +134,25 @@ export default function InvestPage() {
   }
 
   function analyse() {
+    let F = form
     if(!strategy) return
-    if(isR2R ? !form.rent : !form.price) return
+    if(isR2R ? !F.rent : !F.price) return
+    // Use the figures shown in the boxes, including their defaults
+    if (isR2R) {
+      const f = { ...F, rooms: F.rooms || (isR2HMO ? '5' : '1'), leaseMonths: F.leaseMonths || '24',
+        landlordDeposit: F.landlordDeposit || F.rent, advanceRent: F.advanceRent || F.rent }
+      if (f.rooms!==F.rooms||f.leaseMonths!==F.leaseMonths||f.landlordDeposit!==F.landlordDeposit||f.advanceRent!==F.advanceRent) { setForm(f); F = f }
+    }
     let r: any = {}
-    if(strategy==='btl'||strategy==='brrr') r = calcBTL(form)
-    else if(strategy==='hmo') r = calcHMO(form)
-    else if(isR2R) r = calcR2R(isR2HMO ? {...form, currentRooms: form.bedrooms} : {...form, currentRooms: '', conversionCost: '', conversionMonths: ''})
-    else if(strategy==='flip') r = calcFlip(form)
-    else if(strategy==='land') r = calcLand(form)
-    else if(strategy==='social'||strategy==='supported') r = calcBTL({...form, expenses:'10'})
+    if(strategy==='btl'||strategy==='brrr') r = calcBTL(F)
+    else if(strategy==='hmo') r = calcHMO(F)
+    else if(isR2R) r = calcR2R(isR2HMO ? {...F, currentRooms: F.bedrooms} : {...F, currentRooms: '', conversionCost: '', conversionMonths: ''})
+    else if(strategy==='flip') r = calcFlip(F)
+    else if(strategy==='land') r = calcLand(F)
+    else if(strategy==='social'||strategy==='supported') r = calcBTL({...F, expenses:'10'})
     r.strategy = strategy
-    r.address = form.address
-    r.price = form.price
+    r.address = F.address
+    r.price = F.price
     setResult(r)
     setSavedDealId(null)
     setVerdict(null)
@@ -319,8 +326,8 @@ export default function InvestPage() {
                         )}
                       </div>
                       <div><label style={lbl}>Lease Term (months)</label><input value={form.leaseMonths||'24'} onChange={e=>setForm({...form,leaseMonths:e.target.value})} type="number" placeholder="24" style={inp}/></div>
-                      <div><label style={lbl}>Deposit to Landlord (months of rent)</label><input value={form.landlordDepositMonths??'1'} onChange={e=>setForm({...form,landlordDepositMonths:e.target.value})} type="number" placeholder="1" style={inp}/></div>
-                      <div><label style={lbl}>Rent Paid in Advance (months)</label><input value={form.advanceRentMonths??'1'} onChange={e=>setForm({...form,advanceRentMonths:e.target.value})} type="number" placeholder="1" style={inp}/></div>
+                      <div><label style={lbl}>Deposit to Landlord (£)</label><input value={form.landlordDeposit??''} onChange={e=>setForm({...form,landlordDeposit:e.target.value})} type="number" placeholder={form.rent?`${form.rent} (1 month’s rent)`:'1 month’s rent'} style={inp}/></div>
+                      <div><label style={lbl}>Rent Paid in Advance (£)</label><input value={form.advanceRent??''} onChange={e=>setForm({...form,advanceRent:e.target.value})} type="number" placeholder={form.rent?`${form.rent} (1 month’s rent)`:'1 month’s rent'} style={inp}/></div>
                       <div><label style={lbl}>Letting Type</label><select value={form.termType||'long'} onChange={e=>setForm({...form,termType:e.target.value})} style={inp}><option value="long">Long-term residential</option><option value="short">Short-term / serviced accommodation</option><option value="airbnb">Airbnb / short-let (nightly)</option></select></div>
                       <div><label style={lbl}>Wi-Fi/Internet (£/mo)</label><input value={form.wifiCost||''} onChange={e=>setForm({...form,wifiCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
                       <div><label style={lbl}>Utilities Allowance (£/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
@@ -550,7 +557,7 @@ export default function InvestPage() {
                       </div>
                     </div>
                     <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
-                      <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>{isR2HMO?'Setup Cost Payback':'Furniture Payback'}</div>
+                      <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>{isR2R?'Upfront Cash Payback':'Furniture Payback'}</div>
                       {(result.paybackBase??result.furnitureCost)>0?(
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
@@ -559,7 +566,7 @@ export default function InvestPage() {
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
                             <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>
-                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {Math.max(0,result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2HMO?'setup costs are':'furniture is'} paid off{result.leaseProfit!==undefined?` — about £${Math.round(result.leaseProfit).toLocaleString('en-GB')} profit over the whole lease`:''}.{!result.withinLeaseTerm&&' Consider negotiating a longer lease (24–36 months) before investing this much in furniture.'}</div>
+                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {Math.max(0,result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2R?'your upfront cash is':'furniture is'} paid back{result.leaseProfit!==undefined?` — about £${Math.round(result.leaseProfit).toLocaleString('en-GB')} profit over the whole lease`:''}.{!result.withinLeaseTerm&&' Negotiate a longer lease (24–36 months) or lower the upfront costs before going ahead.'}</div>
                           </div>
                         </>):(
                           <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is £0 or negative — furniture investment will never be recovered at these numbers.</div>
