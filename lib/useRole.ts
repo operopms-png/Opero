@@ -49,6 +49,7 @@ export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'customeronboarding', l: 'Customer Onboarding' },
   { k: 'meetings',    l: 'Meetings' },
   { k: 'listings',    l: 'Listings' },
+  { k: 'smarthome',   l: 'Smart Home' },
   { k: 'inbox',       l: 'Conversations' },
   { k: 'portalaccess', l: 'Portal Access' },
   { k: 'portals',     l: 'Property Portals' },

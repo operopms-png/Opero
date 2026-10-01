@@ -49,6 +49,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/tasks': 'tasks',
   '/staff-centre/meetings': 'meetings',
   '/staff-centre/listings': 'listings',
+  '/staff-centre/smart-home': 'smarthome',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
