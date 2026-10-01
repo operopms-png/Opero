@@ -76,7 +76,9 @@ async function buildThreads(c: Caller): Promise<{ threads: Thread[]; mailboxes: 
   }
   // booking invitations etc. without a chat link: attach by listing (or host)
   for (const e of looseEvents) {
-    let t = [...byKey.values()].find(x => e.listing && x.listing && norm(x.listing) === norm(e.listing)) ?? [...byKey.values()].find(x => e.host && x.host && norm(x.host) === norm(e.host) && !e.listing)
+    const all = [...byKey.values()]
+    const sameHost = all.filter(x => e.host && x.host && norm(x.host) === norm(e.host))
+    let t = all.find(x => e.listing && x.listing && norm(x.listing) === norm(e.listing)) ?? (sameHost.length === 1 ? sameHost[0] : undefined)
     if (!t) {
       const key = 'l:' + norm(e.listing || e.host || e.subject)
       t = byKey.get(key)

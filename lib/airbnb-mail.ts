@@ -38,22 +38,29 @@ function joinLines(lines: string[]) {
   return paras.join('\n\n').trim()
 }
 const indent = (l: string) => l.length - l.trimStart().length
+const INVISIBLE = /[\u034f\u00ad\u200b-\u200f\u2060-\u2069\ufeff]/g
+// "Natoya invited you to book Spurtree Villa for Aug 3 – 4" -> [name, listing]
+function invitation(body: string): [string, string] | null {
+  const all = [...body.matchAll(/([A-Z][\w’'-]+) invited you to book ([^\n!]+?)(?:\s+for [A-Z][a-z]{2,8}\.? \d|[.!]?\s*(?:\n|$))/g)]
+  const m = all.find(x => !/^their\b/i.test(x[2]))
+  return m ? [m[1], m[2].trim()] : null
+}
 const titleCase = (s: string) => s.toLowerCase().replace(/(^|[\s/(-])([a-z])/g, (_, a, b) => a + b.toUpperCase())
 
 function listingFrom(subject: string, body: string): string | null {
   const s = subject.replace(/^(re|fw|fwd):\s*/i, '')
   const m = s.match(/\bfor (.+?),\s+[A-Z][a-z]{2,8}\.? \d/)
   if (m) return m[1].trim()
-  const inv = body.match(/invited you to book ([\s\S]+?)\s+for [A-Z][a-z]{2,8}\.? \d/)
-  if (inv) return inv[1].replace(/\s+/g, ' ').trim()
+  const inv = invitation(body)
+  if (inv) return inv[1]
   const up = body.match(/\n([A-Z0-9][A-Z0-9 '’&/()\-,.!]{3,80})\s*\n\s*\n?[^\n]*hosted by/)
   return up ? titleCase(up[1].trim()) : null
 }
 
 export function parseAirbnbEmail(row: { id?: string; from_email?: string | null; subject?: string | null; body_text?: string | null; date?: string | null }): AbParsed | null {
   if (!isAirbnb(row.from_email)) return null
-  const body = (row.body_text ?? '').replace(/\r/g, '')
-  const subject = row.subject ?? ''
+  const body = (row.body_text ?? '').replace(/\r/g, '').replace(INVISIBLE, '')
+  const subject = (row.subject ?? '').replace(INVISIBLE, '')
   const thread = body.match(/messaging\/thread\/(\d+)[^\s\]]*?inbox_type=(\w+)/)
   // Only the guest side (us messaging hosts). Host-side mail comes through Smoobu.
   if (thread && thread[2] !== 'guest') return null
@@ -105,15 +112,16 @@ export function parseAirbnbEmail(row: { id?: string; from_email?: string | null;
     return { threadId: thread[1], listing, host, roomId, items }
   }
 
-  // Booking-invitation notices (no chat thread link): show as events
-  const first = body.replace(/[͏­]/g, '').split('\n').map(s => s.trim()).find(s => s && !/%opentrack%/.test(s))
-  if (/invit|pre-?approv|expired|reminder to book/i.test(subject + ' ' + (first ?? ''))) {
-    const inv = body.match(/(\S+ invited you to book[\s\S]+?\.)\s*\n/)
-    const text = (inv ? inv[1] : subject).replace(/\s+/g, ' ').trim()
-    if (text) items.push({ kind: 'event', text, at, emailId: row.id })
-    return { threadId: null, listing, host, roomId, items }
-  }
-  return null
+  // Booking-invitation notices (no chat thread link): short events
+  const inv = invitation(body)
+  const who = inv?.[0] ?? subject.match(/book (.+?)[’']s place/i)?.[1] ?? host ?? 'The host'
+  let text = ''
+  if (/about to expire|reminder to book/i.test(subject)) return null // reminders duplicate the invite
+  if (/invitation (has )?expired|expired to book/i.test(subject + ' ' + body.slice(0, 400))) text = `${who}’s invitation to book expired`
+  else if (inv) text = `${inv[0]} invited you to book ${inv[1]}`
+  else return null
+  items.push({ kind: 'event', text, at, emailId: row.id })
+  return { threadId: null, listing, host: host ?? inv?.[0] ?? null, roomId, items }
 }
 
 export const airbnbThreadUrl = (id: string) => `https://www.airbnb.com/messaging/thread/${id}?thread_type=home_booking&inbox_type=guest`
