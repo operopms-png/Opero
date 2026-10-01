@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { C, Modal, btn, input, label } from '../crm/Page'
-import { FILL_INS, categoryColor, type Script } from '../../lib/scripts-shared'
+import { FILL_INS, categoryColor, fillScript, type Script } from '../../lib/scripts-shared'
 
 async function api(body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -36,7 +36,7 @@ export default function ScriptsView() {
   const shown = (list ?? []).filter(s => (!cat || s.category === cat) && (!q || `${s.name} ${s.category} ${s.stage ?? ''} ${s.body}`.toLowerCase().includes(q.toLowerCase())))
   const groups = [...new Set(shown.map(s => s.category))].sort()
 
-  const copy = (s: Script) => navigator.clipboard?.writeText(s.body).then(() => { setCopied(s.id); setTimeout(() => setCopied(''), 1500); api({ action: 'used', id: s.id }).catch(() => {}) })
+  const copy = (s: Script) => navigator.clipboard?.writeText(fillScript(s.body, { myName: me.name })).then(() => { setCopied(s.id); setTimeout(() => setCopied(''), 1500); api({ action: 'used', id: s.id }).catch(() => {}) })
 
   return (
     <div style={{ flex: 1, overflow: 'auto', background: '#fff' }}>
