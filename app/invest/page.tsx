@@ -319,6 +319,8 @@ export default function InvestPage() {
                         )}
                       </div>
                       <div><label style={lbl}>Lease Term (months)</label><input value={form.leaseMonths||'24'} onChange={e=>setForm({...form,leaseMonths:e.target.value})} type="number" placeholder="24" style={inp}/></div>
+                      <div><label style={lbl}>Deposit to Landlord (months of rent)</label><input value={form.landlordDepositMonths??'1'} onChange={e=>setForm({...form,landlordDepositMonths:e.target.value})} type="number" placeholder="1" style={inp}/></div>
+                      <div><label style={lbl}>Rent Paid in Advance (months)</label><input value={form.advanceRentMonths??'1'} onChange={e=>setForm({...form,advanceRentMonths:e.target.value})} type="number" placeholder="1" style={inp}/></div>
                       <div><label style={lbl}>Letting Type</label><select value={form.termType||'long'} onChange={e=>setForm({...form,termType:e.target.value})} style={inp}><option value="long">Long-term residential</option><option value="short">Short-term / serviced accommodation</option><option value="airbnb">Airbnb / short-let (nightly)</option></select></div>
                       <div><label style={lbl}>Wi-Fi/Internet (£/mo)</label><input value={form.wifiCost||''} onChange={e=>setForm({...form,wifiCost:e.target.value})} type="number" placeholder="e.g. 35" style={inp}/></div>
                       <div><label style={lbl}>Utilities Allowance (£/mo)</label><input value={form.utilitiesCost||''} onChange={e=>setForm({...form,utilitiesCost:e.target.value})} type="number" placeholder="e.g. 80" style={inp}/></div>
@@ -368,6 +370,7 @@ export default function InvestPage() {
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
                 </div>
 
+                {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#7A5A12'}}>⚠ No setup or conversion costs entered, so ROI is based only on the £{(result.totalUpfront||0).toFixed(0)} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
                 {/* Key metrics */}
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
                   {result.monthlyCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
@@ -431,7 +434,7 @@ export default function InvestPage() {
                       {result.rooms>a.rooms&&<div style={{marginTop:14,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',fontSize:12.5,color:'#7A5A12',lineHeight:1.6}}>
                         <b>Before converting:</b> get the landlord’s written consent to the works and to letting by the room; check the HMO licence for {result.rooms} occupants{result.rooms>=7?' and planning — 7+ unrelated sharers usually needs planning permission in the UK (sui generis)':''}; check minimum room sizes, fire doors, alarms and enough bathrooms and kitchen space for {result.rooms} people. In Jamaica, check with the parish council on use and building approval.
                       </div>}
-                      {!result.conversionCost&&result.rooms>a.rooms&&<div style={{marginTop:8,fontSize:12,color:'#9A6400'}}>No conversion cost entered — add it above for a true comparison.</div>}
+                      {(!result.conversionCost||!result.furnitureCost)&&result.rooms>a.rooms&&<div style={{marginTop:8,fontSize:12,color:'#9A6400'}}>No {[!result.furnitureCost&&'setup (furniture, licence, safety)',!result.conversionCost&&'conversion'].filter(Boolean).join(' or ')} cost entered — upfront cash only includes the landlord deposit and first month’s rent, so ROI and payback will look better than they really are.</div>}
                     </div>
                   )
                 })()}
@@ -487,9 +490,11 @@ export default function InvestPage() {
                       result.totalInvested!==undefined&&{l:'Total Invested',v:'£'+result.totalInvested.toFixed(0),bold:true},
                       result.setupCost!==undefined&&{l:'Setup Cost',v:'£'+(form.setupCost||0)},
                       result.furnitureCost!==undefined&&{l:isR2HMO?'Setup Costs (furniture, licence, safety)':'Furniture Investment',v:'£'+result.furnitureCost.toFixed(0)},
+                      result.landlordDeposit>0&&{l:'Deposit to landlord (returned at the end)',v:'£'+result.landlordDeposit.toFixed(0)},
+                      result.advanceRent>0&&{l:'Rent in advance',v:'£'+result.advanceRent.toFixed(0)},
                       result.conversionCost>0&&{l:'Conversion Cost',v:'£'+result.conversionCost.toFixed(0)},
                       result.holdingCost>0&&{l:`Rent & bills while converting (${result.conversionMonths} mo)`,v:'£'+result.holdingCost.toFixed(0)},
-                      result.totalUpfront!==undefined&&(result.conversionCost>0||result.holdingCost>0)&&{l:'Total Upfront',v:'£'+result.totalUpfront.toFixed(0),bold:true},
+                      result.totalUpfront!==undefined&&{l:'Total Upfront Cash',v:'£'+result.totalUpfront.toFixed(0),bold:true},
                       result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:'£'+result.purchaseCosts.toFixed(0)},
                       result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:'£'+result.saleCosts.toFixed(0)},
                       result.totalCost!==undefined&&{l:'Total Cost',v:'£'+result.totalCost.toFixed(0),bold:true},
@@ -546,11 +551,11 @@ export default function InvestPage() {
                     </div>
                     <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>{isR2HMO?'Setup Cost Payback':'Furniture Payback'}</div>
-                      {(result.totalUpfront??result.furnitureCost)>0?(
+                      {(result.paybackBase??result.furnitureCost)>0?(
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
                             <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#9699A6'}}> months</span></div>
-                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to recover £{(result.totalUpfront??result.furnitureCost).toFixed(0)} {isR2HMO?(result.conversionCost>0||result.holdingCost>0?' of setup and conversion costs':' of setup costs'):' of furniture investment'}{result.conversionMonths>0?` (includes ${result.conversionMonths} months converting)`:''}</div>
+                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to get back £{(result.paybackBase??result.furnitureCost).toFixed(0)} you put in{result.landlordDeposit>0?' (deposit'+(result.furnitureCost>0?', setup':'')+(result.conversionCost>0?', conversion':'')+')':''}{result.conversionMonths>0?` (includes ${result.conversionMonths} months converting)`:''}</div>
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
                             <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>

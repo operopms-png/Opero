@@ -59,22 +59,29 @@ export function calcR2R(d: any) {
   const b = base.breakdown
   // While converting you still pay the landlord and the property's bills
   const holdingCost = conversionMonths * (b.landlordRent + b.utilities + b.propertyTax + b.insurance)
-  const totalUpfront = furnitureCost + conversionCost + holdingCost
+  // Paid to the landlord before you get the keys (default 1 month each)
+  const months = (v: any) => v === undefined || v === null || v === '' ? 1 : Math.max(0, parseFloat(v) || 0)
+  const landlordDeposit = months(d.landlordDepositMonths) * b.landlordRent
+  const advanceRent = months(d.advanceRentMonths) * b.landlordRent
+  const sunkCost = furnitureCost + conversionCost + holdingCost          // spent, not coming back
+  const totalUpfront = sunkCost + landlordDeposit + advanceRent          // cash needed on day one
+  const paybackBase = sunkCost + landlordDeposit                         // advance rent is month 1's rent, already in costs
   const roi = totalUpfront > 0 ? (base.annualCashflow / totalUpfront * 100) : 0
-  const paybackMonths = base.monthlyCashflow > 0 ? totalUpfront / base.monthlyCashflow + conversionMonths : null
+  const paybackMonths = base.monthlyCashflow > 0 ? paybackBase / base.monthlyCashflow + conversionMonths : null
   const withinLeaseTerm = paybackMonths !== null ? paybackMonths <= leaseMonths : null
   const earningMonths = Math.max(0, leaseMonths - conversionMonths)
-  const leaseProfit = base.monthlyCashflow * earningMonths - totalUpfront
+  const leaseProfit = base.monthlyCashflow * earningMonths - sunkCost   // deposit comes back at the end
 
   // Same house let as it is, with no conversion — for the side-by-side
   let asIs: any = null
   const units = parseInt(d.rooms) || 1
   if (currentRooms > 0 && currentRooms !== units) {
     const a = r2rCore(d, currentRooms)
-    const aPayback = a.monthlyCashflow > 0 ? furnitureCost / a.monthlyCashflow : null
+    const aPayback = a.monthlyCashflow > 0 ? (furnitureCost + landlordDeposit) / a.monthlyCashflow : null
+    const aUpfront = furnitureCost + landlordDeposit + advanceRent
     asIs = {
       rooms: currentRooms, totalIncome: a.totalIncome, monthlyCashflow: a.monthlyCashflow, annualCashflow: a.annualCashflow,
-      upfront: furnitureCost, roi: furnitureCost > 0 ? a.annualCashflow / furnitureCost * 100 : 0,
+      upfront: aUpfront, roi: aUpfront > 0 ? a.annualCashflow / aUpfront * 100 : 0,
       paybackMonths: aPayback, leaseProfit: a.monthlyCashflow * leaseMonths - furnitureCost,
     }
   }
@@ -82,7 +89,7 @@ export function calcR2R(d: any) {
   const conversionPayback = asIs && extraMonthly && extraMonthly > 0 ? (conversionCost + holdingCost) / extraMonthly + conversionMonths : null
 
   return {
-    ...base, roi, furnitureCost, conversionCost, conversionMonths, holdingCost, totalUpfront,
+    ...base, roi, furnitureCost, conversionCost, conversionMonths, holdingCost, landlordDeposit, advanceRent, sunkCost, totalUpfront, paybackBase,
     paybackMonths, leaseMonths, withinLeaseTerm, earningMonths, leaseProfit,
     rooms: units, currentRooms: currentRooms || null, asIs, extraMonthly, conversionPayback,
   }
