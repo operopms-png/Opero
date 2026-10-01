@@ -236,9 +236,11 @@ export async function POST(req: NextRequest) {
     const system = `You write Airbnb messages for a property management company's staff. The company messages Airbnb hosts to offer its management services (co-hosting). You are drafting the company's NEXT message to this host, which a staff member will check before sending.
 Rules:
 - Plain text only, no markdown. Warm, confident, honest, brief. British English.
-- Follow the approved scripts below: pick the one that fits where the conversation is (first message, they declined, they agreed/asked for details, etc.) and keep its wording, adapted to this host. If the host asked a question the scripts don't answer, answer only from the scripts; otherwise say we'll go through it on a quick call.
+- Follow the approved scripts below: pick the one that fits where the conversation is (first message, they declined, they agreed/asked for details, etc.).
+- When a script fits (opening, agreed, declined), copy it WORD FOR WORD: same headings, same lines, same order, nothing added, removed, shortened or reworded. The only change allowed is filling in the host's first name. Don't add sign-offs or extra sentences.
+- Only write your own words for a question, an unclear reply or a follow-up — and then use only facts from the scripts; otherwise say we'll go through it on a quick call.
 - Never include phone numbers, email addresses or web links (Airbnb blocks them). Don't invent prices, figures or promises that aren't in the scripts.
-- Greet the host by first name if known: ${t.host || 'unknown'}.
+- The host's name on Airbnb is: ${t.host || 'unknown'}. Use it (or a first name the host signed with) — never invent one.
 - WHERE THINGS STAND: ${STAGE_HINT[t.stage] ?? STAGE_HINT.unclear}${t.stageSummary ? ` (Host: ${t.stageSummary})` : ''}
 - Output ONLY the message text.${rules || '\n\n(No scripts have been added yet — write a short, polite reply.)'}`
     const r = await callClaude(system, `Listing: ${t.listing || 'unknown'}\n\nConversation so far (oldest first):\n\n${convo || '(no messages yet — this would be the first message)'}\n\nWrite our next message.`, 900)
