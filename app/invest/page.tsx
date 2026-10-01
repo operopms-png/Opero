@@ -69,6 +69,7 @@ export default function InvestPage() {
   useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => d?.rates && setFx(d.rates)).catch(() => {}) }, [])
   const [form, setForm] = useState<any>({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'})
   const S = symOf(form)
+  const n0 = (v: any) => Math.round(Number(v) || 0).toLocaleString('en-GB')
   const [result, setResult] = useState<any>(null)
   const [marketEstimate, setMarketEstimate] = useState<string|null>(null)
   const [estimating, setEstimating] = useState(false)
@@ -413,17 +414,17 @@ export default function InvestPage() {
                   <CurrencySwitch/>
                 </div>
 
-                {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#7A5A12'}}>⚠ No setup or conversion costs entered, so ROI is based only on the {S}{(result.totalUpfront||0).toFixed(0)} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
+                {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#7A5A12'}}>⚠ No setup or conversion costs entered, so ROI is based only on the {S}{n0((result.totalUpfront||0))} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
                 {/* Key metrics */}
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
                   {result.monthlyCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Monthly Cash Flow</div>
-                    <div style={{fontSize:28,fontWeight:800,color:result.monthlyCashflow>=0?'#10B981':'#EF4444'}}>{S}{Math.abs(result.monthlyCashflow).toFixed(0)}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:result.monthlyCashflow>=0?'#10B981':'#EF4444'}}>{S}{n0(Math.abs(result.monthlyCashflow))}</div>
                     <div style={{fontSize:11,color:'#9699A6',marginTop:4}}>{result.monthlyCashflow>=0?'positive':'negative'}</div>
                   </div>}
                   {result.annualCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Annual Cash Flow</div>
-                    <div style={{fontSize:28,fontWeight:800,color:result.annualCashflow>=0?'#10B981':'#EF4444'}}>{S}{Math.abs(result.annualCashflow).toFixed(0)}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:result.annualCashflow>=0?'#10B981':'#EF4444'}}>{S}{n0(Math.abs(result.annualCashflow))}</div>
                   </div>}
                   {result.grossYield!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Gross Yield</div>
@@ -435,7 +436,7 @@ export default function InvestPage() {
                   </div>}
                   {result.profit!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#676879',textTransform:'uppercase',marginBottom:8}}>Profit</div>
-                    <div style={{fontSize:28,fontWeight:800,color:result.profit>=0?'#10B981':'#EF4444'}}>{S}{Math.abs(result.profit).toFixed(0)}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:result.profit>=0?'#10B981':'#EF4444'}}>{S}{n0(Math.abs(result.profit))}</div>
                   </div>}
                 </div>
 
@@ -500,14 +501,14 @@ export default function InvestPage() {
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.monthlyCashflow
-                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:14,fontWeight:700,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+S+Math.abs(v).toFixed(0):'—'}</div>
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:14,fontWeight:700,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+S+n0(Math.abs(v)):'—'}</div>
                         })}
 
                         <div style={{fontSize:12,color:'#676879',display:'flex',alignItems:'center'}}>Annual Cash Flow</div>
                         {getStressScenarios(strategy!)!.map(sc=>{
                           const r:any = applyStress(strategy!, form, sc)
                           const v = r.annualCashflow
-                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:13,fontWeight:600,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+S+Math.abs(v).toFixed(0):'—'}</div>
+                          return <div key={sc.key} style={{textAlign:'center',padding:'10px 4px',fontSize:13,fontWeight:600,color:v>=0?'#10B981':'#EF4444'}}>{v!==undefined?(v>=0?'+':'-')+S+n0(Math.abs(v)):'—'}</div>
                         })}
 
                         <div style={{fontSize:12,color:'#676879',display:'flex',alignItems:'center'}}>ROI</div>
@@ -527,20 +528,20 @@ export default function InvestPage() {
                   <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Investment Breakdown</div>
                     {[
-                      result.depositAmt!==undefined&&{l:'Deposit',v:S+result.depositAmt.toFixed(0)},
-                      result.loanAmt!==undefined&&{l:'Mortgage Amount',v:S+result.loanAmt.toFixed(0)},
-                      form.refurb&&{l:'Refurb Cost',v:S+parseFloat(form.refurb).toFixed(0)},
-                      result.totalInvested!==undefined&&{l:'Total Invested',v:S+result.totalInvested.toFixed(0),bold:true},
+                      result.depositAmt!==undefined&&{l:'Deposit',v:S+n0(result.depositAmt)},
+                      result.loanAmt!==undefined&&{l:'Mortgage Amount',v:S+n0(result.loanAmt)},
+                      form.refurb&&{l:'Refurb Cost',v:S+n0(parseFloat(form.refurb))},
+                      result.totalInvested!==undefined&&{l:'Total Invested',v:S+n0(result.totalInvested),bold:true},
                       result.setupCost!==undefined&&{l:'Setup Cost',v:S+(form.setupCost||0)},
-                      result.furnitureCost!==undefined&&{l:isR2HMO?'Setup Costs (furniture, licence, safety)':'Furniture Investment',v:S+result.furnitureCost.toFixed(0)},
-                      result.landlordDeposit>0&&{l:'Deposit to landlord (returned at the end)',v:S+result.landlordDeposit.toFixed(0)},
-                      result.advanceRent>0&&{l:'Rent in advance',v:S+result.advanceRent.toFixed(0)},
-                      result.conversionCost>0&&{l:'Conversion Cost',v:S+result.conversionCost.toFixed(0)},
-                      result.holdingCost>0&&{l:`Rent & bills while converting (${result.conversionMonths} mo)`,v:S+result.holdingCost.toFixed(0)},
-                      result.totalUpfront!==undefined&&{l:'Total Upfront Cash',v:S+result.totalUpfront.toFixed(0),bold:true},
-                      result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:S+result.purchaseCosts.toFixed(0)},
-                      result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:S+result.saleCosts.toFixed(0)},
-                      result.totalCost!==undefined&&{l:'Total Cost',v:S+result.totalCost.toFixed(0),bold:true},
+                      result.furnitureCost!==undefined&&{l:isR2HMO?'Setup Costs (furniture, licence, safety)':'Furniture Investment',v:S+n0(result.furnitureCost)},
+                      result.landlordDeposit>0&&{l:'Deposit to landlord (returned at the end)',v:S+n0(result.landlordDeposit)},
+                      result.advanceRent>0&&{l:'Rent in advance',v:S+n0(result.advanceRent)},
+                      result.conversionCost>0&&{l:'Conversion Cost',v:S+n0(result.conversionCost)},
+                      result.holdingCost>0&&{l:`Rent & bills while converting (${result.conversionMonths} mo)`,v:S+n0(result.holdingCost)},
+                      result.totalUpfront!==undefined&&{l:'Total Upfront Cash',v:S+n0(result.totalUpfront),bold:true},
+                      result.purchaseCosts!==undefined&&{l:'Purchase Costs (5%)',v:S+n0(result.purchaseCosts)},
+                      result.saleCosts!==undefined&&{l:'Sale Costs (3%)',v:S+n0(result.saleCosts)},
+                      result.totalCost!==undefined&&{l:'Total Cost',v:S+n0(result.totalCost),bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
                         <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
@@ -551,12 +552,12 @@ export default function InvestPage() {
                   <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Monthly P&L</div>
                     {[
-                      result.totalRent!==undefined&&{l:'Total Rental Income',v:S+(result.totalRent||0).toFixed(0),c:'#10B981'},
-                      result.totalIncome!==undefined&&{l:isR2HMO?`Room Rent Income (${form.rooms||'?'} rooms)`:'Resident Rent Income',v:S+(result.totalIncome||0).toFixed(0),c:'#10B981'},
-                      result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:S+(parseFloat(form.rent)||0).toFixed(0),c:'#10B981'},
+                      result.totalRent!==undefined&&{l:'Total Rental Income',v:S+n0((result.totalRent||0)),c:'#10B981'},
+                      result.totalIncome!==undefined&&{l:isR2HMO?`Room Rent Income (${form.rooms||'?'} rooms)`:'Resident Rent Income',v:S+n0((result.totalIncome||0)),c:'#10B981'},
+                      result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:S+n0((parseFloat(form.rent)||0)),c:'#10B981'},
                       result.monthlyMortgage!==undefined&&{l:'Mortgage Payment',v:('-'+S)+result.monthlyMortgage.toFixed(0),c:'#EF4444'},
                       result.monthlyExpenses!==undefined&&{l:isR2R?'Total Fixed Costs':'Expenses',v:('-'+S)+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
-                      result.monthlyCashflow!==undefined&&{l:isR2R?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+S+Math.abs(result.monthlyCashflow).toFixed(0),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
+                      result.monthlyCashflow!==undefined&&{l:isR2R?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+S+n0(Math.abs(result.monthlyCashflow)),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
                       <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
                         <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
@@ -584,12 +585,12 @@ export default function InvestPage() {
                       ].filter(item=>item.v>0).map((item,i)=>(
                         <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #E6E9EF'}}>
                           <span style={{fontSize:13,color:'#676879'}}>{item.l}</span>
-                          <span style={{fontSize:13,fontWeight:500,color:'#EF4444'}}>-{S}{item.v.toFixed(0)}</span>
+                          <span style={{fontSize:13,fontWeight:500,color:'#EF4444'}}>-{S}{n0(item.v)}</span>
                         </div>
                       ))}
                       <div style={{display:'flex',justifyContent:'space-between',padding:'8px 0'}}>
                         <span style={{fontSize:13,fontWeight:700,color:'#323338'}}>Total Fixed Costs</span>
-                        <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>-{S}{result.monthlyExpenses.toFixed(0)}</span>
+                        <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>-{S}{n0(result.monthlyExpenses)}</span>
                       </div>
                     </div>
                     <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
@@ -598,11 +599,11 @@ export default function InvestPage() {
                         result.paybackMonths!==null?(<>
                           <div style={{textAlign:'center',padding:'12px 0 20px'}}>
                             <div style={{fontSize:32,fontWeight:800,color:'#323338'}}>{result.paybackMonths.toFixed(1)}<span style={{fontSize:16,fontWeight:600,color:'#9699A6'}}> months</span></div>
-                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to get back {S}{(result.paybackBase??result.furnitureCost).toFixed(0)} you put in{result.landlordDeposit>0?' (deposit'+(result.furnitureCost>0?', setup':'')+(result.conversionCost>0?', conversion':'')+')':''}{result.conversionMonths>0?` (includes ${result.conversionMonths} months converting)`:''}</div>
+                            <div style={{fontSize:12,color:'#676879',marginTop:4}}>to get back {S}{n0((result.paybackBase??result.furnitureCost))} you put in{result.landlordDeposit>0?' (deposit'+(result.furnitureCost>0?', setup':'')+(result.conversionCost>0?', conversion':'')+')':''}{result.conversionMonths>0?` (includes ${result.conversionMonths} months converting)`:''}</div>
                           </div>
                           <div style={{padding:'12px 14px',borderRadius:8,background:result.withinLeaseTerm?'#ECFDF5':'#FEF3F2',border:'1px solid '+(result.withinLeaseTerm?'#A7F3D0':'#FDA29B')}}>
                             <div style={{fontSize:13,fontWeight:600,color:result.withinLeaseTerm?'#10B981':'#EF4444',marginBottom:4}}>{result.withinLeaseTerm?'✓ Payback fits within your lease term':'⚠ Payback exceeds your lease term'}</div>
-                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {Math.max(0,result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2R?'your upfront cash is':'furniture is'} paid back{result.leaseProfit!==undefined?` — about '+S+'${Math.round(result.leaseProfit).toLocaleString('en-GB')} profit over the whole lease`:''}.{!result.withinLeaseTerm&&' Negotiate a longer lease (24–36 months) or lower the upfront costs before going ahead.'}</div>
+                            <div style={{fontSize:12,color:'#676879'}}>Your {result.leaseMonths}-month lease leaves {Math.max(0,result.leaseMonths-result.paybackMonths).toFixed(1)} months of profit after {isR2R?'your upfront cash is':'furniture is'} paid back{result.leaseProfit!==undefined?` — about ${S}${Math.round(result.leaseProfit).toLocaleString('en-GB')} profit over the whole lease`:''}.{!result.withinLeaseTerm&&' Negotiate a longer lease (24–36 months) or lower the upfront costs before going ahead.'}</div>
                           </div>
                         </>):(
                           <div style={{padding:'12px 14px',borderRadius:8,background:'#FEF3F2',border:'1px solid #FDA29B',fontSize:13,color:'#EF4444'}}>Monthly profit is {S}0 or negative — upfront cash will never be recovered at these numbers.</div>
