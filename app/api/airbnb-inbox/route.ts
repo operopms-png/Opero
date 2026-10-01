@@ -174,7 +174,9 @@ export async function POST(req: NextRequest) {
 
   if (action === 'ai_draft') {
     // Drafts the next message from our scripts; staff check it and press Send.
-    const scripts = await listScripts(c.businessId, 'airbnb')
+    // AI sticks to the Airbnb scripts (Facebook / agent / phone scripts are for staff to pick by hand)
+    const allAb = await listScripts(c.businessId, 'airbnb')
+    const scripts = allAb.some(x => /airbnb/i.test(x.category)) ? allAb.filter(x => /airbnb/i.test(x.category)) : allAb
     const guides = (await listScripts(c.businessId)).filter(x => x.kind === 'guide' && x.ai_use)
     const rules = scriptsForAi([...scripts, ...guides.filter(g => !scripts.some(x => x.id === g.id))])
     const convo = t.items.slice(-14).map(i => i.kind === 'event' ? `[Airbnb notice: ${i.text}]` : `${i.kind === 'you' ? 'US' : `HOST (${t.host || 'host'})`}: ${i.text}`).join('\n\n')

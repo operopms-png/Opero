@@ -117,6 +117,8 @@ function Card({ s, color, copied, onCopy, onEdit }: { s: Script; color: string; 
       <div style={{ whiteSpace: 'pre-wrap', fontSize: 13.5, lineHeight: 1.6, marginTop: 6 }}>{s.body}</div>
       <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={tag('#F1F2F5', C.muted)}>Staff guide · never sent</span>
+        {s.show_airbnb && <span style={tag('#FFE8EC', '#D11A3F')}>Airbnb Inbox</span>}
+        {s.show_email && <span style={tag('#E8F1FF', '#2F6FD6')}>Email</span>}
         {s.ai_use && <span style={tag('#F1E8FB', '#7A35B8', true)}>✦ AI knows this</span>}
       </div>
     </div>
@@ -195,10 +197,10 @@ function Editor({ s, cats, canDelete, onClose, onSaved }: { s: Partial<Script>; 
         </div>
         {!guide && <div><span style={label}>Tip for staff <span style={{ color: C.faint, fontWeight: 400 }}>(optional, not sent)</span></span><input value={f.note ?? ''} onChange={e => set('note', e.target.value)} placeholder="e.g. Airbnb may hide social media handles before a booking" style={input} /></div>}
         <div>
-          <span style={label}>Show it in</span>
+          <span style={label}>Show it in{guide ? <span style={{ color: C.faint, fontWeight: 400 }}> (as a read-only tip for staff)</span> : null}</span>
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-            {chk(!guide && !!f.show_airbnb, 'Airbnb Inbox', () => set('show_airbnb', !f.show_airbnb), guide)}
-            {chk(!guide && !!f.show_email, 'Email', () => set('show_email', !f.show_email), guide)}
+            {chk(!!f.show_airbnb, 'Airbnb Inbox', () => set('show_airbnb', !f.show_airbnb))}
+            {chk(!!f.show_email, 'Email', () => set('show_email', !f.show_email))}
           </div>
         </div>
         <div style={{ border: '1px solid #E5D6F5', background: '#FBF7FF', borderRadius: 6, padding: '10px 12px' }}>

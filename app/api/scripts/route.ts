@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const row = {
       name: str(s.name, 200).trim(), category: str(s.category, 80).trim() || 'General', stage: str(s.stage, 120).trim() || null,
       kind: s.kind === 'guide' ? 'guide' : 'message', body: str(s.body, 20000), note: str(s.note, 1000).trim() || null,
-      show_email: s.kind === 'guide' ? false : !!s.show_email, show_airbnb: s.kind === 'guide' ? false : !!s.show_airbnb,
+      show_email: !!s.show_email, show_airbnb: !!s.show_airbnb, // guides show in the picker as read-only tips
       ai_use: !!s.ai_use, sort: Number.isFinite(Number(s.sort)) ? Math.round(Number(s.sort)) : 0,
       updated_by: c.name, updated_at: new Date().toISOString(),
     }
