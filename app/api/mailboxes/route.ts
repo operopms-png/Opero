@@ -108,7 +108,10 @@ export async function POST(req: NextRequest) {
     const email = String(body.email || '').trim().toLowerCase()
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return bad('Enter a valid email address')
     const domain = email.split('@')[1]
-    const { data, error } = await serviceClient.from('mailboxes').insert({ user_id: c.businessId, email, display_name: body.display_name || null, imap_host: `mail.${domain}`, smtp_host: `mail.${domain}` }).select(PUBLIC_COLS).single()
+    // Staff mailboxes sit in their own "Staff" section and are private to
+    // that person (plus admins); department mailboxes are shared as chosen.
+    const kind = body.kind === 'staff' ? 'staff' : 'shared'
+    const { data, error } = await serviceClient.from('mailboxes').insert({ user_id: c.businessId, email, display_name: body.display_name || null, imap_host: `mail.${domain}`, smtp_host: `mail.${domain}`, kind, ...(kind === 'staff' ? { access: [email] } : {}) }).select(PUBLIC_COLS).single()
     if (error) return bad(/duplicate/.test(error.message) ? 'That address is already added' : error.message)
     return NextResponse.json({ mailbox: data })
   }
@@ -143,6 +146,7 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(body.access)) patch.access = body.access.map((x: string) => String(x).toLowerCase())
     if (Array.isArray(body.access_teams)) patch.access_teams = body.access_teams.map((x: string) => String(x))
     if (body.use_for_marketing !== undefined) patch.use_for_marketing = !!body.use_for_marketing
+    if (body.kind === 'staff' || body.kind === 'shared') patch.kind = body.kind
     if (['off', 'draft', 'auto'].includes(body.ai_mode)) patch.ai_mode = body.ai_mode
     if (body.disconnect) Object.assign(patch, { password_enc: null, status: 'not_connected', last_error: null })
     if (body.email && body.email !== mb.email) {

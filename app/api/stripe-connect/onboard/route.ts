@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser, serviceClient } from '@/lib/admin-auth'
+import { SITE_URL } from '@/lib/brand'
 
 // Starts (or resumes) Stripe onboarding for the logged-in business, so the
 // payments its customers make through Opero (tenant rent, partner
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       if (error) return NextResponse.json({ error: 'Failed to save connected account: ' + error.message }, { status: 500 })
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    const siteUrl = SITE_URL
     const link = await stripe.v2.core.accountLinks.create({
       account: accountId,
       use_case: {

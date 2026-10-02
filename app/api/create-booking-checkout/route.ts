@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { businessStripeAccount, getStripe } from '@/lib/stripe-connect'
+import { SITE_URL } from '@/lib/brand'
 
 // Direct booking checkout for the public /book/[slug] page.
 // Everything that decides the price is worked out HERE from the database —
@@ -89,8 +90,8 @@ export async function POST(request: NextRequest) {
         guestEmail,
         guestPhone,
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/book/success?session_id={CHECKOUT_SESSION_ID}&p=${property.id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/book/${property.slug}`,
+      success_url: `${SITE_URL}/book/success?session_id={CHECKOUT_SESSION_ID}&p=${property.id}`,
+      cancel_url: `${SITE_URL}/book/${property.slug}`,
     }, { stripeAccount: account })
     return NextResponse.json({ url: session.url })
   } catch (err: unknown) {

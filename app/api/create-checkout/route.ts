@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
+import { SITE_URL } from '@/lib/brand'
 
 // Opero now sells one thing: all-modules access, either £79/mo or £175.50
 // one-time -- the old per-module à la carte prices (aipm/invest/str/pm/
@@ -29,8 +30,8 @@ export async function POST(request: NextRequest) {
       // typo or different email there means the webhook can't match it to
       // any existing user.
       ...(email ? { customer_email: email } : {}),
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}${successPath}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/settings`,
+      success_url: `${SITE_URL}${successPath}`,
+      cancel_url: `${SITE_URL}/settings`,
       allow_promotion_codes: true,
     })
     const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })

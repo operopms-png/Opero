@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
+import { SITE_URL } from '@/lib/brand'
 
 // Public feed of the real portfolio for sangstersgroup.com (property search
 // page, home page carousel). Estate Agency properties with "Show on website"
@@ -10,7 +11,7 @@ import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 
 export const revalidate = 0
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }
-const APP = process.env.NEXT_PUBLIC_SITE_URL || 'https://app.sangstersgroup.com'
+const APP = SITE_URL
 const SYMBOL: Record<string, string> = { JMD: 'J$', USD: 'US$', GBP: '£', EUR: '€', CAD: 'C$', AED: 'AED ' }
 
 function photos(row: any): string[] {

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { newReference } from '@/lib/partner-bank'
+import { SITE_URL } from '@/lib/brand'
 
 // Public partner sign-up: <site>/join/<slug>
 // 1. Creates the login straight away but BANNED, so nobody can sign in unpaid.
@@ -145,8 +146,8 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       }],
       metadata: { type: 'partner_join', signup_id: signupId! },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/join/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/join/${link.slug}`,
+      success_url: `${SITE_URL}/join/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${SITE_URL}/join/${link.slug}`,
     }, { stripeAccount: destination! }) // direct charge on the business's own account
     await serviceClient.from('partner_signups').update({ stripe_session_id: session.id }).eq('id', signupId!)
     return NextResponse.json({ url: session.url })

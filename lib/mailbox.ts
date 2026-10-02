@@ -58,7 +58,7 @@ export function canAccess(mb: any, c: Caller) {
   return !!c.role && (mb.access_teams ?? []).map((x: string) => x.toLowerCase()).includes(c.role.toLowerCase())
 }
 
-export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,access_teams,use_for_marketing,ai_mode,created_at'
+export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,access_teams,use_for_marketing,ai_mode,kind,created_at'
 
 // ---------- connections ----------
 export function imapFor(mb: any, password: string) {

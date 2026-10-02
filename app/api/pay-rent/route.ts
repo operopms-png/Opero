@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser, serviceClient } from '@/lib/admin-auth'
+import { SITE_URL } from '@/lib/brand'
 
 // Creates a one-time Stripe Checkout session for a tenant to pay either an
 // existing outstanding charge (payment_id) OR a brand new payment they're
@@ -72,8 +73,8 @@ export async function POST(req: NextRequest) {
       ...(applicationFeeAmount > 0 ? { payment_intent_data: { application_fee_amount: applicationFeeAmount } } : {}),
       metadata: { type: 'tenant_rent_payment', payment_id: payment.id, tenant_id: tenant.id },
       ...(tenant.email ? { customer_email: tenant.email } : {}),
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal?paid=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pm-tenant-portal`,
+      success_url: `${SITE_URL}/pm-tenant-portal?paid=true`,
+      cancel_url: `${SITE_URL}/pm-tenant-portal`,
     }, { stripeAccount: businessSub.stripe_connect_account_id }) // direct charge on the business's own account
     return NextResponse.json({ url: session.url })
   } catch (err: any) {

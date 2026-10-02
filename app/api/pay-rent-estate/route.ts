@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser, serviceClient } from '@/lib/admin-auth'
+import { SITE_URL } from '@/lib/brand'
 
 // Same pattern as app/api/pay-rent, adapted to Estate Agency's schema:
 // estate_rent_schedules (a recurring schedule row, status Pending/Paid/
@@ -69,8 +70,8 @@ export async function POST(req: NextRequest) {
       ...(applicationFeeAmount > 0 ? { payment_intent_data: { application_fee_amount: applicationFeeAmount } } : {}),
       metadata: { type: 'estate_tenant_rent_payment', schedule_id: schedule.id, tenant_id: tenant.id },
       ...(tenant.email ? { customer_email: tenant.email } : {}),
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/estate-tenant-portal?paid=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/estate-tenant-portal`,
+      success_url: `${SITE_URL}/estate-tenant-portal?paid=true`,
+      cancel_url: `${SITE_URL}/estate-tenant-portal`,
     }, { stripeAccount: businessSub.stripe_connect_account_id }) // direct charge on the business's own account
     return NextResponse.json({ url: session.url })
   } catch (err: any) {

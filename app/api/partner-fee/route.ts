@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser, serviceClient } from '@/lib/admin-auth'
+import { SITE_URL } from '@/lib/brand'
 
 // One-time Partners portal membership fee, paid by the investor partner.
 // Routes to the managing business's connected Stripe account (same as
@@ -47,8 +48,8 @@ export async function POST(req: NextRequest) {
       }],
       metadata: { type: 'partner_fee', owner_id: owner.id },
       ...(owner.email ? { customer_email: owner.email } : {}),
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/staff-centre/partners?paid=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/staff-centre/partners`,
+      success_url: `${SITE_URL}/staff-centre/partners?paid=true`,
+      cancel_url: `${SITE_URL}/staff-centre/partners`,
     }, { stripeAccount: businessSub.stripe_connect_account_id }) // direct charge on the business's own account
     return NextResponse.json({ url: session.url })
   } catch (err: any) {

@@ -229,9 +229,15 @@ export default function EmailPage() {
           <NavItem on={view === 'mail' && folder === 'Sent'} onClick={() => { setView('mail'); setFolder('Sent'); setOpenId(null); setMsg(null) }}>Sent</NavItem>
           <div style={{ fontSize: 12, color: C.muted, padding: '12px 6px 4px' }}>Mailboxes</div>
           <NavItem on={view === 'mail' && box === 'all'} onClick={() => { setView('mail'); setBox('all'); setOpenId(null); setMsg(null) }} count={totalUnread}>All mailboxes</NavItem>
-          {boxes.map(b => (
+          {boxes.filter(b => b.kind !== 'staff').map(b => (
             <NavItem key={b.id} on={view === 'mail' && box === b.id} onClick={() => { setView('mail'); setBox(b.id); setOpenId(null); setMsg(null) }} count={b.unread} dot={b.status === 'connected' ? colorFor(b.email) : C.grey}>
               <span title={b.email}>{b.email.split('@')[0]}</span>
+            </NavItem>
+          ))}
+          {boxes.some(b => b.kind === 'staff') && <div style={{ fontSize: 12, color: C.muted, padding: '12px 6px 4px' }}>Staff</div>}
+          {boxes.filter(b => b.kind === 'staff').map(b => (
+            <NavItem key={b.id} on={view === 'mail' && box === b.id} onClick={() => { setView('mail'); setBox(b.id); setOpenId(null); setMsg(null) }} count={b.unread} dot={b.status === 'connected' ? colorFor(b.email) : C.grey}>
+              <span title={b.email}>{b.display_name || b.email.split('@')[0]}</span>
             </NavItem>
           ))}
           {boxes.length === 0 && <div style={{ fontSize: 12.5, color: C.faint, padding: '4px 8px' }}>No mailboxes shared with you yet.</div>}
@@ -428,10 +434,12 @@ export default function EmailPage() {
 function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, onTemplates, sampleEmail }: any) {
   const [adding, setAdding] = useState(false)
   const [newEmail, setNewEmail] = useState('')
+  const [newKind, setNewKind] = useState('shared')
+  const [newName, setNewName] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
   const [nameDraft, setNameDraft] = useState('')
   const act = async (body: any, ok?: string) => { try { await api('', body); if (ok) flash(ok); await reload() } catch (e: any) { flash(e.message) } }
-  const cols = 'minmax(220px,1.4fr) 150px 130px minmax(150px,1fr) 90px 120px 180px'
+  const cols = 'minmax(220px,1.4fr) 150px 110px 130px minmax(150px,1fr) 90px 120px 180px'
   return (
     <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
       <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
@@ -444,15 +452,17 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
       <div style={{ padding: '20px 28px 40px' }}>
         {adding && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center' }}>
-            <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="name@sangstersgroup.com" style={{ ...input, width: 320 }} autoFocus />
-            <button onClick={async () => { await act({ action: 'add', email: newEmail }, 'Mailbox added'); setAdding(false); setNewEmail('') }} style={btn('gold', true)}>Add</button>
+            <select value={newKind} onChange={e => setNewKind(e.target.value)} style={{ ...input, width: 170 }}><option value="shared">Department mailbox</option><option value="staff">Staff member</option></select>
+            <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="name@sangstersgroup.com" style={{ ...input, width: 280 }} autoFocus />
+            {newKind === 'staff' && <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Their name" style={{ ...input, width: 180 }} />}
+            <button onClick={async () => { await act({ action: 'add', email: newEmail, kind: newKind, display_name: newName || undefined }, 'Mailbox added'); setAdding(false); setNewEmail(''); setNewName(''); setNewKind('shared') }} style={btn('gold', true)}>Add</button>
             <button onClick={() => setAdding(false)} style={btn('ghost', true)}>Cancel</button>
           </div>
         )}
         <div style={{ overflowX: 'auto' }}>
-          <div style={{ minWidth: 1040 }}>
+          <div style={{ minWidth: 1150 }}>
             <div style={{ display: 'grid', gridTemplateColumns: cols, borderLeft: '6px solid ' + C.gold, borderTop: '1px solid ' + C.row, borderRight: '1px solid ' + C.row, fontSize: 13, color: C.muted }}>
-              {['Address', 'Shown as', 'Status', 'Who can see it', 'Marketing', 'AI replies', ''].map((h, i) => <div key={i} style={{ padding: '8px 10px', borderLeft: i ? '1px solid ' + C.row : 'none', borderBottom: '1px solid ' + C.row, textAlign: i ? 'center' : 'left' }}>{h}</div>)}
+              {['Address', 'Shown as', 'Type', 'Status', 'Who can see it', 'Marketing', 'AI replies', ''].map((h, i) => <div key={i} style={{ padding: '8px 10px', borderLeft: i ? '1px solid ' + C.row : 'none', borderBottom: '1px solid ' + C.row, textAlign: i ? 'center' : 'left' }}>{h}</div>)}
             </div>
             {boxes.map((b: any) => (
               <div key={b.id} style={{ display: 'grid', gridTemplateColumns: cols, borderLeft: '6px solid ' + C.gold, borderRight: '1px solid ' + C.row, fontSize: 14 }}>
@@ -467,6 +477,9 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
                   {editing === b.id
                     ? <input value={nameDraft} autoFocus onChange={e => setNameDraft(e.target.value)} onBlur={async () => { setEditing(null); if (nameDraft !== (b.display_name ?? '')) await act({ action: 'update', id: b.id, display_name: nameDraft }) }} onKeyDown={e => e.key === 'Enter' && (e.target as HTMLInputElement).blur()} style={{ ...input, padding: '4px 6px', fontSize: 13 }} />
                     : <span onClick={() => { setEditing(b.id); setNameDraft(b.display_name ?? '') }} title="Click to edit the name people see" style={{ cursor: 'text', fontSize: 13, color: b.display_name ? C.ink : C.faint, width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.display_name || 'Add a name'}</span>}
+                </div>
+                <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Pill width={92} color={b.kind === 'staff' ? C.blue : C.brown} onClick={() => act({ action: 'update', id: b.id, kind: b.kind === 'staff' ? 'shared' : 'staff' })} title="Department mailboxes are listed under Mailboxes; staff mailboxes under Staff. Click to switch.">{b.kind === 'staff' ? 'Staff' : 'Department'}</Pill>
                 </div>
                 <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Pill width={110} color={b.status === 'connected' ? C.green : b.status === 'error' ? C.red : C.grey}>{b.status === 'connected' ? 'Connected' : b.status === 'error' ? 'Needs attention' : 'Not connected'}</Pill>
