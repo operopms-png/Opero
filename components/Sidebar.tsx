@@ -65,6 +65,7 @@ const NAV_GROUPS = [
       { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe', scTab: 'portals' },
       { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance', badge: 'maintenance' },
       { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts', scTab: 'crm', badge: 'crm' },
+      { href: '/staff-centre/landlord-leads', label: 'Landlord Leads', key: 'staffcentre', icon: 'building', scTab: 'crm' },
       { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles', scTab: 'marketing' },
       { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file', scTab: 'applications', badge: 'applications' },
       { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },

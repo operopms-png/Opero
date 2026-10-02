@@ -10,7 +10,7 @@ import './globals.css'
 
 // Full-screen pages with no staff sidebar: sign-in pages, public pages, and the
 // portals used by owners, landlords, tenants and investors (they do their own sign-in)
-const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/estate-owner-portal', '/estate-tenant-portal', '/dev-investor-portal', '/staff-dashboard', '/meet', '/join', '/book', '/homes']
+const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/estate-owner-portal', '/estate-tenant-portal', '/dev-investor-portal', '/staff-dashboard', '/meet', '/join', '/book', '/homes', '/earnings']
 
 // Statuses where Stripe has stopped billing successfully — trial expired
 // with no working payment method, a renewal failed, or it was cancelled.
@@ -51,6 +51,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/listings': 'listings',
   '/staff-centre/smart-home': 'smarthome',
   '/staff-centre/airbnb': 'inbox',
+  '/staff-centre/landlord-leads': 'crm',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
