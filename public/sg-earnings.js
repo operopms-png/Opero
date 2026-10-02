@@ -228,7 +228,7 @@
     var comps = (main.comparables || []).slice(0, 3)
     var compsHtml = comps.length ? '<div class="sge-comps">' + comps.map(function (x) { return '<div>' + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.title) + '</a>' : '<span style="color:' + INK + '">' + esc(x.title) + '</span>') + '<span>' + esc(x.price_text) + '</span></div>' }).join('') + '</div>' : ''
     frame('<div class="sge-res"><div class="lbl">' + mainLbl + '</div><div class="big">' + range + '</div>' + extra + alt +
-      '<div class="note">This estimate is drawn from live listings near ' + esc(d.location) + ' for a ' + esc(beds(d.bedrooms).toLowerCase()) + ' property, before fees and running costs. It is not a guarantee of income. We’ve emailed you a copy.</div>' +
+      '<div class="note">This estimate is drawn from live listings near ' + esc(d.location) + ' for a ' + (d.bedrooms === 0 ? 'studio' : d.bedrooms + '-bedroom') + ' property, before fees and running costs. It is not a guarantee of income. We’ve emailed you a copy.</div>' +
       msg + cta + compsHtml + '</div>', 0, true)
   }
 

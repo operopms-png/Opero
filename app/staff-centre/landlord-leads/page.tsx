@@ -136,7 +136,7 @@ function LeadModal({ lead, onClose, onSaved }: { lead: any; onClose: () => void;
                 {list.map((x: any, i: number) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12.5, padding: '4px 0', borderBottom: '1px solid ' + C.row }}>{x.url ? <a href={x.url} target="_blank" rel="noreferrer" style={{ color: C.goldDark }}>{x.title}</a> : <span>{x.title}</span>}<span style={{ color: C.muted, whiteSpace: 'nowrap' }}>{x.price_text}</span></div>)}
               </div>
             ) : null)}
-            <div style={{ fontSize: 11.5, color: C.faint, marginTop: 8 }}>Sent to the landlord {new Date(e.checkedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}. Figures in {c}.</div>
+            <div style={{ fontSize: 11.5, color: C.faint, marginTop: 8 }}>Market checked {new Date(e.checkedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}. Figures in {c}.</div>
           </div>
         ) : <div style={{ fontSize: 13, color: C.orange }}>No estimate yet{lead.estimate_error ? ` (${lead.estimate_error})` : ''} — the landlord was told the team will send one within 24 hours.</div>}
         <button style={{ ...btn('ghost', true), justifySelf: 'start' }} disabled={!!busy} onClick={() => run({ action: 'rerun' }, 'rerun')}>{busy === 'rerun' ? 'Checking the market… (about 40s)' : e ? 'Re-check the market' : 'Run the estimate now'}</button>
