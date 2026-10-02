@@ -7,6 +7,7 @@ import PartnerBroadcast from '../../components/PartnerBroadcast'
 import { STAFF_CENTRE_TABS, PARTNER_GRANTABLE_MODULES } from '../../lib/useRole'
 import InvestPage from '../invest/page'
 import { SITE_HOST } from '@/lib/brand'
+import { buckets, bucketSum, Kpi, Panel, StackedBars, TrendLine, Funnel, Legend, Seg, Badge, Avatar, agentTier, ST_COL, LT_COL, PERIOD_LABEL, type Period, type Bucket } from '../../components/partners/PartnerCharts'
 
 // Partners
 // --------
@@ -134,7 +135,9 @@ export default function PartnersPage() {
   const [bankForm, setBankForm] = useState<any>({ bank_name: '', bank_account_name: '', bank_sort_code: '', bank_account_number: '', alert_email: '' })
 
   // Agent Programme UI
-  const [apView, setApView] = useState<'Referrals' | 'Agents'>('Referrals')
+  const [period, setPeriod] = useState<Period>('12m')
+  const [openRefId, setOpenRefId] = useState<string | null>(null)
+  const [showClosed, setShowClosed] = useState(false)
   const [refFilter, setRefFilter] = useState<'all' | 'short_term' | 'long_term'>('all')
   const [showAgentForm, setShowAgentForm] = useState(false)
   const [agentForm, setAgentForm] = useState<any>(EMPTY_AGENT)
@@ -480,6 +483,64 @@ export default function PartnersPage() {
   const agentName = (id: string) => agents.find(a => a.id === id)?.name ?? '—'
   const filteredReferrals = referrals.filter(r => refFilter === 'all' || r.referral_type === refFilter)
 
+  // ---------- Partners dashboard charts (period switch) ----------
+  const bs = buckets(period), prevBs = buckets(period, 1)
+  const inRange = (w: string | null | undefined, b: Bucket[]) => { if (!w) return false; const t = new Date(w).getTime(); return t >= b[0].start && t < b[b.length - 1].end }
+  const sum = (a: number[]) => a.reduce((s, v) => s + v, 0)
+  const pRefs = referrals.filter(r => inRange(r.created_at, bs))
+  const prevRefs = referrals.filter(r => inRange(r.created_at, prevBs))
+  const stSeries = bucketSum(bs, referrals.filter(r => r.referral_type === 'short_term'), r => r.created_at)
+  const ltSeries = bucketSum(bs, referrals.filter(r => r.referral_type !== 'short_term'), r => r.created_at)
+  const loggedSeries = stSeries.map((v, i) => v + ltSeries[i])
+  const commAmt = (r: any) => Number(r.commission_amount) || 0
+  const paidSeries = bucketSum(bs, referrals.filter(r => r.commission_status === 'paid'), r => r.paid_at, commAmt)
+  const paidNow = sum(paidSeries)
+  const paidPrev = sum(bucketSum(prevBs, referrals.filter(r => r.commission_status === 'paid'), r => r.paid_at, commAmt))
+  const payableSeries = bucketSum(bs, referrals.filter(r => ['payable', 'pending'].includes(r.commission_status)), r => r.created_at, commAmt)
+  const agentSeries = bs.map(b => agents.filter(a => a.status === 'active' && new Date(a.created_at).getTime() < b.end).length)
+  const agentsJoined = agents.filter(a => inRange(a.created_at, bs)).length
+  const convOf = (list: any[]) => list.length ? Math.round((list.filter(r => r.status === 'completed').length / list.length) * 100) : 0
+  const convNow = convOf(pRefs), convPrev = convOf(prevRefs)
+  const convSeries = bs.map(b => convOf(referrals.filter(r => { const t = new Date(r.created_at).getTime(); return t >= b.start && t < b.end })))
+  const capitalSeries = bs.map(b => allOwners.filter(o => new Date(o.created_at).getTime() < b.end).reduce((s, o) => s + (Number(o.invested) || 0), 0))
+  const periodWord = period === '30d' ? 'last 30 days' : period === 'quarter' ? 'last quarter' : 'last 12 months'
+  const vsPrev = (now: number, prev: number, f: (n: number) => string = n => String(n)) => ({ delta: now - prev, deltaText: now === prev ? 'No change vs prior' : `${f(Math.abs(now - prev))} vs prior` })
+  const funnel: [string, number][] = [
+    ['Referrals logged', pRefs.length],
+    ['Screened', pRefs.filter(r => ['screening', 'approved', 'completed', 'rejected'].includes(r.status)).length],
+    ['Approved', pRefs.filter(r => ['approved', 'completed'].includes(r.status)).length],
+    ['Stayed / moved in', pRefs.filter(r => r.status === 'completed').length],
+    ['Commission paid', pRefs.filter(r => r.commission_status === 'paid').length],
+  ]
+  const agentStats = agents.map(a => {
+    const mine = referrals.filter(r => r.agent_id === a.id)
+    const done = mine.filter(r => r.status === 'completed').length
+    const closed = mine.filter(r => ['completed', 'rejected', 'cancelled'].includes(r.status)).length
+    return {
+      a, refs: mine.length, done, conv: closed ? Math.round((done / closed) * 100) : null,
+      paid: mine.filter(r => r.commission_status === 'paid').reduce((s, r) => s + commAmt(r), 0),
+      owed: mine.filter(r => r.commission_status === 'payable').reduce((s, r) => s + commAmt(r), 0),
+      pending: mine.filter(r => r.commission_status === 'pending').reduce((s, r) => s + commAmt(r), 0),
+      tier: agentTier(done),
+    }
+  })
+  const topAgents = [...agentStats].sort((x, y) => (y.paid + y.owed) - (x.paid + x.owed) || y.refs - x.refs).slice(0, 5)
+  const daysOld = (d: string) => Math.floor((Date.now() - new Date(d).getTime()) / 864e5)
+  const attention: { key: string; title: string; sub: string; tag: string; tone: 'amber' | 'blue' | 'red' | 'grey'; go: () => void }[] = [
+    ...pendingSignups.filter(s => s.marked_sent_at).map(s => ({ key: 's' + s.id, title: 'Confirm partner payment', sub: `${s.name} · ref ${s.reference}`, tag: 'Check bank', tone: 'amber' as const, go: () => setStaffTab('Investors') })),
+    ...referrals.filter(r => r.commission_status === 'payable').map(r => ({ key: 'p' + r.id, title: 'Pay commission', sub: `${agentName(r.agent_id)} · ${gbp(commAmt(r))}`, tag: 'Payable', tone: 'amber' as const, go: () => { setStaffTab('Agent Programme'); setOpenRefId(r.id) } })),
+    ...referrals.filter(r => isDuplicate(r) && !['rejected', 'cancelled'].includes(r.status)).map(r => ({ key: 'd' + r.id, title: 'Possible duplicate', sub: `${r.person_name} · ${agentName(r.agent_id)}`, tag: 'Check', tone: 'red' as const, go: () => { setStaffTab('Agent Programme'); setOpenRefId(r.id) } })),
+    ...referrals.filter(r => r.status === 'logged' && daysOld(r.created_at) >= 2).map(r => ({ key: 'l' + r.id, title: 'Not screened yet', sub: `${r.person_name} · ${daysOld(r.created_at)} days old`, tag: 'Chase', tone: 'blue' as const, go: () => { setStaffTab('Agent Programme'); setOpenRefId(r.id) } })),
+  ]
+  const openRef = referrals.find(r => r.id === openRefId) ?? null
+  const BOARD: [string, string, (r: any) => boolean][] = [
+    ['logged', 'Logged', r => r.status === 'logged'],
+    ['screening', 'Screening', r => r.status === 'screening'],
+    ['approved', 'Approved', r => r.status === 'approved'],
+    ['due', 'Commission due', r => r.status === 'completed' && r.commission_status !== 'paid' && r.commission_status !== 'clawed_back'],
+  ]
+  const closedRefs = filteredReferrals.filter(r => !BOARD.some(([, , f]) => f(r)))
+
   // ---------- Partners membership (one-time fee) ----------
   const locked = !isStaff && !!profile && !profile.partner_paid_at
   const inv = !isStaff && !locked
@@ -517,6 +578,83 @@ export default function PartnersPage() {
   const btnGold: React.CSSProperties = { background: ACCENT, color: '#fff', border: 'none', borderRadius: 4, padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }
   const btnGhost: React.CSSProperties = { background: '#fff', color: '#323338', border: '1px solid #D0D4E4', borderRadius: 4, padding: '8px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }
   const chip = (on: boolean): React.CSSProperties => ({ padding: '10px 4px', margin: '0 8px -1px 0', border: 'none', borderBottom: `2px solid ${on ? ACCENT : 'transparent'}`, background: 'none', color: on ? TEXT : '#676879', fontSize: 14, fontWeight: on ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' })
+  const btnDark: React.CSSProperties = { ...btnGold, background: '#191815' }
+  const panelCard: React.CSSProperties = { background: '#fff', border: '1px solid #ebe7de', borderRadius: 8, minWidth: 0 }
+  const tbl: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' }
+  const th: React.CSSProperties = { fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: '#8a857a', fontWeight: 600, textAlign: 'left', padding: '10px 18px', borderBottom: '1px solid #ebe7de', background: '#fcfbf8', whiteSpace: 'nowrap' }
+  const td: React.CSSProperties = { padding: '11px 18px', borderBottom: '1px solid #f2efe8', fontSize: 13, verticalAlign: 'middle', fontVariantNumeric: 'tabular-nums' }
+
+  // One referral on the pipeline board — click to open the full record.
+  function refTile(r: any) {
+    const st = r.referral_type === 'short_term'
+    const amt = r.commission_amount != null ? Number(r.commission_amount) : calcCommission(agents.find(a => a.id === r.agent_id), r)
+    const dup = isDuplicate(r)
+    return (
+      <button key={r.id} onClick={() => setOpenRefId(r.id)} style={{ display: 'block', width: '100%', textAlign: 'left', background: '#fff', border: `1px solid ${dup ? '#F4B4AE' : '#ebe7de'}`, borderRadius: 6, padding: '10px 12px', marginBottom: 8, cursor: 'pointer', fontFamily: 'inherit', color: '#191815' }}>
+        <div style={{ fontWeight: 600, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.person_name}</div>
+        <div style={{ fontSize: 12, color: '#8a857a', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.property_label || 'No property'} · {agentName(r.agent_id)}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, gap: 6 }}>
+          <span style={{ display: 'inline-flex', gap: 4, flexWrap: 'wrap' }}>
+            <Badge tone={st ? 'gold' : 'blue'}>{st ? 'Short-term' : 'Long-term'}</Badge>
+            {dup && <Badge tone="red">Duplicate?</Badge>}
+            {['rejected', 'cancelled'].includes(r.status) && <Badge tone="grey">{STATUS_LABEL[r.status]}</Badge>}
+            {r.commission_status === 'paid' && <Badge tone="green">Paid</Badge>}
+          </span>
+          <b style={{ fontSize: 12.5, fontVariantNumeric: 'tabular-nums' }}>{amt ? gbp(amt) : '—'}</b>
+        </div>
+      </button>
+    )
+  }
+
+  // Full referral record (opened from the board).
+  function referralCard(r: any) {
+    const dup = isDuplicate(r)
+    const st = r.referral_type === 'short_term'
+    return (
+      <div key={r.id} style={{ ...card, borderColor: dup ? '#FDA29B' : '#E4E7EC', boxShadow: '0 20px 50px rgba(0,0,0,.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>{r.person_name}</div>
+            <div style={{ fontSize: 12, color: '#667085' }}>
+              {st ? `Guest · ${CHANNEL_LABEL[r.channel] ?? 'Direct'}` : 'Tenant'} · Agent: {agentName(r.agent_id)} · Logged {new Date(r.created_at).toLocaleDateString('en-GB')}
+            </div>
+            <div style={{ fontSize: 12, color: '#667085' }}>{[r.person_email, r.person_phone].filter(Boolean).join(' · ')}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            {dup && <Pill status="duplicate" label="Possible duplicate" />}
+            <Pill status={r.status} label={STATUS_LABEL[r.status]} />
+            <Pill status={r.commission_status} label={COMMISSION_LABEL[r.commission_status]} />
+            <button onClick={() => setOpenRefId(null)} style={{ ...btnGhost, padding: '4px 10px' }}>Close</button>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, fontSize: 12, marginBottom: 12 }}>
+          <div><div style={{ color: '#667085' }}>Property</div><div style={{ fontWeight: 700 }}>{r.property_label ?? '—'}</div></div>
+          <div><div style={{ color: '#667085' }}>{st ? 'Stay' : 'Move-in'}</div><div style={{ fontWeight: 700 }}>{r.start_date ? new Date(r.start_date).toLocaleDateString('en-GB') : '—'}{st && r.end_date ? ` – ${new Date(r.end_date).toLocaleDateString('en-GB')}` : ''}</div></div>
+          <div><div style={{ color: '#667085' }}>{st ? 'Booking value' : 'Monthly rent'}</div><div style={{ fontWeight: 700 }}>{r.value != null ? gbp(Number(r.value)) : '—'}</div></div>
+          <div>
+            <div style={{ color: '#667085' }}>Commission</div>
+            <input type="number" defaultValue={r.commission_amount ?? ''} placeholder={gbp(calcCommission(agents.find(a => a.id === r.agent_id), r))}
+              onBlur={e => { const v = e.target.value; if (String(r.commission_amount ?? '') !== v) updateReferralField(r, 'commission_amount', v === '' ? null : Number(v)) }}
+              style={{ ...input, padding: '5px 8px', width: 110 }} disabled={r.commission_status === 'paid'} />
+          </div>
+        </div>
+        {r.notes && <div style={{ fontSize: 12.5, color: '#55524b', background: '#fbfaf7', border: '1px solid #ebe7de', borderRadius: 6, padding: '8px 10px', marginBottom: 12, whiteSpace: 'pre-wrap' }}>{r.notes}</div>}
+        {!st && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>Screening notes (ID, income, references, credit, guarantor)</div>
+            <textarea defaultValue={r.screening_notes ?? ''} onBlur={e => { if ((r.screening_notes ?? '') !== e.target.value) updateReferralField(r, 'screening_notes', e.target.value || null) }} style={{ ...input, minHeight: 50 }} />
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <select value={r.status} onChange={e => setReferralStatus(r, e.target.value)} style={{ ...input, width: 190 }}>
+            {REFERRAL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          </select>
+          {r.commission_status === 'payable' && <button onClick={() => markPaid(r)} style={btnDark}>Mark commission paid</button>}
+          {r.commission_status === 'paid' && <span style={{ fontSize: 12, color: '#059669' }}>Paid {r.paid_at ? new Date(r.paid_at).toLocaleDateString('en-GB') : ''}{r.payout_reference ? ` · Ref ${r.payout_reference}` : ''}</span>}
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3', fontFamily: "'Inter', sans-serif" }}>Loading…</div>
@@ -561,12 +699,14 @@ export default function PartnersPage() {
         {/* Bank transfers partners say they've sent: shown on every staff tab except Investors (where the list is) */}
         {isStaff && staffTab !== 'Investors' && pendingSignups.some(s => s.marked_sent_at) && (() => {
           const n = pendingSignups.filter(s => s.marked_sent_at).length
+          const first = pendingSignups.find(s => s.marked_sent_at)
           return (
-            <div style={{ ...card, padding: '12px 16px', marginBottom: 16, borderColor: '#FEC84B', background: '#FFFAEB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 13 }}>
-                <b>💷 {n} partner payment{n === 1 ? '' : 's'} to check.</b> <span style={{ color: '#667085' }}>Check your bank for the reference, then Confirm to unlock their account.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', border: '1px solid #efd9a6', background: '#fdf7e8', borderRadius: 8, marginBottom: 16 }}>
+              <span style={{ width: 22, height: 22, borderRadius: '50%', border: '1.5px solid #8E6B1F', color: '#8E6B1F', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>!</span>
+              <div style={{ fontSize: 13, flex: 1, minWidth: 220 }}>
+                <b>{n} partner payment{n === 1 ? '' : 's'} to check</b> <span style={{ color: '#6b675e' }}>— {n === 1 && first ? `${first.name}, reference ${first.reference}. ` : ''}Check your bank, then confirm to unlock their account.</span>
               </div>
-              <button onClick={() => setStaffTab('Investors')} style={btnGold}>Review</button>
+              <button onClick={() => setStaffTab('Investors')} style={btnDark}>Review</button>
             </div>
           )
         })()}
@@ -588,37 +728,66 @@ export default function PartnersPage() {
 
         {/* ======================= STAFF ======================= */}
 
+        {isStaff && (staffTab === 'Dashboard' || staffTab === 'Agent Programme') && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+            <div style={{ fontSize: 12.5, color: '#8a857a' }}>Showing the {periodWord}</div>
+            <Seg value={period} onChange={setPeriod} options={(['30d', 'quarter', '12m'] as Period[]).map(p => [p, PERIOD_LABEL[p]] as [Period, string])} />
+          </div>
+        )}
+
         {isStaff && staffTab === 'Dashboard' && (
           <>
-            <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 12 }}>Investors</div>
-            <div style={{ ...grid, marginBottom: 24 }}>
-              <Stat label="Investors" value={String(allOwners.length)} />
-              <Stat label="Capital In" value={gbp(staffInvested)} />
-              <Stat label="Capital Returned" value={gbp(staffReturned)} />
-              <Stat label="Outstanding" value={gbp(Math.max(0, staffInvested - staffReturned))} dark />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14, marginBottom: 14 }}>
+              <Kpi label="Active agents" value={String(activeAgents)} delta={agentsJoined} deltaText={`${agentsJoined} joined`} data={agentSeries} />
+              <Kpi label="Open referrals" value={String(openReferrals)} {...vsPrev(pRefs.length, prevRefs.length)} data={loggedSeries} />
+              <Kpi label="Conversion rate" value={`${convNow}%`} {...vsPrev(convNow, convPrev, n => `${n} pts`)} data={convSeries} />
+              <Kpi label="Commission payable" value={gbp(commissionPayable)} deltaText={`${gbp(commissionPending)} pending`} data={payableSeries} highlight />
+              <Kpi label="Investor capital" value={gbp(staffInvested)} deltaText={`${allOwners.length} investor${allOwners.length === 1 ? '' : 's'} · ${gbp(staffReturned)} returned`} data={capitalSeries} />
             </div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 12 }}>Agent Programme</div>
-            <div style={{ ...grid, marginBottom: 24 }}>
-              <Stat label="Active Agents" value={String(activeAgents)} />
-              <Stat label="Open Referrals" value={String(openReferrals)} sub={`${inScreening} in screening`} />
-              <Stat label="Commission Pending" value={gbp(commissionPending)} />
-              <Stat label="Commission Payable" value={gbp(commissionPayable)} dark />
-            </div>
-            <div style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Recent referrals</div>
-                <button onClick={() => setStaffTab('Agent Programme')} style={btnGhost}>View all</button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 14, marginBottom: 14 }}>
+              <div style={{ gridColumn: 'span 1', minWidth: 0 }}>
+                <Panel title="Referrals logged" right={<Legend items={[[ST_COL, 'Short-term (guests)'], [LT_COL, 'Long-term (tenants)']]} />}>
+                  <StackedBars bs={bs} a={stSeries} b={ltSeries} aName="Guests" bName="Tenants" empty="No referrals logged in this period yet" />
+                </Panel>
               </div>
-              {referrals.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No referrals logged yet.</div>}
-              {referrals.slice(0, 6).map(r => (
-                <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderTop: '1px solid #F2F4F7', gap: 10 }}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{r.person_name}</div>
-                    <div style={{ fontSize: 12, color: '#667085' }}>{r.referral_type === 'short_term' ? 'Guest' : 'Tenant'} · {agentName(r.agent_id)} · {r.property_label ?? '—'}</div>
-                  </div>
-                  <Pill status={r.status} label={STATUS_LABEL[r.status]} />
-                </div>
-              ))}
+              <Panel title="Commission paid to agents" meta={`${gbp(paidNow)} in the ${periodWord}`}>
+                <TrendLine bs={bs} values={paidSeries} fmt={gbp} empty="No commission paid in this period yet" />
+              </Panel>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 14 }}>
+              <Panel title="Referral pipeline" meta={PERIOD_LABEL[period]}>
+                <Funnel stages={funnel} />
+              </Panel>
+              <Panel title="Top agents" meta="by commission earned" pad={false}><div style={{ overflowX: 'auto' }}>
+                {topAgents.length === 0
+                  ? <div style={{ padding: 18, fontSize: 13, color: '#8a857a' }}>No agents yet. Add one in the Agent Programme tab.</div>
+                  : <table style={tbl}>
+                      <thead><tr><th style={th}>Agent</th><th style={{ ...th, textAlign: 'right', paddingLeft: 8, paddingRight: 8 }} title="Referrals logged">Refs</th><th style={{ ...th, textAlign: 'right', paddingLeft: 8, paddingRight: 8 }} title="Stayed / moved in">Won</th><th style={{ ...th, textAlign: 'right' }}>Earned</th></tr></thead>
+                      <tbody>{topAgents.map(s => (
+                        <tr key={s.a.id}>
+                          <td style={{ ...td, whiteSpace: 'nowrap' }}><span style={{ display: 'inline-flex', alignItems: 'center' }}><Avatar name={s.a.name} />{s.a.name}<span style={{ marginLeft: 8 }}><Badge tone={s.tier.tone}>{s.tier.label}</Badge></span></span></td>
+                          <td style={{ ...td, textAlign: 'right', paddingLeft: 8, paddingRight: 8 }}>{s.refs}</td>
+                          <td style={{ ...td, textAlign: 'right', paddingLeft: 8, paddingRight: 8 }}>{s.done}</td>
+                          <td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{gbp(s.paid + s.owed)}</td>
+                        </tr>
+                      ))}</tbody>
+                    </table>}
+              </div></Panel>
+              <Panel title="Needs attention" right={attention.length ? <Badge tone="amber">{attention.length}</Badge> : <Badge tone="green">All clear</Badge>} pad={false}>
+                {attention.length === 0 && <div style={{ padding: 18, fontSize: 13, color: '#8a857a' }}>Nothing needs attention right now.</div>}
+                {attention.slice(0, 6).map((x, i) => (
+                  <button key={x.key} onClick={x.go} style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '12px 18px', border: 'none', borderTop: i ? '1px solid #f2efe8' : 'none', background: '#fff', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13.5, color: '#191815' }}>{x.title}</div>
+                      <div style={{ fontSize: 12, color: '#8a857a', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.sub}</div>
+                    </div>
+                    <Badge tone={x.tone}>{x.tag}</Badge>
+                  </button>
+                ))}
+                {attention.length > 6 && <div style={{ padding: '10px 18px', fontSize: 12, color: '#8a857a', borderTop: '1px solid #f2efe8' }}>+{attention.length - 6} more</div>}
+              </Panel>
             </div>
           </>
         )}
@@ -630,96 +799,24 @@ export default function PartnersPage() {
                 The Agent Programme tables aren't in the database yet. Run <b>migrations/add-partners-agent-programme.sql</b> in the Supabase SQL Editor.
               </div>
             )}
-            <div style={{ ...grid, marginBottom: 16 }}>
-              <Stat label="Active Agents" value={String(activeAgents)} />
-              <Stat label="Open Referrals" value={String(openReferrals)} />
-              <Stat label="Payable Now" value={gbp(commissionPayable)} />
-              <Stat label="Paid to Agents" value={gbp(commissionPaid)} dark />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
+              <Kpi label="Active agents" value={String(activeAgents)} delta={agentsJoined} deltaText={`${agentsJoined} joined`} data={agentSeries} />
+              <Kpi label="Open referrals" value={String(openReferrals)} deltaText={`${inScreening} in screening`} data={loggedSeries} />
+              <Kpi label="Payable now" value={gbp(commissionPayable)} deltaText={`${gbp(commissionPending)} pending`} data={payableSeries} highlight />
+              <Kpi label={`Paid to agents (${PERIOD_LABEL[period].toLowerCase()})`} value={gbp(paidNow)} {...vsPrev(paidNow, paidPrev, gbp)} data={paidSeries} />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(['Referrals', 'Agents'] as const).map(v => <button key={v} onClick={() => setApView(v)} style={chip(apView === v)}>{v}</button>)}
-              </div>
-              {apView === 'Referrals'
-                ? <button onClick={() => { setShowRefForm(!showRefForm); setRefForm(EMPTY_REFERRAL) }} style={btnGold} disabled={agents.length === 0}>{showRefForm ? 'Close' : '+ Log guest / tenant'}</button>
-                : <button onClick={() => { setShowAgentForm(!showAgentForm); setEditingAgentId(null); setAgentForm(EMPTY_AGENT) }} style={btnGold}>{showAgentForm ? 'Close' : '+ Add agent'}</button>}
-            </div>
-
-            {/* ---- Agents ---- */}
-            {apView === 'Agents' && (
-              <>
-                {showAgentForm && (
-                  <div style={{ ...card, marginBottom: 16, borderColor: ACCENT }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>{editingAgentId ? 'Edit agent' : 'New agent'}</div>
-                    <div style={{ ...formGrid, marginBottom: 12 }}>
-                      <Field label="Name *"><input style={input} value={agentForm.name} onChange={e => setAgentForm({ ...agentForm, name: e.target.value })} /></Field>
-                      <Field label="Email"><input style={input} value={agentForm.email} onChange={e => setAgentForm({ ...agentForm, email: e.target.value })} /></Field>
-                      <Field label="Phone"><input style={input} value={agentForm.phone} onChange={e => setAgentForm({ ...agentForm, phone: e.target.value })} /></Field>
-                      <Field label="Country"><input style={input} value={agentForm.country} onChange={e => setAgentForm({ ...agentForm, country: e.target.value })} placeholder="Jamaica / UK / UAE" /></Field>
-                      <Field label="Agent code (auto if blank)"><input style={input} value={agentForm.code} onChange={e => setAgentForm({ ...agentForm, code: e.target.value.toUpperCase() })} /></Field>
-                    </div>
-                    <div style={{ ...formGrid, marginBottom: 12 }}>
-                      <Field label="Short-term commission">
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <select style={{ ...input, width: 110 }} value={agentForm.st_rate_type} onChange={e => setAgentForm({ ...agentForm, st_rate_type: e.target.value })}><option value="percent">% of booking</option><option value="flat">Flat £</option></select>
-                          <input style={input} type="number" value={agentForm.st_rate} onChange={e => setAgentForm({ ...agentForm, st_rate: e.target.value })} />
-                        </div>
-                      </Field>
-                      <Field label="Long-term commission">
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <select style={{ ...input, width: 110 }} value={agentForm.lt_rate_type} onChange={e => setAgentForm({ ...agentForm, lt_rate_type: e.target.value })}><option value="percent">% of month's rent</option><option value="flat">Flat £</option></select>
-                          <input style={input} type="number" value={agentForm.lt_rate} onChange={e => setAgentForm({ ...agentForm, lt_rate: e.target.value })} />
-                        </div>
-                      </Field>
-                      <Field label="Payout method">
-                        <select style={input} value={agentForm.payout_method} onChange={e => setAgentForm({ ...agentForm, payout_method: e.target.value })}>
-                          <option value="bank">Bank transfer</option><option value="wise">Wise</option><option value="stripe">Stripe</option><option value="other">Other</option>
-                        </select>
-                      </Field>
-                      <Field label="Payout details"><input style={input} value={agentForm.payout_details} onChange={e => setAgentForm({ ...agentForm, payout_details: e.target.value })} placeholder="Account name / reference" /></Field>
-                    </div>
-                    <Field label="Notes"><textarea style={{ ...input, minHeight: 60 }} value={agentForm.notes} onChange={e => setAgentForm({ ...agentForm, notes: e.target.value })} /></Field>
-                    <div style={{ marginTop: 14 }}><button onClick={saveAgent} disabled={saving} style={btnGold}>{saving ? 'Saving…' : 'Save agent'}</button></div>
-                  </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {agents.length === 0 && <div style={{ ...card, fontSize: 13, color: '#98A2B3' }}>No agents yet. Add your first agent to start logging guests and tenants.</div>}
-                  {agents.map(a => {
-                    const mine = referrals.filter(r => r.agent_id === a.id)
-                    const earned = mine.filter(r => r.commission_status === 'paid').reduce((s, r) => s + (Number(r.commission_amount) || 0), 0)
-                    const owed = mine.filter(r => r.commission_status === 'payable').reduce((s, r) => s + (Number(r.commission_amount) || 0), 0)
-                    return (
-                      <div key={a.id} style={card}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-                          <div>
-                            <div style={{ fontWeight: 700 }}>{a.name} <span style={{ fontSize: 12, color: ACCENT, fontWeight: 700, marginLeft: 6 }}>{a.code}</span></div>
-                            <div style={{ fontSize: 12, color: '#667085' }}>{[a.email, a.phone, a.country].filter(Boolean).join(' · ') || '—'}</div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <Pill status={a.status} label={a.status === 'active' ? 'Active' : 'Paused'} />
-                            <button onClick={() => editAgent(a)} style={btnGhost}>Edit</button>
-                            <button onClick={() => toggleAgentStatus(a)} style={btnGhost}>{a.status === 'active' ? 'Pause' : 'Activate'}</button>
-                          </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, fontSize: 12 }}>
-                          <div><div style={{ color: '#667085' }}>Short-term rate</div><div style={{ fontWeight: 700 }}>{a.st_rate_type === 'flat' ? gbp(a.st_rate) : `${a.st_rate}% of booking`}</div></div>
-                          <div><div style={{ color: '#667085' }}>Long-term rate</div><div style={{ fontWeight: 700 }}>{a.lt_rate_type === 'flat' ? gbp(a.lt_rate) : `${a.lt_rate}% of 1 month`}</div></div>
-                          <div><div style={{ color: '#667085' }}>Referrals</div><div style={{ fontWeight: 700 }}>{mine.length}</div></div>
-                          <div><div style={{ color: '#667085' }}>Owed</div><div style={{ fontWeight: 700 }}>{gbp(owed)}</div></div>
-                          <div><div style={{ color: '#667085' }}>Paid</div><div style={{ fontWeight: 700 }}>{gbp(earned)}</div></div>
-                        </div>
-                      </div>
-                    )
-                  })}
+            {/* ---- Referral pipeline board ---- */}
+            <div style={{ ...panelCard, marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '13px 18px', borderBottom: '1px solid #ebe7de' }}>
+                <div style={{ fontSize: 14.5, fontWeight: 600 }}>Referral pipeline</div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Seg value={refFilter} onChange={setRefFilter} options={[['all', 'All'], ['short_term', 'Short-term'], ['long_term', 'Long-term']]} />
+                  <button onClick={() => { setShowRefForm(!showRefForm); setRefForm(EMPTY_REFERRAL) }} style={btnDark} disabled={agents.length === 0}>{showRefForm ? 'Close' : 'Log guest / tenant'}</button>
                 </div>
-              </>
-            )}
-
-            {/* ---- Referrals ---- */}
-            {apView === 'Referrals' && (
-              <>
-                {agents.length === 0 && !agentsMissing && <div style={{ ...card, marginBottom: 12, fontSize: 13, color: '#667085' }}>Add an agent first (Agents tab), then log their guests and tenants here.</div>}
+              </div>
+              <div style={{ padding: 18 }}>
+                {agents.length === 0 && !agentsMissing && <div style={{ fontSize: 13, color: '#667085', marginBottom: 12 }}>Add an agent first (Agents, below), then log their guests and tenants here.</div>}
                 {showRefForm && (
                   <div style={{ ...card, marginBottom: 16, borderColor: ACCENT }}>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Log a guest or tenant</div>
@@ -756,66 +853,117 @@ export default function PartnersPage() {
                       <Field label={refForm.referral_type === 'short_term' ? 'Booking value (£)' : 'Monthly rent (£)'}><input style={input} type="number" value={refForm.value} onChange={e => setRefForm({ ...refForm, value: e.target.value })} /></Field>
                     </div>
                     <Field label="Notes"><textarea style={{ ...input, minHeight: 60 }} value={refForm.notes} onChange={e => setRefForm({ ...refForm, notes: e.target.value })} /></Field>
-                    <div style={{ marginTop: 14 }}><button onClick={saveReferral} disabled={saving} style={btnGold}>{saving ? 'Saving…' : 'Log referral'}</button></div>
+                    <div style={{ marginTop: 14 }}><button onClick={saveReferral} disabled={saving} style={btnDark}>{saving ? 'Saving…' : 'Log referral'}</button></div>
                   </div>
                 )}
-
-                <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-                  {([['all', 'All'], ['short_term', 'Short-term'], ['long_term', 'Long-term']] as const).map(([k, v]) => (
-                    <button key={k} onClick={() => setRefFilter(k)} style={{ ...btnGhost, background: refFilter === k ? ACCENT_SOFT : '#fff', borderColor: refFilter === k ? ACCENT : '#D0D5DD', color: refFilter === k ? ACCENT : '#344054' }}>{v}</button>
-                  ))}
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {filteredReferrals.length === 0 && <div style={{ ...card, fontSize: 13, color: '#98A2B3' }}>No referrals yet.</div>}
-                  {filteredReferrals.map(r => {
-                    const dup = isDuplicate(r)
-                    const st = r.referral_type === 'short_term'
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                  {BOARD.map(([k, label, f]) => {
+                    const list = filteredReferrals.filter(f)
                     return (
-                      <div key={r.id} style={{ ...card, borderColor: dup ? '#FDA29B' : '#E4E7EC' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-                          <div>
-                            <div style={{ fontWeight: 700 }}>{r.person_name}</div>
-                            <div style={{ fontSize: 12, color: '#667085' }}>
-                              {st ? `Guest · ${CHANNEL_LABEL[r.channel] ?? 'Direct'}` : 'Tenant'} · Agent: {agentName(r.agent_id)} · Logged {new Date(r.created_at).toLocaleDateString('en-GB')}
-                            </div>
-                            <div style={{ fontSize: 12, color: '#667085' }}>{[r.person_email, r.person_phone].filter(Boolean).join(' · ')}</div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                            {dup && <Pill status="duplicate" label="Possible duplicate" />}
-                            <Pill status={r.status} label={STATUS_LABEL[r.status]} />
-                            <Pill status={r.commission_status} label={COMMISSION_LABEL[r.commission_status]} />
-                          </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, fontSize: 12, marginBottom: 12 }}>
-                          <div><div style={{ color: '#667085' }}>Property</div><div style={{ fontWeight: 700 }}>{r.property_label ?? '—'}</div></div>
-                          <div><div style={{ color: '#667085' }}>{st ? 'Stay' : 'Move-in'}</div><div style={{ fontWeight: 700 }}>{r.start_date ? new Date(r.start_date).toLocaleDateString('en-GB') : '—'}{st && r.end_date ? ` – ${new Date(r.end_date).toLocaleDateString('en-GB')}` : ''}</div></div>
-                          <div><div style={{ color: '#667085' }}>{st ? 'Booking value' : 'Monthly rent'}</div><div style={{ fontWeight: 700 }}>{r.value != null ? gbp(Number(r.value)) : '—'}</div></div>
-                          <div>
-                            <div style={{ color: '#667085' }}>Commission</div>
-                            <input type="number" defaultValue={r.commission_amount ?? ''} placeholder={gbp(calcCommission(agents.find(a => a.id === r.agent_id), r))}
-                              onBlur={e => { const v = e.target.value; if (String(r.commission_amount ?? '') !== v) updateReferralField(r, 'commission_amount', v === '' ? null : Number(v)) }}
-                              style={{ ...input, padding: '5px 8px', width: 110 }} disabled={r.commission_status === 'paid'} />
-                          </div>
-                        </div>
-                        {!st && (
-                          <div style={{ marginBottom: 12 }}>
-                            <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>Screening notes (ID, income, references, credit, guarantor)</div>
-                            <textarea defaultValue={r.screening_notes ?? ''} onBlur={e => { if ((r.screening_notes ?? '') !== e.target.value) updateReferralField(r, 'screening_notes', e.target.value || null) }} style={{ ...input, minHeight: 50 }} />
-                          </div>
-                        )}
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <select value={r.status} onChange={e => setReferralStatus(r, e.target.value)} style={{ ...input, width: 190 }}>
-                            {REFERRAL_STATUSES.map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-                          </select>
-                          {r.commission_status === 'payable' && <button onClick={() => markPaid(r)} style={btnGold}>Mark commission paid</button>}
-                          {r.commission_status === 'paid' && <span style={{ fontSize: 12, color: '#059669' }}>Paid {r.paid_at ? new Date(r.paid_at).toLocaleDateString('en-GB') : ''}{r.payout_reference ? ` · Ref ${r.payout_reference}` : ''}</span>}
+                      <div key={k} style={{ background: '#fbfaf7', border: '1px solid #ebe7de', borderRadius: 8, padding: 10, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '2px 4px 10px', fontSize: 11.5, letterSpacing: '.06em', textTransform: 'uppercase', fontWeight: 600, color: '#55524b' }}><span>{label}</span><span>{list.length}</span></div>
+                        <div style={{ maxHeight: 460, overflowY: 'auto' }}>
+                          {list.length === 0 && <div style={{ fontSize: 12, color: '#a8a397', padding: '6px 4px 4px' }}>None</div>}
+                          {list.map(r => refTile(r))}
                         </div>
                       </div>
                     )
                   })}
                 </div>
-              </>
+                {closedRefs.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <button onClick={() => setShowClosed(!showClosed)} style={btnGhost}>{showClosed ? 'Hide' : 'Show'} closed referrals ({closedRefs.length})</button>
+                    {showClosed && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8, marginTop: 10 }}>{closedRefs.map(r => refTile(r))}</div>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ---- Agents table ---- */}
+            <div style={panelCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '13px 18px', borderBottom: '1px solid #ebe7de' }}>
+                <div style={{ fontSize: 14.5, fontWeight: 600 }}>Agents</div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#8a857a' }}>{activeAgents} active{agents.length - activeAgents ? ` · ${agents.length - activeAgents} paused` : ''}</span>
+                  <button onClick={() => { setShowAgentForm(!showAgentForm); setEditingAgentId(null); setAgentForm(EMPTY_AGENT) }} style={btnGhost}>{showAgentForm ? 'Close' : 'Add agent'}</button>
+                </div>
+              </div>
+              {showAgentForm && (
+                <div id="agent-form" style={{ padding: 18, borderBottom: '1px solid #ebe7de', background: '#fcfbf8' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>{editingAgentId ? 'Edit agent' : 'New agent'}</div>
+                  <div style={{ ...formGrid, marginBottom: 12 }}>
+                    <Field label="Name *"><input style={input} value={agentForm.name} onChange={e => setAgentForm({ ...agentForm, name: e.target.value })} /></Field>
+                    <Field label="Email"><input style={input} value={agentForm.email} onChange={e => setAgentForm({ ...agentForm, email: e.target.value })} /></Field>
+                    <Field label="Phone"><input style={input} value={agentForm.phone} onChange={e => setAgentForm({ ...agentForm, phone: e.target.value })} /></Field>
+                    <Field label="Country"><input style={input} value={agentForm.country} onChange={e => setAgentForm({ ...agentForm, country: e.target.value })} placeholder="Jamaica / UK / UAE" /></Field>
+                    <Field label="Agent code (auto if blank)"><input style={input} value={agentForm.code} onChange={e => setAgentForm({ ...agentForm, code: e.target.value.toUpperCase() })} /></Field>
+                  </div>
+                  <div style={{ ...formGrid, marginBottom: 12 }}>
+                    <Field label="Short-term commission">
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <select style={{ ...input, width: 110 }} value={agentForm.st_rate_type} onChange={e => setAgentForm({ ...agentForm, st_rate_type: e.target.value })}><option value="percent">% of booking</option><option value="flat">Flat £</option></select>
+                        <input style={input} type="number" value={agentForm.st_rate} onChange={e => setAgentForm({ ...agentForm, st_rate: e.target.value })} />
+                      </div>
+                    </Field>
+                    <Field label="Long-term commission">
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <select style={{ ...input, width: 110 }} value={agentForm.lt_rate_type} onChange={e => setAgentForm({ ...agentForm, lt_rate_type: e.target.value })}><option value="percent">% of month's rent</option><option value="flat">Flat £</option></select>
+                        <input style={input} type="number" value={agentForm.lt_rate} onChange={e => setAgentForm({ ...agentForm, lt_rate: e.target.value })} />
+                      </div>
+                    </Field>
+                    <Field label="Payout method">
+                      <select style={input} value={agentForm.payout_method} onChange={e => setAgentForm({ ...agentForm, payout_method: e.target.value })}>
+                        <option value="bank">Bank transfer</option><option value="wise">Wise</option><option value="stripe">Stripe</option><option value="other">Other</option>
+                      </select>
+                    </Field>
+                    <Field label="Payout details"><input style={input} value={agentForm.payout_details} onChange={e => setAgentForm({ ...agentForm, payout_details: e.target.value })} placeholder="Account name / reference" /></Field>
+                  </div>
+                  <Field label="Notes"><textarea style={{ ...input, minHeight: 60 }} value={agentForm.notes} onChange={e => setAgentForm({ ...agentForm, notes: e.target.value })} /></Field>
+                  <div style={{ marginTop: 14 }}><button onClick={saveAgent} disabled={saving} style={btnDark}>{saving ? 'Saving…' : 'Save agent'}</button></div>
+                </div>
+              )}
+              {agents.length === 0
+                ? <div style={{ padding: 18, fontSize: 13, color: '#8a857a' }}>No agents yet. Add your first agent to start logging guests and tenants.</div>
+                : <div style={{ overflowX: 'auto' }}>
+                    <table style={{ ...tbl, minWidth: 980 }}>
+                      <thead><tr>
+                        <th style={th}>Agent</th><th style={th}>Area</th><th style={th}>Tier</th><th style={th}>Rates</th>
+                        <th style={{ ...th, textAlign: 'right' }}>Referrals</th><th style={{ ...th, width: 170 }}>Conversion</th>
+                        <th style={{ ...th, textAlign: 'right' }}>Paid</th><th style={{ ...th, textAlign: 'right' }}>Owed</th><th style={th}>Payout</th><th style={th}></th>
+                      </tr></thead>
+                      <tbody>{agentStats.map(s => (
+                        <tr key={s.a.id} style={{ opacity: s.a.status === 'active' ? 1 : 0.55 }}>
+                          <td style={{ ...td, whiteSpace: 'nowrap' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center' }}><Avatar name={s.a.name} />
+                              <span><span style={{ fontWeight: 600 }}>{s.a.name}</span><span style={{ fontSize: 11.5, color: '#8E6B1F', fontWeight: 700, marginLeft: 6 }}>{s.a.code}</span>
+                                <div style={{ fontSize: 11.5, color: '#8a857a' }}>{[s.a.email, s.a.phone].filter(Boolean).join(' · ') || '—'}</div></span>
+                            </span>
+                          </td>
+                          <td style={{ ...td, color: '#55524b' }}>{s.a.country || '—'}</td>
+                          <td style={td}>{s.a.status === 'active' ? <Badge tone={s.tier.tone}>{s.tier.label}</Badge> : <Badge tone="grey">Paused</Badge>}</td>
+                          <td style={{ ...td, fontSize: 12, color: '#55524b', whiteSpace: 'nowrap' }}>ST {s.a.st_rate_type === 'flat' ? gbp(s.a.st_rate) : `${s.a.st_rate}%`} · LT {s.a.lt_rate_type === 'flat' ? gbp(s.a.lt_rate) : `${s.a.lt_rate}%`}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{s.refs}</td>
+                          <td style={td}>{s.conv == null ? <span style={{ fontSize: 12, color: '#a8a397' }}>No closed referrals</span> : <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ flex: 1 }}><Bar pct={s.conv} /></div><span style={{ width: 34, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{s.conv}%</span></div>}</td>
+                          <td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{gbp(s.paid)}</td>
+                          <td style={{ ...td, textAlign: 'right' }}>{s.owed ? gbp(s.owed) : '—'}</td>
+                          <td style={td}>{s.owed ? <Badge tone="amber">Payable</Badge> : s.pending ? <Badge tone="blue">{gbp(s.pending)} pending</Badge> : <Badge tone="green">Up to date</Badge>}</td>
+                          <td style={{ ...td, whiteSpace: 'nowrap', textAlign: 'right' }}>
+                            <button onClick={() => { editAgent(s.a); setTimeout(() => document.getElementById('agent-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50) }} style={{ ...btnGhost, padding: '5px 10px' }}>Edit</button>{' '}
+                            <button onClick={() => toggleAgentStatus(s.a)} style={{ ...btnGhost, padding: '5px 10px' }}>{s.a.status === 'active' ? 'Pause' : 'Activate'}</button>
+                          </td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>}
+            </div>
+
+            {/* ---- Referral detail ---- */}
+            {openRef && (
+              <div onClick={() => setOpenRefId(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(25,24,21,.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '6vh 16px', overflowY: 'auto' }}>
+                <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 720 }}>
+                  {referralCard(openRef)}
+                </div>
+              </div>
             )}
           </>
         )}
