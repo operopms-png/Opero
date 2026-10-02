@@ -7,6 +7,8 @@ import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 // "Send enquiry" from the property cards on sangstersgroup.com (sg-properties.js).
 //   POST {property_id, name, email, phone, check_in, check_out, guests, move_in, message}
 //   -> CRM contact + Enquiry deal, bell + email alert to the team, thank-you email.
+// Also the homepage hero enquiry (no property):
+//   POST {service: guaranteed-rent|partnership-management|accommodation, country, name, email, phone, message}
 // Public and cross-origin on purpose; a hidden "website" field catches bots.
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +27,26 @@ export async function POST(req: NextRequest) {
   const name = clean(b.name, 120), email = clean(b.email, 200).toLowerCase(), phone = clean(b.phone, 40), message = clean(b.message, 3000)
   if (!name) return bad('Please add your name.')
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please add a valid email address.')
+
+  // General enquiry from the homepage hero (country + service, no property)
+  const SERVICES: Record<string, { label: string; module: string; type: string }> = {
+    'guaranteed-rent': { label: 'Guaranteed Rent', module: 'pm', type: 'Landlord' },
+    'partnership-management': { label: 'Partnership Management', module: 'str', type: 'Landlord' },
+    accommodation: { label: 'Accommodation', module: 'str', type: 'Guest' },
+  }
+  if (!b.property_id && b.service) {
+    const svc = SERVICES[clean(b.service, 40)]
+    if (!svc) return bad('Please choose a service.')
+    const country = clean(b.country, 60) || 'Not given'
+    const since = new Date(Date.now() - 864e5).toISOString()
+    const { count } = await serviceClient.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', biz).eq('type', 'lead').ilike('message', `%${email}%`).gte('created_at', since)
+    if ((count ?? 0) >= 6) return bad('We’ve already received your enquiries — we’ll be in touch soon.', 429)
+    const details = [`Service: ${svc.label}`, `Country: ${country}`, `Phone: ${phone || '—'}`, message && `Message: ${message}`, `Source: ${clean(b.source, 120) || 'Website homepage'}`].filter(Boolean).join('\n')
+    await addCrmLead({ businessId: biz, name, email, phone, source: 'Website enquiry', module: svc.module, type: svc.type, notes: details, dealName: `${name} — ${svc.label} (${country})` })
+    const alertTo = await alertTeam(biz, `Website enquiry: ${svc.label} — ${name}`, `${name} <${email}>${phone ? ` · ${phone}` : ''}\n${details}`, '/staff-centre/crm', email)
+    await sendEmail(email, `Your enquiry — ${svc.label}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for your enquiry about <b>${esc(svc.label)}</b>${country !== 'Not given' ? ` in ${esc(country)}` : ''}. A member of our team will be in touch shortly.</p><p>If anything changes, just reply to this email.</p><p>Kind regards,<br>Sangsters Group</p></div>`, alertTo).catch(() => {})
+    return NextResponse.json({ success: true }, { headers: CORS })
+  }
 
   const { data: p } = await serviceClient.from('estate_properties').select('id,name,web_title,web_area,country,status,airbnb_url').eq('user_id', biz).eq('id', clean(b.property_id, 80)).eq('show_on_website', true).maybeSingle()
   if (!p) return bad('Sorry, that property is no longer available.', 404)
