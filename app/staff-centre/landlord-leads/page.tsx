@@ -58,7 +58,7 @@ export default function LandlordLeads() {
           <input placeholder="Search name, email, phone or area" value={q} onChange={e => setQ(e.target.value)} style={{ ...input, maxWidth: 360, marginBottom: 18 }} />
           {shown.length === 0 ? <Empty>{total === 0 ? <>No landlord leads yet. Share <b>{LINK}</b> in your ads, letters and with realtors, or put the form on your website.</> : 'No leads match.'}</Empty> : (
             <Group title={tab === 'all' ? 'All leads' : STATUS[tab].l} color={tab === 'all' ? C.goldDark : STATUS[tab].c} count={shown.length}
-              cols={[{ k: 'n', l: 'Landlord', w: 'minmax(200px,1.3fr)' }, { k: 'p', l: 'Property', w: 'minmax(200px,1.4fr)' }, { k: 'h', l: 'Holiday let / mo', w: 130 }, { k: 'l', l: 'Long let / mo', w: 130 }, { k: 'g', l: 'Wants', w: 150 }, { k: 'w', l: 'Lives in', w: 120 }, { k: 's', l: 'Status', w: 140 }, { k: 'd', l: 'Date', w: 100 }]}>
+              cols={[{ k: 'n', l: 'Landlord', w: 'minmax(200px,1.3fr)' }, { k: 'p', l: 'Property', w: 'minmax(200px,1.4fr)' }, { k: 'h', l: 'Holiday let / mo', w: 130 }, { k: 'l', l: 'Long let / mo', w: 130 }, { k: 'g', l: 'Wants', w: 150 }, { k: 'w', l: 'Start', w: 120 }, { k: 's', l: 'Status', w: 140 }, { k: 'd', l: 'Date', w: 100 }]}>
               {shown.map(l => (
                 <Row key={l.id} onClick={() => setOpen(l)} active={open?.id === l.id} cells={[
                   <div key="n" style={{ minWidth: 0 }}><div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</div><div style={{ fontSize: 12, color: C.faint, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.email}</div></div>,
@@ -66,7 +66,7 @@ export default function LandlordLeads() {
                   <span key="h" style={{ fontWeight: 600 }}>{money(l.estimate?.short_let?.monthly_typical, l.currency)}</span>,
                   <span key="l" style={{ fontWeight: 600 }}>{money(l.estimate?.long_let?.monthly_typical, l.currency)}</span>,
                   <span key="g" style={{ fontSize: 12.5 }}>{l.goal || '—'}</span>,
-                  <span key="w" style={{ fontSize: 12.5 }}>{l.lives_in || '—'}</span>,
+                  <span key="w" style={{ fontSize: 12.5 }}>{l.start_when || l.lives_in || '—'}</span>,
                   <Pill key="s" color={STATUS[l.status]?.c || C.grey} width={120}>{STATUS[l.status]?.l || l.status}</Pill>,
                   <span key="d" style={{ fontSize: 12.5, color: C.muted }}>{new Date(l.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>,
                 ]} />
@@ -122,7 +122,7 @@ function LeadModal({ lead, onClose, onSaved }: { lead: any; onClose: () => void;
         <div style={{ fontSize: 13.5, color: C.ink, lineHeight: 1.7, background: '#F7F8FA', borderRadius: 6, padding: '10px 14px' }}>
           <b>{lead.bedrooms === 0 ? 'Studio' : lead.bedrooms ? `${lead.bedrooms}-bed` : ''} {(lead.property_type || 'property').toLowerCase()}</b> in {lead.location}{lead.country ? `, ${lead.country}` : ''}
           {lead.bathrooms ? ` · ${lead.bathrooms} bath` : ''}{lead.furnished ? ` · furnished: ${lead.furnished}` : ''}<br />
-          Wants: <b>{lead.goal || '—'}</b> · Lives in: <b>{lead.lives_in || '—'}</b> · Came from: {lead.source || '—'} · {new Date(lead.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          Wants: <b>{lead.goal || '—'}</b>{lead.rent_type ? <> · <b>{lead.rent_type}</b></> : null}{lead.start_when ? <> · start <b>{lead.start_when}</b></> : null} · Marketing emails: <b>{lead.marketing_opt_in ? 'yes' : 'no'}</b>{lead.lives_in ? <> · Lives in: <b>{lead.lives_in}</b></> : null} · Came from: {lead.source || '—'} · {new Date(lead.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
         </div>
         {e ? (
           <div>

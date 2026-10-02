@@ -8,7 +8,8 @@ import { runEstimate, money, type Estimate } from '@/lib/earnings-estimate'
 // "What could your property earn?" — the landlord earnings checker on
 // sangstersgroup.com (public/sg-earnings.js) and app.sangstersgroup.com/earnings.
 //   POST {name, email, phone, lives_in, location, country, property_type, bedrooms,
-//         bathrooms, furnished, goal, currency, consent, source, website(honeypot)}
+//         bathrooms, furnished, goal, rent_type, start_when, marketing_opt_in,
+//         currency, consent, source, website(honeypot)}
 // 1. saves the lead (Landlord Leads + CRM + team alert) straight away, so a
 //    landlord is never lost even if the market search fails,
 // 2. runs the AI estimate (live listings, holiday let + long let),
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
     business_id: biz, name, email, phone: phone || null, lives_in: clean(b.lives_in, 60) || null,
     location, country, property_type: clean(b.property_type, 60) || null, bedrooms, bathrooms,
     furnished: clean(b.furnished, 30) || null, goal: clean(b.goal, 30) || null, currency,
+    rent_type: clean(b.rent_type, 30) || null, start_when: clean(b.start_when, 30) || null, marketing_opt_in: b.marketing_opt_in === true,
     source: clean(b.source, 120) || 'Website', ip: ip || null,
   }
   const { data: saved, error: insErr } = await serviceClient.from('landlord_estimates').insert(row).select('id').single()
@@ -63,6 +65,9 @@ export async function POST(req: NextRequest) {
     row.bathrooms ? `Bathrooms: ${row.bathrooms}` : '',
     row.furnished ? `Furnished: ${row.furnished}` : '',
     row.goal ? `Interested in: ${row.goal}` : '',
+    row.rent_type ? `Letting: ${row.rent_type}` : '',
+    row.start_when ? `Start: ${row.start_when}` : '',
+    `Marketing emails: ${row.marketing_opt_in ? 'yes' : 'no'}`,
     row.lives_in ? `Lives in: ${row.lives_in}` : '',
     `Phone: ${phone || '—'}`,
     `Source: ${row.source}`,

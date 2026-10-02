@@ -20,8 +20,8 @@ export default function Page() {
         <a href="https://sangstersgroup.com" style={{ marginLeft: 'auto', fontSize: 13.5, color: '#191815', fontWeight: 600 }}>sangstersgroup.com</a>
       </header>
       <main style={{ padding: '40px 16px 64px' }}>
-        <div data-sg-earnings="" />
-        <div style={{ maxWidth: 760, margin: '28px auto 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
+        <div style={{ maxWidth: 980, margin: '0 auto' }}><div data-sg-earnings="" /></div>
+        <div style={{ maxWidth: 980, margin: '28px auto 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16 }}>
           {[
             ['Full management', 'Listing, pricing, guests, cleaning and maintenance — handled by our team.'],
             ['Guaranteed rent', 'Prefer a fixed monthly income? Ask us about guaranteed rent.'],
