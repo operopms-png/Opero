@@ -53,6 +53,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/smart-home': 'smarthome',
   '/staff-centre/airbnb': 'inbox',
   '/staff-centre/landlord-leads': 'crm',
+  '/staff-centre/client-properties': 'crm',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
