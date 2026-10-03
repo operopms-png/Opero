@@ -3,16 +3,38 @@
 // reuse the exact same calculation logic instead of duplicating it.
 // page.tsx now imports these instead of defining them locally.
 
+// How a purchase is funded (form.financeType):
+//   'mortgage' (default) — deposit % + repayment mortgage (rate %, term in years)
+//   'cash'               — bought outright, no finance payment
+//   'option'             — purchase option agreement / lease option: pay the owner an
+//                          option fee now and a monthly payment, buy later at an agreed price
+// Blank fields fall back to defaults; a typed 0 stays 0 (0% rate, 0% deposit).
+export function financeFor(d: any, price: number, defaultRate: number) {
+  const num = (v: any, def: number) => { if (v === undefined || v === null || v === '') return def; const x = parseFloat(v); return Number.isFinite(x) ? x : def }
+  const financeType = d.financeType === 'cash' || d.financeType === 'option' ? d.financeType : 'mortgage'
+  if (financeType === 'cash') return { financeType, depositAmt: price, loanAmt: 0, monthlyMortgage: 0 }
+  if (financeType === 'option') {
+    const optionFee = num(d.optionFee, 0), optionMonthly = num(d.optionMonthly, 0), optionYears = num(d.optionYears, 5)
+    const optionPrice = num(d.optionPrice, price), optionEndValue = num(d.optionEndValue, price)
+    const credited = d.optionCredit === 'yes' ? optionFee + optionMonthly * 12 * optionYears : 0
+    const optionToPayAtEnd = Math.max(0, optionPrice - credited)
+    return { financeType, depositAmt: optionFee, loanAmt: 0, monthlyMortgage: optionMonthly, optionFee, optionMonthly, optionYears, optionPrice, optionEndValue, optionCredited: credited, optionToPayAtEnd, optionEquityAtEnd: optionEndValue - optionPrice }
+  }
+  const deposit = num(d.deposit, 25), rate = num(d.mortgageRate, defaultRate), years = num(d.mortgageTerm, 25)
+  const depositAmt = price * deposit / 100
+  const loanAmt = Math.max(0, price - depositAmt)
+  const n = Math.max(1, Math.round(years * 12)), r = rate / 100 / 12
+  const monthlyMortgage = loanAmt <= 0 ? 0 : r === 0 ? loanAmt / n : loanAmt * r / (1 - Math.pow(1 + r, -n))
+  return { financeType, depositAmt, loanAmt, monthlyMortgage }
+}
+
 export function calcBTL(d: any) {
   const price = parseFloat(d.price)||0
-  const deposit = parseFloat(d.deposit)||25
   const rent = parseFloat(d.rent)||0
-  const mortgage = parseFloat(d.mortgageRate)||5
   const expenses = parseFloat(d.expenses)||20
   const refurb = parseFloat(d.refurb)||0
-  const depositAmt = price * deposit / 100
-  const loanAmt = price - depositAmt
-  const monthlyMortgage = loanAmt * (mortgage/100/12) / (1 - Math.pow(1+mortgage/100/12, -300))
+  const fin = financeFor(d, price, 5)
+  const { depositAmt, loanAmt, monthlyMortgage } = fin
   const monthlyExpenses = rent * expenses / 100
   const monthlyCashflow = rent - monthlyMortgage - monthlyExpenses
   const annualCashflow = monthlyCashflow * 12
@@ -20,28 +42,25 @@ export function calcBTL(d: any) {
   const grossYield = price > 0 ? (rent*12/price*100) : 0
   const netYield = totalInvested > 0 ? (annualCashflow/totalInvested*100) : 0
   const roi = totalInvested > 0 ? (annualCashflow/totalInvested*100) : 0
-  return { depositAmt, loanAmt, monthlyMortgage, monthlyExpenses, monthlyCashflow, annualCashflow, grossYield, netYield, roi, totalInvested }
+  return { ...fin, depositAmt, loanAmt, monthlyMortgage, monthlyExpenses, monthlyCashflow, annualCashflow, grossYield, netYield, roi, totalInvested }
 }
 
 export function calcHMO(d: any) {
   const price = parseFloat(d.price)||0
-  const deposit = parseFloat(d.deposit)||25
   const rooms = parseInt(d.rooms)||4
   const rentPerRoom = parseFloat(d.rentPerRoom)||600
-  const mortgage = parseFloat(d.mortgageRate)||5.5
   const expenses = parseFloat(d.expenses)||35
   const refurb = parseFloat(d.refurb)||0
   const totalRent = rooms * rentPerRoom
-  const depositAmt = price * deposit / 100
-  const loanAmt = price - depositAmt
-  const monthlyMortgage = loanAmt * (mortgage/100/12) / (1 - Math.pow(1+mortgage/100/12, -300))
+  const fin = financeFor(d, price, 5.5)
+  const { depositAmt, loanAmt, monthlyMortgage } = fin
   const monthlyExpenses = totalRent * expenses / 100
   const monthlyCashflow = totalRent - monthlyMortgage - monthlyExpenses
   const annualCashflow = monthlyCashflow * 12
   const totalInvested = depositAmt + refurb
   const grossYield = price > 0 ? (totalRent*12/price*100) : 0
   const roi = totalInvested > 0 ? (annualCashflow/totalInvested*100) : 0
-  return { depositAmt, loanAmt, monthlyMortgage, monthlyExpenses, monthlyCashflow, annualCashflow, grossYield, roi, totalInvested, totalRent }
+  return { ...fin, depositAmt, loanAmt, monthlyMortgage, monthlyExpenses, monthlyCashflow, annualCashflow, grossYield, roi, totalInvested, totalRent }
 }
 
 // Rent to Rent / Rent to HMO.
@@ -171,7 +190,7 @@ export function getStressScenarios(strategy: string) {
 export function applyStress(strategy: string, form: any, scenario: { ratePts?: number; rentPct?: number }) {
   if (strategy === 'r2hmo') strategy = 'r2r'
   const f = { ...form }
-  if (scenario.ratePts) {
+  if (scenario.ratePts && (!f.financeType || f.financeType === 'mortgage')) {
     const baseRate = parseFloat(f.mortgageRate) || (strategy==='hmo' ? 5.5 : 5)
     f.mortgageRate = String(baseRate + scenario.ratePts)
   }

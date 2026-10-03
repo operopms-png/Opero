@@ -256,8 +256,12 @@ export default function InvestPage() {
       n.priceLabel = 'Price'; n.price = parseFloat(form.price) || null
       n.cashLabel = 'Total cost'; n.cashNeeded = result.totalCost ?? null; n.cashSub = 'Price, works and costs'; n.profit = result.profit ?? null
     } else {
-      n.priceLabel = 'Price'; n.price = parseFloat(form.price) || null; n.priceSub = form.deposit ? `${form.deposit}% deposit` : ''
-      n.cashLabel = 'Cash needed'; n.cashNeeded = result.totalInvested ?? null; n.cashSub = 'Deposit and refurb'
+      const ft = result.financeType || 'mortgage'
+      n.financeType = ft
+      n.priceLabel = ft === 'option' ? 'Agreed price' : 'Price'; n.price = ft === 'option' ? result.optionPrice : (parseFloat(form.price) || null)
+      n.priceSub = ft === 'cash' ? 'Cash purchase' : ft === 'option' ? `Purchase option · ${result.optionYears} yrs` : `${form.deposit || 25}% deposit · mortgage`
+      n.cashLabel = 'Cash needed'; n.cashNeeded = result.totalInvested ?? null
+      n.cashSub = ft === 'cash' ? 'Price and refurb' : ft === 'option' ? 'Option fee and refurb' : 'Deposit and refurb'
     }
     n.monthlyCashflow = result.monthlyCashflow ?? null
     const res = await fetch('/api/client-properties', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ action: 'numbers', id: clientProp.id, numbers: n }) })
@@ -402,8 +406,31 @@ export default function InvestPage() {
                     {!isR2R&&<div><label style={lbl}>Purchase Price ({S}) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}
 
                     {(strategy==='btl'||strategy==='brrr'||strategy==='hmo'||strategy==='social'||strategy==='supported')&&(<>
-                      <div><label style={lbl}>Deposit (%)</label><input value={form.deposit||'25'} onChange={e=>setForm({...form,deposit:e.target.value})} type="number" placeholder="25" style={inp}/></div>
-                      <div><label style={lbl}>Mortgage Rate (%)</label><input value={form.mortgageRate||'5'} onChange={e=>setForm({...form,mortgageRate:e.target.value})} type="number" placeholder="5.0" style={inp}/></div>
+                      {/* How the purchase is funded — see financeFor() in lib/dealCalculators.ts */}
+                      <div style={{gridColumn:'1 / -1'}}>
+                        <label style={lbl}>How are you buying it?</label>
+                        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                          {([['mortgage','Mortgage'],['cash','Cash — no mortgage'],['option','Purchase option agreement']] as const).map(([k,l])=>{ const on=(form.financeType||'mortgage')===k; return (
+                            <button key={k} type="button" onClick={()=>setForm({...form,financeType:k})} style={{padding:'8px 14px',borderRadius:20,border:'1px solid '+(on?'#191815':'#D0D4E4'),background:on?'#191815':'#fff',color:on?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{l}</button>) })}
+                        </div>
+                        {form.financeType==='cash'&&<div style={{fontSize:12.5,color:'#676879',marginTop:8}}>Bought outright: no mortgage payment. Cash needed is the price plus refurb.</div>}
+                        {form.financeType==='option'&&<div style={{fontSize:12.5,color:'#676879',marginTop:8}}>You pay the owner an option fee now and a monthly payment, let the property out, and have the right to buy it later at the agreed price.</div>}
+                      </div>
+                      {(form.financeType||'mortgage')==='mortgage'&&<>
+                        <div><label style={lbl}>Deposit (%)</label><input value={form.deposit??''} onChange={e=>setForm({...form,deposit:e.target.value})} type="number" placeholder="25" style={inp}/></div>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                          <div><label style={lbl}>Mortgage Rate (%)</label><input value={form.mortgageRate??''} onChange={e=>setForm({...form,mortgageRate:e.target.value})} type="number" placeholder="5.0" style={inp}/></div>
+                          <div><label style={lbl}>Term (years)</label><input value={form.mortgageTerm??''} onChange={e=>setForm({...form,mortgageTerm:e.target.value})} type="number" placeholder="25" style={inp}/></div>
+                        </div>
+                      </>}
+                      {form.financeType==='option'&&<>
+                        <div><label style={lbl}>Option Fee — paid to the owner now ({S})</label><input value={form.optionFee??''} onChange={e=>setForm({...form,optionFee:e.target.value})} type="number" placeholder="e.g. 500000" style={inp}/></div>
+                        <div><label style={lbl}>Monthly Payment to Owner ({S}/mo)</label><input value={form.optionMonthly??''} onChange={e=>setForm({...form,optionMonthly:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>
+                        <div><label style={lbl}>Agreed Purchase Price ({S})</label><input value={form.optionPrice??''} onChange={e=>setForm({...form,optionPrice:e.target.value})} type="number" placeholder={form.price?`${form.price} (the asking price)`:'Same as the price'} style={inp}/></div>
+                        <div><label style={lbl}>Option Length (years)</label><input value={form.optionYears??''} onChange={e=>setForm({...form,optionYears:e.target.value})} type="number" placeholder="5" style={inp}/></div>
+                        <div><label style={lbl}>Expected Value When You Buy ({S})</label><input value={form.optionEndValue??''} onChange={e=>setForm({...form,optionEndValue:e.target.value})} type="number" placeholder={form.price?`${form.price} (today’s price)`:'Today’s price'} style={inp}/></div>
+                        <div><label style={lbl}>Fee & Payments Count Towards the Price?</label><select value={form.optionCredit||'no'} onChange={e=>setForm({...form,optionCredit:e.target.value})} style={inp}><option value="no">No</option><option value="yes">Yes — deducted from the price</option></select></div>
+                      </>}
                     </>)}
 
                     {(strategy==='btl'||strategy==='brrr'||strategy==='social'||strategy==='supported')&&(
@@ -606,8 +633,12 @@ export default function InvestPage() {
                   <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
                     <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Investment Breakdown</div>
                     {[
-                      result.depositAmt!==undefined&&{l:'Deposit',v:S+n0(result.depositAmt)},
-                      result.loanAmt!==undefined&&{l:'Mortgage Amount',v:S+n0(result.loanAmt)},
+                      result.depositAmt!==undefined&&{l:result.financeType==='cash'?'Purchase Price (cash)':result.financeType==='option'?'Option Fee':'Deposit',v:S+n0(result.depositAmt)},
+                      result.loanAmt!==undefined&&(!result.financeType||result.financeType==='mortgage')&&{l:'Mortgage Amount',v:S+n0(result.loanAmt)},
+                      result.financeType==='option'&&{l:`Agreed Price (in ${result.optionYears} yrs)`,v:S+n0(result.optionPrice)},
+                      result.financeType==='option'&&result.optionCredited>0&&{l:'Credited from fee & payments',v:'-'+S+n0(result.optionCredited)},
+                      result.financeType==='option'&&{l:'Still to Pay When You Buy',v:S+n0(result.optionToPayAtEnd)},
+                      result.financeType==='option'&&{l:'Equity When You Buy (value − agreed price)',v:(result.optionEquityAtEnd<0?'-':'')+S+n0(Math.abs(result.optionEquityAtEnd)),bold:true},
                       form.refurb&&{l:'Refurb Cost',v:S+n0(parseFloat(form.refurb))},
                       result.totalInvested!==undefined&&{l:'Total Invested',v:S+n0(result.totalInvested),bold:true},
                       result.setupCost!==undefined&&{l:'Setup Cost',v:S+(form.setupCost||0)},
@@ -633,7 +664,7 @@ export default function InvestPage() {
                       result.totalRent!==undefined&&{l:'Total Rental Income',v:S+n0((result.totalRent||0)),c:'#10B981'},
                       result.totalIncome!==undefined&&{l:isR2HMO?`Room Rent Income (${form.rooms||'?'} rooms)`:'Resident Rent Income',v:S+n0((result.totalIncome||0)),c:'#10B981'},
                       result.monthlyCashflow!==undefined&&!result.totalRent&&!result.totalIncome&&{l:'Monthly Rent',v:S+n0((parseFloat(form.rent)||0)),c:'#10B981'},
-                      result.monthlyMortgage!==undefined&&{l:'Mortgage Payment',v:('-'+S)+result.monthlyMortgage.toFixed(0),c:'#EF4444'},
+                      result.monthlyMortgage!==undefined&&result.financeType!=='cash'&&{l:result.financeType==='option'?'Payment to Owner':'Mortgage Payment',v:('-'+S)+n0(result.monthlyMortgage),c:'#EF4444'},
                       result.monthlyExpenses!==undefined&&{l:isR2R?'Total Fixed Costs':'Expenses',v:('-'+S)+result.monthlyExpenses.toFixed(0),c:'#F59E0B'},
                       result.monthlyCashflow!==undefined&&{l:isR2R?'Net Operating Profit':'Net Cash Flow',v:(result.monthlyCashflow>=0?'+':'-')+S+n0(Math.abs(result.monthlyCashflow)),c:result.monthlyCashflow>=0?'#10B981':'#EF4444',bold:true},
                     ].filter(Boolean).map((item:any,i)=>(
