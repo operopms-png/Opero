@@ -1,4 +1,5 @@
 'use client'
+import { TextModal } from '@/components/TextComposer'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import CallButton from '@/components/CallButton'
@@ -70,6 +71,9 @@ export default function Page() {
   const [waConnections, setWaConnections] = useState<any[]>([])
   const [activeWaConnection, setActiveWaConnection] = useState<string | null>(null)
   const [activeSmsConnection, setActiveSmsConnection] = useState<string | null>(null)
+  const [smsConfigured, setSmsConfigured] = useState<boolean | null>(null)
+  const [smsPhone, setSmsPhone] = useState<string>('')
+  const [showNewText, setShowNewText] = useState(false)
   const [showNewConvo, setShowNewConvo] = useState(false)
   const [newConvoName, setNewConvoName] = useState('')
   const [newConvoMembers, setNewConvoMembers] = useState<string[]>([])
@@ -102,7 +106,7 @@ export default function Page() {
       setTeam(teamRows ?? [])
     }
 
-    await Promise.all([loadExternal(id), loadTeamConversations(id), loadWaConnections(), loadCallLogs()])
+    await Promise.all([loadExternal(id), loadTeamConversations(id), loadWaConnections(), loadSmsConnections(), loadCallLogs()])
     setLoading(false)
   }
 
@@ -126,16 +130,23 @@ export default function Page() {
     const result = await res.json()
     setWaConnections(result.connections ?? [])
     if (result.connections?.length && !activeWaConnection) setActiveWaConnection(result.connections[0].id)
-    if (result.connections?.length && !activeSmsConnection) setActiveSmsConnection(result.connections[0].id)
+  }
+
+  // Texts (SMS) — the business's Twilio number; see /api/sms/*
+  async function loadSmsConnections() {
+    const res = await fetch('/api/sms/connections', { headers: await authHeaders() })
+    if (!res.ok) { setSmsConfigured(false); return }
+    const result = await res.json()
+    setSmsConfigured(!!result.configured)
+    if (result.connections?.length) { setSmsPhone(result.connections[0].phone); if (!activeSmsConnection) setActiveSmsConnection(result.connections[0].id) }
   }
 
   async function loadSmsConversations(connectionId: string) {
     const res = await fetch(`/api/sms/messages?connection_id=${connectionId}`, { headers: await authHeaders() })
     if (!res.ok) return
     const result = await res.json()
-    const conn = waConnections.find(c=>c.id===connectionId)
     const smsConvos = (result.conversations ?? []).map((c:any)=>({
-      channel: 'sms', channelLabel: conn?.label ?? 'SMS', channelBg: SMS_BG, channelFg: SMS_FG,
+      channel: 'sms', channelLabel: 'Text', channelBg: SMS_BG, channelFg: SMS_FG,
       recipientId: c.contact_phone, recipientName: c.contact_name || c.contact_phone,
       lastMessage: c.last_message, lastAt: c.last_at, unread: c.unread, connectionId,
     }))
@@ -316,7 +327,7 @@ export default function Page() {
   const isOpenTeam = openConvo?.channel === 'team'
   const canCallOpenTeam = isOpenTeam && !!openConvo?.teamMemberEmail
   const isOpenCalls = openConvo?.channel === 'calls'
-  const navChannels = [...CHANNEL_PILLS.map(c=>({key:c.key,label:c.label})), ...(waConnections.length ? [{key:'whatsapp',label:'WhatsApp'},{key:'sms',label:'SMS'}] : [])]
+  const navChannels = [...CHANNEL_PILLS.map(c=>({key:c.key,label:c.label})), {key:'sms',label:'Texts'}, ...(waConnections.length ? [{key:'whatsapp',label:'WhatsApp'}] : [])]
   const current = tab==='Unread' ? 'Unread' : filter==='All' ? 'All conversations' : (navChannels.find(c=>c.key===filter)?.label ?? 'Conversations')
   const col = (c:any) => CH_COLOR[c?.channel] ?? '#C4C4C4'
   const INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4', CREAM = '#FBF4E6'
@@ -334,6 +345,7 @@ export default function Page() {
           <span style={{width:20,height:20,borderRadius:4,background:'#D0AE4C',color:'#624920',fontSize:11,fontWeight:700,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>S</span>Sangsters Inbox
         </div>
         {identity.isAdmin && <button onClick={()=>setShowNewConvo(true)} style={{height:32,borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:13.5,fontWeight:500,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New team conversation</button>}
+        <button onClick={()=>setShowNewText(true)} style={{height:32,borderRadius:4,border:`1px solid ${ACCENT}`,background:'#fff',color:'#8E6B1F',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New text</button>
         <button className="ib-nav" onClick={()=>{setTab('Unread');setFilter('All')}} style={navBtn(tab==='Unread')}><span style={{flex:1}}>Unread</span>{unreadCount>0&&<span style={{background:'#DF2F4A',color:'#fff',fontSize:11,fontWeight:600,borderRadius:9,padding:'0 7px'}}>{unreadCount}</span>}</button>
         <button className="ib-nav" onClick={()=>{setTab('All');setFilter('All')}} style={navBtn(tab==='All'&&filter==='All')}><span style={{flex:1}}>All conversations</span><span style={{fontSize:11.5,color:MUTED}}>{conversations.length}</span></button>
         <div style={{fontSize:12,color:MUTED,padding:'14px 10px 4px'}}>Channels</div>
@@ -348,7 +360,7 @@ export default function Page() {
             </button>
           )
         })}
-        {(filter==='whatsapp'||filter==='sms') && waConnections.length>1 && (
+        {filter==='whatsapp' && waConnections.length>1 && (
           <div style={{padding:'8px 10px',display:'flex',flexDirection:'column',gap:4}}>
             <div style={{fontSize:12,color:MUTED}}>Number</div>
             {waConnections.map((c:any)=>{
@@ -369,8 +381,18 @@ export default function Page() {
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="⌕  Search conversations" style={{marginTop:10,width:'100%',height:32,border:`1px solid ${BORDER}`,borderRadius:4,padding:'0 10px',fontSize:13.5,fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}/>
         </div>
         <div style={{flex:1,overflowY:'auto'}}>
-          {sorted.length===0?(
-            <div style={{textAlign:'center',padding:60,color:MUTED,fontSize:13.5}}>{tab==='Unread' ? 'All caught up.' : q ? 'Nothing matches that search.' : 'No conversations yet.'}</div>
+          {filter==='sms' && smsConfigured===false ? (
+            <div style={{padding:'28px 22px',fontSize:13.5,color:INK,lineHeight:1.6}}>
+              <div style={{fontSize:15,fontWeight:700,marginBottom:6}}>Texts aren’t switched on yet</div>
+              <div style={{color:MUTED,marginBottom:12}}>Texting runs through a Twilio phone number. Once it’s connected, texts you send and replies you get show here.</div>
+              <ol style={{margin:0,paddingLeft:18,color:MUTED}}>
+                <li>Create a Twilio account and buy a number that can send texts.</li>
+                <li>In Netlify → Environment variables add <b style={{color:INK}}>TWILIO_ACCOUNT_SID</b>, <b style={{color:INK}}>TWILIO_AUTH_TOKEN</b> and <b style={{color:INK}}>TWILIO_SMS_FROM</b> (the number, e.g. +44…), then redeploy.</li>
+                <li>In Twilio → the number → Messaging, set “A message comes in” to <b style={{color:INK,wordBreak:'break-all'}}>https://app.sangstersgroup.com/api/sms/inbound</b> (HTTP POST).</li>
+              </ol>
+            </div>
+          ) : sorted.length===0?(
+            <div style={{textAlign:'center',padding:60,color:MUTED,fontSize:13.5}}>{filter==='sms' ? <>No texts yet.{smsPhone && <> Your number is <b style={{color:INK}}>{smsPhone}</b>.</>}<br/><button onClick={()=>setShowNewText(true)} style={{marginTop:12,height:32,padding:'0 14px',borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Send a text</button></> : <>{tab==='Unread' ? 'All caught up.' : q ? 'Nothing matches that search.' : 'No conversations yet.'}</>}</div>
           ):sorted.map((c:any)=>{
             const sel = openConvo?.recipientId===c.recipientId&&openConvo?.channel===c.channel
             return (
@@ -476,6 +498,7 @@ export default function Page() {
         </div>
       )}
 
+      {showNewText && <TextModal onClose={()=>setShowNewText(false)} onSent={async (phone)=>{ await loadSmsConnections(); if (activeSmsConnection) await loadSmsConversations(activeSmsConnection); setTab('All'); setFilter('sms') }} />}
       {showNewConvo && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(41,47,76,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }} onClick={e=>e.target===e.currentTarget&&setShowNewConvo(false)}>
           <div style={{ background: '#fff', borderRadius: 10, padding: 24, width: 420, maxWidth: '100%', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>

@@ -8,6 +8,7 @@
 // List at /staff-centre/client-properties, one property at ?id=…
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { TextButton } from '../../../components/TextComposer'
 import { C, CrmPage, CrmHeader, Body, Stat, Empty, Modal, Loading, btn, input, label } from '../../../components/crm/Page'
 
 type P = any
@@ -388,6 +389,7 @@ function Detail({ id, back }: { id: string; back: () => void }) {
                 {p.owner_email ? <a href={`mailto:${p.owner_email}`} style={{ display: 'flex', gap: 8, alignItems: 'center', color: C.ink, textDecoration: 'none' }}><Icon k="mail" c={C.muted} />{p.owner_email}</a> : null}
                 {!p.owner_phone && !p.owner_email && <span style={{ color: C.muted, fontSize: 12.5 }}>No phone or email yet — press Edit to add them.</span>}
               </div>
+              {p.owner_phone && <div style={{ marginTop: 12 }}><TextButton phone={p.owner_phone} name={p.owner_name} /></div>}
               {p.agent && <div style={{ marginTop: 14, padding: '10px 12px', background: '#F7F8FA', borderRadius: 8, fontSize: 12.5 }}><div style={{ color: C.muted }}>Listing agent</div><b>{p.agent}</b></div>}
             </div>
             <Activity p={p} onChange={setP} />
