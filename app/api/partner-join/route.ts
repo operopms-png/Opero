@@ -32,12 +32,13 @@ export async function POST(req: NextRequest) {
 
     const { data: link } = await serviceClient
       .from('partner_join_links')
-      .select('business_id, slug, fee_gbp, active, bank_name, bank_account_name, bank_sort_code, bank_account_number')
+      .select('business_id, slug, fee_gbp, active, card_direct, bank_name, bank_account_name, bank_sort_code, bank_account_number')
       .eq('slug', String(slug).toLowerCase())
       .maybeSingle()
     if (!link || !link.active) return NextResponse.json({ error: 'This sign-up link isn’t active.' }, { status: 404 })
 
-    // Card: the fee goes to the business's own connected Stripe account only.
+    // Card: the fee goes to the business's connected Stripe account, or — when the
+    // link is set to card_direct — straight to the portal's own Stripe account.
     let destination: string | null = null
     if (method === 'card') {
       const { data: businessSub } = await serviceClient
@@ -46,7 +47,8 @@ export async function POST(req: NextRequest) {
         .eq('user_id', link.business_id)
         .maybeSingle()
       destination = businessSub?.stripe_connect_onboarded ? businessSub.stripe_connect_account_id : null
-      if (!destination) {
+      // card_direct: no connected account — charge on the portal's own Stripe account (Sangsters' account, STRIPE_SECRET_KEY)
+      if (!destination && !link.card_direct) {
         return NextResponse.json({ error: 'Card payments aren’t available yet. Please choose bank transfer.' }, { status: 400 })
       }
     } else if (!link.bank_sort_code || !link.bank_account_number) {
@@ -148,7 +150,7 @@ export async function POST(req: NextRequest) {
       metadata: { type: 'partner_join', signup_id: signupId! },
       success_url: `${SITE_URL}/join/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${SITE_URL}/join/${link.slug}`,
-    }, { stripeAccount: destination! }) // direct charge on the business's own account
+    }, destination ? { stripeAccount: destination } : undefined) // connected account, else the portal's own Stripe account
     await serviceClient.from('partner_signups').update({ stripe_session_id: session.id }).eq('id', signupId!)
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
