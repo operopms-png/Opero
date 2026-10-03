@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, applyStress } from '../../lib/dealCalculators'
 import AskChat from '../../components/ai/AskChat'
 import MarketCheck from '../../components/invest/MarketCheck'
+import LandlordOffer, { landlordOffer } from '../../components/invest/LandlordOffer'
 import { CURRENCIES, curOf, symOf, type Cur } from '../../lib/currency'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
@@ -485,6 +486,14 @@ export default function InvestPage() {
 
                 <MarketCheck strategy={strategy!} strategyLabel={STRATEGIES.find(s=>s.id===strategy)?.label} form={form} setForm={setForm} market={market} onMarket={gotMarket} />
 
+                {isR2R&&<LandlordOffer form={form} setForm={setForm} result={result} market={market} onUseOffer={offer=>{
+                  const was = String(form.rent||'')
+                  const f = { ...form, askingRent: form.askingRent || was, rent: String(offer),
+                    landlordDeposit: !form.landlordDeposit || form.landlordDeposit===was ? String(offer) : form.landlordDeposit,
+                    advanceRent: !form.advanceRent || form.advanceRent===was ? String(offer) : form.advanceRent }
+                  setForm(f); analyse(f)
+                }} />}
+
                 {/* Stress Test */}
                 {getStressScenarios(strategy!)&&(
                   <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24,marginBottom:20}}>
@@ -734,6 +743,7 @@ export default function InvestPage() {
                       results: result,
                       stress: (getStressScenarios(strategy!)||[]).map(sc=>{ const r:any = applyStress(strategy!, form, sc); return { scenario: sc.label, monthlyCashflow: r?.monthlyCashflow, annualCashflow: r?.annualCashflow } }),
                       localMarket: market ? { location: market.location, confidence: market.confidence, area: market.area, benchmarks: market.benchmarks, comparables: (market.comparables||[]).map((c:any)=>({type:c.type,title:c.title,location:c.location,beds:c.beds,price:c.price,unit:c.unit,source:c.source,url:c.url})), demand: market.demand, watchOuts: market.watch_outs } : null,
+                      landlordOffer: isR2R ? (()=>{ const o = landlordOffer(form, result, market); return { marketRent: o.marketRent, landlordAsking: o.asking, landlordReallyKeeps: o.landlordKeeps, mostYouCanPay: o.maxRent, targetProfit: o.targetProfit, recommendedOffer: o.rec?.offer ?? null, options: o.rows } })() : null,
                       aiVerdict: verdict ? { status: verdict.status, summary: verdict.ai_summary, override: verdict.override_status, risks: verdict.risk_flags, breakEven: verdict.break_even } : null,
                     }}
                     suggestions={['What do you think of this deal?','What are the biggest risks?','What should I negotiate on?','Do you agree with the AI Verdict?']} />
