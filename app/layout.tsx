@@ -54,6 +54,8 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/airbnb': 'inbox',
   '/staff-centre/landlord-leads': 'crm',
   '/staff-centre/client-properties': 'crm',
+  '/staff-centre/finance': 'finance',
+  '/staff-centre/compliance': 'compliance',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

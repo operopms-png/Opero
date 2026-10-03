@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 
 const C = { ink: '#191815', brown: '#5A4320', gold: '#A8862E', goldT: '#8E6B1F', gold2: '#D9B866', cream: '#FBF4E6', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
-const MOD: Record<string, string> = { vr: '#B08A2E', pm: '#2F6DB5', ea: '#138a62', staff: '#8A877F' } // validated categorical set
+const MOD: Record<string, string> = { vr: '#B08A2E', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
 const TONE = { red: { c: '#B42318', bg: '#FDECEC' }, amber: { c: '#9A6400', bg: '#FFF4DE' }, blue: { c: '#1F5BB0', bg: '#E8F0FB' } }
 const P: Record<string, string> = {
   in: 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3', out: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
@@ -35,6 +35,20 @@ export default function Dashboard() {
   const [d, setD] = useState<any>(null)
   const [err, setErr] = useState('')
   const [clock, setClock] = useState(new Date())
+  const [notices, setNotices] = useState<any[]>([])
+  async function loadNotices() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/announcements', { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } })
+      const j = await res.json(); if (res.ok) setNotices(j.unread || [])
+    } catch {}
+  }
+  async function markRead(id: string) {
+    setNotices(n => n.filter(x => x.id !== id))
+    const { data: { session } } = await supabase.auth.getSession()
+    fetch('/api/announcements', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ action: 'read', id }) })
+  }
+  useEffect(() => { loadNotices() }, [])
 
   async function load(r = range) {
     setErr('')
@@ -64,10 +78,12 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: 'calc(100vh - var(--hub-h, 0px))', background: C.bg, fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: C.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
-        .dash-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+        .dash-grid3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
         .dash-cols{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
         .dash-hero{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-        @media(max-width:1100px){.dash-cols{grid-template-columns:1fr 1fr}.dash-grid3{grid-template-columns:1fr}}
+        @media(max-width:1300px){.dash-grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:1100px){.dash-cols{grid-template-columns:1fr 1fr}}
+        @media(max-width:700px){.dash-grid3{grid-template-columns:1fr}}
         @media(max-width:760px){.dash-cols{grid-template-columns:1fr}.dash-hero{grid-template-columns:repeat(2,minmax(0,1fr))}}
         .dash-link:hover{background:#FFFCF5}`}</style>
 
@@ -100,11 +116,22 @@ export default function Dashboard() {
       </div>
 
       <div style={{ padding: '22px 30px 40px' }}>
+        {notices[0] && (
+          <div style={{ ...card, borderLeft: `4px solid ${C.gold}`, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, background: '#FFFCF5' }}>
+            <span style={{ width: 30, height: 30, borderRadius: 8, background: '#F6EBD0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Ico k="msg" s={15} c={C.goldT} /></span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink }}>{notices[0].title}</div>
+              {notices[0].body && <div style={{ fontSize: 12.5, color: C.text, marginTop: 2, whiteSpace: 'pre-wrap' }}>{notices[0].body}</div>}
+              <div style={{ fontSize: 11.5, color: C.muted, marginTop: 3 }}>{notices[0].author} · {ago(notices[0].created_at)}{notices.length > 1 && <> · <Link href="/staff-centre/announcements" style={{ color: C.goldT, fontWeight: 600 }}>{notices.length - 1} more</Link></>}</div>
+            </div>
+            <button onClick={() => markRead(notices[0].id)} style={{ padding: '6px 12px', borderRadius: 7, border: '1px solid #D9D4C7', background: '#fff', fontSize: 12, fontWeight: 600, color: C.text, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Got it</button>
+          </div>
+        )}
         {err && <div style={{ ...card, padding: 14, color: '#B42318', marginBottom: 16 }}>{err} <button onClick={() => load()} style={{ marginLeft: 8, border: 'none', background: 'none', color: C.goldT, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Try again</button></div>}
 
         {/* Business cards */}
         <div className="dash-grid3">
-          {(d?.modules || [{}, {}, {}]).map((m: any, i: number) => <ModuleCard key={m.key || i} m={m} />)}
+          {(d?.modules || [{}, {}, {}, {}]).map((m: any, i: number) => <ModuleCard key={m.key || i} m={m} />)}
         </div>
 
         <div className="dash-cols" style={{ marginTop: 16 }}>
@@ -159,21 +186,24 @@ export default function Dashboard() {
 }
 
 function ModuleCard({ m }: { m: any }) {
-  if (!m.key) return <div style={{ ...card, height: 118 }} />
-  const col = MOD[m.key], r = 34, Cc = 2 * Math.PI * r
+  if (!m.key) return <div style={{ ...card, height: 150 }} />
+  const col = MOD[m.key], r = 25, Cc = 2 * Math.PI * r
   return (
-    <Link href={m.href} className="dash-link" style={{ ...card, borderTop: `3px solid ${col}`, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', color: C.text }}>
-      <svg width="84" height="84" viewBox="0 0 84 84" role="img" aria-label={`${m.occ}% ${m.key === 'vr' ? 'booked this month' : 'let'}`} style={{ flexShrink: 0 }}>
-        <circle cx="42" cy="42" r={r} fill="none" stroke="#EFECE4" strokeWidth="8" />
-        <circle cx="42" cy="42" r={r} fill="none" stroke={col} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${(Cc * m.occ) / 100} ${Cc}`} transform="rotate(-90 42 42)" />
-        <text x="42" y="47" textAnchor="middle" fontSize="17" fontWeight="800" fill={C.ink}>{m.occ}%</text>
-      </svg>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}><div style={{ fontSize: 14.5, fontWeight: 700, color: C.ink }}>{m.name}</div><Ico k="arrow" s={14} c={C.muted} /></div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{m.note}</div>
-        <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 12, whiteSpace: 'nowrap' }}>
-          {m.stats.map((s: any) => <div key={s.l}><div style={{ color: C.muted }}>{s.l}</div><b style={{ fontSize: 14, color: C.ink }}>{s.v}</b></div>)}
+    <Link href={m.href} className="dash-link" style={{ ...card, borderTop: `3px solid ${col}`, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12, textDecoration: 'none', color: C.text, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <svg width="62" height="62" viewBox="0 0 62 62" role="img" aria-label={`${m.occ}% ${m.ringLabel || (m.key === 'vr' ? 'booked this month' : 'let')}`} style={{ flexShrink: 0 }}>
+          <circle cx="31" cy="31" r={r} fill="none" stroke="#EFECE4" strokeWidth="7" />
+          <circle cx="31" cy="31" r={r} fill="none" stroke={col} strokeWidth="7" strokeLinecap="round" strokeDasharray={`${(Cc * m.occ) / 100} ${Cc}`} transform="rotate(-90 31 31)" />
+          <text x="31" y="35.5" textAnchor="middle" fontSize="13.5" fontWeight="800" fill={C.ink}>{m.occ}%</text>
+        </svg>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}><div style={{ fontSize: 14.5, fontWeight: 700, color: C.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div><Ico k="arrow" s={14} c={C.muted} /></div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.note}</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>{m.ringLabel || (m.key === 'vr' ? 'booked this month' : 'let')}</div>
         </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr', gap: 8, paddingTop: 10, borderTop: '1px solid #F2F0EA', fontSize: 11.5 }}>
+        {m.stats.map((s: any) => <div key={s.l} style={{ minWidth: 0 }}><div style={{ color: C.muted, whiteSpace: 'nowrap' }}>{s.l}</div><b style={{ fontSize: 13.5, color: C.ink, whiteSpace: 'nowrap' }}>{s.v}</b></div>)}
       </div>
     </Link>
   )

@@ -43,10 +43,22 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/meetings', label: 'Meetings', scTab: 'meetings', badge: 'meetings' },
     { href: '/staff-centre/tasks', label: 'Tasks', scTab: 'tasks', badge: 'tasks' },
   ] },
-  { label: 'Maintenance', icon: 'wrench', tabs: [{ href: '/staff-centre/maintenance', label: 'Maintenance Board', scTab: 'maintenance', badge: 'maintenance' }] },
+  { label: 'Finance', icon: 'revenue', tabs: [
+    { href: '/staff-centre/finance', label: 'Overview', scTab: 'finance' },
+    { href: '/staff-centre/finance/payouts', label: 'Owner Payouts', scTab: 'finance' },
+    { href: '/staff-centre/finance/arrears', label: 'Arrears', scTab: 'finance', badge: 'arrears' },
+    { href: '/staff-centre/approvals', label: 'Approvals', badge: 'approvals' },
+  ] },
+  { label: 'Operations', icon: 'wrench', tabs: [
+    { href: '/staff-centre/maintenance', label: 'Maintenance Board', scTab: 'maintenance', badge: 'maintenance' },
+    { href: '/staff-centre/compliance', label: 'Compliance', scTab: 'compliance', badge: 'compliance' },
+    { href: '/cleaning', label: 'Cleaning', requiresModule: 'str' },
+    { href: '/turnovers', label: 'Turnovers', requiresModule: 'str' },
+  ] },
   { label: 'Smart Home', icon: 'shield', tabs: [{ href: '/staff-centre/smart-home', label: 'Smart Home', scTab: 'smarthome' }] },
   { label: 'Team', icon: 'team', tabs: [
     { href: '/settings?section=Team+Management', label: 'Team Management' },
+    { href: '/staff-centre/announcements', label: 'Announcements', badge: 'announcements' },
     { href: '/staff-centre/hr', label: 'People & HR', scTab: 'hr', badge: 'hr' },
     { href: '/staff-centre/performance', label: 'Staff Performance', scTab: 'performance' },
     { href: '/staff-centre/training', label: 'Staff Training', scTab: 'training' },

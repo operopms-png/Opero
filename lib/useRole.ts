@@ -54,6 +54,8 @@ export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'portalaccess', l: 'Portal Access' },
   { k: 'portals',     l: 'Property Portals' },
   { k: 'maintenance', l: 'Maintenance Board' },
+  { k: 'compliance',  l: 'Compliance' },
+  { k: 'finance',     l: 'Finance (money, payouts, arrears)' },
   { k: 'crm',         l: 'CRM' },
   { k: 'marketing',   l: 'Marketing' },
   { k: 'applications', l: 'Applications' },
@@ -64,7 +66,8 @@ export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
   { k: 'tasks',       l: 'Tasks' },
 ]
 export const SC_TABS = STAFF_CENTRE_TABS.map(t => t.k)
-export const DEFAULT_SC_TABS = [...SC_TABS]
+// Finance is admin-only unless an admin ticks it for someone in Team Management
+export const DEFAULT_SC_TABS = SC_TABS.filter(t => t !== 'finance')
 
 export function getScTabs(role: string, modules: string[]): string[] {
   if (!modules.includes('sc')) return []

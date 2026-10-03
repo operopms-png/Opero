@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 
   const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
   const [vrProps, pmProps, pmUnits, pmTenants, pmRent, pmMaint, eaProps, eaUnits, eaTenants, eaMaint, viewings, meetings, tasks,
-    strComp, pmComp, eaComp, chats, signups, clientProps, eaRentSched] = await Promise.all([
+    strComp, pmComp, eaComp, chats, signups, clientProps, eaRentSched, devProjects, devMilestones] = await Promise.all([
     q(db.from('properties').select('id,name').eq('user_id', biz)),
     q(db.from('pm_properties').select('id,name,status').eq('user_id', biz)),
     q(db.from('pm_units').select('id,status').eq('user_id', biz)),
@@ -58,6 +58,8 @@ export async function GET(req: NextRequest) {
     q(db.from('partner_signups').select('id,name,status,payment_method,marked_sent_at,created_at,paid_at').eq('business_id', biz)),
     q(db.from('client_properties').select('id,address,subarea,owner_name,stage,created_at,updated_at').eq('business_id', biz)),
     q(db.from('estate_rent_schedules').select('id,status').eq('user_id', biz)),
+    q(db.from('dev_projects').select('id,name,status,total_budget,spent').eq('user_id', biz)),
+    q(db.from('dev_milestones').select('id,name,status,due_date,project_id').eq('user_id', biz)),
   ])
   const vrIds = vrProps.map((p: any) => p.id)
   const [bookings, vrMaint, guestMsgs] = vrIds.length ? await Promise.all([
@@ -113,6 +115,17 @@ export async function GET(req: NextRequest) {
       stats: [{ l: 'Rent paid', v: pmDue.length ? `${pmPaid} of ${pmDue.length}` : '—' }, { l: 'Tenants', v: pmTenants.length }, { l: 'Open jobs', v: pmMaint.filter((m: any) => open(m.status)).length }] },
     { key: 'ea', name: 'Estate Agency', href: '/estate', occ: pct(eaLetUnits, eaTotal), note: `${eaVacant} vacant · ${eaTenants.filter((t: any) => day(new Date(t.created_at)) >= weekStart).length} new tenants this week`,
       stats: [{ l: 'Let', v: `${eaLetUnits} of ${eaTotal}` }, { l: 'Tenants', v: eaTenants.length }, { l: 'Open jobs', v: eaMaint.filter((m: any) => open(m.status)).length }] },
+    (() => {
+      // Developments: ring = budget spent; note = next milestone
+      const budget = devProjects.reduce((a: number, p: any) => a + (Number(p.total_budget) || 0), 0), spent = devProjects.reduce((a: number, p: any) => a + (Number(p.spent) || 0), 0)
+      const openMs = devMilestones.filter((m: any) => open(m.status))
+      const late = openMs.filter((m: any) => m.due_date && m.due_date < today).length
+      const next = openMs.filter((m: any) => m.due_date && m.due_date >= today).sort((a: any, b: any) => a.due_date.localeCompare(b.due_date))[0]
+      const short = (n: number) => n >= 1e6 ? '£' + (n / 1e6).toFixed(1) + 'm' : n >= 1e3 ? '£' + Math.round(n / 1e3) + 'k' : '£' + Math.round(n)
+      return { key: 'dev', name: 'Developments', href: '/dev', occ: budget ? Math.min(100, Math.round(spent / budget * 100)) : 0, ringLabel: 'of budget spent',
+        note: next ? `Next: ${next.name} · ${new Date(next.due_date + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : `${devProjects.length} project${devProjects.length === 1 ? '' : 's'}`,
+        stats: [{ l: 'Spent', v: budget ? `${short(spent)} of ${short(budget)}` : short(spent) }, { l: 'Projects', v: devProjects.filter((p: any) => !/complete|done|closed/i.test(p.status || '')).length }, { l: 'Late', v: late }] }
+    })(),
   ]
 
   // ── schedule ──
