@@ -13,7 +13,7 @@ export type Listing = {
   saleOrRent: string | null; rentalPrice: string | null; style: string | null; bedrooms: number | null; bathrooms: number | null
   sqft: number | null; lotSqft: number | null; lotAcres: number | null; yearBuilt: string | null; daysOnMarket: number | null
   amenities: string | null; siteInfluence: string | null; exterior: string | null; subdivision: string | null
-  description: string | null; lat: number | null; lng: number | null; photos: string[]
+  description: string | null; lat: number | null; lng: number | null; photos: string[]; agent?: string | null
 }
 
 const C = { ink: '#191815', text: '#323338', muted: '#676879', line: '#E6E9EF', soft: '#F7F8FA', gold: '#A8862E', goldBg: '#FBF6EA', red: '#B42318' }

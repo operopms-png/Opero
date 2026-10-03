@@ -42,6 +42,7 @@ export type ImportedListing = {
   lat: number | null
   lng: number | null
   photos: string[]
+  agent?: string | null
 }
 
 const decode = (s: string) => s
@@ -55,6 +56,7 @@ const pick = (html: string, re: RegExp) => { const m = html.match(re); return m 
 
 function parseXposure(html: string, sourceUrl: string): ImportedListing[] {
   const board = pick(html, /setPhotoServerUrl\("[^"]*board=([a-z]+)/i) || 'jamaica'
+  const agent = pick(html, /alt="([^"]+?) Agent Photo"/)
   const rows = html.split(/<div class="listing-container[^"]*" id="row\d+"/).slice(1)
   return rows.map(row => {
     const field = (label: string) => {
@@ -104,6 +106,7 @@ function parseXposure(html: string, sourceUrl: string): ImportedListing[] {
       lat: pick(row, /data-latitude="([-0-9.]+)"/) ? parseFloat(pick(row, /data-latitude="([-0-9.]+)"/)!) : null,
       lng: pick(row, /data-longitude="([-0-9.]+)"/) ? parseFloat(pick(row, /data-longitude="([-0-9.]+)"/)!) : null,
       photos,
+      agent,
     }
   })
 }

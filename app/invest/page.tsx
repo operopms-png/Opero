@@ -70,6 +70,29 @@ export default function InvestPage() {
   const [fx, setFx] = useState<Record<Cur, number> | null>(null)
   useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => d?.rates && setFx(d.rates)).catch(() => {}) }, [])
   const [form, setForm] = useState<any>({deposit:'25',mortgageRate:'5',expenses:'20',rooms:'4',rentPerRoom:'600'})
+  // Client Properties → "Run numbers": /invest?client=<id> opens with that property filled in
+  const [clientProp, setClientProp] = useState<{id:string,address:string}|null>(null)
+  const [clientSaved, setClientSaved] = useState<string|null>(null)
+  useEffect(() => {
+    const cid = new URLSearchParams(window.location.search).get('client')
+    if (!cid) return
+    ;(async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/client-properties?id=' + encodeURIComponent(cid), { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } })
+      const d = await res.json().catch(() => ({}))
+      const p = d.property; if (!p) return
+      setClientProp({ id: p.id, address: p.address })
+      if (p.numbers?.form && p.numbers?.strategy) { setForm(p.numbers.form); setStrategy(p.numbers.strategy); return }
+      const listing: Listing = p.listing || { source: 'Client property', sourceUrl: p.source_url || '', mls: p.mls, address: p.address, area: p.area, subarea: p.subarea, price: p.price, priceText: p.price_text || null, currency: p.currency, status: null, saleOrRent: p.price_is_rent ? 'For Rent' : 'For Sale', rentalPrice: null, style: p.style, bedrooms: p.bedrooms, bathrooms: p.bathrooms, sqft: p.sqft, lotSqft: p.lot_sqft, lotAcres: p.lot_acres, yearBuilt: null, daysOnMarket: null, amenities: p.amenities, siteInfluence: null, exterior: null, subdivision: null, description: p.description, lat: null, lng: null, photos: [] }
+      const f: any = { deposit:'25', mortgageRate:'5', expenses:'20', rooms:'4', rentPerRoom:'600', listing: { ...listing, photos: p.photos?.length ? p.photos : listing.photos },
+        currency: p.currency || 'JMD', address: [p.address, p.subarea, p.area].filter(Boolean).join(', ') }
+      if (p.bedrooms != null) f.bedrooms = String(+p.bedrooms)
+      if (p.bathrooms != null) f.bathrooms = String(+p.bathrooms)
+      const t = propertyTypeFor(p.style); if (t) f.propertyType = t
+      if (p.price) { if (p.price_is_rent) f.rent = String(+p.price); else f.price = String(+p.price) }
+      setForm(f)
+    })()
+  }, [])
   const S = symOf(form)
   const n0 = (v: any) => Math.round(Number(v) || 0).toLocaleString('en-GB')
   const [result, setResult] = useState<any>(null)
@@ -219,6 +242,28 @@ export default function InvestPage() {
   async function gotMarket(m: any) {
     setMarket(m)
     if (savedDealId) await supabase.from('investment_deals').update({ market_check: m }).eq('id', savedDealId)
+  }
+
+  async function saveToClient() {
+    if (!clientProp || !result) return
+    const lbl = STRATEGIES.find(x=>x.id===strategy)?.label || strategy
+    const n: any = { strategy, strategyLabel: lbl, currency: curOf(form), roi: result.roi ?? null, score: score?.label || null, form, dealId: savedDealId }
+    if (isR2R) {
+      n.priceLabel = 'Rent to landlord'; n.price = parseFloat(form.rent) || null; n.priceSub = 'Per month'
+      n.cashLabel = 'Cash needed'; n.cashNeeded = result.totalUpfront ?? null; n.cashSub = 'Deposit, advance rent and setup'
+      const o = landlordOffer(form, result, market); n.offer = o.rec?.offer ?? null
+    } else if (strategy==='flip' || strategy==='land') {
+      n.priceLabel = 'Price'; n.price = parseFloat(form.price) || null
+      n.cashLabel = 'Total cost'; n.cashNeeded = result.totalCost ?? null; n.cashSub = 'Price, works and costs'; n.profit = result.profit ?? null
+    } else {
+      n.priceLabel = 'Price'; n.price = parseFloat(form.price) || null; n.priceSub = form.deposit ? `${form.deposit}% deposit` : ''
+      n.cashLabel = 'Cash needed'; n.cashNeeded = result.totalInvested ?? null; n.cashSub = 'Deposit and refurb'
+    }
+    n.monthlyCashflow = result.monthlyCashflow ?? null
+    const res = await fetch('/api/client-properties', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ action: 'numbers', id: clientProp.id, numbers: n }) })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok) { alert(d.error || 'Could not save to the client property'); return }
+    setClientSaved(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
   }
 
   async function saveDeal() {
@@ -648,6 +693,11 @@ export default function InvestPage() {
                   </div>
                 )}
 
+                {clientProp&&<div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',marginBottom:14,padding:'12px 16px',borderRadius:8,background:'#FBF6EA',border:'1px solid #EADFC2',fontSize:13,color:'#5A4320'}}>
+                  <span>Client property: <b>{clientProp.address}</b>{clientSaved?` — numbers saved at ${clientSaved}`:''}</span>
+                  <button onClick={saveToClient} style={{marginLeft:'auto',padding:'8px 16px',borderRadius:6,border:'none',background:'#191815',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{clientSaved?'Save again':'Save numbers to client property'}</button>
+                  <a href={`/staff-centre/client-properties?id=${clientProp.id}`} style={{fontSize:13,fontWeight:600,color:'#8E6B1F'}}>Back to property →</a>
+                </div>}
                 <div style={{display:'flex',gap:12,marginBottom:24}}>
                   <button onClick={saveDeal} style={{padding:'12px 24px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>💾 Save Deal</button>
                   <button onClick={getVerdict} disabled={!savedDealId||verdictLoading} style={{padding:'12px 24px',borderRadius:4,border:'1px solid '+(savedDealId?BLUE:'#D0D4E4'),background:'#fff',color:savedDealId?BLUE:'#9699A6',fontSize:14,fontWeight:600,cursor:savedDealId&&!verdictLoading?'pointer':'not-allowed',fontFamily:'inherit',opacity:verdictLoading?0.6:1}}>{verdictLoading?'Analysing…':'🤖 Get AI Verdict'}</button>
