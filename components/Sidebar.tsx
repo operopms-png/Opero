@@ -8,6 +8,7 @@ import { useRole, ROLE_MODULES, getScTabs, resolveAccess } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import { BRAND_NAME } from '@/lib/brand'
+import { STAFF_HUBS, tabMatches } from '@/lib/staffHubs'
 
 const NAV_GROUPS = [
   {
@@ -47,34 +48,8 @@ const NAV_GROUPS = [
     module: 'staffcentre',
     staffCentre: true,
     items: [
-      { href: '/staff-centre/oversight', label: 'Dashboard', key: 'staffcentre', icon: 'trendingup', scTab: 'oversight' },
-      { href: '/staff-centre/partners', label: 'Partners', key: 'staffcentre', icon: 'users', scTab: 'partners', badge: 'partners' },
-      { href: '/invest', label: 'Deal Analyser', key: 'invest', icon: 'calculator', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
-      { href: '/invest?section=Watchlist', label: 'Watchlist', key: 'invest', icon: 'bookmark', requiresModule: 'invest', requiresModulePrice: '£19/mo' },
-      { href: '/staff-centre/investors', label: 'Investors', key: 'staffcentre', icon: 'revenue', scTab: 'investors' },
-      { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', key: 'staffcentre', icon: 'report', scTab: 'customeronboarding' },
-      { href: '/staff-centre/meetings', label: 'Meetings', key: 'staffcentre', icon: 'phone', scTab: 'meetings', badge: 'meetings' },
-      { href: '/staff-centre/listings', label: 'Listings', key: 'staffcentre', icon: 'home', scTab: 'listings', badge: 'listings' },
-      { href: '/staff-centre/smart-home', label: 'Smart Home', key: 'staffcentre', icon: 'globe', scTab: 'smarthome' },
-      { href: '/staff-centre/receptionist', label: 'AI Assistant', key: 'staffcentre', icon: 'sparkles', scTab: 'inbox' },
-      { href: '/staff-centre/email', label: 'Email', key: 'staffcentre', icon: 'mail', scTab: 'inbox' },
-      { href: '/staff-centre/airbnb', label: 'Airbnb Inbox', key: 'staffcentre', icon: 'message', scTab: 'inbox' },
-      { href: '/staff-centre/inbox', label: 'Conversations', key: 'staffcentre', icon: 'message', scTab: 'inbox', badge: 'inbox' },
-      { href: '/staff-centre/website-chats', label: 'Website Chats', key: 'staffcentre', icon: 'globe', scTab: 'inbox', badge: 'webchat' },
-      { href: '/staff-centre/portal-access', label: 'Portal Access', key: 'staffcentre', icon: 'globe', scTab: 'portalaccess' },
-      { href: '/staff-centre/portals', label: 'Property Portals', key: 'staffcentre', icon: 'globe', scTab: 'portals' },
-      { href: '/staff-centre/maintenance', label: 'Maintenance Board', key: 'staffcentre', icon: 'wrench', scTab: 'maintenance', badge: 'maintenance' },
-      { href: '/staff-centre/crm', label: 'CRM', key: 'staffcentre', icon: 'contacts', scTab: 'crm', badge: 'crm' },
-      { href: '/staff-centre/client-properties', label: 'Client Properties', key: 'staffcentre', icon: 'home', scTab: 'crm' },
-      { href: '/staff-centre/landlord-leads', label: 'Landlord Leads', key: 'staffcentre', icon: 'building', scTab: 'crm' },
-      { href: '/staff-centre/marketing', label: 'Marketing', key: 'staffcentre', icon: 'sparkles', scTab: 'marketing' },
-      { href: '/staff-centre/applications', label: 'Applications', key: 'staffcentre', icon: 'file', scTab: 'applications', badge: 'applications' },
-      { href: '/settings?section=Team+Management', label: 'Team Management', key: 'staffcentre', icon: 'team' },
-      { href: '/staff-centre/performance', label: 'Staff Performance', key: 'staffcentre', icon: 'trendingup', scTab: 'performance' },
-      { href: '/staff-centre/hr', label: 'People & HR', key: 'staffcentre', icon: 'users', scTab: 'hr', badge: 'hr' },
-      { href: '/staff-centre/training', label: 'Staff Training', key: 'staffcentre', icon: 'graduation', scTab: 'training' },
-      { href: '/staff-centre/calendar', label: 'Calendar', key: 'staffcentre', icon: 'calendar', scTab: 'calendar' },
-      { href: '/staff-centre/tasks', label: 'Tasks', key: 'staffcentre', icon: 'file', scTab: 'tasks', badge: 'tasks' },
+      // Grouped into hubs — see lib/staffHubs.ts (tabs show along the top of each page)
+      ...STAFF_HUBS.map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs })),
     ]
   },
 ]
@@ -228,13 +203,25 @@ export default function Sidebar() {
                   {group.label}
                 </div>
               )}
-              {group.items.map(({ href, icon, label, key, minPlan, requiresModule, requiresModulePrice, scTab, badge }: any) => {
-                const itemHasModule = itemAllowed({ requiresModule, scTab })
+              {group.items.map((item: any) => {
+                let { href, icon, label, key, requiresModule, scTab, badge, hubTabs } = item
+                let badgeCount = badge ? (counts[badge] ?? 0) : 0
+                let itemHasModule: boolean, active: boolean
+                if (hubTabs) {
+                  // A hub: open the first tab this person can see; badge = total of its tabs
+                  const allowed = (hubTabs as any[]).filter(t => itemAllowed(t) && !(isPartner && t.href.startsWith('/settings')))
+                  itemHasModule = allowed.length > 0
+                  if (itemHasModule) { href = allowed[0].href; requiresModule = allowed[0].requiresModule }
+                  badgeCount = allowed.reduce((a, t) => a + (t.badge ? (counts[t.badge] ?? 0) : 0), 0)
+                  active = (hubTabs as any[]).some(t => tabMatches(t, pathname, search))
+                } else {
+                  itemHasModule = itemAllowed({ requiresModule, scTab })
+                  const [hp, hq] = href.split('?')
+                  const cur = new URLSearchParams(search).get('section')
+                  active = pathname === hp && (hq ? new URLSearchParams(hq).get('section') === cur : !NAV_GROUPS.some((g: any) => g.items.some((it: any) => { const [p2, q2] = String(it.href).split('?'); return p2 === hp && q2 && new URLSearchParams(q2).get('section') === cur })))
+                }
                 if (isPartner && (!itemHasModule || String(href).startsWith('/settings'))) return null
                 const hasAccess = itemHasModule && features.includes(key)
-                const [hp, hq] = href.split('?')
-                const cur = new URLSearchParams(search).get('section')
-                const active = pathname === hp && (hq ? new URLSearchParams(hq).get('section') === cur : !NAV_GROUPS.some((g: any) => g.items.some((it: any) => { const [p2, q2] = String(it.href).split('?'); return p2 === hp && q2 && new URLSearchParams(q2).get('section') === cur })))
                 const linkHref = itemHasModule ? href : (requiresModule ? '/modules' : '#')
                 return (
                   <Link key={href + label} href={linkHref}
@@ -244,10 +231,10 @@ export default function Sidebar() {
                     style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#D0AE4C' : 'transparent', color: !itemHasModule ? '#C9B891' : !hasAccess ? '#C9B891' : active ? '#3A2A10' : '#3A2A10', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
                     <Icon name={icon} size={16} color={!itemHasModule ? '#C9B891' : !hasAccess ? '#C9B891' : active ? '#3A2A10' : '#8A6B2E'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
-                    {badge && itemHasModule && (counts[badge] ?? 0) > 0 && (
+                    {itemHasModule && badgeCount > 0 && (
                       isCollapsed
                         ? <span style={{ position: 'absolute', top: 5, left: '50%', marginLeft: 5, width: 8, height: 8, borderRadius: '50%', background: '#EF4444', border: '1.5px solid #FBF4E6' }} />
-                        : <span title={`${counts[badge]} waiting`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>{counts[badge] > 99 ? '99+' : counts[badge]}</span>
+                        : <span title={`${badgeCount} waiting`} style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>{badgeCount > 99 ? '99+' : badgeCount}</span>
                     )}
                   </Link>
                 )

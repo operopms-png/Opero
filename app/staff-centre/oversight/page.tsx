@@ -126,7 +126,7 @@ export default function OversightPage() {
     setLoading(false)
   }
 
-  if (loading || !data) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
+  if (loading || !data) return <div style={{ minHeight: 'calc(100vh - var(--hub-h, 0px))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>
 
   const now = new Date()
   const thisMonth = monthKey(now)
@@ -268,7 +268,7 @@ export default function OversightPage() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
+    <div style={{ minHeight: 'calc(100vh - var(--hub-h, 0px))', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '24px 28px' }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Dashboard</h1>
         <div style={{ fontSize: 13, color: '#667085' }}>Everything happening across Vacation Rentals, Property Management, Estate Agency &amp; Developments — this month.</div>

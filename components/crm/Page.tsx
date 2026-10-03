@@ -27,7 +27,7 @@ export const label: React.CSSProperties = { display: 'block', fontSize: 13, font
 
 export function CrmPage({ children, fill }: { children: React.ReactNode; fill?: boolean }) {
   return (
-    <div style={{ minHeight: '100vh', height: fill ? '100vh' : undefined, display: fill ? 'flex' : undefined, flexDirection: 'column', width: '100%', minWidth: 0, contain: 'inline-size', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: C.ink, background: '#fff' }}>
+    <div style={{ minHeight: 'calc(100vh - var(--hub-h, 0px))', height: fill ? 'calc(100vh - var(--hub-h, 0px))' : undefined, display: fill ? 'flex' : undefined, flexDirection: 'column', width: '100%', minWidth: 0, contain: 'inline-size', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: C.ink, background: '#fff' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');`}</style>
       {children}
     </div>

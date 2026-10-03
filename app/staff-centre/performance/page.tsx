@@ -53,7 +53,7 @@ export default function PerformancePage() {
   const medal = ['🥇', '🥈', '🥉']
 
   return (
-    <div style={{ height: '100vh', width: '100%', contain: 'inline-size', overflowY: 'auto', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: BRAND.ink, background: '#fff' }}>
+    <div style={{ height: 'calc(100vh - var(--hub-h, 0px))', width: '100%', contain: 'inline-size', overflowY: 'auto', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: BRAND.ink, background: '#fff' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
         .crm-hover-show { opacity: 0; transition: opacity .1s }

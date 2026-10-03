@@ -305,7 +305,7 @@ export default function Page() {
     setFilter('team')
   }
 
-  if (loading || !identity) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#9699A6',fontFamily:'Figtree, Inter, sans-serif'}}>Loading conversations…</div>
+  if (loading || !identity) return <div style={{minHeight: 'calc(100vh - var(--hub-h, 0px))',display:'flex',alignItems:'center',justifyContent:'center',color:'#9699A6',fontFamily:'Figtree, Inter, sans-serif'}}>Loading conversations…</div>
 
   const q = search.trim().toLowerCase()
   const tabFiltered = tab==='Unread' ? conversations.filter(c=>c.unread) : conversations
@@ -324,7 +324,7 @@ export default function Page() {
   const Pill = ({c}:{c:any}) => <span style={{background:col(c),color:'#fff',fontSize:11.5,fontWeight:500,borderRadius:3,padding:'1px 8px',whiteSpace:'nowrap'}}>{c.channelLabel}</span>
 
   return (
-    <div style={{display:'flex',height:'100vh',width:'100%',contain:'inline-size',fontFamily:'Figtree, Inter, -apple-system, sans-serif',color:INK,background:'#fff'}}>
+    <div style={{display:'flex',height: 'calc(100vh - var(--hub-h, 0px))',width:'100%',contain:'inline-size',fontFamily:'Figtree, Inter, -apple-system, sans-serif',color:INK,background:'#fff'}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap'); .ib-nav:hover{background:#F5F6F8} .ib-row:hover{background:#F5F6F8} @media (max-width: 1100px){ .ib-details{display:none !important} } @media (max-width: 900px){ .ib-ws{display:none !important} }`}</style>
 
       {/* workspace nav */}

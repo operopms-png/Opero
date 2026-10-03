@@ -185,7 +185,7 @@ export default function Page() {
   const Count = ({ n, red }: { n: number; red?: boolean }) => n ? (red ? <span style={{ background: '#DF2F4A', color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 9, padding: '0 7px' }}>{n}</span> : <span style={{ fontSize: 11.5, color: MUTED }}>{n}</span>) : null
 
   return (
-    <div style={{ display: 'flex', height: '100vh', width: '100%', contain: 'inline-size', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: INK, background: '#fff' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - var(--hub-h, 0px))', width: '100%', contain: 'inline-size', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: INK, background: '#fff' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap'); .wc-nav:hover{background:#F5F6F8} .wc-row:hover{background:#F5F6F8} @media (max-width: 900px){ .wc-ws{display:none !important} }`}</style>
 
       <aside className="wc-ws" style={{ width: 232, flexShrink: 0, borderRight: `1px solid ${LINE}`, padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
