@@ -327,8 +327,9 @@ export default function InvestPage() {
                 <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="Street, town or postcode — used for the local market check" style={inp}/></div>
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1.4fr',gap:10}}>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1.4fr',gap:10}}>
                       <div><label style={lbl}>{isR2HMO?'Bedrooms now (as rented)':'Bedrooms'}</label><input value={form.bedrooms||''} onChange={e=>setForm({...form,bedrooms:e.target.value,...(isR2HMO?{currentRooms:e.target.value}:{})})} type="number" placeholder="e.g. 3" style={inp}/></div>
+                      <div><label style={lbl}>Bathrooms</label><input value={form.bathrooms||''} onChange={e=>setForm({...form,bathrooms:e.target.value})} type="number" step="0.5" placeholder="e.g. 2" style={inp}/></div>
                       <div><label style={lbl}>Property Type</label><select value={form.propertyType||''} onChange={e=>setForm({...form,propertyType:e.target.value})} style={inp}><option value="">Any</option>{['House','Terraced house','Semi-detached house','Detached house','Flat / apartment','Bungalow','Townhouse','Villa','Land'].map(t=><option key={t}>{t}</option>)}</select></div>
                     </div>
                     {!isR2R&&<div><label style={lbl}>Purchase Price ({S}) *</label><input value={form.price||''} onChange={e=>setForm({...form,price:e.target.value})} type="number" placeholder="e.g. 150000" style={inp}/></div>}

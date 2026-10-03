@@ -84,7 +84,7 @@ export default function LandlordOffer({ form, setForm, result, market, onUseOffe
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
           {[
-            { l: `Market rent${form.bedrooms ? ` (${form.bedrooms}-bed)` : ''}`, v: m(o.marketRent), s: o.fromMarket ? 'From the market check' : num(form.offerMarketRent) ? 'Your figure' : "Landlord's asking — run the market check for a local figure" },
+            { l: `Market rent${form.bedrooms || form.bathrooms ? ` (${[form.bedrooms && `${form.bedrooms}-bed`, form.bathrooms && `${form.bathrooms}-bath`].filter(Boolean).join(', ')})` : ''}`, v: m(o.marketRent), s: o.fromMarket ? 'From the market check' : num(form.offerMarketRent) ? 'Your figure' : "Landlord's asking — run the market check for a local figure" },
             { l: 'What the landlord really keeps', v: m(o.landlordKeeps), s: `After ${o.emptyMonths} empty month${o.emptyMonths === 1 ? '' : 's'} a year and ${o.repairsPct}% repairs` },
             { l: 'Recommended offer', v: o.rec ? m(o.rec.offer) : '—', s: o.rec ? `${o.rec.pct}% below market · ${o.years} year${o.years === 1 ? '' : 's'}` : 'No offer level works', hl: true },
             { l: 'Most you can pay', v: m(o.maxRent), s: `Keeps your ${m(o.targetProfit)} a month profit` },

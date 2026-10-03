@@ -16,7 +16,7 @@ const n = (v: any) => { const x = parseFloat(v); return Number.isFinite(x) && x 
 
 export function dealMetrics(strategy: string, form: any): Metric[] {
   const S = symOf(form)
-  const beds = form.bedrooms ? `${form.bedrooms}-bed ` : ''
+  const beds = (form.bedrooms ? `${form.bedrooms}-bed ` : '') + (form.bathrooms ? `${form.bathrooms}-bath ` : '')
   const type = (form.propertyType || 'property').toLowerCase()
   const out: Metric[] = []
   const add = (m: Metric) => { if (m.value > 0 || m.ref) out.push(m) }
@@ -81,7 +81,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
     if (!form.address?.trim()) { setErr('Add the property’s location (street, town or postcode) first.'); return }
     setLoading(true); setErr(null)
     const { data: { session } } = await supabase.auth.getSession()
-    const base = { strategy, strategyLabel, currency: curOf(form), location: form.address, bedrooms: form.bedrooms, propertyType: form.propertyType, letting: strategy === 'r2r' ? form.termType || 'long' : undefined }
+    const base = { strategy, strategyLabel, currency: curOf(form), location: form.address, bedrooms: form.bedrooms, bathrooms: form.bathrooms, propertyType: form.propertyType, letting: strategy === 'r2r' ? form.termType || 'long' : undefined }
     // One search per figure plus an area overview, all at once
     const call = async (body: any) => {
       const res = await fetch('/api/deal-market', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ ...base, ...body }) })
@@ -108,7 +108,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
     const sources = ok.flatMap((p: any) => p?.sources || []).filter((x: any) => { if (srcSeen.has(x.url)) return false; srcSeen.add(x.url); return true }).slice(0, 8)
     const missing = metrics.filter((_, i) => !parts[i]).map(m => m.label)
     onMarket({
-      checkedAt: new Date().toISOString(), location: form.address, bedrooms: form.bedrooms || null, propertyType: form.propertyType || null,
+      checkedAt: new Date().toISOString(), location: form.address, bedrooms: form.bedrooms || null, bathrooms: form.bathrooms || null, propertyType: form.propertyType || null,
       metrics, benchmarks: parts.filter(Boolean).map((p: any) => p.benchmark), comparables, sources,
       area: ov.area || '', demand: ov.demand || '', watch_outs: ov.watch_outs || [],
       confidence, confidence_reason: [ov.confidence_reason, missing.length ? `Couldn’t get market data for: ${missing.join(', ')}.` : ''].filter(Boolean).join(' '),
@@ -130,9 +130,10 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
         {market && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 12, background: market.confidence === 'High' ? '#E6F7EF' : market.confidence === 'Medium' ? '#FFF4DE' : '#FDECEC', color: market.confidence === 'High' ? '#0E7C55' : market.confidence === 'Medium' ? '#9A6400' : C.red }} title={market.confidence_reason}>{market.confidence} confidence</span>}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px,2fr) 110px minmax(130px,1fr) auto', gap: 10, marginTop: 14, alignItems: 'end' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px,2fr) 100px 100px minmax(130px,1fr) auto', gap: 10, marginTop: 14, alignItems: 'end' }}>
         <div><div style={{ fontSize: 11.5, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Location</div><input value={form.address || ''} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Street, town or postcode" style={{ ...inp, width: '100%' }} /></div>
         <div><div style={{ fontSize: 11.5, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Bedrooms</div><input value={form.bedrooms || ''} onChange={e => setForm({ ...form, bedrooms: e.target.value })} type="number" placeholder="e.g. 3" style={{ ...inp, width: '100%' }} /></div>
+        <div><div style={{ fontSize: 11.5, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Bathrooms</div><input value={form.bathrooms || ''} onChange={e => setForm({ ...form, bathrooms: e.target.value })} type="number" step="0.5" placeholder="e.g. 2" style={{ ...inp, width: '100%' }} /></div>
         <div><div style={{ fontSize: 11.5, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Property type</div>
           <select value={form.propertyType || ''} onChange={e => setForm({ ...form, propertyType: e.target.value })} style={{ ...inp, width: '100%' }}>
             <option value="">Any</option>{['House', 'Terraced house', 'Semi-detached house', 'Detached house', 'Flat / apartment', 'Bungalow', 'Townhouse', 'Villa', 'Land'].map(t => <option key={t}>{t}</option>)}

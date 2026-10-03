@@ -7,7 +7,7 @@ import { requireUser } from '@/lib/admin-auth'
 // plus the comparables themselves with links. Links are only kept if they
 // came back from the web search, so the AI can't invent a listing URL.
 //
-// POST { mode:'metric'|'overview', strategy, strategyLabel, location, bedrooms, propertyType, letting, metrics:[{key,label,value,unit,compare}] }
+// POST { mode:'metric'|'overview', strategy, strategyLabel, location, bedrooms, bathrooms, propertyType, letting, metrics:[{key,label,value,unit,compare}] }
 // The browser calls this once per figure plus once for the overview, all at
 // the same time, so each search stays inside the 60s server limit.
 // The response is streamed: spaces every few seconds to keep the connection
@@ -29,7 +29,7 @@ const METRIC_SHAPE = `JSON shape:
  "comparables": [ { "type": "For sale" | "Sold" | "To rent" | "Room" | "Short let" | "Land", "title": "short description", "location": "street/area", "beds": number|null, "price": number, "unit": "<same unit as the metric>", "price_text": "as shown on the listing", "url": "exact URL you found", "source": "site name" } ],
  "confidence": "High" | "Medium" | "Low"
 }
-Give 3-6 comparables, closest match first. The benchmark must be in the same unit as the metric. Match bedrooms and property type as closely as you can; if you had to widen the search, say so in basis. If data is thin, give your best range, a low count and Low confidence.`
+Give 3-6 comparables, closest match first. The benchmark must be in the same unit as the metric. Match bedrooms, bathrooms and property type as closely as you can; if you had to widen the search, say so in basis. If data is thin, give your best range, a low count and Low confidence.`
 
 const OVERVIEW_SHAPE = `JSON shape:
 {
@@ -54,6 +54,7 @@ async function run(b: any) {
 Location: ${location}
 Property type: ${b.propertyType || 'not given'}
 Bedrooms: ${b.bedrooms || 'not given'}
+Bathrooms: ${b.bathrooms || 'not given'}
 ${b.letting ? `Letting type: ${b.letting}\n` : ''}
 ` + (overview
     ? 'Describe the local market for this strategy and return the JSON.'
