@@ -25,7 +25,7 @@ const ym = (d?: string | null) => (d || '').slice(0, 7)
 const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
 
 async function load(biz: string) {
-  const [vr, pmProps, eaProps, pmRent, pmTenants, pmLl, eaLl, pmPay, eaPay, eaSched, eaTen, eaTenants, strTx, pmTx, eaTx, devItems, devProjects, approvals] = await Promise.all([
+  const [vr, pmProps, eaProps, pmRent, pmTenants, pmLl, eaLl, pmPay, eaPay, eaSched, eaTen, eaTenants, strTx, pmTx, eaTx, devItems, devProjects, approvals, invoices] = await Promise.all([
     q(db.from('properties').select('id,name').eq('user_id', biz)),
     q(db.from('pm_properties').select('id,name,country').eq('user_id', biz)),
     q(db.from('estate_properties').select('id,name,address,currency').eq('user_id', biz)),
@@ -44,10 +44,11 @@ async function load(biz: string) {
     q(db.from('dev_budget_items').select('actual,created_at,name,project_id').eq('user_id', biz)),
     q(db.from('dev_projects').select('id,name').eq('user_id', biz)),
     q(db.from('approvals').select('amount,currency,status,decided_at,title,kind').eq('business_id', biz).eq('status', 'approved')),
+    q(db.from('invoices').select('number,total,currency,paid_at,bill_to_name,module').eq('business_id', biz).eq('status', 'paid')),
   ])
   const vrIds = vr.map((p: any) => p.id)
   const bookings = vrIds.length ? await q(db.from('bookings').select('id,property_id,check_in,check_out,total_amount,status,guest_name').in('property_id', vrIds)) : []
-  return { vr, pmProps, eaProps, pmRent, pmTenants, pmLl, eaLl, pmPay, eaPay, eaSched, eaTen, eaTenants, strTx, pmTx, eaTx, devItems, devProjects, approvals, bookings }
+  return { vr, pmProps, eaProps, pmRent, pmTenants, pmLl, eaLl, pmPay, eaPay, eaSched, eaTen, eaTenants, strTx, pmTx, eaTx, devItems, devProjects, approvals, invoices, bookings }
 }
 
 export async function GET(req: NextRequest) {
@@ -100,6 +101,7 @@ export async function GET(req: NextRequest) {
   for (const [list, mod, cur] of [[d.strTx, 'vr', 'USD'], [d.pmTx, 'pm', 'GBP'], [d.eaTx, 'ea', 'GBP']] as [any[], string, Cur][]) for (const t of list) if (t.date && Number(t.amount)) lines.push({ month: ym(t.date), dir: /income/i.test(t.type) ? 'in' : 'out', source: /income/i.test(t.type) ? 'Other income' : 'Expenses', module: mod, amount: Math.abs(Number(t.amount)), currency: cur, label: t.description || t.type })
   for (const p of [...d.pmPay.map((x: any) => ({ ...x, mod: 'pm', cur: pmCur(pmProp(x.property_id)), ll: name(d.pmLl, x.landlord_id) })), ...d.eaPay.map((x: any) => ({ ...x, mod: 'ea', cur: eaCur(eaProp(x.property_id)), ll: name(d.eaLl, x.landlord_id) }))]) if (p.paid_date) lines.push({ month: ym(p.paid_date), dir: 'out', source: 'Owner payouts', module: p.mod, amount: Number(p.amount) || 0, currency: p.cur, label: `${p.ll || 'Owner'} · ${p.category || 'payout'}` })
   for (const b of d.devItems) if (Number(b.actual) > 0) lines.push({ month: ym(b.created_at), dir: 'out', source: 'Development spend', module: 'dev', amount: Number(b.actual), currency: 'GBP', label: `${name(d.devProjects, b.project_id) || 'Project'} · ${b.name || ''}` })
+  for (const v of d.invoices) if (Number(v.total) > 0 && v.paid_at) lines.push({ month: ym(v.paid_at), dir: 'in', source: 'Invoices', module: v.module || 'company', amount: Number(v.total), currency: (['GBP', 'JMD', 'USD'].includes(v.currency) ? v.currency : 'GBP') as Cur, label: `${v.number} · ${v.bill_to_name || 'client'}` })
   for (const a of d.approvals) if (Number(a.amount) > 0 && a.decided_at) lines.push({ month: ym(a.decided_at), dir: 'out', source: 'Approved expenses', module: 'company', amount: Number(a.amount), currency: (['GBP', 'JMD', 'USD'].includes(a.currency) ? a.currency : 'GBP') as Cur, label: a.title })
 
   const inMonth = lines.filter(l => l.month === month)

@@ -47,6 +47,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/finance', label: 'Overview', scTab: 'finance' },
     { href: '/staff-centre/finance/payouts', label: 'Owner Payouts', scTab: 'finance' },
     { href: '/staff-centre/finance/arrears', label: 'Arrears', scTab: 'finance', badge: 'arrears' },
+    { href: '/staff-centre/invoices', label: 'Invoices' },
     { href: '/staff-centre/approvals', label: 'Approvals', badge: 'approvals' },
   ] },
   { label: 'Operations', icon: 'wrench', tabs: [
