@@ -14,12 +14,20 @@ import { BRAND_NAME } from '@/lib/brand'
 const ACCENT = '#A8862E'
 const TEXT = '#323338'
 
+const INK = '#191815'
+const ICONS: Record<string, string> = {
+  chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  calc: 'M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM8 7h8M8 11h2M12 11h2M16 11v6M8 15h2M12 15h2',
+  mega: 'M3 11v3l12 5V6L3 11zM15 9a3 3 0 0 1 0 6M6 14v4',
+  home: 'M3 11l9-7 9 7M5 10v10h14V10',
+}
 const FEATURES = [
-  { icon: '£', title: 'Your investment dashboard', desc: 'Capital in, returned, outstanding, payback and ROI, live.' },
-  { icon: '%', title: 'Deal Analyser', desc: 'Run the numbers on any deal: rent-to-rent, HMO, buy-to-let and more.' },
-  { icon: '✦', title: 'Partners broadcast', desc: 'New opportunities and updates from the team, with photos.' },
-  { icon: '⌂', title: 'Owner Portal', desc: 'Bookings, statements and messages for properties you’re in.' },
+  { icon: 'chart', title: 'Your investment dashboard', desc: 'Money in, money returned, what’s outstanding and your return, live.' },
+  { icon: 'mega', title: 'First look at new opportunities', desc: 'Properties and updates shared with partners first, with photos and figures.' },
+  { icon: 'calc', title: 'Deal Analyser', desc: 'Run the numbers on any deal, with a local market check on rents and prices.' },
+  { icon: 'home', title: 'Owner Portal', desc: 'Statements, payouts and messages for every property you’re in.' },
 ]
+const Icon = ({ d }: { d: string }) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
 
 type BankInfo = { signup_id: string; reference: string; amount: number; bank_name: string | null; account_name: string | null; sort_code: string; account_number: string; email: string }
 
@@ -90,11 +98,11 @@ export default function JoinPage() {
   const feeText = `£${fee % 1 === 0 ? fee : fee.toFixed(2)}`
   const cardOn = !!link?.card_enabled
   const bankOn = !!link?.bank_enabled
-  const input: React.CSSProperties = { width: '100%', padding: '10px 12px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', color: TEXT }
+  const input: React.CSSProperties = { width: '100%', padding: '12px 14px', border: '1px solid #D9D4C8', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', boxSizing: 'border-box', color: TEXT }
   const label: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: '#344054', margin: '12px 0 4px' }
   const option = (on: boolean, disabled: boolean): React.CSSProperties => ({
     flex: 1, textAlign: 'left', padding: '10px 12px', borderRadius: 9, cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-    border: `1.5px solid ${on ? ACCENT : '#D0D5DD'}`, background: on ? '#FBF4E6' : '#fff', opacity: disabled ? 0.5 : 1,
+    border: `1.5px solid ${on ? INK : '#D9D4C8'}`, background: on ? '#FAF3E2' : '#fff', opacity: disabled ? 0.5 : 1,
   })
 
   const detailRow = (k: string, l: string, v: string, mono = false) => (
@@ -108,12 +116,18 @@ export default function JoinPage() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", color: TEXT }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{box-sizing:border-box}
-        @media(max-width:820px){.join-grid{grid-template-columns:1fr !important}}`}</style>
-      <nav style={{ height: 60, background: '#fff', borderBottom: '1px solid #E4E7EC', display: 'flex', alignItems: 'center', padding: '0 24px', gap: 8 }}>
-        <img src="/logo.PNG" alt={BRAND_NAME} style={{ width: 26, height: 26, objectFit: 'contain' }} />
-        <span style={{ fontWeight: 700, fontSize: 15 }}>{BRAND_NAME}</span>
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "Figtree, -apple-system, sans-serif", color: INK }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap');*{box-sizing:border-box}
+        .jh{font-family:Archivo,Figtree,sans-serif;letter-spacing:-0.02em}
+        .join-grid{grid-template-columns:1.1fr 1fr}
+        .join-card{margin-top:-150px}
+        @media(max-width:860px){.join-grid{grid-template-columns:1fr}.join-card{margin-top:0;order:-1}.join-hero h1{font-size:32px !important}.join-hero{height:auto !important;padding-bottom:36px !important}}`}</style>
+      <nav style={{ height: 68, background: '#fff', borderBottom: '1px solid #ECE8DF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px' }}>
+        <a href="https://sangstersgroup.com" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <img src="/logo-192.png" alt={BRAND_NAME} style={{ width: 36, height: 36, borderRadius: 8 }} />
+          <span className="jh" style={{ fontWeight: 700, fontSize: 20, color: '#5A4320' }}>{BRAND_NAME}</span>
+        </a>
+        <a href="/login" style={{ fontSize: 14, fontWeight: 600, color: INK, textDecoration: 'none' }}>Partner sign in</a>
       </nav>
 
       {!loaded ? (
@@ -160,64 +174,92 @@ export default function JoinPage() {
           </div>
         </div>
       ) : (
-        <div className="join-grid" style={{ maxWidth: 1040, margin: '0 auto', padding: '40px 20px', display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 28, alignItems: 'start' }}>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: ACCENT, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Partner programme</div>
-            <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 10px' }}>{link.headline || 'Become a partner'}</h1>
-            {link.blurb && <div style={{ fontSize: 15, color: '#667085', lineHeight: 1.6, marginBottom: 22 }}>{link.blurb}</div>}
-            {FEATURES.map(f => (
-              <div key={f.title} style={{ display: 'flex', gap: 12, background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '14px 16px', marginBottom: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 9, background: '#FBF4E6', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, fontWeight: 800 }}>{f.icon}</div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{f.title}</div>
-                  <div style={{ fontSize: 12.5, color: '#667085', marginTop: 2 }}>{f.desc}</div>
-                </div>
+        <>
+          <div className="join-hero" style={{ position: 'relative', height: 380, background: `${INK} url(/partners-hero.jpg) center 40%/cover no-repeat` }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(25,24,21,0.88) 0%, rgba(25,24,21,0.6) 55%, rgba(25,24,21,0.25) 100%)' }} />
+            <div style={{ position: 'relative', maxWidth: 1120, margin: '0 auto', padding: '56px 24px 0' }}>
+              <div style={{ maxWidth: 560, color: '#fff' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#D9B866', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 14 }}>Partner Programme · Jamaica</div>
+                <h1 className="jh" style={{ fontSize: 44, lineHeight: 1.08, margin: '0 0 14px', fontWeight: 800 }}>{link.headline || 'Invest alongside us in Jamaica'}</h1>
+                {link.blurb && <div style={{ fontSize: 16.5, color: 'rgba(255,255,255,0.82)', lineHeight: 1.6 }}>{link.blurb}</div>}
               </div>
-            ))}
-          </div>
-
-          <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 14, padding: 26 }}>
-            <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 10 }}>Become a partner</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
-              <b style={{ fontSize: 34 }}>{feeText}</b>
-              <span style={{ color: '#667085', fontSize: 14 }}>one-time membership</span>
-            </div>
-            <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 6 }}>No monthly fees. Membership is separate from any amount you invest.</div>
-
-            <label style={label}>Full name</label>
-            <input style={input} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Jane Smith" autoComplete="name" />
-            <label style={label}>Email</label>
-            <input style={input} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="jane@example.com" autoComplete="email" />
-            <label style={label}>Phone</label>
-            <input style={input} type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+44 7700 900000" autoComplete="tel" />
-            <label style={label}>Create a password</label>
-            <input style={input} type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="min. 8 characters" autoComplete="new-password" onKeyDown={e => e.key === 'Enter' && join()} />
-
-            <label style={label}>How would you like to pay?</label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" disabled={!cardOn} onClick={() => setMethod('card')} style={option(method === 'card', !cardOn)}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>Card</div>
-                <div style={{ fontSize: 11.5, color: '#667085' }}>{cardOn ? 'Instant access' : 'Coming soon'}</div>
-              </button>
-              <button type="button" disabled={!bankOn} onClick={() => setMethod('bank')} style={option(method === 'bank', !bankOn)}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>Bank transfer</div>
-                <div style={{ fontSize: 11.5, color: '#667085' }}>{bankOn ? 'Unlocked once received' : 'Not available'}</div>
-              </button>
-            </div>
-
-            {error && <div style={{ fontSize: 13, color: '#B42318', background: '#FEF3F2', borderRadius: 8, padding: '10px 12px', marginTop: 12 }}>{error}</div>}
-
-            <button onClick={join} disabled={loading || (!cardOn && !bankOn)} style={{ width: '100%', marginTop: 18, background: ACCENT, color: '#fff', border: 'none', borderRadius: 9, padding: 13, fontWeight: 700, fontSize: 15, cursor: loading ? 'wait' : 'pointer', opacity: loading || (!cardOn && !bankOn) ? 0.7 : 1, fontFamily: 'inherit' }}>
-              {loading ? (method === 'card' ? 'Opening secure payment…' : 'Getting bank details…') : method === 'card' ? `Pay ${feeText} & join →` : 'Continue to bank details →'}
-            </button>
-            <div style={{ fontSize: 11.5, color: '#98A2B3', marginTop: 10, textAlign: 'center', lineHeight: 1.5 }}>
-              {method === 'card'
-                ? 'Secure card payment by Stripe. Your account is created once payment succeeds, and you’ll go straight to your Partners portal.'
-                : 'We’ll show you our bank details and your payment reference. Your account unlocks once the team confirms your transfer.'}<br />
-              Already a partner? <a href="/login" style={{ color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>Sign in</a>
             </div>
           </div>
-        </div>
+
+          <div className="join-grid" style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 24px 56px', display: 'grid', gap: 40, alignItems: 'start' }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#8E6B1F', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: 6 }}>What membership includes</div>
+              {FEATURES.map((f, i) => (
+                <div key={f.title} style={{ display: 'flex', gap: 14, padding: '18px 0', borderTop: i ? '1px solid #F0ECE3' : 'none' }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 10, background: '#FAF3E2', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon d={ICONS[f.icon]} /></div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 15.5 }}>{f.title}</div>
+                    <div style={{ fontSize: 14, color: '#55524B', marginTop: 3, lineHeight: 1.5 }}>{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+              <div style={{ marginTop: 22, padding: '18px 20px', background: '#FBFAF7', border: '1px solid #ECE8DF', borderRadius: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Two ways to invest</div>
+                <div style={{ fontSize: 14, color: '#55524B', lineHeight: 1.6, marginTop: 6 }}>
+                  <b style={{ color: INK }}>50/50 partnership:</b> we share the upfront costs and the profit.<br />
+                  <b style={{ color: INK }}>Investor:</b> you fund the property, we run it and the income pays you back.
+                </div>
+                <div style={{ fontSize: 12, color: '#8A857A', marginTop: 10 }}>Returns are not guaranteed. Every opportunity comes with its own figures and a written agreement.</div>
+              </div>
+            </div>
+
+            <div className="join-card" style={{ position: 'relative', background: '#fff', border: '1px solid #ECE8DF', borderTop: `4px solid ${ACCENT}`, borderRadius: 12, padding: 28, boxShadow: '0 24px 60px rgba(25,24,21,0.14)' }}>
+              <div className="jh" style={{ fontWeight: 700, fontSize: 20, marginBottom: 12 }}>Become a partner</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                <b className="jh" style={{ fontSize: 44, fontWeight: 800 }}>{feeText}</b>
+                <span style={{ color: '#55524B', fontSize: 15 }}>one-time membership</span>
+              </div>
+              <div style={{ fontSize: 13, color: '#6B675E', marginBottom: 8 }}>No monthly fees. Membership is separate from any amount you invest.</div>
+              <label style={label}>Full name</label>
+              <input style={input} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Jane Smith" autoComplete="name" />
+              <label style={label}>Email</label>
+              <input style={input} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="jane@example.com" autoComplete="email" />
+              <label style={label}>Phone</label>
+              <input style={input} type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+44 7700 900000" autoComplete="tel" />
+              <label style={label}>Create a password</label>
+              <input style={input} type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="min. 8 characters" autoComplete="new-password" onKeyDown={e => e.key === 'Enter' && join()} />
+
+              <label style={label}>How would you like to pay?</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" disabled={!cardOn} onClick={() => setMethod('card')} style={option(method === 'card', !cardOn)}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>Card</div>
+                  <div style={{ fontSize: 11.5, color: '#667085' }}>{cardOn ? 'Instant access' : 'Coming soon'}</div>
+                </button>
+                <button type="button" disabled={!bankOn} onClick={() => setMethod('bank')} style={option(method === 'bank', !bankOn)}>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>Bank transfer</div>
+                  <div style={{ fontSize: 11.5, color: '#667085' }}>{bankOn ? 'Unlocked once received' : 'Not available'}</div>
+                </button>
+              </div>
+
+              {error && <div style={{ fontSize: 13, color: '#B42318', background: '#FEF3F2', borderRadius: 8, padding: '10px 12px', marginTop: 12 }}>{error}</div>}
+
+              <button onClick={join} disabled={loading || (!cardOn && !bankOn)} style={{ width: '100%', marginTop: 18, background: INK, color: '#fff', border: 'none', borderRadius: 8, padding: 15, fontWeight: 700, fontSize: 15.5, cursor: loading ? 'wait' : 'pointer', opacity: loading || (!cardOn && !bankOn) ? 0.7 : 1, fontFamily: 'inherit' }}>
+                {loading ? (method === 'card' ? 'Opening secure payment…' : 'Getting bank details…') : method === 'card' ? `Pay ${feeText} & join →` : 'Continue to bank details →'}
+              </button>
+              <div style={{ fontSize: 11.5, color: '#8A857A', marginTop: 12, textAlign: 'center', lineHeight: 1.5 }}>
+                {method === 'card'
+                  ? 'Secure card payment by Stripe. Your account is created once payment succeeds, and you’ll go straight to your Partners portal.'
+                  : 'We’ll show you our bank details and your payment reference. Your account unlocks once the team confirms your transfer.'}<br />
+                Already a partner? <a href="/login" style={{ color: '#8E6B1F', fontWeight: 700, textDecoration: 'none' }}>Sign in</a>
+              </div>
+
+            </div>
+          </div>
+
+          <footer style={{ borderTop: '1px solid #ECE8DF', background: '#FBFAF7' }}>
+            <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontSize: 13, color: '#55524B' }}>
+              <span><b style={{ color: INK }}>Sangsters Group</b> · Company No. 16171490</span>
+              <span>Tallis House, 2 Tallis St, London EC4Y 0AB</span>
+              <span>Shop 7, 45 Main Street, Porus, Manchester, Jamaica</span>
+              <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#8E6B1F', textDecoration: 'none', fontWeight: 600 }}>contact.us@sangstersgroup.com</a>
+            </div>
+          </footer>
+        </>
       )}
     </div>
   )
