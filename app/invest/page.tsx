@@ -5,6 +5,7 @@ import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, appl
 import AskChat from '../../components/ai/AskChat'
 import MarketCheck from '../../components/invest/MarketCheck'
 import LandlordOffer, { landlordOffer } from '../../components/invest/LandlordOffer'
+import { ListingImportBox, ListingCard, propertyTypeFor, type Listing } from '../../components/invest/ListingImport'
 import { CURRENCIES, curOf, symOf, type Cur } from '../../lib/currency'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
@@ -154,6 +155,26 @@ export default function InvestPage() {
     setForm(f); setMarket(null); setMarketEstimate(null)
     if (result) analyse(f)
   }
+
+  // Imported listing: switch the deal to the listing's currency (converting
+  // anything already entered), then fill address, price, beds, baths, type.
+  function applyListing(l: Listing) {
+    const from = curOf(form)
+    const to = (l.currency && l.currency in CURRENCIES ? l.currency : from) as Cur
+    const rates = fx || { GBP: 1, USD: 1.34, JMD: 210 }
+    const k = rates[to] / rates[from]
+    const f: any = { ...form, currency: to, listing: l }
+    if (to !== from) for (const m of MONEY_FIELDS) { const v = parseFloat(form[m]); if (form[m] !== undefined && form[m] !== '' && Number.isFinite(v)) f[m] = String(Math.round(v * k * 100) / 100) }
+    f.address = [l.address, l.subarea, l.area].filter(Boolean).join(', ')
+    if (l.bedrooms) { f.bedrooms = String(l.bedrooms); if (isR2HMO) f.currentRooms = String(l.bedrooms) }
+    if (l.bathrooms) f.bathrooms = String(l.bathrooms)
+    const t = propertyTypeFor(l.style); if (t) f.propertyType = t
+    if (l.price && !/rent/i.test(l.saleOrRent || '')) f.price = String(l.price)
+    const rent = l.rentalPrice ? parseFloat(l.rentalPrice.replace(/[^0-9.]/g, '')) : (/rent/i.test(l.saleOrRent || '') ? l.price : null)
+    if (rent && isR2R) f.rent = String(rent)
+    setForm(f); setMarket(null); setMarketEstimate(null)
+  }
+  const removeListing = () => { const f = { ...form }; delete f.listing; setForm(f) }
 
   const CurrencySwitch = () => {
     const cur = curOf(form)
@@ -319,11 +340,12 @@ export default function InvestPage() {
             {/* Form */}
             {strategy&&!result&&(
               <div>
-                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
+                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24,flexWrap:'wrap'}}>
                   <button onClick={()=>setStrategy(null)} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← Back</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} Analysis</div>
                   <CurrencySwitch/>
                 </div>
+                {form.listing ? <ListingCard listing={form.listing} onRemove={removeListing} authHeaders={authHeaders} onImport={applyListing}/> : <ListingImportBox authHeaders={authHeaders} onImport={applyListing}/>}
                 <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:28}}>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
                     <div><label style={lbl}>Property Address</label><input value={form.address||''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="Street, town or postcode — used for the local market check" style={inp}/></div>
@@ -409,13 +431,14 @@ export default function InvestPage() {
             {/* Results */}
             {result&&(
               <div>
-                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
+                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24,flexWrap:'wrap'}}>
                   <button onClick={()=>{setResult(null);setSavedDealId(null);setVerdict(null);setVerdictError(null);setMarket(null)}} style={{padding:'6px 12px',borderRadius:4,border:'1px solid #D0D4E4',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>← New Analysis</button>
                   <div style={{fontSize:16,fontWeight:600,color:'#323338'}}>{STRATEGIES.find(s=>s.id===strategy)?.label} — {form.address||'Analysis Results'}</div>
                   {score&&<span style={{padding:'4px 12px',borderRadius:20,background:score.bg,color:score.color,fontSize:13,fontWeight:700}}>{score.label} Deal</span>}
                   <CurrencySwitch/>
                 </div>
 
+                {form.listing&&<ListingCard listing={form.listing}/>}
                 {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#7A5A12'}}>⚠ No setup or conversion costs entered, so ROI is based only on the {S}{n0((result.totalUpfront||0))} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
                 {/* Key metrics */}
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
@@ -743,6 +766,7 @@ export default function InvestPage() {
                       inputs: form,
                       results: result,
                       stress: (getStressScenarios(strategy!)||[]).map(sc=>{ const r:any = applyStress(strategy!, form, sc); return { scenario: sc.label, monthlyCashflow: r?.monthlyCashflow, annualCashflow: r?.annualCashflow } }),
+                      importedListing: form.listing ? (()=>{ const { photos, ...rest } = form.listing; return { ...rest, photoCount: (photos||[]).length } })() : null,
                       localMarket: market ? { location: market.location, confidence: market.confidence, area: market.area, benchmarks: market.benchmarks, comparables: (market.comparables||[]).map((c:any)=>({type:c.type,title:c.title,location:c.location,beds:c.beds,price:c.price,unit:c.unit,source:c.source,url:c.url})), demand: market.demand, watchOuts: market.watch_outs } : null,
                       landlordOffer: isR2R ? (()=>{ const o = landlordOffer(form, result, market); return { marketRent: o.marketRent, landlordAsking: o.asking, landlordReallyKeeps: o.landlordKeeps, mostYouCanPay: o.maxRent, targetProfit: o.targetProfit, recommendedOffer: o.rec?.offer ?? null, options: o.rows } })() : null,
                       aiVerdict: verdict ? { status: verdict.status, summary: verdict.ai_summary, override: verdict.override_status, risks: verdict.risk_flags, breakEven: verdict.break_even } : null,
@@ -766,7 +790,8 @@ export default function InvestPage() {
             ):(
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
                 {savedDeals.map(d=>(
-                  <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24}}>
+                  <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24,overflow:'hidden'}}>
+                    {d.listing?.photos?.[0]&&<img src={d.listing.photos[0]} alt="" style={{display:'block',width:'calc(100% + 48px)',height:150,objectFit:'cover',margin:'-24px -24px 16px'}}/>}
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{d.address||'Deal #'+d.id}</div>
                       <button onClick={()=>deleteDeal(d.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444'}}>×</button>
