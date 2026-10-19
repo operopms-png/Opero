@@ -36,15 +36,18 @@ export function CrmPage({ children, fill }: { children: React.ReactNode; fill?: 
 
 export type Tab = { k: string; l: string; count?: number; color?: string }
 
-export function CrmHeader({ title, subtitle, actions, tabs, tab, onTab, below }: {
-  title: string; subtitle?: React.ReactNode; actions?: React.ReactNode; tabs?: Tab[]; tab?: string; onTab?: (k: string) => void; below?: React.ReactNode
+export const BLUE = { grad: 'linear-gradient(135deg,#F2F7FE,#DCEAFB)', line: '#C5D9F2', title: '#1F3A5F', sub: '#4F6B8F', accent: '#3B7DD8' }
+
+export function CrmHeader({ title, subtitle, actions, tabs, tab, onTab, below, theme }: {
+  title: string; subtitle?: React.ReactNode; actions?: React.ReactNode; tabs?: Tab[]; tab?: string; onTab?: (k: string) => void; below?: React.ReactNode; theme?: 'blue'
 }) {
+  const blue = theme === 'blue'
   return (
-    <div style={{ padding: tabs ? '22px 28px 0' : '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + C.creamLine, flexShrink: 0 }}>
+    <div style={{ padding: tabs ? '22px 28px 0' : '22px 28px', background: blue ? BLUE.grad : 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + (blue ? BLUE.line : C.creamLine), flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>{subtitle}</div>}
+          <h1 style={{ fontSize: 26, fontWeight: 500, color: blue ? BLUE.title : C.brown, margin: '0 0 2px' }}>{title}</h1>
+          {subtitle && <div style={{ fontSize: 13, color: blue ? BLUE.sub : '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>{subtitle}</div>}
         </div>
         {actions && <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>{actions}</div>}
       </div>
@@ -54,7 +57,7 @@ export function CrmHeader({ title, subtitle, actions, tabs, tab, onTab, below }:
           {tabs.map(t => {
             const on = t.k === tab
             return (
-              <button key={t.k} onClick={() => onTab?.(t.k)} style={{ padding: '8px 2px', marginBottom: -1, border: 'none', borderBottom: '2px solid ' + (on ? C.goldDark : 'transparent'), background: 'none', color: on ? C.ink : C.muted, fontSize: 14, fontWeight: on ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <button key={t.k} onClick={() => onTab?.(t.k)} style={{ padding: '8px 2px', marginBottom: -1, border: 'none', borderBottom: '2px solid ' + (on ? (blue ? BLUE.accent : C.goldDark) : 'transparent'), background: 'none', color: on ? C.ink : C.muted, fontSize: 14, fontWeight: on ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 {t.color && <span style={{ width: 8, height: 8, borderRadius: 2, background: t.color }} />}
                 {t.l}{t.count !== undefined && <span style={{ color: C.faint, fontWeight: 400 }}>{t.count}</span>}
               </button>
@@ -70,11 +73,12 @@ export function Body({ children, style }: { children: React.ReactNode; style?: R
   return <div style={{ padding: '20px 28px 40px', minWidth: 0, ...style }}>{children}</div>
 }
 
-export function Stat({ label: l, value, sub, highlight }: { label: string; value: React.ReactNode; sub?: React.ReactNode; highlight?: boolean }) {
+export function Stat({ label: l, value, sub, highlight, theme }: { label: string; value: React.ReactNode; sub?: React.ReactNode; highlight?: boolean; theme?: 'blue' }) {
+  const blue = theme === 'blue'
   return (
-    <div style={{ background: highlight ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', border: '1px solid ' + (highlight ? C.creamLine : C.row), borderRadius: 8, padding: 16 }}>
-      <div style={{ fontSize: 13, color: highlight ? '#8A7248' : C.muted, marginBottom: 6 }}>{l}</div>
-      <div style={{ fontSize: 26, fontWeight: 600, color: highlight ? C.brown : C.ink, lineHeight: 1.1 }}>{value}</div>
+    <div style={{ background: highlight ? (blue ? BLUE.grad : 'linear-gradient(135deg,#FBF4E6,#F3E6C8)') : '#fff', border: '1px solid ' + (highlight ? (blue ? BLUE.line : C.creamLine) : C.row), borderRadius: 8, padding: 16 }}>
+      <div style={{ fontSize: 13, color: highlight ? (blue ? BLUE.sub : '#8A7248') : C.muted, marginBottom: 6 }}>{l}</div>
+      <div style={{ fontSize: 26, fontWeight: 600, color: highlight ? (blue ? BLUE.title : C.brown) : C.ink, lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: C.faint, marginTop: 4 }}>{sub}</div>}
     </div>
   )

@@ -133,17 +133,17 @@ export default function SmartHomePage() {
   const tuyaConn = (d.connections ?? []).find((x: any) => x.provider === 'tuya')
   return (
     <CrmPage>
-      <CrmHeader title="Smart Home" subtitle="Live cameras and smart locks across your properties. Each location needs a one-time code (emailed to you) to open, and only staff given access can see it." tabs={tabs} tab={tab} onTab={k => setTab(k as any)} />
+      <CrmHeader title="Smart Home" subtitle="Live cameras and smart locks across your properties. Each location needs a one-time code (emailed to you) to open, and only staff given access can see it." tabs={tabs} tab={tab} onTab={k => setTab(k as any)} theme="blue" />
       <Body>
         {tab !== 'setup' && tab !== 'activity' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12, marginBottom: 22 }}>
             {tab === 'cameras' ? <>
-              <Stat label="Cameras online" value={`${cams.filter((x: any) => x.online !== false && x.provider !== 'ring').length} / ${cams.length}`} highlight />
+              <Stat label="Cameras online" value={`${cams.filter((x: any) => x.online !== false && x.provider !== 'ring').length} / ${cams.length}`} highlight theme="blue" />
               <Stat label="Offline" value={<span style={{ color: cams.some((x: any) => x.online === false) ? C.red : C.ink }}>{cams.filter((x: any) => x.online === false).length}</span>} />
               <Stat label="Locations" value={d.locations.filter((l: any) => devicesAt(l.id, 'camera').length).length} />
               <Stat label="Unlocked now" value={Object.keys(d.unlocked).filter(k => unlockedLeft(k)).length} />
             </> : <>
-              <Stat label="Locks" value={locks.length} highlight />
+              <Stat label="Locks" value={locks.length} highlight theme="blue" />
               <Stat label="Low battery" value={<span style={{ color: locks.some((x: any) => x.battery != null && x.battery < 25) ? C.orange : C.ink }}>{locks.filter((x: any) => x.battery != null && x.battery < 25).length}</span>} />
               <Stat label="Unlocked doors" value={locks.filter((x: any) => x.locked === false).length} />
               <Stat label="Offline" value={locks.filter((x: any) => x.online === false).length} />
