@@ -68,8 +68,8 @@ export default function CrmPage() {
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, height: 34, border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '0 8px', fontSize: 13.5 }}>
-              <span style={{ width: 20, height: 20, borderRadius: 4, background: BRAND.gold, color: BRAND.brown, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>S</span>
-              Sangsters CRM
+              <img src="/novouq-logo.jpg" alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'cover' }} />
+              NOVOURQ CRM
             </div>
             <button onClick={() => setNewBoard(true)} title="Add board" style={{ width: 34, height: 34, border: `1px solid ${BRAND.border}`, borderRadius: 4, background: '#fff', cursor: 'pointer', fontSize: 18, color: BRAND.ink }}>+</button>
           </div>
@@ -137,10 +137,10 @@ function Home({ crm, onOpen, onDashboard, onNew }: { crm: ReturnType<typeof useC
       <div style={{ padding: '0 40px 40px', marginTop: -44 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18 }}>
           <div style={{ width: 88, height: 88, borderRadius: 10, background: '#fff', border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
-            <img src="/logo.PNG" alt="Sangsters" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/novouq-logo.jpg" alt="NOVOURQ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div style={{ paddingBottom: 6 }}>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 500 }}>Sangsters CRM</h1>
+            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 500 }}>NOVOURQ CRM</h1>
             <div style={{ fontSize: 13.5, color: BRAND.muted }}>Contacts, properties, tasks and deals in one place</div>
           </div>
         </div>

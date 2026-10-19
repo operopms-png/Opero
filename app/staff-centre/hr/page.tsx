@@ -66,8 +66,8 @@ export default function HrPage() {
             <button onClick={() => setPanelOpen(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: BRAND.muted }}>«</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '0 8px', fontSize: 13.5, marginBottom: 12, whiteSpace: 'nowrap' }}>
-            <span style={{ width: 20, height: 20, borderRadius: 4, background: BRAND.gold, color: BRAND.brown, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>S</span>
-            Sangsters People & HR
+            <img src="/novouq-logo.jpg" alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'cover' }} />
+            NOVOURQ People & HR
           </div>
           <Nav icon={ICON.home} label="HR dashboard" active={view.kind === 'home'} onClick={() => setView({ kind: 'home' })} />
           {HR_BOARDS.map(b => <Nav key={b.key} icon={ICON[b.key]} label={b.title} count={store.rows[b.key]?.length} active={view.kind === 'board' && view.key === b.key} onClick={() => setView({ kind: 'board', key: b.key })} />)}

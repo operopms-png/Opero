@@ -60,8 +60,8 @@ export default function MarketingPage() {
             <button onClick={() => setPanelOpen(false)} title="Collapse" style={{ border: 'none', background: 'none', cursor: 'pointer', color: BRAND.muted }}>«</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '0 8px', fontSize: 13.5, marginBottom: 12, whiteSpace: 'nowrap' }}>
-            <span style={{ width: 20, height: 20, borderRadius: 4, background: BRAND.gold, color: BRAND.brown, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>S</span>
-            Sangsters Marketing
+            <img src="/novouq-logo.jpg" alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'cover' }} />
+            NOVOURQ Marketing
           </div>
           <NavItem icon={ICON.home} label="Workspace home" active={view.kind === 'home'} onClick={() => setView({ kind: 'home' })} />
           {BOARDS.map(b => <NavItem key={b.key} icon={ICON[b.key]} label={b.title} count={mk.rows[b.key].length} active={view.kind === 'board' && view.key === b.key} onClick={() => setView({ kind: 'board', key: b.key })} />)}
@@ -131,10 +131,10 @@ function Home({ mk, onOpen, onDashboard, onScripts }: { mk: Mk; onOpen: (k: stri
       <div style={{ padding: '0 40px 40px', marginTop: -44 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18 }}>
           <div style={{ width: 88, height: 88, borderRadius: 10, background: '#fff', border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', overflow: 'hidden', flexShrink: 0 }}>
-            <img src="/logo.PNG" alt="Sangsters" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/novouq-logo.jpg" alt="NOVOURQ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div style={{ paddingBottom: 6 }}>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 500 }}>Sangsters Marketing</h1>
+            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 500 }}>NOVOURQ Marketing</h1>
             <div style={{ fontSize: 13.5, color: BRAND.muted }}>Campaigns, emails, social posts and ads for every module in one place</div>
           </div>
         </div>

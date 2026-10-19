@@ -342,7 +342,7 @@ export default function Page() {
       <aside className="ib-ws" style={{width:232,flexShrink:0,borderRight:`1px solid ${LINE}`,padding:'14px 10px',display:'flex',flexDirection:'column',gap:2,overflowY:'auto'}}>
         <div style={{fontSize:13,color:MUTED,padding:'0 6px 10px'}}>Workspace</div>
         <div style={{display:'flex',alignItems:'center',gap:8,height:34,border:`1px solid ${BORDER}`,borderRadius:4,padding:'0 8px',fontSize:13.5,marginBottom:10,whiteSpace:'nowrap'}}>
-          <span style={{width:20,height:20,borderRadius:4,background:'#D0AE4C',color:'#624920',fontSize:11,fontWeight:700,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>S</span>Sangsters Inbox
+          <img src="/novouq-logo.jpg" alt="" style={{width:20,height:20,borderRadius:4,objectFit:'cover'}} />NOVOURQ Inbox
         </div>
         {identity.isAdmin && <button onClick={()=>setShowNewConvo(true)} style={{height:32,borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:13.5,fontWeight:500,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New team conversation</button>}
         <button onClick={()=>setShowNewText(true)} style={{height:32,borderRadius:4,border:`1px solid ${ACCENT}`,background:'#fff',color:'#8E6B1F',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New text</button>
