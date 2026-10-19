@@ -8,6 +8,7 @@ import { C, CrmPage, CrmHeader, Body, Stat, Loading, Empty, Modal, btn, input, l
 import { staffApi, money, MODULE_LABEL } from '../../../lib/staff-api'
 
 const KINDS = [['expense', 'Expense'], ['purchase', 'Purchase'], ['refund', 'Refund'], ['discount', 'Discount'], ['other', 'Other']]
+const KIND_LABEL: Record<string, string> = { ...Object.fromEntries(KINDS), document: 'Document wording' }
 const ST: Record<string, { l: string; bg: string; c: string }> = { pending: { l: 'Waiting', bg: '#FFF4DE', c: '#9A6400' }, approved: { l: 'Approved', bg: '#E6F7EF', c: '#0E7C55' }, rejected: { l: 'Rejected', bg: '#FDECEC', c: '#B42318' } }
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -42,10 +43,10 @@ export default function Approvals() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <b style={{ fontSize: 14.5, color: C.ink }}>{r.title}</b>
                       <span style={{ padding: '2px 9px', borderRadius: 12, fontSize: 11.5, fontWeight: 700, background: ST[r.status].bg, color: ST[r.status].c }}>{ST[r.status].l}</span>
-                      <span style={{ fontSize: 11.5, color: C.muted }}>{KINDS.find(k => k[0] === r.kind)?.[1]} · {MODULE_LABEL[r.module] || 'Company'}{r.property ? ` · ${r.property}` : ''}</span>
+                      <span style={{ fontSize: 11.5, color: C.muted }}>{KIND_LABEL[r.kind] || r.kind} · {MODULE_LABEL[r.module] || 'Company'}{r.property ? ` · ${r.property}` : ''}</span>
                     </div>
                     {r.details && <div style={{ fontSize: 13, color: '#3b3833', marginTop: 4, whiteSpace: 'pre-wrap' }}>{r.details}</div>}
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Asked by {r.requested_by} · {when(r.created_at)}{r.receipt_url && <> · <a href={r.receipt_url} target="_blank" rel="noreferrer" style={{ color: C.goldDark, fontWeight: 600 }}>Receipt</a></>}</div>
+                    <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>Asked by {r.requested_by} · {when(r.created_at)}{r.receipt_url && <> · <a href={r.receipt_url} target="_blank" rel="noreferrer" style={{ color: C.goldDark, fontWeight: 600 }}>Receipt</a></>}{r.link && <> · <a href={r.link} style={{ color: C.goldDark, fontWeight: 600 }}>Open the document and see the changes</a></>}</div>
                     {r.status !== 'pending' && <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{ST[r.status].l} by {r.decided_by} · {when(r.decided_at)}{r.decision_note ? ` — “${r.decision_note}”` : ''}</div>}
                   </div>
                   <div style={{ textAlign: 'right' }}>

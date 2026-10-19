@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { deliverDocument } from '@/lib/documents'
 
 // Finance → Approvals. Any staff member can ask for something to be signed off
 // (an expense, refund, discount, purchase…); admins approve or reject it.
@@ -52,12 +53,23 @@ export async function POST(req: NextRequest) {
     if (!['approved', 'rejected'].includes(b.status)) return bad('Choose approve or reject.')
     const { data, error } = await db.from('approvals').update({ status: b.status, decided_by: c.name || c.email, decided_at: new Date().toISOString(), decision_note: String(b.note || '').slice(0, 1000) || null }).eq('id', r.id).select('*').single()
     if (error) return bad(error.message, 500)
+    // a document whose wording was changed: approving sends it, rejecting hands it back to the sender
+    if (r.kind === 'document' && r.ref_id) {
+      const { data: doc } = await db.from('doc_sends').select('*').eq('id', r.ref_id).eq('business_id', c.businessId).maybeSingle()
+      if (doc && doc.status === 'pending_approval') {
+        if (b.status === 'approved') {
+          const err = await deliverDocument(doc)
+          if (err) { await db.from('approvals').update({ status: 'pending', decided_by: null, decided_at: null }).eq('id', r.id); return bad(`Approved, but the document couldn’t be sent: ${err}`) }
+        } else await db.from('doc_sends').update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', doc.id)
+      }
+    }
     return NextResponse.json({ request: data })
   }
   if (b.action === 'cancel') {
     if (r.requested_email !== c.email && !c.isAdmin) return bad('You can only cancel your own requests.', 403)
     if (r.status !== 'pending') return bad('Already decided.')
     await db.from('approvals').delete().eq('id', r.id)
+    if (r.kind === 'document' && r.ref_id) await db.from('doc_sends').update({ status: 'draft', approval_id: null }).eq('id', r.ref_id).eq('status', 'pending_approval')
     return NextResponse.json({ ok: true })
   }
   return bad('Unknown action')
