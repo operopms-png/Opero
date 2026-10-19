@@ -350,16 +350,16 @@ export default function DevPage() {
     <div style={{ minHeight:'100vh', background:'#F7F8FA', fontFamily:"'Inter',sans-serif", display:'flex' }}>
       {/* Sidebar */}
       <div style={{ width:200, background:'#fff', borderRight:'1px solid #E4E7EC', display:'flex', flexDirection:'column', flexShrink:0, minHeight:'100vh', overflowY:'auto' }}>
-        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)' }}>
-          <div style={{ width:8, height:8, background:'#D0AE4C', borderRadius:'50%' }} />
-          <span style={{ fontSize:14, fontWeight:700, color:'#624920' }}>Developments</span>
+        <div style={{ padding:'16px 16px 12px', borderBottom:'1px solid #E4E7EC', display:'flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)' }}>
+          <div style={{ width:8, height:8, background:'#2F6DB5', borderRadius:'50%' }} />
+          <span style={{ fontSize:14, fontWeight:700, color:'#1D4E89' }}>Developments</span>
         </div>
         <div style={{ padding:'8px 10px' }}>
           {DEV_NAV_GROUPS.map(group=>(
             <div key={group.label}>
               <div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'10px 10px 4px', marginTop:8 }}>{group.label}</div>
               {group.items.map(t=>(
-                <button key={t} onClick={()=>{if(t==='Contractors'){window.location.href='/dev/vendors';return;} if(t==='Service'){window.location.href='/dev/service';return;} setTab(t)}} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:tab===t?'1px solid #A8862E':'1px solid transparent',background:tab===t?'#FBF4E6':'transparent', color:tab===t?'#624920':'#344054', fontSize:13, fontWeight:tab===t?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}>{t}</button>
+                <button key={t} onClick={()=>{if(t==='Contractors'){window.location.href='/dev/vendors';return;} if(t==='Service'){window.location.href='/dev/service';return;} setTab(t)}} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:tab===t?'1px solid #2F6DB5':'1px solid transparent',background:tab===t?'#B9D6F2':'transparent', color:tab===t?'#624920':'#344054', fontSize:13, fontWeight:tab===t?600:400, cursor:'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}>{t}</button>
               ))}
             </div>
           ))}

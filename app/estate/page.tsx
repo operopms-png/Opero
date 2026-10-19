@@ -742,8 +742,8 @@ export default function Page() {
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
   const btnStyle = (active:boolean) => ({
-    display:'flex' as const,alignItems:'center' as const,gap:8,width:'100%',padding:'8px 12px',borderRadius:6,border:active?'1px solid #A8862E':'1px solid transparent',
-    background:active?'#FBF4E6':'transparent',color:active?'#624920':'#344054',fontSize:13,
+    display:'flex' as const,alignItems:'center' as const,gap:8,width:'100%',padding:'8px 12px',borderRadius:6,border:active?'1px solid #2F6DB5':'1px solid transparent',
+    background:active?'#B9D6F2':'transparent',color:active?'#1D4E89':'#344054',fontSize:13,
     fontWeight:active?600:400,cursor:'pointer' as const,fontFamily:'inherit',textAlign:'left' as const,marginBottom:2
   })
 
@@ -754,9 +754,9 @@ export default function Page() {
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
       {/* Sidebar */}
       <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:'flex',flexDirection:'column',paddingTop:0,flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
-        <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)'}}>
-          <div style={{width:8,height:8,background:'#D0AE4C',borderRadius:'50%'}}/>
-          <span style={{fontSize:14,fontWeight:700,color:'#624920'}}>Estate Agency</span>
+        <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)'}}>
+          <div style={{width:8,height:8,background:'#2F6DB5',borderRadius:'50%'}}/>
+          <span style={{fontSize:14,fontWeight:700,color:'#1D4E89'}}>Estate Agency</span>
         </div>
         <div style={{padding:'8px 10px'}}>
           {NAV_GROUPS.map(group=>(

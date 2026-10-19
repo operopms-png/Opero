@@ -673,9 +673,9 @@ function PMPageInner() {
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
       {/* Sidebar */}
       <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:'flex',flexDirection:'column',flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
-        <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)'}}>
-          <div style={{width:8,height:8,background:'#D0AE4C',borderRadius:'50%'}}/>
-          <span style={{fontSize:14,fontWeight:700,color:'#624920'}}>Property Management</span>
+        <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)'}}>
+          <div style={{width:8,height:8,background:'#2F6DB5',borderRadius:'50%'}}/>
+          <span style={{fontSize:14,fontWeight:700,color:'#1D4E89'}}>Property Management</span>
         </div>
         <div style={{padding:'8px 10px'}}>
           {PM_NAV_GROUPS.map(group=>(
@@ -684,7 +684,7 @@ function PMPageInner() {
               {group.items.map(t=>{
                 const locked = !!(allowedTab && t !== allowedTab)
                 const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
-                return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #A8862E':'1px solid transparent',background:tab===t&&!locked?'#FBF4E6':'transparent',color:locked?'#C1C9D2':tab===t?'#624920':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+                return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
             </div>
           ))}
