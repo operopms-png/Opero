@@ -123,7 +123,7 @@ function Dashboard({ store, go, openItem }: { store: ReturnType<typeof useMultiB
       <div style={{ height: 120, background: `linear-gradient(135deg, ${BRAND.selected}, #F3E6C8)` }} />
       <div style={{ padding: '0 32px 40px', marginTop: -40 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
-          <div style={{ width: 80, height: 80, borderRadius: 10, background: '#fff', border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', overflow: 'hidden', flexShrink: 0 }}><img src="/logo.PNG" alt="Sangsters" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
+          <div style={{ width: 80, height: 80, borderRadius: 10, background: '#fff', border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', overflow: 'hidden', flexShrink: 0 }}><img src="/novouq-logo.jpg" alt="NOVOURQ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
           <div style={{ paddingBottom: 4 }}>
             <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500 }}>People & HR</h1>
             <div style={{ fontSize: 13.5, color: BRAND.muted }}>Employees, onboarding, reviews, training, requests and goals in one place</div>
