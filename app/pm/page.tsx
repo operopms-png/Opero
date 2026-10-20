@@ -654,6 +654,10 @@ function PMPageInner() {
   const activeLeases = leases.filter(l=>l.status==='active')
   const rentedPropertyIds = new Set(activeLeases.map(l=>l.property_id))
   const annualRent = activeLeases.reduce((s,l)=>s+(l.monthly_rent??0),0)*12
+  const weekStart = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate())
+  const weekEnd = new Date(weekStart.getTime() + 7*86400000)
+  const cleaningsWeek = cleaning.filter((c:any)=>c.status!=='completed' && c.scheduled_date && new Date(c.scheduled_date+'T00:00:00')>=weekStart && new Date(c.scheduled_date+'T00:00:00')<weekEnd)
+  const cleaningsUnassigned = cleaningsWeek.filter((c:any)=>!c.assigned_to).length
   const exportRows = (() => {
     const inRange = (d: string | null | undefined) => !!d && d.slice(0,10) >= exportFrom && d.slice(0,10) <= exportTo
     const rent = payments.filter(p=>p.status==='paid' && inRange(p.paid_date)).map(p=>({date:p.paid_date.slice(0,10), type:'Rent received', description:p.pm_tenants?.name??'Tenant', property:p.pm_properties?.name??'', amount:Number(p.amount??0)}))
@@ -784,8 +788,9 @@ function PMPageInner() {
                 </div>
               ))}
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:16}}>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
               {[
+                {label:'Cleanings This Week',value:`${cleaningsWeek.length}`,sub:`${cleaningsUnassigned} not assigned`},
                 {label:'Rented Properties',value:`${rentedPropertyIds.size} / ${properties.length}`,sub:`${Math.max(properties.length-rentedPropertyIds.size,0)} available`},
                 {label:'Tenancies',value:`${activeLeases.length} / ${leases.length}`,sub:`${leases.length-activeLeases.length} not active`},
                 {label:'Annual Rent',value:`£${annualRent.toLocaleString()}`,sub:`£${Math.round(annualRent/12).toLocaleString()} / month`},
