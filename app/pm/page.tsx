@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -54,12 +54,12 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
+  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
   { label: 'SHORT STAYS', items: ['Bookings','Reviews','Channels','Guest Comms','Analytics','Integrations'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits'] },
-  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms'] },
+  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
-  { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
+  { label: 'COMPANY', items: ['Company SOPs','Contract Templates','Audit Log'] },
   { label: 'FINANCE', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages'] },
   { label: 'REPORTS', items: ['Landlord Reports','Reports','Accounting Export'] },
   { label: 'COMMS', items: ['Messages'] },
@@ -282,6 +282,11 @@ function PMPageInner() {
   const [strCleaning, setStrCleaning] = useState<any[]>([])
   const [strMaintenance, setStrMaintenance] = useState<any[]>([])
   const [strCompliance, setStrCompliance] = useState<any[]>([])
+  const [headLeases, setHeadLeases] = useState<any[]>([])
+  const [hmoRooms, setHmoRooms] = useState<any[]>([])
+  const [keySets, setKeySets] = useState<any[]>([])
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [auditFilter, setAuditFilter] = useState<string>('All')
   const [commTemplates, setCommTemplates] = useState<any[]>([])
   const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
   const [templateDraft, setTemplateDraft] = useState('')
@@ -453,6 +458,10 @@ function PMPageInner() {
       setBookings(b??[]); setStrCleaning(ct??[]); setStrMaintenance(mt??[])
     })
     supabase.from('str_reviews').select('*, properties(name)').eq('user_id',userId).order('review_date',{ascending:false}).then(({data})=>setStrReviews(data??[]))
+    supabase.from('pm_head_leases').select('*,pm_properties(name)').eq('user_id',userId).order('expiry_date',{ascending:true}).then(({data})=>setHeadLeases(data??[]))
+    supabase.from('pm_hmo_rooms').select('*,pm_properties(name),pm_tenants(name)').eq('user_id',userId).order('room_name',{ascending:true}).then(({data})=>setHmoRooms(data??[]))
+    supabase.from('pm_keys').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setKeySets(data??[]))
+    supabase.from('pm_audit_log').select('*').eq('user_id',userId).order('created_at',{ascending:false}).limit(200).then(({data})=>setAuditLogs(data??[]))
     supabase.from('guest_comm_templates').select('*').eq('user_id',userId).then(({data})=>setCommTemplates(data??[]))
     supabase.from('str_guest_messages').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setGuestMessages(data??[]))
     supabase.from('integrations').select('*').eq('user_id',userId).single().then(({data})=>setIntegrationsRow(data??null))
@@ -972,6 +981,9 @@ function PMPageInner() {
             {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
             {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
             {tab==='Buildings'&&<button onClick={()=>{setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Building</button>}
+            {tab==='Head Leases'&&<button onClick={()=>{setModal('headLease');setForm({sublet_consent:'Pending'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add head lease</button>}
+            {tab==='HMO Rooms'&&<button onClick={()=>{setModal('hmoRoom');setForm({max_occupants:'1'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add room</button>}
+            {tab==='Keys'&&<button onClick={()=>{setModal('keySet');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add key set</button>}
             {tab==='Reviews'&&<button onClick={()=>{setModal('review');setForm({platform:'Airbnb',responded:false});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Log Review</button>}
             {tab==='Bookings'&&<button onClick={()=>{setModal('booking');setForm({status:'confirmed'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Booking</button>}
             {tab==='Leases'&&<button onClick={()=>{setModal('lease');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Lease</button>}
@@ -1679,6 +1691,128 @@ function PMPageInner() {
             </div>
           </div>
         )}
+
+        {tab==='Head Leases'&&(() => {
+          const daysLeft = (d?: string) => d ? Math.round((new Date(d).getTime()-Date.now())/86400000) : null
+          const cols = '1.2fr 1fr 110px 110px 110px 1fr 110px'
+          return (
+          <div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:cols,padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Property</span><span>Landlord</span><span>Rent payable</span><span>Expires</span><span>Break</span><span>Sublet consent</span><span></span>
+              </div>
+              {headLeases.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No head leases recorded yet</div>:
+              headLeases.map((h:any)=>{
+                const left = daysLeft(h.expiry_date)
+                return (
+                <div key={h.id} style={{display:'grid',gridTemplateColumns:cols,padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{h.pm_properties?.name??'—'}</span>
+                  <span>{h.landlord_name??'—'}</span>
+                  <span>{h.rent_payable!=null?`£${Number(h.rent_payable).toLocaleString()} / mo`:'—'}</span>
+                  <span style={{color:left!=null&&left<90?'#DC2626':'#344054',fontWeight:left!=null&&left<90?600:400}}>{h.expiry_date??'—'}{left!=null&&left<90?` (${left<0?'expired':`${left} days`})`:''}</span>
+                  <span>{h.break_date??'—'}</span>
+                  <span>{h.sublet_consent??'—'}</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('headLease',{...h,rent_payable:h.rent_payable??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_head_leases',h.id,setHeadLeases)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>
+                )
+              })}
+            </div>
+          </div>
+          )
+        })()}
+
+        {tab==='HMO Rooms'&&(() => {
+          const occupied = hmoRooms.filter((r:any)=>r.tenant_id).length
+          const cols = '1.2fr 1fr 110px 1.2fr 130px 110px'
+          const tiles = [{label:'Rooms',value:hmoRooms.length,color:'#323338'},{label:'Occupied',value:occupied,color:'#2F6DB5'},{label:'Vacant',value:hmoRooms.length-occupied,color:'#F59E0B'}]
+          return (
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
+              {tiles.map((c:any)=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div><div style={{fontSize:28,fontWeight:800,color:c.color}}>{c.value}</div></div>
+              ))}
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:cols,padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Property</span><span>Room</span><span>Max occupants</span><span>Tenant</span><span>Licence expires</span><span></span>
+              </div>
+              {hmoRooms.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No rooms recorded yet</div>:
+              hmoRooms.map((r:any)=>(
+                <div key={r.id} style={{display:'grid',gridTemplateColumns:cols,padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{r.pm_properties?.name??'—'}</span>
+                  <span>{r.room_name}</span>
+                  <span>{r.max_occupants}</span>
+                  <span>{r.pm_tenants?.name??'Vacant'}</span>
+                  <span>{r.licence_expiry??'—'}</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('hmoRoom',{...r,tenant_id:r.tenant_id??'',max_occupants:String(r.max_occupants??1)})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_hmo_rooms',r.id,setHmoRooms)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
+
+        {tab==='Keys'&&(
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 120px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+              <span>Property</span><span>Key set</span><span>Held by</span><span>Kept at</span><span>Last checked</span><span></span>
+            </div>
+            {keySets.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No key sets recorded yet. Record where codes are kept, not the codes themselves.</div>:
+            keySets.map((k:any)=>(
+              <div key={k.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 120px 110px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                <span style={{fontWeight:500,color:'#323338'}}>{k.pm_properties?.name??'—'}</span>
+                <span>{k.key_set}</span>
+                <span>{k.held_by??'—'}</span>
+                <span>{k.kept_at??'—'}</span>
+                <span>{k.last_checked??'—'}</span>
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={()=>openEdit('keySet',k)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>del('pm_keys',k.id,setKeySets)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab==='Audit Log'&&(() => {
+          const tables = ['All','pm_properties','pm_leases','pm_head_leases']
+          const rows = auditLogs.filter((a:any)=>auditFilter==='All'||a.table_name===auditFilter)
+          const changedFields = (a:any) => {
+            if(a.action!=='update'||!a.changes?.before||!a.changes?.after) return null
+            const keys = Object.keys(a.changes.after).filter(k=>JSON.stringify(a.changes.before[k])!==JSON.stringify(a.changes.after[k]) && !['updated_at'].includes(k))
+            return keys.length ? keys.join(', ') : null
+          }
+          return (
+          <div>
+            <div style={{display:'flex',gap:8,marginBottom:12}}>
+              {tables.map(t=>(
+                <button key={t} onClick={()=>setAuditFilter(t)} style={{padding:'6px 14px',borderRadius:14,border:auditFilter===t?'1px solid #2F6DB5':'1px solid #D0D5DD',background:auditFilter===t?'#EAF3FC':'#fff',color:auditFilter===t?'#1D4E89':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t==='All'?'All':t.replace('pm_','').replace(/_/g,' ')}</button>
+              ))}
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'170px 110px 1fr 110px 1.4fr',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>When</span><span>Action</span><span>Record</span><span>Table</span><span>Changed</span>
+              </div>
+              {rows.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No changes recorded yet</div>:
+              rows.map((a:any)=>(
+                <div key={a.id} style={{display:'grid',gridTemplateColumns:'170px 110px 1fr 110px 1.4fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:12,color:'#344054',alignItems:'center'}}>
+                  <span>{new Date(a.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                  <span style={{textTransform:'capitalize'}}>{a.action}</span>
+                  <span style={{fontFamily:'monospace',fontSize:11,color:'#667085'}}>{a.record_id?String(a.record_id).slice(0,8):'—'}</span>
+                  <span>{a.table_name.replace('pm_','').replace(/_/g,' ')}</span>
+                  <span>{changedFields(a)??(a.action==='insert'?'New record':a.action==='delete'?'Record removed':'—')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
 
         {tab==='Bookings'&&(
           <div>
@@ -3293,6 +3427,90 @@ function PMPageInner() {
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
             <button onClick={()=>save('str_reviews',{guest_name:form.guest_name||null,property_id:form.property_id||null,platform:form.platform||'Airbnb',rating:form.rating===''||form.rating==null||isNaN(Number(form.rating))?null:Number(form.rating),review_date:form.review_date||null,responded:!!form.responded,review_text:form.review_text||null,response_text:form.response_text||null})} disabled={saving||(!form.guest_name&&!form.review_text)} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||(!form.guest_name&&!form.review_text)?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Log review'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='headLease'&&(
+        <Modal title={editId?'Edit head lease':'Add head lease'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Landlord name</label><input style={inp} value={form.landlord_name??''} onChange={e=>setForm({...form,landlord_name:e.target.value})}/></div>
+              <div><label style={lbl}>Rent payable to landlord (£ / mo)</label><input type="number" style={inp} value={form.rent_payable??''} onChange={e=>setForm({...form,rent_payable:e.target.value})}/></div>
+              <div><label style={lbl}>Start date</label><input type="date" style={inp} value={form.start_date??''} onChange={e=>setForm({...form,start_date:e.target.value})}/></div>
+              <div><label style={lbl}>Expiry date</label><input type="date" style={inp} value={form.expiry_date??''} onChange={e=>setForm({...form,expiry_date:e.target.value})}/></div>
+              <div><label style={lbl}>Break date</label><input type="date" style={inp} value={form.break_date??''} onChange={e=>setForm({...form,break_date:e.target.value})}/></div>
+              <div><label style={lbl}>Sublet consent</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.sublet_consent??'Pending'} onChange={e=>setForm({...form,sublet_consent:e.target.value})}>
+                  <option>Pending</option><option>Yes, letter on file</option><option>Yes, verbal only</option><option>No</option>
+                </select>
+              </div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_head_leases',{property_id:form.property_id||null,landlord_name:form.landlord_name||null,rent_payable:form.rent_payable===''||form.rent_payable==null||isNaN(Number(form.rent_payable))?null:Number(form.rent_payable),start_date:form.start_date||null,expiry_date:form.expiry_date||null,break_date:form.break_date||null,sublet_consent:form.sublet_consent||null,notes:form.notes||null})} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add head lease'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='hmoRoom'&&(
+        <Modal title={editId?'Edit room':'Add HMO room'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Room name *</label><input style={inp} value={form.room_name??''} onChange={e=>setForm({...form,room_name:e.target.value})} placeholder="e.g. Room 1, Ground floor"/></div>
+              <div><label style={lbl}>Max occupants</label><input type="number" min="1" style={inp} value={form.max_occupants??'1'} onChange={e=>setForm({...form,max_occupants:e.target.value})}/></div>
+              <div><label style={lbl}>Tenant</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.tenant_id??''} onChange={e=>setForm({...form,tenant_id:e.target.value})}>
+                  <option value="">Vacant</option>
+                  {tenants.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Licence expiry</label><input type="date" style={inp} value={form.licence_expiry??''} onChange={e=>setForm({...form,licence_expiry:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_hmo_rooms',{property_id:form.property_id||null,room_name:form.room_name,max_occupants:Math.max(1,parseInt(form.max_occupants)||1),tenant_id:form.tenant_id||null,licence_expiry:form.licence_expiry||null,notes:form.notes||null})} disabled={saving||!form.property_id||!form.room_name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id||!form.room_name?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add room'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='keySet'&&(
+        <Modal title={editId?'Edit key set':'Add key set'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Key set *</label><input style={inp} value={form.key_set??''} onChange={e=>setForm({...form,key_set:e.target.value})} placeholder="e.g. Front door x2"/></div>
+              <div><label style={lbl}>Held by</label><input style={inp} value={form.held_by??''} onChange={e=>setForm({...form,held_by:e.target.value})}/></div>
+              <div><label style={lbl}>Kept at</label><input style={inp} value={form.kept_at??''} onChange={e=>setForm({...form,kept_at:e.target.value})} placeholder="e.g. Office safe, lockbox"/></div>
+              <div><label style={lbl}>Last checked</label><input type="date" style={inp} value={form.last_checked??''} onChange={e=>setForm({...form,last_checked:e.target.value})}/></div>
+            </div>
+            <div style={{fontSize:11,color:'#98A2B3'}}>Record where codes are kept, not the codes themselves.</div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_keys',{property_id:form.property_id||null,key_set:form.key_set,held_by:form.held_by||null,kept_at:form.kept_at||null,last_checked:form.last_checked||null,notes:form.notes||null})} disabled={saving||!form.property_id||!form.key_set} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id||!form.key_set?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add key set'}</button>
           </div>
         </Modal>
       )}
