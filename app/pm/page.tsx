@@ -52,6 +52,57 @@ function complianceStatus(expiryDate?: string) {
 }
 const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Expiring Soon':'#F59E0B', 'Valid':'#10B981', 'No Expiry':'#98A2B3' }
 
+// Shown at the top of every Property Management tab so staff know what it is for.
+const TAB_INTROS: Record<string,string> = {
+  'Dashboard': 'the portfolio at a glance: properties, occupancy, rent collected, arrears, cleaning, rentals, tenancies, annual rent and the Short Stays summary. Figures come from the records in each tab.',
+  'Properties': 'every property we manage, long let or short stay, with its address, currency and status. Use Add property to create one and Edit to change its details.',
+  'Units': 'the rentable units inside each property, with their type, rent and whether they are let, vacant or being prepared.',
+  'Buildings': 'buildings that hold several units, such as a block of flats, with the unit count for each.',
+  'Landlords': 'the owners of the properties we manage, with their contact details and the payment arrangements agreed with them.',
+  'Tenants': 'everyone renting a unit, with their contact details, lease and current status.',
+  'Leases': 'tenancy agreements for each unit: the tenant, start and end dates, rent and deposit, and whether the lease is signed.',
+  'Head Leases': 'the lease we hold from the landlord of a property we sublet. It sets the head rent we pay, the expiry and break dates, and whether the landlord has consented to subletting.',
+  'Furniture': 'the furniture list for each unit in a furnished let, with quantities and condition.',
+  'Vacancies': 'units that are empty or about to be empty, with the date they become available and the asking rent.',
+  'Viewings': 'prospective tenant viewings booked for vacant units, with the date and status of each.',
+  'Renewals & Notices': 'lease renewals and notices to end a tenancy, with the dates they fall due.',
+  'Short Stays Overview': 'the short stays overview: properties, cleaning and maintenance, this month\'s revenue, upcoming check-ins and recent bookings, with six-month revenue and occupancy trends. Figures come from the Bookings, Cleaning and Maintenance records.',
+  'Bookings': 'short stay bookings for each property: guest, dates, status and total amount. Channels such as Airbnb, VRBO and Booking.com are connected on the Channels tab.',
+  'Reviews': 'guest reviews from each platform, with the rating, the review text and whether we have responded.',
+  'Guest Comms': 'message templates for guests, such as welcome, check-in, check-out and review requests, and the messages sent to guests.',
+  'Analytics': 'short stay performance: revenue, bookings, cancellations and occupancy over the last six months.',
+  'Channels': 'the booking platforms connected to each property, such as Airbnb, VRBO and Booking.com, and when their calendars were last synced.',
+  'Integrations': 'connections to outside services used by the portal. Connect or disconnect each one here.',
+  'Compliance': 'certificates and licences for each property and for the business, such as gas safety, EPC and insurance certificates, with their expiry dates. Records expiring within 60 days show as Expiring Soon.',
+  'Tenant Checks': 'screening records for each applicant or tenant, with the checks completed and their outcome.',
+  'Right to Rent': 'Right to Rent checks made before a tenancy starts, with the document seen, the date checked and when a recheck is due.',
+  'Deposits': 'the deposit register: the amount held for each tenancy, where it is protected and when it is due back.',
+  'HMO Rooms': 'the rooms in each house in multiple occupation, with the maximum number of occupants, the licence expiry and the tenant in each room.',
+  'Deadlines': 'one list of everything due soon across the portfolio: head lease expiry and break dates, HMO licences, compliance certificates, insurance renewals, tenancy end dates and bill due dates. Items due within 60 days, or already overdue, are shown in red. Dates come from the records in each tab, so update the source record to change a deadline.',
+  'Insurance': 'the insurance policies themselves: buildings, contents and public liability cover, with the insurer, policy number, premium and renewal date. Compliance tracks certificates; this tab tracks the policies that landlords and insurers ask to see. Renewals also appear on the Deadlines tab.',
+  'Maintenance': 'repair and maintenance tickets for each property, with the issue, the priority and the status until it is closed.',
+  'Cleaning': 'cleaning jobs for short stays and changeovers, with the date, the property and the person assigned.',
+  'Inspections': 'property inspections: the date, the inspector and any issues found. Inspections are not the same as inventories.',
+  'Inventories': 'the inventory for each property: a list of items and their condition, recorded at check-in and check-out.',
+  'Keys': 'the key register: where each key set is kept and who holds it. Record where door codes are kept, never the codes themselves.',
+  'Utilities': 'one row per bill account on a property: electricity, gas, water, broadband and council tax. It shows who holds each account, the supplier and the next bill date, so unpaid bills are caught early. Store account references only, never passwords or payment card details.',
+  'Documents': 'files kept against the business and its properties, such as contracts, certificates and photos.',
+  'Company SOPs': 'standard operating procedures for staff. Read the procedure before doing the task it covers.',
+  'Contract Templates': 'standard templates for leases, licences and other agreements that staff fill in for each new let.',
+  'Audit Log': 'a record of changes made to properties, leases and head leases: what changed, when, and by whom.',
+  'Finance': 'the money side of the portfolio: rent and payments received, and the costs recorded against them.',
+  'Rent': 'rent payments due and received for each lease. Record each payment against the tenancy it relates to.',
+  'Expenses': 'costs paid by the business, such as repairs and supplies, with the date, amount and property each relates to.',
+  'Banking': 'the bank accounts used for the business and the transactions recorded against them.',
+  'Loans & Mortgages': 'loans and mortgages secured on properties, with the lender, the balance and the monthly payment.',
+  'Exchange Rates': 'each property has a currency (GBP or JMD). Rent and costs are kept in that currency. The rate below converts them to pounds for totals and for Unit Profit. Enter how many pounds one unit of the currency is worth, and update it when the rate changes.',
+  'Unit Profit': 'shows whether each unit makes money every month. Rent from the current lease is shown against the head rent paid to the landlord and the running costs (utility bills). Head rent and bills for a property are split evenly across its units. A negative margin means the unit should be reviewed. Head rent is taken as GBP; property bills are converted using the rates on the Exchange Rates tab.',
+  'Landlord Reports': 'statements for each landlord showing the rent collected, the costs and the amount due to them.',
+  'Reports': 'portfolio-wide reports on income, costs and occupancy for a chosen period.',
+  'Accounting Export': 'export of income and expense records in a format the accountant can use.',
+  'Messages': 'messages sent to and from tenants, landlords and staff, kept in one place.',
+}
+
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
@@ -1028,6 +1079,12 @@ function PMPageInner() {
 
         <div style={{flex:1,padding:24,overflowY:'auto'}}>
 
+        {TAB_INTROS[tab]&&(
+          <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
+            <strong>What this is for:</strong> {TAB_INTROS[tab]}
+          </div>
+        )}
+
         {tab==='Dashboard'&&(
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
@@ -1880,9 +1937,6 @@ function PMPageInner() {
           const fmt = (n:number) => `${n<0?'-':''}£${Math.abs(Math.round(n)).toLocaleString()}`
           return (
           <div>
-            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
-              <strong>What this is for:</strong> shows whether each unit makes money every month. Rent from the current lease is shown against the head rent paid to the landlord and the running costs (utility bills). Head rent and bills for a property are split evenly across its units. A negative margin means the unit should be reviewed. Head rent is taken as GBP; property bills are converted using the rates on the Exchange Rates tab.
-            </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
               {[{label:'Sublet income / mo',value:fmt(totals.income),color:'#323338'},{label:'Head rent / mo',value:fmt(totals.head),color:'#323338'},{label:'Running costs / mo',value:fmt(totals.costs),color:'#323338'},{label:'Margin / mo',value:fmt(totals.margin),color:totals.margin<0?'#DC2626':'#067647'}].map((c:any)=>(
                 <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div><div style={{fontSize:24,fontWeight:800,color:c.color}}>{c.value}</div></div>
@@ -1910,9 +1964,6 @@ function PMPageInner() {
 
         {tab==='Utilities'&&(
           <div>
-            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
-              <strong>What this is for:</strong> one row per bill account on a property: electricity, gas, water, broadband and council tax. It shows who holds each account, the supplier and the next bill date, so unpaid bills are caught early. Store account references only, never passwords or payment card details.
-            </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 110px 120px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
                 <span>Property</span><span>Service</span><span>Account holder</span><span>Supplier</span><span>Monthly</span><span>Next bill</span><span></span>
@@ -1938,9 +1989,6 @@ function PMPageInner() {
 
         {tab==='Exchange Rates'&&(
           <div>
-            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
-              <strong>What this is for:</strong> each property has a currency (GBP or JMD). Rent and costs are kept in that currency. The rate below converts them to pounds for totals and for Unit Profit. Enter how many pounds one unit of the currency is worth, and update it when the rate changes.
-            </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 120px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
                 <span>Currency</span><span>1 unit is worth (GBP)</span><span>Last updated</span><span></span>
@@ -1974,9 +2022,6 @@ function PMPageInner() {
           ].filter((x:any)=>x.date).map((x:any)=>({...x,days:Math.round((new Date(x.date).getTime()-now)/86400000)})).sort((a:any,b:any)=>a.days-b.days)
           return (
           <div>
-            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
-              <strong>What this is for:</strong> one list of everything due soon across the portfolio: head lease expiry and break dates, HMO licences, compliance certificates, insurance renewals, tenancy end dates and bill due dates. Items due within 60 days, or already overdue, are shown in red. Dates come from the records in each tab, so update the source record to change a deadline.
-            </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'130px 1.4fr 1.2fr 130px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
                 <span>Due</span><span>Item</span><span>Property</span><span>Days left</span>
@@ -2000,9 +2045,6 @@ function PMPageInner() {
 
         {tab==='Insurance'&&(
           <div>
-            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
-              <strong>What this is for:</strong> the insurance policies themselves: buildings, contents and public liability cover, with the insurer, policy number, premium and renewal date. Compliance tracks certificates; this tab tracks the policies that landlords and insurers ask to see. Renewals also appear on the Deadlines tab.
-            </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 110px 120px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
                 <span>Property</span><span>Type</span><span>Insurer</span><span>Policy no.</span><span>Premium</span><span>Renews</span><span></span>
@@ -2049,9 +2091,6 @@ function PMPageInner() {
           const row = {display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid #F2F4F7',fontSize:13} as const
           return (
           <div>
-            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
-              <strong>What this is for:</strong> the short stays overview: properties, cleaning and maintenance, this month's revenue, upcoming check-ins and recent bookings, with six-month revenue and occupancy trends. Figures come from the Bookings, Cleaning and Maintenance records.
-            </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
               <div style={cardStyle}><div style={kpiLabel}>Properties</div><div style={{fontSize:28,fontWeight:800,color:'#2F6DB5'}}>{strProperties.length}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Total active</div></div>
               <div style={cardStyle}><div style={kpiLabel}>Cleaning tasks</div><div style={{fontSize:28,fontWeight:800,color:'#10B981'}}>{cleaningPending}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Pending</div></div>
