@@ -250,6 +250,7 @@ function PMPageInner() {
   const [bookings, setBookings] = useState<any[]>([])
   const [strProperties, setStrProperties] = useState<any[]>([])
   const [strReviews, setStrReviews] = useState<any[]>([])
+  const [propFilter, setPropFilter] = useState<string>('All')
   const [rtrChecks, setRtrChecks] = useState<any[]>([])
   const [bankChecks, setBankChecks] = useState<any[]>([])
   const [editingChecksLeaseId, setEditingChecksLeaseId] = useState<string|null>(null)
@@ -782,13 +783,13 @@ function PMPageInner() {
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
-            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
+            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{properties.length+strProperties.length} properties</span>}
             {tab!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{tab}</span></>}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             {tab==='Properties'&&(!isBundle&&properties.length >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>Add more properties</button>
-              : <button onClick={()=>{setModal('property');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
+              : <button onClick={()=>{setModal('propertyType');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
             {tab==='Landlords'&&<button onClick={()=>{setModal('landlord');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Landlord</button>}
             {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
             {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
@@ -990,17 +991,30 @@ function PMPageInner() {
           </div>
         )}
 
-        {tab==='Properties'&&(
+        {tab==='Properties'&&(() => {
+          const longRows = propFilter!=='Short stay' ? properties : []
+          const shortRows = propFilter!=='Long let' ? strProperties : []
+          const cols = '56px 1.3fr 1.3fr 100px 1.2fr 80px 130px'
+          const typeBadge = (kind:'long'|'short') => kind==='long'
+            ? {label:'Long let', bg:'#EAF3FC', fg:'#1D4E89'}
+            : {label:'Short stay', bg:'#ECFDF3', fg:'#067647'}
+          return (
           <div>
-            {properties.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No properties yet. Click + Add Property to get started.</div>:
+            <div style={{display:'flex',gap:8,marginBottom:12}}>
+              {['All','Long let','Short stay'].map(f=>(
+                <button key={f} onClick={()=>setPropFilter(f)} style={{padding:'6px 14px',borderRadius:14,border:propFilter===f?'1px solid #2F6DB5':'1px solid #D0D5DD',background:propFilter===f?'#EAF3FC':'#fff',color:propFilter===f?'#1D4E89':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{f}</button>
+              ))}
+            </div>
+            {longRows.length+shortRows.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No properties yet. Click + Add Property to get started.</div>:
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'56px 1.3fr 1.3fr 60px 60px 90px 80px 130px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
-                <span></span><span>Name</span><span>Address</span><span>Beds</span><span>Baths</span><span>Rent/mo</span><span>Status</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:cols,padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span></span><span>Name</span><span>Address</span><span>Type</span><span>Detail</span><span>Status</span><span></span>
               </div>
-              {properties.map(p=>{
+              {longRows.map(p=>{
                 const photos = parseAttachments(p.image_urls)
+                const badge = typeBadge('long')
                 return (
-                <div key={p.id} style={{display:'grid',gridTemplateColumns:'56px 1.3fr 1.3fr 60px 60px 90px 80px 130px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                <div key={'pm-'+p.id} style={{display:'grid',gridTemplateColumns:cols,padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
                   {photos.length > 0
                     ? <div onClick={()=>setViewingPhotos(photos)} style={{position:'relative',width:40,height:40,cursor:'pointer'}}>
                         <img src={photos[0]} alt="" style={{width:40,height:40,objectFit:'cover',borderRadius:6,display:'block'}}/>
@@ -1009,9 +1023,8 @@ function PMPageInner() {
                     : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
                   <span style={{fontWeight:500,color:'#323338'}}>{p.name}</span>
                   <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')||'—'}</span>
-                  <span style={{display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms||'—'}</span>
-                  <span style={{display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>{p.bathrooms||'—'}</span>
-                  <span>£{(p.monthly_income??0).toLocaleString()}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:badge.bg,color:badge.fg,justifySelf:'start'}}>{badge.label}</span>
+                  <span style={{display:'inline-flex',alignItems:'center',gap:10}}><span style={{display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms||'—'}</span><span style={{display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>{p.bathrooms||'—'}</span><span>£{(p.monthly_income??0).toLocaleString()}/mo</span></span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p.status==='active'?'#D1FAE5':'#F3F4F6',color:p.status==='active'?'#059669':'#6B7280',display:'inline-block',width:'fit-content'}}>{p.status}</span>
                   <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('property',p)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
@@ -1019,9 +1032,28 @@ function PMPageInner() {
                   </div>
                 </div>
               )})}
+              {shortRows.map((p:any)=>{
+                const badge = typeBadge('short')
+                const channels = [p.airbnb_ical_url&&'Airbnb iCal', p.vrbo_ical_url&&'VRBO iCal', p.booking_ical_url&&'Booking.com iCal', p.smoobu_apartment_id&&'Smoobu'].filter(Boolean).join(', ')||'No channels linked'
+                return (
+                <div key={'str-'+p.id} style={{display:'grid',gridTemplateColumns:cols,padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>
+                  <span style={{fontWeight:500,color:'#323338'}}>{p.name}</span>
+                  <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')||'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:badge.bg,color:badge.fg,justifySelf:'start'}}>{badge.label}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{p.nightly_rate?`£${p.nightly_rate} / night`:'No nightly rate'} · {channels}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#F2F4F7',color:'#475467',display:'inline-block',width:'fit-content'}}>—</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('strProperty',{...p,nightly_rate:p.nightly_rate??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('properties',p.id,setStrProperties)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>
+                )
+              })}
             </div>}
           </div>
-        )}
+          )
+        })()}
 
         {tab==='Units'&&(
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
@@ -2294,6 +2326,55 @@ function PMPageInner() {
           )
         })()}
       </div>
+
+      {modal==='propertyType'&&(
+        <Modal title="Add property" onClose={()=>{setModal(null);setForm({})}}>
+          <div style={{fontSize:14,color:'#344054',marginBottom:16}}>What kind of property is this?</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <button onClick={()=>{setForm({});setEditId(null);setModal('property')}} style={{padding:'18px 14px',borderRadius:10,border:'1px solid #2F6DB5',background:'#EAF3FC',color:'#1D4E89',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',textAlign:'left'}}>
+              Long let<div style={{fontSize:12,fontWeight:400,color:'#344054',marginTop:4}}>Units, landlord, tenant and leases</div>
+            </button>
+            <button onClick={()=>{setForm({});setEditId(null);setModal('strProperty')}} style={{padding:'18px 14px',borderRadius:10,border:'1px solid #2F6DB5',background:'#ECFDF3',color:'#067647',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit',textAlign:'left'}}>
+              Short stay<div style={{fontSize:12,fontWeight:400,color:'#344054',marginTop:4}}>Nightly rate, channels and guest details</div>
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='strProperty'&&(
+        <Modal title={editId?'Edit Short Stay Property':'Add Short Stay Property'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Aurevo Seacastle"/></div>
+            <div><label style={lbl}>Address</label><input style={inp} value={form.address??''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="123 Main Street"/></div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>City</label><input style={inp} value={form.city??''} onChange={e=>setForm({...form,city:e.target.value})}/></div>
+              <div><label style={lbl}>Country</label><input style={inp} value={form.country??''} onChange={e=>setForm({...form,country:e.target.value})}/></div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Nightly rate (£)</label><input type="number" style={inp} value={form.nightly_rate??''} onChange={e=>setForm({...form,nightly_rate:e.target.value})}/></div>
+              <div><label style={lbl}>Max guests</label><input type="number" style={inp} value={form.max_guests??''} onChange={e=>setForm({...form,max_guests:e.target.value})}/></div>
+            </div>
+            <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:8}}>Guest information</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>WiFi network name</label><input style={inp} value={form.wifi_name??''} onChange={e=>setForm({...form,wifi_name:e.target.value})}/></div>
+              <div><label style={lbl}>WiFi password</label><input style={inp} value={form.wifi_password??''} onChange={e=>setForm({...form,wifi_password:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Check-in instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkin_instructions??''} onChange={e=>setForm({...form,checkin_instructions:e.target.value})}/></div>
+            <div><label style={lbl}>Check-out instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkout_instructions??''} onChange={e=>setForm({...form,checkout_instructions:e.target.value})}/></div>
+            <div><label style={lbl}>House rules</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.house_rules??''} onChange={e=>setForm({...form,house_rules:e.target.value})}/></div>
+            <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:8}}>Channel sync (iCal)</div>
+            <div><label style={lbl}>Airbnb iCal URL</label><input style={inp} value={form.airbnb_ical_url??''} onChange={e=>setForm({...form,airbnb_ical_url:e.target.value})}/></div>
+            <div><label style={lbl}>VRBO iCal URL</label><input style={inp} value={form.vrbo_ical_url??''} onChange={e=>setForm({...form,vrbo_ical_url:e.target.value})}/></div>
+            <div><label style={lbl}>Booking.com iCal URL</label><input style={inp} value={form.booking_ical_url??''} onChange={e=>setForm({...form,booking_ical_url:e.target.value})}/></div>
+            <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:8}}>Smoobu</div>
+            <div><label style={lbl}>Smoobu apartment ID</label><input style={inp} value={form.smoobu_apartment_id??''} onChange={e=>setForm({...form,smoobu_apartment_id:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('properties',{...form,nightly_rate:form.nightly_rate===''||form.nightly_rate==null||isNaN(Number(form.nightly_rate))?null:Number(form.nightly_rate),max_guests:form.max_guests===''||form.max_guests==null||isNaN(Number(form.max_guests))?null:parseInt(form.max_guests)})} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add property'}</button>
+          </div>
+        </Modal>
+      )}
 
       {modal==='property'&&(
         <Modal title={editId?"Edit Property":"Add Property"} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
