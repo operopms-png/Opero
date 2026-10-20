@@ -258,6 +258,8 @@ function PMPageInner() {
   const [cleaning, setCleaning] = useState<any[]>([])
   const [inspections, setInspections] = useState<any[]>([])
   const [inventories, setInventories] = useState<any[]>([])
+  const [pmNews, setPmNews] = useState<any[]>([])
+  const [dashPeriod, setDashPeriod] = useState<'month'|'last'|'year'|'12'>('month')
   const [documents, setDocuments] = useState<any[]>([])
   const [docsTenant, setDocsTenant] = useState<any>(null)
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
@@ -377,6 +379,7 @@ function PMPageInner() {
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
     supabase.from('pm_inventories').select('*,pm_properties(name),pm_leases(pm_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}).then(({data})=>setInventories(data??[]))
+    fetch('/api/estate-news').then(r=>r.json()).then(d=>setPmNews(d?.news??[])).catch(()=>{})
     setExpenses(ex.data??[]); setCleaning(cleanData); setLandlordPayments(lp.data??[])
     setComplianceRecords(comp.data??[])
     setBankAccounts(bk.data??[]); setTransactions(tx.data??[])
@@ -628,6 +631,21 @@ function PMPageInner() {
   const arrears = payments.filter(p=>p.status==='overdue').reduce((s,p)=>s+(p.amount??0),0)
   const occupiedUnits = units.filter(u=>u.status==='occupied').length
   const occupancyRate = units.length ? Math.round((occupiedUnits/units.length)*100) : 0
+  const nowDate = new Date()
+  const inPeriod = (d: string | null | undefined) => {
+    if (!d) return false
+    const t = new Date(d.length === 10 ? d + 'T00:00:00' : d)
+    if (dashPeriod === 'month') return t.getFullYear()===nowDate.getFullYear() && t.getMonth()===nowDate.getMonth()
+    if (dashPeriod === 'last') { const lm = new Date(nowDate.getFullYear(), nowDate.getMonth()-1, 1); return t.getFullYear()===lm.getFullYear() && t.getMonth()===lm.getMonth() }
+    if (dashPeriod === 'year') return t.getFullYear()===nowDate.getFullYear()
+    return t >= new Date(nowDate.getFullYear(), nowDate.getMonth()-11, 1)
+  }
+  const periodPaid = payments.filter(p=>p.status==='paid' && inPeriod(p.paid_date)).reduce((s,p)=>s+(p.amount??0),0)
+  const periodLate = payments.filter(p=>p.status==='overdue' && inPeriod(p.due_date)).reduce((s,p)=>s+(p.amount??0),0)
+  const periodExpenses = expenses.filter(e=>inPeriod(e.date)).reduce((s,e)=>s+(e.amount??0),0)
+  const activeLeases = leases.filter(l=>l.status==='active')
+  const rentedPropertyIds = new Set(activeLeases.map(l=>l.property_id))
+  const annualRent = activeLeases.reduce((s,l)=>s+(l.monthly_rent??0),0)*12
 
   // Real 6-month occupancy trend for the Dashboard chart, replacing a
   // hardcoded static bar shape. Occupancy for a given month = % of units
@@ -740,6 +758,19 @@ function PMPageInner() {
                 </div>
               ))}
             </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:16}}>
+              {[
+                {label:'Rented Properties',value:`${rentedPropertyIds.size} / ${properties.length}`,sub:`${Math.max(properties.length-rentedPropertyIds.size,0)} available`},
+                {label:'Tenancies',value:`${activeLeases.length} / ${leases.length}`,sub:`${leases.length-activeLeases.length} not active`},
+                {label:'Annual Rent',value:`£${annualRent.toLocaleString()}`,sub:`£${Math.round(annualRent/12).toLocaleString()} / month`},
+              ].map((c:any)=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
+                  <div style={{fontSize:26,fontWeight:800,color:'#1D4E89',letterSpacing:'-0.02em'}}>{c.value}</div>
+                  <div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>{c.sub}</div>
+                </div>
+              ))}
+            </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
               {[
                 {label:'Monthly Rent Due',value:`£${totalDue.toLocaleString()}`,dark:true},
@@ -753,6 +784,34 @@ function PMPageInner() {
                   <div style={{fontSize:12,color:c.dark ? '#1D4E89':'#98A2B3',marginTop:4}}>{c.sub}</div>
                 </div>
               ))}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16,marginBottom:16}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Revenues and Expenses</div>
+                <div style={{display:'flex',gap:8,marginBottom:12,borderBottom:'1px solid #E4E7EC',paddingBottom:12}}>
+                  {[{k:'month',l:'Current month'},{k:'last',l:'Last month'},{k:'year',l:'Current year'},{k:'12',l:'12 months'}].map(t=>(
+                    <button key={t.k} onClick={()=>setDashPeriod(t.k as any)} style={{padding:'4px 10px',borderRadius:4,border:'none',background:dashPeriod===t.k?'#B9D6F2':'transparent',color:dashPeriod===t.k?'#1D4E89':'#667085',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t.l}</button>
+                  ))}
+                </div>
+                {[
+                  {label:'Rent paid',value:periodPaid,color:'#323338'},
+                  {label:'Late rent',value:periodLate,color:periodLate>0?'#EF4444':'#323338'},
+                  {label:'Expenses',value:periodExpenses,color:'#323338'},
+                  {label:'Net profit',value:periodPaid-periodExpenses,color:periodPaid-periodExpenses>=0?'#10B981':'#EF4444'},
+                ].map(r=>(
+                  <div key={r.label} style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid #F2F4F7',fontSize:14}}><span style={{color:'#667085'}}>{r.label}</span><span style={{fontWeight:700,color:r.color}}>£{r.value.toLocaleString()}</span></div>
+                ))}
+                <div style={{fontSize:11,color:'#98A2B3',marginTop:10}}>Rent paid counts payments with a paid date in the period. Late rent counts overdue payments with a due date in the period.</div>
+              </div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Real estate news</div>
+                {pmNews.length===0?<div style={{fontSize:13,color:'#98A2B3'}}>No news right now</div>:pmNews.slice(0,5).map((n:any,idx:number)=>(
+                  <div key={idx} style={{padding:'10px 0',borderBottom:'1px solid #F2F4F7'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:'#1D4E89',textTransform:'uppercase',letterSpacing:'0.05em'}}>{n.tag}</div>
+                    <div style={{fontSize:13,fontWeight:600,color:'#323338',marginTop:2}}>{n.link?<a href={n.link} target="_blank" rel="noreferrer" style={{color:'inherit',textDecoration:'none'}}>{n.title}</a>:n.title}</div>
+                  </div>
+                ))}
+              </div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
