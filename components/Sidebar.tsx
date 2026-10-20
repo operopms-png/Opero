@@ -12,27 +12,11 @@ import { STAFF_HUBS, tabMatches } from '@/lib/staffHubs'
 
 const NAV_GROUPS = [
   {
-    label: 'Vacation Rentals',
-    module: 'str',
-    modulePrice: '£29/mo',
-    items: [
-      { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'home', badge: 'str' },
-    ]
-  },
-  {
     label: 'Property Management',
     module: 'pm',
     modulePrice: '£39/mo',
     items: [
       { href: '/pm', label: 'Property Management', key: 'pm', icon: 'building', badge: 'pm' },
-    ]
-  },
-  {
-    label: 'Estate Agency',
-    module: 'ea',
-    modulePrice: '£59/mo',
-    items: [
-      { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building', badge: 'estate' },
     ]
   },
   {
