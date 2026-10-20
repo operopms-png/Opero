@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Vacancies','Viewings','Loans & Mortgages','Finance','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
@@ -26,13 +26,13 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Vacancies','Viewings'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks'] },
+  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Vacancies','Viewings','Renewals & Notices'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Deposits'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'FINANCE', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages'] },
-  { label: 'REPORTS', items: ['Landlord Reports','Reports'] },
+  { label: 'REPORTS', items: ['Landlord Reports','Reports','Accounting Export'] },
   { label: 'COMMS', items: ['Messages'] },
 ]
 
@@ -263,6 +263,8 @@ function PMPageInner() {
   const [viewings, setViewings] = useState<any[]>([])
   const [mortgages, setMortgages] = useState<any[]>([])
   const [dashPeriod, setDashPeriod] = useState<'month'|'last'|'year'|'12'>('month')
+  const [exportFrom, setExportFrom] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0,10) })
+  const [exportTo, setExportTo] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth()+1, 0).toISOString().slice(0,10) })
   const [documents, setDocuments] = useState<any[]>([])
   const [docsTenant, setDocsTenant] = useState<any>(null)
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
@@ -652,6 +654,21 @@ function PMPageInner() {
   const activeLeases = leases.filter(l=>l.status==='active')
   const rentedPropertyIds = new Set(activeLeases.map(l=>l.property_id))
   const annualRent = activeLeases.reduce((s,l)=>s+(l.monthly_rent??0),0)*12
+  const exportRows = (() => {
+    const inRange = (d: string | null | undefined) => !!d && d.slice(0,10) >= exportFrom && d.slice(0,10) <= exportTo
+    const rent = payments.filter(p=>p.status==='paid' && inRange(p.paid_date)).map(p=>({date:p.paid_date.slice(0,10), type:'Rent received', description:p.pm_tenants?.name??'Tenant', property:p.pm_properties?.name??'', amount:Number(p.amount??0)}))
+    const exp = expenses.filter(e=>inRange(e.date)).map(e=>({date:String(e.date).slice(0,10), type:'Expense', description:[e.vendor,e.description].filter(Boolean).join(' - ')||'Expense', property:e.property_name??'', amount:-Number(e.amount??0)}))
+    const lp = landlordPayments.filter(l=>l.paid_date && inRange(l.paid_date)).map(l=>({date:String(l.paid_date).slice(0,10), type:'Landlord payment', description:l.pm_landlords?.name??'Landlord', property:l.pm_properties?.name??'', amount:-Number(l.amount??0)}))
+    return [...rent, ...exp, ...lp].sort((a,b)=>a.date.localeCompare(b.date))
+  })()
+  function downloadAccountsCsv() {
+    const esc = (v: any) => `"${String(v??'').replace(/"/g,'""')}"`
+    const lines = [['Date','Type','Description','Property','Amount'].map(esc).join(','), ...exportRows.map(r=>[r.date,r.type,r.description,r.property,r.amount.toFixed(2)].map(esc).join(','))]
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = `accounts_${exportFrom}_to_${exportTo}.csv`; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   // Real 6-month occupancy trend for the Dashboard chart, replacing a
   // hardcoded static bar shape. Occupancy for a given month = % of units
@@ -1276,6 +1293,79 @@ function PMPageInner() {
                 <button onClick={()=>del('pm_mortgages',m.id,setMortgages)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
               </div>
             ))}
+          </div>
+        )}
+
+        {tab==='Deposits'&&(() => {
+          const depRows = leases.filter((l:any)=>Number(l.deposit??0)>0)
+          const depIssue = (l:any): string|null => !l.deposit_scheme ? 'No scheme' : !l.deposit_protected_date ? 'Not protected' : !l.prescribed_info_given ? 'Prescribed info missing' : null
+          const total = depRows.reduce((s:number,l:any)=>s+Number(l.deposit??0),0)
+          const problems = depRows.filter((l:any)=>depIssue(l)).length
+          return (
+            <div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:16}}>
+                <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Deposits held</div><div style={{fontSize:24,fontWeight:800,color:'#1D4E89'}}>£{total.toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{depRows.length} tenancies</div></div>
+                <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Need attention</div><div style={{fontSize:24,fontWeight:800,color:problems?'#EF4444':'#10B981'}}>{problems}</div><div style={{fontSize:12,color:'#98A2B3'}}>missing scheme, protection or prescribed info</div></div>
+              </div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                {depRows.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No deposits recorded on leases yet</div>:
+                depRows.map((l:any)=>{ const issue = depIssue(l); return (
+                  <div key={l.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr auto 1fr 1fr auto',gap:14,alignItems:'center',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
+                    <div><div style={{fontWeight:600,color:'#323338'}}>{l.pm_tenants?.name??'Tenant'}</div><div style={{fontSize:12,color:'#667085'}}>{l.pm_properties?.name??''}</div></div>
+                    <div style={{color:'#323338'}}>£{Number(l.deposit).toLocaleString()}</div>
+                    <div style={{color:'#667085',fontSize:12}}>{l.deposit_scheme??'—'}{l.deposit_scheme_ref?` · ${l.deposit_scheme_ref}`:''}</div>
+                    <div style={{color:'#667085',fontSize:12}}>Protected {l.deposit_protected_date??'—'}</div>
+                    <div style={{color:'#667085',fontSize:12}}>Prescribed info {l.prescribed_info_given?(l.prescribed_info_date??'given'):'not given'}</div>
+                    <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:10,background:issue?'#FEF3F2':'#ECFDF3',color:issue?'#B42318':'#067647',whiteSpace:'nowrap'}}>{issue??'Complete'}</span>
+                  </div>
+                )})}
+              </div>
+            </div>
+          )
+        })()}
+
+        {tab==='Renewals & Notices'&&(() => {
+          const now = new Date()
+          const rows = leases
+            .filter((l:any)=>l.end_date && l.status==='active')
+            .map((l:any)=>({...l, days: Math.round((new Date(l.end_date+'T00:00:00').getTime()-now.getTime())/86400000)}))
+            .filter((l:any)=>l.days<=120)
+            .sort((a:any,b:any)=>a.days-b.days)
+          return (
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              {rows.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No leases ending in the next 120 days</div>:
+              rows.map((l:any)=>(
+                <div key={l.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr auto auto 1.2fr',gap:14,alignItems:'center',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
+                  <div><div style={{fontWeight:600,color:'#323338'}}>{l.pm_tenants?.name??'Tenant'}</div><div style={{fontSize:12,color:'#667085'}}>{l.pm_properties?.name??''}</div></div>
+                  <div style={{color:'#667085',fontSize:12}}>Ends {l.end_date}</div>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:10,background:l.days<0?'#FEF3F2':l.days<=60?'#FFFAEB':'#EAF3FC',color:l.days<0?'#B42318':l.days<=60?'#B54708':'#1D4E89',whiteSpace:'nowrap'}}>{l.days<0?`Ended ${-l.days}d ago`:`${l.days} days left`}</span>
+                  <span style={{fontSize:12,color:'#323338',whiteSpace:'nowrap'}}>{l.renewal_status??'No renewal started'}</span>
+                  <div style={{fontSize:12,color:'#667085'}}>{l.renewal_notes??''}</div>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
+
+        {tab==='Accounting Export'&&(
+          <div>
+            <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px',marginBottom:16,display:'flex',gap:14,alignItems:'flex-end',flexWrap:'wrap'}}>
+              <div><label style={lbl}>From</label><input type="date" style={inp} value={exportFrom} onChange={e=>setExportFrom(e.target.value)}/></div>
+              <div><label style={lbl}>To</label><input type="date" style={inp} value={exportTo} onChange={e=>setExportTo(e.target.value)}/></div>
+              <button onClick={downloadAccountsCsv} disabled={exportRows.length===0} style={{padding:'10px 18px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:exportRows.length===0?0.6:1}}>Download CSV</button>
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{padding:'12px 20px',fontSize:12,color:'#667085',borderBottom:'1px solid #E4E7EC'}}>{exportRows.length} lines: rent received, expenses and landlord payments in this period</div>
+              {exportRows.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>Nothing in this period</div>:
+              exportRows.map((r,i)=>(
+                <div key={i} style={{display:'grid',gridTemplateColumns:'100px 1fr 1fr 110px',gap:14,padding:'10px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
+                  <span style={{color:'#667085'}}>{r.date}</span>
+                  <span style={{color:'#323338'}}>{r.type} · {r.description}</span>
+                  <span style={{color:'#667085'}}>{r.property}</span>
+                  <span style={{textAlign:'right',fontWeight:600,color:r.amount<0?'#B42318':'#067647'}}>£{r.amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
