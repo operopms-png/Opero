@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -55,7 +55,7 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
-  { label: 'SHORT STAYS', items: ['Bookings','Reviews','Channels','Guest Comms','Analytics','Integrations'] },
+  { label: 'SHORT STAYS', items: ['Short Stays Overview','Bookings','Reviews','Channels','Guest Comms','Analytics','Integrations'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms','Deadlines','Insurance'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
@@ -1044,6 +1044,32 @@ function PMPageInner() {
                 </div>
               ))}
             </div>
+            {(() => {
+              const liveB = bookings.filter((b:any)=>b.status!=='cancelled')
+              const nowD = new Date()
+              const monthKey = `${nowD.getFullYear()}-${String(nowD.getMonth()+1).padStart(2,'0')}`
+              const monthB = liveB.filter((b:any)=>b.check_in?.startsWith(monthKey))
+              const monthRevenue = monthB.reduce((s:number,b:any)=>s+(Number(b.total_amount)||0),0)
+              const monthNights = monthB.reduce((s:number,b:any)=>{ if(!b.check_in||!b.check_out) return s; return s+Math.max(0,(new Date(b.check_out).getTime()-new Date(b.check_in).getTime())/86400000) },0)
+              const daysThisMonth = new Date(nowD.getFullYear(), nowD.getMonth()+1, 0).getDate()
+              const monthOcc = Math.min(100, Math.round((monthNights/(Math.max(1,strProperties.length)*daysThisMonth))*100))
+              const nextIn = liveB.filter((b:any)=>b.check_in>=today).sort((a:any,b:any)=>a.check_in.localeCompare(b.check_in))[0]
+              const cleanPending = strCleaning.filter((c:any)=>c.status==='pending').length
+              const maintOpen = strMaintenance.filter((m:any)=>m.status==='open').length
+              const shortCard = {background:'#FBFDFF',border:'1px solid #E4E7EC',borderLeft:'4px solid #2F6DB5',borderRadius:12,padding:'20px 24px'} as const
+              const shortLabel = {fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6} as const
+              return (
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:12,fontWeight:700,color:'#2F6DB5',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8}}>Short Stays</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
+                  <div style={shortCard}><div style={shortLabel}>Short stay properties</div><div style={{fontSize:26,fontWeight:800,color:'#2F6DB5',letterSpacing:'-0.02em'}}>{strProperties.length}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Total active</div></div>
+                  <div style={shortCard}><div style={shortLabel}>Revenue this month</div><div style={{fontSize:26,fontWeight:800,color:'#1D4E89',letterSpacing:'-0.02em'}}>£{monthRevenue.toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Occupancy {monthOcc}%</div></div>
+                  <div style={shortCard}><div style={shortLabel}>Next check-in</div><div style={{fontSize:20,fontWeight:800,color:'#323338',letterSpacing:'-0.02em'}}>{nextIn?.check_in??'None'}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>{nextIn?.properties?.name??'No upcoming check-ins'}</div></div>
+                  <div style={shortCard}><div style={shortLabel}>Cleans and maintenance</div><div style={{fontSize:26,fontWeight:800,color:'#F59E0B',letterSpacing:'-0.02em'}}>{cleanPending} / {maintOpen}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Pending cleans / open tickets</div></div>
+                </div>
+              </div>
+              )
+            })()}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
               {[
                 {label:'Cleanings This Week',value:`${cleaningsWeek.length}`,sub:`${cleaningsUnassigned} not assigned`},
@@ -1999,6 +2025,81 @@ function PMPageInner() {
             </div>
           </div>
         )}
+
+        {tab==='Short Stays Overview'&&(() => {
+          const todayStr = new Date().toISOString().split('T')[0]
+          const live = bookings.filter((b:any)=>b.status!=='cancelled')
+          const months = Array.from({length:6},(_,i)=>{
+            const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-(5-i))
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+            const mb = live.filter((b:any)=>b.check_in?.startsWith(key))
+            const revenue = mb.reduce((s:number,b:any)=>s+(Number(b.total_amount)||0),0)
+            const nights = mb.reduce((s:number,b:any)=>{ if(!b.check_in||!b.check_out) return s; return s+Math.max(0,(new Date(b.check_out).getTime()-new Date(b.check_in).getTime())/86400000) },0)
+            const days = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()
+            const occupancyPct = Math.min(100, Math.round((nights/(Math.max(1,strProperties.length)*days))*100))
+            return {key, label: d.toLocaleString('default',{month:'short'}), revenue, occupancyPct}
+          })
+          const thisMonth = months[months.length-1]
+          const upcoming = live.filter((b:any)=>b.check_in>=todayStr).slice(0,5)
+          const cleaningPending = strCleaning.filter((c:any)=>c.status==='pending').length
+          const maintOpen = strMaintenance.filter((m:any)=>m.status==='open').length
+          const avgRate = strProperties.length>0 ? Math.round(strProperties.reduce((s:number,p:any)=>s+(Number(p.nightly_rate)||0),0)/strProperties.length) : 0
+          const cardStyle = {background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'} as const
+          const kpiLabel = {fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6} as const
+          const row = {display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid #F2F4F7',fontSize:13} as const
+          return (
+          <div>
+            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
+              <strong>What this is for:</strong> the short stays overview: properties, cleaning and maintenance, this month's revenue, upcoming check-ins and recent bookings, with six-month revenue and occupancy trends. Figures come from the Bookings, Cleaning and Maintenance records.
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
+              <div style={cardStyle}><div style={kpiLabel}>Properties</div><div style={{fontSize:28,fontWeight:800,color:'#2F6DB5'}}>{strProperties.length}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Total active</div></div>
+              <div style={cardStyle}><div style={kpiLabel}>Cleaning tasks</div><div style={{fontSize:28,fontWeight:800,color:'#10B981'}}>{cleaningPending}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Pending</div></div>
+              <div style={cardStyle}><div style={kpiLabel}>Maintenance</div><div style={{fontSize:28,fontWeight:800,color:'#F59E0B'}}>{maintOpen}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Open tickets</div></div>
+              <div style={{...cardStyle,background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3'}}><div style={{...kpiLabel,color:'#1D4E89'}}>Revenue</div><div style={{fontSize:28,fontWeight:800,color:'#1D4E89'}}>£{thisMonth.revenue.toLocaleString()}</div><div style={{fontSize:12,color:'#1D4E89',marginTop:4}}>This month</div></div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+              <div style={cardStyle}>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>Revenue trend (6 months)</div>
+                <svg viewBox="0 0 300 80" style={{width:'100%'}}>
+                  <polyline points={shortPolylinePoints(months.map(m=>m.revenue),300,70,10)} fill="none" stroke="#2F6DB5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#98A2B3'}}>{months.map(m=><span key={m.key}>{m.label}</span>)}</div>
+              </div>
+              <div style={cardStyle}>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>Occupancy trend (6 months)</div>
+                <svg viewBox="0 0 300 80" style={{width:'100%'}}>
+                  {months.map((m,i)=>{ const h=Math.max(2,(m.occupancyPct/100)*60); return <rect key={m.key} x={10+i*47} y={70-h} width={30} height={h} rx="3" fill={i===months.length-1?'#2F6DB5':'#C9DEF3'}/> })}
+                </svg>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#98A2B3'}}>{months.map(m=><span key={m.key}>{m.label}</span>)}</div>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+              <div style={cardStyle}>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:14}}>Upcoming check-ins</div>
+                {upcoming.length===0 ? <div style={{color:'#98A2B3',fontSize:13}}>No upcoming check-ins</div> :
+                upcoming.map((b:any)=>(<div key={b.id} style={{...row,justifyContent:'space-between'}}><div><div style={{fontWeight:500,color:'#323338'}}>{b.guest_name??'Guest'}</div><div style={{fontSize:11,color:'#667085'}}>{b.properties?.name} · {b.check_in}</div></div><span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#EAF3FC',color:'#1D4E89',alignSelf:'center'}}>Check-in</span></div>))}
+              </div>
+              <div style={cardStyle}>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:14}}>Recent bookings</div>
+                {bookings.length===0 ? <div style={{color:'#98A2B3',fontSize:13}}>No bookings yet</div> :
+                bookings.slice(0,5).map((b:any)=>(<div key={b.id} style={{...row,justifyContent:'space-between'}}><div><div style={{fontWeight:500,color:'#323338'}}>{b.guest_name??'Guest'}</div><div style={{fontSize:11,color:'#667085'}}>{b.properties?.name}</div></div><span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,alignSelf:'center',background:b.status==='confirmed'?'#EAF3FC':'#F2F4F7',color:b.status==='confirmed'?'#1D4E89':'#475467'}}>{b.status}</span></div>))}
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+              <WeatherWidget />
+              <div style={cardStyle}>
+                <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:14}}>Quick stats</div>
+                <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Average nightly rate</span><span style={{fontWeight:600,color:'#323338'}}>£{avgRate}</span></div>
+                <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Total bookings</span><span style={{fontWeight:600,color:'#323338'}}>{bookings.length}</span></div>
+                <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Confirmed</span><span style={{fontWeight:600,color:'#10B981'}}>{bookings.filter((b:any)=>b.status==='confirmed').length}</span></div>
+                <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Cancelled</span><span style={{fontWeight:600,color:'#EF4444'}}>{bookings.filter((b:any)=>b.status==='cancelled').length}</span></div>
+                <div style={{...row,justifyContent:'space-between',borderBottom:'none'}}><span style={{color:'#667085'}}>Occupancy this month</span><span style={{fontWeight:600,color:'#2F6DB5'}}>{thisMonth.occupancyPct}%</span></div>
+              </div>
+            </div>
+          </div>
+          )
+        })()}
 
         {tab==='Bookings'&&(
           <div>
