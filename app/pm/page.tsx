@@ -251,6 +251,8 @@ function PMPageInner() {
   const [strProperties, setStrProperties] = useState<any[]>([])
   const [strReviews, setStrReviews] = useState<any[]>([])
   const [propFilter, setPropFilter] = useState<string>('All')
+  const [strCleaning, setStrCleaning] = useState<any[]>([])
+  const [strMaintenance, setStrMaintenance] = useState<any[]>([])
   const [rtrChecks, setRtrChecks] = useState<any[]>([])
   const [bankChecks, setBankChecks] = useState<any[]>([])
   const [editingChecksLeaseId, setEditingChecksLeaseId] = useState<string|null>(null)
@@ -394,9 +396,13 @@ function PMPageInner() {
       const list=(data??[]).filter((x:any)=>propertyIds.length===0||propertyIds.includes(x.id))
       setStrProperties(list)
       const ids=list.map((x:any)=>x.id)
-      if(ids.length===0){setBookings([]);return}
-      const {data:b}=await supabase.from('bookings').select('*, properties(name)').in('property_id',ids).order('check_in',{ascending:false})
-      setBookings(b??[])
+      if(ids.length===0){setBookings([]);setStrCleaning([]);setStrMaintenance([]);return}
+      const [{data:b},{data:ct},{data:mt}]=await Promise.all([
+        supabase.from('bookings').select('*, properties(name)').in('property_id',ids).order('check_in',{ascending:false}),
+        supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id',ids).order('scheduled_date',{ascending:true}),
+        supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id',ids).order('created_at',{ascending:false}),
+      ])
+      setBookings(b??[]); setStrCleaning(ct??[]); setStrMaintenance(mt??[])
     })
     supabase.from('str_reviews').select('*, properties(name)').eq('user_id',userId).order('review_date',{ascending:false}).then(({data})=>setStrReviews(data??[]))
     supabase.from('pm_inventories').select('*,pm_properties(name),pm_leases(pm_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}).then(({data})=>setInventories(data??[]))
@@ -548,6 +554,15 @@ function PMPageInner() {
     fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
       user_id: userId, module: 'pm', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/pm',
     }) }).catch(()=>{})
+  }
+
+  // Short-stay cleaning and maintenance tables have no user_id column, so insert without it.
+  async function saveShortRecord(table: string, payload: any) {
+    setSaving(true)
+    const { error } = await supabase.from(table).insert([payload])
+    if (error) { alert(error.message); setSaving(false); return }
+    setSaving(false); setModal(null); setForm({})
+    await loadAll()
   }
 
   async function saveBooking() {
@@ -1321,44 +1336,68 @@ function PMPageInner() {
 
         {tab==='Maintenance'&&(
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            {maintenance.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No maintenance tickets</div>:
-            maintenance.map(m=>{
-              const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#2F6DB5'
-              const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#EAF3FC'
-              return(
-                <div key={m.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto auto',alignItems:'center',gap:16}}>
-                  <div>
-                    <div style={{fontWeight:600,fontSize:14,color:'#323338',marginBottom:2}}>{m.title}</div>
-                    <div style={{fontSize:12,color:'#667085'}}>{m.pm_properties?.name}{m.assigned_to?` · ${m.assigned_to}`:''}</div>
+            {(()=>{
+              const rows = [
+                ...maintenance.map((m:any)=>({...m,_kind:'long'})),
+                ...strMaintenance.map((m:any)=>({...m,_kind:'short'})),
+              ]
+              if(rows.length===0) return <div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No maintenance tickets</div>
+              return rows.map((m:any)=>{
+                const table = m._kind==='short' ? 'maintenance_tickets' : 'pm_maintenance'
+                const propName = m._kind==='short' ? m.properties?.name : m.pm_properties?.name
+                const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#2F6DB5'
+                const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#EAF3FC'
+                const typeBg = m._kind==='long'?'#EAF3FC':'#ECFDF3'
+                const typeFg = m._kind==='long'?'#1D4E89':'#067647'
+                return(
+                  <div key={m._kind+m.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto auto auto',alignItems:'center',gap:16}}>
+                    <div>
+                      <div style={{fontWeight:600,fontSize:14,color:'#323338',marginBottom:2}}>{m.title}</div>
+                      <div style={{fontSize:12,color:'#667085'}}>{propName??'—'}{m._kind==='long'&&m.assigned_to?` · ${m.assigned_to}`:''}</div>
+                    </div>
+                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:typeBg,color:typeFg}}>{m._kind==='long'?'Long let':'Short stay'}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:priBg,color:priColor,textTransform:'uppercase'}}>{m.priority}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:m.status==='open'?'#DBEAFE':m.status==='resolved'?'#D1FAE5':'#FEF3C7',color:m.status==='open'?'#2563EB':m.status==='resolved'?'#059669':'#D97706'}}>{m.status}</span>
+                    <select value={m.status} onChange={async e=>{await supabase.from(table).update({status:e.target.value}).eq('id',m.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
+                      <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
+                    </select>
+                    <button onClick={()=>del(table,m.id,m._kind==='short'?setStrMaintenance:setMaintenance)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
                   </div>
-                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:priBg,color:priColor,textTransform:'uppercase'}}>{m.priority}</span>
-                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:m.status==='open'?'#DBEAFE':m.status==='resolved'?'#D1FAE5':'#FEF3C7',color:m.status==='open'?'#2563EB':m.status==='resolved'?'#059669':'#D97706'}}>{m.status}</span>
-                  <select value={m.status} onChange={async e=>{await supabase.from('pm_maintenance').update({status:e.target.value}).eq('id',m.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
-                    <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
-                  </select>
-                  <button onClick={()=>del('pm_maintenance',m.id,setMaintenance)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
-                </div>
-              )
-            })}
+                )
+              })
+            })()}
           </div>
         )}
 
         {tab==='Cleaning'&&(
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            {cleaning.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No cleaning tasks scheduled</div>:
-            cleaning.map(c=>(
-              <div key={c.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto',alignItems:'center',gap:16}}>
-                <div>
-                  <div style={{fontWeight:600,fontSize:14,color:'#323338',marginBottom:2}}>{c.pm_properties?.name??'—'}{c.pm_units?.unit_number?` — Unit ${c.pm_units.unit_number}`:''}</div>
-                  <div style={{fontSize:12,color:'#667085'}}>{c.scheduled_date??'—'}{c.notes?` · ${c.notes}`:''}</div>
+            {(()=>{
+              const rows = [
+                ...cleaning.map((c:any)=>({...c,_kind:'long'})),
+                ...strCleaning.map((c:any)=>({...c,_kind:'short'})),
+              ]
+              if(rows.length===0) return <div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No cleaning tasks scheduled</div>
+              return rows.map((c:any)=>{
+                const isShort = c._kind==='short'
+                const table = isShort ? 'cleaning_tasks' : 'pm_cleaning_tasks'
+                const propName = isShort ? c.properties?.name : c.pm_properties?.name
+                const unitLabel = !isShort && c.pm_units?.unit_number ? ` — Unit ${c.pm_units.unit_number}` : ''
+                return (
+                <div key={c._kind+c.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto auto',alignItems:'center',gap:16}}>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:14,color:'#323338',marginBottom:2}}>{propName??'—'}{unitLabel}</div>
+                    <div style={{fontSize:12,color:'#667085'}}>{c.scheduled_date??'—'}{c.notes?` · ${c.notes}`:''}</div>
+                  </div>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:isShort?'#ECFDF3':'#EAF3FC',color:isShort?'#067647':'#1D4E89'}}>{isShort?'Short stay':'Long let'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:c.status==='completed'?'#D1FAE5':c.status==='in_progress'?'#DBEAFE':'#FEF3C7',color:c.status==='completed'?'#059669':c.status==='in_progress'?'#2563EB':'#D97706',textTransform:'capitalize'}}>{c.status}</span>
+                  <select value={c.status} onChange={async e=>{await supabase.from(table).update({status:e.target.value}).eq('id',c.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
+                    <option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
+                  </select>
+                  <button onClick={()=>del(table,c.id,isShort?setStrCleaning:setCleaning)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
                 </div>
-                <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:c.status==='completed'?'#D1FAE5':c.status==='in_progress'?'#DBEAFE':'#FEF3C7',color:c.status==='completed'?'#059669':c.status==='in_progress'?'#2563EB':'#D97706',textTransform:'capitalize'}}>{c.status}</span>
-                <select value={c.status} onChange={async e=>{await supabase.from('pm_cleaning_tasks').update({status:e.target.value}).eq('id',c.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
-                  <option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
-                </select>
-                <button onClick={()=>del('pm_cleaning_tasks',c.id,setCleaning)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
-              </div>
-            ))}
+                )
+              })
+            })()}
           </div>
         )}
 
@@ -2670,11 +2709,17 @@ function PMPageInner() {
       {modal==='maintenance'&&(
         <Modal title="New Maintenance Ticket" onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Type</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.kind??'long'} onChange={e=>setForm({...form,kind:e.target.value,property_id:''})}>
+                <option value="long">Long let</option>
+                <option value="short">Short stay</option>
+              </select>
+            </div>
             <div><label style={lbl}>Title *</label><input style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})} placeholder="e.g. Boiler not working"/></div>
             <div><label style={lbl}>Property</label>
               <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
                 <option value="">Select property…</option>
-                {properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+                {(form.kind==='short'?strProperties:properties).map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
             <div><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})}/></div>
@@ -2690,7 +2735,11 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_maintenance',form)} disabled={saving||!form.title} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.title?0.6:1}}>{saving?'Saving…':'Create Ticket'}</button>
+            <button onClick={()=>{
+              const base={title:form.title,description:form.description||null,priority:form.priority??'medium',property_id:form.property_id||null,status:'open'}
+              if(form.kind==='short') saveShortRecord('maintenance_tickets',base)
+              else save('pm_maintenance',{...base,assigned_to:form.assigned_to??null,photos:form.photos})
+            }} disabled={saving||!form.title} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.title?0.6:1}}>{saving?'Saving…':'Create Ticket'}</button>
           </div>
         </Modal>
       )}
@@ -2698,18 +2747,24 @@ function PMPageInner() {
       {modal==='cleaning'&&(
         <Modal title="Schedule Cleaning" onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Type</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.kind??'long'} onChange={e=>setForm({...form,kind:e.target.value,property_id:'',unit_id:''})}>
+                <option value="long">Long let</option>
+                <option value="short">Short stay</option>
+              </select>
+            </div>
             <div><label style={lbl}>Property</label>
               <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
                 <option value="">Select property…</option>
-                {properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+                {(form.kind==='short'?strProperties:properties).map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
-            <div><label style={lbl}>Unit</label>
+            {form.kind!=='short'&&<div><label style={lbl}>Unit</label>
               <select style={{...inp,cursor:'pointer'}} value={form.unit_id??''} onChange={e=>setForm({...form,unit_id:e.target.value})}>
                 <option value="">Select unit (optional)…</option>
                 {units.filter(u=>u.property_id===form.property_id).map(u=><option key={u.id} value={u.id}>{u.unit_number}</option>)}
               </select>
-            </div>
+            </div>}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Scheduled Date</label><input type="date" style={inp} value={form.scheduled_date??''} onChange={e=>setForm({...form,scheduled_date:e.target.value})}/></div>
               <div><label style={lbl}>Assigned To</label><input style={inp} value={form.assigned_to??''} onChange={e=>setForm({...form,assigned_to:e.target.value})} placeholder="Cleaner name"/></div>
@@ -2718,7 +2773,10 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_cleaning_tasks',form)} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
+            <button onClick={()=>{
+              if(form.kind==='short') saveShortRecord('cleaning_tasks',{property_id:form.property_id,scheduled_date:form.scheduled_date||null,notes:form.notes||null,status:'pending'})
+              else save('pm_cleaning_tasks',{...form,kind:undefined})
+            }} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
           </div>
         </Modal>
       )}
