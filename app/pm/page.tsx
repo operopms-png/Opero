@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Vacancies','Viewings','Loans & Mortgages','Finance','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
@@ -26,12 +26,12 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases'] },
+  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Vacancies','Viewings'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
-  { label: 'FINANCE', items: ['Rent','Expenses','Banking'] },
+  { label: 'FINANCE', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages'] },
   { label: 'REPORTS', items: ['Landlord Reports','Reports'] },
   { label: 'COMMS', items: ['Messages'] },
 ]
@@ -259,6 +259,9 @@ function PMPageInner() {
   const [inspections, setInspections] = useState<any[]>([])
   const [inventories, setInventories] = useState<any[]>([])
   const [pmNews, setPmNews] = useState<any[]>([])
+  const [vacancies, setVacancies] = useState<any[]>([])
+  const [viewings, setViewings] = useState<any[]>([])
+  const [mortgages, setMortgages] = useState<any[]>([])
   const [dashPeriod, setDashPeriod] = useState<'month'|'last'|'year'|'12'>('month')
   const [documents, setDocuments] = useState<any[]>([])
   const [docsTenant, setDocsTenant] = useState<any>(null)
@@ -380,6 +383,9 @@ function PMPageInner() {
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
     supabase.from('pm_inventories').select('*,pm_properties(name),pm_leases(pm_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}).then(({data})=>setInventories(data??[]))
     fetch('/api/estate-news').then(r=>r.json()).then(d=>setPmNews(d?.news??[])).catch(()=>{})
+    supabase.from('pm_vacancies').select('*,pm_properties(name)').eq('user_id',userId).order('available_date',{ascending:true}).then(({data})=>setVacancies(data??[]))
+    supabase.from('pm_viewings').select('*,pm_properties(name)').eq('user_id',userId).order('scheduled_at',{ascending:true}).then(({data})=>setViewings(data??[]))
+    supabase.from('pm_mortgages').select('*,pm_properties(name)').eq('user_id',userId).order('start_date',{ascending:false}).then(({data})=>setMortgages(data??[]))
     setExpenses(ex.data??[]); setCleaning(cleanData); setLandlordPayments(lp.data??[])
     setComplianceRecords(comp.data??[])
     setBankAccounts(bk.data??[]); setTransactions(tx.data??[])
@@ -731,6 +737,9 @@ function PMPageInner() {
             {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
             {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
             {tab==='Cleaning'&&<button onClick={()=>{setModal('cleaning');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule Cleaning</button>}
+            {tab==='Vacancies'&&<button onClick={()=>{setModal('vacancy');setForm({type:'Whole property'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add vacancy</button>}
+            {tab==='Viewings'&&<button onClick={()=>{setModal('viewing');setForm({status:'Requested'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add viewing</button>}
+            {tab==='Loans & Mortgages'&&<button onClick={()=>{setModal('mortgage');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add loan</button>}
             {tab==='Inventories'&&<button onClick={()=>{setModal('inventory');setForm({type:'Check-in',status:'Draft'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add inventory</button>}
             {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
             {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
@@ -1186,6 +1195,85 @@ function PMPageInner() {
                   <option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
                 </select>
                 <button onClick={()=>del('pm_inspections',i.id,setInspections)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab==='Finance'&&(
+          <div>
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {[{k:'month',l:'Current month'},{k:'last',l:'Last month'},{k:'year',l:'Current year'},{k:'12',l:'12 months'}].map(t=>(
+                <button key={t.k} onClick={()=>setDashPeriod(t.k as any)} style={{padding:'6px 12px',borderRadius:6,border:'1px solid '+(dashPeriod===t.k?'#2F6DB5':'#E4E7EC'),background:dashPeriod===t.k?'#B9D6F2':'#fff',color:dashPeriod===t.k?'#1D4E89':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t.l}</button>
+              ))}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
+              {[
+                {label:'Rent paid',value:`£${periodPaid.toLocaleString()}`,color:'#1D4E89'},
+                {label:'Late rent',value:`£${periodLate.toLocaleString()}`,color:periodLate>0?'#EF4444':'#323338'},
+                {label:'Expenses',value:`£${periodExpenses.toLocaleString()}`,color:'#323338'},
+                {label:'Net profit',value:`£${(periodPaid-periodExpenses).toLocaleString()}`,color:periodPaid-periodExpenses>=0?'#10B981':'#EF4444'},
+              ].map(c=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
+                  <div style={{fontSize:26,fontWeight:800,color:c.color,letterSpacing:'-0.02em'}}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px',fontSize:13,color:'#667085'}}>
+              Rent paid counts payments with a paid date in the period. Late rent counts overdue payments with a due date in the period. Expenses are office expenses dated in the period. Loan repayments are on the Loans &amp; Mortgages tab.
+            </div>
+          </div>
+        )}
+
+        {tab==='Vacancies'&&(
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            {vacancies.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No vacancies yet</div>:
+            vacancies.map(v=>(
+              <div key={v.id} style={{display:'grid',gridTemplateColumns:'1fr auto auto auto',gap:16,alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #F2F4F7'}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{v.pm_properties?.name??'—'}{v.room_type?` · ${v.room_type}`:''}</div>
+                  <div style={{fontSize:12,color:'#667085'}}>{v.type??''}{v.bedrooms?` · ${v.bedrooms} bed`:''}{v.description?` · ${v.description}`:''}</div>
+                </div>
+                <div style={{fontSize:13,color:'#323338'}}>{v.rent!=null?`£${Number(v.rent).toLocaleString()} / month`:'—'}</div>
+                <div style={{fontSize:12,color:'#667085'}}>Available {v.available_date??'—'}</div>
+                <button onClick={()=>del('pm_vacancies',v.id,setVacancies)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab==='Viewings'&&(
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            {viewings.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No viewings yet</div>:
+            viewings.map(v=>(
+              <div key={v.id} style={{display:'grid',gridTemplateColumns:'1fr auto auto auto',gap:16,alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #F2F4F7'}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{v.prospect_name??'—'}</div>
+                  <div style={{fontSize:12,color:'#667085'}}>{v.pm_properties?.name??'—'}{v.prospect_phone?` · ${v.prospect_phone}`:''}{v.prospect_email?` · ${v.prospect_email}`:''}</div>
+                </div>
+                <div style={{fontSize:12,color:'#667085'}}>{v.scheduled_at?new Date(v.scheduled_at).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'}):'Not scheduled'}</div>
+                <select value={v.status??'Requested'} onChange={async e=>{await supabase.from('pm_viewings').update({status:e.target.value}).eq('id',v.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
+                  {['Requested','Scheduled','Completed','Cancelled','No Show'].map(s=><option key={s}>{s}</option>)}
+                </select>
+                <button onClick={()=>del('pm_viewings',v.id,setViewings)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab==='Loans & Mortgages'&&(
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            {mortgages.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No loans or mortgages yet</div>:
+            mortgages.map(m=>(
+              <div key={m.id} style={{display:'grid',gridTemplateColumns:'1fr auto auto auto',gap:16,alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #F2F4F7'}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{m.pm_properties?.name??'—'}{m.bank?` · ${m.bank}`:''}</div>
+                  <div style={{fontSize:12,color:'#667085'}}>{m.type??''}{m.rate!=null?` · ${m.rate}%`:''}{m.start_date?` · from ${m.start_date}`:''}{m.end_date?` to ${m.end_date}`:''}</div>
+                </div>
+                <div style={{fontSize:13,color:'#323338'}}>{m.amount!=null?`£${Number(m.amount).toLocaleString()}`:'—'}</div>
+                <div style={{fontSize:13,color:'#323338'}}>{m.monthly_payment!=null?`£${Number(m.monthly_payment).toLocaleString()} / month`:'—'}</div>
+                <button onClick={()=>del('pm_mortgages',m.id,setMortgages)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
               </div>
             ))}
           </div>
@@ -2315,6 +2403,86 @@ function PMPageInner() {
         </Modal>
       )}
 
+      {modal==='vacancy'&&(
+        <Modal title="Add Vacancy" onClose={()=>setModal(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Type</label><input style={inp} value={form.type??''} onChange={e=>setForm({...form,type:e.target.value})} placeholder="Whole property / Room"/></div>
+              <div><label style={lbl}>Room type</label><input style={inp} value={form.room_type??''} onChange={e=>setForm({...form,room_type:e.target.value})}/></div>
+              <div><label style={lbl}>Rent per month (£)</label><input type="number" style={inp} value={form.rent??''} onChange={e=>setForm({...form,rent:e.target.value})}/></div>
+              <div><label style={lbl}>Available from</label><input type="date" style={inp} value={form.available_date??''} onChange={e=>setForm({...form,available_date:e.target.value})}/></div>
+              <div><label style={lbl}>Bedrooms</label><input style={inp} value={form.bedrooms??''} onChange={e=>setForm({...form,bedrooms:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_vacancies',{...form,rent:form.rent===''||form.rent==null?null:Number(form.rent),available_date:form.available_date||null})} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Save'}</button>
+          </div>
+        </Modal>
+      )}
+      {modal==='viewing'&&(
+        <Modal title="Add Viewing" onClose={()=>setModal(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Prospect name</label><input style={inp} value={form.prospect_name??''} onChange={e=>setForm({...form,prospect_name:e.target.value})}/></div>
+              <div><label style={lbl}>Phone</label><input style={inp} value={form.prospect_phone??''} onChange={e=>setForm({...form,prospect_phone:e.target.value})}/></div>
+              <div><label style={lbl}>Email</label><input style={inp} value={form.prospect_email??''} onChange={e=>setForm({...form,prospect_email:e.target.value})}/></div>
+              <div><label style={lbl}>Viewing date and time</label><input type="datetime-local" style={inp} value={form.scheduled_at??''} onChange={e=>setForm({...form,scheduled_at:e.target.value})}/></div>
+              <div><label style={lbl}>Status</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.status??'Requested'} onChange={e=>setForm({...form,status:e.target.value})}>
+                  {['Requested','Scheduled','Completed','Cancelled','No Show'].map(s=><option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Source</label><input style={inp} value={form.source??''} onChange={e=>setForm({...form,source:e.target.value})} placeholder="e.g. Listing enquiry"/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_viewings',{...form,scheduled_at:form.scheduled_at||null})} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Save'}</button>
+          </div>
+        </Modal>
+      )}
+      {modal==='mortgage'&&(
+        <Modal title="Add Loan or Mortgage" onClose={()=>setModal(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Bank / lender</label><input style={inp} value={form.bank??''} onChange={e=>setForm({...form,bank:e.target.value})}/></div>
+              <div><label style={lbl}>Type</label><input style={inp} value={form.type??''} onChange={e=>setForm({...form,type:e.target.value})} placeholder="Mortgage / Loan"/></div>
+              <div><label style={lbl}>Amount (£)</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:e.target.value})}/></div>
+              <div><label style={lbl}>Interest rate (%)</label><input type="number" step="0.01" style={inp} value={form.rate??''} onChange={e=>setForm({...form,rate:e.target.value})}/></div>
+              <div><label style={lbl}>Start date</label><input type="date" style={inp} value={form.start_date??''} onChange={e=>setForm({...form,start_date:e.target.value})}/></div>
+              <div><label style={lbl}>End date</label><input type="date" style={inp} value={form.end_date??''} onChange={e=>setForm({...form,end_date:e.target.value})}/></div>
+              <div><label style={lbl}>Term</label><input style={inp} value={form.duration??''} onChange={e=>setForm({...form,duration:e.target.value})} placeholder="e.g. 25 years"/></div>
+              <div><label style={lbl}>Monthly payment (£)</label><input type="number" style={inp} value={form.monthly_payment??''} onChange={e=>setForm({...form,monthly_payment:e.target.value})}/></div>
+              <div><label style={lbl}>Insurance (£ / month)</label><input type="number" style={inp} value={form.insurance??''} onChange={e=>setForm({...form,insurance:e.target.value})}/></div>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_mortgages',{...form,amount:form.amount===''||form.amount==null?null:Number(form.amount),rate:form.rate===''||form.rate==null?null:Number(form.rate),monthly_payment:form.monthly_payment===''||form.monthly_payment==null?null:Number(form.monthly_payment),insurance:form.insurance===''||form.insurance==null?null:Number(form.insurance),start_date:form.start_date||null,end_date:form.end_date||null})} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Save'}</button>
+          </div>
+        </Modal>
+      )}
       {modal==='inventory'&&(
         <Modal title="Add Inventory" onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
