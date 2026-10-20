@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Bookings','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
@@ -27,6 +27,7 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
+  { label: 'SHORT STAYS', items: ['Bookings'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
@@ -246,6 +247,8 @@ function PMPageInner() {
   const [landlords, setLandlords] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])
   const [leases, setLeases] = useState<any[]>([])
+  const [bookings, setBookings] = useState<any[]>([])
+  const [strProperties, setStrProperties] = useState<any[]>([])
   const [rtrChecks, setRtrChecks] = useState<any[]>([])
   const [bankChecks, setBankChecks] = useState<any[]>([])
   const [editingChecksLeaseId, setEditingChecksLeaseId] = useState<string|null>(null)
@@ -384,6 +387,15 @@ function PMPageInner() {
     setProperties(restrictedProps); setUnits(u.data??[]); setLandlords(l.data??[])
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
+    // Short Stays: bookings live in the existing STR tables (no user_id column on bookings)
+    supabase.from('properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(async({data})=>{
+      const list=(data??[]).filter((x:any)=>propertyIds.length===0||propertyIds.includes(x.id))
+      setStrProperties(list)
+      const ids=list.map((x:any)=>x.id)
+      if(ids.length===0){setBookings([]);return}
+      const {data:b}=await supabase.from('bookings').select('*, properties(name)').in('property_id',ids).order('check_in',{ascending:false})
+      setBookings(b??[])
+    })
     supabase.from('pm_inventories').select('*,pm_properties(name),pm_leases(pm_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}).then(({data})=>setInventories(data??[]))
     fetch('/api/estate-news').then(r=>r.json()).then(d=>setPmNews(d?.news??[])).catch(()=>{})
     supabase.from('pm_vacancies').select('*,pm_properties(name)').eq('user_id',userId).order('available_date',{ascending:true}).then(({data})=>setVacancies(data??[]))
@@ -533,6 +545,25 @@ function PMPageInner() {
     fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
       user_id: userId, module: 'pm', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/pm',
     }) }).catch(()=>{})
+  }
+
+  async function saveBooking() {
+    setSaving(true)
+    const payload = {
+      guest_name: form.guest_name,
+      guest_email: form.guest_email || null,
+      property_id: form.property_id || null,
+      check_in: form.check_in || null,
+      check_out: form.check_out || null,
+      total_amount: form.total_amount===''||form.total_amount==null||isNaN(Number(form.total_amount)) ? null : Number(form.total_amount),
+      status: form.status || 'confirmed',
+    }
+    const { error } = editId
+      ? await supabase.from('bookings').update(payload).eq('id', editId)
+      : await supabase.from('bookings').insert([payload])
+    if (error) { alert(error.message); setSaving(false); return }
+    setSaving(false); setModal(null); setForm({}); setEditId(null)
+    await loadAll()
   }
 
   function openEdit(modalName: string, record: any) {
@@ -760,6 +791,7 @@ function PMPageInner() {
             {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
             {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
             {tab==='Buildings'&&<button onClick={()=>{setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Building</button>}
+            {tab==='Bookings'&&<button onClick={()=>{setModal('booking');setForm({status:'confirmed'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Booking</button>}
             {tab==='Leases'&&<button onClick={()=>{setModal('lease');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Lease</button>}
             {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
             {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
@@ -1102,6 +1134,35 @@ function PMPageInner() {
         )}
 
         {docsTenant&&<TenantDocuments kind="pm" tenant={docsTenant} onClose={()=>setDocsTenant(null)} onChanged={async()=>{const {data}=await supabase.from('pm_documents').select('*,pm_properties(name)').eq('user_id',docsTenant.user_id).order('created_at',{ascending:false});setDocuments(data??[])}} />}
+
+        {tab==='Bookings'&&(
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
+              {[{label:'Total Bookings',value:bookings.length,color:'#323338'},{label:'Confirmed',value:bookings.filter((b:any)=>b.status==='confirmed').length,color:'#2F6DB5'},{label:'Pending',value:bookings.filter((b:any)=>b.status==='pending').length,color:'#F59E0B'}].map((c:any)=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div><div style={{fontSize:28,fontWeight:800,color:c.color}}>{c.value}</div></div>
+              ))}
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 110px 110px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Guest</span><span>Property</span><span>Check in</span><span>Check out</span><span>Status</span><span></span>
+              </div>
+              {bookings.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No bookings yet</div>:
+              bookings.map((b:any)=>(
+                <div key={b.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 110px 110px 110px 110px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{b.guest_name??'—'}</span>
+                  <span>{b.properties?.name??'—'}</span>
+                  <span>{b.check_in??'—'}</span>
+                  <span>{b.check_out??'—'}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,justifySelf:'start',background:b.status==='confirmed'?'#EAF3FC':'#F2F4F7',color:b.status==='confirmed'?'#1D4E89':'#475467'}}>{b.status??'—'}</span>
+                  <div style={{display:'flex',gap:6}}>
+                    <button onClick={()=>openEdit('booking',b)} style={{fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('bookings',b.id,setBookings)} style={{fontSize:11,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {tab==='Leases'&&(
           <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
@@ -2567,6 +2628,33 @@ function PMPageInner() {
           </div>
         </Modal>
       )}
+      {modal==='booking'&&(
+        <Modal title={editId?'Edit Booking':'New Booking'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Guest name *</label><input style={inp} value={form.guest_name??''} onChange={e=>setForm({...form,guest_name:e.target.value})} placeholder="John Smith"/></div>
+            <div><label style={lbl}>Guest email</label><input type="email" style={inp} value={form.guest_email??''} onChange={e=>setForm({...form,guest_email:e.target.value})} placeholder="john@example.com"/></div>
+            <div><label style={lbl}>Property</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {strProperties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Check in</label><input type="date" style={inp} value={form.check_in??''} onChange={e=>setForm({...form,check_in:e.target.value})}/></div>
+              <div><label style={lbl}>Check out</label><input type="date" style={inp} value={form.check_out??''} onChange={e=>setForm({...form,check_out:e.target.value})}/></div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Total amount (£)</label><input type="number" style={inp} value={form.total_amount??''} onChange={e=>setForm({...form,total_amount:e.target.value})}/></div>
+              <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??'confirmed'} onChange={e=>setForm({...form,status:e.target.value})}><option value="confirmed">Confirmed</option><option value="pending">Pending</option><option value="cancelled">Cancelled</option></select></div>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={saveBooking} disabled={saving||!form.guest_name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.guest_name?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add booking'}</button>
+          </div>
+        </Modal>
+      )}
+
       {modal==='vacancy'&&(
         <Modal title="Add Vacancy" onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
