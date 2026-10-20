@@ -11,9 +11,37 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Bookings','Reviews','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
+const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
+const STR_BUSINESS_COMPLIANCE_TYPES = ['Public Liability Insurance','Business/Trading Licence','ICO Data Protection Registration','Health & Safety Policy','Other']
+const STR_GUEST_TEMPLATES: Record<string, { label: string; subject: string; body: string }> = {
+  welcome: { label: 'Welcome Message', subject: 'Welcome to your stay!', body: "Hi {guest_name},\n\nWelcome! We're excited to host you.\n\nCheck-in: {check_in}\nCheck-out: {check_out}\n\nPlease don't hesitate to reach out if you need anything.\n\nBest regards" },
+  checkin: { label: 'Check-in Instructions', subject: 'Your check-in details', body: "Hi {guest_name},\n\nYour check-in is coming up on {check_in}. Here's everything you need:\n\nAddress: \nWiFi: \nLockbox code: \n\nSafe travels!" },
+  checkout: { label: 'Check-out Reminder', subject: 'Check-out reminder', body: "Hi {guest_name},\n\nJust a reminder that check-out is on {check_out}. Please leave the keys in the lockbox and lock up on your way out.\n\nThanks for staying with us!" },
+  review: { label: 'Review Request', subject: 'How was your stay?', body: "Hi {guest_name},\n\nThanks for staying with us! If you had a great time, we'd really appreciate a review — it means a lot to our small team.\n\nHope to host you again soon!" },
+}
+
+// Short-stay analytics helpers (same maths as the Vacation Rentals Analytics tab).
+function shortPolylinePoints(values: number[], w: number, h: number, pad = 8) {
+  const max = Math.max(1, ...values)
+  const stepX = values.length > 1 ? (w - pad * 2) / (values.length - 1) : 0
+  return values.map((v, i) => `${pad + i * stepX},${h - pad - (v / max) * (h - pad * 2)}`).join(' ')
+}
+function shortGaugeArcPath(pct: number) {
+  const theta = (180 * (1 - Math.min(100, Math.max(0, pct)) / 100)) * (Math.PI / 180)
+  const endX = 100 + 80 * Math.cos(theta)
+  const endY = 80 - 80 * Math.sin(theta)
+  const largeArc = pct > 50 ? 1 : 0
+  return `M 20 80 A 80 80 0 ${largeArc} 1 ${endX.toFixed(1)} ${endY.toFixed(1)}`
+}
+
+// Certificate/requirement list depends on whether the record is for a long let or a short stay.
+function complianceTypeList(kind: 'long'|'short', scope: string) {
+  if (kind === 'short') return scope === 'property' ? STR_COMPLIANCE_TYPES : STR_BUSINESS_COMPLIANCE_TYPES
+  return scope === 'property' ? PROPERTY_COMPLIANCE_TYPES : BUSINESS_COMPLIANCE_TYPES
+}
 
 function complianceStatus(expiryDate?: string) {
   if (!expiryDate) return 'No Expiry'
@@ -27,7 +55,7 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
-  { label: 'SHORT STAYS', items: ['Bookings','Reviews'] },
+  { label: 'SHORT STAYS', items: ['Bookings','Reviews','Channels','Guest Comms','Analytics','Integrations'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
@@ -253,6 +281,26 @@ function PMPageInner() {
   const [propFilter, setPropFilter] = useState<string>('All')
   const [strCleaning, setStrCleaning] = useState<any[]>([])
   const [strMaintenance, setStrMaintenance] = useState<any[]>([])
+  const [strCompliance, setStrCompliance] = useState<any[]>([])
+  const [commTemplates, setCommTemplates] = useState<any[]>([])
+  const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
+  const [templateDraft, setTemplateDraft] = useState('')
+  const [templateSubjectDraft, setTemplateSubjectDraft] = useState('')
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [guestMessages, setGuestMessages] = useState<any[]>([])
+  const [openBookingThread, setOpenBookingThread] = useState<any>(null)
+  const [guestReply, setGuestReply] = useState('')
+  const [sendingGuestReply, setSendingGuestReply] = useState(false)
+  const [syncingChannels, setSyncingChannels] = useState(false)
+  const [lastSyncResult, setLastSyncResult] = useState<any>(null)
+  const [syncingSmoobu, setSyncingSmoobu] = useState(false)
+  const [lastSmoobuSyncResult, setLastSmoobuSyncResult] = useState<any>(null)
+  const [integrationsRow, setIntegrationsRow] = useState<any>(null)
+  const [currentUserId, setCurrentUserId] = useState<string|null>(null)
+  const [integrationInputs, setIntegrationInputs] = useState<Record<string,string>>({})
+  const [integrationLoading, setIntegrationLoading] = useState<Record<string,boolean>>({})
+  const [integrationMessages, setIntegrationMessages] = useState<Record<string,{type:'success'|'error',text:string}>>({})
+  const [complianceKind, setComplianceKind] = useState<'long'|'short'>('long')
   const [rtrChecks, setRtrChecks] = useState<any[]>([])
   const [bankChecks, setBankChecks] = useState<any[]>([])
   const [editingChecksLeaseId, setEditingChecksLeaseId] = useState<string|null>(null)
@@ -405,6 +453,11 @@ function PMPageInner() {
       setBookings(b??[]); setStrCleaning(ct??[]); setStrMaintenance(mt??[])
     })
     supabase.from('str_reviews').select('*, properties(name)').eq('user_id',userId).order('review_date',{ascending:false}).then(({data})=>setStrReviews(data??[]))
+    supabase.from('guest_comm_templates').select('*').eq('user_id',userId).then(({data})=>setCommTemplates(data??[]))
+    supabase.from('str_guest_messages').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setGuestMessages(data??[]))
+    supabase.from('integrations').select('*').eq('user_id',userId).single().then(({data})=>setIntegrationsRow(data??null))
+    setCurrentUserId(userId ?? null)
+    supabase.from('str_compliance').select('*, properties(name)').eq('user_id',userId).order('expiry_date',{ascending:true}).then(({data})=>setStrCompliance((data??[]).filter((c:any)=>!c.property_id||propertyIds.length===0||propertyIds.includes(c.property_id))))
     supabase.from('pm_inventories').select('*,pm_properties(name),pm_leases(pm_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}).then(({data})=>setInventories(data??[]))
     fetch('/api/estate-news').then(r=>r.json()).then(d=>setPmNews(d?.news??[])).catch(()=>{})
     supabase.from('pm_vacancies').select('*,pm_properties(name)').eq('user_id',userId).order('available_date',{ascending:true}).then(({data})=>setVacancies(data??[]))
@@ -554,6 +607,116 @@ function PMPageInner() {
     fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
       user_id: userId, module: 'pm', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/pm',
     }) }).catch(()=>{})
+  }
+
+  // Integrations and channel sync handlers (ported unchanged from the Vacation Rentals page).
+  async function connectIntegration(id: string, column: string) {
+    const value = integrationInputs[id]
+    if (!value) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const accountId = await getAccountId(user)
+    setIntegrationLoading(prev => ({ ...prev, [id]: true }))
+    const extra: any = column === 'smoobu_api_key' && !integrationsRow?.smoobu_webhook_token ? { smoobu_webhook_token: crypto.randomUUID().replace(/-/g, '') } : {}
+    const { error } = await supabase.from('integrations').upsert({ user_id: accountId, [column]: value, ...extra }, { onConflict: 'user_id' })
+    setIntegrationLoading(prev => ({ ...prev, [id]: false }))
+    if (error) { setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'error', text: error.message } })); return }
+    setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'success', text: 'Connected!' } }))
+    setIntegrationsRow((prev: any) => ({ ...prev, [column]: value, ...extra }))
+  }
+
+  async function disconnectIntegration(id: string, column: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const accountId = await getAccountId(user)
+    await supabase.from('integrations').upsert({ user_id: accountId, [column]: null }, { onConflict: 'user_id' })
+    setIntegrationsRow((prev: any) => ({ ...prev, [column]: null }))
+    setIntegrationInputs(prev => ({ ...prev, [id]: '' }))
+  }
+
+  async function disconnectXero() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const accountId = await getAccountId(user)
+    await supabase.from('integrations').upsert(
+      { user_id: accountId, xero_access_token: null, xero_refresh_token: null, xero_tenant_id: null, xero_tenant_name: null, xero_token_expires_at: null },
+      { onConflict: 'user_id' }
+    )
+    setIntegrationsRow((prev: any) => ({ ...prev, xero_access_token: null, xero_tenant_name: null }))
+  }
+
+  async function sendGuestReply() {
+    if (!guestReply.trim() || !openBookingThread) return
+    setSendingGuestReply(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/guest-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+      body: JSON.stringify({ booking_id: openBookingThread.id, body: guestReply.trim() }),
+    })
+    const result = await res.json()
+    setSendingGuestReply(false)
+    if (!res.ok) { alert(result.error || 'Could not send'); return }
+    if (result.skipped) { alert(result.message); return }
+    setGuestReply('')
+    await loadAll()
+  }
+
+  async function runChannelSync() {
+    setSyncingChannels(true)
+    try {
+      const res = await fetch('/api/sync-ical')
+      const result = await res.json()
+      setLastSyncResult(result)
+    } catch (e) {
+      setLastSyncResult({ error: String(e) })
+    }
+    setSyncingChannels(false)
+    await loadAll()
+  }
+
+  async function runSmoobuSyncNow() {
+    setSyncingSmoobu(true)
+    try {
+      const res = await fetch('/api/sync-smoobu')
+      const result = await res.json()
+      setLastSmoobuSyncResult(result)
+    } catch (e) {
+      setLastSmoobuSyncResult({ error: String(e) })
+    }
+    setSyncingSmoobu(false)
+    await loadAll()
+  }
+
+  function selectTemplate(key: string) {
+    setActiveTemplateKey(key)
+    const saved = commTemplates.find((t:any) => t.template_key === key)
+    setTemplateSubjectDraft(saved?.subject ?? STR_GUEST_TEMPLATES[key].subject)
+    setTemplateDraft(saved?.body ?? STR_GUEST_TEMPLATES[key].body)
+  }
+
+  // Keep the editor in sync once the saved templates arrive.
+  useEffect(() => { selectTemplate(activeTemplateKey) }, [commTemplates])
+
+  async function saveTemplate() {
+    setSavingTemplate(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const accountId = user ? await getAccountId(user) : undefined
+    const { error } = await supabase.from('guest_comm_templates').upsert({
+      user_id: accountId, template_key: activeTemplateKey, subject: templateSubjectDraft, body: templateDraft, updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,template_key' })
+    setSavingTemplate(false)
+    if (error) { alert(error.message); return }
+    await loadAll()
+  }
+
+  async function copyTemplate() {
+    try {
+      await navigator.clipboard.writeText(templateDraft)
+      alert('Copied!')
+    } catch {
+      alert('Could not copy. Select the text and copy it manually.')
+    }
   }
 
   // Short-stay cleaning and maintenance tables have no user_id column, so insert without it.
@@ -785,7 +948,7 @@ function PMPageInner() {
               <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
               {group.items.map(t=>{
                 const locked = !!(allowedTab && t !== allowedTab)
-                const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
+                const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? [...complianceRecords,...strCompliance].filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
                 return <button key={t} onClick={()=>!locked && setTab(t)} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
             </div>
@@ -821,7 +984,7 @@ function PMPageInner() {
             {tab==='Loans & Mortgages'&&<button onClick={()=>{setModal('mortgage');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add loan</button>}
             {tab==='Inventories'&&<button onClick={()=>{setModal('inventory');setForm({type:'Check-in',status:'Draft'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add inventory</button>}
             {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
-            {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
+            {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:complianceTypeList(complianceKind,complianceScope)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
             {tab==='Documents'&&<button onClick={()=>{setModal('document');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Document</button>}
             {tab==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Expense</button>}
             {tab==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Bank Account</button>}
@@ -1228,6 +1391,295 @@ function PMPageInner() {
           )
         })()}
 
+        {tab==='Analytics'&&(() => {
+          const live = bookings.filter((b:any)=>b.status!=='cancelled')
+          const totalRevenue = live.reduce((s:number,b:any)=>s+(Number(b.total_amount)||0),0)
+          const monthly = Array.from({length:6},(_,i)=>{
+            const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-(5-i))
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+            const mb = live.filter((b:any)=>b.check_in?.startsWith(key))
+            const revenue = mb.reduce((s:number,b:any)=>s+(Number(b.total_amount)||0),0)
+            const nights = mb.reduce((s:number,b:any)=>{ if(!b.check_in||!b.check_out) return s; const n=(new Date(b.check_out).getTime()-new Date(b.check_in).getTime())/86400000; return s+Math.max(0,n) },0)
+            const daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate()
+            const available = Math.max(1, strProperties.length) * daysInMonth
+            const occupancyPct = Math.min(100, Math.round((nights/available)*100))
+            return {key, label: d.toLocaleString('default',{month:'short'}), revenue, nights, occupancyPct}
+          })
+          const currentOcc = monthly[monthly.length-1]?.occupancyPct ?? 0
+          const cancelled = bookings.filter((b:any)=>b.status==='cancelled')
+          const cardStyle = {background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'} as const
+          const labelStyle = {fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8} as const
+          return (
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
+              <div style={cardStyle}><div style={labelStyle}>Total revenue</div><div style={{fontSize:24,fontWeight:800,color:'#323338'}}>£{totalRevenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{width:'100%',marginTop:8}}><polyline points={shortPolylinePoints(monthly.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={cardStyle}><div style={labelStyle}>Total bookings</div><div style={{fontSize:24,fontWeight:800,color:'#323338'}}>{live.length}</div><svg viewBox="0 0 200 50" style={{width:'100%',marginTop:8}}><polyline points={shortPolylinePoints(monthly.map(m=>m.nights),200,50)} fill="none" stroke="#2F6DB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={{...cardStyle,border:'1px solid #FEE2E2'}}><div style={labelStyle}>Cancellations</div><div style={{fontSize:24,fontWeight:800,color:'#EF4444'}}>{cancelled.length}</div><svg viewBox="0 0 200 50" style={{width:'100%',marginTop:8}}><polyline points={shortPolylinePoints(monthly.map(m=>cancelled.filter((b:any)=>b.check_in?.startsWith(m.key)).length),200,50)} fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/></svg></div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+              <div style={{...cardStyle,padding:24}}>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>Occupancy</div>
+                <svg viewBox="0 0 200 110" style={{width:'100%',maxWidth:240,display:'block',margin:'0 auto'}}>
+                  <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#F3F4F6" strokeWidth="16" strokeLinecap="round"/>
+                  <path d={shortGaugeArcPath(currentOcc)} fill="none" stroke="#2F6DB5" strokeWidth="16" strokeLinecap="round"/>
+                  <text x="18" y="98" fontSize="10" fill="#9CA3AF">0%</text><text x="88" y="18" fontSize="10" fill="#9CA3AF">50%</text><text x="172" y="98" fontSize="10" fill="#9CA3AF">100%</text>
+                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#2F6DB5" textAnchor="middle">{currentOcc}%</text>
+                </svg>
+              </div>
+              <div style={{...cardStyle,padding:24}}>
+                <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>Revenue and occupancy</div>
+                <svg viewBox="0 0 300 120" style={{width:'100%'}}>
+                  <polyline points={shortPolylinePoints(monthly.map(m=>m.revenue),300,120,10)} fill="none" stroke="#2F6DB5" strokeWidth="2"/>
+                  <polyline points={shortPolylinePoints(monthly.map(m=>m.occupancyPct),300,120,10)} fill="none" stroke="#10B981" strokeWidth="2" strokeDasharray="5 3"/>
+                  {monthly.map((m,i)=>(<text key={m.key} x={10+(i*52)} y={118} fontSize="8" fill="#9CA3AF" textAnchor="middle">{m.label}</text>))}
+                </svg>
+              </div>
+            </div>
+          </div>
+          )
+        })()}
+
+        {tab==='Channels'&&(() => {
+          const CHANNEL_DEFS = [
+            { key:'airbnb_ical_url', name:'Airbnb', initial:'A', color:'#ff5a5f', bg:'#fff1f2' },
+            { key:'vrbo_ical_url', name:'VRBO', initial:'V', color:'#1e6ef4', bg:'#EAF3FC' },
+            { key:'booking_ical_url', name:'Booking.com', initial:'B', color:'#003580', bg:'#EAF3FC' },
+          ]
+          const threads = bookings.filter((b:any)=>guestMessages.some((m:any)=>m.booking_id===b.id))
+            .map((b:any)=>{
+              const msgs = guestMessages.filter((m:any)=>m.booking_id===b.id)
+              const last = msgs[0]
+              return { booking:b, lastMessage:last?.message, lastAt:last?.created_at, unread: last?.sender==='guest' }
+            })
+            .sort((a:any,b:any)=>new Date(b.lastAt).getTime()-new Date(a.lastAt).getTime())
+          const unreadCount = threads.filter((t:any)=>t.unread).length
+          const smoobuConnected = !!integrationsRow?.smoobu_api_key
+          const smoobuMapped = strProperties.filter((p:any)=>p.smoobu_apartment_id).length
+
+          return (
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:12}}>Channel status</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:16}}>
+              {CHANNEL_DEFS.map(ch=>{
+                const connectedCount = strProperties.filter((p:any)=>p[ch.key]).length
+                return (
+                  <div key={ch.key} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 20px',display:'flex',alignItems:'center',gap:14}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:ch.bg,color:ch.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700}}>{ch.initial}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>{ch.name}</div>
+                      <div style={{fontSize:12,color:connectedCount>0?'#10B981':'#98A2B3'}}>{connectedCount>0?`${connectedCount} propert${connectedCount===1?'y':'ies'} connected`:'Not connected'}</div>
+                    </div>
+                  </div>
+                )
+              })}
+              <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 20px',display:'flex',alignItems:'center',gap:14}}>
+                <div style={{width:40,height:40,borderRadius:10,background:'#E6F5FC',color:'#0084C7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700}}>S</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#323338'}}>Smoobu</div>
+                  <div style={{fontSize:12,color:smoobuConnected&&smoobuMapped>0?'#10B981':'#98A2B3'}}>{!smoobuConnected?'Not connected (see Integrations)':smoobuMapped>0?`${smoobuMapped} propert${smoobuMapped===1?'y':'ies'} mapped`:'Connected, no properties mapped yet'}</div>
+                </div>
+              </div>
+            </div>
+            <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginBottom:8}}>
+              {lastSyncResult&&!lastSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>iCal: {lastSyncResult.synced?.length ?? 0} property/channel pairs checked</span>}
+              {lastSyncResult?.error&&<span style={{fontSize:12,color:'#DC2626'}}>iCal sync failed: {lastSyncResult.error}</span>}
+              <button onClick={runChannelSync} disabled={syncingChannels} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingChannels?0.6:1}}>{syncingChannels?'Syncing…':'Sync iCal now'}</button>
+            </div>
+            <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginBottom:24}}>
+              {lastSmoobuSyncResult&&!lastSmoobuSyncResult.error&&<span style={{fontSize:12,color:'#98A2B3'}}>Smoobu: {lastSmoobuSyncResult.synced?.reduce((s:number,r:any)=>s+(r.bookings??0),0) ?? 0} bookings, {lastSmoobuSyncResult.synced?.reduce((s:number,r:any)=>s+(r.messages??0),0) ?? 0} messages checked</span>}
+              {lastSmoobuSyncResult?.error&&<span style={{fontSize:12,color:'#DC2626'}}>Smoobu sync failed: {lastSmoobuSyncResult.error}</span>}
+              <button onClick={runSmoobuSyncNow} disabled={syncingSmoobu} style={{padding:'8px 18px',borderRadius:8,border:'none',background:'#0084C7',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:syncingSmoobu?0.6:1}}>{syncingSmoobu?'Syncing…':'Sync Smoobu now'}</button>
+            </div>
+            <div style={{fontSize:11,color:'#98A2B3',marginBottom:24,marginTop:-14}}>iCal runs automatically every 2 hours (booking dates only). Smoobu runs every 30 minutes (real bookings and guest messages that relay into their actual Airbnb/Booking.com chat).</div>
+
+            {lastSmoobuSyncResult?.synced?.some((r:any)=>r.debug)&&(
+              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:16,marginBottom:24,fontSize:12,color:'#92400E'}}>
+                <div style={{fontWeight:700,marginBottom:8}}>Smoobu sync details (temporary, for debugging)</div>
+                {lastSmoobuSyncResult.synced.filter((r:any)=>r.debug).map((r:any,i:number)=>(
+                  <div key={i} style={{marginBottom:8}}>
+                    <div>Property mapped to Smoobu apartment ID(s): <strong>{r.debug.mappedApartmentIds.join(', ')||'(none)'}</strong></div>
+                    <div>Total bookings Smoobu returned: <strong>{r.debug.totalBookingsFromSmoobu}</strong> (Smoobu says total_items: {r.debug.totalItemsAccordingToSmoobu})</div>
+                    <div>Apartment ID(s) actually seen in those bookings: <strong>{r.debug.apartmentIdsSeenInResponse.join(', ')||'(none, Smoobu returned zero bookings)'}</strong></div>
+                    <div>Message threads Smoobu returned: <strong>{r.debug.totalThreadsFromSmoobu}</strong></div>
+                    {r.debug.threadsSkippedNoBooking>0&&<div>Threads skipped (no matching booking, even after direct fetch): <strong>{r.debug.threadsSkippedNoBooking}</strong></div>}
+                    {r.debug.threadErrors?.length>0&&<div style={{marginTop:6}}>Sample errors:<br/>{r.debug.threadErrors.map((e:string,j:number)=><span key={j}>— {e}<br/></span>)}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
+              <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>Guest messages {unreadCount>0&&<span style={{marginLeft:6,background:'#DC2626',color:'#fff',fontSize:11,fontWeight:700,borderRadius:10,padding:'2px 8px'}}>{unreadCount} unread</span>}</div>
+              <select onChange={e=>{ if(!e.target.value)return; const b=bookings.find((bk:any)=>bk.id===e.target.value); if(b)setOpenBookingThread(b); e.target.value='' }} style={{...inp,width:220,fontSize:12,padding:'6px 10px'}} defaultValue="">
+                <option value="" disabled>Message a guest…</option>
+                {bookings.filter((b:any)=>b.guest_email).map((b:any)=><option key={b.id} value={b.id}>{b.guest_name||'Guest'} — {b.properties?.name}</option>)}
+              </select>
+            </div>
+            <div style={{fontSize:12,color:'#98A2B3',marginBottom:16}}>Real email to and from each guest's own address. Not synced with Airbnb/Booking.com's own in-app messaging, which needs official platform partner access.</div>
+
+            <div style={{display:'flex',gap:16,height:480}}>
+              <div style={{width:320,background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,overflowY:'auto' as const}}>
+                {threads.length===0?(
+                  <div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No guest messages yet.</div>
+                ):threads.map((t:any)=>(
+                  <div key={t.booking.id} onClick={()=>setOpenBookingThread(t.booking)} style={{padding:'12px 16px',borderBottom:'1px solid #F2F4F7',cursor:'pointer',background:openBookingThread?.id===t.booking.id?'#EAF3FC':'transparent'}}>
+                    <div style={{display:'flex',justifyContent:'space-between'}}>
+                      <span style={{fontSize:13,fontWeight:t.unread?700:500,color:'#323338'}}>{t.booking.guest_name||'Guest'}</span>
+                      {t.unread&&<div style={{width:7,height:7,borderRadius:'50%',background:'#2F6DB5',marginTop:4}}/>}
+                    </div>
+                    <div style={{fontSize:11,color:'#667085'}}>{t.booking.properties?.name??'—'}</div>
+                    <div style={{fontSize:12,color:t.unread?'#344054':'#98A2B3',whiteSpace:'nowrap' as const,overflow:'hidden',textOverflow:'ellipsis',marginTop:2}}>{t.lastMessage}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{flex:1,background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,display:'flex',flexDirection:'column' as const}}>
+                {!openBookingThread?(
+                  <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3',fontSize:13}}>Select a conversation</div>
+                ):(
+                  <>
+                    <div style={{padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}>
+                      <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{openBookingThread.guest_name||'Guest'}</div>
+                      <div style={{fontSize:12,color:'#667085'}}>{openBookingThread.properties?.name??'—'} · {openBookingThread.guest_email}</div>
+                    </div>
+                    <div style={{flex:1,overflowY:'auto' as const,padding:20,display:'flex',flexDirection:'column' as const,gap:10}}>
+                      {guestMessages.filter((m:any)=>m.booking_id===openBookingThread.id).slice().reverse().map((m:any)=>{
+                        const isOutbound = m.sender==='staff'||m.sender==='ai'
+                        return (
+                        <div key={m.id} style={{alignSelf:isOutbound?'flex-end':'flex-start',maxWidth:'65%'}}>
+                          <div style={{background:m.sender==='ai'?'#EAF3FC':isOutbound?'#2F6DB5':'#F2F4F7',color:m.sender==='ai'?'#2F6DB5':isOutbound?'#fff':'#323338',border:m.sender==='ai'?'1px solid #2F6DB5':'none',borderRadius:12,padding:'10px 14px',fontSize:13}}>{m.message}</div>
+                          <div style={{fontSize:10,color:'#98A2B3',marginTop:3,textAlign:isOutbound?'right' as const:'left' as const}}>{m.sender==='ai'?'AI receptionist':m.sender==='staff'?'You':openBookingThread.guest_name} · {new Date(m.created_at).toLocaleString()}</div>
+                        </div>
+                        )
+                      })}
+                    </div>
+                    <div style={{borderTop:'1px solid #E4E7EC',padding:14,display:'flex',gap:10}}>
+                      <input value={guestReply} onChange={e=>setGuestReply(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendGuestReply()} placeholder="Type a reply…" style={{...inp,flex:1}}/>
+                      <button onClick={sendGuestReply} disabled={sendingGuestReply||!guestReply.trim()} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:sendingGuestReply||!guestReply.trim()?0.6:1}}>Send</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          )
+        })()}
+
+        {tab==='Integrations'&&(
+          <div>
+            <p style={{color:'#667085',fontSize:14,marginBottom:8}}>Connect your tools to get the most out of the portal.</p>
+            <p style={{color:'#98A2B3',fontSize:13,marginBottom:20}}>Airbnb, VRBO and Booking.com calendar sync, and Smoobu, are set per property. Open a property under Properties and scroll down, since each listing or apartment has its own iCal link or Smoobu ID.</p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))',gap:16}}>
+              {[
+                { id:'xero', name:'Xero', desc:'Sync contacts and financial data with your Xero accounting. Connect your organisation to keep bookkeeping in sync automatically.', initial:'X', color:'#13B5EA', bg:'#E8FAFF', oauth:true },
+                { id:'pricelabs', name:'PriceLabs', desc:'Dynamic pricing recommendations. Connect your account to see live pricing data for all your properties.', initial:'P', color:'#1a56db', bg:'#EAF3FC', column:'pricelabs_api_key', placeholder:'Enter your PriceLabs API key', docsUrl:'https://pricelabs.co/users/api_keys', docsLabel:'Get your API key →' },
+                { id:'stripe', name:'Stripe', desc:'Process payments and subscriptions. Already configured.', initial:'S', color:'#635bff', bg:'#f5f3ff', builtIn:true },
+                { id:'smoobu', name:'Smoobu', desc:"Pull real bookings and guest messages from your Smoobu account. Messages relay into the guest's actual Airbnb/Booking.com chat, not just email.", initial:'S', color:'#0084C7', bg:'#E6F5FC', column:'smoobu_api_key', placeholder:'Enter your Smoobu API key', docsUrl:'https://login.smoobu.com/en/settings/api', docsLabel:'Get your API key →' },
+                { id:'paypal', name:'PayPal', desc:'Accept PayPal and PayPal.me payments from guests and owners.', initial:'P', color:'#003087', bg:'#EAF3FC', column:'paypal_client_id', placeholder:'Enter your PayPal Client ID', docsUrl:'https://developer.paypal.com/dashboard/', docsLabel:'Get your Client ID →' },
+              ].map(int => {
+                const isConnected = int.builtIn || (int.oauth ? !!integrationsRow?.xero_access_token : (int.column ? !!integrationsRow?.[int.column] : false))
+                return (
+                  <div key={int.id} style={{background:'#fff',border:`1px solid ${isConnected?'#22c55e':'#E4E7EC'}`,borderRadius:12,padding:'1.25rem',display:'flex',flexDirection:'column',gap:10}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:10}}>
+                        <div style={{width:40,height:40,background:int.bg,color:int.color,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700}}>{int.initial}</div>
+                        <div>
+                          <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{int.name}</div>
+                          {isConnected && !int.builtIn && <div style={{fontSize:11,color:'#16a34a',fontWeight:500}}>Connected</div>}
+                        </div>
+                      </div>
+                      {isConnected && !int.builtIn && !int.oauth && (
+                        <button onClick={()=>disconnectIntegration(int.id, int.column!)} style={{fontSize:11,color:'#ef4444',background:'none',border:'1px solid #fca5a5',borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Disconnect</button>
+                      )}
+                      {isConnected && int.oauth && (
+                        <button onClick={()=>disconnectXero()} style={{fontSize:11,color:'#ef4444',background:'none',border:'1px solid #fca5a5',borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Disconnect</button>
+                      )}
+                    </div>
+                    <p style={{fontSize:12,color:'#667085',lineHeight:1.6}}>{int.desc}</p>
+                    {int.oauth ? (
+                      isConnected ? (
+                        <div style={{fontSize:12,color:'#16a34a',fontWeight:500}}>{integrationsRow?.xero_tenant_name ? `Connected to ${integrationsRow.xero_tenant_name}` : 'Connected'}</div>
+                      ) : (
+                        <a href={`/api/xero/connect?userId=${currentUserId||''}`} style={{padding:'8px 14px',background:int.color,color:'#fff',border:'none',borderRadius:7,fontSize:12,cursor:'pointer',fontWeight:600,textAlign:'center',textDecoration:'none',display:'inline-block'}}>Connect to Xero</a>
+                      )
+                    ) : int.builtIn ? (
+                      <div style={{fontSize:12,color:'#16a34a',fontWeight:500}}>Active on your account</div>
+                    ) : isConnected ? (
+                      int.id === 'smoobu' ? (
+                        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                          <div style={{fontSize:12,color:'#16a34a',fontWeight:500}}>Connected: bookings (dates, guest, price) and guest messages</div>
+                          {integrationsRow?.smoobu_webhook_last_at ? (
+                            <div style={{fontSize:12,color:'#16a34a'}}>Instant sync on. Last update from Smoobu {new Date(integrationsRow.smoobu_webhook_last_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                          ) : integrationsRow?.smoobu_webhook_token ? (
+                            <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                              <div style={{fontSize:11.5,color:'#676879'}}>Instant sync: waiting for the first update from Smoobu (it arrives with the next booking or message). Until then it syncs every 10 minutes. If nothing arrives, add this in Smoobu under Advanced, API Keys, Webhook URLs:</div>
+                              <div style={{display:'flex',gap:6}}>
+                                <input readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/smoobu-webhook?token=${integrationsRow.smoobu_webhook_token}`} onFocus={e=>e.currentTarget.select()} style={{flex:1,padding:'6px 8px',borderRadius:4,border:'1px solid #D0D4E4',fontSize:11,fontFamily:'inherit',color:'#323338',background:'#F6F7FB'}}/>
+                                <button onClick={()=>navigator.clipboard?.writeText(`${window.location.origin}/api/smoobu-webhook?token=${integrationsRow.smoobu_webhook_token}`)} style={{padding:'6px 10px',background:'#fff',color:int.color,border:`1px solid ${int.color}`,borderRadius:4,fontSize:11.5,cursor:'pointer',fontWeight:600}}>Copy</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{fontSize:11.5,color:'#676879'}}>Syncs every 10 minutes.</div>
+                          )}
+                          {integrationsRow?.smoobu_api_secret ? (
+                            <div style={{fontSize:12,color:'#16a34a'}}>Secure signing on (ready for Smoobu's 31 Oct change)</div>
+                          ) : (
+                            <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                              <div style={{fontSize:11.5,color:'#B76E00'}}>From 31 Oct Smoobu needs an API secret. In Smoobu go to Advanced, API Keys, create a key, and paste the secret shown here (use that new key above too if it differs).</div>
+                              <div style={{display:'flex',gap:6}}>
+                                <input type="password" autoComplete="off" placeholder="Smoobu API secret" value={integrationInputs['smoobu_secret']||''} onChange={e=>setIntegrationInputs(prev=>({...prev,smoobu_secret:e.target.value}))} style={{flex:1,padding:'7px 10px',borderRadius:4,border:'1px solid #D0D4E4',fontSize:12,fontFamily:'inherit'}}/>
+                                <button onClick={()=>connectIntegration('smoobu_secret','smoobu_api_secret')} disabled={!integrationInputs['smoobu_secret']} style={{padding:'7px 12px',background:int.color,color:'#fff',border:'none',borderRadius:4,fontSize:12,cursor:'pointer',fontWeight:600}}>Save</button>
+                              </div>
+                              {integrationMessages['smoobu_secret'] && <div style={{fontSize:11,color:integrationMessages['smoobu_secret'].type==='success'?'#16a34a':'#ef4444'}}>{integrationMessages['smoobu_secret'].text}</div>}
+                            </div>
+                          )}
+                          <button onClick={async()=>{ setIntegrationMessages(prev=>({...prev,smoobu_sync:{type:'success',text:'Syncing…'}})); const r=await fetch('/api/sync-smoobu').then(x=>x.json()).catch(()=>null); const a=r?.synced?.[0]; setIntegrationMessages(prev=>({...prev,smoobu_sync: !a ? {type:'error',text:'Sync failed. Try again.'} : a.error ? {type:'error',text:a.error} : {type:'success',text:`Synced ${a.bookings} bookings and ${a.messages} messages${a.debug?.threadErrors?.length ? ' (some items had problems)' : ''}.`}})) }} style={{alignSelf:'flex-start',padding:'6px 12px',background:'#fff',color:int.color,border:`1px solid ${int.color}`,borderRadius:4,fontSize:12,cursor:'pointer',fontWeight:600}}>Sync now</button>
+                          {integrationMessages['smoobu_sync'] && <div style={{fontSize:11.5,color:integrationMessages['smoobu_sync'].type==='success'?'#16a34a':'#ef4444'}}>{integrationMessages['smoobu_sync'].text}</div>}
+                        </div>
+                      ) : <div style={{fontSize:12,color:'#16a34a',fontWeight:500}}>Connected</div>
+                    ) : (
+                      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                        {int.docsUrl && <a href={int.docsUrl} target="_blank" rel="noreferrer" style={{fontSize:11,color:int.color,textDecoration:'none'}}>{int.docsLabel}</a>}
+                        <div style={{display:'flex',gap:6}}>
+                          <input type="text" placeholder={int.placeholder} value={integrationInputs[int.id]||''} onChange={e=>setIntegrationInputs(prev=>({...prev,[int.id]:e.target.value}))} style={{flex:1,padding:'7px 10px',borderRadius:7,border:'1px solid #e5e7eb',fontSize:12,fontFamily:'inherit'}}/>
+                          <button onClick={()=>connectIntegration(int.id, int.column!)} disabled={integrationLoading[int.id]||!integrationInputs[int.id]} style={{padding:'7px 14px',background:int.color,color:'#fff',border:'none',borderRadius:7,fontSize:12,cursor:'pointer',fontWeight:500,opacity:integrationLoading[int.id]?0.7:1}}>{integrationLoading[int.id]?'...':'Connect'}</button>
+                        </div>
+                        {integrationMessages[int.id] && <div style={{fontSize:11,color:integrationMessages[int.id].type==='success'?'#16a34a':'#ef4444'}}>{integrationMessages[int.id].text}</div>}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {tab==='Guest Comms'&&(
+          <div style={{display:'grid',gridTemplateColumns:'260px 1fr',gap:24}}>
+            <div>
+              <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:12}}>Templates</div>
+              <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                {Object.entries(STR_GUEST_TEMPLATES).map(([key,t])=>(
+                  <div key={key} onClick={()=>selectTemplate(key)} style={{padding:'12px 14px',borderRadius:10,border:'1px solid '+(activeTemplateKey===key?'#2F6DB5':'#E4E7EC'),background:activeTemplateKey===key?'#2F6DB5':'#fff',cursor:'pointer',fontSize:13,color:activeTemplateKey===key?'#fff':'#344054',fontWeight:activeTemplateKey===key?600:400}}>{t.label}</div>
+                ))}
+              </div>
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:28}}>
+              <div style={{fontSize:16,fontWeight:600,color:'#323338',marginBottom:4}}>{STR_GUEST_TEMPLATES[activeTemplateKey].label}</div>
+              <div style={{fontSize:12,color:'#667085',marginBottom:16}}>Short stay guest message. Placeholders such as {'{guest_name}'} are filled in when sent.</div>
+              <div style={{marginBottom:16}}>
+                <label style={lbl}>Subject</label>
+                <input value={templateSubjectDraft} onChange={e=>setTemplateSubjectDraft(e.target.value)} style={inp}/>
+              </div>
+              <label style={lbl}>Message</label>
+              <textarea value={templateDraft} onChange={e=>setTemplateDraft(e.target.value)} style={{width:'100%',minHeight:200,padding:14,borderRadius:10,border:'1px solid #D0D5DD',fontSize:14,fontFamily:'inherit',resize:'vertical',boxSizing:'border-box',lineHeight:1.6}}/>
+              <div style={{display:'flex',gap:8,marginTop:12}}>
+                <button onClick={saveTemplate} disabled={savingTemplate} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:savingTemplate?0.6:1}}>{savingTemplate?'Saving…':'Save template'}</button>
+                <button onClick={copyTemplate} style={{padding:'10px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>Copy to clipboard</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {tab==='Bookings'&&(
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
@@ -1619,8 +2071,9 @@ function PMPageInner() {
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
                 <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
+                  <div><label style={lbl}>Type</label><select value={complianceKind} onChange={e=>{const k=e.target.value as 'long'|'short';setComplianceKind(k);setComplianceForm({...complianceForm,property_id:'',type:complianceTypeList(k,complianceForm.scope)[0]})}} style={inp}><option value="long">Long let</option><option value="short">Short stay</option></select></div>
                   <div><label style={lbl}>Scope</label>
-                    <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:(e.target.value==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0]})} style={inp}>
+                    <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:complianceTypeList(complianceKind,e.target.value)[0]})} style={inp}>
                       <option value="property">Property (from landlord)</option>
                       <option value="business">Business (to operate)</option>
                     </select>
@@ -1628,12 +2081,12 @@ function PMPageInner() {
                   {complianceForm.scope==='property'&&<div><label style={lbl}>Property *</label>
                     <select value={complianceForm.property_id} onChange={e=>setComplianceForm({...complianceForm,property_id:e.target.value})} style={inp}>
                       <option value="">Select property</option>
-                      {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                      {(complianceKind==='short'?strProperties:properties).map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>}
                   <div><label style={lbl}>Certificate / requirement type *</label>
                     <select value={complianceForm.type} onChange={e=>setComplianceForm({...complianceForm,type:e.target.value})} style={inp}>
-                      {(complianceForm.scope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES).map(t=><option key={t}>{t}</option>)}
+                      {complianceTypeList(complianceKind,complianceForm.scope).map(t=><option key={t}>{t}</option>)}
                     </select>
                   </div>
                   <div><label style={lbl}>Reference / provider</label><input style={inp} value={complianceForm.reference} onChange={e=>setComplianceForm({...complianceForm,reference:e.target.value})} placeholder="e.g. issuing engineer or scheme name"/></div>
@@ -1648,7 +2101,9 @@ function PMPageInner() {
                     const { data: { user } } = await supabase.auth.getUser()
                     const accountId = user ? await getAccountId(user) : undefined
                     const payload = complianceForm.scope==='business' ? {...complianceForm,property_id:null} : complianceForm
-                    const { error } = await supabase.from('pm_compliance').insert({...payload,user_id:accountId})
+                    const { error } = complianceKind==='short'
+                      ? await supabase.from('str_compliance').insert({...payload,user_id:accountId})
+                      : await supabase.from('pm_compliance').insert({...payload,user_id:accountId})
                     if(error){alert(error.message);return}
                     setShowAddCompliance(false)
                     await loadAll()
@@ -1659,7 +2114,10 @@ function PMPageInner() {
             )}
 
             {(()=>{
-              const scoped = complianceRecords.filter((c:any)=>c.scope===complianceScope)
+              const scoped = [
+                ...complianceRecords.map((c:any)=>({...c,_kind:'long'})),
+                ...strCompliance.map((c:any)=>({...c,_kind:'short'})),
+              ].filter((c:any)=>(c.scope??'property')===complianceScope)
               return (<>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
                   {[
@@ -1674,26 +2132,26 @@ function PMPageInner() {
                   ))}
                 </div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-                  <div style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
-                    {complianceScope==='property'&&<span>Property</span>}
+                  <div style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'90px 1fr 1fr 1fr 1fr 100px 60px':'90px 1.5fr 1fr 1fr 100px 60px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                    <span>Source</span>{complianceScope==='property'&&<span>Property</span>}
                     <span>Type</span><span>Issued</span><span>Expires</span><span>Status</span><span></span>
                   </div>
                   {scoped.length===0?(
                     <div style={{textAlign:'center',padding:60,color:'#98A2B3'}}>
-                      <div style={{fontSize:40,marginBottom:12}}>🛡️</div>
                       <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No {complianceScope} compliance records yet</div>
                       <div style={{fontSize:13}}>{complianceScope==='property'?'Track certificates you collect from landlords for each property, with automatic expiry alerts.':'Track what your agency needs to legally operate — CMP, redress scheme, insurance, and more.'}</div>
                     </div>
                   ):scoped.map((c:any)=>{
                     const status = complianceStatus(c.expiry_date)
                     return (
-                      <div key={c.id} style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'1fr 1fr 1fr 1fr 100px 60px':'1.5fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                        {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.pm_properties?.name??'—'}</span>}
+                      <div key={c._kind+c.id} style={{display:'grid',gridTemplateColumns:complianceScope==='property'?'90px 1fr 1fr 1fr 1fr 100px 60px':'90px 1.5fr 1fr 1fr 100px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                        <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:c._kind==='long'?'#EAF3FC':'#ECFDF3',color:c._kind==='long'?'#1D4E89':'#067647',justifySelf:'start'}}>{c._kind==='long'?'Long let':'Short stay'}</span>
+                        {complianceScope==='property'&&<span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{(c._kind==='long'?c.pm_properties?.name:c.properties?.name)??'—'}</span>}
                         <span style={{fontSize:13,color:'#344054'}}>{c.type}</span>
                         <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
                         <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
                         <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:complianceStatusColor[status]+'18',color:complianceStatusColor[status],textAlign:'center'}}>{status}</span>
-                        <button onClick={()=>del('pm_compliance',c.id,setComplianceRecords)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                        <button onClick={()=>del(c._kind==='long'?'pm_compliance':'str_compliance',c.id,c._kind==='long'?setComplianceRecords:setStrCompliance)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                       </div>
                     )
                   })}
