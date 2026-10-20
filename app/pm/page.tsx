@@ -28,7 +28,7 @@ const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks'] },
-  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections'] },
+  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'FINANCE', items: ['Rent','Expenses','Banking'] },
@@ -257,6 +257,7 @@ function PMPageInner() {
   const [maintenance, setMaintenance] = useState<any[]>([])
   const [cleaning, setCleaning] = useState<any[]>([])
   const [inspections, setInspections] = useState<any[]>([])
+  const [inventories, setInventories] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
   const [docsTenant, setDocsTenant] = useState<any>(null)
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
@@ -375,6 +376,7 @@ function PMPageInner() {
     setProperties(restrictedProps); setUnits(u.data??[]); setLandlords(l.data??[])
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
+    supabase.from('pm_inventories').select('*,pm_properties(name),pm_leases(pm_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}).then(({data})=>setInventories(data??[]))
     setExpenses(ex.data??[]); setCleaning(cleanData); setLandlordPayments(lp.data??[])
     setComplianceRecords(comp.data??[])
     setBankAccounts(bk.data??[]); setTransactions(tx.data??[])
@@ -711,6 +713,7 @@ function PMPageInner() {
             {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
             {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
             {tab==='Cleaning'&&<button onClick={()=>{setModal('cleaning');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule Cleaning</button>}
+            {tab==='Inventories'&&<button onClick={()=>{setModal('inventory');setForm({type:'Check-in',status:'Draft'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add inventory</button>}
             {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
             {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
             {tab==='Documents'&&<button onClick={()=>{setModal('document');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Document</button>}
@@ -1124,6 +1127,26 @@ function PMPageInner() {
                   <option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
                 </select>
                 <button onClick={()=>del('pm_inspections',i.id,setInspections)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab==='Inventories'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {inventories.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No inventory reports yet</div>:
+            inventories.map(i=>(
+              <div key={i.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto',alignItems:'center',gap:16}}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14,color:'#323338',marginBottom:2}}>{i.pm_properties?.name??'—'}</div>
+                  <div style={{fontSize:12,color:'#667085'}}>{i.type} · {i.inspection_date??'—'}{i.pm_leases?.pm_tenants?.name?` · ${i.pm_leases.pm_tenants.name}`:''}</div>
+                  {i.condition_summary&&<div style={{fontSize:12,color:'#667085',marginTop:4}}>{i.condition_summary}</div>}
+                </div>
+                <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:i.status==='Completed'?'#D1FAE5':'#FEF3C7',color:i.status==='Completed'?'#059669':'#D97706'}}>{i.status}</span>
+                <select value={i.status} onChange={async e=>{await supabase.from('pm_inventories').update({status:e.target.value}).eq('id',i.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
+                  <option>Draft</option><option>Completed</option>
+                </select>
+                <button onClick={()=>del('pm_inventories',i.id,setInventories)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
               </div>
             ))}
           </div>
@@ -2233,6 +2256,38 @@ function PMPageInner() {
         </Modal>
       )}
 
+      {modal==='inventory'&&(
+        <Modal title="Add Inventory" onClose={()=>setModal(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value,lease_id:''})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>Lease</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.lease_id??''} onChange={e=>setForm({...form,lease_id:e.target.value})}>
+                <option value="">Select lease…</option>
+                {leases.filter((l:any)=>!form.property_id||l.property_id===form.property_id).map((l:any)=><option key={l.id} value={l.id}>{l.pm_tenants?.name??'Tenant'}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Type</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.type??'Check-in'} onChange={e=>setForm({...form,type:e.target.value})}>
+                  <option>Check-in</option><option>Check-out</option><option>Mid-term Inspection</option>
+                </select>
+              </div>
+              <div><label style={lbl}>Inspection date</label><input type="date" style={inp} value={form.inspection_date??''} onChange={e=>setForm({...form,inspection_date:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Condition summary</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.condition_summary??''} onChange={e=>setForm({...form,condition_summary:e.target.value})}/></div>
+            <FileUpload label="Report document" value={form.document_url??''} onChange={url=>setForm({...form,document_url:url})} folder="pm-inventories" />
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_inventories',{...form,lease_id:form.lease_id||null})} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Save'}</button>
+          </div>
+        </Modal>
+      )}
       {modal==='inspection'&&(
         <Modal title="Schedule Inspection" onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
