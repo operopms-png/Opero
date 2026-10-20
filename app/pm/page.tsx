@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -56,12 +56,12 @@ const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
   { label: 'SHORT STAYS', items: ['Bookings','Reviews','Channels','Guest Comms','Analytics','Integrations'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms'] },
-  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms','Deadlines','Insurance'] },
+  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates','Audit Log'] },
-  { label: 'FINANCE', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages'] },
-  { label: 'REPORTS', items: ['Landlord Reports','Reports','Accounting Export'] },
+  { label: 'FINANCE', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Exchange Rates'] },
+  { label: 'REPORTS', items: ['Landlord Reports','Reports','Accounting Export','Unit Profit'] },
   { label: 'COMMS', items: ['Messages'] },
 ]
 
@@ -287,6 +287,9 @@ function PMPageInner() {
   const [keySets, setKeySets] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
   const [auditFilter, setAuditFilter] = useState<string>('All')
+  const [utilities, setUtilities] = useState<any[]>([])
+  const [insurancePolicies, setInsurancePolicies] = useState<any[]>([])
+  const [fxRates, setFxRates] = useState<any[]>([])
   const [commTemplates, setCommTemplates] = useState<any[]>([])
   const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
   const [templateDraft, setTemplateDraft] = useState('')
@@ -462,6 +465,9 @@ function PMPageInner() {
     supabase.from('pm_hmo_rooms').select('*,pm_properties(name),pm_tenants(name)').eq('user_id',userId).order('room_name',{ascending:true}).then(({data})=>setHmoRooms(data??[]))
     supabase.from('pm_keys').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setKeySets(data??[]))
     supabase.from('pm_audit_log').select('*').eq('user_id',userId).order('created_at',{ascending:false}).limit(200).then(({data})=>setAuditLogs(data??[]))
+    supabase.from('pm_utilities').select('*,pm_properties(name)').eq('user_id',userId).order('next_bill_date',{ascending:true}).then(({data})=>setUtilities(data??[]))
+    supabase.from('pm_insurance_policies').select('*,pm_properties(name)').eq('user_id',userId).order('renewal_date',{ascending:true}).then(({data})=>setInsurancePolicies(data??[]))
+    supabase.from('pm_fx_rates').select('*').eq('user_id',userId).order('currency',{ascending:true}).then(({data})=>setFxRates(data??[]))
     supabase.from('guest_comm_templates').select('*').eq('user_id',userId).then(({data})=>setCommTemplates(data??[]))
     supabase.from('str_guest_messages').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setGuestMessages(data??[]))
     supabase.from('integrations').select('*').eq('user_id',userId).single().then(({data})=>setIntegrationsRow(data??null))
@@ -616,6 +622,20 @@ function PMPageInner() {
     fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
       user_id: userId, module: 'pm', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/pm',
     }) }).catch(()=>{})
+  }
+
+  async function saveFxRate() {
+    setSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    const accountId = user ? await getAccountId(user) : undefined
+    const { error } = await supabase.from('pm_fx_rates').upsert(
+      { user_id: accountId, currency: form.currency, rate_to_gbp: Number(form.rate_to_gbp), updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,currency' }
+    )
+    setSaving(false)
+    if (error) { alert(error.message); return }
+    setModal(null); setForm({}); setEditId(null)
+    await loadAll()
   }
 
   // Integrations and channel sync handlers (ported unchanged from the Vacation Rentals page).
@@ -983,6 +1003,9 @@ function PMPageInner() {
             {tab==='Buildings'&&<button onClick={()=>{setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Building</button>}
             {tab==='Head Leases'&&<button onClick={()=>{setModal('headLease');setForm({sublet_consent:'Pending'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add head lease</button>}
             {tab==='HMO Rooms'&&<button onClick={()=>{setModal('hmoRoom');setForm({max_occupants:'1'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add room</button>}
+            {tab==='Utilities'&&<button onClick={()=>{setModal('utility');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add bill account</button>}
+            {tab==='Exchange Rates'&&<button onClick={()=>{setModal('fxRate');setForm({currency:'JMD'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Set rate</button>}
+            {tab==='Insurance'&&<button onClick={()=>{setModal('insurance');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add policy</button>}
             {tab==='Keys'&&<button onClick={()=>{setModal('keySet');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add key set</button>}
             {tab==='Reviews'&&<button onClick={()=>{setModal('review');setForm({platform:'Airbnb',responded:false});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Log Review</button>}
             {tab==='Bookings'&&<button onClick={()=>{setModal('booking');setForm({status:'confirmed'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Booking</button>}
@@ -1813,6 +1836,169 @@ function PMPageInner() {
           </div>
           )
         })()}
+
+        {tab==='Unit Profit'&&(() => {
+          const today = new Date().toISOString().slice(0,10)
+          const rateFor = (ccy?: string) => (!ccy || ccy==='GBP') ? 1 : (fxRates.find((r:any)=>r.currency===ccy)?.rate_to_gbp ?? null)
+          const rows = units.map((u:any)=>{
+            const prop = properties.find((p:any)=>p.id===u.property_id)
+            const rate = rateFor(prop?.currency)
+            const lease = leases.find((l:any)=>l.unit_id===u.id && (!l.end_date || l.end_date>=today))
+            const sameProp = units.filter((x:any)=>x.property_id===u.property_id).length || 1
+            const income = (Number(lease?.monthly_rent)||0)*(rate??1)
+            const head = headLeases.filter((h:any)=>h.property_id===u.property_id).reduce((s:number,h:any)=>s+(Number(h.rent_payable)||0),0)/sameProp
+            const costs = utilities.filter((x:any)=>x.property_id===u.property_id).reduce((s:number,x:any)=>s+(Number(x.monthly_amount)||0),0)*(rate??1)/sameProp
+            return { u, name: prop?.name ?? u.pm_properties?.name ?? '—', income, head, costs, margin: income-head-costs, rateMissing: rate==null }
+          })
+          const totals = rows.reduce((t:any,r:any)=>({income:t.income+r.income,head:t.head+r.head,costs:t.costs+r.costs,margin:t.margin+r.margin}),{income:0,head:0,costs:0,margin:0})
+          const fmt = (n:number) => `${n<0?'-':''}£${Math.abs(Math.round(n)).toLocaleString()}`
+          return (
+          <div>
+            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
+              <strong>What this is for:</strong> shows whether each unit makes money every month. Rent from the current lease is shown against the head rent paid to the landlord and the running costs (utility bills). Head rent and bills for a property are split evenly across its units. A negative margin means the unit should be reviewed. Head rent is taken as GBP; property bills are converted using the rates on the Exchange Rates tab.
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
+              {[{label:'Sublet income / mo',value:fmt(totals.income),color:'#323338'},{label:'Head rent / mo',value:fmt(totals.head),color:'#323338'},{label:'Running costs / mo',value:fmt(totals.costs),color:'#323338'},{label:'Margin / mo',value:fmt(totals.margin),color:totals.margin<0?'#DC2626':'#067647'}].map((c:any)=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div><div style={{fontSize:24,fontWeight:800,color:c.color}}>{c.value}</div></div>
+              ))}
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.4fr 1fr 110px 110px 110px 120px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Unit</span><span>Property</span><span>Sublet income</span><span>Head rent</span><span>Running costs</span><span>Margin</span>
+              </div>
+              {rows.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No units yet. Add units under Portfolio, then their leases will appear here.</div>:
+              rows.map((r:any)=>(
+                <div key={r.u.id} style={{display:'grid',gridTemplateColumns:'1.4fr 1fr 110px 110px 110px 120px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{r.u.unit_number??'Unit'}{r.rateMissing?' (no exchange rate set)':''}</span>
+                  <span>{r.name}</span>
+                  <span>{fmt(r.income)}</span>
+                  <span>{fmt(r.head)}</span>
+                  <span>{fmt(r.costs)}</span>
+                  <span style={{fontWeight:700,color:r.margin<0?'#DC2626':'#067647'}}>{fmt(r.margin)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
+
+        {tab==='Utilities'&&(
+          <div>
+            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
+              <strong>What this is for:</strong> one row per bill account on a property: electricity, gas, water, broadband and council tax. It shows who holds each account, the supplier and the next bill date, so unpaid bills are caught early. Store account references only, never passwords or payment card details.
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 110px 120px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Property</span><span>Service</span><span>Account holder</span><span>Supplier</span><span>Monthly</span><span>Next bill</span><span></span>
+              </div>
+              {utilities.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No bill accounts recorded yet</div>:
+              utilities.map((u:any)=>(
+                <div key={u.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 110px 120px 110px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{u.pm_properties?.name??'—'}</span>
+                  <span>{u.service}</span>
+                  <span>{u.account_holder??'—'}</span>
+                  <span>{u.supplier??'—'}</span>
+                  <span>{u.monthly_amount!=null?`£${Number(u.monthly_amount).toLocaleString()}`:'—'}</span>
+                  <span>{u.next_bill_date??'—'}</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('utility',{...u,monthly_amount:u.monthly_amount??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_utilities',u.id,setUtilities)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab==='Exchange Rates'&&(
+          <div>
+            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
+              <strong>What this is for:</strong> each property has a currency (GBP or JMD). Rent and costs are kept in that currency. The rate below converts them to pounds for totals and for Unit Profit. Enter how many pounds one unit of the currency is worth, and update it when the rate changes.
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 120px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Currency</span><span>1 unit is worth (GBP)</span><span>Last updated</span><span></span>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 120px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                <span style={{fontWeight:500,color:'#323338'}}>GBP</span><span>1.0000 (base currency)</span><span>—</span><span></span>
+              </div>
+              {fxRates.length===0?<div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:14}}>No rates set yet. JMD properties will show as having no exchange rate until one is added.</div>:
+              fxRates.map((r:any)=>(
+                <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 120px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{r.currency}</span>
+                  <span>{Number(r.rate_to_gbp).toFixed(4)}</span>
+                  <span>{r.updated_at?new Date(r.updated_at).toLocaleDateString('en-GB'):'—'}</span>
+                  <div><button onClick={()=>{setModal('fxRate');setForm({currency:r.currency,rate_to_gbp:String(r.rate_to_gbp)});setEditId(r.id)}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab==='Deadlines'&&(() => {
+          const now = Date.now()
+          const items = [
+            ...headLeases.flatMap((h:any)=>[{date:h.expiry_date,label:'Head lease expires',prop:h.pm_properties?.name},{date:h.break_date,label:'Head lease break date',prop:h.pm_properties?.name}]),
+            ...hmoRooms.filter((r:any)=>r.licence_expiry).map((r:any)=>({date:r.licence_expiry,label:`HMO licence (${r.room_name})`,prop:r.pm_properties?.name})),
+            ...complianceRecords.filter((c:any)=>c.expiry_date).map((c:any)=>({date:c.expiry_date,label:c.type,prop:c.pm_properties?.name??'Business'})),
+            ...strCompliance.filter((c:any)=>c.expiry_date).map((c:any)=>({date:c.expiry_date,label:c.type,prop:c.properties?.name??'Business'})),
+            ...insurancePolicies.filter((p:any)=>p.renewal_date).map((p:any)=>({date:p.renewal_date,label:`${p.policy_type} insurance renewal`,prop:p.pm_properties?.name})),
+            ...leases.filter((l:any)=>l.end_date).map((l:any)=>({date:l.end_date,label:'Tenancy ends',prop:l.pm_properties?.name})),
+            ...utilities.filter((u:any)=>u.next_bill_date).map((u:any)=>({date:u.next_bill_date,label:`${u.service} bill due`,prop:u.pm_properties?.name})),
+          ].filter((x:any)=>x.date).map((x:any)=>({...x,days:Math.round((new Date(x.date).getTime()-now)/86400000)})).sort((a:any,b:any)=>a.days-b.days)
+          return (
+          <div>
+            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
+              <strong>What this is for:</strong> one list of everything due soon across the portfolio: head lease expiry and break dates, HMO licences, compliance certificates, insurance renewals, tenancy end dates and bill due dates. Items due within 60 days, or already overdue, are shown in red. Dates come from the records in each tab, so update the source record to change a deadline.
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'130px 1.4fr 1.2fr 130px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Due</span><span>Item</span><span>Property</span><span>Days left</span>
+              </div>
+              {items.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>Nothing with a date yet</div>:
+              items.map((x:any,i:number)=>{
+                const urgent = x.days<60
+                return (
+                <div key={i} style={{display:'grid',gridTemplateColumns:'130px 1.4fr 1.2fr 130px',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span>{x.date}</span>
+                  <span style={{fontWeight:500,color:'#323338'}}>{x.label}</span>
+                  <span>{x.prop??'—'}</span>
+                  <span style={{fontWeight:700,color:urgent?'#DC2626':'#344054'}}>{x.days<0?`Overdue by ${-x.days}`:`${x.days}`}</span>
+                </div>
+                )
+              })}
+            </div>
+          </div>
+          )
+        })()}
+
+        {tab==='Insurance'&&(
+          <div>
+            <div style={{background:'#EAF3FC',border:'1px solid #C9DEF3',borderRadius:10,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#1D4E89',lineHeight:1.6}}>
+              <strong>What this is for:</strong> the insurance policies themselves: buildings, contents and public liability cover, with the insurer, policy number, premium and renewal date. Compliance tracks certificates; this tab tracks the policies that landlords and insurers ask to see. Renewals also appear on the Deadlines tab.
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 110px 120px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Property</span><span>Type</span><span>Insurer</span><span>Policy no.</span><span>Premium</span><span>Renews</span><span></span>
+              </div>
+              {insurancePolicies.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No policies recorded yet</div>:
+              insurancePolicies.map((p:any)=>(
+                <div key={p.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 110px 120px 110px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{p.pm_properties?.name??'—'}</span>
+                  <span>{p.policy_type}</span>
+                  <span>{p.insurer??'—'}</span>
+                  <span>{p.policy_number??'—'}</span>
+                  <span>{p.premium!=null?`£${Number(p.premium).toLocaleString()}`:'—'}</span>
+                  <span>{p.renewal_date??'—'}</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('insurance',{...p,premium:p.premium??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_insurance_policies',p.id,setInsurancePolicies)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {tab==='Bookings'&&(
           <div>
@@ -3017,7 +3203,10 @@ function PMPageInner() {
               <div><label style={lbl}>City</label><input style={inp} value={form.city??''} onChange={e=>setForm({...form,city:e.target.value})} placeholder="London"/></div>
               <div><label style={lbl}>Country</label><input style={inp} value={form.country??'United Kingdom'} onChange={e=>setForm({...form,country:e.target.value})}/></div>
             </div>
-            <div><label style={lbl}>Monthly Income (£)</label><input type="number" style={inp} value={form.monthly_income??''} onChange={e=>setForm({...form,monthly_income:parseFloat(e.target.value)})} placeholder="0"/></div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 140px',gap:14}}>
+              <div><label style={lbl}>Monthly income (in the property's currency)</label><input type="number" style={inp} value={form.monthly_income??''} onChange={e=>setForm({...form,monthly_income:parseFloat(e.target.value)})} placeholder="0"/></div>
+              <div><label style={lbl}>Currency</label><select style={{...inp,cursor:'pointer'}} value={form.currency??'GBP'} onChange={e=>setForm({...form,currency:e.target.value})}><option value="GBP">GBP</option><option value="JMD">JMD</option></select></div>
+            </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={{...lbl,display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>Bedrooms</label><input style={inp} value={form.bedrooms??''} onChange={e=>setForm({...form,bedrooms:e.target.value})} placeholder="e.g. 2"/></div>
               <div><label style={{...lbl,display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>Bathrooms</label><input style={inp} value={form.bathrooms??''} onChange={e=>setForm({...form,bathrooms:e.target.value})} placeholder="e.g. 1"/></div>
@@ -3427,6 +3616,82 @@ function PMPageInner() {
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
             <button onClick={()=>save('str_reviews',{guest_name:form.guest_name||null,property_id:form.property_id||null,platform:form.platform||'Airbnb',rating:form.rating===''||form.rating==null||isNaN(Number(form.rating))?null:Number(form.rating),review_date:form.review_date||null,responded:!!form.responded,review_text:form.review_text||null,response_text:form.response_text||null})} disabled={saving||(!form.guest_name&&!form.review_text)} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||(!form.guest_name&&!form.review_text)?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Log review'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='utility'&&(
+        <Modal title={editId?'Edit bill account':'Add bill account'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Service *</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.service??''} onChange={e=>setForm({...form,service:e.target.value})}>
+                  <option value="">Select…</option><option>Electricity</option><option>Gas</option><option>Water</option><option>Broadband</option><option>Council tax</option><option>Other</option>
+                </select>
+              </div>
+              <div><label style={lbl}>Monthly amount (in the property's currency)</label><input type="number" style={inp} value={form.monthly_amount??''} onChange={e=>setForm({...form,monthly_amount:e.target.value})}/></div>
+              <div><label style={lbl}>Account holder</label><input style={inp} value={form.account_holder??''} onChange={e=>setForm({...form,account_holder:e.target.value})} placeholder="e.g. Landlord, or us"/></div>
+              <div><label style={lbl}>Supplier</label><input style={inp} value={form.supplier??''} onChange={e=>setForm({...form,supplier:e.target.value})}/></div>
+              <div><label style={lbl}>Account reference</label><input style={inp} value={form.account_reference??''} onChange={e=>setForm({...form,account_reference:e.target.value})}/></div>
+              <div><label style={lbl}>Next bill date</label><input type="date" style={inp} value={form.next_bill_date??''} onChange={e=>setForm({...form,next_bill_date:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_utilities',{property_id:form.property_id||null,service:form.service,account_holder:form.account_holder||null,supplier:form.supplier||null,account_reference:form.account_reference||null,monthly_amount:form.monthly_amount===''||form.monthly_amount==null||isNaN(Number(form.monthly_amount))?null:Number(form.monthly_amount),next_bill_date:form.next_bill_date||null,notes:form.notes||null})} disabled={saving||!form.property_id||!form.service} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id||!form.service?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add bill account'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='fxRate'&&(
+        <Modal title="Exchange rate" onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Currency</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.currency??'JMD'} onChange={e=>setForm({...form,currency:e.target.value})}>
+                <option>JMD</option><option>USD</option><option>EUR</option>
+              </select>
+            </div>
+            <div><label style={lbl}>1 unit of this currency is worth (GBP) *</label><input type="number" step="0.0001" style={inp} value={form.rate_to_gbp??''} onChange={e=>setForm({...form,rate_to_gbp:e.target.value})} placeholder="e.g. 0.0048 for JMD"/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={saveFxRate} disabled={saving||!form.rate_to_gbp||Number(form.rate_to_gbp)<=0} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.rate_to_gbp?0.6:1}}>{saving?'Saving…':'Save rate'}</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal==='insurance'&&(
+        <Modal title={editId?'Edit policy':'Add insurance policy'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Type *</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.policy_type??''} onChange={e=>setForm({...form,policy_type:e.target.value})}>
+                  <option value="">Select…</option><option>Buildings</option><option>Contents</option><option>Public liability</option><option>Other</option>
+                </select>
+              </div>
+              <div><label style={lbl}>Insurer</label><input style={inp} value={form.insurer??''} onChange={e=>setForm({...form,insurer:e.target.value})}/></div>
+              <div><label style={lbl}>Policy number</label><input style={inp} value={form.policy_number??''} onChange={e=>setForm({...form,policy_number:e.target.value})}/></div>
+              <div><label style={lbl}>Premium (£)</label><input type="number" style={inp} value={form.premium??''} onChange={e=>setForm({...form,premium:e.target.value})}/></div>
+              <div><label style={lbl}>Renewal date</label><input type="date" style={inp} value={form.renewal_date??''} onChange={e=>setForm({...form,renewal_date:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_insurance_policies',{property_id:form.property_id||null,policy_type:form.policy_type,insurer:form.insurer||null,policy_number:form.policy_number||null,premium:form.premium===''||form.premium==null||isNaN(Number(form.premium))?null:Number(form.premium),renewal_date:form.renewal_date||null,notes:form.notes||null})} disabled={saving||!form.property_id||!form.policy_type} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id||!form.policy_type?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add policy'}</button>
           </div>
         </Modal>
       )}
