@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Bookings','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Bookings','Reviews','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
@@ -27,7 +27,7 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
-  { label: 'SHORT STAYS', items: ['Bookings'] },
+  { label: 'SHORT STAYS', items: ['Bookings','Reviews'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
@@ -249,6 +249,7 @@ function PMPageInner() {
   const [leases, setLeases] = useState<any[]>([])
   const [bookings, setBookings] = useState<any[]>([])
   const [strProperties, setStrProperties] = useState<any[]>([])
+  const [strReviews, setStrReviews] = useState<any[]>([])
   const [rtrChecks, setRtrChecks] = useState<any[]>([])
   const [bankChecks, setBankChecks] = useState<any[]>([])
   const [editingChecksLeaseId, setEditingChecksLeaseId] = useState<string|null>(null)
@@ -396,6 +397,7 @@ function PMPageInner() {
       const {data:b}=await supabase.from('bookings').select('*, properties(name)').in('property_id',ids).order('check_in',{ascending:false})
       setBookings(b??[])
     })
+    supabase.from('str_reviews').select('*, properties(name)').eq('user_id',userId).order('review_date',{ascending:false}).then(({data})=>setStrReviews(data??[]))
     supabase.from('pm_inventories').select('*,pm_properties(name),pm_leases(pm_tenants(name))').eq('user_id',userId).order('inspection_date',{ascending:false}).then(({data})=>setInventories(data??[]))
     fetch('/api/estate-news').then(r=>r.json()).then(d=>setPmNews(d?.news??[])).catch(()=>{})
     supabase.from('pm_vacancies').select('*,pm_properties(name)').eq('user_id',userId).order('available_date',{ascending:true}).then(({data})=>setVacancies(data??[]))
@@ -791,6 +793,7 @@ function PMPageInner() {
             {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
             {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
             {tab==='Buildings'&&<button onClick={()=>{setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Building</button>}
+            {tab==='Reviews'&&<button onClick={()=>{setModal('review');setForm({platform:'Airbnb',responded:false});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Log Review</button>}
             {tab==='Bookings'&&<button onClick={()=>{setModal('booking');setForm({status:'confirmed'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Booking</button>}
             {tab==='Leases'&&<button onClick={()=>{setModal('lease');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Lease</button>}
             {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
@@ -1134,6 +1137,49 @@ function PMPageInner() {
         )}
 
         {docsTenant&&<TenantDocuments kind="pm" tenant={docsTenant} onClose={()=>setDocsTenant(null)} onChanged={async()=>{const {data}=await supabase.from('pm_documents').select('*,pm_properties(name)').eq('user_id',docsTenant.user_id).order('created_at',{ascending:false});setDocuments(data??[])}} />}
+
+        {tab==='Reviews'&&(() => {
+          const rated = strReviews.filter((r:any)=>r.rating!=null)
+          const avg = rated.length ? rated.reduce((s:number,r:any)=>s+Number(r.rating),0)/rated.length : 0
+          const needs = strReviews.filter((r:any)=>!r.responded && r.rating!=null && Number(r.rating)<=3)
+          return (
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
+              {[{label:'Average rating',value:avg?`${avg.toFixed(1)} / 5`:'—',color:'#323338'},{label:'Total reviews',value:strReviews.length,color:'#323338'},{label:'Needs response',value:needs.length,color:needs.length?'#DC2626':'#323338'}].map((c:any)=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div><div style={{fontSize:28,fontWeight:800,color:c.color}}>{c.value}</div></div>
+              ))}
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 110px 110px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                <span>Guest</span><span>Property</span><span>Rating</span><span>Platform</span><span>Date</span><span></span>
+              </div>
+              {strReviews.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No reviews logged yet</div>:
+              strReviews.map((r:any)=>(
+                <div key={r.id} style={{borderBottom:'1px solid #F2F4F7'}}>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 100px 110px 110px 110px',padding:'14px 20px',fontSize:13,color:'#344054',alignItems:'center'}}>
+                    <span style={{fontWeight:500,color:'#323338'}}>{r.guest_name||'Guest'}</span>
+                    <span>{r.properties?.name??'—'}</span>
+                    <span>{r.rating!=null?`${r.rating} / 5`:'—'}</span>
+                    <span>{r.platform??'—'}</span>
+                    <span>{r.review_date??'—'}</span>
+                    <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                      <button onClick={()=>openEdit('review',{...r,property_id:r.property_id??'',rating:r.rating!=null?String(r.rating):''})} style={{fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                      <button onClick={()=>del('str_reviews',r.id,setStrReviews)} style={{fontSize:11,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                    </div>
+                  </div>
+                  {(r.review_text||r.response_text||(!r.responded&&r.rating!=null&&Number(r.rating)<=3))&&(
+                    <div style={{padding:'0 20px 14px',fontSize:12,color:'#667085'}}>
+                      {!r.responded&&r.rating!=null&&Number(r.rating)<=3&&<span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:'#FEE2E2',color:'#DC2626',marginRight:8}}>NEEDS RESPONSE</span>}
+                      {r.review_text&&<div style={{marginTop:6,color:'#344054',fontSize:13}}>{r.review_text}</div>}
+                      {r.response_text&&<div style={{marginTop:6}}><strong>Your response:</strong> {r.response_text}</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          )
+        })()}
 
         {tab==='Bookings'&&(
           <div>
@@ -2628,6 +2674,32 @@ function PMPageInner() {
           </div>
         </Modal>
       )}
+      {modal==='review'&&(
+        <Modal title={editId?'Edit Review':'Log Review'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Guest name</label><input style={inp} value={form.guest_name??''} onChange={e=>setForm({...form,guest_name:e.target.value})}/></div>
+              <div><label style={lbl}>Property</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                  <option value="">Select property…</option>
+                  {strProperties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Platform</label><select style={{...inp,cursor:'pointer'}} value={form.platform??'Airbnb'} onChange={e=>setForm({...form,platform:e.target.value})}><option>Airbnb</option><option>Booking.com</option><option>VRBO</option><option>Direct</option><option>Other</option></select></div>
+              <div><label style={lbl}>Rating (out of 5)</label><input type="number" min="1" max="5" step="0.5" style={inp} value={form.rating??''} onChange={e=>setForm({...form,rating:e.target.value})}/></div>
+              <div><label style={lbl}>Review date</label><input type="date" style={inp} value={form.review_date??''} onChange={e=>setForm({...form,review_date:e.target.value})}/></div>
+              <div><label style={lbl}>Responded?</label><select style={{...inp,cursor:'pointer'}} value={form.responded?'yes':'no'} onChange={e=>setForm({...form,responded:e.target.value==='yes'})}><option value="no">Not yet</option><option value="yes">Yes</option></select></div>
+            </div>
+            <div><label style={lbl}>What the guest said</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.review_text??''} onChange={e=>setForm({...form,review_text:e.target.value})}/></div>
+            <div><label style={lbl}>Your response</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.response_text??''} onChange={e=>setForm({...form,response_text:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('str_reviews',{guest_name:form.guest_name||null,property_id:form.property_id||null,platform:form.platform||'Airbnb',rating:form.rating===''||form.rating==null||isNaN(Number(form.rating))?null:Number(form.rating),review_date:form.review_date||null,responded:!!form.responded,review_text:form.review_text||null,response_text:form.response_text||null})} disabled={saving||(!form.guest_name&&!form.review_text)} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||(!form.guest_name&&!form.review_text)?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Log review'}</button>
+          </div>
+        </Modal>
+      )}
+
       {modal==='booking'&&(
         <Modal title={editId?'Edit Booking':'New Booking'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
