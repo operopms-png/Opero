@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 
-const C = { ink: '#191815', brown: '#5A4320', gold: '#A8862E', goldT: '#8E6B1F', gold2: '#D9B866', cream: '#FBF4E6', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
+const C = { ink: '#191815', brown: '#5A4320', gold: '#2F6DB5', goldT: '#8E6B1F', gold2: '#D9B866', cream: '#EAF3FC', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
 const MOD: Record<string, string> = { vr: '#B08A2E', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
 const TONE = { red: { c: '#B42318', bg: '#FDECEC' }, amber: { c: '#9A6400', bg: '#FFF4DE' }, blue: { c: '#1F5BB0', bg: '#E8F0FB' } }
 const P: Record<string, string> = {
@@ -88,7 +88,7 @@ export default function Dashboard() {
         .dash-link:hover{background:#FFFCF5}`}</style>
 
       {/* Band — Sangsters cream & gold */}
-      <div style={{ background: 'linear-gradient(135deg,#FBF4E6 0%,#F3E6C8 100%)', borderBottom: '1px solid #EADBB8', padding: '24px 30px 22px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg,#EAF3FC 0%,#C9DEF3 100%)', borderBottom: '1px solid #C9DEF3', padding: '24px 30px 22px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -60, top: -90, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(168,134,46,.22)' }} />
         <div style={{ position: 'absolute', right: 40, top: -150, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(168,134,46,.14)' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap', position: 'relative' }}>
@@ -99,19 +99,19 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ display: 'inline-flex', border: '1px solid #D9C69A', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
-              {RANGES.map(([k, l], i) => <button key={k} onClick={() => setRange(k)} style={{ padding: '8px 14px', border: 'none', borderLeft: i ? '1px solid #EADBB8' : 'none', background: range === k ? C.gold : '#fff', color: range === k ? '#fff' : C.brown, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>)}
+              {RANGES.map(([k, l], i) => <button key={k} onClick={() => setRange(k)} style={{ padding: '8px 14px', border: 'none', borderLeft: i ? '1px solid #C9DEF3' : 'none', background: range === k ? C.gold : '#fff', color: range === k ? '#fff' : C.brown, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>)}
             </div>
             <button onClick={() => load()} title="Refresh" aria-label="Refresh" style={{ width: 36, height: 36, borderRadius: 8, border: '1px solid #D9C69A', background: '#fff', color: C.goldT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Ico k="refresh" s={15} /></button>
           </div>
         </div>
         <div className="dash-hero" style={{ marginTop: 20, position: 'relative' }}>
           {(d ? hero : Array.from({ length: 5 })).map((h: any, i) => h ? (
-            <Link key={h.k} href={h.href} className="dash-link" style={{ background: '#fff', border: '1px solid #EADBB8', borderRadius: 10, padding: '14px 16px', textDecoration: 'none', color: C.text, boxShadow: '0 1px 0 rgba(90,67,32,.04)' }}>
+            <Link key={h.k} href={h.href} className="dash-link" style={{ background: '#fff', border: '1px solid #C9DEF3', borderRadius: 10, padding: '14px 16px', textDecoration: 'none', color: C.text, boxShadow: '0 1px 0 rgba(90,67,32,.04)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: C.goldT, fontWeight: 600 }}><Ico k={h.k} s={14} />{h.l}</div>
               <div style={{ fontSize: 30, fontWeight: 800, color: C.ink, marginTop: 4, letterSpacing: '-.02em' }}>{h.n}</div>
               <div style={{ fontSize: 11.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minHeight: 15 }}>{h.sub || (h.n ? '' : 'None ' + rangeName)}</div>
             </Link>
-          ) : <div key={i} style={{ background: 'rgba(255,255,255,.6)', border: '1px solid #EADBB8', borderRadius: 10, height: 96 }} />)}
+          ) : <div key={i} style={{ background: 'rgba(255,255,255,.6)', border: '1px solid #C9DEF3', borderRadius: 10, height: 96 }} />)}
         </div>
       </div>
 

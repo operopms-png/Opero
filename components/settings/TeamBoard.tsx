@@ -7,7 +7,7 @@ import { normalizeRole } from '@/lib/useRole'
 // Team Management in the CRM board style: members grouped by role,
 // click the role pill to change it, open a member to edit access.
 export const ROLE_COLORS: Record<string, string> = {
-  'Admin': '#D0AE4C',
+  'Admin': '#2F6DB5',
   'Vacation Rental Team': '#00C875',
   'Property Management Team': '#579BFC',
   'Estate Agency Team': '#FDAB3D',
@@ -15,7 +15,7 @@ export const ROLE_COLORS: Record<string, string> = {
   'Cleaning Team': '#66CCFF',
   'Maintenance Team': '#FF642E',
   'Viewer': '#A1B4C6',
-  'Partner': '#8A6B2E',
+  'Partner': '#1D4E89',
 }
 const MOD_LABEL: Record<string, string> = { str: 'Vacation Rentals', pm: 'Property Management', ea: 'Estate Agency', dev: 'Developments', sc: 'Staff Centre', aipm: 'AI Property Manager', invest: 'Deal Analyser' }
 const NAME_W = 300
@@ -84,7 +84,7 @@ export default function TeamBoard({ me, myRole, team, roles, propertyCount, onIn
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
         .tm-row:hover, .tm-row:hover .tm-sticky { background: ${BRAND.hover} !important }
-        .tm-editable:hover { background: #FBF4E6 !important }
+        .tm-editable:hover { background: #EAF3FC !important }
         .tm-tb:hover { background: ${BRAND.hover} }
         @media (max-width: 900px) { .tm-tiles { grid-template-columns: repeat(2, minmax(0,1fr)) !important } }
       `}</style>
@@ -97,8 +97,8 @@ export default function TeamBoard({ me, myRole, team, roles, propertyCount, onIn
 
       <div className="tm-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12, marginBottom: 18 }}>
         {tiles.map(t => (
-          <div key={t.l} style={{ border: `1px solid ${t.hl ? '#EADBB8' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', borderRadius: 8, padding: 16 }}>
-            <div style={{ fontSize: 12.5, color: t.hl ? '#8A6B2E' : BRAND.muted }}>{t.l}</div>
+          <div key={t.l} style={{ border: `1px solid ${t.hl ? '#C9DEF3' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#EAF3FC,#C9DEF3)' : '#fff', borderRadius: 8, padding: 16 }}>
+            <div style={{ fontSize: 12.5, color: t.hl ? '#1D4E89' : BRAND.muted }}>{t.l}</div>
             <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: t.hl ? BRAND.brown : BRAND.ink }}>{t.v}</div>
           </div>
         ))}
@@ -179,7 +179,7 @@ function Row({ m, color, roles, propertyCount, onEdit, onDelete, onRoleChange }:
         <div onClick={() => !m.you && onEdit(m)} style={{ ...cell, width: NAME_W, gap: 10, paddingLeft: 16, cursor: m.you ? 'default' : 'pointer', boxShadow: '2px 0 3px -2px rgba(0,0,0,0.08)' }}>
           <Avatar name={m.name || m.email} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name || m.email}</span>
-          {m.you && <span style={{ fontSize: 11.5, color: BRAND.brown, background: BRAND.selected, border: '1px solid #EADBB8', borderRadius: 10, padding: '0 8px' }}>You</span>}
+          {m.you && <span style={{ fontSize: 11.5, color: BRAND.brown, background: BRAND.selected, border: '1px solid #C9DEF3', borderRadius: 10, padding: '0 8px' }}>You</span>}
           {!m.you && <span style={{ marginLeft: 'auto', marginRight: 10, flexShrink: 0, fontSize: 12, color: BRAND.goldDark, border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '2px 8px', background: '#fff', whiteSpace: 'nowrap' }}>✎ Edit access</span>}
         </div>
       </div>

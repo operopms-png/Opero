@@ -9,7 +9,7 @@ import MkPanel from '@/components/marketing/MkPanel'
 // Staff Centre → Tasks: assign tasks to the team. Each person sees theirs on their staff dashboard.
 export default function TasksPage() {
   const store = useMultiBoards([TASKS_BOARD, TEAM_SOURCE], {
-    refs: rows => ({ team: (rows.team ?? []).filter(t => t.name?.trim()).map(t => ({ value: t.id, label: t.name, color: '#D0AE4C' })).sort((a, b) => a.label.localeCompare(b.label)) }),
+    refs: rows => ({ team: (rows.team ?? []).filter(t => t.name?.trim()).map(t => ({ value: t.id, label: t.name, color: '#2F6DB5' })).sort((a, b) => a.label.localeCompare(b.label)) }),
   })
   const [open, setOpen] = useState<string | null>(null)
   return (

@@ -25,7 +25,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 
 export default function HrPage() {
   const store = useMultiBoards(HR_BOARDS, {
-    refs: rows => ({ employees: (rows.employees ?? []).map(e => ({ value: e.id, label: e.full_name, color: '#D0AE4C' })).sort((a, b) => a.label.localeCompare(b.label)) }),
+    refs: rows => ({ employees: (rows.employees ?? []).map(e => ({ value: e.id, label: e.full_name, color: '#2F6DB5' })).sort((a, b) => a.label.localeCompare(b.label)) }),
     patch: (k, row, p) => {
       // keep the "done" dates filled in automatically
       if (k === 'onboarding' && 'status' in p) return { ...p, completed_date: p.status === 'Complete' ? (row.completed_date ?? today()) : null }
@@ -120,7 +120,7 @@ function Dashboard({ store, go, openItem }: { store: ReturnType<typeof useMultiB
   const empty = (t: string) => <div style={{ padding: 24, color: BRAND.muted, fontSize: 13.5, textAlign: 'center' }}>{t}</div>
   return (
     <div style={{ flex: 1, overflow: 'auto' }}>
-      <div style={{ height: 120, background: `linear-gradient(135deg, ${BRAND.selected}, #F3E6C8)` }} />
+      <div style={{ height: 120, background: `linear-gradient(135deg, ${BRAND.selected}, #C9DEF3)` }} />
       <div style={{ padding: '0 32px 40px', marginTop: -40 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 22 }}>
           <div style={{ width: 80, height: 80, borderRadius: 10, background: '#fff', border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', overflow: 'hidden', flexShrink: 0 }}><img src="/novouq-logo.jpg" alt="NOVOURQ" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
@@ -131,8 +131,8 @@ function Dashboard({ store, go, openItem }: { store: ReturnType<typeof useMultiB
         </div>
         <div className="hr-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0,1fr))', gap: 12, marginBottom: 18 }}>
           {tiles.map(t => (
-            <button key={t.l} onClick={() => go(t.k)} style={{ textAlign: 'left', border: `1px solid ${t.hl ? '#EADBB8' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', borderRadius: 8, padding: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
-              <div style={{ fontSize: 12.5, color: t.hl ? '#8A6B2E' : BRAND.muted }}>{t.l}</div>
+            <button key={t.l} onClick={() => go(t.k)} style={{ textAlign: 'left', border: `1px solid ${t.hl ? '#C9DEF3' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#EAF3FC,#C9DEF3)' : '#fff', borderRadius: 8, padding: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <div style={{ fontSize: 12.5, color: t.hl ? '#1D4E89' : BRAND.muted }}>{t.l}</div>
               <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: t.hl ? BRAND.brown : BRAND.ink }}>{t.v}</div>
             </button>
           ))}

@@ -5,13 +5,13 @@
 import React from 'react'
 
 export const C = {
-  gold: '#D0AE4C', goldDark: '#A8862E', brown: '#624920', cream: '#FBF4E6', creamLine: '#EADBB8',
+  gold: '#2F6DB5', goldDark: '#2F6DB5', brown: '#1D4E89', cream: '#EAF3FC', creamLine: '#C9DEF3',
   ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', hover: '#F5F6F8',
   green: '#00C875', orange: '#FDAB3D', red: '#DF2F4A', blue: '#579BFC', purple: '#9D50DD', grey: '#C4C4C4',
 }
 
 export const MODULE_COLOR: Record<string, string> = {
-  str: '#D0AE4C', pm: '#00C875', ea: '#FDAB3D', dev: '#9D50DD', staff: '#624920', other: '#9699A6',
+  str: '#2F6DB5', pm: '#00C875', ea: '#FDAB3D', dev: '#9D50DD', staff: '#1D4E89', other: '#9699A6',
 }
 
 export const btn = (kind: 'gold' | 'ghost' | 'danger' = 'gold', small = false): React.CSSProperties => ({
@@ -43,7 +43,7 @@ export function CrmHeader({ title, subtitle, actions, tabs, tab, onTab, below, t
 }) {
   const blue = theme === 'blue'
   return (
-    <div style={{ padding: tabs ? '22px 28px 0' : '22px 28px', background: blue ? BLUE.grad : 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + (blue ? BLUE.line : C.creamLine), flexShrink: 0 }}>
+    <div style={{ padding: tabs ? '22px 28px 0' : '22px 28px', background: blue ? BLUE.grad : 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + (blue ? BLUE.line : C.creamLine), flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
           <h1 style={{ fontSize: 26, fontWeight: 500, color: blue ? BLUE.title : C.brown, margin: '0 0 2px' }}>{title}</h1>
@@ -76,7 +76,7 @@ export function Body({ children, style }: { children: React.ReactNode; style?: R
 export function Stat({ label: l, value, sub, highlight, theme }: { label: string; value: React.ReactNode; sub?: React.ReactNode; highlight?: boolean; theme?: 'blue' }) {
   const blue = theme === 'blue'
   return (
-    <div style={{ background: highlight ? (blue ? BLUE.grad : 'linear-gradient(135deg,#FBF4E6,#F3E6C8)') : '#fff', border: '1px solid ' + (highlight ? (blue ? BLUE.line : C.creamLine) : C.row), borderRadius: 8, padding: 16 }}>
+    <div style={{ background: highlight ? (blue ? BLUE.grad : 'linear-gradient(135deg,#EAF3FC,#C9DEF3)') : '#fff', border: '1px solid ' + (highlight ? (blue ? BLUE.line : C.creamLine) : C.row), borderRadius: 8, padding: 16 }}>
       <div style={{ fontSize: 13, color: highlight ? (blue ? BLUE.sub : '#8A7248') : C.muted, marginBottom: 6 }}>{l}</div>
       <div style={{ fontSize: 26, fontWeight: 600, color: highlight ? (blue ? BLUE.title : C.brown) : C.ink, lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: C.faint, marginTop: 4 }}>{sub}</div>}

@@ -127,7 +127,7 @@ function Home({ mk, onOpen, onDashboard, onScripts }: { mk: Mk; onOpen: (k: stri
   const td: React.CSSProperties = { padding: '11px 16px', borderBottom: `1px solid ${BRAND.rowBorder}` }
   return (
     <div style={{ flex: 1, overflow: 'auto' }}>
-      <div style={{ height: 130, background: `linear-gradient(135deg, ${BRAND.selected}, #F3E6C8)` }} />
+      <div style={{ height: 130, background: `linear-gradient(135deg, ${BRAND.selected}, #C9DEF3)` }} />
       <div style={{ padding: '0 40px 40px', marginTop: -44 }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18 }}>
           <div style={{ width: 88, height: 88, borderRadius: 10, background: '#fff', border: '4px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', overflow: 'hidden', flexShrink: 0 }}>

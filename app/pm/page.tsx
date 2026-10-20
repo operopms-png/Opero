@@ -124,7 +124,7 @@ function FileUpload({ label, value, onChange, folder }: { label: string; value: 
           {uploading ? 'Uploading…' : value ? 'Replace file' : 'Upload file (PDF, JPG, PNG)'}
           <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handle} style={{ display:'none' }} />
         </label>
-        {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#A8862E', fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
+        {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#2F6DB5', fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
       </div>
       {value && <div style={{ fontSize:11, color:'#10B981', marginTop:4 }}>✓ File uploaded</div>}
     </div>
@@ -170,7 +170,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           <div style={{display:'flex',gap:16,alignItems:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Inflows</span></div>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#EF4444',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Outflows</span></div>
-            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#A8862E',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#2F6DB5',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
           </div>
         </div>
         <svg viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:H,overflow:'visible'}}>
@@ -186,12 +186,12 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           <path d={line(cfData.map(d=>d.inflow))+' L'+x(11)+' '+(H-PAD)+' L'+x(0)+' '+(H-PAD)+' Z'} fill='#10B98115'/>
           <path d={line(cfData.map(d=>d.inflow))} fill='none' stroke='#10B981' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
           <path d={line(cfData.map(d=>d.outflow))} fill='none' stroke='#EF4444' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#A8862E' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
+          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#2F6DB5' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
           {cfData.map((d,i)=>(
             <g key={i}>
               <circle cx={x(i)} cy={y(d.inflow)} r='3' fill='#10B981'/>
               <circle cx={x(i)} cy={y(d.outflow)} r='3' fill='#EF4444'/>
-              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#A8862E'/>
+              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#2F6DB5'/>
             </g>
           ))}
         </svg>
@@ -664,7 +664,7 @@ function PMPageInner() {
         </div>
         <h2 style={{fontSize:22,fontWeight:700,color:'#323338',marginBottom:8}}>Property Management</h2>
         <p style={{fontSize:14,color:'#667085',lineHeight:1.6,marginBottom:24}}>This module requires the Property Management add-on at £99/month.</p>
-        <a href="/modules" style={{display:'inline-block',background:'#A8862E',color:'#fff',borderRadius:8,padding:'11px 24px',fontSize:14,fontWeight:600,textDecoration:'none'}}>Unlock Module →</a>
+        <a href="/modules" style={{display:'inline-block',background:'#2F6DB5',color:'#fff',borderRadius:8,padding:'11px 24px',fontSize:14,fontWeight:600,textDecoration:'none'}}>Unlock Module →</a>
       </div>
     </div>
   )
@@ -701,21 +701,21 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             {tab==='Properties'&&(!isBundle&&properties.length >= propertyLimit
-              ? <button onClick={()=>setShowUpgrade(true)} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>Add more properties</button>
-              : <button onClick={()=>{setModal('property');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
-            {tab==='Landlords'&&<button onClick={()=>{setModal('landlord');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Landlord</button>}
-            {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
-            {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
-            {tab==='Buildings'&&<button onClick={()=>{setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(true)}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Building</button>}
-            {tab==='Leases'&&<button onClick={()=>{setModal('lease');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Lease</button>}
-            {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
-            {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
-            {tab==='Cleaning'&&<button onClick={()=>{setModal('cleaning');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule Cleaning</button>}
-            {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
-            {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
-            {tab==='Documents'&&<button onClick={()=>{setModal('document');setForm({})}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Document</button>}
-            {tab==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Expense</button>}
-            {tab==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Bank Account</button>}
+              ? <button onClick={()=>setShowUpgrade(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>Add more properties</button>
+              : <button onClick={()=>{setModal('property');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
+            {tab==='Landlords'&&<button onClick={()=>{setModal('landlord');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Landlord</button>}
+            {tab==='Tenants'&&<button onClick={()=>{setModal('tenant');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Tenant</button>}
+            {tab==='Units'&&<button onClick={()=>{setModal('unit');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Unit</button>}
+            {tab==='Buildings'&&<button onClick={()=>{setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Building</button>}
+            {tab==='Leases'&&<button onClick={()=>{setModal('lease');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Lease</button>}
+            {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
+            {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
+            {tab==='Cleaning'&&<button onClick={()=>{setModal('cleaning');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule Cleaning</button>}
+            {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
+            {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?PROPERTY_COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
+            {tab==='Documents'&&<button onClick={()=>{setModal('document');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Document</button>}
+            {tab==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Expense</button>}
+            {tab==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Bank Account</button>}
           </div>
         </div>
 
@@ -744,10 +744,10 @@ function PMPageInner() {
                 {label:'Open Maintenance',value:openMaintenance.length,sub:`${maintenance.filter(m=>m.priority==='urgent').length} urgent`},
                 {label:'Inspections Scheduled',value:inspections.filter(i=>i.status==='scheduled').length},
               ].map((c:any)=>(
-                <div key={c.label} style={{background:c.dark?'linear-gradient(135deg,#FBF4E6,#F3E6C8)':'#fff',border:'1px solid '+(c.dark?'#EADBB8':'#E4E7EC'),borderRadius:12,padding:'20px 24px'}}>
-                  <div style={{fontSize:11,fontWeight:600,color:c.dark ? '#8A6B2E':'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
-                  <div style={{fontSize:26,fontWeight:800,color:c.amber?'#F59E0B':c.dark ? '#624920':'#323338',letterSpacing:'-0.02em'}}>{c.value}</div>
-                  <div style={{fontSize:12,color:c.dark ? '#8A6B2E':'#98A2B3',marginTop:4}}>{c.sub}</div>
+                <div key={c.label} style={{background:c.dark?'linear-gradient(135deg,#EAF3FC,#C9DEF3)':'#fff',border:'1px solid '+(c.dark?'#C9DEF3':'#E4E7EC'),borderRadius:12,padding:'20px 24px'}}>
+                  <div style={{fontSize:11,fontWeight:600,color:c.dark ? '#1D4E89':'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
+                  <div style={{fontSize:26,fontWeight:800,color:c.amber?'#F59E0B':c.dark ? '#1D4E89':'#323338',letterSpacing:'-0.02em'}}>{c.value}</div>
+                  <div style={{fontSize:12,color:c.dark ? '#1D4E89':'#98A2B3',marginTop:4}}>{c.sub}</div>
                 </div>
               ))}
             </div>
@@ -784,13 +784,13 @@ function PMPageInner() {
                 <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>Occupancy Trends</div>
                 <div style={{display:'flex',gap:16,fontSize:11,color:'#667085',marginBottom:12}}>
                   <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#E8D29A',display:'inline-block',borderRadius:2}}></span>Previous</span>
-                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#A8862E',display:'inline-block',borderRadius:2}}></span>Current</span>
+                  <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,background:'#2F6DB5',display:'inline-block',borderRadius:2}}></span>Current</span>
                 </div>
                 <svg viewBox="0 0 300 80" style={{width:'100%'}}>
                   {occupancyTrend.map((m,i)=>{
                     const x = 10+(i*47)
                     const h = Math.max(2,(m.occupancyPct/100)*60)
-                    return <rect key={m.label+i} x={x} y={75-h} width={30} height={h} rx="3" fill={i===occupancyTrend.length-1?'#A8862E':'#E8D29A'}/>
+                    return <rect key={m.label+i} x={x} y={75-h} width={30} height={h} rx="3" fill={i===occupancyTrend.length-1?'#2F6DB5':'#E8D29A'}/>
                   })}
                   {occupancyTrend.map((m,i)=>(<text key={m.label+i} x={15+(i*47)} y={79} fontSize="8" fill="#98A2B3">{m.label}</text>))}
                 </svg>
@@ -866,7 +866,7 @@ function PMPageInner() {
                   <span>£{(p.monthly_income??0).toLocaleString()}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p.status==='active'?'#D1FAE5':'#F3F4F6',color:p.status==='active'?'#059669':'#6B7280',display:'inline-block',width:'fit-content'}}>{p.status}</span>
                   <div style={{display:'flex',gap:8}}>
-                    <button onClick={()=>openEdit('property',p)} style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>openEdit('property',p)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                     <button onClick={()=>del('pm_properties',p.id,setProperties)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
                   </div>
                 </div>
@@ -898,7 +898,7 @@ function PMPageInner() {
 
         {tab==='Buildings'&&(
           <div>
-            {showAddBuilding&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+            {showAddBuilding&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editingBuildingId?'Edit Building':'Add Building'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
                 <div><label style={lbl}>Name *</label><input style={inp} value={buildingForm.name} onChange={e=>setBuildingForm({...buildingForm,name:e.target.value})} placeholder="e.g. Riverside Court"/></div>
@@ -918,7 +918,7 @@ function PMPageInner() {
                   }
                   setEditingBuildingId(null);setBuildingForm({name:'',address:'',total_units:'',notes:''});setShowAddBuilding(false)
                   await loadAll()
-                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editingBuildingId?'Save Changes':'Add Building'}</button>
+                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editingBuildingId?'Save Changes':'Add Building'}</button>
                 <button onClick={()=>{setShowAddBuilding(false);setEditingBuildingId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -931,7 +931,7 @@ function PMPageInner() {
                     <div style={{fontSize:12,color:'#667085',marginTop:2}}>{b.address||'—'}</div>
                   </div>
                   <span style={{fontSize:13,color:'#667085'}}>{units.filter((u:any)=>u.building_id===b.id).length}{b.total_units?` / ${b.total_units}`:''} units</span>
-                  <button onClick={()=>{setEditingBuildingId(b.id);setBuildingForm({name:b.name??'',address:b.address??'',total_units:b.total_units!=null?String(b.total_units):'',notes:b.notes??''});setShowAddBuilding(true)}} style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                  <button onClick={()=>{setEditingBuildingId(b.id);setBuildingForm({name:b.name??'',address:b.address??'',total_units:b.total_units!=null?String(b.total_units):'',notes:b.notes??''});setShowAddBuilding(true)}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                   <button onClick={()=>del('pm_buildings',b.id,setBuildings)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
                 </div>
               ))}
@@ -944,7 +944,7 @@ function PMPageInner() {
             {landlords.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No landlords yet</div>:
             landlords.map(l=>(
               <div key={l.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
-                <div style={{width:40,height:40,borderRadius:'50%',background:'#FBF4E6',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:'#A8862E',flexShrink:0}}>{l.name.charAt(0)}</div>
+                <div style={{width:40,height:40,borderRadius:'50%',background:'#EAF3FC',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:'#2F6DB5',flexShrink:0}}>{l.name.charAt(0)}</div>
                 <div style={{flex:1}}>
                   <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{l.name}</div>
                   <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[l.email,l.phone].filter(Boolean).join(' · ')}</div>
@@ -953,12 +953,12 @@ function PMPageInner() {
                 {l.portal_user_id?(
                   <>
                     <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Portal Active</span>
-                    <a href={`/pm-owner-portal?landlord_id=${l.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
+                    <a href={`/pm-owner-portal?landlord_id=${l.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
                   </>
                 ):(
-                  <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
+                  <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
                 )}
-                <button onClick={()=>openEdit('landlord',l)} style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                <button onClick={()=>openEdit('landlord',l)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_landlords',l.id,setLandlords)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
             ))}
@@ -978,10 +978,10 @@ function PMPageInner() {
                 </div>
                 <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:t.status==='active'?'#D1FAE5':'#F3F4F6',color:t.status==='active'?'#059669':'#6B7280'}}>{t.status}</span>
                 {t.portal_user_id
-                  ? <a href={`/pm-tenant-portal?tenant_id=${t.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
-                  : <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>}
+                  ? <a href={`/pm-tenant-portal?tenant_id=${t.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
+                  : <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>}
                 <button onClick={()=>setDocsTenant(t)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>📁 Documents ({documents.filter((d:any)=>d.tenant_id===t.id).length})</button>
-                <button onClick={()=>openEdit('tenant',t)} style={{fontSize:12,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                <button onClick={()=>openEdit('tenant',t)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_tenants',t.id,setTenants)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
             ))}
@@ -1027,7 +1027,7 @@ function PMPageInner() {
                   ):(
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       {partiallySigned&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>Partial</span>}
-                      <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${l.sign_token}`);alert('Signing link copied')}} style={{fontSize:11.5,fontWeight:600,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
+                      <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${l.sign_token}`);alert('Signing link copied')}} style={{fontSize:11.5,fontWeight:600,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
                     </div>
                   )}
                 </div>
@@ -1071,8 +1071,8 @@ function PMPageInner() {
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             {maintenance.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No maintenance tickets</div>:
             maintenance.map(m=>{
-              const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#A8862E'
-              const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#FBF4E6'
+              const priColor=m.priority==='urgent'?'#EF4444':m.priority==='high'?'#F59E0B':'#2F6DB5'
+              const priBg=m.priority==='urgent'?'#FEE2E2':m.priority==='high'?'#FEF3C7':'#EAF3FC'
               return(
                 <div key={m.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr auto auto auto auto',alignItems:'center',gap:16}}>
                   <div>
@@ -1133,12 +1133,12 @@ function PMPageInner() {
           <div>
             <div style={{display:'flex',gap:8,marginBottom:20}}>
               {(['property','business'] as const).map(s=>(
-                <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #A8862E':'1px solid #D0D5DD',background:complianceScope===s?'#D0AE4C18':'#fff',color:complianceScope===s?'#A8862E':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance (from landlords)':'Business Compliance (to operate)'}</button>
+                <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #2F6DB5':'1px solid #D0D5DD',background:complianceScope===s?'#D0AE4C18':'#fff',color:complianceScope===s?'#2F6DB5':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance (from landlords)':'Business Compliance (to operate)'}</button>
               ))}
             </div>
 
             {showAddCompliance&&(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
                 <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
                   <div><label style={lbl}>Scope</label>
@@ -1174,7 +1174,7 @@ function PMPageInner() {
                     if(error){alert(error.message);return}
                     setShowAddCompliance(false)
                     await loadAll()
-                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
+                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
                   <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
@@ -1250,7 +1250,7 @@ function PMPageInner() {
 
         {tab==='Expenses'&&(
           <div>
-            <div style={{background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',border:'1px solid #EADBB8',borderRadius:12,padding:24,marginBottom:20,color:'#624920',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
                 <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
@@ -1267,7 +1267,7 @@ function PMPageInner() {
               ))}
             </div>
             {showAddExpense&&(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
                 <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add expense</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Cleaning supplies" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -1279,7 +1279,7 @@ function PMPageInner() {
                   <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={addExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
+                  <button onClick={addExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
                   <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
@@ -1311,7 +1311,7 @@ function PMPageInner() {
           <div>
             <div style={{display:'flex',gap:4,marginBottom:20,background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:4,width:'fit-content'}}>
               {['Overview','Bank Accounts','Transactions','Reconciliation','Cash Flow'].map(t=>(
-                <button key={t} onClick={()=>setBankingTab(t)} style={{padding:'7px 14px',borderRadius:7,border:'none',background:bankingTab===t?'#A8862E':'transparent',color:bankingTab===t?'#fff':'#344054',fontSize:13,fontWeight:bankingTab===t?600:400,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+                <button key={t} onClick={()=>setBankingTab(t)} style={{padding:'7px 14px',borderRadius:7,border:'none',background:bankingTab===t?'#2F6DB5':'transparent',color:bankingTab===t?'#fff':'#344054',fontSize:13,fontWeight:bankingTab===t?600:400,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
               ))}
             </div>
             {bankingTab==='Overview'&&(
@@ -1335,7 +1335,7 @@ function PMPageInner() {
             {bankingTab==='Bank Accounts'&&(
               <div>
                 {showAddBank&&(
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add bank account</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -1344,12 +1344,12 @@ function PMPageInner() {
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
+                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
                       <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
                 )}
-                {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
+                {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
                     {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></div><div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                     <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
@@ -1360,7 +1360,7 @@ function PMPageInner() {
             {bankingTab==='Transactions'&&(
               <div>
                 {showAddTx&&(
-                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:16}}>
+                  <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:16}}>
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -1371,13 +1371,13 @@ function PMPageInner() {
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category</label><select value={txForm.category} onChange={e=>setTxForm({...txForm,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Rent','Maintenance','Utilities','Insurance','Marketing','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={addTransaction} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
+                      <button onClick={addTransaction} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add</button>
                       <button onClick={()=>setShowAddTx(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
                 )}
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{transactions.length} transactions</div><button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button></div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 20px',borderBottom:'1px solid #E4E7EC'}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{transactions.length} transactions</div><button onClick={()=>setShowAddTx(true)} style={{padding:'7px 14px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button></div>
                   {transactions.length===0?<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.map((t:any)=>(
                     <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 110px 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
@@ -1396,7 +1396,7 @@ function PMPageInner() {
                 {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No transactions waiting for review.</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                   <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#A8862E',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#2F6DB5',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                   </div>
                 ))}
               </div>
@@ -1421,7 +1421,7 @@ function PMPageInner() {
           const thisMonth = pnlByMonth.find(m=>m.month===thisMonthKey) ?? { income:0, propertyCosts:0, allExpenses:0, net:0 }
           return (
           <div>
-            <div style={{background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',border:'1px solid #EADBB8',borderRadius:12,padding:24,marginBottom:20,color:'#624920'}}>
+            <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
               <div style={{fontSize:36,fontWeight:800}}>£{thisMonth.net.toLocaleString()}</div>
               <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{thisMonth.income.toLocaleString()} income · £{thisMonth.allExpenses.toLocaleString()} costs</div>
@@ -1429,7 +1429,7 @@ function PMPageInner() {
             <div style={{display:'flex',gap:8,marginBottom:20,justifyContent:'space-between',alignItems:'center'}}>
               <div style={{display:'flex',gap:8}}>
                 {['P&L','Cash Flow','Forecast'].map(t=>(
-                  <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?'#323338':'#E4E7EC'),background:reportTab===t?'#A8862E':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
+                  <button key={t} onClick={()=>setReportTab(t)} style={{padding:'7px 16px',borderRadius:8,border:'1px solid '+(reportTab===t?'#323338':'#E4E7EC'),background:reportTab===t?'#2F6DB5':'#fff',color:reportTab===t?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{t}</button>
                 ))}
               </div>
               {reportTab==='P&L'&&<button onClick={()=>downloadCsv(`property-management-pl-${year}.csv`, pnlByMonth.map(row=>({
@@ -1535,7 +1535,7 @@ function PMPageInner() {
                   const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
                   const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).length;return cum})
                   const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${45-(v/max)*39}`).join(' ')
-                  return <polyline points={pts} fill="none" stroke="#A8862E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  return <polyline points={pts} fill="none" stroke="#2F6DB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 })()}</svg>
               </div>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #FEE2E2',padding:24}}>
@@ -1564,7 +1564,7 @@ function PMPageInner() {
                     const largeArc = pct>50?1:0
                     return <path d={`M 20 100 A 80 80 0 ${largeArc} 1 ${endX} ${endY}`} fill="none" stroke="#10B981" strokeWidth="20" strokeLinecap="round"/>
                   })()}
-                  <text x="100" y="95" fontSize="22" fontWeight="800" fill="#A8862E" textAnchor="middle">{payments.length>0?Math.round(payments.filter((p:any)=>p.status==='paid').length/payments.length*100):0}%</text>
+                  <text x="100" y="95" fontSize="22" fontWeight="800" fill="#2F6DB5" textAnchor="middle">{payments.length>0?Math.round(payments.filter((p:any)=>p.status==='paid').length/payments.length*100):0}%</text>
                   <text x="100" y="115" fontSize="10" fill="#98A2B3" textAnchor="middle">collection rate</text>
                 </svg>
               </div>
@@ -1572,7 +1572,7 @@ function PMPageInner() {
                 <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Owner vs Management Split</div>
                 <div style={{display:'flex',flexDirection:'column',gap:12}}>
                   <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Owner (80%)</span><span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>£{Math.round(totalCollected*0.8).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#10B981',borderRadius:4,width:'80%'}}></div></div></div>
-                  <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (20%)</span><span style={{fontSize:13,fontWeight:600,color:'#A8862E'}}>£{Math.round(totalCollected*0.2).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#A8862E',borderRadius:4,width:'20%'}}></div></div></div>
+                  <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (20%)</span><span style={{fontSize:13,fontWeight:600,color:'#2F6DB5'}}>£{Math.round(totalCollected*0.2).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#2F6DB5',borderRadius:4,width:'20%'}}></div></div></div>
                 </div>
               </div>
             </div>
@@ -1611,11 +1611,11 @@ function PMPageInner() {
             </div>
 
             <div style={{display:'flex',justifyContent:'flex-end',marginBottom:16}}>
-              <button onClick={()=>{setEditingPaymentId(null);setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setShowAddLandlordPayment(true)}} style={{background:'#A8862E',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Payment to Landlord</button>
+              <button onClick={()=>{setEditingPaymentId(null);setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setShowAddLandlordPayment(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Payment to Landlord</button>
             </div>
 
             {showAddLandlordPayment&&(
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
                 <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editingPaymentId?'Edit Payment':'Add Payment to Landlord'}</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={lbl}>Landlord</label><select style={inp} value={lpForm.landlord_id} onChange={e=>setLpForm({...lpForm,landlord_id:e.target.value})}><option value="">Select landlord…</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
@@ -1638,7 +1638,7 @@ function PMPageInner() {
                       : await supabase.from('pm_landlord_payments').insert([{...payload,user_id:accountId}])
                     if(error){alert(error.message);return}
                     setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''});setEditingPaymentId(null);setShowAddLandlordPayment(false);await loadAll()
-                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
+                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Save</button>
                   <button onClick={()=>{setShowAddLandlordPayment(false);setEditingPaymentId(null);setLpForm({landlord_id:'',property_id:'',category:'Rent Share',amount:'',due_date:'',paid_date:'',notes:'',receipt_url:''})}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
@@ -1662,7 +1662,7 @@ function PMPageInner() {
                   {p.receipt_url?(
                     <a href={p.receipt_url} target="_blank" rel="noopener noreferrer">
                       <img src={p.receipt_url} alt="Receipt" style={{width:32,height:32,objectFit:'cover',borderRadius:6,border:'1px solid #E4E7EC'}} onError={(e:any)=>{e.target.style.display='none';e.target.nextSibling.style.display='inline'}}/>
-                      <span style={{display:'none',fontSize:11,color:'#A8862E',textDecoration:'underline'}}>View</span>
+                      <span style={{display:'none',fontSize:11,color:'#2F6DB5',textDecoration:'underline'}}>View</span>
                     </a>
                   ):<span style={{fontSize:11,color:'#D0D5DD'}}>—</span>}
                   <div style={{display:'flex',gap:6}}>
@@ -1670,7 +1670,7 @@ function PMPageInner() {
                       setLpForm({landlord_id:p.landlord_id??'',property_id:p.property_id??'',category:p.category??'Rent Share',amount:String(p.amount??''),due_date:p.due_date??'',paid_date:p.paid_date??'',notes:p.notes??'',receipt_url:p.receipt_url??''})
                       setEditingPaymentId(p.id)
                       setShowAddLandlordPayment(true)
-                    }} style={{fontSize:11,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
+                    }} style={{fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
                     <button onClick={async ()=>{await supabase.from('pm_landlord_payments').delete().eq('id',p.id);await loadAll()}} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
@@ -1711,7 +1711,7 @@ function PMPageInner() {
                   const isMine = m.sender==='staff'||m.sender==='ai'
                   return (
                   <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',justifyContent:isMine?'flex-end':'flex-start'}}>
-                    <div style={{maxWidth:'70%',background:isMine?'#A8862E':'#F3F4F6',color:isMine?'#fff':'#323338',borderRadius:10,padding:'10px 14px',fontSize:13}}>
+                    <div style={{maxWidth:'70%',background:isMine?'#2F6DB5':'#F3F4F6',color:isMine?'#fff':'#323338',borderRadius:10,padding:'10px 14px',fontSize:13}}>
                       <div style={{fontSize:10,opacity:0.7,marginBottom:3,textTransform:'uppercase'}}>{m.sender==='ai'?'AI receptionist':isMine?'You':(msgLandlord?.name??'Landlord')}</div>
                       {parseAttachments(m.attachment_url).length>0&&(
                         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:m.message?8:4}}>
@@ -1759,7 +1759,7 @@ function PMPageInner() {
                     }}/>
                   </label>
                   <input value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')sendLandlordMessage()}} placeholder="Type a message…" style={{flex:1,padding:'10px 14px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit'}}/>
-                  <button onClick={sendLandlordMessage} disabled={sendingMsg||uploadingMsg} style={{padding:'10px 20px',background:'#A8862E',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer',opacity:sendingMsg||uploadingMsg?0.6:1}}>Send</button>
+                  <button onClick={sendLandlordMessage} disabled={sendingMsg||uploadingMsg} style={{padding:'10px 20px',background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:600,cursor:'pointer',opacity:sendingMsg||uploadingMsg?0.6:1}}>Send</button>
                 </div>
               </div>
             )}
@@ -1793,7 +1793,7 @@ function PMPageInner() {
                       <span style={{fontSize:12,color:'#667085'}}>{l.pm_properties?.name??'—'}</span>
                       {rtr ? <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:rtrStatusColor[rtr.status]?.bg,color:rtrStatusColor[rtr.status]?.fg,width:'fit-content'}}>{rtr.status}</span> : <span style={{fontSize:12,color:'#98A2B3'}}>Not checked</span>}
                       {bank ? <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:bankStatusColor[bank.status]?.bg,color:bankStatusColor[bank.status]?.fg,width:'fit-content'}}>{bank.status}</span> : <span style={{fontSize:12,color:'#98A2B3'}}>Not checked</span>}
-                      <button onClick={()=>openEditChecks(l.id)} style={{fontSize:11,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>{rtr||bank?'Edit':'Add Checks'}</button>
+                      <button onClick={()=>openEditChecks(l.id)} style={{fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>{rtr||bank?'Edit':'Add Checks'}</button>
                     </div>
                   )
                 })}
@@ -1842,10 +1842,10 @@ function PMPageInner() {
                   </div>
                 )}
 
-                <div style={{marginBottom:14,background:'#FBF4E6',border:'1px solid #DCE0FF',borderRadius:10,padding:16}}>
+                <div style={{marginBottom:14,background:'#EAF3FC',border:'1px solid #DCE0FF',borderRadius:10,padding:16}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:bankCheckForm.ai_assessment?10:0}}>
                     <div style={{fontSize:12,fontWeight:600,color:'#344054'}}>🤖 AI Affordability Opinion <span style={{fontWeight:400,color:'#98A2B3'}}>— advisory only, not a decision</span></div>
-                    <button onClick={()=>generateAssessment(parseFloat(editingLease?.monthly_rent)||0)} disabled={generatingAssessment||!bankCheckForm.declared_income} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#A8862E',border:'none',borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit',opacity:generatingAssessment||!bankCheckForm.declared_income?0.6:1}}>{generatingAssessment?'Thinking…':bankCheckForm.ai_assessment?'Regenerate':'Generate Opinion'}</button>
+                    <button onClick={()=>generateAssessment(parseFloat(editingLease?.monthly_rent)||0)} disabled={generatingAssessment||!bankCheckForm.declared_income} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit',opacity:generatingAssessment||!bankCheckForm.declared_income?0.6:1}}>{generatingAssessment?'Thinking…':bankCheckForm.ai_assessment?'Regenerate':'Generate Opinion'}</button>
                   </div>
                   {!bankCheckForm.declared_income&&<div style={{fontSize:11,color:'#98A2B3'}}>Add declared monthly income above first.</div>}
                   {bankCheckForm.ai_assessment&&(
@@ -1878,7 +1878,7 @@ function PMPageInner() {
               </div>
 
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>saveChecks(editingChecksLeaseId)} disabled={savingChecks} style={{padding:'10px 24px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingChecks?0.6:1}}>{savingChecks?'Saving…':'Save Checks'}</button>
+                <button onClick={()=>saveChecks(editingChecksLeaseId)} disabled={savingChecks} style={{padding:'10px 24px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:savingChecks?0.6:1}}>{savingChecks?'Saving…':'Save Checks'}</button>
                 <button onClick={()=>setEditingChecksLeaseId(null)} style={{padding:'10px 24px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>
@@ -1915,7 +1915,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_properties',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
+            <button onClick={()=>save('pm_properties',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
           </div>
         </Modal>
       )}
@@ -1927,7 +1927,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10}}>
             <button onClick={()=>setShowUpgrade(false)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={purchaseBlock} disabled={upgrading} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+            <button onClick={purchaseBlock} disabled={upgrading} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
           </div>
         </Modal>
       )}
@@ -1990,7 +1990,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_landlords',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Landlord'}</button>
+            <button onClick={()=>save('pm_landlords',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Landlord'}</button>
           </div>
         </Modal>
       )}
@@ -2025,7 +2025,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_tenants',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Tenant'}</button>
+            <button onClick={()=>save('pm_tenants',form)} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Tenant'}</button>
           </div>
         </Modal>
       )}
@@ -2062,7 +2062,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_units',form)} disabled={saving||!form.unit_number||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.unit_number||!form.property_id?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Unit'}</button>
+            <button onClick={()=>save('pm_units',form)} disabled={saving||!form.unit_number||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.unit_number||!form.property_id?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Unit'}</button>
           </div>
         </Modal>
       )}
@@ -2127,7 +2127,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_leases',form)} disabled={saving||!form.tenant_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.tenant_id?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Lease'}</button>
+            <button onClick={()=>save('pm_leases',form)} disabled={saving||!form.tenant_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.tenant_id?0.6:1}}>{saving?'Saving…':editId?'Save Changes':'Add Lease'}</button>
           </div>
         </Modal>
       )}
@@ -2172,7 +2172,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_rent_payments',form)} disabled={saving||!form.tenant_id||!form.amount} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.tenant_id||!form.amount?0.6:1}}>{saving?'Saving…':'Record Payment'}</button>
+            <button onClick={()=>save('pm_rent_payments',form)} disabled={saving||!form.tenant_id||!form.amount} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.tenant_id||!form.amount?0.6:1}}>{saving?'Saving…':'Record Payment'}</button>
           </div>
         </Modal>
       )}
@@ -2200,7 +2200,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_maintenance',form)} disabled={saving||!form.title} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.title?0.6:1}}>{saving?'Saving…':'Create Ticket'}</button>
+            <button onClick={()=>save('pm_maintenance',form)} disabled={saving||!form.title} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.title?0.6:1}}>{saving?'Saving…':'Create Ticket'}</button>
           </div>
         </Modal>
       )}
@@ -2228,7 +2228,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_cleaning_tasks',form)} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
+            <button onClick={()=>save('pm_cleaning_tasks',form)} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
           </div>
         </Modal>
       )}
@@ -2261,7 +2261,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_inspections',form)} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
+            <button onClick={()=>save('pm_inspections',form)} disabled={saving||!form.property_id} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id?0.6:1}}>{saving?'Saving…':'Schedule'}</button>
           </div>
         </Modal>
       )}
@@ -2285,7 +2285,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('pm_documents',form)} disabled={saving||!form.name||!form.url} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name||!form.url?0.6:1}}>{saving?'Saving…':'Add Document'}</button>
+            <button onClick={()=>save('pm_documents',form)} disabled={saving||!form.name||!form.url} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name||!form.url?0.6:1}}>{saving?'Saving…':'Add Document'}</button>
           </div>
         </Modal>
       )}
@@ -2309,7 +2309,7 @@ function PMPageInner() {
               if(!res.ok){alert(result.error||'Could not create portal access');return}
               alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalLandlord(null);await loadAll()
-            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
+            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}
@@ -2333,7 +2333,7 @@ function PMPageInner() {
               if(!res.ok){alert(result.error||'Could not create portal access');return}
               alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalTenant(null);await loadAll()
-            }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
+            }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}

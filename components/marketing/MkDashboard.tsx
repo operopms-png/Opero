@@ -71,8 +71,8 @@ export default function MkDashboard({ mk, onOpen }: { mk: Mk; onOpen: (board: st
       </div>
       <div className="mk-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0,1fr))', gap: 12, marginBottom: 14 }}>
         {tiles.map(t => (
-          <div key={t.l} style={{ ...card, padding: 16, background: t.hl ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', borderColor: t.hl ? '#EADBB8' : BRAND.rowBorder }}>
-            <div style={{ fontSize: 12.5, color: t.hl ? '#8A6B2E' : BRAND.muted }}>{t.l}</div>
+          <div key={t.l} style={{ ...card, padding: 16, background: t.hl ? 'linear-gradient(135deg,#EAF3FC,#C9DEF3)' : '#fff', borderColor: t.hl ? '#C9DEF3' : BRAND.rowBorder }}>
+            <div style={{ fontSize: 12.5, color: t.hl ? '#1D4E89' : BRAND.muted }}>{t.l}</div>
             <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: t.hl ? BRAND.brown : BRAND.ink }}>{t.v}</div>
           </div>
         ))}
@@ -84,7 +84,7 @@ export default function MkDashboard({ mk, onOpen }: { mk: Mk; onOpen: (board: st
           <div style={{ height: 260, padding: '12px 12px 4px' }}>
             <ResponsiveContainer><BarChart data={monthly}>
               <CartesianGrid strokeDasharray="3 3" stroke="#EEE" vertical={false} /><XAxis dataKey="m" tick={{ fontSize: 12 }} /><YAxis allowDecimals={false} tick={{ fontSize: 12 }} width={28} /><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Campaigns" stackId="a" fill="#A8862E" /><Bar dataKey="Emails" stackId="a" fill="#D0AE4C" /><Bar dataKey="Posts" stackId="a" fill="#E8D29A" /><Bar dataKey="Ads" stackId="a" fill="#624920" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Campaigns" stackId="a" fill="#2F6DB5" /><Bar dataKey="Emails" stackId="a" fill="#2F6DB5" /><Bar dataKey="Posts" stackId="a" fill="#E8D29A" /><Bar dataKey="Ads" stackId="a" fill="#1D4E89" radius={[3, 3, 0, 0]} />
             </BarChart></ResponsiveContainer>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function MkDashboard({ mk, onOpen }: { mk: Mk; onOpen: (board: st
               {[['Sent', sent.length], ['Delivered', delivered], ['Opened', opened], ['Clicked', clicked], ['Replied', replied], ['Bounced', bounced]].map(([l, n]) => (
                 <div key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '9px 0', fontSize: 13.5 }}>
                   <span style={{ width: 76 }}>{l}</span>
-                  <div style={{ flex: 1, background: '#F1F2F6', borderRadius: 4, height: 12, overflow: 'hidden' }}><div style={{ width: `${pct(n as number, sent.length)}%`, height: '100%', background: l === 'Bounced' ? '#DF2F4A' : '#D0AE4C' }} /></div>
+                  <div style={{ flex: 1, background: '#F1F2F6', borderRadius: 4, height: 12, overflow: 'hidden' }}><div style={{ width: `${pct(n as number, sent.length)}%`, height: '100%', background: l === 'Bounced' ? '#DF2F4A' : '#2F6DB5' }} /></div>
                   <span style={{ width: 70, textAlign: 'right', color: BRAND.muted }}>{n} · {pct(n as number, sent.length)}%</span>
                 </div>
               ))}
@@ -142,7 +142,7 @@ export default function MkDashboard({ mk, onOpen }: { mk: Mk; onOpen: (board: st
             <div style={{ height: 200, padding: '12px 12px 4px' }}>
               <ResponsiveContainer><BarChart data={Object.entries(devices).map(([name, v]) => ({ name, ...v }))}>
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} /><YAxis allowDecimals={false} tick={{ fontSize: 12 }} width={24} /><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="Opened" fill="#D0AE4C" radius={[3, 3, 0, 0]} /><Bar dataKey="Clicked" fill="#00C875" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Opened" fill="#2F6DB5" radius={[3, 3, 0, 0]} /><Bar dataKey="Clicked" fill="#00C875" radius={[3, 3, 0, 0]} />
               </BarChart></ResponsiveContainer>
             </div>
           )}

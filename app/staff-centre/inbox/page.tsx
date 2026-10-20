@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import CallButton from '@/components/CallButton'
 
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 const CHANNELS = [
-  { key:'str_owner', label:'VR Owner', bg:'#FBF4E6', fg:'#A8862E',
+  { key:'str_owner', label:'VR Owner', bg:'#EAF3FC', fg:'#2F6DB5',
     table:'owner_messages', recipientTable:'owner_profiles', idField:'owner_id', sendRoute:'/api/admin/send-message', sendBody:'owner_id' },
-  { key:'pm_landlord', label:'PM Landlord', bg:'#FBF4E6', fg:'#A8862E',
+  { key:'pm_landlord', label:'PM Landlord', bg:'#EAF3FC', fg:'#2F6DB5',
     table:'pm_landlord_messages', recipientTable:'pm_landlords', idField:'landlord_id', sendRoute:'/api/admin/send-landlord-message', sendBody:'landlord_id' },
-  { key:'pm_tenant', label:'PM Tenant', bg:'#FBF4E6', fg:'#A8862E',
+  { key:'pm_tenant', label:'PM Tenant', bg:'#EAF3FC', fg:'#2F6DB5',
     table:'pm_tenant_messages', recipientTable:'pm_tenants', idField:'tenant_id', sendRoute:'/api/admin/send-tenant-message', sendBody:'tenant_id' },
   { key:'estate_tenant', label:'EA Tenant', bg:'#EAF3EE', fg:'#2D6A4F',
     table:'estate_tenant_messages', recipientTable:'estate_tenants', idField:'tenant_id', sendRoute:'/api/admin/send-estate-tenant-message', sendBody:'tenant_id' },
@@ -24,14 +24,14 @@ const WHATSAPP_FG = '#1DA851'
 const SMS_BG = '#FFF4E5'
 const SMS_FG = '#B45309'
 const TEAM_BG = '#F5F3FF'
-const TEAM_FG = '#A8862E'
+const TEAM_FG = '#2F6DB5'
 const CALLS_BG = '#FFF1F2'
 const CALLS_FG = '#E11D48'
 const NON_STAFF_SENDER: Record<string,string> = { str_guest:'guest', str_owner:'owner', pm_landlord:'landlord', pm_tenant:'tenant', estate_tenant:'tenant', estate_landlord:'landlord', whatsapp:'contact', sms:'contact' }
 
 const TABS = ['Unread', 'All'] as const
 // CRM-style label colours for each channel
-const CH_COLOR: Record<string,string> = { str_guest:'#FF5A5F', team:'#D0AE4C', calls:'#DF2F4A', str_owner:'#00C875', pm_landlord:'#579BFC', pm_tenant:'#66CCFF', estate_tenant:'#9D50DD', estate_landlord:'#784BD1', whatsapp:'#1DA851', sms:'#FDAB3D' }
+const CH_COLOR: Record<string,string> = { str_guest:'#FF5A5F', team:'#2F6DB5', calls:'#DF2F4A', str_owner:'#00C875', pm_landlord:'#579BFC', pm_tenant:'#66CCFF', estate_tenant:'#9D50DD', estate_landlord:'#784BD1', whatsapp:'#1DA851', sms:'#FDAB3D' }
 const CHANNEL_PILLS = [{ key:'team', label:'Team Chat', bg:TEAM_BG, fg:TEAM_FG }, { key:'calls', label:'Calls', bg:CALLS_BG, fg:CALLS_FG }, ...CHANNELS]
 
 function initials(name: string) {
@@ -330,7 +330,7 @@ export default function Page() {
   const navChannels = [...CHANNEL_PILLS.map(c=>({key:c.key,label:c.label})), {key:'sms',label:'Texts'}, ...(waConnections.length ? [{key:'whatsapp',label:'WhatsApp'}] : [])]
   const current = tab==='Unread' ? 'Unread' : filter==='All' ? 'All conversations' : (navChannels.find(c=>c.key===filter)?.label ?? 'Conversations')
   const col = (c:any) => CH_COLOR[c?.channel] ?? '#C4C4C4'
-  const INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4', CREAM = '#FBF4E6'
+  const INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4', CREAM = '#EAF3FC'
   const navBtn = (active:boolean): React.CSSProperties => ({display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 10px',border:active?`1px solid ${ACCENT}`:'1px solid transparent',borderRadius:4,background:active?CREAM:'none',color:INK,fontSize:13.5,cursor:'pointer',fontFamily:'inherit',textAlign:'left'})
   const Pill = ({c}:{c:any}) => <span style={{background:col(c),color:'#fff',fontSize:11.5,fontWeight:500,borderRadius:3,padding:'1px 8px',whiteSpace:'nowrap'}}>{c.channelLabel}</span>
 
@@ -489,7 +489,7 @@ export default function Page() {
               <div style={{fontSize:12.5,color:MUTED,marginBottom:6}}>Members ({openConvo.members?.length ?? 0})</div>
               {(openConvo.members ?? []).map((m:any)=>(
                 <div key={m.member_email} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 0'}}>
-                  <div style={{width:26,height:26,borderRadius:'50%',background:'#D0AE4C',color:'#fff',fontSize:10.5,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(m.member_name)}</div>
+                  <div style={{width:26,height:26,borderRadius:'50%',background:'#2F6DB5',color:'#fff',fontSize:10.5,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center'}}>{initials(m.member_name)}</div>
                   <span style={{fontSize:13.5}}>{m.member_name}{m.member_email===identity.email?' (you)':''}</span>
                 </div>
               ))}

@@ -40,7 +40,7 @@ export default function ScriptsView() {
 
   return (
     <div style={{ flex: 1, overflow: 'auto', background: '#fff' }}>
-      <div style={{ padding: '22px 28px 16px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      <div style={{ padding: '22px 28px 16px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Scripts</h1>
           <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 720, lineHeight: 1.5 }}>Paste your scripts here once. They show in <b>Email</b> and the <b>Airbnb Inbox</b> under <b>📋 Scripts</b> so staff can insert or copy them, and the AI follows the ones marked <b>✦ AI can use</b>.</div>

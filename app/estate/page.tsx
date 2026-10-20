@@ -10,7 +10,7 @@ import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
 import ListingEditor, { WebsiteEditor, EMPTY_WEBSITE } from '@/components/estate/ListingEditor'
 import { CURRENCIES } from '@/lib/listings-shared'
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 // Blank property form (the listing fields feed the public /homes page)
 const EMPTY_PROP = {name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:'',listed:false,currency:'JMD',available_from:'',description:'',features:[] as string[],photo_captions:{} as Record<string,string>,...EMPTY_WEBSITE}
 const curSym = (c?: string) => (CURRENCIES[c || 'JMD'] ?? CURRENCIES.JMD).symbol
@@ -167,7 +167,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           <div style={{display:'flex',gap:16,alignItems:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#10B981',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Inflows</span></div>
             <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#EF4444',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Outflows</span></div>
-            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#A8862E',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:12,height:3,background:'#2F6DB5',borderRadius:2}}></div><span style={{fontSize:12,color:'#667085'}}>Net Cash Flow</span></div>
           </div>
         </div>
         <svg viewBox={'0 0 '+W+' '+H} style={{width:'100%',height:H,overflow:'visible'}}>
@@ -183,12 +183,12 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           <path d={line(cfData.map(d=>d.inflow))+' L'+x(11)+' '+(H-PAD)+' L'+x(0)+' '+(H-PAD)+' Z'} fill='#10B98115'/>
           <path d={line(cfData.map(d=>d.inflow))} fill='none' stroke='#10B981' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
           <path d={line(cfData.map(d=>d.outflow))} fill='none' stroke='#EF4444' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/>
-          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#A8862E' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
+          <path d={line(cfData.map(d=>d.net))} fill='none' stroke='#2F6DB5' strokeWidth='2' strokeDasharray='4 3' strokeLinecap='round' strokeLinejoin='round'/>
           {cfData.map((d,i)=>(
             <g key={i}>
               <circle cx={x(i)} cy={y(d.inflow)} r='3' fill='#10B981'/>
               <circle cx={x(i)} cy={y(d.outflow)} r='3' fill='#EF4444'/>
-              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#A8862E'/>
+              <circle cx={x(i)} cy={y(d.net)} r='3' fill='#2F6DB5'/>
             </g>
           ))}
         </svg>
@@ -785,7 +785,7 @@ export default function Page() {
           </div>
           <div style={{display:'flex',gap:8}}>
             {section==='Properties'&&(!isBundle&&properties.length >= propertyLimit
-              ? <button onClick={()=>setShowUpgrade(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add more properties</button>
+              ? <button onClick={()=>setShowUpgrade(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add more properties</button>
               : <button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>)}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
             {section==='Vacancies'&&<button onClick={()=>setShowAddVacancy(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
@@ -957,11 +957,11 @@ export default function Page() {
                 <button onClick={()=>{setShowAddProperty(false);setEditItem(null);setProp(EMPTY_PROP)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
-            {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #A8862E',padding:24,marginBottom:20}}>
+            {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 10px'}}>Add more properties</h3>
               <p style={{fontSize:14,color:'#344054',lineHeight:1.6,marginBottom:16}}>Your Estate Agency plan includes {propertyLimit} properties. Adding 2 more properties is <strong>£12/mo</strong>, billed on your existing subscription with proration for the rest of this cycle.</p>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={purchaseBlock} disabled={upgrading} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+                <button onClick={purchaseBlock} disabled={upgrading} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
                 <button onClick={()=>setShowUpgrade(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -987,7 +987,7 @@ export default function Page() {
                         {photos.length > 1 && <span style={{position:'absolute',bottom:-2,right:-2,background:'rgba(0,0,0,0.7)',color:'#fff',fontSize:9,fontWeight:600,padding:'1px 4px',borderRadius:4}}>+{photos.length-1}</span>}
                       </div>
                     : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
-                  <div style={{fontSize:13,fontWeight:500,color:'#323338',display:'flex',alignItems:'center',gap:6,minWidth:0}}><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</span>{p.listed&&<a href={`/homes/${p.id}`} target="_blank" rel="noreferrer" title="Shown on the listings link — open" style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:'#FBF4E6',color:ACCENT,textDecoration:'none',flexShrink:0}}>Listed ↗</a>}</div>
+                  <div style={{fontSize:13,fontWeight:500,color:'#323338',display:'flex',alignItems:'center',gap:6,minWidth:0}}><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</span>{p.listed&&<a href={`/homes/${p.id}`} target="_blank" rel="noreferrer" title="Shown on the listings link — open" style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:'#EAF3FC',color:ACCENT,textDecoration:'none',flexShrink:0}}>Listed ↗</a>}</div>
                   <span style={{fontSize:12,color:'#344054'}}>{p.type}</span>
                   <span style={{fontSize:12,color:'#667085',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.address||'—'}</span>
                   <span style={{fontSize:12,color:'#344054',display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms}</span>
@@ -1430,8 +1430,8 @@ export default function Page() {
                   ):(
                     <div style={{display:'flex',alignItems:'center',gap:6}}>
                       {partiallySigned&&<span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#FEF3C7',color:'#D97706'}}>Partial</span>}
-                      <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${t.sign_token}`);alert('Signing link copied')}} style={{fontSize:11,fontWeight:600,color:'#A8862E',background:'none',border:'1px solid #A8862E',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
-                      <button onClick={()=>openContractPicker(t)} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#A8862E',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
+                      <button onClick={()=>{navigator.clipboard.writeText(`${window.location.origin}/sign/${t.sign_token}`);alert('Signing link copied')}} style={{fontSize:11,fontWeight:600,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Copy Link</button>
+                      <button onClick={()=>openContractPicker(t)} disabled={sendingSignLink===t.id} style={{fontSize:11,fontWeight:600,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===t.id?0.6:1,marginLeft:6}}>{sendingSignLink===t.id?'Sending…':'✉ Email to Tenant'}</button>
                     </div>
                   )}
                   <div style={{display:'flex',gap:4}}>
@@ -1739,7 +1739,7 @@ export default function Page() {
                   <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(m.monthly_payment||0).toLocaleString()}</span>
                   <span style={{fontSize:11,color:'#667085'}}>{m.start_date||'—'}</span>
                   <span style={{fontSize:11,color:'#667085'}}>{m.end_date||'—'}</span>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:'#A8862E'}}>{m.type}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:'#2F6DB5'}}>{m.type}</span>
                   <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
                     <button onClick={()=>{setEditItem(m);setMortgageForm({property:m.property_id??'',bank:m.bank??'',amount:m.amount!=null?String(m.amount):'',rate:m.rate??'',startDate:m.start_date??'',endDate:m.end_date??'',duration:m.duration??'25',monthlyPayment:m.monthly_payment!=null?String(m.monthly_payment):'',insurance:m.insurance??'',type:m.type??'Repayment'});setShowAddMortgage(true)}} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_mortgages',m.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
@@ -2110,7 +2110,7 @@ export default function Page() {
                     const n=7, chunk=Math.max(1,Math.ceil(sorted.length/n)); let cum=0
                     const vals=Array.from({length:n},(_,i)=>{cum+=sorted.slice(i*chunk,(i+1)*chunk).length;return cum})
                     const max=Math.max(1,...vals); const pts=vals.map((v,i)=>`${5+i*31.6},${45-(v/max)*39}`).join(' ')
-                    return <polyline points={pts} fill="none" stroke="#A8862E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    return <polyline points={pts} fill="none" stroke="#2F6DB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   })()}</svg>
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
@@ -2132,7 +2132,7 @@ export default function Page() {
                   <svg viewBox="0 0 200 120" style={{width:'100%',maxWidth:200}}>
                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#F3F4F6" strokeWidth="20" strokeLinecap="round"/>
                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={ACCENT} strokeWidth="20" strokeLinecap="round"/>
-                    <text x="100" y="95" fontSize="22" fontWeight="800" fill="#A8862E" textAnchor="middle">{properties.length>0?Math.round(tenancies.filter((t:any)=>t.status==='Active').length/Math.max(properties.length,1)*100):0}%</text>
+                    <text x="100" y="95" fontSize="22" fontWeight="800" fill="#2F6DB5" textAnchor="middle">{properties.length>0?Math.round(tenancies.filter((t:any)=>t.status==='Active').length/Math.max(properties.length,1)*100):0}%</text>
                     <text x="100" y="115" fontSize="10" fill="#98A2B3" textAnchor="middle">occupancy rate</text>
                   </svg>
                 </div>
@@ -2361,7 +2361,7 @@ export default function Page() {
                     </div>
                   </div>
 
-                  <div style={{marginBottom:14,background:'#FBF4E6',border:'1px solid #DCE0FF',borderRadius:10,padding:16}}>
+                  <div style={{marginBottom:14,background:'#EAF3FC',border:'1px solid #DCE0FF',borderRadius:10,padding:16}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:bankCheckForm.ai_assessment?10:0}}>
                       <div style={{fontSize:12,fontWeight:600,color:'#344054'}}>🤖 AI Affordability Opinion <span style={{fontWeight:400,color:'#98A2B3'}}>— advisory only, not a decision</span></div>
                       <button onClick={()=>generateAssessment(parseFloat(editingTenancy?.rent)||0)} disabled={generatingAssessment||(!bankCheckForm.declared_income&&!bankCheckForm.document_url)} style={{fontSize:11,fontWeight:600,color:'#fff',background:ACCENT,border:'none',borderRadius:6,padding:'5px 12px',cursor:'pointer',fontFamily:'inherit',opacity:generatingAssessment||(!bankCheckForm.declared_income&&!bankCheckForm.document_url)?0.6:1}}>{generatingAssessment?'Reading statement…':bankCheckForm.ai_assessment?'Regenerate':'Generate Opinion'}</button>
@@ -2472,7 +2472,7 @@ export default function Page() {
               await saveRecord('estate_landlords',landlordForm,editItem?.id)
               setEditItem(null);setShowAddLandlord(false)
               setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''})
-            }} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Landlord'}</button>
+            }} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Landlord'}</button>
           </div>
         </Modal>
       )}
@@ -2496,7 +2496,7 @@ export default function Page() {
               if(!res.ok){alert(result.error||'Could not create portal access');return}
               alert(`Portal access created. Share these details with ${portalLandlord.name}:\n\nEmail: ${portalLandlord.email}\nPassword: ${portalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalLandlord(null);await loadAll()
-            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
+            }} disabled={creatingPortal||!portalLandlord.email||!portalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email||!portalPassword?0.6:1}}>{creatingPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}
@@ -2520,7 +2520,7 @@ export default function Page() {
               if(!res.ok){alert(result.error||'Could not create portal access');return}
               alert(`Portal access created. Share these details with ${portalTenant.name}:\n\nEmail: ${portalTenant.email}\nPassword: ${tenantPortalPassword}\nLogin at: ${SITE_HOST}/login`)
               setPortalTenant(null);await loadAll()
-            }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
+            }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
       )}
@@ -2579,7 +2579,7 @@ export default function Page() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>{setShowContractPicker(null);setSelectedTemplateId('');setEditableContractText('')}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>emailSigningLink(showContractPicker)} disabled={sendingSignLink===showContractPicker} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#A8862E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===showContractPicker?0.6:1}}>{sendingSignLink===showContractPicker?'Sending…':'Send Email'}</button>
+            <button onClick={()=>emailSigningLink(showContractPicker)} disabled={sendingSignLink===showContractPicker} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:sendingSignLink===showContractPicker?0.6:1}}>{sendingSignLink===showContractPicker?'Sending…':'Send Email'}</button>
           </div>
         </Modal>
         )
@@ -2593,8 +2593,8 @@ function ListingsLinkBar({ count }: { count: number }) {
   const [copied, setCopied] = useState(false)
   const url = typeof window !== 'undefined' ? `${window.location.origin}/homes` : '/homes'
   return (
-    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'#FBF4E6',border:'1px solid #F0E3C4',borderRadius:10,padding:'10px 14px',marginBottom:16}}>
-      <div style={{flex:'1 1 260px',fontSize:13,color:'#624920'}}><b style={{fontWeight:600}}>Listings link for tenants</b> · {count} {count===1?'property':'properties'} showing. Switch a property on under <i>Edit → Photos &amp; listing</i>.</div>
+    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',background:'#EAF3FC',border:'1px solid #F0E3C4',borderRadius:10,padding:'10px 14px',marginBottom:16}}>
+      <div style={{flex:'1 1 260px',fontSize:13,color:'#1D4E89'}}><b style={{fontWeight:600}}>Listings link for tenants</b> · {count} {count===1?'property':'properties'} showing. Switch a property on under <i>Edit → Photos &amp; listing</i>.</div>
       <code style={{fontSize:12.5,background:'#fff',border:'1px solid #E4E7EC',borderRadius:6,padding:'5px 9px',color:'#323338'}}>{url.replace(/^https?:\/\//,'')}</code>
       <button onClick={()=>{navigator.clipboard?.writeText(url);setCopied(true);setTimeout(()=>setCopied(false),1500)}} style={{padding:'6px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{copied?'Copied ✓':'Copy link'}</button>
       <a href="/homes" target="_blank" rel="noreferrer" style={{fontSize:12.5,color:ACCENT,fontWeight:600,textDecoration:'none'}}>Open ↗</a>

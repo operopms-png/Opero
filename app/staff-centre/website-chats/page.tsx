@@ -7,7 +7,7 @@ import { SITE_URL } from '@/lib/brand'
 // Every conversation from the AI chat box on the business's own website, the leads it captured,
 // the assistant's settings, the install code, and which properties it can show.
 
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 const SITE = SITE_URL
 const CURRENCIES = [
   { v: '', l: 'Don’t show prices (team confirms)' },
@@ -176,9 +176,9 @@ export default function Page() {
   const leads = chats.filter(c => c.email || c.phone).length
   const liveCount = props.filter(p => p.show_on_website).length
 
-  const INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4', CREAM = '#FBF4E6'
+  const INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4', CREAM = '#EAF3FC'
   const navBtn = (active: boolean): React.CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 10px', border: active ? `1px solid ${ACCENT}` : '1px solid transparent', borderRadius: 4, background: active ? CREAM : 'none', color: INK, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' })
-  const INTEREST_COLOR: Record<string, string> = { rent_a_home: '#579BFC', list_property: '#00C875', guaranteed_rent: '#D0AE4C', invest: '#9D50DD', careers: '#66CCFF', other: '#C4C4C4' }
+  const INTEREST_COLOR: Record<string, string> = { rent_a_home: '#579BFC', list_property: '#00C875', guaranteed_rent: '#2F6DB5', invest: '#9D50DD', careers: '#66CCFF', other: '#C4C4C4' }
   const cardS: React.CSSProperties = { background: '#fff', border: `1px solid ${LINE}`, borderRadius: 8 }
   const inp: React.CSSProperties = { width: '100%', height: 36, padding: '0 10px', border: `1px solid ${BORDER}`, borderRadius: 4, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }
   const lab: React.CSSProperties = { fontSize: 13, color: MUTED, marginBottom: 4, display: 'block' }
@@ -191,7 +191,7 @@ export default function Page() {
       <aside className="wc-ws" style={{ width: 232, flexShrink: 0, borderRight: `1px solid ${LINE}`, padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <div style={{ fontSize: 13, color: MUTED, padding: '0 6px 10px' }}>Workspace</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 34, border: `1px solid ${BORDER}`, borderRadius: 4, padding: '0 8px', fontSize: 13.5, marginBottom: 12, whiteSpace: 'nowrap' }}>
-          <span style={{ width: 20, height: 20, borderRadius: 4, background: '#D0AE4C', color: '#624920', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>S</span>Website Chats
+          <span style={{ width: 20, height: 20, borderRadius: 4, background: '#2F6DB5', color: '#1D4E89', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>S</span>Website Chats
         </div>
         <div style={{ fontSize: 12, color: MUTED, padding: '4px 10px' }}>Chats</div>
         <button className="wc-nav" onClick={() => { setView('chats'); setFilter('all') }} style={navBtn(view === 'chats' && filter === 'all')}><span style={{ flex: 1 }}>All chats</span><Count n={chats.length} /></button>
@@ -211,7 +211,7 @@ export default function Page() {
               <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500 }}>{filter === 'all' ? 'All chats' : filter === 'leads' ? 'Leads captured' : 'Unread'}</h1>
               <span style={{ fontSize: 12.5, color: MUTED }}>{shown.length}</span>
             </div>
-            {settings && !settings.enabled && <div style={{ marginTop: 10, background: CREAM, border: '1px solid #EADBB8', color: '#624920', borderRadius: 6, padding: '8px 10px', fontSize: 12.5 }}>The chat box is off, so it isn’t on your website. Turn it on in Settings & install.</div>}
+            {settings && !settings.enabled && <div style={{ marginTop: 10, background: CREAM, border: '1px solid #C9DEF3', color: '#1D4E89', borderRadius: 6, padding: '8px 10px', fontSize: 12.5 }}>The chat box is off, so it isn’t on your website. Turn it on in Settings & install.</div>}
           </div>
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {shown.length === 0 && (
@@ -231,7 +231,7 @@ export default function Page() {
                   <div style={{ display: 'flex', gap: 6, margin: '5px 0 3px', flexWrap: 'wrap' }}>
                     {(c.email || c.phone) && <span style={{ background: '#00C875', color: '#fff', fontSize: 11.5, borderRadius: 3, padding: '1px 8px' }}>Lead</span>}
                     {c.interest && <span style={{ background: INTEREST_COLOR[c.interest] ?? '#C4C4C4', color: '#fff', fontSize: 11.5, borderRadius: 3, padding: '1px 8px' }}>{INTEREST_LABEL[c.interest] ?? c.interest}</span>}
-                    {c.crm_contact_id && <span style={{ background: '#D0AE4C', color: '#fff', fontSize: 11.5, borderRadius: 3, padding: '1px 8px' }}>In CRM</span>}
+                    {c.crm_contact_id && <span style={{ background: '#2F6DB5', color: '#fff', fontSize: 11.5, borderRadius: 3, padding: '1px 8px' }}>In CRM</span>}
                   </div>
                   <div style={{ fontSize: 12.5, color: MUTED, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.summary || `${Math.ceil((c.message_count ?? 0) / 2)} question${c.message_count > 2 ? 's' : ''}`}
@@ -255,11 +255,11 @@ export default function Page() {
                 {open.email && <a href={`mailto:${open.email}`} style={{ color: ACCENT, textDecoration: 'none' }}>✉ {open.email}</a>}
                 {open.phone && <a href={`tel:${open.phone}`} style={{ color: ACCENT, textDecoration: 'none' }}>☎ {open.phone}</a>}
                 {open.interest && <span style={{ background: INTEREST_COLOR[open.interest] ?? '#C4C4C4', color: '#fff', borderRadius: 3, padding: '1px 8px' }}>{INTEREST_LABEL[open.interest]}</span>}
-                {open.crm_contact_id && <a href="/staff-centre/crm" style={{ background: '#D0AE4C', color: '#fff', borderRadius: 3, padding: '1px 8px', textDecoration: 'none' }}>In CRM ✓</a>}
+                {open.crm_contact_id && <a href="/staff-centre/crm" style={{ background: '#2F6DB5', color: '#fff', borderRadius: 3, padding: '1px 8px', textDecoration: 'none' }}>In CRM ✓</a>}
                 <span>Started {new Date(open.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                 {open.page_url && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 280 }}>on {open.page_url.replace(/^https?:\/\//, '')}</span>}
               </div>
-              {open.summary && <div style={{ fontSize: 13, background: CREAM, border: '1px solid #EADBB8', borderRadius: 6, padding: '8px 10px', marginTop: 10 }}><b style={{ fontWeight: 600 }}>Summary:</b> {open.summary}</div>}
+              {open.summary && <div style={{ fontSize: 13, background: CREAM, border: '1px solid #C9DEF3', borderRadius: 6, padding: '8px 10px', marginTop: 10 }}><b style={{ fontWeight: 600 }}>Summary:</b> {open.summary}</div>}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
               {thread.map(m => {
@@ -269,7 +269,7 @@ export default function Page() {
                     <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, textAlign: mine ? 'right' : 'left' }}>
                       {m.role === 'visitor' ? (open.name || 'Visitor') : m.role === 'staff' ? `${m.meta?.by?.replace(/\s*\(.*\)$/, '') || 'Team'} · by email` : 'Assistant'} · {new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                     </div>
-                    <div style={{ fontSize: 13.5, lineHeight: 1.5, padding: '10px 14px', borderRadius: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: m.role === 'visitor' ? '#fff' : m.role === 'staff' ? ACCENT : CREAM, color: m.role === 'staff' ? '#fff' : INK, border: m.role === 'visitor' ? `1px solid ${LINE}` : m.role === 'assistant' ? '1px solid #EADBB8' : 'none' }}>
+                    <div style={{ fontSize: 13.5, lineHeight: 1.5, padding: '10px 14px', borderRadius: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: m.role === 'visitor' ? '#fff' : m.role === 'staff' ? ACCENT : CREAM, color: m.role === 'staff' ? '#fff' : INK, border: m.role === 'visitor' ? `1px solid ${LINE}` : m.role === 'assistant' ? '1px solid #C9DEF3' : 'none' }}>
                       {m.content}
                       {m.meta?.cards?.length ? <div style={{ fontSize: 11.5, opacity: 0.75, marginTop: 4 }}>Showed {m.meta.cards.length} propert{m.meta.cards.length === 1 ? 'y' : 'ies'}</div> : null}
                       {m.meta?.form ? <div style={{ fontSize: 11.5, opacity: 0.75, marginTop: 4 }}>Asked for contact details: {m.meta.form}</div> : null}
@@ -299,11 +299,11 @@ export default function Page() {
         </div>
       </>) : settings && (
         <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', background: '#F6F7FB' }}>
-          <div style={{ height: 110, background: `linear-gradient(135deg, ${CREAM}, #F3E6C8)` }} />
+          <div style={{ height: 110, background: `linear-gradient(135deg, ${CREAM}, #C9DEF3)` }} />
           <div style={{ padding: '0 32px 40px', marginTop: -70, maxWidth: 960, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: '#624920' }}>Settings & install</h1>
-              <div style={{ fontSize: 13.5, color: '#8A6B2E', marginTop: 2 }}>The AI chat box on your website: what it knows, where alerts go, and which properties it can show.</div>
+              <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: '#1D4E89' }}>Settings & install</h1>
+              <div style={{ fontSize: 13.5, color: '#1D4E89', marginTop: 2 }}>The AI chat box on your website: what it knows, where alerts go, and which properties it can show.</div>
             </div>
             <div style={{ ...cardS, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
@@ -342,7 +342,7 @@ export default function Page() {
                 Paste this once into your website’s footer or “custom code” area (WordPress: a Custom HTML block or your theme’s footer scripts; Elementor: Site Settings → Custom Code; Wix/Squarespace: Custom Code → Body end). It then shows on every page.
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'stretch', flexWrap: 'wrap' }}>
-                <code style={{ flex: '1 1 400px', background: CREAM, border: '1px solid #EADBB8', color: '#624920', borderRadius: 6, padding: '10px 12px', fontSize: 12.5, wordBreak: 'break-all' }}>{snippet}</code>
+                <code style={{ flex: '1 1 400px', background: CREAM, border: '1px solid #C9DEF3', color: '#1D4E89', borderRadius: 6, padding: '10px 12px', fontSize: 12.5, wordBreak: 'break-all' }}>{snippet}</code>
                 <button onClick={() => { navigator.clipboard?.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000) }} style={{ padding: '0 16px', borderRadius: 4, border: 'none', background: copied ? '#00C875' : ACCENT, color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{copied ? 'Copied ✓' : 'Copy'}</button>
               </div>
             </div>

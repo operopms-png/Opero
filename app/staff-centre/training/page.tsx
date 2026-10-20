@@ -9,7 +9,7 @@ const TYPES = [
   { k: 'file', l: 'File', color: '#579BFC' },
   { k: 'video', l: 'Video', color: '#9D50DD' },
 ]
-const GROUP_COLORS = ['#D0AE4C', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1']
+const GROUP_COLORS = ['#2F6DB5', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1']
 
 // Turns a pasted YouTube/Vimeo link into its embeddable form. Returns
 // null for anything else (an uploaded file's own URL, or a direct .mp4

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 const MODULE = 'str'
 const CONTACT_TYPES = ['Landlord','Tenant','Buyer','Seller','Investor','Other']
 const DEAL_STAGES = ['Enquiry','Viewing','Offer','Negotiation','Won','Lost']
@@ -145,7 +145,7 @@ export default function Page() {
                 <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.name}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{c.email||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{c.phone||'—'}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{c.type}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT,fontWeight:600}}>{c.type}</span>
                 <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
                   <button onClick={()=>openEditContact(c)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
                   <button onClick={()=>delContact(c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>

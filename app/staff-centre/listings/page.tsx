@@ -81,7 +81,7 @@ export default function ListingsPage() {
     const photos = parseUrls(p.image_urls)
     return <Row key={p.id} cells={[
       <div key="n" style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-        {photos[0] ? <img src={photos[0]} alt="" style={{ width: 44, height: 32, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} /> : <span style={{ width: 44, height: 32, borderRadius: 4, background: '#F3E6C8', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🏠</span>}
+        {photos[0] ? <img src={photos[0]} alt="" style={{ width: 44, height: 32, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} /> : <span style={{ width: 44, height: 32, borderRadius: 4, background: '#C9DEF3', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🏠</span>}
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
       </div>,
       <span key="a" style={{ fontSize: 13, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.address || '—'}</span>,

@@ -18,7 +18,7 @@ async function api(body?: any) {
 
 const CH: Record<string, { l: string; c: string }> = { phone: { l: 'Phone', c: '#DF2F4A' }, email: { l: 'Email', c: '#579BFC' }, portal: { l: 'Tenant / landlord', c: '#9D50DD' }, website: { l: 'Website chat', c: '#00C875' } }
 const ACT: Record<string, { l: string; c: string }> = {
-  replied: { l: 'Answered', c: '#00C875' }, drafted: { l: 'Draft ready', c: '#D0AE4C' }, message_taken: { l: 'Message taken', c: '#FDAB3D' },
+  replied: { l: 'Answered', c: '#00C875' }, drafted: { l: 'Draft ready', c: '#2F6DB5' }, message_taken: { l: 'Message taken', c: '#FDAB3D' },
   viewing_requested: { l: 'Viewing request', c: '#9D50DD' }, transferred: { l: 'Put through', c: '#579BFC' }, maintenance_created: { l: 'Repair logged', c: '#FF7575' },
   escalated: { l: 'Passed to staff', c: '#DF2F4A' }, skipped: { l: 'No action', c: '#C4C4C4' },
 }

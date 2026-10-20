@@ -66,15 +66,15 @@ export default function PerformancePage() {
       {store.loading ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Loading staff performance…</div>
         : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load staff performance: {store.error}</div>
         : <>
-          <div style={{ background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid #EADBB8', padding: '22px 28px' }}>
+          <div style={{ background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid #C9DEF3', padding: '22px 28px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <h1 style={{ margin: 0, fontSize: 26, fontWeight: 500, color: BRAND.brown }}>Staff Performance</h1>
-                <div style={{ fontSize: 13.5, color: '#8A6B2E', marginTop: 2 }}>Who’s winning. CRM deals set to “Closed won” and leads set to “Won” are added automatically for the agent on them, with the amount and date.</div>
+                <div style={{ fontSize: 13.5, color: '#1D4E89', marginTop: 2 }}>Who’s winning. CRM deals set to “Closed won” and leads set to “Won” are added automatically for the agent on them, with the amount and date.</div>
               </div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {PERIODS.map(p => (
-                  <button key={p} onClick={() => setPeriod(p)} style={{ height: 32, padding: '0 14px', borderRadius: 16, border: period === p ? `1px solid ${BRAND.goldDark}` : `1px solid #EADBB8`, background: period === p ? BRAND.goldDark : '#fff', color: period === p ? '#fff' : BRAND.ink, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>{p}</button>
+                  <button key={p} onClick={() => setPeriod(p)} style={{ height: 32, padding: '0 14px', borderRadius: 16, border: period === p ? `1px solid ${BRAND.goldDark}` : `1px solid #C9DEF3`, background: period === p ? BRAND.goldDark : '#fff', color: period === p ? '#fff' : BRAND.ink, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>{p}</button>
                 ))}
               </div>
             </div>
@@ -83,8 +83,8 @@ export default function PerformancePage() {
           <div style={{ padding: '20px 28px 4px' }}>
             <div className="perf-tiles" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12, marginBottom: 20 }}>
               {tiles.map(t => (
-                <div key={t.l} style={{ border: `1px solid ${t.hl ? '#EADBB8' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', borderRadius: 8, padding: 16 }}>
-                  <div style={{ fontSize: 12.5, color: t.hl ? '#8A6B2E' : BRAND.muted }}>{t.l}</div>
+                <div key={t.l} style={{ border: `1px solid ${t.hl ? '#C9DEF3' : BRAND.rowBorder}`, background: t.hl ? 'linear-gradient(135deg,#EAF3FC,#C9DEF3)' : '#fff', borderRadius: 8, padding: 16 }}>
+                  <div style={{ fontSize: 12.5, color: t.hl ? '#1D4E89' : BRAND.muted }}>{t.l}</div>
                   <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: t.hl ? BRAND.brown : BRAND.ink }}>{t.v}</div>
                 </div>
               ))}

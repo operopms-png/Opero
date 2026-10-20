@@ -7,7 +7,7 @@ const HEAD_H = 62
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7) // 7am - 8pm
 const STATUS_COLORS: Record<string, string> = { Working: '#00C875', Leave: '#FDAB3D', Off: '#C4C4C4' }
 
-const AVATAR_COLORS = ['#D0AE4C', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1']
+const AVATAR_COLORS = ['#2F6DB5', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1']
 function avatarColor(name: string) {
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)

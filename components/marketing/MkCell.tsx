@@ -89,7 +89,7 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
     return (
       <div ref={ref} style={base} onClick={() => !locked && setOpen(true)}>
         {col.type === 'module'
-          ? (o ? <span style={{ display: 'inline-block', maxWidth: '92%', overflow: 'hidden', textOverflow: 'ellipsis', background: BRAND.selected, color: BRAND.brown, border: '1px solid #EADBB8', borderRadius: 12, padding: '1px 10px', fontSize: 12.5 }}>{o.label}</span> : null)
+          ? (o ? <span style={{ display: 'inline-block', maxWidth: '92%', overflow: 'hidden', textOverflow: 'ellipsis', background: BRAND.selected, color: BRAND.brown, border: '1px solid #C9DEF3', borderRadius: 12, padding: '1px 10px', fontSize: 12.5 }}>{o.label}</span> : null)
           : <Pill text={o?.label ?? v ?? ''} color={o?.color ?? (v ? '#757575' : '#C4C4C4')} />}
         {open && (
           <Popover anchor={ref.current} onClose={() => setOpen(false)} width={220}>
@@ -153,7 +153,7 @@ export default function MkCell({ mk, board, col, row }: { mk: Mk; board: MkBoard
       const p = Math.max(0, Math.min(100, Number(row.progress_pct) || 0))
       return <div style={{ ...base, cursor: 'default', gap: 8, padding: '0 10px' }}><div style={{ flex: 1, height: 8, background: '#F1F2F6', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${p}%`, height: '100%', background: p >= 100 ? '#00C875' : BRAND.gold }} /></div><span style={{ fontSize: 12, color: BRAND.muted }}>{p}%</span></div>
     }
-    const color = t === 'Bounced' || t === 'Expired' || t.startsWith('Overdue') ? '#DF2F4A' : t === 'Due today' ? '#D97706' : t === 'Yes' || t === 'Valid' ? '#00A35E' : t.startsWith('Expires in') ? '#D97706' : col.key === 'stars' ? '#D0AE4C' : BRAND.ink
+    const color = t === 'Bounced' || t === 'Expired' || t.startsWith('Overdue') ? '#DF2F4A' : t === 'Due today' ? '#D97706' : t === 'Yes' || t === 'Valid' ? '#00A35E' : t.startsWith('Expires in') ? '#D97706' : col.key === 'stars' ? '#2F6DB5' : BRAND.ink
     return <div style={{ ...base, cursor: 'default', color, letterSpacing: col.key === 'stars' ? 2 : undefined }}>{t}</div>
   }
 

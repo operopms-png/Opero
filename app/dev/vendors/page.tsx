@@ -1,11 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 const MODULE = 'dev'
 const LABEL = 'Developments'
 const VENDOR_TYPES = ['Cleaner','Maintenance','Plumber','Electrician','Handyman','Landscaper','Other']
-const STATUS_COLORS: any = {'Open':'#F59E0B','In Progress':'#A8862E','Completed':'#10B981','Approved':'#10B981','Rejected':'#EF4444','Pending':'#F59E0B'}
+const STATUS_COLORS: any = {'Open':'#F59E0B','In Progress':'#2F6DB5','Completed':'#10B981','Approved':'#10B981','Rejected':'#EF4444','Pending':'#F59E0B'}
 const NAV = [
   {group:'VENDORS',items:[
     {s:'Work Orders',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>},
@@ -115,7 +115,7 @@ export default function Page() {
 
           {section==='Work Orders'&&(<div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total orders',v:workOrders.length,c:ACCENT},{l:'Open',v:workOrders.filter(w=>w.status==='Open').length,c:'#F59E0B'},{l:'In Progress',v:workOrders.filter(w=>w.status==='In Progress').length,c:'#A8862E'},{l:'Completed',v:workOrders.filter(w=>w.status==='Completed'||w.status==='Approved').length,c:'#10B981'}].map(s=>(
+              {[{l:'Total orders',v:workOrders.length,c:ACCENT},{l:'Open',v:workOrders.filter(w=>w.status==='Open').length,c:'#F59E0B'},{l:'In Progress',v:workOrders.filter(w=>w.status==='In Progress').length,c:'#2F6DB5'},{l:'Completed',v:workOrders.filter(w=>w.status==='Completed'||w.status==='Approved').length,c:'#10B981'}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:28,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>

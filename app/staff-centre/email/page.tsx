@@ -25,7 +25,7 @@ async function api(path: string, body?: any) {
 }
 
 const CAT_COLOR: Record<string, string> = { Enquiry: '#579BFC', Booking: '#00C875', Viewing: '#9D50DD', Maintenance: '#FDAB3D', Tenant: '#66CCFF', Landlord: '#784BD1', Invoice: '#C4C4C4', 'Job application': '#037F4C', Complaint: '#DF2F4A', Spam: '#9699A6' }
-const COLORS = ['#D0AE4C', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1', '#FF7575', '#037F4C', '#BB3354']
+const COLORS = ['#2F6DB5', '#579BFC', '#00C875', '#9D50DD', '#FDAB3D', '#DF2F4A', '#66CCFF', '#784BD1', '#FF7575', '#037F4C', '#BB3354']
 const colorFor = (s: string) => { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length] }
 function when(d: string) {
   const t = new Date(d), now = new Date()
@@ -200,7 +200,7 @@ export default function EmailPage() {
   const frameDoc = useMemo(() => {
     if (!msg) return ''
     const body = msg.body_html || `<pre style="white-space:pre-wrap;font-family:inherit;margin:0">${esc(msg.body_text || '')}</pre>`
-    return `<!doctype html><html><head><base target="_blank"><meta charset="utf-8"><style>body{font-family:Figtree,Arial,sans-serif;font-size:14px;line-height:1.55;color:#323338;margin:0;padding:4px 2px;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%}a{color:#A8862E}blockquote{border-left:2px solid #D0D4E4;margin:8px 0;padding-left:10px;color:#676879}</style></head><body>${body}</body></html>`
+    return `<!doctype html><html><head><base target="_blank"><meta charset="utf-8"><style>body{font-family:Figtree,Arial,sans-serif;font-size:14px;line-height:1.55;color:#323338;margin:0;padding:4px 2px;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%}a{color:#2F6DB5}blockquote{border-left:2px solid #D0D4E4;margin:8px 0;padding-left:10px;color:#676879}</style></head><body>${body}</body></html>`
   }, [msg])
 
   if (loading) return <CrmPage><div style={{ padding: 60, color: C.faint }}>Loading email…</div></CrmPage>
@@ -249,7 +249,7 @@ export default function EmailPage() {
 
         {view === 'templates' ? (
           <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
-            <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + C.creamLine }}>
+            <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine }}>
               <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Email templates</h1>
               <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>The opening line, sign-off and footer that go on every email. Click any words in the preview to change them, then save. You can also change the footer for a single email while writing it.</div>
             </div>
@@ -442,7 +442,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
   const cols = 'minmax(220px,1.4fr) 150px 110px 130px minmax(150px,1fr) 90px 120px 180px'
   return (
     <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
-      <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Mailbox settings</h1>
           <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>Connect each address with its email password (from Bluehost → Email). Passwords are stored encrypted and never shown again. Admins see every mailbox; choose which staff can see each one.</div>

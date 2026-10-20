@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { normalizeRole, resolveAccess } from '../../lib/useRole'
 
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 
 function startOfWeek(d: Date) {
   const date = new Date(d)
@@ -227,7 +227,7 @@ function StaffDashboardInner() {
             <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{isStaffView ? `${member.name}${/s$/i.test(member.name ?? '') ? "'" : "'s"} schedule` : 'My Schedule'} — {weekOffset === 0 ? 'This Week' : `w/c ${weekStartShown.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}</div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button onClick={() => setWeekOffset(w => w - 1)} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>← Prev</button>
-              {weekOffset !== 0 && <button onClick={() => setWeekOffset(0)} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #A8862E', background: '#FBF4E6', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#624920' }}>This week</button>}
+              {weekOffset !== 0 && <button onClick={() => setWeekOffset(0)} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #2F6DB5', background: '#EAF3FC', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#1D4E89' }}>This week</button>}
               <button onClick={() => setWeekOffset(w => w + 1)} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #D0D5DD', background: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Next →</button>
             </div>
           </div>
@@ -246,7 +246,7 @@ function StaffDashboardInner() {
               }
               const c = colors[type] ?? colors.Off
               return (
-                <div key={dateStr} style={{ flex: '1 0 110px', padding: '14px 8px', textAlign: 'center' as const, borderRight: '1px solid #F2F4F7', background: isToday ? '#FBF4E6' : '#fff' }}>
+                <div key={dateStr} style={{ flex: '1 0 110px', padding: '14px 8px', textAlign: 'center' as const, borderRight: '1px solid #F2F4F7', background: isToday ? '#EAF3FC' : '#fff' }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: isToday ? ACCENT : '#98A2B3', textTransform: 'uppercase' as const, marginBottom: 8 }}>{d.toLocaleDateString('en-GB', { weekday: 'short' })} {d.getDate()}</div>
                   <div style={{ background: c.bg, color: c.fg, fontSize: 12, fontWeight: 600, padding: '6px 4px', borderRadius: 6 }}>
                     {type === 'Working' && shift?.start_time ? `${shift.start_time.slice(0,5)}–${shift.end_time?.slice(0,5) ?? ''}` : type}

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 const MODULE = 'estate'
 const LABEL = 'ESTATE AGENCY'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -243,7 +243,7 @@ export default function Page() {
             {campaigns.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📣</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No campaigns yet</div><div style={{fontSize:13}}>Create your first marketing campaign.</div></div>):campaigns.map((c:any)=>(
               <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 120px 100px 100px 80px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.name}</div>{c.start_date&&<div style={{fontSize:11,color:'#98A2B3'}}>{c.start_date} - {c.end_date}</div>}</div>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{c.type}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT,fontWeight:600}}>{c.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{c.audience||'—'}</span>
                 <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{c.budget?'£'+parseFloat(c.budget).toLocaleString():'—'}</span>
                 <select value={c.status} onChange={e=>updateField('marketing_campaigns',c.id,'status',e.target.value,setCampaigns)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Draft','Active','Paused','Completed'].map(s=><option key={s}>{s}</option>)}</select>
@@ -424,7 +424,7 @@ export default function Page() {
               {templates.length===0?(<div style={{gridColumn:'span 3' as const,textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>📄</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No templates yet</div><div style={{fontSize:13}}>Add your first one above.</div></div>):templates.map((t:any)=>(
                 <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT}}>{t.category}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT}}>{t.category}</span>
                   </div>
                   <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>{t.name}</div>
                   <div style={{fontSize:12,color:'#667085',marginBottom:6}}>{t.subject}</div>
@@ -544,7 +544,7 @@ export default function Page() {
             {socials.length===0?(<div style={{gridColumn:'span 3' as const,textAlign:'center' as const,padding:60,color:'#98A2B3',background:'#fff',borderRadius:12,border:'1px solid #E4E7EC'}}><div style={{fontSize:36,marginBottom:12}}>📱</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No posts yet</div></div>):socials.map((p:any)=>(
               <div key={p.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT}}>{p.platform}</span>
+                  <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT}}>{p.platform}</span>
                   <span style={{fontSize:11,color:p.status==='Published'?'#10B981':'#667085',fontWeight:600}}>{p.status}</span>
                 </div>
                 <p style={{fontSize:13,color:'#344054',lineHeight:1.5,marginBottom:8}}>{p.caption}</p>
@@ -578,7 +578,7 @@ export default function Page() {
             {ads.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📢</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No ads yet</div></div>):ads.map((a:any)=>(
               <div key={a.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 100px 100px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{a.name}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{a.platform}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT,fontWeight:600}}>{a.platform}</span>
                 <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{a.budget?'£'+parseFloat(a.budget).toLocaleString():'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{a.start_date||'—'}</span>
                 <select value={a.status} onChange={e=>updateField('marketing_ads',a.id,'status',e.target.value,setAds)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Draft','Active','Paused','Ended'].map(s=><option key={s}>{s}</option>)}</select>

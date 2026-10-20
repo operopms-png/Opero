@@ -19,7 +19,7 @@ export function useMarketing() {
     const { data: { session } } = await supabase.auth.getSession()
     const res = await fetch('/api/mailboxes', { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } }).catch(() => null)
     const d = res && res.ok ? await res.json().catch(() => ({})) : {}
-    setSenders((d.mailboxes ?? []).filter((m: any) => m.status === 'connected' && m.use_for_marketing).map((m: any) => ({ value: m.id, label: m.email, color: '#D0AE4C' })))
+    setSenders((d.mailboxes ?? []).filter((m: any) => m.status === 'connected' && m.use_for_marketing).map((m: any) => ({ value: m.id, label: m.email, color: '#2F6DB5' })))
   })() }, [])
   const [me, setMe] = useState<string>('')
   const [sendSettings, setSendSettings] = useState({ marketing_from_email: '', marketing_from_name: 'Sangsters Group' })

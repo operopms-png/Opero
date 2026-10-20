@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-const ACCENT = '#A8862E'
+const ACCENT = '#2F6DB5'
 const MODULE = 'pm'
 const LABEL = 'PROPERTY MANAGEMENT'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -101,7 +101,7 @@ export default function Page() {
             {reports.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>📊</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No reports yet</div><div style={{fontSize:13}}>Create your first report.</div></div>):reports.map((r:any)=>(
               <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 140px 80px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{r.name}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{r.type}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT,fontWeight:600}}>{r.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.period}</span>
                 <span style={{fontSize:11,fontWeight:600,color:'#667085'}}>{r.format}</span>
                 <span style={{fontSize:11,color:'#98A2B3'}}>{new Date(r.created_at).toLocaleDateString()}</span>
@@ -134,7 +134,7 @@ export default function Page() {
             {scheduled.length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:36,marginBottom:12}}>⏰</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:6}}>No scheduled reports</div></div>):scheduled.map((r:any)=>(
               <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 120px 200px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{r.name}</span>
-                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#FBF4E6',color:ACCENT,fontWeight:600}}>{r.type}</span>
+                <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT,fontWeight:600}}>{r.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.frequency}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.recipients||'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{r.next_run||'—'}</span>

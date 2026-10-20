@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
-const C = { gold: '#D0AE4C', gd: '#A8862E', brown: '#624920', cream: '#FBF4E6', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', purple: '#7A35B8' }
+const C = { gold: '#2F6DB5', gd: '#2F6DB5', brown: '#1D4E89', cream: '#EAF3FC', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', purple: '#7A35B8' }
 
 async function api(body?: any, qs = '') {
   const { data: { session } } = await supabase.auth.getSession()

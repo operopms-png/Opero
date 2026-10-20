@@ -8,7 +8,7 @@ import type { Crm } from './useCrm'
 
 const card: React.CSSProperties = { background: '#fff', border: `1px solid ${BRAND.rowBorder}`, borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column' }
 const cardHead: React.CSSProperties = { padding: '14px 20px', fontSize: 16, fontWeight: 500, color: BRAND.ink, borderBottom: `1px solid ${BRAND.rowBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
-const WON = '#A8862E'
+const WON = '#2F6DB5'
 const OPEN = '#1F76C2'
 
 export default function Dashboard({ crm, onOpenItem, onOpenBoard }: { crm: Crm; onOpenItem: (id: string) => void; onOpenBoard: (id: string) => void }) {

@@ -15,7 +15,7 @@ type P = any
 const STAGES = [
   { k: 'new', l: 'New', bg: '#EEF2F7', c: '#344054' },
   { k: 'viewing', l: 'Viewing', bg: '#E8F0FB', c: '#1F5BB0' },
-  { k: 'numbers', l: 'Numbers done', bg: '#FBF4E6', c: '#8E6B1F' },
+  { k: 'numbers', l: 'Numbers done', bg: '#EAF3FC', c: '#8E6B1F' },
   { k: 'offer', l: 'Offer made', bg: '#FFF0E0', c: '#A35A00' },
   { k: 'signed', l: 'Signed', bg: '#E6F7EF', c: '#0E7C55' },
   { k: 'passed', l: 'Passed', bg: '#F2F2F2', c: '#76736C' },
@@ -28,7 +28,7 @@ const SERVICES = [
 const SV = Object.fromEntries(SERVICES.map(s => [s.k, s.l]))
 const TYPES = ['House', 'Apartment', 'Townhouse', 'Villa', 'Bungalow', 'Land', 'Commercial']
 const SYM: Record<string, string> = { JMD: 'J$', USD: '$', GBP: '£' }
-const INK = '#191815', GOLD = '#A8862E', GOLD_T = '#8E6B1F'
+const INK = '#191815', GOLD = '#2F6DB5', GOLD_T = '#8E6B1F'
 
 const money = (n: any, cur = 'JMD', short = false) => {
   if (n == null || n === '') return '—'
