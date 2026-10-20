@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
@@ -27,7 +27,7 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Vacancies','Viewings','Renewals & Notices'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Deposits'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
@@ -2026,7 +2026,7 @@ function PMPageInner() {
           </div>
         )}
 
-        {tab==='Tenant Checks'&&(() => {
+        {(tab==='Tenant Checks'||tab==='Right to Rent')&&(() => {
           const CHECK_TYPES = ['Manual','Online','Birth Certificate + NI']
           const rtrStatusColor: Record<string,{bg:string,fg:string}> = {'Unlimited':{bg:'#ECFDF5',fg:'#10B981'},'Time-limited':{bg:'#FFFBEB',fg:'#F59E0B'},'No Right to Rent':{bg:'#FEF2F2',fg:'#EF4444'}}
           const bankStatusColor: Record<string,{bg:string,fg:string}> = {'Passed':{bg:'#ECFDF5',fg:'#10B981'},'Flagged':{bg:'#FFFBEB',fg:'#F59E0B'},'Failed':{bg:'#FEF2F2',fg:'#EF4444'}}
