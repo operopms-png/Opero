@@ -11,7 +11,7 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
-const TABS = ['Dashboard','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 
@@ -26,7 +26,7 @@ const complianceStatusColor: Record<string,string> = { 'Expired':'#EF4444', 'Exp
 
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Vacancies','Viewings','Renewals & Notices'] },
+  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
@@ -259,6 +259,7 @@ function PMPageInner() {
   const [inspections, setInspections] = useState<any[]>([])
   const [inventories, setInventories] = useState<any[]>([])
   const [pmNews, setPmNews] = useState<any[]>([])
+  const [furniture, setFurniture] = useState<any[]>([])
   const [vacancies, setVacancies] = useState<any[]>([])
   const [viewings, setViewings] = useState<any[]>([])
   const [mortgages, setMortgages] = useState<any[]>([])
@@ -388,6 +389,7 @@ function PMPageInner() {
     supabase.from('pm_vacancies').select('*,pm_properties(name)').eq('user_id',userId).order('available_date',{ascending:true}).then(({data})=>setVacancies(data??[]))
     supabase.from('pm_viewings').select('*,pm_properties(name)').eq('user_id',userId).order('scheduled_at',{ascending:true}).then(({data})=>setViewings(data??[]))
     supabase.from('pm_mortgages').select('*,pm_properties(name)').eq('user_id',userId).order('start_date',{ascending:false}).then(({data})=>setMortgages(data??[]))
+    supabase.from('pm_furniture').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('created_at',{ascending:true}).then(({data})=>setFurniture(data??[]))
     setExpenses(ex.data??[]); setCleaning(cleanData); setLandlordPayments(lp.data??[])
     setComplianceRecords(comp.data??[])
     setBankAccounts(bk.data??[]); setTransactions(tx.data??[])
@@ -658,6 +660,10 @@ function PMPageInner() {
   const weekEnd = new Date(weekStart.getTime() + 7*86400000)
   const cleaningsWeek = cleaning.filter((c:any)=>c.status!=='completed' && c.scheduled_date && new Date(c.scheduled_date+'T00:00:00')>=weekStart && new Date(c.scheduled_date+'T00:00:00')<weekEnd)
   const cleaningsUnassigned = cleaningsWeek.filter((c:any)=>!c.assigned_to).length
+  const corporateAccounts = new Set(tenants.map((t:any)=>(t.company??'').trim()).filter(Boolean)).size
+  const propertiesNoTour = properties.filter((p:any)=>!p.tour_url).length
+  const unitsWithFurniture = new Set(furniture.map((f:any)=>f.unit_id))
+  const unitsNoFurniture = units.filter((u:any)=>!unitsWithFurniture.has(u.id)).length
   const exportRows = (() => {
     const inRange = (d: string | null | undefined) => !!d && d.slice(0,10) >= exportFrom && d.slice(0,10) <= exportTo
     const rent = payments.filter(p=>p.status==='paid' && inRange(p.paid_date)).map(p=>({date:p.paid_date.slice(0,10), type:'Rent received', description:p.pm_tenants?.name??'Tenant', property:p.pm_properties?.name??'', amount:Number(p.amount??0)}))
@@ -758,6 +764,7 @@ function PMPageInner() {
             {tab==='Rent'&&<button onClick={()=>{setModal('payment');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Record Payment</button>}
             {tab==='Maintenance'&&<button onClick={()=>{setModal('maintenance');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Ticket</button>}
             {tab==='Cleaning'&&<button onClick={()=>{setModal('cleaning');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule Cleaning</button>}
+            {tab==='Furniture'&&<button onClick={()=>{setModal('furniture');setForm({quantity:1,condition:'Good'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add furniture</button>}
             {tab==='Vacancies'&&<button onClick={()=>{setModal('vacancy');setForm({type:'Whole property'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add vacancy</button>}
             {tab==='Viewings'&&<button onClick={()=>{setModal('viewing');setForm({status:'Requested'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add viewing</button>}
             {tab==='Loans & Mortgages'&&<button onClick={()=>{setModal('mortgage');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add loan</button>}
@@ -794,6 +801,19 @@ function PMPageInner() {
                 {label:'Rented Properties',value:`${rentedPropertyIds.size} / ${properties.length}`,sub:`${Math.max(properties.length-rentedPropertyIds.size,0)} available`},
                 {label:'Tenancies',value:`${activeLeases.length} / ${leases.length}`,sub:`${leases.length-activeLeases.length} not active`},
                 {label:'Annual Rent',value:`£${annualRent.toLocaleString()}`,sub:`£${Math.round(annualRent/12).toLocaleString()} / month`},
+              ].map((c:any)=>(
+                <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
+                  <div style={{fontSize:26,fontWeight:800,color:'#1D4E89',letterSpacing:'-0.02em'}}>{c.value}</div>
+                  <div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>{c.sub}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:16}}>
+              {[
+                {label:'Corporate Accounts',value:`${corporateAccounts}`,sub:'companies on tenant records'},
+                {label:'Listings Without a Tour',value:`${propertiesNoTour}`,sub:`of ${properties.length} properties`},
+                {label:'Units Without a Furniture List',value:`${unitsNoFurniture}`,sub:`of ${units.length} units`},
               ].map((c:any)=>(
                 <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
@@ -1245,6 +1265,21 @@ function PMPageInner() {
             <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px',fontSize:13,color:'#667085'}}>
               Rent paid counts payments with a paid date in the period. Late rent counts overdue payments with a due date in the period. Expenses are office expenses dated in the period. Loan repayments are on the Loans &amp; Mortgages tab.
             </div>
+          </div>
+        )}
+
+        {tab==='Furniture'&&(
+          <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            {furniture.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No furniture lists yet. Add each item per unit.</div>:
+            furniture.map(f=>(
+              <div key={f.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr auto auto auto',gap:16,alignItems:'center',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
+                <div><div style={{fontWeight:600,color:'#323338'}}>{f.item}</div><div style={{fontSize:12,color:'#667085'}}>{f.notes??''}</div></div>
+                <div style={{color:'#667085',fontSize:12}}>{f.pm_properties?.name??'—'}{f.pm_units?.unit_number?` · Unit ${f.pm_units.unit_number}`:''}</div>
+                <div style={{color:'#323338'}}>× {f.quantity}</div>
+                <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:10,background:'#EAF3FC',color:'#1D4E89'}}>{f.condition??'—'}</span>
+                <button onClick={()=>del('pm_furniture',f.id,setFurniture)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+              </div>
+            ))}
           </div>
         )}
 
@@ -2158,6 +2193,7 @@ function PMPageInner() {
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Property Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Harbour View Apartments"/></div>
             <div><label style={lbl}>Address</label><input style={inp} value={form.address??''} onChange={e=>setForm({...form,address:e.target.value})} placeholder="123 Main Street"/></div>
+            <div><label style={lbl}>Tour link (video or 3D)</label><input style={inp} value={form.tour_url??''} onChange={e=>setForm({...form,tour_url:e.target.value})} placeholder="https://"/></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>City</label><input style={inp} value={form.city??''} onChange={e=>setForm({...form,city:e.target.value})} placeholder="London"/></div>
               <div><label style={lbl}>Country</label><input style={inp} value={form.country??'United Kingdom'} onChange={e=>setForm({...form,country:e.target.value})}/></div>
@@ -2266,6 +2302,7 @@ function PMPageInner() {
             <div><label style={lbl}>Full Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Jane Doe"/></div>
             <div><label style={lbl}>Email</label><input type="email" style={inp} value={form.email??''} onChange={e=>setForm({...form,email:e.target.value})} placeholder="jane@example.com"/></div>
             <div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+44 7700 000000"/></div>
+            <div><label style={lbl}>Company (optional, for corporate tenants)</label><input style={inp} value={form.company??''} onChange={e=>setForm({...form,company:e.target.value})} placeholder="Sample Co Ltd"/></div>
             <div><label style={lbl}>Property</label>
               <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
                 <option value="">Select property…</option>
@@ -2498,6 +2535,38 @@ function PMPageInner() {
         </Modal>
       )}
 
+      {modal==='furniture'&&(
+        <Modal title="Add Furniture" onClose={()=>setModal(null)}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Property *</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value,unit_id:''})}>
+                  <option value="">Select property…</option>
+                  {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Unit</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.unit_id??''} onChange={e=>setForm({...form,unit_id:e.target.value})}>
+                  <option value="">Whole property</option>
+                  {units.filter((u:any)=>!form.property_id||u.property_id===form.property_id).map((u:any)=><option key={u.id} value={u.id}>{u.unit_number}</option>)}
+                </select>
+              </div>
+              <div><label style={lbl}>Item *</label><input style={inp} value={form.item??''} onChange={e=>setForm({...form,item:e.target.value})} placeholder="e.g. Sofa, 3-seater"/></div>
+              <div><label style={lbl}>Quantity</label><input type="number" min={1} style={inp} value={form.quantity??1} onChange={e=>setForm({...form,quantity:e.target.value})}/></div>
+              <div><label style={lbl}>Condition</label>
+                <select style={{...inp,cursor:'pointer'}} value={form.condition??'Good'} onChange={e=>setForm({...form,condition:e.target.value})}>
+                  {['Good','Fair','Poor','Replace'].map(c=><option key={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+            <div><label style={lbl}>Notes</label><input style={inp} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>setModal(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={()=>save('pm_furniture',{...form,quantity:Number(form.quantity)||1,unit_id:form.unit_id||null})} disabled={saving||!form.property_id||!form.item} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id||!form.item?0.6:1}}>{saving?'Saving…':'Save'}</button>
+          </div>
+        </Modal>
+      )}
       {modal==='vacancy'&&(
         <Modal title="Add Vacancy" onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
