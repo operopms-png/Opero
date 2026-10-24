@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
+import GrokPanel from '../../../components/GrokPanel'
 
 const C = { ink: '#191815', brown: '#5A4320', gold: '#2F6DB5', goldT: '#8E6B1F', gold2: '#D9B866', cream: '#EAF3FC', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
 const MOD: Record<string, string> = { vr: '#B08A2E', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
@@ -181,6 +182,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <GrokPanel />
     </div>
   )
 }
