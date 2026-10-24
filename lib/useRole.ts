@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export type UserRole = 'Admin' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Estate Agency Team' | 'Partner'
+export type UserRole = 'Admin' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Finance Team' | 'Partner'
 
 export const ROLE_MODULES: Record<string, string[]> = {
   'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
@@ -10,7 +10,7 @@ export const ROLE_MODULES: Record<string, string[]> = {
   'HR Team':                     ['sc'],
   'Property Management Team':    ['pm'],
   'Development Team':            ['dev'],
-  'Estate Agency Team':          ['ea'],
+  'Finance Team':                ['sc'],
   'Cleaning Team':                ['str', 'pm', 'ea'],
   'Maintenance Team':            ['str', 'pm', 'ea'],
   'Viewer':                      ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
@@ -23,7 +23,7 @@ export const ROLE_SETTINGS: Record<string, boolean> = {
   'Vacation Rental Team':        false,
   'Property Management Team':    false,
   'Development Team':            false,
-  'Estate Agency Team':          false,
+  'Finance Team':                false,
   'Cleaning Team':                false,
   'Maintenance Team':            false,
   'Viewer':                      false,
@@ -144,7 +144,7 @@ export async function resolveAccess(user: { id: string; email?: string | null })
   return { role: 'Admin', customModules: null, propertyIds: [], businessId: user.id, isPartner: false }
 }
 
-const KNOWN_ROLES: UserRole[] = ['Admin', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Estate Agency Team', 'Partner']
+const KNOWN_ROLES: UserRole[] = ['Admin', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Finance Team', 'Partner']
 
 const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
   'airbnb agent':     'Vacation Rental Team',
@@ -152,7 +152,7 @@ const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
   'dev':              'Development Team',
   'cleaner':          'Cleaning Team',
   'maintenance':      'Maintenance Team',
-  'estate agent':     'Estate Agency Team',
+  'estate agent':     'Partner',
 }
 
 export function normalizeRole(raw: string | null | undefined): UserRole {

@@ -10,7 +10,7 @@ export const ROLE_COLORS: Record<string, string> = {
   'Admin': '#2F6DB5',
   'Vacation Rental Team': '#00C875',
   'Property Management Team': '#579BFC',
-  'Estate Agency Team': '#FDAB3D',
+  'Finance Team': '#00A3A3',
   'Development Team': '#9D50DD',
   'Cleaning Team': '#66CCFF',
   'Maintenance Team': '#FF642E',

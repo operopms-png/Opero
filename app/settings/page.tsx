@@ -16,7 +16,7 @@ const NAV = [
   ]}
 ]
 
-const ROLES = ['Admin','HR Team','Vacation Rental Team','Property Management Team','Estate Agency Team','Development Team','Cleaning Team','Maintenance Team','Viewer','Partner']
+const ROLES = ['Admin','HR Team','Vacation Rental Team','Property Management Team','Finance Team','Development Team','Cleaning Team','Maintenance Team','Viewer','Partner']
 
 function SettingsInner() {
   const searchParams = useSearchParams()
