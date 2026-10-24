@@ -137,11 +137,20 @@ function PMTenantPortalInner() {
   async function sendTenantMessage() {
     if (!newMessage.trim() || !tenant?.id) return
     setSendingMessage(true)
-    const { error } = await supabase.from('pm_tenant_messages').insert({
+    const { data: sent, error } = await supabase.from('pm_tenant_messages').insert({
       tenant_id: tenant.id,
       sender: 'tenant',
       message: newMessage.trim(),
-    })
+    }).select('id').single()
+    if (!error && sent?.id) {
+      // Let the assistant answer, or hand over to a person with an alert.
+      const { data: { session } } = await supabase.auth.getSession()
+      fetch('/api/tenant-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ message_id: sent.id }),
+      }).catch(() => {})
+    }
     setSendingMessage(false)
     if (error) { alert(error.message); return }
     setNewMessage('')
