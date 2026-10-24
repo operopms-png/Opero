@@ -19,6 +19,7 @@ export default function GrokPanel() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Msg[]>([])
   const [busy, setBusy] = useState(false)
+  const [role, setRole] = useState<'general' | 'property_manager'>('general')
 
   async function send(text: string) {
     const message = text.trim()
@@ -31,7 +32,7 @@ export default function GrokPanel() {
       const res = await fetch('/api/grok', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, role }),
       })
       const data = await res.json().catch(() => ({}))
       const reply = res.ok ? (data.reply || 'No answer came back.') : (data.error || 'The assistant could not answer.')
@@ -47,7 +48,13 @@ export default function GrokPanel() {
     <div style={{ margin: '0 30px 30px', background: '#fff', border: `2px solid ${C.blue}`, borderRadius: 12, overflow: 'hidden', fontFamily: 'inherit' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '14px 18px', background: C.soft, borderBottom: '1px solid #C9DEF3' }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: C.brown }}>Ask Grok</div>
-        <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: '#fff', color: C.brown, border: '1px solid #C9DEF3' }}>Read only. Drafts need approval</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <select value={role} onChange={e => setRole(e.target.value as 'general' | 'property_manager')} style={{ fontSize: 12, fontWeight: 600, color: C.brown, background: '#fff', border: '1px solid #C9DEF3', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit' }}>
+            <option value="general">Assistant</option>
+            <option value="property_manager">Property Manager</option>
+          </select>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: '#fff', color: C.brown, border: '1px solid #C9DEF3' }}>Read only. Drafts need approval</span>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '12px 18px', borderBottom: '1px solid #F2F4F7' }}>
