@@ -9,13 +9,15 @@
   var SRC = (document.currentScript && document.currentScript.src) || 'https://app.sangstersgroup.com/sg-properties.js'
   var APP = SRC.replace(/\/sg-properties\.js.*$/, '')
   var FEED = APP + '/api/public/portfolio'
-  var GOLD = '#A8862E', INK = '#1d1d1f', MUTED = '#6b6b6b', LINE = '#e6e2d8'
+  var BLUE = '#17306F', GOLD = BLUE, INK = '#1d1d1f', MUTED = '#6b6b6b', LINE = '#e6e2d8'
   var KIND = {
-    stay: { label: 'Available — short stays', pin: 'STAY', color: '#1f9d55', cta: 'Send enquiry' },
-    rent: { label: 'Available — long-term rent', pin: 'RENT', color: '#1f9d55', cta: 'View property' },
-    development: { label: 'New development', pin: 'DEV', color: '#C9A646', cta: 'View development' },
-    let: { label: 'Currently let / rented', pin: 'LET', color: '#c0392b', cta: 'Currently let' }
+    stay: { label: 'Available — short stays', pin: 'STAY', color: BLUE, cta: 'Send enquiry' },
+    rent: { label: 'Available — long-term rent', pin: 'RENT', color: BLUE, cta: 'View property' },
+    development: { label: 'New development', pin: 'DEV', color: '#2F5597', cta: 'View development' },
+    let: { label: 'Currently let / rented', pin: 'LET', color: '#98A2B3', cta: 'Currently let' }
   }
+  // Property names are shown without the company name
+  function cleanTitle(t) { return String(t || '').replace(/^\s*sangsters?\b[\s'’-]*/i, '').replace(/\s*\bsangsters?\b\s*/ig, ' ').trim() || String(t || '') }
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] }) }
   function css() {
@@ -28,7 +30,7 @@
       '.sgp-map .leaflet-marker-icon,.sgp-map .leaflet-marker-icon img{width:auto;height:auto}',
       '.sgp-search{display:flex;gap:10px;background:#fff;border:1px solid ' + LINE + ';border-radius:4px;padding:10px;margin:0 0 22px}',
       '.sgp-search input{flex:1;border:none;outline:none;font:inherit;font-size:14px;padding:8px 10px;min-width:0;background:transparent}',
-      '.sgp-search button{background:#111;color:#fff;border:none;border-radius:3px;padding:0 22px;font:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer}',
+      '.sgp-search button{background:#17306F;color:#fff;border:none;border-radius:3px;padding:0 22px;font:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer}',
       '.sgp-head h2{font-size:24px;font-weight:700;margin:0 0 4px}.sgp-head p{font-size:13px;color:' + MUTED + ';margin:0 0 16px}',
       '.sgp-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}',
       '.sgp-list{display:grid;gap:14px}',
@@ -36,8 +38,8 @@
       '.sgp-row:hover,.sgp-row.on{box-shadow:0 4px 18px rgba(0,0,0,.09)}',
       '.sgp-img{position:relative;background:#efe9dc center/cover no-repeat;min-height:140px}',
       '.sgp-img .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#a99a76;font-size:12px;text-align:center;padding:10px}',
-      '.sgp-badge{position:absolute;top:10px;left:10px;background:#C9A646;color:#1d1d1f;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:2px}',
-      '.sgp-badge.dark{background:#111;color:#fff}',
+      '.sgp-badge{position:absolute;top:10px;left:10px;background:#FFFFFF;color:#1d1d1f;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:2px}',
+      '.sgp-badge.dark{background:#17306F;color:#fff}',
       '.sgp-count{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:3px 7px;border-radius:3px}',
       '.sgp-body{padding:16px 18px;min-width:0}',
       '.sgp-loc{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:' + GOLD + ';text-transform:uppercase;margin-bottom:6px}',
@@ -55,8 +57,8 @@
       '.sgp-card .sgp-img{height:170px;min-height:0;cursor:pointer}',
       '.sgp-card .sgp-body{display:flex;flex-direction:column;flex:1}',
       '.sgp-card .sgp-specs{border-top:1px solid ' + LINE + ';padding-top:10px;margin-top:auto}',
-      '.sgp-btn{display:block;text-align:center;background:#111;color:#fff !important;text-decoration:none;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:14px 10px;border-radius:3px;margin-top:14px}',
-      '.sgp-btn.off{background:#ece7dc;color:#8a7b5a !important;pointer-events:none}',
+      '.sgp-btn{display:block;text-align:center;background:#17306F;color:#fff !important;text-decoration:none;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:14px 10px;border-radius:3px;margin-top:14px}',
+      '.sgp-btn.off{background:#17306F;color:#fff !important;pointer-events:none;opacity:.6}',
       '.sgp-empty{padding:30px;color:' + MUTED + ';font-size:14px}',
       '.sgp-lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999999;display:flex;align-items:center;justify-content:center}',
       '.sgp-lb img{max-width:92vw;max-height:84vh;object-fit:contain}',
@@ -85,7 +87,7 @@
 
   var feed = null
   function load() {
-    if (!feed) feed = fetch(FEED, { mode: 'cors' }).then(function (r) { return r.json() }).then(function (d) { return d.properties || [] })
+    if (!feed) feed = fetch(FEED, { mode: 'cors' }).then(function (r) { return r.json() }).then(function (d) { return (d.properties || []).map(function (p) { p.title = cleanTitle(p.title); return p }) })
     return feed
   }
   function specs(p) {
@@ -98,7 +100,7 @@
   function img(p) {
     return '<div class="sgp-img" data-lb="' + esc(p.id) + '" style="' + (p.cover ? "background-image:url('" + esc(p.cover) + "')" : '') + '">' +
       (p.cover ? '' : '<span class="ph">Photos coming soon</span>') + badge(p) +
-      ((p.photo_count || 0) > 1 ? '<span class="sgp-count">📷 ' + p.photo_count + '</span>' : '') + '</div>'
+      ((p.photo_count || 0) > 1 ? '<span class="sgp-count">' + p.photo_count + ' photos</span>' : '') + '</div>'
   }
   function lightbox(p, start) {
     if (!p.photos || !p.photos.length) return
@@ -221,7 +223,8 @@
         var groupMarkers = Object.keys(groups).map(function (c) {
           var ps = groups[c], lat = 0, lng = 0; ps.forEach(function (p) { lat += p.lat; lng += p.lng })
           var avail = ps.some(function (p) { return p.status !== 'let' })
-          var icon = L.divIcon({ className: '', html: '<span class="sgp-pin" style="background:' + (avail ? '#1f9d55' : '#c0392b') + ';border-top-color:' + (avail ? '#1f9d55' : '#c0392b') + '">' + esc(c.toUpperCase()) + ' · ' + ps.length + '</span>', iconSize: [0, 0] })
+          var pinColour = avail ? BLUE : '#98A2B3'
+          var icon = L.divIcon({ className: '', html: '<span class="sgp-pin" style="background:' + pinColour + ';border-top-color:' + pinColour + '">' + esc(c.toUpperCase()) + ' · ' + ps.length + '</span>', iconSize: [0, 0] })
           var m = L.marker([lat / ps.length, lng / ps.length], { icon: icon })
           m.on('click', function () { var b = L.latLngBounds(ps.map(function (p) { return [p.lat, p.lng] })); map.fitBounds(b.pad(0.5), { maxZoom: 13 }); if (ps.length === 1) setTimeout(function () { markers[ps[0].id] && markers[ps[0].id].openPopup() }, 400) })
           return { m: m, ps: ps }
@@ -236,6 +239,7 @@
           if (p.lat == null || p.lng == null) return
           var k = KIND[p.kind] || KIND.rent
           var icon = L.divIcon({ className: '', html: '<span class="sgp-pin" style="background:' + k.color + ';border-top-color:' + k.color + '">' + k.pin + '</span>', iconSize: [0, 0] })
+          // (pins: blue = available, grey = let)
           markers[p.id] = L.marker([p.lat, p.lng], { icon: icon }).bindPopup('<b>' + esc(p.title) + '</b><br>' + esc([p.area, p.country].filter(Boolean).join(', ')) + (p.status !== 'let' ? '<br><a href="#" data-enq-pop="' + esc(p.id) + '">Send enquiry →</a>' : '<br><span style="color:#c0392b">Currently let</span>'))
           markers[p.id].on('click', function () { var row = listEl.querySelector('[data-id="' + p.id + '"]'); if (row) { Array.prototype.forEach.call(listEl.querySelectorAll('.sgp-row.on'), function (r) { r.classList.remove('on') }); row.classList.add('on'); row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }) } })
         })
