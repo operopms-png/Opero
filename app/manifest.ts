@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next'
 // Home-screen app details (name + Sangsters icons) for phones and tablets.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Sangsters Portal',
-    short_name: 'Sangsters',
+    name: 'The NOVOURQ Portal',
+    short_name: 'NOVOURQ',
     description: 'The Sangsters staff, owner, landlord and tenant portal.',
     start_url: '/login',
     display: 'standalone',

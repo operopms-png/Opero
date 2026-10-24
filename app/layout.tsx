@@ -124,7 +124,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <title>Sangsters Portal</title>
+        <title>The NOVOURQ Portal</title>
         <meta name="description" content="Sangsters staff, owner, landlord, tenant and partner portal" />
       </head>
       <body style={{ margin: 0, background: '#F7F8FA', display: 'flex' }}>
