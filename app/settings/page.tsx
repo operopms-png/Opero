@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import AIStaffSection from '../../components/settings/AIStaffSection'
 import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
 import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
 import TeamBoard from '@/components/settings/TeamBoard'
@@ -302,6 +303,7 @@ function SettingsInner() {
                 setTeam(team.map(t=>t.id===m.id?{...t,role}:t))
               }}
             />
+            <AIStaffSection />
             {showInvite&&(<div onMouseDown={e=>{if(e.target===e.currentTarget){setShowInvite(false);setEditingMemberId(null);setCustomModules([])}}} style={{position:'fixed',inset:0,zIndex:900,background:'rgba(41,47,76,0.25)'}}><div style={{position:'absolute',top:0,right:0,bottom:0,width:'min(640px,100vw)',background:'#fff',boxShadow:'-8px 0 30px rgba(0,0,0,0.15)',padding:28,overflowY:'auto',boxSizing:'border-box',fontFamily:"Figtree, Inter, sans-serif"}}>
               <div style={{display:'flex',justifyContent:'flex-end',marginBottom:4}}><button onClick={()=>{setShowInvite(false);setEditingMemberId(null);setCustomModules([])}} style={{border:'none',background:'none',fontSize:22,cursor:'pointer',color:'#676879'}}>×</button></div>
               {!editingMemberId && (
