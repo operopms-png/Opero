@@ -13,10 +13,11 @@ import { STAFF_HUBS, tabMatches } from '@/lib/staffHubs'
 const NAV_GROUPS = [
   {
     label: 'Property Operations',
+    hideHeading: true,
     module: 'pm',
     modulePrice: '£39/mo',
     items: [
-      { href: '/pm', label: 'Property Operations', key: 'pm', icon: 'building', badge: 'pm' },
+      { href: '/pm', label: 'Operations', key: 'pm', icon: 'building', badge: 'pm' },
     ]
   },
   {
@@ -174,7 +175,7 @@ export default function Sidebar() {
           return (
             <div key={group.label}>
               {gi > 0 && <div style={{ height: 1, background: '#C9DEF3', margin: '6px 0' }} />}
-              {!isCollapsed && (
+              {!isCollapsed && !(group as any).hideHeading && (
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#2F6DB5', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 10px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {group.label}
                 </div>
