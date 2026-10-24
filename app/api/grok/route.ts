@@ -29,16 +29,14 @@ export async function POST(req: NextRequest) {
   const stop = setTimeout(() => ctrl.abort(), 50000)
   let res: Response
   try {
-    res = await fetch('https://api.x.ai/v1/chat/completions', {
+    res = await fetch('https://api.x.ai/v1/responses', {
       method: 'POST',
       signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model,
-        messages: [
-          { role: 'system', content: SYSTEM },
-          { role: 'user', content: message },
-        ],
+        instructions: SYSTEM,
+        input: message,
       }),
     })
   } catch {
@@ -49,5 +47,14 @@ export async function POST(req: NextRequest) {
 
   const data = await res.json().catch(() => null)
   if (!res.ok) return NextResponse.json({ error: data?.error?.message ?? 'The assistant could not answer.' }, { status: 502 })
-  return NextResponse.json({ reply: data?.choices?.[0]?.message?.content ?? '' })
+  // Responses API: text is in output[] message items as output_text parts.
+  const reply = typeof data?.output_text === 'string'
+    ? data.output_text
+    : (data?.output ?? [])
+        .filter((item: any) => item?.type === 'message')
+        .flatMap((item: any) => item?.content ?? [])
+        .filter((part: any) => part?.type === 'output_text')
+        .map((part: any) => part?.text ?? '')
+        .join('')
+  return NextResponse.json({ reply })
 }
