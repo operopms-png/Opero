@@ -32,6 +32,18 @@ export function computedValue(mk: Mk, board: MkBoard, col: MkCol, row: any): str
   if (col.key === 'attendee_name') return row.attendee_name ?? ''
   if (col.key === 'created_by_email') return row.created_by_email ?? ''
   if (col.key === 'meeting_link') return row.token ? 'Copy link' : ''
+  if (col.key === 'service') {
+    // Length of service: start date to end date (or today while still employed)
+    if (!row.start_date) return ''
+    const start = new Date(row.start_date + 'T00:00:00')
+    const end = row.end_date ? new Date(row.end_date + 'T00:00:00') : new Date()
+    let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth())
+    if (end.getDate() < start.getDate()) months--
+    if (months < 0) months = 0
+    const y = Math.floor(months / 12), m = months % 12
+    const out = [y ? `${y} yr${y > 1 ? 's' : ''}` : '', m ? `${m} mo${m > 1 ? 's' : ''}` : ''].filter(Boolean).join(' ')
+    return out || 'Under 1 month'
+  }
   if (col.key === 'stars') { const r = Math.round(Number(row.rating) || 0); return r ? '★'.repeat(Math.min(r, 5)) + '☆'.repeat(Math.max(0, 5 - r)) : '' }
   if (col.key === 'progress_bar') { const p = Math.max(0, Math.min(100, Number(row.progress_pct) || 0)); return `${p}%` }
   if (col.key === 'due_flag') {

@@ -6,6 +6,10 @@ import { fmtDate } from '@/lib/marketing-boards'
 import { useMultiBoards } from '@/components/boards/useMultiBoards'
 import MkBoardView from '@/components/marketing/MkBoardView'
 import MkPanel from '@/components/marketing/MkPanel'
+import { useRole } from '@/lib/useRole'
+
+// Employees (with salary and status) are visible to Admin and HR only.
+const EMP_TABS = ['Active', 'Fired', 'Not active'] as const
 
 // Staff Centre → People & HR: a CRM-style workspace with one board per HR record type.
 type View = { kind: 'home' } | { kind: 'board'; key: string }
@@ -31,12 +35,20 @@ export default function HrPage() {
       if (k === 'onboarding' && 'status' in p) return { ...p, completed_date: p.status === 'Complete' ? (row.completed_date ?? today()) : null }
       if (k === 'requests' && 'status' in p) return { ...p, resolved_date: p.status !== 'Pending' ? (row.resolved_date ?? today()) : null }
       if (k === 'goals' && 'status' in p && p.status === 'Achieved') return { ...p, progress_pct: 100 }
+      // leaving (Fired / Not active) records the end date, which stops length of service
+      if (k === 'employees' && 'status' in p) return { ...p, end_date: p.status === 'Active' ? null : (row.end_date ?? today()) }
       return p
     },
   })
   const [view, setViewState] = useState<View>({ kind: 'home' })
   const [panelOpen, setPanelOpen] = useState(true)
   const [open, setOpen] = useState<{ board: string; id: string } | null>(null)
+  const [empTab, setEmpTab] = useState<(typeof EMP_TABS)[number]>('Active')
+  const { role: myRole, loading: roleLoading } = useRole()
+  const canEmployees = myRole === 'Admin' || myRole === 'HR Team'
+  const empAll: any[] = store.rows.employees ?? []
+  const empCount = (t: string) => empAll.filter(e => e.status === t).length
+  const empStore = { ...store, rows: { ...store.rows, employees: empAll.filter(e => e.status === empTab) } }
 
   useEffect(() => {
     if (store.loading) return
@@ -70,7 +82,7 @@ export default function HrPage() {
             NOVOURQ People & HR
           </div>
           <Nav icon={ICON.home} label="HR dashboard" active={view.kind === 'home'} onClick={() => setView({ kind: 'home' })} />
-          {HR_BOARDS.map(b => <Nav key={b.key} icon={ICON[b.key]} label={b.title} count={store.rows[b.key]?.length} active={view.kind === 'board' && view.key === b.key} onClick={() => setView({ kind: 'board', key: b.key })} />)}
+          {HR_BOARDS.filter(b => b.key !== 'employees' || roleLoading || canEmployees).map(b => <Nav key={b.key} icon={ICON[b.key]} label={b.title} count={store.rows[b.key]?.length} active={view.kind === 'board' && view.key === b.key} onClick={() => setView({ kind: 'board', key: b.key })} />)}
         </aside>
       ) : <button onClick={() => setPanelOpen(true)} style={{ width: 28, flexShrink: 0, border: 'none', borderRight: `1px solid ${BRAND.rowBorder}`, background: '#fff', cursor: 'pointer', color: BRAND.muted }}>»</button>}
 
@@ -78,6 +90,19 @@ export default function HrPage() {
         {store.loading ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Loading People & HR…</div>
           : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load People & HR: {store.error}</div>
           : view.kind === 'home' ? <Dashboard store={store} go={k => setView({ kind: 'board', key: k })} openItem={(b, id) => setOpen({ board: b, id })} />
+          : board?.key === 'employees' && !roleLoading && !canEmployees ? <div style={{ padding: 60, color: BRAND.muted, textAlign: 'center' }}>Only Admin and HR can see Employees.</div>
+          : board?.key === 'employees' ? <>
+              <div style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
+                {EMP_TABS.map(t => (
+                  <button key={t} onClick={() => setEmpTab(t)} style={{ padding: '7px 14px', borderRadius: 6, border: empTab === t ? `1px solid ${BRAND.goldDark}` : `1px solid ${BRAND.border}`, background: empTab === t ? BRAND.selected : '#fff', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer', fontWeight: empTab === t ? 600 : 400, color: BRAND.ink }}>
+                    {t} <span style={{ color: BRAND.muted, marginLeft: 4 }}>{empCount(t)}</span>
+                  </button>
+                ))}
+              </div>
+              <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <MkBoardView key={`employees-${empTab}`} mk={empStore} board={board} onOpen={id => setOpen({ board: board.key, id })} />
+              </div>
+            </>
           : board && <MkBoardView key={board.key} mk={store} board={board} onOpen={id => setOpen({ board: board.key, id })} />}
       </main>
       {open && hrBoard(open.board) && <MkPanel key={open.id} mk={store} board={hrBoard(open.board)!} id={open.id} onClose={() => setOpen(null)} onOpenOther={(b, id) => setOpen({ board: b, id })} />}

@@ -15,9 +15,10 @@ export const HR_BOARDS: MkBoard[] = [
       { key: 'employment_type', title: 'Type', type: 'status', width: 130, options: [
         { value: 'Full-Time', color: '#00C875' }, { value: 'Part-Time', color: '#FDAB3D' }, { value: 'Contractor', color: '#9D50DD' }] },
       { key: 'status', title: 'Status', type: 'status', width: 130, options: [
-        { value: 'Active', color: '#00C875' }, { value: 'On Leave', color: '#FDAB3D' }, { value: 'Terminated', color: '#C4C4C4' }] },
+        { value: 'Active', color: '#00C875' }, { value: 'Not active', color: '#FDAB3D' }, { value: 'Fired', color: '#DF2F4A' }] },
       { key: 'start_date', title: 'Start date', type: 'date', width: 130 },
       { key: 'end_date', title: 'End date', type: 'date', width: 130 },
+      { key: 'service', title: 'Length of service', type: 'computed', width: 150 },
       { key: 'email', title: 'Email', type: 'email', width: 210 },
       { key: 'phone', title: 'Phone', type: 'phone', width: 140 },
       { key: 'salary', title: 'Salary', type: 'number', width: 120, currency: '£' },

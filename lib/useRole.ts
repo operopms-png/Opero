@@ -2,11 +2,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export type UserRole = 'Admin' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Estate Agency Team' | 'Partner'
+export type UserRole = 'Admin' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Estate Agency Team' | 'Partner'
 
 export const ROLE_MODULES: Record<string, string[]> = {
   'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
   'Vacation Rental Team':        ['str'],
+  'HR Team':                     ['sc'],
   'Property Management Team':    ['pm'],
   'Development Team':            ['dev'],
   'Estate Agency Team':          ['ea'],
