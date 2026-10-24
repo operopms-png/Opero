@@ -199,8 +199,8 @@ function LoginForm() {
       {mode === 'signup' && (
         <div style={{ width: 420, background: '#fff', borderRight: '1px solid #E4E7EC', padding: '40px 32px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
-            <img src="/logo.PNG" alt={BRAND_NAME} style={{ width: 28, height: 28, objectFit: 'contain' }} />
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#323338' }}>{BRAND_NAME}</span>
+            <img src="/novouq-logo.jpg" alt="NOVOURQ" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#323338' }}>NOVOURQ</span>
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Choose your plan</div>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>14-day free trial · No credit card required</div>
@@ -271,9 +271,9 @@ function LoginForm() {
           )}
 
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            {mode !== 'signup' && <img src="/logo.PNG" alt={BRAND_NAME} style={{ width: 48, height: 48, objectFit: 'contain', marginBottom: 8 }} />}
+            {mode !== 'signup' && <img src="/novouq-logo.jpg" alt="NOVOURQ" style={{ width: 48, height: 48, objectFit: 'contain', marginBottom: 8 }} />}
             <div style={{ fontSize: 20, fontWeight: 700, color: '#323338' }}>
-              {mode === 'login' ? `Sign in to ${BRAND_NAME}` : mode === 'signup' ? 'Create your account' : 'Reset your password'}
+              {mode === 'login' ? 'Sign in to NOVOURQ' : mode === 'signup' ? 'Create your account' : 'Reset your password'}
             </div>
             {mode === 'signup' && selectedPlan && (
               <div style={{ fontSize: 13, color: '#667085', marginTop: 4 }}>
