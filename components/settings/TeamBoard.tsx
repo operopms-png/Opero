@@ -17,7 +17,7 @@ export const ROLE_COLORS: Record<string, string> = {
   'Viewer': '#A1B4C6',
   'Partner': '#1D4E89',
 }
-const MOD_LABEL: Record<string, string> = { str: 'Vacation Rentals', pm: 'Property Management', ea: 'Estate Agency', dev: 'Developments', sc: 'Staff Centre', aipm: 'AI Property Manager', invest: 'Deal Analyser' }
+const MOD_LABEL: Record<string, string> = { str: 'Vacation Rentals', pm: 'Property Operations', dev: 'Developments', sc: 'Staff Centre', aipm: 'AI Property Manager', invest: 'Deal Analyser' }
 const NAME_W = 300
 const ROW_H = 40
 const tb: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 10px', border: 'none', background: 'none', borderRadius: 4, fontSize: 13.5, color: BRAND.ink, cursor: 'pointer', fontFamily: 'inherit' }
