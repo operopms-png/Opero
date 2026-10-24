@@ -17,8 +17,6 @@ const NAV_GROUPS = [
     modulePrice: '£39/mo',
     items: [
       { href: '/pm', label: 'Property Operations', key: 'pm', icon: 'building', badge: 'pm' },
-      // The old Vacation Rentals tab bar, kept for teams with the str module. Shown like Developments.
-      { href: '/str', label: 'Vacation Rentals', key: 'str', icon: 'calendar', requiresModule: 'str' },
     ]
   },
   {

@@ -106,8 +106,8 @@ const TAB_INTROS: Record<string,string> = {
 const PM_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
-  { label: 'SHORT STAYS', items: ['Short Stays Overview','Bookings','Reviews','Channels','Guest Comms','Analytics','Integrations'] },
   { label: 'DEVELOPMENTS', items: ['Developments'] },
+  { label: 'VACATION RENTALS', items: ['Vacation Rentals'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms','Deadlines','Insurance'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
@@ -1030,7 +1030,7 @@ function PMPageInner() {
               {group.items.map(t=>{
                 const locked = !!(allowedTab && t !== allowedTab)
                 const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? [...complianceRecords,...strCompliance].filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
-                return <button key={t} onClick={()=>{ if(t==='Developments'){ window.location.assign('/dev'); return } if(!locked) setTab(t) }} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+                return <button key={t} onClick={()=>{ if(t==='Developments'){ window.location.assign('/dev'); return } if(t==='Vacation Rentals'){ window.location.assign('/str'); return } if(!locked) setTab(t) }} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
             </div>
           ))}
