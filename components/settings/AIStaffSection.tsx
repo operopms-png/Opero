@@ -14,6 +14,7 @@ type AIStaff = {
   escalation: string | null
   access: string | null
   status: 'active' | 'not_set_up' | 'paused'
+  grok_bot: string | null
 }
 
 const STATUS_LABEL: Record<AIStaff['status'], string> = { active: 'Active', not_set_up: 'Not set up', paused: 'Paused' }
@@ -23,7 +24,7 @@ const STATUS_COLOR: Record<AIStaff['status'], { bg: string; fg: string }> = {
   paused: { bg: '#FFFAEB', fg: '#B54708' },
 }
 
-const EMPTY = { name: '', job_role: '', responsibilities: '', escalation: '', access: '', status: 'active' as AIStaff['status'] }
+const EMPTY = { name: '', job_role: '', responsibilities: '', escalation: '', access: '', grok_bot: '', status: 'active' as AIStaff['status'] }
 
 export default function AIStaffSection() {
   const [rows, setRows] = useState<AIStaff[]>([])
@@ -52,7 +53,7 @@ export default function AIStaffSection() {
     setEditingId(r.id)
     setForm({
       name: r.name, job_role: r.job_role, responsibilities: r.responsibilities ?? '',
-      escalation: r.escalation ?? '', access: r.access ?? '', status: r.status,
+      escalation: r.escalation ?? '', access: r.access ?? '', grok_bot: r.grok_bot ?? '', status: r.status,
     })
     setError(''); setShowForm(true)
   }
@@ -65,6 +66,7 @@ export default function AIStaffSection() {
       responsibilities: form.responsibilities.trim() || null,
       escalation: form.escalation.trim() || null,
       access: form.access.trim() || null,
+      grok_bot: form.grok_bot.trim() || null,
       status: form.status,
     }
     const res = editingId
@@ -108,7 +110,7 @@ export default function AIStaffSection() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#F9FAFB' }}>
-                  {['Name', 'Job role', 'Does day to day', 'Hands over to a person', 'Status', ''].map(h => (
+                  {['Name', 'Job role', 'Grok bot', 'Does day to day', 'Hands over to a person', 'Status', ''].map(h => (
                     <th key={h} style={{ textAlign: 'left', padding: '9px 14px', fontSize: 11, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #E4E7EC' }}>{h}</th>
                   ))}
                 </tr>
@@ -118,6 +120,7 @@ export default function AIStaffSection() {
                   <tr key={r.id}>
                     <td style={{ padding: '11px 14px', borderBottom: '1px solid #F2F4F7', fontWeight: 600 }}>{r.name}</td>
                     <td style={{ padding: '11px 14px', borderBottom: '1px solid #F2F4F7', color: '#1D4E89', fontWeight: 600 }}>{r.job_role}</td>
+                    <td style={{ padding: '11px 14px', borderBottom: '1px solid #F2F4F7', color: '#344054' }}>{r.grok_bot || '—'}</td>
                     <td style={{ padding: '11px 14px', borderBottom: '1px solid #F2F4F7', color: '#344054', maxWidth: 260 }}>{r.responsibilities || '—'}</td>
                     <td style={{ padding: '11px 14px', borderBottom: '1px solid #F2F4F7', color: '#344054', maxWidth: 260 }}>{r.escalation || '—'}</td>
                     <td style={{ padding: '11px 14px', borderBottom: '1px solid #F2F4F7' }}>
@@ -147,6 +150,10 @@ export default function AIStaffSection() {
             <div style={{ marginBottom: 14 }}>
               <label style={label}>Job role</label>
               <input style={input} value={form.job_role} onChange={e => setForm({ ...form, job_role: e.target.value })} placeholder="e.g. Property Manager" />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={label}>Grok bot</label>
+              <input style={input} value={form.grok_bot} onChange={e => setForm({ ...form, grok_bot: e.target.value })} placeholder="e.g. Sarah Bennett | Property Manager" />
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={label}>Does day to day</label>

@@ -23,3 +23,7 @@ create policy "owner manages ai staff" on public.ai_staff
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 NOTIFY pgrst, 'reload schema';
+
+-- Grok bot name for each AI staff member (the bot in the Grok app that does this job)
+alter table public.ai_staff add column if not exists grok_bot text;
+NOTIFY pgrst, 'reload schema';
