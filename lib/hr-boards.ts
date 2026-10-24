@@ -158,7 +158,7 @@ export const MAINTENANCE_BOARD: MkBoard = {
       { value: 'open', label: 'Open', color: '#579BFC' }, { value: 'in_progress', label: 'In Progress', color: '#FDAB3D' },
       { value: 'resolved', label: 'Resolved', color: '#00C875' }, { value: 'closed', label: 'Closed', color: '#8A6B2E' }] },
     { key: 'module', title: 'Module', type: 'status', width: 180, readonlyWhen: () => true, options: [
-      { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Management', color: '#579BFC' }, { value: 'estate', label: 'Estate Agency', color: '#00C875' }] },
+      { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Operations', color: '#579BFC' }, { value: 'estate', label: 'Estate Agency', color: '#00C875' }] },
     { key: 'propertyName', title: 'Property', type: 'computed', width: 200 },
     { key: 'assignee', title: 'Assigned to', type: 'computed', width: 170 },
     { key: 'age', title: 'Reported', type: 'computed', width: 130 },
