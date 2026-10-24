@@ -293,8 +293,10 @@ function SettingsInner() {
               }}
               onDelete={async (m:any)=>{
                 if(!confirm(`Remove ${m.name||m.email} from the team? They won't be able to sign in to the staff side any more.`))return
-                const {error}=await supabase.from('team_members').delete().eq('id',m.id)
+                const {data:removed,error}=await supabase.from('team_members').delete().eq('id',m.id).select('id')
                 if(error){alert(error.message);return}
+                // Blocked rows come back with no error and no rows: say so instead of hiding them
+                if(!removed||removed.length===0){alert(`${m.name||m.email} was not removed. Your account may not be allowed to remove this person. Ask for help.`);return}
                 setTeam(team.filter(t=>t.id!==m.id))
               }}
               onRoleChange={async (m:any, role:string)=>{
