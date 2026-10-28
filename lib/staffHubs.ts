@@ -8,7 +8,10 @@ export type HubTab = { href: string; label: string; scTab?: string; requiresModu
 export type Hub = { label: string; icon: string; tabs: HubTab[] }
 
 export const STAFF_HUBS: Hub[] = [
-  { label: 'Dashboard', icon: 'trendingup', tabs: [{ href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' }] },
+  { label: 'Dashboard', icon: 'trendingup', tabs: [
+    { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
+    { href: '/staff-centre/ai-command-centre', label: 'AI Command Centre', scTab: 'oversight' },
+  ] },
   { label: 'Ask Grok', icon: 'sparkles', tabs: [{ href: '/staff-centre/ask-grok', label: 'Ask Grok', scTab: 'oversight' }] },
   { label: 'Inbox', icon: 'message', tabs: [
     { href: '/staff-centre/inbox', label: 'Conversations', scTab: 'inbox', badge: 'inbox' },
