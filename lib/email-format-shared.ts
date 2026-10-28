@@ -15,15 +15,15 @@ export const DEFAULT_FORMAT: EmailFormat = {
   closing: 'Kind regards,',
   sign_name: true,
   footer_enabled: true,
-  company: 'Sangsters Group',
-  tagline: 'Global real estate leaders · #FeelAtHomeAnywhere',
-  contact_email: 'contact.us@sangstersgroup.com',
-  phone: '020 7164 0329',
-  website: 'www.sangstersgroup.com',
-  address_uk: 'Tallis House, 2 Tallis St, Blackfriars, London EC4Y 0AB, United Kingdom',
-  address_jm: 'Shop 7, 45 Main Street, Porus, Manchester, Jamaica, JMDMR21',
-  company_number: '16171490',
-  rating: 'We are rated 4.0 out of 5',
+  company: 'The NOVOURQ',
+  tagline: '',
+  contact_email: 'contact.us@thenovourq.com',
+  phone: '',
+  website: 'www.thenovourq.com',
+  address_uk: '2 Tallis Street, London',
+  address_jm: '',
+  company_number: '',
+  rating: '',
   disclaimer: 'This email and any attachments are confidential and intended only for the named recipient. If you received it in error, please let us know and delete it.',
   footer_html: '',
 }
@@ -31,7 +31,7 @@ export const FORMAT_FIELDS = Object.keys(DEFAULT_FORMAT) as (keyof EmailFormat)[
 export type EmailTemplate = EmailFormat & { id: string; name: string; is_default: boolean }
 
 const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-const LOGO = 'https://app.sangstersgroup.com/logo-192.png'
+const LOGO = 'https://app.thenovourq.com/logo-192.png'
 
 // Email-safe (table + inline styles) footer. Shows the company contact email;
 // falls back to the sending address if that's left blank.
