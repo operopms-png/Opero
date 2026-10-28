@@ -1,9 +1,9 @@
-// Sangsters app theme — corporate: white, ink, gold. Archivo for headings, Figtree for body.
+// NOVOURQ app theme — corporate: white, ink, gold. Archivo for headings, Figtree for body.
 export const C = {
   ink: '#191815', ink2: '#55524b', mute: '#8a857a', faint: '#9a958a',
-  line: '#ece8df', line2: '#f2efe8', bg: '#ffffff', soft: '#fbfaf7', cream: '#faf3e2', creamLine: '#eadbb8',
-  gold: '#C9A24A', goldText: '#8E6B1F', goldDark: '#A8862E', goldLight: '#D9B866',
-  green: '#1F7A4D', greenBg: '#e7f4ec', amber: '#9A5B00', amberBg: '#fdf1dc', blue: '#1f4f8a', blueBg: '#e6eef8', red: '#B3261E', redBg: '#fdecea',
+  line: '#ece8df', line2: '#f2efe8', bg: '#ffffff', soft: '#fbfaf7', cream: '#EEF3FC', creamLine: '#C9DEF3',
+  gold: '#89CFF0', goldText: '#1B2F6E', goldDark: '#1B2F6E', goldLight: '#89CFF0',
+  green: '#1F7A4D', greenBg: '#e7f4ec', amber: '#9A5B00', amberBg: '#EEF3FC', blue: '#1f4f8a', blueBg: '#e6eef8', red: '#B3261E', redBg: '#fdecea',
 }
 export const F = {
   head: 'Archivo_700Bold', headSemi: 'Archivo_600SemiBold',
