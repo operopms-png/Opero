@@ -125,7 +125,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <title>The NOVOURQ Portal</title>
-        <meta name="description" content="Sangsters staff, owner, landlord, tenant and partner portal" />
+        <meta name="description" content="NOVOURQ staff, owner, landlord, tenant and partner portal" />
       </head>
       <body style={{ margin: 0, background: '#F7F8FA', display: 'flex' }}>
         {isPublicRoute ? (

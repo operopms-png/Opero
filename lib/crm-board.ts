@@ -38,7 +38,7 @@ export const PALETTE = [
 
 export const GROUP_COLORS = ['#579BFC', '#00C875', '#FDAB3D', '#DF2F4A', '#9D50DD', '#FF5AC4', '#89CFF0', '#0086C0', '#784BD1', '#66CCFF', '#9CD326', '#FF642E']
 
-// Sangsters brand
+// NOVOURQ brand
 export const BRAND = {
   gold: '#89CFF0',
   goldDark: '#89CFF0',

@@ -1,4 +1,4 @@
-// Draws a Sangsters invoice as an A4 PDF (pdf-lib, no browser needed), in the
+// Draws a NOVOURQ invoice as an A4 PDF (pdf-lib, no browser needed), in the
 // same layout as the Canva invoice: gold logo block and contact lines, "INVOICE"
 // title, Bill to + number/date/due, gold table header, items, total, payment
 // instructions, black "BALANCE DUE" box, signature and terms note.

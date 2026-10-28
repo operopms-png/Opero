@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const ownerShare = revenue * ((owner.split_percentage ?? 60) / 100)
   const nights = active.reduce((s: number, b: any) => s + Math.max(0, Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000)), 0)
 
-  const systemPrompt = `You are an AI assistant drafting a friendly, professional monthly owner report email for a short-term rental management company (Sangsters Group) to send to a property owner. Use only the figures given below — do not invent numbers. Keep it warm but concise, structured with a brief summary followed by the key figures, ready to send as-is.
+  const systemPrompt = `You are an AI assistant drafting a friendly, professional monthly owner report email for a short-term rental management company (NOVOURQ Group) to send to a property owner. Use only the figures given below — do not invent numbers. Keep it warm but concise, structured with a brief summary followed by the key figures, ready to send as-is.
 
 Owner: ${owner.name}
 Properties: ${(properties ?? []).map((p: any) => p.name).join(', ') || 'None on file'}

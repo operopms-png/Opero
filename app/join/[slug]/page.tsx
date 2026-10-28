@@ -253,7 +253,7 @@ export default function JoinPage() {
 
           <footer style={{ borderTop: '1px solid #ECE8DF', background: '#FBFAF7' }}>
             <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontSize: 13, color: '#55524B' }}>
-              <span><b style={{ color: INK }}>Sangsters Group</b> · Company No. 16171490</span>
+              <span><b style={{ color: INK }}>NOVOURQ Group</b> · Company No. 16171490</span>
               <span>Tallis House, 2 Tallis St, London EC4Y 0AB</span>
               <span>Shop 7, 45 Main Street, Porus, Manchester, Jamaica</span>
               <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#89CFF0', textDecoration: 'none', fontWeight: 600 }}>contact.us@sangstersgroup.com</a>

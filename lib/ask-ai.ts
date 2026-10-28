@@ -79,7 +79,7 @@ export async function portalContext(c: Caller): Promise<string> {
 
 export function systemPrompt(o: { c: Caller; portal: string | null; web: boolean; deal?: any }) {
   const now = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  let s = `You are the AI assistant inside the Sangsters staff portal. Sangsters Group is a property company working in Jamaica, the UK and the UAE: short-stay (Airbnb) management and co-hosting, guaranteed rent / rent-to-rent, lettings and estate agency, property management and developments.
+  let s = `You are the AI assistant inside the NOVOURQ staff portal. NOVOURQ Group is a property company working in Jamaica, the UK and the UAE: short-stay (Airbnb) management and co-hosting, guaranteed rent / rent-to-rent, lettings and estate agency, property management and developments.
 You are talking to ${o.c.name} (${o.c.isAdmin ? 'admin' : o.c.role || 'staff'}). It is ${now} (UK time).
 
 How to answer:

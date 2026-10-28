@@ -5,7 +5,7 @@ import { SITE_URL, EMAIL_DOMAIN } from '@/lib/brand'
 import { sendEmail } from '@/lib/send-email'
 import { invoicePdf, fmtMoney, fmtDate } from '@/lib/invoice-pdf'
 
-// Finance → Invoices, in the Sangsters invoice format.
+// Finance → Invoices, in the NOVOURQ invoice format.
 //   GET                       -> { invoices, settings, isAdmin }
 //   GET ?id=…                 -> { invoice, settings }
 //   GET ?id=…&pdf=1           -> the PDF (download)

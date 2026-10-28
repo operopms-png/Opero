@@ -1,4 +1,4 @@
-// Draws a sent document as an A4 PDF (pdf-lib): Sangsters letterhead on every
+// Draws a sent document as an A4 PDF (pdf-lib): NOVOURQ letterhead on every
 // page, the document text (headings, paragraphs, lists, bold/italic), and at the
 // end either signature lines or the electronic signature record.
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
@@ -33,7 +33,7 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   }
   const ink = hex('#1F1F1F'), grey = hex('#6B6B6B'), gold = hex('#89CFF0'), goldBg = hex('#89CFF0')
   const logo = await loadImage(pdf, s.logo_url, siteUrl)
-  const company = s.company_name || 'Sangsters Group'
+  const company = s.company_name || 'NOVOURQ Group'
   const pages: PDFPage[] = []
   let page!: PDFPage, y = 0
 

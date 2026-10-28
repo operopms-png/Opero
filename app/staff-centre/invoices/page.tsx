@@ -1,5 +1,5 @@
 'use client'
-// Staff Centre → Finance → Invoices, in the Sangsters invoice format.
+// Staff Centre → Finance → Invoices, in the NOVOURQ invoice format.
 // List: unpaid / overdue / paid with Mark paid. Editor (?id=… or ?new=1): pick
 // who to bill, add lines, choose currency and due date — the invoice on the
 // right updates as you type. The fixed parts (logo, contact details, bank
@@ -50,7 +50,7 @@ function List({ open }: { open: (v: any) => void }) {
   }
   return (
     <CrmPage>
-      <CrmHeader title="Invoices" subtitle="Invoices in the Sangsters format. Paid invoices count as money in on Finance."
+      <CrmHeader title="Invoices" subtitle="Invoices in the NOVOURQ format. Paid invoices count as money in on Finance."
         actions={<>{d?.isAdmin && <button style={btn('ghost')} onClick={() => setSettings(true)}>Invoice settings</button>}<button style={btn('gold')} onClick={() => open({ isNew: true })}>+ New invoice</button></>}
         tabs={[{ k: 'all', l: 'All', count: all.length }, { k: 'sent', l: 'Unpaid', count: n('sent') }, { k: 'overdue', l: 'Overdue', count: n('overdue') }, { k: 'paid', l: 'Paid', count: n('paid') }, { k: 'draft', l: 'Drafts', count: n('draft') }]} tab={tab} onTab={setTab} />
       <Body>
@@ -63,7 +63,7 @@ function List({ open }: { open: (v: any) => void }) {
             <Stat label="Next number" value={`${d.settings?.prefix || 'INV'}${String(d.settings?.next_number || 1).padStart(4, '0')}`} />
           </div>
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search number, name or email" style={{ ...input, maxWidth: 320, marginBottom: 14 }} />
-          {shown.length === 0 ? <Empty>{all.length === 0 ? <>No invoices yet. Press <b>New invoice</b> — pick who it’s for, add the lines, and it comes out in the Sangsters format ready to send.</> : 'No invoices match.'}</Empty> : (
+          {shown.length === 0 ? <Empty>{all.length === 0 ? <>No invoices yet. Press <b>New invoice</b> — pick who it’s for, add the lines, and it comes out in the NOVOURQ format ready to send.</> : 'No invoices match.'}</Empty> : (
             <div style={{ background: '#fff', border: '1px solid ' + C.row, borderRadius: 8, overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 780 }}>
                 <thead><tr style={{ background: '#F7F8FA' }}>{['Number', 'Bill to', 'Date', 'Due', 'Amount', 'Status', ''].map((h, i) => <th key={i} style={{ textAlign: i === 4 ? 'right' : 'left', padding: '9px 16px', fontSize: 11.5, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.04em' }}>{h}</th>)}</tr></thead>

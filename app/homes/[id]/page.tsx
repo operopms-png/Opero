@@ -10,10 +10,10 @@ export const dynamic = 'force-dynamic'
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const h = await getListing(id)
-  if (!h) return { title: 'Home to rent · Sangsters Group' }
+  if (!h) return { title: 'Home to rent · NOVOURQ Group' }
   const title = `${titleCase(h.name)}${h.rent ? ` — ${money(h.rent, h.currency)} / month` : ''}`
   const description = [bedLabel(h.bedrooms), h.type, h.address].filter(Boolean).join(' · ')
-  return { title: `${title} · Sangsters Group`, description, openGraph: { title, description, images: h.photos[0] ? [h.photos[0].url] : ['/logo-512.png'] } }
+  return { title: `${title} · NOVOURQ Group`, description, openGraph: { title, description, images: h.photos[0] ? [h.photos[0].url] : ['/logo-512.png'] } }
 }
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

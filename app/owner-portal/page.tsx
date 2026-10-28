@@ -32,12 +32,12 @@ function parseAttachments(val: string | null | undefined): string[] {
   return val.startsWith('http') ? [val] : []
 }
 
-const MGMT_FEE = 0.40 // Sangsters takes 40%, owner gets 60%
+const MGMT_FEE = 0.40 // NOVOURQ takes 40%, owner gets 60%
 
 const STAGING_STEPS = [
   'Property virtually viewed and confirmed',
   'Management agreement signed',
-  'Fees, rent and deposit sent to Sangsters Group',
+  'Fees, rent and deposit sent to NOVOURQ Group',
   'Offer accepted or rejected by landlord',
   'Contract viewed and signed',
   'Rent and deposit sent to broker',
@@ -1341,7 +1341,7 @@ export default function OwnerPortalPage() {
                   return (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     <div style={{ maxWidth: '70%', background: isMine ? '#89CFF0' : '#F3F4F6', color: isMine ? '#fff' : '#323338', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
-                      <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'Sangsters Group' : (chatOwner?.name ?? 'Owner')}</div>
+                      <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'NOVOURQ Group' : (chatOwner?.name ?? 'Owner')}</div>
                       {parseAttachments(m.attachment_url).length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: m.message ? 8 : 4 }}>
                           {parseAttachments(m.attachment_url).map((url, ai) => (
@@ -1820,7 +1820,7 @@ export default function OwnerPortalPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 { label: 'Description', key: 'description', placeholder: 'Monthly payout' },
-                { label: 'Property Name', key: 'property_name', placeholder: 'Sangsters Aurevo' },
+                { label: 'Property Name', key: 'property_name', placeholder: 'NOVOURQ Aurevo' },
               ].map(f => (
                 <div key={f.key}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>{f.label}</div>

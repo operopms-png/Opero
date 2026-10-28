@@ -17,7 +17,7 @@ async function ensureSettings(biz: string) {
   let s = await getSettings(biz)
   if (!s) {
     const { data: chat } = await serviceClient.from('website_chat_settings').select('assistant_name,knowledge,alert_email,company_name').eq('business_id', biz).maybeSingle()
-    await serviceClient.from('ai_receptionist_settings').insert({ business_id: biz, assistant_name: chat?.assistant_name || 'Sangsters Assistant', knowledge: chat?.knowledge ?? null, alert_email: chat?.alert_email ?? null, company_name: chat?.company_name || 'Sangsters' })
+    await serviceClient.from('ai_receptionist_settings').insert({ business_id: biz, assistant_name: chat?.assistant_name || 'NOVOURQ Assistant', knowledge: chat?.knowledge ?? null, alert_email: chat?.alert_email ?? null, company_name: chat?.company_name || 'NOVOURQ' })
     s = await getSettings(biz)
   }
   return s!

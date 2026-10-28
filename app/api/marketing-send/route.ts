@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   const { data: settings } = await serviceClient.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id', userId).single()
   const from = settings?.marketing_from_email
-    ? `${settings.marketing_from_name || 'Sangsters Group'} <${settings.marketing_from_email}>`
+    ? `${settings.marketing_from_name || 'NOVOURQ Group'} <${settings.marketing_from_email}>`
     : undefined // falls back to sendEmail's default (notifications@EMAIL_DOMAIN) if nothing's configured
 
   const replyTo = `marketing+${email.reply_token}@${EMAIL_DOMAIN}`

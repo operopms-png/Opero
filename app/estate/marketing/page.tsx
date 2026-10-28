@@ -20,7 +20,7 @@ export default function Page() {
   const [sendingEmailId, setSendingEmailId] = useState<string|null>(null)
   const [emailReplies, setEmailReplies] = useState<Record<string,any[]>>({})
   const [showSendSettings, setShowSendSettings] = useState(false)
-  const [sendSettings, setSendSettings] = useState({marketing_from_email:'',marketing_from_name:'Sangsters Group'})
+  const [sendSettings, setSendSettings] = useState({marketing_from_email:'',marketing_from_name:'NOVOURQ Group'})
   const [savingSendSettings, setSavingSendSettings] = useState(false)
   const [emailSubTab, setEmailSubTab] = useState('Manage')
   const [emailFilter, setEmailFilter] = useState('All emails')
@@ -45,7 +45,7 @@ export default function Page() {
       if(!user){window.location.href='/login';return}
       await loadAll(user.id)
       const { data: settings } = await supabase.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id',user.id).single()
-      if (settings) setSendSettings({marketing_from_email:settings.marketing_from_email||'',marketing_from_name:settings.marketing_from_name||'Sangsters Group'})
+      if (settings) setSendSettings({marketing_from_email:settings.marketing_from_email||'',marketing_from_name:settings.marketing_from_name||'NOVOURQ Group'})
       setLoading(false)
     })
   },[])
@@ -266,13 +266,13 @@ export default function Page() {
                 <div style={{fontSize:20,fontWeight:700,color:'#323338'}}>Marketing Email</div>
                 <div style={{fontSize:12,color:'#667085',marginTop:2}}>{emails.length} marketing email{emails.length===1?'':'s'} · {emails.filter((e:any)=>e.status==='Sent').length} sent this month</div>
               </div>
-              <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#323338'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'Sangsters default notifications address (not set up yet)'}</strong> <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',marginLeft:8}}>{sendSettings.marketing_from_email?'Change':'Set up'}</button></div>
+              <div style={{fontSize:12,color:'#667085'}}>Sending as: <strong style={{color:'#323338'}}>{sendSettings.marketing_from_email?`${sendSettings.marketing_from_name} <${sendSettings.marketing_from_email}>`:'NOVOURQ default notifications address (not set up yet)'}</strong> <button onClick={()=>setShowSendSettings(!showSendSettings)} style={{fontSize:12,fontWeight:600,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',marginLeft:8}}>{sendSettings.marketing_from_email?'Change':'Set up'}</button></div>
             </div>
             {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
               <p style={{fontSize:12,color:'#98A2B3',marginBottom:16,lineHeight:1.5}}>This address's domain must be verified in Resend (SPF/DKIM records added to its DNS) or sends will fail or land in spam. If you haven't verified sangstersgroup.com in Resend yet, do that first — this setting alone won't make sends work on an unverified domain.</p>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
-                <div><label style={lbl}>From Name</label><input value={sendSettings.marketing_from_name} onChange={e=>setSendSettings({...sendSettings,marketing_from_name:e.target.value})} placeholder="Sangsters Group" style={inp}/></div>
+                <div><label style={lbl}>From Name</label><input value={sendSettings.marketing_from_name} onChange={e=>setSendSettings({...sendSettings,marketing_from_name:e.target.value})} placeholder="NOVOURQ Group" style={inp}/></div>
                 <div><label style={lbl}>From Email</label><input value={sendSettings.marketing_from_email} onChange={e=>setSendSettings({...sendSettings,marketing_from_email:e.target.value})} placeholder="info@sangstersgroup.com" style={inp}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>

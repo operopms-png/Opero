@@ -69,7 +69,7 @@ function StaffLoginForm() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/sangsters-logo.jpg"
-              alt="Sangsters Group Development"
+              alt="NOVOURQ Group Development"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           </div>

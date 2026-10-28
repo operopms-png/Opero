@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         .eq('user_id', link.business_id)
         .maybeSingle()
       destination = businessSub?.stripe_connect_onboarded ? businessSub.stripe_connect_account_id : null
-      // card_direct: no connected account — charge on the portal's own Stripe account (Sangsters' account, STRIPE_SECRET_KEY)
+      // card_direct: no connected account — charge on the portal's own Stripe account (NOVOURQ' account, STRIPE_SECRET_KEY)
       if (!destination && !link.card_direct) {
         return NextResponse.json({ error: 'Card payments aren’t available yet. Please choose bank transfer.' }, { status: 400 })
       }

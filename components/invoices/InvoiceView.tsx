@@ -1,4 +1,4 @@
-// The Sangsters invoice as a web page — same layout as the PDF (lib/invoice-pdf.ts).
+// The NOVOURQ invoice as a web page — same layout as the PDF (lib/invoice-pdf.ts).
 // Used for the live preview while staff fill an invoice in, and for the page
 // the client opens from their email (/invoice/[token]).
 import React from 'react'

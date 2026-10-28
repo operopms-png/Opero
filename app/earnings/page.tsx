@@ -6,7 +6,7 @@ import Script from 'next/script'
 // ads, letters and realtor referrals. Add ?src=facebook etc. to track where
 // a landlord came from (it shows on the lead in the portal).
 export const metadata: Metadata = {
-  title: 'What could your property earn? · Sangsters',
+  title: 'What could your property earn? · NOVOURQ',
   description: 'Free earnings estimate for landlords in Jamaica, the UK and the UAE — holiday let and long-term let, based on live listings.',
 }
 
@@ -15,8 +15,8 @@ export default function Page() {
     <div style={{ minHeight: '100vh', background: '#fff', fontFamily: 'Figtree, -apple-system, sans-serif', color: '#191815' }}>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" />
       <header style={{ borderBottom: '1px solid #ece8df', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12, maxWidth: 1100, margin: '0 auto' }}>
-        <img src="/logo-192.png" alt="Sangsters" style={{ width: 40, height: 40, borderRadius: 8 }} />
-        <span style={{ fontWeight: 700, fontSize: 19, color: '#5A4320' }}>Sangsters</span>
+        <img src="/logo-192.png" alt="NOVOURQ" style={{ width: 40, height: 40, borderRadius: 8 }} />
+        <span style={{ fontWeight: 700, fontSize: 19, color: '#5A4320' }}>NOVOURQ</span>
         <a href="https://sangstersgroup.com" style={{ marginLeft: 'auto', fontSize: 13.5, color: '#191815', fontWeight: 600 }}>thenovourq.com</a>
       </header>
       <main style={{ padding: '40px 16px 64px' }}>
