@@ -18,6 +18,7 @@ const NAV_GROUPS = [
     modulePrice: '£39/mo',
     items: [
       { href: '/pm', label: 'Operations', key: 'pm', icon: 'building', badge: 'pm' },
+      { href: '/estate', label: 'Estate Agency', key: 'estate', icon: 'building', badge: 'estate', requiresModule: 'ea' },
     ]
   },
   {
