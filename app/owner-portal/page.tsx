@@ -60,9 +60,9 @@ const STAFF_NAV = [
 function StatCard({ label, value, sub, dark }: any) {
   return (
     <div style={{ background: dark ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', border: `1px solid ${dark ? '#EADBB8' : '#E4E7EC'}`, borderRadius: 10, padding: '16px 20px' }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: dark ? '#8A6B2E' : '#667085', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: dark ? '#624920' : '#323338' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: dark ? '#8A6B2E' : '#98A2B3', marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 11, fontWeight: 600, color: dark ? '#89CFF0' : '#667085', textTransform: 'uppercase' as const, letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: dark ? '#89CFF0' : '#323338' }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: dark ? '#89CFF0' : '#98A2B3', marginTop: 4 }}>{sub}</div>}
     </div>
   )
 }
@@ -691,7 +691,7 @@ export default function OwnerPortalPage() {
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>{bookedNights} Nights</div>
                 <ResponsiveContainer width="100%" height={70}>
                   <AreaChart data={chartData}>
-                    <Area type="monotone" dataKey="bookings" stroke="#89CFF0" fill="#D0AE4C22" strokeWidth={2} />
+                    <Area type="monotone" dataKey="bookings" stroke="#89CFF0" fill="#89CFF022" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -904,7 +904,7 @@ export default function OwnerPortalPage() {
           <div style={card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>Maintenance</div>
-              {isStaff && <button onClick={() => setAddingIssue(true)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#C9A84C', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Issue</button>}
+              {isStaff && <button onClick={() => setAddingIssue(true)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#89CFF0', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Issue</button>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
               <StatCard label="Open" value={tickets.filter(t => t.status === 'open').length} />
@@ -1417,7 +1417,7 @@ export default function OwnerPortalPage() {
                   <input value={contactForm.address ?? ownerProfile?.address ?? ''} onChange={e => setContactForm((p: any) => ({ ...p, address: e.target.value }))} placeholder="Full address" style={{ width: '100%', padding: '10px 14px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
               </div>
-              <button onClick={saveContactInfo} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+              <button onClick={saveContactInfo} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
             </div>
             <div style={card}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>🏦 Banking Details <span style={{ fontSize: 11, fontWeight: 400, color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: 20 }}>Secure</span></div>
@@ -1442,7 +1442,7 @@ export default function OwnerPortalPage() {
                   </select>
                 </div>
               </div>
-              <button onClick={saveBankingInfo} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Banking Info</button>
+              <button onClick={saveBankingInfo} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Banking Info</button>
             </div>
             <div style={card}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>💳 Payment History</div>
@@ -1541,7 +1541,7 @@ export default function OwnerPortalPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={createOwnerAccount} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button onClick={createOwnerAccount} disabled={saving} style={{ marginTop: 16, padding: '10px 20px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Creating…' : 'Create Account'}
               </button>
             </div>
@@ -1616,7 +1616,7 @@ export default function OwnerPortalPage() {
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => deleteOwner(editingOwner.id)} style={{ padding: '9px 16px', background: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Delete Owner</button>
               <button onClick={() => setEditingOwner(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={saveOwnerEdit} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+              <button onClick={saveOwnerEdit} disabled={saving} style={{ padding: '9px 20px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
             </div>
           </div>
         </div>
@@ -1659,7 +1659,7 @@ export default function OwnerPortalPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setEditingProperty(null)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={savePropertyEdit} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+              <button onClick={savePropertyEdit} disabled={saving} style={{ padding: '9px 20px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
             </div>
           </div>
         </div>
@@ -1719,7 +1719,7 @@ export default function OwnerPortalPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setAddingBooking(false)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addBooking} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Booking</button>
+              <button onClick={addBooking} disabled={saving} style={{ padding: '9px 20px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Add Booking</button>
             </div>
           </div>
         </div>
@@ -1790,7 +1790,7 @@ export default function OwnerPortalPage() {
                     ))}
                   </div>
                 )}
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', border: '1px dashed #C9A84C', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#C9A84C' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', border: '1px dashed #89CFF0', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: '#89CFF0' }}>
                   {uploadingIssue ? 'Uploading…' : '📎 Attach photos or videos'}
                   <input type="file" accept="image/*,video/*" multiple style={{ display: 'none' }} onChange={async e => {
                     const files = Array.from(e.target.files ?? [])
@@ -1806,7 +1806,7 @@ export default function OwnerPortalPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
               <button onClick={() => setAddingIssue(false)} style={{ padding: '9px 16px', background: '#F3F4F6', border: 'none', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={addMaintenanceIssue} disabled={saving} style={{ padding: '9px 20px', background: '#C9A84C', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Submit Issue</button>
+              <button onClick={addMaintenanceIssue} disabled={saving} style={{ padding: '9px 20px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Submit Issue</button>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { fillScript, categoryColor, type Script } from '../../lib/scripts-shared'
 
-const C = { ink: '#323338', muted: '#676879', faint: '#9699A6', border: '#D0D4E4', row: '#E6E9EF', cream: '#FBF4E6', gold: '#89CFF0', brown: '#624920' }
+const C = { ink: '#323338', muted: '#676879', faint: '#9699A6', border: '#D0D4E4', row: '#E6E9EF', cream: '#FBF4E6', gold: '#89CFF0', brown: '#89CFF0' }
 
 async function api(path: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -61,7 +61,7 @@ export default function ScriptPicker({ where, name, property, onInsert, up }: {
               <div key={cat}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '.04em', padding: '8px 8px 4px' }}><span style={{ width: 8, height: 8, borderRadius: 2, background: categoryColor(cat) }} />{cat}</div>
                 {shown.filter(s => s.category === cat).map(s => s.kind === 'guide' ? (
-                  <button key={s.id} type="button" onClick={() => setGuide(guide?.id === s.id ? null : s)} style={{ display: 'block', width: '100%', textAlign: 'left', border: '1px dashed #C9B37A', background: '#FFFCF3', borderRadius: 5, padding: '7px 9px', margin: '2px 0', cursor: 'pointer', fontFamily: 'inherit', color: C.ink }}>
+                  <button key={s.id} type="button" onClick={() => setGuide(guide?.id === s.id ? null : s)} style={{ display: 'block', width: '100%', textAlign: 'left', border: '1px dashed #89CFF0', background: '#FFFCF3', borderRadius: 5, padding: '7px 9px', margin: '2px 0', cursor: 'pointer', fontFamily: 'inherit', color: C.ink }}>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>📘 {s.name}</span> <span style={{ fontSize: 11.5, color: C.faint }}>staff guide · not for sending</span>
                     {guide?.id === s.id && <span style={{ display: 'block', whiteSpace: 'pre-wrap', fontSize: 12.5, color: C.ink, marginTop: 6, lineHeight: 1.5 }}>{s.body}</span>}
                   </button>
@@ -71,7 +71,7 @@ export default function ScriptPicker({ where, name, property, onInsert, up }: {
                       {s.stage && <span style={{ display: 'block', fontSize: 11, color: categoryColor(s.category), fontWeight: 600 }}>{s.stage}</span>}
                       <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600 }}>{s.name}</span>
                       <span style={{ display: 'block', fontSize: 12, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fill(s).replace(/\s+/g, ' ')}</span>
-                      {s.note && <span style={{ display: 'block', fontSize: 11.5, color: '#9A6A00', marginTop: 2 }}>⚠ {s.note}</span>}
+                      {s.note && <span style={{ display: 'block', fontSize: 11.5, color: '#89CFF0', marginTop: 2 }}>⚠ {s.note}</span>}
                     </button>
                     <button type="button" title="Copy" onClick={() => { navigator.clipboard?.writeText(fill(s)).then(() => { setCopied(s.id); used(s); setTimeout(() => setCopied(''), 1500) }).catch(() => {}) }} style={{ flexShrink: 0, border: '1px solid ' + C.border, background: '#fff', borderRadius: 4, padding: '3px 7px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: copied === s.id ? '#00A35C' : C.muted }}>{copied === s.id ? '✓' : '⧉'}</button>
                   </div>

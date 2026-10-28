@@ -114,7 +114,7 @@ export function ListingCard({ listing: l, onRemove, authHeaders, onImport }: { l
     ['Year built', l.yearBuilt || '—'],
   ] as [string, string][]).filter(([, v]) => v !== '—')
   const extra: [string, string | null][] = [['Amenities', l.amenities], ['Area', l.siteInfluence], ['Exterior', l.exterior], ['Subdivision', l.subdivision]]
-  const statusTone = /expired|withdrawn|cancel/i.test(l.status || '') ? { bg: '#FDECEC', c: C.red } : /sold|under/i.test(l.status || '') ? { bg: '#FFF4DE', c: '#9A6400' } : { bg: '#E6F7EF', c: '#0E7C55' }
+  const statusTone = /expired|withdrawn|cancel/i.test(l.status || '') ? { bg: '#FDECEC', c: C.red } : /sold|under/i.test(l.status || '') ? { bg: '#FFF4DE', c: '#89CFF0' } : { bg: '#E6F7EF', c: '#0E7C55' }
   const map = l.lat && l.lng ? `https://www.google.com/maps?q=${l.lat},${l.lng}` : `https://www.google.com/maps/search/${encodeURIComponent([l.address, l.subarea, l.area, 'Jamaica'].filter(Boolean).join(', '))}`
   const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 6, border: `1px solid ${C.line}`, background: '#fff', fontSize: 12, color: '#344054', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap' }
   const arrow = (side: 'left' | 'right', size = 34): React.CSSProperties => ({ position: 'absolute', top: '50%', [side]: 10, transform: 'translateY(-50%)', width: size, height: size, borderRadius: size, border: 'none', background: 'rgba(25,24,21,.65)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' })

@@ -38,7 +38,7 @@ const MONEY_FIELDS = ['price','rent','rentPerRoom','subletRent','landlordDeposit
 
 const VERDICT_COLORS: Record<string,{color:string;bg:string;border:string}> = {
   PASS:   { color:'#10B981', bg:'#ECFDF5', border:'#A7F3D0' },
-  REVIEW: { color:'#F59E0B', bg:'#FEF3C7', border:'#FDE68A' },
+  REVIEW: { color:'#F59E0B', bg:'#FEF3C7', border:'#89CFF0' },
   REJECT: { color:'#EF4444', bg:'#FEE2E2', border:'#FDA29B' },
 }
 const RULE_STATUS_COLORS: Record<string,string> = {
@@ -351,8 +351,8 @@ export default function InvestPage() {
     <div style={{minHeight:'100vh',background:'#fff',fontFamily:"'Figtree',sans-serif",color:'#323338'}}>
       {/* Header */}
       <div style={{padding:'22px 28px 0',background:'linear-gradient(135deg,#FBF4E6,#F3E6C8)',borderBottom:'1px solid #EADBB8'}}>
-        <h1 style={{fontSize:26,fontWeight:500,color:'#624920',margin:'0 0 2px'}}>Invest</h1>
-        <div style={{fontSize:13,color:'#8A7248',marginBottom:12}}>Analyse deals, keep the ones worth comparing and track properties you are watching.</div>
+        <h1 style={{fontSize:26,fontWeight:500,color:'#89CFF0',margin:'0 0 2px'}}>Invest</h1>
+        <div style={{fontSize:13,color:'#89CFF0',marginBottom:12}}>Analyse deals, keep the ones worth comparing and track properties you are watching.</div>
         <div style={{display:'flex',gap:22}}>
           {SECTIONS.map(s=>(
             <button key={s} onClick={()=>goSection(s)} style={{padding:'8px 2px',marginBottom:-1,border:'none',borderBottom:'2px solid '+(section===s?BLUE:'transparent'),background:'none',color:section===s?'#323338':'#676879',fontSize:14,fontWeight:section===s?600:400,cursor:'pointer',fontFamily:'inherit'}}>{s}{s==='Saved Deals'&&savedDeals.length>0?` (${savedDeals.length})`:''}{s==='Watchlist'&&watchlist.length>0?` (${watchlist.length})`:''}</button>
@@ -376,7 +376,7 @@ export default function InvestPage() {
                 <div style={{fontSize:13,fontWeight:600,color:'#344054',marginBottom:12}}>Select your investment strategy</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
                   {STRATEGIES.map(s=>(
-                    <div key={s.id} onClick={()=>setStrategy(s.id)} style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,cursor:'pointer',transition:'all 0.15s'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#D0AE4C';e.currentTarget.style.background='#FFFCF5'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='#E6E9EF';e.currentTarget.style.background='#fff'}}>
+                    <div key={s.id} onClick={()=>setStrategy(s.id)} style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,cursor:'pointer',transition:'all 0.15s'}} onMouseEnter={e=>{e.currentTarget.style.borderColor='#89CFF0';e.currentTarget.style.background='#FFFCF5'}} onMouseLeave={e=>{e.currentTarget.style.borderColor='#E6E9EF';e.currentTarget.style.background='#fff'}}>
                       <div style={{marginBottom:12,color:BLUE}}>{STRATEGY_ICONS[s.id]}</div>
                       <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>{s.label}</div>
                       <div style={{fontSize:12,color:'#676879'}}>{s.desc}</div>
@@ -511,7 +511,7 @@ export default function InvestPage() {
                 </div>
 
                 {form.listing&&<ListingCard listing={form.listing}/>}
-                {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#7A5A12'}}>⚠ No setup or conversion costs entered, so ROI is based only on the {S}{n0((result.totalUpfront||0))} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
+                {isR2R&&!result.furnitureCost&&!result.conversionCost&&<div style={{marginBottom:12,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',border:'1px solid #F5DFB0',fontSize:12.5,color:'#89CFF0'}}>⚠ No setup or conversion costs entered, so ROI is based only on the {S}{n0((result.totalUpfront||0))} deposit and first month’s rent to the landlord. Add furniture, licence and safety costs for a realistic ROI.</div>}
                 {/* Key metrics */}
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
                   {result.monthlyCashflow!==undefined&&<div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:20,textAlign:'center'}}>
@@ -559,7 +559,7 @@ export default function InvestPage() {
                       <div style={{fontSize:12.5,color:'#676879',marginBottom:14}}>The {a.rooms}-bed as you rent it, against converting it to {result.rooms} rooms at {S}{parseFloat(form.subletRent)||0} a room.</div>
                       <div style={{overflowX:'auto'}}>
                         <table style={{width:'100%',borderCollapse:'collapse',fontSize:13.5,minWidth:460}}>
-                          <thead><tr><th style={{textAlign:'left',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}></th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}>As is ({a.rooms} rooms)</th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#624920',fontWeight:700,borderBottom:'1px solid #E6E9EF',background:'#FBF4E6'}}>Converted ({result.rooms} rooms)</th></tr></thead>
+                          <thead><tr><th style={{textAlign:'left',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}></th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#676879',fontWeight:600,borderBottom:'1px solid #E6E9EF'}}>As is ({a.rooms} rooms)</th><th style={{textAlign:'right',padding:'8px 10px',fontSize:12,color:'#89CFF0',fontWeight:700,borderBottom:'1px solid #E6E9EF',background:'#FBF4E6'}}>Converted ({result.rooms} rooms)</th></tr></thead>
                           <tbody>{rows.map(([l,x,y,money],i)=>(
                             <tr key={i}><td style={{padding:'8px 10px',color:'#676879',borderBottom:'1px solid #F0F1F5'}}>{l}</td>
                               <td style={{padding:'8px 10px',textAlign:'right',fontWeight:600,color:money?(x.startsWith('-')?'#EF4444':'#10B981'):'#323338',borderBottom:'1px solid #F0F1F5'}}>{x}</td>
@@ -572,10 +572,10 @@ export default function InvestPage() {
                         <div style={{background:'#F7F8FA',borderRadius:8,padding:'10px 14px'}}><div style={{fontSize:11.5,color:'#676879'}}>Conversion pays for itself in</div><div style={{fontSize:20,fontWeight:800,color:'#323338'}}>{result.conversionPayback!=null?result.conversionPayback.toFixed(1)+' months':'—'}</div>{result.conversionPayback!=null&&<div style={{fontSize:11.5,color:result.conversionPayback<=result.leaseMonths?'#0E7C55':'#EF4444',fontWeight:600}}>{result.conversionPayback<=result.leaseMonths?'✓ within your lease':'⚠ longer than your lease'}</div>}</div>
                         <div style={{background:'#F7F8FA',borderRadius:8,padding:'10px 14px'}}><div style={{fontSize:11.5,color:'#676879'}}>Extra profit over the lease</div><div style={{fontSize:20,fontWeight:800,color:result.leaseProfit-a.leaseProfit>=0?'#10B981':'#EF4444'}}>{gbp(result.leaseProfit-a.leaseProfit)}</div></div>
                       </div>
-                      {result.rooms>a.rooms&&<div style={{marginTop:14,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',fontSize:12.5,color:'#7A5A12',lineHeight:1.6}}>
+                      {result.rooms>a.rooms&&<div style={{marginTop:14,padding:'10px 14px',borderRadius:8,background:'#FFF8EC',fontSize:12.5,color:'#89CFF0',lineHeight:1.6}}>
                         <b>Before converting:</b> get the landlord’s written consent to the works and to letting by the room; check the HMO licence for {result.rooms} occupants{result.rooms>=7?' and planning — 7+ unrelated sharers usually needs planning permission in the UK (sui generis)':''}; check minimum room sizes, fire doors, alarms and enough bathrooms and kitchen space for {result.rooms} people. In Jamaica, check with the parish council on use and building approval.
                       </div>}
-                      {(!result.conversionCost||!result.furnitureCost)&&result.rooms>a.rooms&&<div style={{marginTop:8,fontSize:12,color:'#9A6400'}}>No {[!result.furnitureCost&&'setup (furniture, licence, safety)',!result.conversionCost&&'conversion'].filter(Boolean).join(' or ')} cost entered — upfront cash only includes the landlord deposit and first month’s rent, so ROI and payback will look better than they really are.</div>}
+                      {(!result.conversionCost||!result.furnitureCost)&&result.rooms>a.rooms&&<div style={{marginTop:8,fontSize:12,color:'#89CFF0'}}>No {[!result.furnitureCost&&'setup (furniture, licence, safety)',!result.conversionCost&&'conversion'].filter(Boolean).join(' or ')} cost entered — upfront cash only includes the landlord deposit and first month’s rent, so ROI and payback will look better than they really are.</div>}
                     </div>
                   )
                 })()}
@@ -727,7 +727,7 @@ export default function InvestPage() {
                 {clientProp&&<div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',marginBottom:14,padding:'12px 16px',borderRadius:8,background:'#FBF6EA',border:'1px solid #EADFC2',fontSize:13,color:'#5A4320'}}>
                   <span>Client property: <b>{clientProp.address}</b>{clientSaved?` — numbers saved at ${clientSaved}`:''}</span>
                   <button onClick={saveToClient} style={{marginLeft:'auto',padding:'8px 16px',borderRadius:6,border:'none',background:'#191815',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>{clientSaved?'Save again':'Save numbers to client property'}</button>
-                  <a href={`/staff-centre/client-properties?id=${clientProp.id}`} style={{fontSize:13,fontWeight:600,color:'#8E6B1F'}}>Back to property →</a>
+                  <a href={`/staff-centre/client-properties?id=${clientProp.id}`} style={{fontSize:13,fontWeight:600,color:'#89CFF0'}}>Back to property →</a>
                 </div>}
                 <div style={{display:'flex',gap:12,marginBottom:24}}>
                   <button onClick={saveDeal} style={{padding:'12px 24px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>💾 Save Deal</button>
@@ -799,7 +799,7 @@ export default function InvestPage() {
                       <div style={{marginBottom:20}}>
                         <div style={{fontSize:13,fontWeight:700,color:'#323338',marginBottom:10}}>Risk Flags</div>
                         {(verdict.risk_flags||[]).map((r:string,i:number)=>(
-                          <div key={i} style={{padding:'10px 14px',borderRadius:8,background:'#FEF3C7',border:'1px solid #FDE68A',fontSize:12.5,color:'#92400E',marginBottom:6}}>⚠ {r}</div>
+                          <div key={i} style={{padding:'10px 14px',borderRadius:8,background:'#FEF3C7',border:'1px solid #89CFF0',fontSize:12.5,color:'#92400E',marginBottom:6}}>⚠ {r}</div>
                         ))}
                       </div>
                     )}
@@ -919,11 +919,11 @@ export default function InvestPage() {
               </div>
             ):(
               <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',overflow:'hidden'}}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 140px 130px 1fr 110px',padding:'9px 16px',background:'#fff',borderBottom:'1px solid #E6E9EF',borderLeft:'4px solid #D0AE4C',fontSize:12.5,fontWeight:500,color:'#676879',gap:8}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 140px 130px 1fr 110px',padding:'9px 16px',background:'#fff',borderBottom:'1px solid #E6E9EF',borderLeft:'4px solid #89CFF0',fontSize:12.5,fontWeight:500,color:'#676879',gap:8}}>
                   <span>Address</span><span>Price</span><span>Status</span><span>Notes</span><span></span>
                 </div>
                 {watchlist.map(w=>(
-                  <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 130px 1fr 110px',padding:'8px 16px',borderBottom:'1px solid #E6E9EF',borderLeft:'4px solid #D0AE4C',alignItems:'center',gap:8}}>
+                  <div key={w.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 130px 1fr 110px',padding:'8px 16px',borderBottom:'1px solid #E6E9EF',borderLeft:'4px solid #89CFF0',alignItems:'center',gap:8}}>
                     <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.address}</span>
                     <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.price?'£'+parseFloat(w.price).toLocaleString():'—'}</span>
                     <span style={{fontSize:12,fontWeight:500,padding:'5px 8px',borderRadius:4,textAlign:'center',color:'#fff',background:WATCH_COLOR[w.status]||'#C4C4C4'}}>{w.status}</span>

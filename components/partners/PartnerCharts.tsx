@@ -17,7 +17,7 @@ function useWidth(fallback: number) {
 // Plain SVG, no chart library. Colours: short-term (guests) gold, long-term
 // (tenants) blue — a pair checked for colour-blind separation.
 
-export const ST_COL = '#B08A2E'
+export const ST_COL = '#89CFF0'
 export const LT_COL = '#2F6DB5'
 const INK = '#191815', MUTE = '#8a857a', GRID = '#f0ede6', AXIS = '#d9d4c8', LINE = '#ebe7de'
 
@@ -92,7 +92,7 @@ export function Kpi({ label, value, delta, deltaText, data, highlight }: { label
   return (
     <div style={{ ...card, padding: '15px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 8, minWidth: 0, ...(highlight ? { background: 'linear-gradient(135deg,#FBF4E6,#F6EBD2)', borderColor: '#EADBB8' } : {}) }}>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 12, color: highlight ? '#8A6B2E' : MUTE, fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</div>
+        <div style={{ fontSize: 12, color: highlight ? '#89CFF0' : MUTE, fontWeight: 500, whiteSpace: 'nowrap' }}>{label}</div>
         <div style={{ fontSize: 26, fontWeight: 700, color: INK, marginTop: 5, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
         {deltaText && (
           <div style={{ fontSize: 12, marginTop: 2, color: '#55524b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -231,7 +231,7 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
 }
 
 export function Badge({ tone, children }: { tone: 'gold' | 'green' | 'amber' | 'blue' | 'grey' | 'red'; children: React.ReactNode }) {
-  const t = { gold: ['#faf3e2', '#8E6B1F'], green: ['#e7f4ec', '#1F7A4D'], amber: ['#fdf1dc', '#9A5B00'], blue: ['#e6eef8', '#1f4f8a'], grey: ['#f0efec', '#55524b'], red: ['#fdecea', '#B3261E'] }[tone]
+  const t = { gold: ['#faf3e2', '#89CFF0'], green: ['#e7f4ec', '#1F7A4D'], amber: ['#fdf1dc', '#9A5B00'], blue: ['#e6eef8', '#1f4f8a'], grey: ['#f0efec', '#55524b'], red: ['#fdecea', '#B3261E'] }[tone]
   return <span style={{ display: 'inline-block', padding: '2px 9px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, background: t[0], color: t[1], whiteSpace: 'nowrap' }}>{children}</span>
 }
 

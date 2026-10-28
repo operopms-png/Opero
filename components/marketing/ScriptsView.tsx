@@ -43,7 +43,7 @@ export default function ScriptsView() {
       <div style={{ padding: '22px 28px 16px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Scripts</h1>
-          <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 720, lineHeight: 1.5 }}>Paste your scripts here once. They show in <b>Email</b> and the <b>Airbnb Inbox</b> under <b>📋 Scripts</b> so staff can insert or copy them, and the AI follows the ones marked <b>✦ AI can use</b>.</div>
+          <div style={{ fontSize: 13, color: '#89CFF0', maxWidth: 720, lineHeight: 1.5 }}>Paste your scripts here once. They show in <b>Email</b> and the <b>Airbnb Inbox</b> under <b>📋 Scripts</b> so staff can insert or copy them, and the AI follows the ones marked <b>✦ AI can use</b>.</div>
         </div>
         <button style={btn('gold')} onClick={() => setEdit({ ...BLANK, category: cat || '' })}>+ New script</button>
       </div>
@@ -109,7 +109,7 @@ function Card({ s, color, copied, onCopy, onEdit }: { s: Script; color: string; 
   const [more, setMore] = useState(false)
   const long = s.body.length > 420
   if (s.kind === 'guide') return (
-    <div style={{ border: '1px dashed #C9B37A', borderLeft: '4px solid ' + C.brown, background: '#FFFCF3', borderRadius: 6, padding: '12px 14px' }}>
+    <div style={{ border: '1px dashed #89CFF0', borderLeft: '4px solid ' + C.brown, background: '#FFFCF3', borderRadius: 6, padding: '12px 14px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ fontWeight: 600, fontSize: 14.5 }}>📘 {s.name}</div>
         <button onClick={onEdit} style={btn('ghost', true)}>Edit</button>
@@ -137,7 +137,7 @@ function Card({ s, color, copied, onCopy, onEdit }: { s: Script; color: string; 
         {long && !more && <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 50, background: 'linear-gradient(transparent,#FAFAFB)' }} />}
       </div>
       {long && <button onClick={() => setMore(m => !m)} style={{ alignSelf: 'flex-start', border: 'none', background: 'none', color: C.goldDark, fontSize: 12.5, cursor: 'pointer', padding: '4px 0', fontFamily: 'inherit' }}>{more ? 'Show less' : 'Show all'}</button>}
-      {s.note && <div style={{ fontSize: 12.5, color: '#9A6A00', background: '#FFF6DD', borderRadius: 4, padding: '6px 9px', marginTop: 8, lineHeight: 1.45 }}>⚠ {s.note}</div>}
+      {s.note && <div style={{ fontSize: 12.5, color: '#89CFF0', background: '#FFF6DD', borderRadius: 4, padding: '6px 9px', marginTop: 8, lineHeight: 1.45 }}>⚠ {s.note}</div>}
       <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {s.show_airbnb && <span style={tag('#FFE8EC', '#D11A3F')}>Airbnb Inbox</span>}
         {s.show_email && <span style={tag('#E8F1FF', '#2F6FD6')}>Email</span>}

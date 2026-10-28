@@ -263,9 +263,9 @@ function EstateTenantPortalInner() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <img src="/logo.PNG" alt="Sangsters" style={{ width: 44, height: 44, objectFit: 'contain' }} />
           <div>
-        {isStaffView && <div style={{ fontSize: 12, background: '#fff', border: '1px solid #EADBB8', color: '#8A6B2E', display: 'inline-block', padding: '2px 10px', borderRadius: 20, marginBottom: 8 }}>Staff preview</div>}
-        <div style={{ fontSize: 11, color: '#8A6B2E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tenant Portal</div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: '#624920' }}>Welcome, {tenant?.name?.split(' ')[0] ?? 'there'}</div>
+        {isStaffView && <div style={{ fontSize: 12, background: '#fff', border: '1px solid #EADBB8', color: '#89CFF0', display: 'inline-block', padding: '2px 10px', borderRadius: 20, marginBottom: 8 }}>Staff preview</div>}
+        <div style={{ fontSize: 11, color: '#89CFF0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tenant Portal</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: '#89CFF0' }}>Welcome, {tenant?.name?.split(' ')[0] ?? 'there'}</div>
           </div>
         </div>
         {!isStaffView && <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #D0D4E4', background: '#fff', color: '#323338', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>}

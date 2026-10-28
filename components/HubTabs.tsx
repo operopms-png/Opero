@@ -44,7 +44,7 @@ export default function HubTabs() {
   if (!show || !hub) return null
   return (
     <div className="hub-tabs" style={{ height: BAR_H, boxSizing: 'border-box', display: 'flex', alignItems: 'stretch', gap: 4, padding: '0 22px', background: '#fff', borderBottom: '1px solid #EADBB8', overflowX: 'auto', overflowY: 'hidden', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', position: 'sticky', top: 0, zIndex: 20 }}>
-      <span style={{ display: 'flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#8A6B2E', paddingRight: 12, marginRight: 4, borderRight: '1px solid #EFE4CC', whiteSpace: 'nowrap' }}>{hub.label}</span>
+      <span style={{ display: 'flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#89CFF0', paddingRight: 12, marginRight: 4, borderRight: '1px solid #EFE4CC', whiteSpace: 'nowrap' }}>{hub.label}</span>
       {tabs.map(t => {
         const on = tabMatches(t, pathname, search)
         const n = t.badge ? counts[t.badge] ?? 0 : 0

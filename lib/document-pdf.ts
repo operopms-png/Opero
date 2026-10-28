@@ -31,7 +31,7 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     ital: await pdf.embedFont(StandardFonts.TimesRomanItalic), boldItal: await pdf.embedFont(StandardFonts.TimesRomanBoldItalic),
     sans: await pdf.embedFont(StandardFonts.Helvetica), sansBold: await pdf.embedFont(StandardFonts.HelveticaBold),
   }
-  const ink = hex('#1F1F1F'), grey = hex('#6B6B6B'), gold = hex('#B08A2E'), goldBg = hex('#C9A24A')
+  const ink = hex('#1F1F1F'), grey = hex('#6B6B6B'), gold = hex('#89CFF0'), goldBg = hex('#89CFF0')
   const logo = await loadImage(pdf, s.logo_url, siteUrl)
   const company = s.company_name || 'Sangsters Group'
   const pages: PDFPage[] = []
@@ -103,7 +103,7 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   // signatures
   if (doc.signed_at) {
     ensure(110); y += 14
-    page.drawRectangle({ x: M, y: H - y - 88, width: CW, height: 88, color: hex('#FAF6EC'), borderColor: hex('#E3D6B3'), borderWidth: 0.6 })
+    page.drawRectangle({ x: M, y: H - y - 88, width: CW, height: 88, color: hex('#FAF6EC'), borderColor: hex('#89CFF0'), borderWidth: 0.6 })
     page.drawText('SIGNED ELECTRONICALLY', { x: M + 14, y: H - y - 18, size: 8, font: F.sansBold, color: gold })
     page.drawText(safe(doc.signed_name), { x: M + 14, y: H - y - 48, size: 24, font: F.ital, color: ink })
     const when = new Date(doc.signed_at).toUTCString().replace('GMT', 'UTC')

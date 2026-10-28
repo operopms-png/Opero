@@ -10,12 +10,12 @@ import { BLANKS, blankLabel, TOKEN_RE } from '../../lib/doc-text'
 export const DOC_CSS = `
 .doc-sheet{font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.65;color:#1F1F1F;outline:none}
 .doc-sheet h1{font-family:Figtree,Arial,sans-serif;font-size:21px;font-weight:800;text-align:center;letter-spacing:.01em;margin:0 0 18px;text-transform:uppercase}
-.doc-sheet h2{font-family:Figtree,Arial,sans-serif;font-size:15px;font-weight:700;color:#9A7726;margin:22px 0 6px}
+.doc-sheet h2{font-family:Figtree,Arial,sans-serif;font-size:15px;font-weight:700;color:#89CFF0;margin:22px 0 6px}
 .doc-sheet h3{font-family:Figtree,Arial,sans-serif;font-size:14px;font-weight:700;margin:16px 0 4px}
 .doc-sheet p{margin:0 0 11px}.doc-sheet ul,.doc-sheet ol{margin:0 0 11px;padding-left:26px}.doc-sheet li{margin-bottom:4px}
 .doc-sheet hr{border:none;border-top:1px solid #ccc;margin:16px 0}
-.doc-sheet blockquote{margin:0 0 11px;padding-left:14px;border-left:3px solid #E3D6B3;color:#555}
-.doc-sheet .blank{display:inline-block;background:#FBF1D3;border:1px solid #E8D39A;color:#7A5B12;border-radius:4px;padding:0 6px;font:600 12.5px/1.6 ui-monospace,Menlo,monospace;margin:0 1px;cursor:default;user-select:all}
+.doc-sheet blockquote{margin:0 0 11px;padding-left:14px;border-left:3px solid #89CFF0;color:#555}
+.doc-sheet .blank{display:inline-block;background:#FBF1D3;border:1px solid #89CFF0;color:#89CFF0;border-radius:4px;padding:0 6px;font:600 12.5px/1.6 ui-monospace,Menlo,monospace;margin:0 1px;cursor:default;user-select:all}
 .doc-sheet span[data-field]{background:#FBF1D3;border-bottom:2px solid #E2C46F;padding:0 2px;border-radius:2px}
 .doc-sheet span[data-field][data-empty]{background:#FDECEC;border-bottom:2px dashed #E08A8A;color:#B42318}
 .doc-read span[data-field]{background:none;border:none;padding:0}
@@ -81,10 +81,10 @@ export default function DocEditor({ html, resetKey, mode, lock = 'editable', onC
         <button type="button" style={tb} onClick={() => cmd('insertOrderedList')}>1. List</button>
         <button type="button" style={tb} onClick={() => cmd('justifyCenter')}>Centre</button>
         <button type="button" style={tb} onClick={() => cmd('insertHorizontalRule')}>Line</button>
-        {mode === 'template' && <button type="button" style={{ ...tb, background: '#FBF1D3', borderColor: '#E8D39A', color: '#7A5B12' }} onClick={() => setBlankMenu(v => !v)}>+ Insert blank ▾</button>}
+        {mode === 'template' && <button type="button" style={{ ...tb, background: '#FBF1D3', borderColor: '#89CFF0', color: '#89CFF0' }} onClick={() => setBlankMenu(v => !v)}>+ Insert blank ▾</button>}
         {blankMenu && <div style={{ position: 'absolute', top: '100%', left: 12, zIndex: 40, width: 340, maxHeight: 420, overflowY: 'auto', background: '#fff', border: '1px solid #E3E1DB', borderRadius: 8, boxShadow: '0 12px 30px rgba(0,0,0,.14)', padding: 8, fontFamily: 'Figtree,Arial,sans-serif' }}>
           {groups.map(g => <div key={g} style={{ marginBottom: 6 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', color: '#9A7726', textTransform: 'uppercase', padding: '4px 6px' }}>{g}</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', color: '#89CFF0', textTransform: 'uppercase', padding: '4px 6px' }}>{g}</div>
             {BLANKS.filter(b => b.group === g).map(b => <button type="button" key={b.key} onClick={() => insertBlank(`{${b.key}}`)} style={{ display: 'flex', justifyContent: 'space-between', width: '100%', border: 'none', background: 'none', padding: '5px 6px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', borderRadius: 4, textAlign: 'left' }}><span>{b.label}</span><code style={{ fontSize: 11, color: '#8A877F' }}>{b.key}</code></button>)}
           </div>)}
           <div style={{ borderTop: '1px solid #EEE', paddingTop: 8, marginTop: 4 }}>

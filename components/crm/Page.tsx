@@ -47,7 +47,7 @@ export function CrmHeader({ title, subtitle, actions, tabs, tab, onTab, below, t
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ minWidth: 0 }}>
           <h1 style={{ fontSize: 26, fontWeight: 500, color: blue ? BLUE.title : C.brown, margin: '0 0 2px' }}>{title}</h1>
-          {subtitle && <div style={{ fontSize: 13, color: blue ? BLUE.sub : '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>{subtitle}</div>}
+          {subtitle && <div style={{ fontSize: 13, color: blue ? BLUE.sub : '#89CFF0', maxWidth: 760, lineHeight: 1.5 }}>{subtitle}</div>}
         </div>
         {actions && <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>{actions}</div>}
       </div>
@@ -77,7 +77,7 @@ export function Stat({ label: l, value, sub, highlight, theme }: { label: string
   const blue = theme === 'blue'
   return (
     <div style={{ background: highlight ? (blue ? BLUE.grad : 'linear-gradient(135deg,#EAF3FC,#C9DEF3)') : '#fff', border: '1px solid ' + (highlight ? (blue ? BLUE.line : C.creamLine) : C.row), borderRadius: 8, padding: 16 }}>
-      <div style={{ fontSize: 13, color: highlight ? (blue ? BLUE.sub : '#8A7248') : C.muted, marginBottom: 6 }}>{l}</div>
+      <div style={{ fontSize: 13, color: highlight ? (blue ? BLUE.sub : '#89CFF0') : C.muted, marginBottom: 6 }}>{l}</div>
       <div style={{ fontSize: 26, fontWeight: 600, color: highlight ? (blue ? BLUE.title : C.brown) : C.ink, lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: C.faint, marginTop: 4 }}>{sub}</div>}
     </div>

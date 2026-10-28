@@ -33,14 +33,14 @@ export type MkBoard = {
 }
 
 export const MODULES: MkOption[] = [
-  { value: 'pm', label: 'Property Management', color: '#D0AE4C' },
+  { value: 'pm', label: 'Property Management', color: '#89CFF0' },
   { value: 'str', label: 'Vacation Rentals', color: '#00C875' },
   { value: 'estate', label: 'Estate Agency', color: '#FDAB3D' },
-  { value: 'dev', label: 'Developments', color: '#8A6B2E' },
+  { value: 'dev', label: 'Developments', color: '#89CFF0' },
 ]
 export const moduleLabel = (v: string) => MODULES.find(m => m.value === v)?.label ?? v ?? ''
 
-const DRAFT = '#C4C4C4', LIVE = '#00C875', AMBER = '#FDAB3D', DONE = '#8A6B2E', RED = '#DF2F4A'
+const DRAFT = '#C4C4C4', LIVE = '#00C875', AMBER = '#FDAB3D', DONE = '#89CFF0', RED = '#DF2F4A'
 
 export const BOARDS: MkBoard[] = [
   {
@@ -50,7 +50,7 @@ export const BOARDS: MkBoard[] = [
     cols: [
       { key: 'owner', title: 'Owner', type: 'person', width: 90 },
       { key: 'type', title: 'Type', type: 'status', width: 130, options: [
-        { value: 'Email', color: '#D0AE4C' }, { value: 'Social', color: '#9D50DD' }, { value: 'Ads', color: '#579BFC' },
+        { value: 'Email', color: '#89CFF0' }, { value: 'Social', color: '#9D50DD' }, { value: 'Ads', color: '#579BFC' },
         { value: 'SMS', color: '#66CCFF' }, { value: 'Multi-channel', color: '#784BD1' }] },
       { key: 'module', title: 'Module', type: 'module', width: 170 },
       { key: 'status', title: 'Status', type: 'status', width: 130, options: [
@@ -123,8 +123,8 @@ export const BOARDS: MkBoard[] = [
     defaults: { name: 'New template', category: 'Other', subject: 'Subject line', body: '' },
     cols: [
       { key: 'category', title: 'Category', type: 'status', width: 170, options: [
-        { value: 'Onboarding', color: '#00C875' }, { value: 'Rent & Payments', color: '#D0AE4C' }, { value: 'Maintenance', color: '#FDAB3D' },
-        { value: 'Renewals', color: '#579BFC' }, { value: 'Announcements', color: '#9D50DD' }, { value: 'Landlord Acquisition', color: '#8A6B2E' },
+        { value: 'Onboarding', color: '#00C875' }, { value: 'Rent & Payments', color: '#89CFF0' }, { value: 'Maintenance', color: '#FDAB3D' },
+        { value: 'Renewals', color: '#579BFC' }, { value: 'Announcements', color: '#9D50DD' }, { value: 'Landlord Acquisition', color: '#89CFF0' },
         { value: 'Other', color: '#C4C4C4' }] },
       { key: 'module', title: 'Module', type: 'module', width: 170 },
       { key: 'subject', title: 'Subject', type: 'text', width: 280 },
@@ -155,7 +155,7 @@ export function optionsOf(c: MkCol | undefined, people: string[] = [], refs?: Re
   if (!c) return []
   if (c.type === 'ref') return refs?.[c.ref ?? ''] ?? []
   if (c.type === 'module') return MODULES
-  if (c.type === 'person') return people.map(p => ({ value: p, color: '#D0AE4C' }))
+  if (c.type === 'person') return people.map(p => ({ value: p, color: '#89CFF0' }))
   return c.options ?? []
 }
 export const RED_ = RED
@@ -185,7 +185,7 @@ export const APPLICATIONS_BOARD: MkBoard = {
       { value: 'Hired', color: '#00C875' }, { value: 'Rejected', color: '#DF2F4A' }] },
     { key: 'module', title: 'Department', type: 'status', width: 170, options: [
       { value: '', label: 'General / Other', color: '#C4C4C4' },
-      { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
+      { value: 'str', label: 'Vacation Rentals', color: '#89CFF0' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
       { value: 'estate', label: 'Estate Agency', color: '#00C875' }, { value: 'dev', label: 'Developments', color: '#9D50DD' }] },
     { key: 'email', title: 'Email', type: 'email', width: 210 },
     { key: 'phone', title: 'Phone', type: 'phone', width: 140 },
@@ -207,7 +207,7 @@ export const WINS_BOARD: MkBoard = {
   cols: [
     { key: 'staff_name', title: 'Staff member', type: 'person', width: 160, readonlyWhen: autoWin },
     { key: 'category', title: 'Category', type: 'status', width: 230, options: [
-      { value: 'Deal Closed', color: '#A8862E' },
+      { value: 'Deal Closed', color: '#89CFF0' },
       { value: 'Client Onboarded (Short-Term)', label: 'Client Onboarded — Short-Term', color: '#00C875' },
       { value: 'Client Onboarded (Long-Term)', label: 'Client Onboarded — Long-Term', color: '#037F4C' },
       { value: 'Joint Venture Secured', color: '#9D50DD' },
@@ -215,7 +215,7 @@ export const WINS_BOARD: MkBoard = {
       { value: 'Tenant Secured', label: 'Tenant Secured (Vacancy Filled)', color: '#579BFC' }] },
     { key: 'value', title: 'Value', type: 'number', width: 120, currency: '£' },
     { key: 'module', title: 'Department', type: 'status', width: 170, options: [
-      { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
+      { value: 'str', label: 'Vacation Rentals', color: '#89CFF0' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
       { value: 'estate', label: 'Estate Agency', color: '#00C875' }, { value: 'dev', label: 'Developments', color: '#9D50DD' }] },
     { key: 'date_achieved', title: 'Date', type: 'date', width: 130 },
     { key: 'source', title: 'Source', type: 'computed', width: 150 },

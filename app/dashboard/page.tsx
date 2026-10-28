@@ -121,7 +121,7 @@ export default function DashboardPage() {
               display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px',
               borderRadius: 20,
               background: trialUrgent ? '#FEF3C7' : '#EAF3FC',
-              border: `1px solid ${trialUrgent ? '#FCD34D' : '#C9DEF3'}`,
+              border: `1px solid ${trialUrgent ? '#89CFF0' : '#C9DEF3'}`,
             }}>
               <span style={{ fontSize: 16 }}>{trialUrgent ? '⚠️' : '⏱️'}</span>
               <span style={{ fontSize: 13, fontWeight: 700, color: trialUrgent ? '#B45309' : '#2F6DB5' }}>

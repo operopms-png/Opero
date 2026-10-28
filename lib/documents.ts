@@ -119,9 +119,9 @@ export function docEmailHtml(company: string, contact: string | null, first: str
   return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#323338">
   <div style="background:#191815;padding:16px 22px;color:#fff;font-weight:700;font-size:16px">${esc(company)}</div>
   <div style="padding:22px;font-size:14px;line-height:1.6">Hi ${esc(first)},<br><br>${esc(message).replace(/\n/g, '<br>')}<br><br>
-  <a href="${link}" style="display:inline-block;background:#A8862E;color:#fff;font-weight:700;padding:11px 20px;border-radius:6px;text-decoration:none">${esc(button)}</a><br><br>
+  <a href="${link}" style="display:inline-block;background:#89CFF0;color:#fff;font-weight:700;padding:11px 20px;border-radius:6px;text-decoration:none">${esc(button)}</a><br><br>
   <span style="font-size:12.5px;color:#676879">${foot}</span></div>
-  <div style="border-top:3px solid #C9A24A;padding:12px 22px;font-size:11px;color:#8A877F;background:#FAF8F3">${esc((contact || '').split('\n').filter(Boolean).join(' · '))}</div></div>`
+  <div style="border-top:3px solid #89CFF0;padding:12px 22px;font-size:11px;color:#8A877F;background:#FAF8F3">${esc((contact || '').split('\n').filter(Boolean).join(' · '))}</div></div>`
 }
 
 /** Email the document (PDF attached, link to read and sign). Returns an error message or null. */

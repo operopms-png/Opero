@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0')
     await serviceClient.from('smart_otps').insert({ business_id: c.businessId, location_id: loc.id, user_email: c.email, code_hash: hash(code, loc.id, c.email), expires_at: new Date(Date.now() + CODE_MINUTES * 60_000).toISOString() })
     try {
-      await sendEmail(c.email, `Your Smart Home code: ${code}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Your one-time code to view <b>${esc(loc.name)}</b> is:</p><p style="font-size:30px;font-weight:bold;letter-spacing:6px;color:#624920;margin:10px 0">${code}</p><p>It expires in ${CODE_MINUTES} minutes and unlocks this location for ${VIEW_MINUTES} minutes. If you didn’t ask for it, tell an admin straight away.</p></div>`)
+      await sendEmail(c.email, `Your Smart Home code: ${code}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Your one-time code to view <b>${esc(loc.name)}</b> is:</p><p style="font-size:30px;font-weight:bold;letter-spacing:6px;color:#89CFF0;margin:10px 0">${code}</p><p>It expires in ${CODE_MINUTES} minutes and unlocks this location for ${VIEW_MINUTES} minutes. If you didn’t ask for it, tell an admin straight away.</p></div>`)
     } catch { return bad('Couldn’t send the code email — try again.', 502) }
     await log(c, 'code_sent', `One-time code emailed for ${loc.name}`, loc.id)
     return NextResponse.json({ ok: true, sentTo: c.email.replace(/^(.{2}).*(@.*)$/, '$1•••$2'), minutes: CODE_MINUTES })

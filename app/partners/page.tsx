@@ -52,9 +52,9 @@ function Stat({ label, value, sub, dark }: { label: string; value: string; sub?:
   // Same tile as the Staff Centre dashboard; `dark` marks the key figure in the accent colour
   return (
     <div style={{ background: dark ? 'linear-gradient(135deg,#FBF4E6,#F3E6C8)' : '#fff', border: `1px solid ${dark ? '#EADBB8' : '#E6E9EF'}`, borderRadius: 8, padding: 16 }}>
-      <div style={{ fontSize: 12.5, color: dark ? '#8A6B2E' : '#676879', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, color: dark ? '#624920' : TEXT }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: dark ? '#8A6B2E' : '#676879', marginTop: 2 }}>{sub}</div>}
+      <div style={{ fontSize: 12.5, color: dark ? '#89CFF0' : '#676879', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: dark ? '#89CFF0' : TEXT }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: dark ? '#89CFF0' : '#676879', marginTop: 2 }}>{sub}</div>}
     </div>
   )
 }
@@ -63,8 +63,8 @@ function Pill({ status, label }: { status: string; label?: string }) {
   // CRM-style solid status label
   const map: Record<string, string> = {
     paid: '#00C875', sent: '#FDAB3D', draft: '#C4C4C4', live: '#00C875', active: '#00C875', onboarding: '#FDAB3D',
-    logged: '#579BFC', screening: '#FDAB3D', approved: '#D0AE4C', rejected: '#DF2F4A', completed: '#00C875', cancelled: '#C4C4C4',
-    pending: '#FDAB3D', payable: '#D0AE4C', clawed_back: '#DF2F4A', none: '#C4C4C4', paused: '#C4C4C4', duplicate: '#DF2F4A',
+    logged: '#579BFC', screening: '#FDAB3D', approved: '#89CFF0', rejected: '#DF2F4A', completed: '#00C875', cancelled: '#C4C4C4',
+    pending: '#FDAB3D', payable: '#89CFF0', clawed_back: '#DF2F4A', none: '#C4C4C4', paused: '#C4C4C4', duplicate: '#DF2F4A',
   }
   const bg = map[(status ?? '').toLowerCase()] ?? '#C4C4C4'
   return <span style={{ fontSize: 12, fontWeight: 500, padding: '2px 10px', borderRadius: 3, background: bg, color: '#fff', whiteSpace: 'nowrap' }}>{label ?? status ?? '—'}</span>
@@ -667,8 +667,8 @@ export default function PartnersPage() {
       {/* Header — CRM-style cream band */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '22px 28px', background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid #EADBB8' }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 500, color: '#624920', margin: '0 0 2px' }}>{isStaff ? 'Partners' : `Welcome, ${profile?.name?.split(' ')[0] ?? 'Partner'}`}</h1>
-          <div style={{ fontSize: 13.5, color: '#8A6B2E' }}>
+          <h1 style={{ fontSize: 26, fontWeight: 500, color: '#89CFF0', margin: '0 0 2px' }}>{isStaff ? 'Partners' : `Welcome, ${profile?.name?.split(' ')[0] ?? 'Partner'}`}</h1>
+          <div style={{ fontSize: 13.5, color: '#89CFF0' }}>
             {isStaff ? 'Investors, the Agent Programme and the partners broadcast — all in one place.' : 'Your investment, payouts and partner updates.'}
           </div>
         </div>
@@ -701,8 +701,8 @@ export default function PartnersPage() {
           const n = pendingSignups.filter(s => s.marked_sent_at).length
           const first = pendingSignups.find(s => s.marked_sent_at)
           return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', border: '1px solid #efd9a6', background: '#fdf7e8', borderRadius: 8, marginBottom: 16 }}>
-              <span style={{ width: 22, height: 22, borderRadius: '50%', border: '1.5px solid #8E6B1F', color: '#8E6B1F', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>!</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 16px', border: '1px solid #89CFF0', background: '#fdf7e8', borderRadius: 8, marginBottom: 16 }}>
+              <span style={{ width: 22, height: 22, borderRadius: '50%', border: '1.5px solid #89CFF0', color: '#89CFF0', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>!</span>
               <div style={{ fontSize: 13, flex: 1, minWidth: 220 }}>
                 <b>{n} partner payment{n === 1 ? '' : 's'} to check</b> <span style={{ color: '#6b675e' }}>— {n === 1 && first ? `${first.name}, reference ${first.reference}. ` : ''}Check your bank, then confirm to unlock their account.</span>
               </div>
@@ -935,7 +935,7 @@ export default function PartnersPage() {
                         <tr key={s.a.id} style={{ opacity: s.a.status === 'active' ? 1 : 0.55 }}>
                           <td style={{ ...td, whiteSpace: 'nowrap' }}>
                             <span style={{ display: 'inline-flex', alignItems: 'center' }}><Avatar name={s.a.name} />
-                              <span><span style={{ fontWeight: 600 }}>{s.a.name}</span><span style={{ fontSize: 11.5, color: '#8E6B1F', fontWeight: 700, marginLeft: 6 }}>{s.a.code}</span>
+                              <span><span style={{ fontWeight: 600 }}>{s.a.name}</span><span style={{ fontSize: 11.5, color: '#89CFF0', fontWeight: 700, marginLeft: 6 }}>{s.a.code}</span>
                                 <div style={{ fontSize: 11.5, color: '#8a857a' }}>{[s.a.email, s.a.phone].filter(Boolean).join(' · ') || '—'}</div></span>
                             </span>
                           </td>
@@ -1051,7 +1051,7 @@ export default function PartnersPage() {
             )}
 
             {pendingSignups.length > 0 && (
-              <div style={{ ...card, marginBottom: 16, borderColor: '#FEC84B' }}>
+              <div style={{ ...card, marginBottom: 16, borderColor: '#89CFF0' }}>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Bank transfers to check ({pendingSignups.length})</div>
                 <div style={{ fontSize: 13, color: '#667085', marginBottom: 12 }}>When the money shows in your bank with the reference, click Confirm. Their account unlocks and they get a sign-in email.</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

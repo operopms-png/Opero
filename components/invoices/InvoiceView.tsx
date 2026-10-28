@@ -6,7 +6,7 @@ import React from 'react'
 const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
 const money = (n: number, cur: string) => (SYM[cur] ?? '') + (Number(n) || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const date = (d?: string | null) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : ''
-const GOLD_LBL = '#D9B860'
+const GOLD_LBL = '#89CFF0'
 
 export default function InvoiceView({ inv, s, status }: { inv: any; s: any; status?: string }) {
   const items: any[] = inv.items || []

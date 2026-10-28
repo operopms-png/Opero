@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import { symOf } from '../../lib/currency'
 
-const C = { gold: '#89CFF0', goldText: '#8E6B1F', cream: '#FAF3E2', creamLine: '#EADBB8', ink: '#191815', ink2: '#55524b', mute: '#8a857a', line: '#ECE8DF', row: '#E6E9EF', border: '#D0D4E4', green: '#1F7A4D', greenBg: '#E7F4EC', amber: '#9A5B00', amberBg: '#FDF1DC', red: '#B3261E', redBg: '#FDECEA' }
+const C = { gold: '#89CFF0', goldText: '#89CFF0', cream: '#FAF3E2', creamLine: '#EADBB8', ink: '#191815', ink2: '#55524b', mute: '#8a857a', line: '#ECE8DF', row: '#E6E9EF', border: '#D0D4E4', green: '#1F7A4D', greenBg: '#E7F4EC', amber: '#9A5B00', amberBg: '#FDF1DC', red: '#B3261E', redBg: '#FDECEA' }
 const num = (v: any) => { const x = parseFloat(v); return Number.isFinite(x) ? x : 0 }
 
 export function landlordOffer(form: any, result: any, market: any) {
@@ -90,7 +90,7 @@ export default function LandlordOffer({ form, setForm, result, market, onUseOffe
             { l: 'Most you can pay', v: m(o.maxRent), s: `Keeps your ${m(o.targetProfit)} a month profit` },
           ].map(x => (
             <div key={x.l} style={{ border: '1px solid ' + (x.hl ? C.creamLine : C.line), background: x.hl ? C.cream : '#fff', borderRadius: 10, padding: '14px 16px' }}>
-              <div style={{ fontSize: 12, color: x.hl ? '#8A6B2E' : C.mute }}>{x.l}</div>
+              <div style={{ fontSize: 12, color: x.hl ? '#89CFF0' : C.mute }}>{x.l}</div>
               <div style={{ fontSize: 23, fontWeight: 800, color: C.ink, marginTop: 4 }}>{x.v}</div>
               <div style={{ fontSize: 11.5, color: C.ink2, marginTop: 2 }}>{x.s}</div>
             </div>

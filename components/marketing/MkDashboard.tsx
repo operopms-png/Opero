@@ -84,7 +84,7 @@ export default function MkDashboard({ mk, onOpen }: { mk: Mk; onOpen: (board: st
           <div style={{ height: 260, padding: '12px 12px 4px' }}>
             <ResponsiveContainer><BarChart data={monthly}>
               <CartesianGrid strokeDasharray="3 3" stroke="#EEE" vertical={false} /><XAxis dataKey="m" tick={{ fontSize: 12 }} /><YAxis allowDecimals={false} tick={{ fontSize: 12 }} width={28} /><Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Campaigns" stackId="a" fill="#2F6DB5" /><Bar dataKey="Emails" stackId="a" fill="#2F6DB5" /><Bar dataKey="Posts" stackId="a" fill="#E8D29A" /><Bar dataKey="Ads" stackId="a" fill="#1D4E89" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Campaigns" stackId="a" fill="#2F6DB5" /><Bar dataKey="Emails" stackId="a" fill="#2F6DB5" /><Bar dataKey="Posts" stackId="a" fill="#89CFF0" /><Bar dataKey="Ads" stackId="a" fill="#1D4E89" radius={[3, 3, 0, 0]} />
             </BarChart></ResponsiveContainer>
           </div>
         </div>

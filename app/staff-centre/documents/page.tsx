@@ -73,7 +73,7 @@ function List({ open, startNew }: { open: (id: string) => void; startNew: boolea
   )
 }
 const td: React.CSSProperties = { padding: '11px 16px', verticalAlign: 'middle' }
-const FileIcon = () => <span style={{ width: 30, height: 30, borderRadius: 6, background: '#F6F1E4', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9A7726" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg></span>
+const FileIcon = () => <span style={{ width: 30, height: 30, borderRadius: 6, background: '#F6F1E4', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#89CFF0" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg></span>
 
 // ── new document: template + person ─────────────────────────────────────
 function NewDocModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
@@ -167,7 +167,7 @@ function DocView({ id, back }: { id: string; back: () => void }) {
         <div className="doc-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 20, marginTop: 14, alignItems: 'start' }}>
           <div style={{ minWidth: 0 }}>
             {editable && <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap', fontSize: 11.5, fontWeight: 700 }}>
-              <span style={{ background: '#FBF1D3', color: '#7A5B12', padding: '3px 9px', borderRadius: 10 }}>Filled in automatically</span>
+              <span style={{ background: '#FBF1D3', color: '#89CFF0', padding: '3px 9px', borderRadius: 10 }}>Filled in automatically</span>
               {empties.length > 0 && <span style={{ background: '#FDECEC', color: '#B42318', padding: '3px 9px', borderRadius: 10 }}>{empties.length} blank{empties.length > 1 ? 's' : ''} still empty</span>}
               {changed && <span style={{ background: '#FFF4E0', color: '#A15C00', padding: '3px 9px', borderRadius: 10 }}>Wording changed</span>}
               <span style={{ marginLeft: 'auto', color: C.muted, fontWeight: 500 }}>{lock === 'locked' && !d.isAdmin ? 'Click a highlighted blank to fill it in' : 'Click any text to edit'}</span>
@@ -184,7 +184,7 @@ function DocView({ id, back }: { id: string; back: () => void }) {
               </div> : <><b style={{ fontSize: 15 }}>{doc.recipient_name}</b><div style={{ fontSize: 12.5, color: C.muted }}>{[KIND_LABEL[doc.person_kind], doc.property_label].filter(Boolean).join(' · ')}</div><div style={{ fontSize: 13, marginTop: 4 }}>{doc.recipient_email}</div></>}
             </div>
 
-            {changes.length > 0 && <div style={{ ...card, background: '#FFFAF0', borderColor: '#F0D9A8', borderLeft: '4px solid #D9A441' }}>
+            {changes.length > 0 && <div style={{ ...card, background: '#FFFAF0', borderColor: '#89CFF0', borderLeft: '4px solid #D9A441' }}>
               <b style={{ fontSize: 13.5, color: '#7A4B00' }}>{changes.length} wording change{changes.length > 1 ? 's' : ''}{doc.status === 'pending_approval' ? ' waiting for approval' : willApprove ? ' need approval' : ''}</b>
               <div style={{ display: 'grid', gap: 4, marginTop: 6, fontSize: 12.5, color: '#5A4320' }}>{changes.map((c, i) => <div key={i}>{c}</div>)}</div>
               {willApprove && editable && <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>An admin gets a request in Finance → Approvals. It sends automatically once approved.</div>}

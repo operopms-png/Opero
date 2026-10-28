@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { C, CrmPage, CrmHeader, Body, Stat, Loading } from '../../../components/crm/Page'
 import { staffApi, money, MODULE_LABEL, MODULE_COL, SYM } from '../../../lib/staff-api'
 
-const IN = '#B08A2E', OUT = '#2F6DB5' // validated pair
+const IN = '#89CFF0', OUT = '#2F6DB5' // validated pair
 const mLabel = (m: string, long = false) => new Date(m + '-15T12:00:00Z').toLocaleDateString('en-GB', { month: long ? 'long' : 'short', year: long ? 'numeric' : undefined })
 const shift = (m: string, n: number) => { const d = new Date(m + '-15T12:00:00Z'); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 7) }
 const pct = (a: number, b: number) => b ? Math.round((a - b) / Math.abs(b) * 100) : null
