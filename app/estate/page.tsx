@@ -812,7 +812,7 @@ export default function Page() {
           {section==='Dashboard'&&(<div>
             <div style={{marginBottom:20}}>
               <div style={{fontSize:13,color:'#667085'}}>Sunday, {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long'})}</div>
-              <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>Hello Sangsters !</div>
+              <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>Hello NOVOURQ !</div>
             </div>
             {(complianceExpired>0||complianceExpiringSoon>0||tenanciesEndingSoon>0||lateRentCount>0)&&(
               <div style={{background:'#FFFBEB',border:'1px solid #89CFF0',borderRadius:10,padding:'16px 20px',marginBottom:20}}>
@@ -941,7 +941,7 @@ export default function Page() {
             {showAddProperty&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{editItem?'Edit property':'Add property'}</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
-                <div><label style={labelStyle}>Property name *</label><input value={prop.name} onChange={e=>setProp({...prop,name:e.target.value})} placeholder="e.g. Sangsters Aurevo C1-12" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Property name *</label><input value={prop.name} onChange={e=>setProp({...prop,name:e.target.value})} placeholder="e.g. NOVOURQ Aurevo C1-12" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Address</label><input value={prop.address} onChange={e=>setProp({...prop,address:e.target.value})} placeholder="Full address" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Type</label><select value={prop.type} onChange={e=>setProp({...prop,type:e.target.value})} style={inputStyle}>{['Apartment','House','Studio','Commercial','HMO','Other'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={{...labelStyle,display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>Bedrooms</label><select value={prop.bedrooms} onChange={e=>setProp({...prop,bedrooms:e.target.value})} style={inputStyle}>{['Studio','1','2','3','4','5','6+'].map(t=><option key={t}>{t}</option>)}</select></div>

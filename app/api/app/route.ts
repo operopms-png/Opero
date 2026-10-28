@@ -4,7 +4,7 @@ import { serviceClient } from '@/lib/admin-auth'
 import { alertTeam } from '@/lib/crm-lead'
 import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 
-// Sangsters mobile app API. Signed in with the app's Supabase session (Bearer token).
+// NOVOURQ mobile app API. Signed in with the app's Supabase session (Bearer token).
 //   GET  ?role=guest|tenant|owner|partner|staff   -> { roles, role, name, email, home }
 //        (role omitted = the person's main role)
 //   POST {action:'message', role, text}          -> message to the team (tenant/owner chats, else team alert)

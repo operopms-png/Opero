@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   if (!tenantEmail) return NextResponse.json({ error: "This tenant doesn't have an email address on file." }, { status: 400 })
 
   const signUrl = `${req.nextUrl.origin}/sign/${tenancy.sign_token}`
-  const from = from_email ? `${from_name || 'Sangsters Group'} <${from_email}>` : undefined
+  const from = from_email ? `${from_name || 'NOVOURQ Group'} <${from_email}>` : undefined
 
   const result = await sendEmail(
     tenantEmail,

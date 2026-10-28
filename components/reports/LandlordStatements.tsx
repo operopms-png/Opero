@@ -412,7 +412,7 @@ export default function LandlordStatements({ mode }: { mode: Mode }) {
     const soon = new Date(); soon.setDate(soon.getDate() + 60)
     return {
       landlord: { name: l.name, address: l.address || undefined, bank: (l.bank_name || l.account_number) ? [l.account_name || l.name, l.bank_name, l.sort_code, l.account_number ? '****' + String(l.account_number).slice(-4) : ''].filter(Boolean).join(' · ') : undefined },
-      business: 'Sangsters',
+      business: 'NOVOURQ',
       period: { label: period.label, from: period.from, to: period.to },
       issued: today,
       summary: { due, received, arrears: due - received, pct, fee, costs: costTotal, net, paidOut, balance: net - paidOut },

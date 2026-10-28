@@ -106,5 +106,5 @@ ${l?.monthly_typical ? row('As a long-term let (per month)', money(l.monthly_typ
 </table>
 <p style="font-size:12px;color:#8a857a">These are estimates from current listings, before management fees and running costs. A free valuation gives you a firm figure.</p>
 <p><a href="${MEET}" style="display:inline-block;background:#191815;color:#fff;text-decoration:none;padding:12px 20px;border-radius:4px;font-weight:700">Book a free valuation call</a></p>
-<p>Kind regards,<br>The Sangsters team</p></div>`
+<p>Kind regards,<br>The NOVOURQ team</p></div>`
 }

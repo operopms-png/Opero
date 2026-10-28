@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     const details = [`Service: ${svc.label}`, `Country: ${country}`, `Phone: ${phone || '—'}`, message && `Message: ${message}`, `Source: ${clean(b.source, 120) || 'Website homepage'}`].filter(Boolean).join('\n')
     await addCrmLead({ businessId: biz, name, email, phone, source: 'Website enquiry', module: svc.module, type: svc.type, notes: details, dealName: `${name} — ${svc.label} (${country})` })
     const alertTo = await alertTeam(biz, `Website enquiry: ${svc.label} — ${name}`, `${name} <${email}>${phone ? ` · ${phone}` : ''}\n${details}`, '/staff-centre/crm', email)
-    await sendEmail(email, `Your enquiry — ${svc.label}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for your enquiry about <b>${esc(svc.label)}</b>${country !== 'Not given' ? ` in ${esc(country)}` : ''}. A member of our team will be in touch shortly.</p><p>If anything changes, just reply to this email.</p><p>Kind regards,<br>Sangsters Group</p></div>`, alertTo).catch(() => {})
+    await sendEmail(email, `Your enquiry — ${svc.label}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for your enquiry about <b>${esc(svc.label)}</b>${country !== 'Not given' ? ` in ${esc(country)}` : ''}. A member of our team will be in touch shortly.</p><p>If anything changes, just reply to this email.</p><p>Kind regards,<br>NOVOURQ Group</p></div>`, alertTo).catch(() => {})
     return NextResponse.json({ success: true }, { headers: CORS })
   }
 
@@ -71,6 +71,6 @@ export async function POST(req: NextRequest) {
 
   await addCrmLead({ businessId: biz, name, email, phone, source: 'Website enquiry', module: stay ? 'str' : 'estate', type: stay ? 'Guest' : 'Tenant', notes: details, dealName: `${name} — ${title}` })
   const alertTo = await alertTeam(biz, `Website enquiry: ${title} — ${name}`, `${name} <${email}>${phone ? ` · ${phone}` : ''}\n${details}`, '/staff-centre/crm', email)
-  await sendEmail(email, `Your enquiry — ${title}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for your enquiry about <b>${esc(title)}</b>${where ? ` in ${esc(where)}` : ''}. A member of our team will be in touch shortly${stay && checkIn ? ` about your dates (<b>${esc(day(checkIn))}${checkOut ? ` – ${esc(day(checkOut))}` : ''}</b>)` : ''}.</p><p>If anything changes, just reply to this email.</p><p>Kind regards,<br>Sangsters Group</p></div>`, alertTo).catch(() => {})
+  await sendEmail(email, `Your enquiry — ${title}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for your enquiry about <b>${esc(title)}</b>${where ? ` in ${esc(where)}` : ''}. A member of our team will be in touch shortly${stay && checkIn ? ` about your dates (<b>${esc(day(checkIn))}${checkOut ? ` – ${esc(day(checkOut))}` : ''}</b>)` : ''}.</p><p>If anything changes, just reply to this email.</p><p>Kind regards,<br>NOVOURQ Group</p></div>`, alertTo).catch(() => {})
   return NextResponse.json({ success: true }, { headers: CORS })
 }

@@ -79,7 +79,7 @@ async function scanEstateAgency(supabase: any, userId: string) {
     ...expiringTenancies.map((t: any) => `<li><strong>Tenancy ending:</strong> ${t.estate_tenants?.name ?? 'tenant'} at ${t.estate_properties?.name ?? 'unknown property'} (ends ${t.end_date})</li>`),
     ...overdueRent.map((r: any) => `<li><strong>Overdue rent:</strong> £${r.amount} — ${r.estate_tenancies?.estate_tenants?.name ?? 'tenant'} at ${r.estate_tenancies?.estate_properties?.name ?? 'unknown property'}</li>`),
   ]
-  const html = `<p>Your Estate Agency account has ${totalIssues} item${totalIssues > 1 ? 's' : ''} needing attention:</p><ul>${rows.join('')}</ul><p><a href="${SITE_URL}/estate">Review in Sangsters</a></p>`
+  const html = `<p>Your Estate Agency account has ${totalIssues} item${totalIssues > 1 ? 's' : ''} needing attention:</p><ul>${rows.join('')}</ul><p><a href="${SITE_URL}/estate">Review in NOVOURQ</a></p>`
 
   const emailResult = await sendEmail(email, title, html)
   return { userId, totalIssues, notified: true, emailed: !!(emailResult as any).sent }

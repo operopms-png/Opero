@@ -15,7 +15,7 @@ export const DEFAULT_FORMAT: EmailFormat = {
   closing: 'Kind regards,',
   sign_name: true,
   footer_enabled: true,
-  company: 'Sangsters Group',
+  company: 'NOVOURQ Group',
   tagline: 'Global real estate leaders · #FeelAtHomeAnywhere',
   contact_email: 'contact.us@sangstersgroup.com',
   phone: '020 7164 0329',

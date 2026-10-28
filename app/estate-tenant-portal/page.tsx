@@ -261,7 +261,7 @@ function EstateTenantPortalInner() {
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
       <div style={{ background: 'linear-gradient(135deg,#FBF4E6,#F3E6C8)', borderBottom: '1px solid #EADBB8', padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src="/logo.PNG" alt="Sangsters" style={{ width: 44, height: 44, objectFit: 'contain' }} />
+          <img src="/logo.PNG" alt="NOVOURQ" style={{ width: 44, height: 44, objectFit: 'contain' }} />
           <div>
         {isStaffView && <div style={{ fontSize: 12, background: '#fff', border: '1px solid #EADBB8', color: '#89CFF0', display: 'inline-block', padding: '2px 10px', borderRadius: 20, marginBottom: 8 }}>Staff preview</div>}
         <div style={{ fontSize: 11, color: '#89CFF0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tenant Portal</div>

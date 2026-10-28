@@ -11,11 +11,11 @@ const INK = '#191815', GOLD = '#89CFF0', MUTED = '#676879', LINE = '#E6E9EF', BO
 // "Mr. Campbell" stays formal; "Andrea Brown" → "Andrea"
 const first = (n?: string | null) => { const t = (n || '').trim(); if (!t) return ''; const m = t.match(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+(.+)$/i); return m ? `${m[1]}. ${m[2].split(/\s+/).pop()}` : t.split(/\s+/)[0] }
 export const TEXT_TEMPLATES: { k: string; l: string; t: (name: string) => string }[] = [
-  { k: 'hello', l: 'Introduction', t: n => `Hi${n ? ' ' + n : ''}, this is Sangsters Group. Thanks for getting in touch — when is a good time to talk?` },
-  { k: 'viewing', l: 'Viewing reminder', t: n => `Hi${n ? ' ' + n : ''}, a reminder of your viewing with Sangsters Group. Reply YES to confirm or let us know if you need to change the time.` },
-  { k: 'rent', l: 'Rent reminder', t: n => `Hi${n ? ' ' + n : ''}, a friendly reminder that your rent is due soon. Reply here if you have any questions. — Sangsters Group` },
-  { k: 'checkin', l: 'Check-in details', t: n => `Hi${n ? ' ' + n : ''}, we're looking forward to welcoming you. Your check-in details will follow shortly — reply here if you need anything. — Sangsters` },
-  { k: 'callback', l: 'Missed you', t: n => `Hi${n ? ' ' + n : ''}, we tried to reach you. Please call or text us back when you're free. — Sangsters Group` },
+  { k: 'hello', l: 'Introduction', t: n => `Hi${n ? ' ' + n : ''}, this is NOVOURQ Group. Thanks for getting in touch — when is a good time to talk?` },
+  { k: 'viewing', l: 'Viewing reminder', t: n => `Hi${n ? ' ' + n : ''}, a reminder of your viewing with NOVOURQ Group. Reply YES to confirm or let us know if you need to change the time.` },
+  { k: 'rent', l: 'Rent reminder', t: n => `Hi${n ? ' ' + n : ''}, a friendly reminder that your rent is due soon. Reply here if you have any questions. — NOVOURQ Group` },
+  { k: 'checkin', l: 'Check-in details', t: n => `Hi${n ? ' ' + n : ''}, we're looking forward to welcoming you. Your check-in details will follow shortly — reply here if you need anything. — NOVOURQ` },
+  { k: 'callback', l: 'Missed you', t: n => `Hi${n ? ' ' + n : ''}, we tried to reach you. Please call or text us back when you're free. — NOVOURQ Group` },
 ]
 
 async function auth() {
@@ -48,7 +48,7 @@ export function TextModal({ phone, name, onClose, onSent }: { phone?: string | n
       <div style={{ background: '#fff', borderRadius: 12, width: 480, maxWidth: '100%', boxShadow: '0 20px 50px rgba(0,0,0,.25)', borderTop: `3px solid ${GOLD}`, overflow: 'hidden' }}>
         <div style={{ padding: '18px 22px', borderBottom: `1px solid ${LINE}` }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: INK }}>{done ? 'Text sent' : 'New text'}</div>
-          <div style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>{done ? 'Replies come into Inbox → Texts.' : 'Sent from the Sangsters texting number. Replies come into Inbox → Texts.'}</div>
+          <div style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>{done ? 'Replies come into Inbox → Texts.' : 'Sent from the NOVOURQ texting number. Replies come into Inbox → Texts.'}</div>
         </div>
         {done ? (
           <div style={{ padding: '18px 22px', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

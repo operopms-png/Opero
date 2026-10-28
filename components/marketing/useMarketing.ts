@@ -22,7 +22,7 @@ export function useMarketing() {
     setSenders((d.mailboxes ?? []).filter((m: any) => m.status === 'connected' && m.use_for_marketing).map((m: any) => ({ value: m.id, label: m.email, color: '#2F6DB5' })))
   })() }, [])
   const [me, setMe] = useState<string>('')
-  const [sendSettings, setSendSettings] = useState({ marketing_from_email: '', marketing_from_name: 'Sangsters Group' })
+  const [sendSettings, setSendSettings] = useState({ marketing_from_email: '', marketing_from_name: 'NOVOURQ Group' })
   const [sendingId, setSendingId] = useState<string | null>(null)
 
   const loadEmailExtras = useCallback(async (emailIds: string[]) => {
@@ -56,7 +56,7 @@ export function useMarketing() {
     setMe(myName)
     const names = new Set<string>([myName, ...(team ?? []).filter((t: any) => t.name?.trim() && t.email?.includes('@')).map((t: any) => t.name.trim())])
     setPeople([...names].filter(Boolean))
-    if (settings) setSendSettings({ marketing_from_email: settings.marketing_from_email || '', marketing_from_name: settings.marketing_from_name || 'Sangsters Group' })
+    if (settings) setSendSettings({ marketing_from_email: settings.marketing_from_email || '', marketing_from_name: settings.marketing_from_name || 'NOVOURQ Group' })
     setLoading(false)
   }, [loadEmailExtras])
 

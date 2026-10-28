@@ -1,7 +1,7 @@
 'use client'
 // Staff Centre → Dashboard ("Operations"): what's happening today (or this
 // week / month) across Vacation Rentals, Property Management and Estate Agency.
-// Sangsters cream-and-gold band with the day's key numbers, a card per
+// NOVOURQ cream-and-gold band with the day's key numbers, a card per
 // business, the schedule, what needs attention and the latest activity.
 // Data: GET /api/staff-dashboard?range=today|week|month (Jamaica time).
 import React, { useEffect, useState } from 'react'
@@ -88,7 +88,7 @@ export default function Dashboard() {
         @media(max-width:760px){.dash-cols{grid-template-columns:1fr}.dash-hero{grid-template-columns:repeat(2,minmax(0,1fr))}}
         .dash-link:hover{background:#FFFCF5}`}</style>
 
-      {/* Band — Sangsters cream & gold */}
+      {/* Band — NOVOURQ cream & gold */}
       <div style={{ background: 'linear-gradient(135deg,#EAF3FC 0%,#C9DEF3 100%)', borderBottom: '1px solid #C9DEF3', padding: '24px 30px 22px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -60, top: -90, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(168,134,46,.22)' }} />
         <div style={{ position: 'absolute', right: 40, top: -150, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(168,134,46,.14)' }} />

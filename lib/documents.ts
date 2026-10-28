@@ -21,7 +21,7 @@ export const PERSON_KINDS: Record<string, string> = {
 
 export async function docSettings(biz: string) {
   let s = await one(db.from('invoice_settings').select('company_name,logo_url,contact_lines,reply_to').eq('business_id', biz).maybeSingle())
-  if (!s) s = { company_name: 'Sangsters Group', logo_url: '/sangsters-logo.jpg', contact_lines: '', reply_to: null }
+  if (!s) s = { company_name: 'NOVOURQ Group', logo_url: '/sangsters-logo.jpg', contact_lines: '', reply_to: null }
   return s as { company_name: string; logo_url: string | null; contact_lines: string | null; reply_to: string | null }
 }
 
@@ -65,7 +65,7 @@ export async function searchPeople(biz: string, text: string) {
 /** Everything we know that can fill a blank, for one person (plus the staff member sending). */
 export async function fieldsFor(biz: string, kind: string | null, id: string | null, staff?: { name?: string; email?: string }, extra: Record<string, any> = {}) {
   const s = await docSettings(biz)
-  const v: Record<string, any> = { today: longDate(todayJm()), company_name: s.company_name || 'Sangsters Group', staff_name: staff?.email ? staff?.name || '' : '', staff_email: staff?.email || '', manager_name: staff?.email ? staff?.name || '' : '', manager_email: staff?.email || '' }
+  const v: Record<string, any> = { today: longDate(todayJm()), company_name: s.company_name || 'NOVOURQ Group', staff_name: staff?.email ? staff?.name || '' : '', staff_email: staff?.email || '', manager_name: staff?.email ? staff?.name || '' : '', manager_email: staff?.email || '' }
   let property_label = ''
   const person = (p: any, name = p?.name) => { if (!p) return; v.recipient_name = name || ''; v.recipient_email = p.email || ''; v.recipient_phone = p.phone || ''; if (p.address) v.recipient_address = p.address }
   const pmCur = (p: any) => /jamaica/i.test(p?.country || '') ? 'JMD' : 'GBP'
@@ -129,7 +129,7 @@ export async function deliverDocument(doc: any, opts: { reminder?: boolean } = {
   const to = String(doc.recipient_email || '').trim()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return 'Add the email address to send it to.'
   const s = await docSettings(doc.business_id)
-  const company = s.company_name || 'Sangsters Group'
+  const company = s.company_name || 'NOVOURQ Group'
   const bytes = await documentPdf(doc, s, SITE_URL)
   const link = `${SITE_URL}/sign/${doc.token}`
   const parts = String(doc.recipient_name || '').trim().split(/\s+/)

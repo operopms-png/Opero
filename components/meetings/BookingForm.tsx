@@ -49,7 +49,7 @@ export default function BookingForm({ code }: { code?: string }) {
       <div style={{ maxWidth: 560, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
           <img src="/logo-192.png" alt="" width={48} height={48} style={{ borderRadius: 10 }} />
-          <div style={{ fontSize: 19, fontWeight: 700, color: BROWN }}>Sangsters Group</div>
+          <div style={{ fontSize: 19, fontWeight: 700, color: BROWN }}>NOVOURQ Group</div>
         </div>
 
         <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 10px 30px rgba(98,73,32,.08)', overflow: 'hidden' }}>

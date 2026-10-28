@@ -49,7 +49,7 @@ export default function MarketingPage() {
   if (mk.error) return <Shell><div style={{ padding: 60, color: '#DF2F4A', width: '100%' }}>Couldn’t load marketing: {mk.error}</div></Shell>
 
   const board = view.kind === 'board' ? boardByKey(view.key) : undefined
-  const sender = mk.sendSettings.marketing_from_email ? `${mk.sendSettings.marketing_from_name} <${mk.sendSettings.marketing_from_email}>` : 'Sangsters default address'
+  const sender = mk.sendSettings.marketing_from_email ? `${mk.sendSettings.marketing_from_name} <${mk.sendSettings.marketing_from_email}>` : 'NOVOURQ default address'
 
   return (
     <Shell>
@@ -183,7 +183,7 @@ function SenderModal({ mk, onClose }: { mk: Mk; onClose: () => void }) {
         <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 500 }}>Sending address</h2>
         <p style={{ fontSize: 13, color: BRAND.muted, lineHeight: 1.5, margin: '0 0 16px' }}>This address’s domain must be verified in Resend (SPF/DKIM records added to its DNS), or emails will fail or land in spam.</p>
         <label style={{ fontSize: 13, color: BRAND.muted }}>From name</label>
-        <input value={s.marketing_from_name} onChange={e => setS({ ...s, marketing_from_name: e.target.value })} placeholder="Sangsters Group" style={f} />
+        <input value={s.marketing_from_name} onChange={e => setS({ ...s, marketing_from_name: e.target.value })} placeholder="NOVOURQ Group" style={f} />
         <label style={{ fontSize: 13, color: BRAND.muted }}>From email</label>
         <input value={s.marketing_from_email} onChange={e => setS({ ...s, marketing_from_email: e.target.value })} placeholder="info@sangstersgroup.com" style={f} />
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

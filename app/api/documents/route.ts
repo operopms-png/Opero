@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     if (!f) return bad('File not found', 404)
     const to = String(b.to || '').trim()
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return bad('Add the email address to send it to.')
-    const s = await docSettings(biz), company = s.company_name || 'Sangsters Group'
+    const s = await docSettings(biz), company = s.company_name || 'NOVOURQ Group'
     const first = String(b.name || '').trim().split(/\s+/)[0] || 'there'
     const html = docEmailHtml(company, s.contact_lines, first, String(b.message || '').trim() || `Please find ${f.name} below.`, f.url, 'Open document', `Sent by ${esc(by)}.`)
     const r = await sendEmail(to, String(b.subject || '').trim() || `${f.name} — ${company}`, html, c.email || s.reply_to || undefined, `${company} <notifications@${EMAIL_DOMAIN}>`)

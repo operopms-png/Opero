@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 
-// Email sign-in codes for the Sangsters mobile app.
+// Email sign-in codes for the NOVOURQ mobile app.
 //   POST {action:'send', email}            -> emails a 6-digit code (10 min)
 //   POST {action:'verify', email, code}    -> {token_hash}; the app finishes
 //        sign-in with supabase.auth.verifyOtp({ token_hash, type: 'email' })
@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
     if ((count ?? 0) >= 5) return bad('Too many codes requested. Please wait a few minutes and try again.', 429)
     const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, '0')
     await serviceClient.from('app_otps').insert({ email, code_hash: hash(email, code), expires_at: new Date(Date.now() + 10 * 60e3).toISOString(), ip: ip || null })
-    await sendEmail(email, `${code} is your Sangsters sign-in code`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338;max-width:480px">
-<p>Here is your sign-in code for the Sangsters app:</p>
+    await sendEmail(email, `${code} is your NOVOURQ sign-in code`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338;max-width:480px">
+<p>Here is your sign-in code for the NOVOURQ app:</p>
 <p style="font-size:32px;font-weight:700;letter-spacing:8px;color:#191815;margin:18px 0">${code}</p>
 <p style="color:#6b675e">It expires in 10 minutes. If you didn't ask for this, you can ignore this email.</p></div>`)
     return NextResponse.json({ ok: true }, { headers: CORS })

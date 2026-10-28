@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const { lead_name, source, inquiry } = await req.json()
   if (!inquiry?.trim()) return NextResponse.json({ error: 'inquiry is required' }, { status: 400 })
 
-  const systemPrompt = `You are an AI lead qualification assistant for Sangsters Group, a property management and short-term rental co-hosting business (Airbnb co-hosting, guaranteed rent, estate agency, property development). Given a landlord/property-owner inquiry, do three things, clearly labeled:
+  const systemPrompt = `You are an AI lead qualification assistant for NOVOURQ Group, a property management and short-term rental co-hosting business (Airbnb co-hosting, guaranteed rent, estate agency, property development). Given a landlord/property-owner inquiry, do three things, clearly labeled:
 1. LEAD QUALITY: rate as Hot, Warm, or Cold, with one line of reasoning.
 2. KEY DETAILS: bullet any details worth logging (property type, location, timeline, etc.) found in the message.
 3. DRAFT REPLY: a warm, professional reply that asks 1-2 qualifying questions to move the conversation forward, ready to send as-is.`

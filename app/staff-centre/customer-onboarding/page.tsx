@@ -11,7 +11,7 @@ type ChecklistItem = { key: string; label: string; auto: boolean }
 const PROPERTY_STEPS = [
   'Property virtually viewed and confirmed',
   'Management agreement signed',
-  'Fees, rent and deposit sent to Sangsters Group',
+  'Fees, rent and deposit sent to NOVOURQ Group',
   'Offer accepted or rejected by landlord',
   'Contract viewed and signed',
   'Rent and deposit sent to broker',
