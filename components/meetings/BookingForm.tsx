@@ -49,7 +49,7 @@ export default function BookingForm({ code }: { code?: string }) {
       <div style={{ maxWidth: 560, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
           <img src="/logo-192.png" alt="" width={48} height={48} style={{ borderRadius: 10 }} />
-          <div style={{ fontSize: 19, fontWeight: 700, color: BROWN }}>Sangsters Group</div>
+          <div style={{ fontSize: 19, fontWeight: 700, color: BROWN }}>The NOVOURQ</div>
         </div>
 
         <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 10px 30px rgba(98,73,32,.08)', overflow: 'hidden' }}>
@@ -105,13 +105,13 @@ export default function BookingForm({ code }: { code?: string }) {
 
                     {err && <div style={{ color: '#C62828', fontSize: 14 }}>{err}</div>}
                     <button type="submit" disabled={sending} style={{ padding: '13px 18px', borderRadius: 10, border: 'none', background: GOLD_DARK, color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: sending ? 0.7 : 1 }}>{sending ? 'Sending…' : 'Request a meeting'}</button>
-                    <div style={{ fontSize: 12.5, color: MUTED, textAlign: 'center' }}>We’ll contact you to confirm a time. Prefer to talk now? Call 020 7164 0329.</div>
+                    <div style={{ fontSize: 12.5, color: MUTED, textAlign: 'center' }}>We’ll contact you to confirm a time.</div>
                   </div>
                 </form>
               )}
           </div>
         </div>
-        <div style={{ textAlign: 'center', fontSize: 12.5, color: MUTED, marginTop: 18 }}><a href="https://www.sangstersgroup.com" style={{ color: GOLD_DARK, textDecoration: 'none' }}>www.sangstersgroup.com</a></div>
+        <div style={{ textAlign: 'center', fontSize: 12.5, color: MUTED, marginTop: 18 }}><a href="https://www.thenovourq.com" style={{ color: GOLD_DARK, textDecoration: 'none' }}>www.thenovourq.com</a></div>
       </div>
     </div>
   )
