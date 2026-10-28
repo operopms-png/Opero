@@ -33,11 +33,16 @@ export type EmailTemplate = EmailFormat & { id: string; name: string; is_default
 const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const LOGO = 'https://app.sangstersgroup.com/logo-192.png'
 
+// "Full signature" template: the fuller layout from the NOVOURQ template PDF.
+// Selected by template name so Standard keeps the short footer below.
+const FULL_SIGNATURE_LAYOUT = (email: string) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#323338;max-width:600px;width:100%"><tr><td style="padding-top:14px;line-height:1.6"><div style="font-weight:bold;color:#1B2F6E">London Headquarters</div><div>2 Tallis Street, London</div><div style="margin-top:12px;font-weight:bold;color:#1B2F6E">Schedule a meeting with us</div><div>Website: <a href="https://www.thenovourq.com" style="color:#1B2F6E;text-decoration:none">www.thenovourq.com</a></div><div style="margin-top:12px">Want to make income? Earn competitive commission by connecting clients with the right property opportunities. Our referral program makes it simple to generate income from property sales and Airbnb agent introductions. Contact the team <a href="mailto:career@thenovourq.com" style="color:#1B2F6E;text-decoration:none">career@thenovourq.com</a></div></td></tr><tr><td style="padding-top:18px"><img src="https://app.thenovourq.com/novouq-logo.jpg" width="240" alt="NOVOURQ" style="display:block;border:0"></td></tr><tr><td style="padding-top:14px;color:#9699A6;font-size:10.5px;line-height:1.4">The information contained in this e-mail (including any attachments) is intended only for the personal and confidential use of the recipients named above. If you are not an intended recipient, please notify the sender by replying to this message and then delete the message and any copies from your system. Any use, dissemination, distribution, or reproduction of this message by unintended recipients is not authorised.</td></tr></table>`
+
 // Email-safe (table + inline styles) footer. Shows the company contact email;
 // falls back to the sending address if that's left blank.
 export function footerHtml(f: EmailFormat, fromEmail: string) {
   if (!f.footer_enabled) return ''
   const email = (f.contact_email || '').trim() || fromEmail
+  if ((f as any).name === 'Full signature') return FULL_SIGNATURE_LAYOUT(email)
   if ((f.footer_html || '').trim()) return `<div style="margin-top:22px;font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#323338;max-width:600px">${f.footer_html.replace(/\{email\}/g, esc(email))}</div>`
   const site = f.website ? `https://${f.website.replace(/^https?:\/\//, '')}` : ''
   const line = (label: string, val: string, href?: string) => val ? `<tr><td style="padding:1px 10px 1px 0;color:#89CFF0;font-weight:bold;white-space:nowrap;vertical-align:top">${label}</td><td style="padding:1px 0;color:#323338">${href ? `<a href="${href}" style="color:#323338;text-decoration:none">${esc(val)}</a>` : esc(val)}</td></tr>` : ''
