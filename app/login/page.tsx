@@ -295,7 +295,7 @@ function LoginForm() {
             )}
             {error && <div style={{ fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
             {successMsg && <div style={{ fontSize: 13, color: '#12B76A', background: '#F6FEF9', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}
-            <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
+            <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#1B2F6E', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
               {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? (selectedPlan === 'onetime' ? 'Get lifetime access →' : 'Start free trial →') : 'Send Reset Email'}
             </button>
           </div>
@@ -307,11 +307,11 @@ function LoginForm() {
                 <div><button onClick={() => setMode('reset')} style={{ background: 'none', border: 'none', color: '#98A2B3', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Forgot password?</button></div>
               </>
             )}
-            {mode === 'signup' && <div>Already have an account? <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#A8862E', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign in</button></div>}
-            {mode === 'reset' && <div><button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#A8862E', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back to sign in</button></div>}
+            {mode === 'signup' && <div>Already have an account? <button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#1B2F6E', cursor: 'pointer', fontWeight: 500, fontSize: 13, fontFamily: 'inherit' }}>Sign in</button></div>}
+            {mode === 'reset' && <div><button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#1B2F6E', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back to sign in</button></div>}
           </div>
           <div style={{ textAlign: 'center', marginTop: 16 }}>
-            <a href="https://www.sangstersgroup.com" style={{ fontSize: 13, color: '#98A2B3', textDecoration: 'none' }}>← Back to sangstersgroup.com</a>
+            <a href="https://thenovourq.com" style={{ fontSize: 13, color: '#98A2B3', textDecoration: 'none' }}>← Back to thenovourq.com</a>
           </div>
         </div>
       </div>
