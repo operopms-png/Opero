@@ -8,6 +8,7 @@ import { normalizeRole } from '@/lib/useRole'
 // click the role pill to change it, open a member to edit access.
 export const ROLE_COLORS: Record<string, string> = {
   'Admin': '#2F6DB5',
+  'Co Founder': '#1B2F6E',
   'Vacation Rental Team': '#00C875',
   'Property Management Team': '#579BFC',
   'Finance Team': '#00A3A3',

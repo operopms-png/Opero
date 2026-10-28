@@ -2,10 +2,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export type UserRole = 'Admin' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Finance Team' | 'Partner'
+export type UserRole = 'Admin' | 'Co Founder' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Finance Team' | 'Partner'
 
 export const ROLE_MODULES: Record<string, string[]> = {
   'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
+  'Co Founder':                  ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
   'Vacation Rental Team':        ['str'],
   'HR Team':                     ['sc'],
   'Property Management Team':    ['pm'],
@@ -20,6 +21,7 @@ export const ROLE_MODULES: Record<string, string[]> = {
 
 export const ROLE_SETTINGS: Record<string, boolean> = {
   'Admin':                       true,
+  'Co Founder':                  true,
   'Vacation Rental Team':        false,
   'Property Management Team':    false,
   'Development Team':            false,
@@ -144,7 +146,7 @@ export async function resolveAccess(user: { id: string; email?: string | null })
   return { role: 'Admin', customModules: null, propertyIds: [], businessId: user.id, isPartner: false }
 }
 
-const KNOWN_ROLES: UserRole[] = ['Admin', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Finance Team', 'Partner']
+const KNOWN_ROLES: UserRole[] = ['Admin', 'Co Founder', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Finance Team', 'Partner']
 
 const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
   'airbnb agent':     'Vacation Rental Team',
