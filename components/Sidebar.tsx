@@ -13,7 +13,6 @@ import { STAFF_HUBS, tabMatches } from '@/lib/staffHubs'
 const NAV_GROUPS = [
   {
     label: 'Property Operations',
-    hideHeading: true,
     module: 'pm',
     modulePrice: '£39/mo',
     items: [
