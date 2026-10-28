@@ -311,7 +311,7 @@ function LoginForm() {
             {mode === 'reset' && <div><button onClick={() => setMode('login')} style={{ background: 'none', border: 'none', color: '#1B2F6E', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>← Back to sign in</button></div>}
           </div>
           <div style={{ textAlign: 'center', marginTop: 16 }}>
-            <a href="https://thenovourq.com" style={{ fontSize: 13, color: '#98A2B3', textDecoration: 'none' }}>← Back to thenovourq.com</a>
+            <a href="https://www.thenovourq.com" style={{ fontSize: 13, color: '#98A2B3', textDecoration: 'none' }}>← Back to www.thenovourq.com</a>
           </div>
         </div>
       </div>
