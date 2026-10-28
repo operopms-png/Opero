@@ -39,7 +39,7 @@ export function Account({ data, role, onSwitch }: { data: any; role: Role; onSwi
         <Row icon="trash" title="Delete my account" sub="Removes your app login" onPress={del} />
       </Card>
       <ErrorText>{err}</ErrorText>
-      <Muted style={{ textAlign: 'center', marginTop: 20, color: C.faint }}>Sangsters · version 1.0.0</Muted>
+      <Muted style={{ textAlign: 'center', marginTop: 20, color: C.faint }}>NOVOURQ · version 1.0.0</Muted>
     </View>
   )
 }
