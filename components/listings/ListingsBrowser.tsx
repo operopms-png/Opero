@@ -19,7 +19,6 @@ export function TopBar() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo-192.png" alt="" width={38} height={38} style={{ borderRadius: 8 }} />The NOVOURQ
       </a>
-      <a href="tel:+442071640329" style={{ fontSize: 14, color: BRAND.gd, fontWeight: 600, textDecoration: 'none' }}>020 7164 0329</a>
     </div>
   )
 }
