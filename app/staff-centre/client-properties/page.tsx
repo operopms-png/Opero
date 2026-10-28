@@ -15,7 +15,7 @@ type P = any
 const STAGES = [
   { k: 'new', l: 'New', bg: '#EEF2F7', c: '#344054' },
   { k: 'viewing', l: 'Viewing', bg: '#E8F0FB', c: '#1F5BB0' },
-  { k: 'numbers', l: 'Numbers done', bg: '#EAF3FC', c: '#8E6B1F' },
+  { k: 'numbers', l: 'Numbers done', bg: '#EAF3FC', c: '#89CFF0' },
   { k: 'offer', l: 'Offer made', bg: '#FFF0E0', c: '#A35A00' },
   { k: 'signed', l: 'Signed', bg: '#E6F7EF', c: '#0E7C55' },
   { k: 'passed', l: 'Passed', bg: '#F2F2F2', c: '#76736C' },
@@ -28,7 +28,7 @@ const SERVICES = [
 const SV = Object.fromEntries(SERVICES.map(s => [s.k, s.l]))
 const TYPES = ['House', 'Apartment', 'Townhouse', 'Villa', 'Bungalow', 'Land', 'Commercial']
 const SYM: Record<string, string> = { JMD: 'J$', USD: '$', GBP: '£' }
-const INK = '#191815', GOLD = '#2F6DB5', GOLD_T = '#8E6B1F'
+const INK = '#191815', GOLD = '#2F6DB5', GOLD_T = '#89CFF0'
 
 const money = (n: any, cur = 'JMD', short = false) => {
   if (n == null || n === '') return '—'
@@ -162,7 +162,7 @@ function PropCard({ p, onClick }: { p: P; onClick: () => void }) {
   return (
     <div onClick={onClick} style={{ ...card, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow .15s' }} onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 20px rgba(25,24,21,.10)'} onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
       <div style={{ position: 'relative', height: 160, background: photo ? `#E8E4DA url("${thumb(photo)}") center/cover` : '#F3EEE3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {!photo && <Icon k="home" s={34} c="#CBBF9F" />}
+        {!photo && <Icon k="home" s={34} c="#89CFF0" />}
         <div style={{ position: 'absolute', top: 10, left: 10 }}><Pill s={p.stage} /></div>
         {p.service && <span style={{ position: 'absolute', bottom: 10, left: 10, background: 'rgba(25,24,21,.8)', color: '#fff', fontSize: 11.5, fontWeight: 600, padding: '4px 9px', borderRadius: 4 }}>{SV[p.service]}</span>}
         {(p.photos || []).length > 1 && <span style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(25,24,21,.65)', color: '#fff', fontSize: 11, padding: '3px 7px', borderRadius: 4 }}>{p.photos.length} photos</span>}

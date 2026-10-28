@@ -205,8 +205,8 @@ export default function Sidebar() {
                     data-active={active ? '1' : undefined}
                     title={isCollapsed ? label : undefined}
                     onClick={(e: any) => { if (!itemHasModule && !requiresModule) e.preventDefault(); else if (itemHasModule && !hasAccess) e.preventDefault(); else setOpen(false) }}
-                    style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#B9D6F2' : 'transparent', color: !itemHasModule ? '#C9B891' : !hasAccess ? '#C9B891' : active ? '#1D4E89' : '#1B2F4B', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
-                    <Icon name={icon} size={16} color={!itemHasModule ? '#C9B891' : !hasAccess ? '#C9B891' : active ? '#1D4E89' : '#2F6DB5'} />
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#B9D6F2' : 'transparent', color: !itemHasModule ? '#89CFF0' : !hasAccess ? '#89CFF0' : active ? '#1D4E89' : '#1B2F4B', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
+                    <Icon name={icon} size={16} color={!itemHasModule ? '#89CFF0' : !hasAccess ? '#89CFF0' : active ? '#1D4E89' : '#2F6DB5'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
                     {itemHasModule && badgeCount > 0 && (
                       isCollapsed

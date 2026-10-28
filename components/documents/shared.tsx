@@ -7,7 +7,7 @@ import { staffApi } from '../../lib/staff-api'
 
 export const DOC_STATUS: Record<string, { l: string; bg: string; c: string }> = {
   draft: { l: 'Draft', bg: '#F2F2F2', c: '#5C5850' }, pending_approval: { l: 'Awaiting approval', bg: '#FFF4E0', c: '#A15C00' }, rejected: { l: 'Changes rejected', bg: '#FDECEC', c: '#B42318' },
-  sent: { l: 'Sent', bg: '#FBF6EA', c: '#8E6B1F' }, opened: { l: 'Opened', bg: '#EAF2FC', c: '#2F6DB5' }, signed: { l: 'Signed', bg: '#E6F7EF', c: '#0E7C55' }, void: { l: 'Cancelled', bg: '#F2F2F2', c: '#8A877F' },
+  sent: { l: 'Sent', bg: '#FBF6EA', c: '#89CFF0' }, opened: { l: 'Opened', bg: '#EAF2FC', c: '#2F6DB5' }, signed: { l: 'Signed', bg: '#E6F7EF', c: '#0E7C55' }, void: { l: 'Cancelled', bg: '#F2F2F2', c: '#8A877F' },
 }
 
 export const KIND_LABEL: Record<string, string> = { pm_tenant: 'Tenant', ea_tenant: 'Tenant', pm_owner: 'Owner', ea_owner: 'Owner', client: 'Owner', partner: 'Partner', guest: 'Guest', crm: 'Contact' }

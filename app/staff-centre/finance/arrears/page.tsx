@@ -42,7 +42,7 @@ export default function Arrears() {
                       <td style={td}><div style={{ fontWeight: 600 }}>{r.tenant}</div><div style={{ fontSize: 11.5, color: C.muted, display: 'flex', alignItems: 'center', gap: 5 }}><i style={{ width: 8, height: 8, borderRadius: 2, background: MODULE_COL[r.module], display: 'inline-block' }} />{MODULE_LABEL[r.module]}{r.phone ? ` · ${r.phone}` : ''}</div></td>
                       <td style={td}>{r.property || '—'}</td>
                       <td style={td}>{new Date(r.due_date + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}<div style={{ fontSize: 11.5, color: C.muted }}>{r.what}</div></td>
-                      <td style={{ ...td, fontWeight: 700, color: r.days > 30 ? C.red : r.days > 7 ? '#9A6400' : C.ink }}>{r.days} day{r.days === 1 ? '' : 's'}</td>
+                      <td style={{ ...td, fontWeight: 700, color: r.days > 30 ? C.red : r.days > 7 ? '#89CFF0' : C.ink }}>{r.days} day{r.days === 1 ? '' : 's'}</td>
                       <td style={{ ...td, textAlign: 'right', fontWeight: 700 }}>{money(r.amount, r.currency)}</td>
                       <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {r.phone && <TextButton phone={r.phone} name={r.tenant} style={{ marginRight: 6 }} />}

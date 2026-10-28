@@ -251,7 +251,7 @@ export default function EmailPage() {
           <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
             <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine }}>
               <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Email templates</h1>
-              <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>The opening line, sign-off and footer that go on every email. Click any words in the preview to change them, then save. You can also change the footer for a single email while writing it.</div>
+              <div style={{ fontSize: 13, color: '#89CFF0', maxWidth: 760, lineHeight: 1.5 }}>The opening line, sign-off and footer that go on every email. Click any words in the preview to change them, then save. You can also change the footer for a single email while writing it.</div>
             </div>
             <div style={{ padding: '20px 28px 40px' }}>
               <TemplatesEditor templates={templates} onChange={setTemplates} flash={flash} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} isAdmin={isAdmin} />
@@ -445,7 +445,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
       <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Mailbox settings</h1>
-          <div style={{ fontSize: 13, color: '#8A7248', maxWidth: 760, lineHeight: 1.5 }}>Connect each address with its email password (from Bluehost → Email). Passwords are stored encrypted and never shown again. Admins see every mailbox; choose which staff can see each one.</div>
+          <div style={{ fontSize: 13, color: '#89CFF0', maxWidth: 760, lineHeight: 1.5 }}>Connect each address with its email password (from Bluehost → Email). Passwords are stored encrypted and never shown again. Admins see every mailbox; choose which staff can see each one.</div>
         </div>
         <button onClick={() => setAdding(true)} style={btn('gold')}>+ Add mailbox</button>
       </div>

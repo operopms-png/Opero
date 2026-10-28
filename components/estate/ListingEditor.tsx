@@ -7,7 +7,7 @@ import { useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CURRENCIES } from '@/lib/listings-shared'
 
-const GD = '#89CFF0', BROWN = '#624920', CREAM = '#FBF4E6', LINE = '#E4E7EC', MUTED = '#667085'
+const GD = '#89CFF0', BROWN = '#89CFF0', CREAM = '#FBF4E6', LINE = '#E4E7EC', MUTED = '#667085'
 export type ListingFields = { listed: boolean; currency: string; available_from: string; description: string; features: string[]; image_urls: string; photo_captions: Record<string, string> }
 
 export function parseUrls(val: string | null | undefined): string[] {
@@ -74,7 +74,7 @@ export default function ListingEditor({ value, onChange, rentLabel, propertyId }
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: CREAM, border: '1px solid #F0E3C4', borderRadius: 8, padding: '10px 12px', marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 13.5, fontWeight: 600, color: BROWN }}>Show on listings link</div>
-          <div style={{ fontSize: 12, color: '#8A7248' }}>Tenants can see it at {typeof window !== 'undefined' ? window.location.host : 'app.sangstersgroup.com'}/homes{value.listed && link ? <> · <a href={link} target="_blank" rel="noreferrer" style={{ color: GD }}>view ↗</a></> : null}. Rented properties are hidden automatically.</div>
+          <div style={{ fontSize: 12, color: '#89CFF0' }}>Tenants can see it at {typeof window !== 'undefined' ? window.location.host : 'app.sangstersgroup.com'}/homes{value.listed && link ? <> · <a href={link} target="_blank" rel="noreferrer" style={{ color: GD }}>view ↗</a></> : null}. Rented properties are hidden automatically.</div>
         </div>
         <button type="button" role="switch" aria-checked={value.listed} onClick={() => onChange({ listed: !value.listed })} style={{ width: 46, height: 26, borderRadius: 13, border: 'none', background: value.listed ? '#00C875' : '#C4C4C4', position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
           <span style={{ position: 'absolute', top: 3, left: value.listed ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .15s' }} />
@@ -127,7 +127,7 @@ export default function ListingEditor({ value, onChange, rentLabel, propertyId }
           </div>
         ))}
         <button type="button" onClick={() => fileRef.current?.click()} style={{ minHeight: 122, border: `2px dashed ${GD}`, borderRadius: 8, background: '#FFFCF5', color: GD, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-          {busy ? `Uploading ${busy}…` : '+ Add photos'}<span style={{ fontWeight: 400, fontSize: 11.5, color: '#8A7248' }}>{busy ? 'please wait' : 'or drop them here'}</span>
+          {busy ? `Uploading ${busy}…` : '+ Add photos'}<span style={{ fontWeight: 400, fontSize: 11.5, color: '#89CFF0' }}>{busy ? 'please wait' : 'or drop them here'}</span>
         </button>
       </div>
       <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={e => { addFiles(e.target.files); e.target.value = '' }} />
@@ -151,7 +151,7 @@ export function WebsiteEditor({ value, onChange }: { value: WebsiteFields; onCha
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: CREAM, border: '1px solid #F0E3C4', borderRadius: 8, padding: '10px 12px', marginBottom: value.show_on_website ? 14 : 0 }}>
         <div>
           <div style={{ fontSize: 13.5, fontWeight: 600, color: BROWN }}>Show on sangstersgroup.com</div>
-          <div style={{ fontSize: 12, color: '#8A7248' }}>Appears on the website’s property search and home page. Rented properties show as “Currently let”.</div>
+          <div style={{ fontSize: 12, color: '#89CFF0' }}>Appears on the website’s property search and home page. Rented properties show as “Currently let”.</div>
         </div>
         <button type="button" role="switch" aria-checked={value.show_on_website} onClick={() => onChange({ show_on_website: !value.show_on_website })} style={{ width: 46, height: 26, borderRadius: 13, border: 'none', background: value.show_on_website ? '#00C875' : '#C4C4C4', position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
           <span style={{ position: 'absolute', top: 3, left: value.show_on_website ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .15s' }} />

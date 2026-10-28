@@ -20,7 +20,7 @@ export default function DevInvestorPortalPreview() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif", padding: '40px 24px' }}>
       <div style={{ maxWidth: 640, margin: '0 auto' }}>
-        <div style={{ background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#92400E' }}>
+        <div style={{ background: '#FFFBEB', border: '1px solid #89CFF0', borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#92400E' }}>
           Preview only — this portal isn't wired to real data yet. Nothing below is live.
         </div>
 

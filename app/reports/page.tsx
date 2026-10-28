@@ -46,7 +46,7 @@ export default function ReportsPage() {
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {(['revenue', 'occupancy'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: tab === t ? '#624920' : '#667085', borderBottom: tab === t ? '2px solid #89CFF0' : '2px solid transparent', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t === 'revenue' ? 'Revenue Report' : 'Occupancy'}</button>
+            <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: tab === t ? '#89CFF0' : '#667085', borderBottom: tab === t ? '2px solid #89CFF0' : '2px solid transparent', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t === 'revenue' ? 'Revenue Report' : 'Occupancy'}</button>
           ))}
         </div>
       </div>

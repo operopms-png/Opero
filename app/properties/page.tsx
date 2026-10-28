@@ -199,7 +199,7 @@ export default function PropertiesPage() {
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px' }}>
         {atLimit && plan !== 'professional' && (
-          <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ background: '#FEF3C7', border: '1px solid #89CFF0', borderRadius: 12, padding: '14px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#92400E' }}>🚫 You've reached your {planLabel} plan limit of {propertyLimit} properties</div>
               <div style={{ fontSize: 13, color: '#92400E', marginTop: 2, opacity: 0.8 }}>Upgrade to {nextPlan} to add more.</div>

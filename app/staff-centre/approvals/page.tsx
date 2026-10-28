@@ -9,7 +9,7 @@ import { staffApi, money, MODULE_LABEL } from '../../../lib/staff-api'
 
 const KINDS = [['expense', 'Expense'], ['purchase', 'Purchase'], ['refund', 'Refund'], ['discount', 'Discount'], ['other', 'Other']]
 const KIND_LABEL: Record<string, string> = { ...Object.fromEntries(KINDS), document: 'Document wording' }
-const ST: Record<string, { l: string; bg: string; c: string }> = { pending: { l: 'Waiting', bg: '#FFF4DE', c: '#9A6400' }, approved: { l: 'Approved', bg: '#E6F7EF', c: '#0E7C55' }, rejected: { l: 'Rejected', bg: '#FDECEC', c: '#B42318' } }
+const ST: Record<string, { l: string; bg: string; c: string }> = { pending: { l: 'Waiting', bg: '#FFF4DE', c: '#89CFF0' }, approved: { l: 'Approved', bg: '#E6F7EF', c: '#0E7C55' }, rejected: { l: 'Rejected', bg: '#FDECEC', c: '#B42318' } }
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export default function Approvals() {
@@ -32,7 +32,7 @@ export default function Approvals() {
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         {!d ? (!err && <Loading />) : <>
           {d.isAdmin && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 18 }}>
-            <Stat label="Waiting for you" value={<span style={{ color: pend.length ? '#9A6400' : C.ink }}>{pend.length}</span>} highlight />
+            <Stat label="Waiting for you" value={<span style={{ color: pend.length ? '#89CFF0' : C.ink }}>{pend.length}</span>} highlight />
             <Stat label="Approved this month" value={all.filter(r => r.status === 'approved' && r.decided_at?.slice(0, 7) === new Date().toISOString().slice(0, 7)).length} />
           </div>}
           {shown.length === 0 ? <Empty>{tab === 'pending' ? 'Nothing waiting for approval.' : 'Nothing here yet.'}</Empty> : (

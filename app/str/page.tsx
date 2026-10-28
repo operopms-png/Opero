@@ -603,7 +603,7 @@ export default function STRPage() {
                   {monthlyTrend.map((m,i)=>{
                     const x = 10+(i*47)
                     const h = Math.max(2,(m.occupancyPct/100)*60)
-                    return <rect key={m.key} x={x} y={75-h} width={30} height={h} rx="3" fill={i===monthlyTrend.length-1?'#2F6DB5':'#E8D29A'}/>
+                    return <rect key={m.key} x={x} y={75-h} width={30} height={h} rx="3" fill={i===monthlyTrend.length-1?'#2F6DB5':'#89CFF0'}/>
                   })}
                   {monthlyTrend.map((m,i)=>(<text key={m.key} x={15+(i*47)} y={79} fontSize="8" fill="#98A2B3">{m.label}</text>))}
                 </svg>
@@ -832,7 +832,7 @@ export default function STRPage() {
             <div style={{fontSize:11,color:'#98A2B3',marginBottom:24,marginTop:-14}}>iCal runs automatically every 2 hours (booking dates only). Smoobu runs every 30 minutes (real bookings + guest messages that relay into their actual Airbnb/Booking.com chat).</div>
 
             {lastSmoobuSyncResult?.synced?.some((r:any)=>r.debug)&&(
-              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:16,marginBottom:24,fontSize:12,color:'#92400E'}}>
+              <div style={{background:'#FFFBEB',border:'1px solid #89CFF0',borderRadius:10,padding:16,marginBottom:24,fontSize:12,color:'#92400E'}}>
                 <div style={{fontWeight:700,marginBottom:8}}>Smoobu sync details (temporary, for debugging)</div>
                 {lastSmoobuSyncResult.synced.filter((r:any)=>r.debug).map((r:any,i:number)=>(
                   <div key={i} style={{marginBottom:8}}>
@@ -1446,7 +1446,7 @@ export default function STRPage() {
         {tab==='Compliance' && (<div>
           <div style={{display:'flex',gap:8,marginBottom:20}}>
             {(['property','business'] as const).map(s=>(
-              <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #2F6DB5':'1px solid #D0D5DD',background:complianceScope===s?'#D0AE4C18':'#fff',color:complianceScope===s?'#2F6DB5':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance':'Business Compliance'}</button>
+              <button key={s} onClick={()=>setComplianceScope(s)} style={{padding:'8px 16px',borderRadius:8,border:complianceScope===s?'1px solid #2F6DB5':'1px solid #D0D5DD',background:complianceScope===s?'#89CFF018':'#fff',color:complianceScope===s?'#2F6DB5':'#344054',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s==='property'?'Property Compliance':'Business Compliance'}</button>
             ))}
           </div>
 
@@ -1485,7 +1485,7 @@ export default function STRPage() {
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
                 {[
                   {label:'Expired',value:scoped.filter((c:any)=>strComplianceStatus(c.expiry_date)==='Expired').length,color:'#EF4444',bg:'#FEF2F2',border:'#FCA5A5'},
-                  {label:'Expiring within 60 days',value:scoped.filter((c:any)=>strComplianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#FDE68A'},
+                  {label:'Expiring within 60 days',value:scoped.filter((c:any)=>strComplianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#89CFF0'},
                   {label:'Valid',value:scoped.filter((c:any)=>strComplianceStatus(c.expiry_date)==='Valid').length,color:'#10B981',bg:'#F0FDF4',border:'#BBF7D0'},
                 ].map(s=>(
                   <div key={s.label} style={{padding:16,background:s.bg,borderRadius:10,border:'1px solid '+s.border}}>

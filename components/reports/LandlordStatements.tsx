@@ -125,9 +125,9 @@ export function StatementView({ snap, edit }: {
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: C.goldDark, letterSpacing: '0.06em' }}>LANDLORD STATEMENT</div>
           <div style={{ fontSize: 24, fontWeight: 500, color: C.brown, marginTop: 4 }}>{snap.landlord.name}</div>
-          {snap.landlord.address && <div style={{ fontSize: 13, color: '#8A7248', marginTop: 2 }}>{snap.landlord.address}</div>}
+          {snap.landlord.address && <div style={{ fontSize: 13, color: '#89CFF0', marginTop: 2 }}>{snap.landlord.address}</div>}
         </div>
-        <div style={{ fontSize: 13, color: '#8A7248', textAlign: 'right', lineHeight: 1.7 }}>
+        <div style={{ fontSize: 13, color: '#89CFF0', textAlign: 'right', lineHeight: 1.7 }}>
           <div><b style={{ color: C.brown }}>{snap.period.label}</b></div>
           <div>{nice(snap.period.from)} – {nice(snap.period.to)}</div>
           <div>Issued {nice(snap.issued)} · {snap.business}</div>
@@ -149,7 +149,7 @@ export function StatementView({ snap, edit }: {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 16px', borderRadius: 6, background: owed ? '#FFF4E0' : '#E6F9F0', border: '1px solid ' + (owed ? '#F8D49B' : '#A6E9C9'), flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 16px', borderRadius: 6, background: owed ? '#FFF4E0' : '#E6F9F0', border: '1px solid ' + (owed ? '#89CFF0' : '#A6E9C9'), flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 600 }}>{owed ? 'Balance still to be paid to you' : s.balance < -0.005 ? 'Paid to you ahead of rent received' : 'Fully paid for this period'}</div>
             <div style={{ fontSize: 12.5, color: C.muted, marginTop: 2 }}>Rent received {money(s.received)} − fee {money(s.fee)} − costs {money(s.costs)} = {money(s.net)} due to you · {money(s.paidOut)} already paid</div>

@@ -9,9 +9,9 @@ import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
 
-const C = { ink: '#191815', brown: '#5A4320', gold: '#2F6DB5', goldT: '#8E6B1F', gold2: '#D9B866', cream: '#EAF3FC', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
-const MOD: Record<string, string> = { vr: '#B08A2E', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
-const TONE = { red: { c: '#B42318', bg: '#FDECEC' }, amber: { c: '#9A6400', bg: '#FFF4DE' }, blue: { c: '#1F5BB0', bg: '#E8F0FB' } }
+const C = { ink: '#191815', brown: '#5A4320', gold: '#2F6DB5', goldT: '#89CFF0', gold2: '#89CFF0', cream: '#EAF3FC', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
+const MOD: Record<string, string> = { vr: '#89CFF0', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
+const TONE = { red: { c: '#B42318', bg: '#FDECEC' }, amber: { c: '#89CFF0', bg: '#FFF4DE' }, blue: { c: '#1F5BB0', bg: '#E8F0FB' } }
 const P: Record<string, string> = {
   in: 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3', out: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
   viewing: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6', check: 'M5 12l5 5 9-10', task: 'M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
@@ -96,13 +96,13 @@ export default function Dashboard() {
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: C.goldT }}>OPERATIONS · {rangeName.toUpperCase()}</div>
             <h1 style={{ margin: '4px 0 0', fontSize: 28, fontWeight: 700, color: C.brown, letterSpacing: '-.01em' }}>{title}</h1>
-            <div style={{ fontSize: 13, color: '#8A7248', marginTop: 3 }}>Jamaica {t('America/Jamaica')} · London {t('Europe/London')}</div>
+            <div style={{ fontSize: 13, color: '#89CFF0', marginTop: 3 }}>Jamaica {t('America/Jamaica')} · London {t('Europe/London')}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <div style={{ display: 'inline-flex', border: '1px solid #D9C69A', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
+            <div style={{ display: 'inline-flex', border: '1px solid #89CFF0', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
               {RANGES.map(([k, l], i) => <button key={k} onClick={() => setRange(k)} style={{ padding: '8px 14px', border: 'none', borderLeft: i ? '1px solid #C9DEF3' : 'none', background: range === k ? C.gold : '#fff', color: range === k ? '#fff' : C.brown, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>)}
             </div>
-            <button onClick={() => load()} title="Refresh" aria-label="Refresh" style={{ width: 36, height: 36, borderRadius: 8, border: '1px solid #D9C69A', background: '#fff', color: C.goldT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Ico k="refresh" s={15} /></button>
+            <button onClick={() => load()} title="Refresh" aria-label="Refresh" style={{ width: 36, height: 36, borderRadius: 8, border: '1px solid #89CFF0', background: '#fff', color: C.goldT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Ico k="refresh" s={15} /></button>
           </div>
         </div>
         <div className="dash-hero" style={{ marginTop: 20, position: 'relative' }}>

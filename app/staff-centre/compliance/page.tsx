@@ -8,8 +8,8 @@ import { C, CrmPage, CrmHeader, Body, Stat, Loading, Empty, Modal, btn, input, l
 import { staffApi, MODULE_LABEL, MODULE_COL } from '../../../lib/staff-api'
 
 const STATUS: Record<string, { l: string; bg: string; c: string }> = {
-  expired: { l: 'Expired', bg: '#FDECEC', c: '#B42318' }, due: { l: 'Due in 30 days', bg: '#FFF4DE', c: '#9A6400' },
-  soon: { l: 'Due in 90 days', bg: '#FBF6EA', c: '#8E6B1F' }, ok: { l: 'Up to date', bg: '#E6F7EF', c: '#0E7C55' }, 'no-date': { l: 'No expiry date', bg: '#F2F2F2', c: '#5C5850' },
+  expired: { l: 'Expired', bg: '#FDECEC', c: '#B42318' }, due: { l: 'Due in 30 days', bg: '#FFF4DE', c: '#89CFF0' },
+  soon: { l: 'Due in 90 days', bg: '#FBF6EA', c: '#89CFF0' }, ok: { l: 'Up to date', bg: '#E6F7EF', c: '#0E7C55' }, 'no-date': { l: 'No expiry date', bg: '#F2F2F2', c: '#5C5850' },
 }
 const TYPES = ['Gas Safety Certificate', 'EICR (Electrical)', 'EPC', 'Fire Risk Assessment', 'Building Insurance', 'Landlord Insurance', 'Public Liability Insurance', 'HMO Licence', 'Business / Trading Licence', 'TPDCo Licence', 'Fire Extinguisher Service', 'Planning Permission', 'Building Control Sign-off']
 const fmt = (d?: string | null) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
@@ -35,7 +35,7 @@ export default function Compliance() {
         {!d ? (!err && <Loading />) : <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12, marginBottom: 16 }}>
             <Stat label="Expired" value={<span style={{ color: n('expired') ? C.red : C.ink }}>{n('expired')}</span>} />
-            <Stat label="Due in 30 days" value={<span style={{ color: n('due') ? '#9A6400' : C.ink }}>{n('due')}</span>} />
+            <Stat label="Due in 30 days" value={<span style={{ color: n('due') ? '#89CFF0' : C.ink }}>{n('due')}</span>} />
             <Stat label="Due in 90 days" value={n('soon')} />
             <Stat label="Up to date" value={<span style={{ color: '#0E7C55' }}>{n('ok')}</span>} highlight />
           </div>

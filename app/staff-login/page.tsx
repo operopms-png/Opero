@@ -35,7 +35,7 @@ function StaffLoginForm() {
     setLoading(false)
   }
 
-  const GOLD = '#C9A84C'
+  const GOLD = '#89CFF0'
   const GOLD_HOVER = '#B89940'
   const INK = '#1A1A1A'
   const CREAM = '#F2EEE4'

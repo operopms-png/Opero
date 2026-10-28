@@ -36,7 +36,7 @@ export function fillScript(text: string, v: { name?: string | null; property?: s
   return out
 }
 
-const PALETTE = ['#FF385C', '#579BFC', '#00C875', '#FDAB3D', '#9D50DD', '#A8862E', '#E2445C', '#66CCFF']
+const PALETTE = ['#FF385C', '#579BFC', '#00C875', '#FDAB3D', '#9D50DD', '#89CFF0', '#E2445C', '#66CCFF']
 export function categoryColor(cat: string) {
   if (/airbnb/i.test(cat)) return '#FF385C'
   let h = 0

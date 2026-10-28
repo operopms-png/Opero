@@ -183,7 +183,7 @@ export default function ReceptionistPage() {
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>Answers your business line, handles questions, takes messages, notes viewing requests and puts callers through to staff. Every call is written up with a transcript.</div>
               <ModePicker disabled={!admin} value={s.phone_mode} onChange={v => quick({ phone_mode: v })} options={[{ v: 'off', l: 'Off', c: C.grey }, { v: 'no_answer', l: 'When nobody answers', c: C.gold }, { v: 'out_of_hours', l: 'Out of hours', c: C.purple }, { v: 'always', l: 'Every call', c: C.green }]} />
               {d.phones.length === 0 ? (
-                <div style={{ marginTop: 14, background: '#FFF4E0', border: '1px solid #F8D49B', borderRadius: 4, padding: '10px 14px', fontSize: 13, lineHeight: 1.55 }}>
+                <div style={{ marginTop: 14, background: '#FFF4E0', border: '1px solid #89CFF0', borderRadius: 4, padding: '10px 14px', fontSize: 13, lineHeight: 1.55 }}>
                   <b>No phone number connected yet.</b> Add a Twilio number to the portal, then either forward <b>020 7164 0329</b> to it from your virtual landline provider, or move the number to Twilio. Until then the phone receptionist can’t take calls — you can still test it in “Try it”.
                 </div>
               ) : <div style={{ marginTop: 12, fontSize: 13, color: C.muted }}>Answering: {d.phones.map((p: any) => p.phone_number).join(', ')}</div>}

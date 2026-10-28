@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { symOf, curOf } from '../../lib/currency'
 
-const C = { gold: '#D0AE4C', gd: '#89CFF0', brown: '#624920', cream: '#FBF4E6', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', green: '#10B981', red: '#EF4444', amber: '#F59E0B' }
+const C = { gold: '#89CFF0', gd: '#89CFF0', brown: '#89CFF0', cream: '#FBF4E6', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', green: '#10B981', red: '#EF4444', amber: '#F59E0B' }
 
 // cost = you pay it (lower than market is good); income = you earn it (higher than market is optimistic)
 type Metric = { key: string; label: string; value: number; unit: string; compare: string; dir: 'cost' | 'income'; ref?: boolean }
@@ -47,7 +47,7 @@ function verdict(m: Metric, b: any) {
   const pct = Math.abs(Math.round(diff))
   if (pct <= 5) return { text: 'In line with market', color: '#0E7C55', bg: '#E6F7EF' }
   if (m.dir === 'cost') return diff < 0 ? { text: `${pct}% below market ✓`, color: '#0E7C55', bg: '#E6F7EF' } : { text: `${pct}% above market`, color: C.red, bg: '#FDECEC' }
-  if (diff > 0) return b.high && m.value > b.high ? { text: `${pct}% above market — optimistic`, color: C.red, bg: '#FDECEC' } : { text: `${pct}% above typical`, color: '#9A6400', bg: '#FFF4DE' }
+  if (diff > 0) return b.high && m.value > b.high ? { text: `${pct}% above market — optimistic`, color: C.red, bg: '#FDECEC' } : { text: `${pct}% above typical`, color: '#89CFF0', bg: '#FFF4DE' }
   return { text: `${pct}% below market (cautious)`, color: '#0E7C55', bg: '#E6F7EF' }
 }
 
@@ -127,7 +127,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
           <div style={{ fontSize: 16, fontWeight: 700, color: C.ink }}>📍 Local market check</div>
           <div style={{ fontSize: 12.5, color: C.muted, marginTop: 2 }}>The AI searches live listings near this property and compares your figures with what the local market is asking and achieving.</div>
         </div>
-        {market && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 12, background: market.confidence === 'High' ? '#E6F7EF' : market.confidence === 'Medium' ? '#FFF4DE' : '#FDECEC', color: market.confidence === 'High' ? '#0E7C55' : market.confidence === 'Medium' ? '#9A6400' : C.red }} title={market.confidence_reason}>{market.confidence} confidence</span>}
+        {market && <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 12, background: market.confidence === 'High' ? '#E6F7EF' : market.confidence === 'Medium' ? '#FFF4DE' : '#FDECEC', color: market.confidence === 'High' ? '#0E7C55' : market.confidence === 'Medium' ? '#89CFF0' : C.red }} title={market.confidence_reason}>{market.confidence} confidence</span>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px,2fr) 100px 100px minmax(130px,1fr) auto', gap: 10, marginTop: 14, alignItems: 'end' }}>
@@ -142,7 +142,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
       </div>
       {err && <div style={{ fontSize: 12.5, color: C.red, marginTop: 8 }}>{err}</div>}
       {loading && <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 8, background: C.cream, fontSize: 13, color: C.brown }}>Searching sale, rental, room and short-let listings near {form.address}… this usually takes under a minute.</div>}
-      {stale && !loading && <div style={{ marginTop: 10, fontSize: 12, color: '#9A6400' }}>Your figures or location have changed since this check — run it again to update the comparison.</div>}
+      {stale && !loading && <div style={{ marginTop: 10, fontSize: 12, color: '#89CFF0' }}>Your figures or location have changed since this check — run it again to update the comparison.</div>}
 
       {market && !loading && (
         <div style={{ marginTop: 18 }}>
@@ -189,7 +189,7 @@ export default function MarketCheck({ strategy, strategyLabel, form, setForm, ma
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 12 }}>
             {market.demand && <div style={{ background: '#F7F8FA', borderRadius: 8, padding: '12px 14px' }}><div style={{ fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 4 }}>Demand</div><div style={{ fontSize: 13, color: '#344054', lineHeight: 1.6 }}>{market.demand}</div></div>}
-            {market.watch_outs?.length > 0 && <div style={{ background: '#FFF8EC', borderRadius: 8, padding: '12px 14px' }}><div style={{ fontSize: 12.5, fontWeight: 700, color: '#9A6400', marginBottom: 4 }}>⚠ Watch out for</div><ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#344054', lineHeight: 1.6 }}>{market.watch_outs.map((w: string, i: number) => <li key={i}>{w}</li>)}</ul></div>}
+            {market.watch_outs?.length > 0 && <div style={{ background: '#FFF8EC', borderRadius: 8, padding: '12px 14px' }}><div style={{ fontSize: 12.5, fontWeight: 700, color: '#89CFF0', marginBottom: 4 }}>⚠ Watch out for</div><ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: '#344054', lineHeight: 1.6 }}>{market.watch_outs.map((w: string, i: number) => <li key={i}>{w}</li>)}</ul></div>}
           </div>
 
           {market.sources?.length > 0 && <div style={{ marginTop: 14, fontSize: 12, color: C.faint, lineHeight: 1.8 }}>Also searched: {market.sources.map((s: any, i: number) => <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: C.muted, marginRight: 10 }}>{s.title.slice(0, 50)}</a>)}</div>}

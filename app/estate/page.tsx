@@ -815,7 +815,7 @@ export default function Page() {
               <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>Hello Sangsters !</div>
             </div>
             {(complianceExpired>0||complianceExpiringSoon>0||tenanciesEndingSoon>0||lateRentCount>0)&&(
-              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:10,padding:'16px 20px',marginBottom:20}}>
+              <div style={{background:'#FFFBEB',border:'1px solid #89CFF0',borderRadius:10,padding:'16px 20px',marginBottom:20}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
                     <span style={{fontSize:20}}>⚠️</span>
@@ -824,19 +824,19 @@ export default function Page() {
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:`repeat(${[complianceExpired+complianceExpiringSoon>0,tenanciesEndingSoon>0,lateRentCount>0].filter(Boolean).length||1},1fr)`,gap:10}}>
                   {(complianceExpired+complianceExpiringSoon)>0&&(
-                    <button onClick={()=>setSection('Compliance')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #FDE68A',cursor:'pointer',fontFamily:'inherit'}}>
+                    <button onClick={()=>setSection('Compliance')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #89CFF0',cursor:'pointer',fontFamily:'inherit'}}>
                       <div style={{fontSize:11,color:'#92400E',fontWeight:600,marginBottom:2}}>🛡️ Compliance</div>
                       <div style={{fontSize:13,color:'#344054'}}>{complianceExpired>0&&`${complianceExpired} expired`}{complianceExpired>0&&complianceExpiringSoon>0&&' · '}{complianceExpiringSoon>0&&`${complianceExpiringSoon} expiring soon`}</div>
                     </button>
                   )}
                   {tenanciesEndingSoon>0&&(
-                    <button onClick={()=>setSection('Tenancies')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #FDE68A',cursor:'pointer',fontFamily:'inherit'}}>
+                    <button onClick={()=>setSection('Tenancies')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #89CFF0',cursor:'pointer',fontFamily:'inherit'}}>
                       <div style={{fontSize:11,color:'#92400E',fontWeight:600,marginBottom:2}}>📋 Tenancies</div>
                       <div style={{fontSize:13,color:'#344054'}}>{tenanciesEndingSoon} ending within 30 days</div>
                     </button>
                   )}
                   {lateRentCount>0&&(
-                    <button onClick={()=>setSection('Rent Collection')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #FDE68A',cursor:'pointer',fontFamily:'inherit'}}>
+                    <button onClick={()=>setSection('Rent Collection')} style={{textAlign:'left' as const,background:'#fff',borderRadius:8,padding:'10px 12px',border:'1px solid #89CFF0',cursor:'pointer',fontFamily:'inherit'}}>
                       <div style={{fontSize:11,color:'#92400E',fontWeight:600,marginBottom:2}}>💷 Rent</div>
                       <div style={{fontSize:13,color:'#344054'}}>{lateRentCount} overdue</div>
                     </button>
@@ -1108,7 +1108,7 @@ export default function Page() {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
                   {[
                     {label:'Expired',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Expired').length,color:'#EF4444',bg:'#FEF2F2',border:'#FCA5A5'},
-                    {label:'Expiring within 60 days',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#FDE68A'},
+                    {label:'Expiring within 60 days',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Expiring Soon').length,color:'#F59E0B',bg:'#FFFBEB',border:'#89CFF0'},
                     {label:'Valid',value:scoped.filter((c:any)=>complianceStatus(c.expiry_date)==='Valid').length,color:'#10B981',bg:'#F0FDF4',border:'#BBF7D0'},
                   ].map(s=>(
                     <div key={s.label} style={{padding:16,background:s.bg,borderRadius:10,border:'1px solid '+s.border}}>

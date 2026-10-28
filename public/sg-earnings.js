@@ -14,7 +14,7 @@
   var APP = SRC.replace(/\/sg-earnings\.js.*$/, '')
   var API = APP + '/api/public/earnings-estimate'
   var MEET = 'https://app.sangstersgroup.com/meeting'
-  var INK = '#191815', GOLD = '#8E6B1F', GOLD2 = '#C9A24A', MUTED = '#6b675e', LINE = '#e3ded2', SOFT = '#f7f4ee'
+  var INK = '#191815', GOLD = '#89CFF0', GOLD2 = '#89CFF0', MUTED = '#6b675e', LINE = '#e3ded2', SOFT = '#f7f4ee'
   var SYM = { USD: '$', JMD: 'J$', GBP: '£' }
   var CUR = { 'Jamaica': 'USD', 'United Kingdom': 'GBP', 'UAE': 'USD' }
 

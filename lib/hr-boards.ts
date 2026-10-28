@@ -136,7 +136,7 @@ export const TASKS_BOARD: MkBoard = {
   cols: [
     { key: 'assigned_to', title: 'Assigned to', type: 'ref', ref: 'team', width: 200 },
     { key: 'status', title: 'Status', type: 'status', width: 130, options: [
-      { value: 'On track', color: '#00C875' }, { value: 'At risk', color: '#FDAB3D' }, { value: 'Off track', color: '#DF2F4A' }, { value: 'Done', color: '#8A6B2E' }] },
+      { value: 'On track', color: '#00C875' }, { value: 'At risk', color: '#FDAB3D' }, { value: 'Off track', color: '#DF2F4A' }, { value: 'Done', color: '#89CFF0' }] },
     { key: 'due_date', title: 'Due date', type: 'date', width: 130 },
     { key: 'due_flag', title: 'Due', type: 'computed', width: 130 },
     { key: 'notes', title: 'Notes', type: 'text', width: 280 },
@@ -156,9 +156,9 @@ export const MAINTENANCE_BOARD: MkBoard = {
       { value: 'medium', label: 'Medium', color: '#FDAB3D' }, { value: 'low', label: 'Low', color: '#C4C4C4' }] },
     { key: 'status', title: 'Status', type: 'status', width: 140, options: [
       { value: 'open', label: 'Open', color: '#579BFC' }, { value: 'in_progress', label: 'In Progress', color: '#FDAB3D' },
-      { value: 'resolved', label: 'Resolved', color: '#00C875' }, { value: 'closed', label: 'Closed', color: '#8A6B2E' }] },
+      { value: 'resolved', label: 'Resolved', color: '#00C875' }, { value: 'closed', label: 'Closed', color: '#89CFF0' }] },
     { key: 'module', title: 'Module', type: 'status', width: 180, readonlyWhen: () => true, options: [
-      { value: 'str', label: 'Vacation Rentals', color: '#D0AE4C' }, { value: 'pm', label: 'Property Operations', color: '#579BFC' }, { value: 'estate', label: 'Estate Agency', color: '#00C875' }] },
+      { value: 'str', label: 'Vacation Rentals', color: '#89CFF0' }, { value: 'pm', label: 'Property Operations', color: '#579BFC' }, { value: 'estate', label: 'Estate Agency', color: '#00C875' }] },
     { key: 'propertyName', title: 'Property', type: 'computed', width: 200 },
     { key: 'assignee', title: 'Assigned to', type: 'computed', width: 170 },
     { key: 'age', title: 'Reported', type: 'computed', width: 130 },

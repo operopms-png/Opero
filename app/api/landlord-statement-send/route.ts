@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   <div style="font-family:Figtree,Arial,sans-serif;max-width:560px;margin:0 auto;color:#323338">
     <div style="background:linear-gradient(135deg,#FBF4E6,#F3E6C8);border:1px solid #EADBB8;border-radius:8px 8px 0 0;padding:20px 24px">
       <div style="font-size:12px;font-weight:600;color:#89CFF0;letter-spacing:.06em">LANDLORD STATEMENT</div>
-      <div style="font-size:20px;color:#624920;margin-top:4px">${esc(st.period_label)}</div>
+      <div style="font-size:20px;color:#89CFF0;margin-top:4px">${esc(st.period_label)}</div>
     </div>
     <div style="border:1px solid #E6E9EF;border-top:none;border-radius:0 0 8px 8px;padding:20px 24px">
       <p style="margin:0 0 14px">Hi ${esc(landlord.name)},</p>

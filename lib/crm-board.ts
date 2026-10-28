@@ -19,7 +19,7 @@ export const COLUMN_TYPES: { type: ColumnType; label: string; icon: string; colo
   { type: 'text', label: 'Text', icon: 'T', color: '#FDAB3D' },
   { type: 'person', label: 'People', icon: '◉', color: '#579BFC' },
   { type: 'date', label: 'Date', icon: '▦', color: '#9D50DD' },
-  { type: 'number', label: 'Numbers', icon: '#', color: '#FFCB00' },
+  { type: 'number', label: 'Numbers', icon: '#', color: '#89CFF0' },
   { type: 'file', label: 'Files', icon: '⎘', color: '#FF642E' },
   { type: 'link', label: 'Connect boards', icon: '⇄', color: '#784BD1' },
   { type: 'phone', label: 'Phone', icon: '✆', color: '#00C875' },
@@ -31,18 +31,18 @@ export const COLUMN_TYPES: { type: ColumnType; label: string; icon: string; colo
 ]
 
 export const PALETTE = [
-  '#00C875', '#9CD326', '#CAB641', '#FFCB00', '#FDAB3D', '#FF642E', '#DF2F4A', '#FF5AC4',
+  '#00C875', '#9CD326', '#CAB641', '#89CFF0', '#FDAB3D', '#FF642E', '#DF2F4A', '#FF5AC4',
   '#FF158A', '#BB3354', '#784BD1', '#9D50DD', '#401694', '#225091', '#0086C0', '#579BFC',
-  '#66CCFF', '#A1B4C6', '#6CA6C9', '#7F5347', '#C4C4C4', '#757575', '#D0AE4C', '#8A6B2E',
+  '#66CCFF', '#A1B4C6', '#6CA6C9', '#7F5347', '#C4C4C4', '#757575', '#89CFF0', '#89CFF0',
 ]
 
-export const GROUP_COLORS = ['#579BFC', '#00C875', '#FDAB3D', '#DF2F4A', '#9D50DD', '#FF5AC4', '#D0AE4C', '#0086C0', '#784BD1', '#66CCFF', '#9CD326', '#FF642E']
+export const GROUP_COLORS = ['#579BFC', '#00C875', '#FDAB3D', '#DF2F4A', '#9D50DD', '#FF5AC4', '#89CFF0', '#0086C0', '#784BD1', '#66CCFF', '#9CD326', '#FF642E']
 
 // Sangsters brand
 export const BRAND = {
-  gold: '#D0AE4C',
-  goldDark: '#A8862E',
-  brown: '#624920',
+  gold: '#89CFF0',
+  goldDark: '#89CFF0',
+  brown: '#89CFF0',
   ink: '#323338',
   muted: '#676879',
   border: '#D0D4E4',

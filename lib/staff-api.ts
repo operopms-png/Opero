@@ -20,4 +20,4 @@ export const money = (n: any, cur = 'GBP', short = false) => {
   return (v < 0 ? '-' : '') + s + Math.round(Math.abs(v)).toLocaleString('en-GB')
 }
 export const MODULE_LABEL: Record<string, string> = { vr: 'Vacation Rentals', pm: 'Property Management', ea: 'Estate Agency', dev: 'Developments', company: 'Company' }
-export const MODULE_COL: Record<string, string> = { vr: '#B08A2E', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', company: '#8A877F' }
+export const MODULE_COL: Record<string, string> = { vr: '#89CFF0', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', company: '#8A877F' }

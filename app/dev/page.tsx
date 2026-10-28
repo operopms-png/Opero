@@ -1077,7 +1077,7 @@ export default function DevPage() {
           return (
           <div>
             {expiringSoon.length>0 && (
-              <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:13, color:'#92400E' }}>
+              <div style={{ background:'#FFFBEB', border:'1px solid #89CFF0', borderRadius:10, padding:'12px 16px', marginBottom:16, fontSize:13, color:'#92400E' }}>
                 ⚠ {expiringSoon.length} record{expiringSoon.length===1?'':'s'} expiring within 30 days
               </div>
             )}

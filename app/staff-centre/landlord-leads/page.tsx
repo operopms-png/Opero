@@ -106,7 +106,7 @@ function LeadModal({ lead, onClose, onSaved }: { lead: any; onClose: () => void;
   const run = async (body: any, key: string) => { setBusy(key); setErr(''); try { const d = await api({ id: lead.id, ...body }); onSaved(d.lead) } catch (x: any) { setErr(x.message) } setBusy('') }
   const card = (title: string, main: string, sub: string, dark?: boolean) => (
     <div style={{ border: '1px solid ' + (dark ? '#191815' : C.row), background: dark ? '#191815' : '#fff', color: dark ? '#fff' : C.ink, borderRadius: 6, padding: 14 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: dark ? '#D9B866' : C.muted }}>{title}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: dark ? '#89CFF0' : C.muted }}>{title}</div>
       <div style={{ fontSize: 24, fontWeight: 700, margin: '4px 0 2px' }}>{main}</div>
       <div style={{ fontSize: 12.5, color: dark ? '#CFC9BC' : C.muted }}>{sub}</div>
     </div>

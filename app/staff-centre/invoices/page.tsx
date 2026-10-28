@@ -11,7 +11,7 @@ import { staffApi, money } from '../../../lib/staff-api'
 import InvoiceView from '../../../components/invoices/InvoiceView'
 
 const STATUS: Record<string, { l: string; bg: string; c: string }> = {
-  draft: { l: 'Draft', bg: '#F2F2F2', c: '#5C5850' }, sent: { l: 'Unpaid', bg: '#FBF6EA', c: '#8E6B1F' }, overdue: { l: 'Overdue', bg: '#FDECEC', c: '#B42318' },
+  draft: { l: 'Draft', bg: '#F2F2F2', c: '#5C5850' }, sent: { l: 'Unpaid', bg: '#FBF6EA', c: '#89CFF0' }, overdue: { l: 'Overdue', bg: '#FDECEC', c: '#B42318' },
   paid: { l: 'Paid', bg: '#E6F7EF', c: '#0E7C55' }, void: { l: 'Void', bg: '#F2F2F2', c: '#8A877F' },
 }
 const QUICK = [['Monthly rent', 'Monthly rent'], ['Rent upfront', '3 months rent upfront'], ['Deposit', 'Security deposit'], ['Admin fee', 'Admin fee'], ['Cleaning fee', 'Cleaning fee'], ['Partner membership', 'Partner Programme membership']]
@@ -249,4 +249,4 @@ function SettingsModal({ s, onClose, onSaved }: { s: any; onClose: () => void; o
 }
 const td: React.CSSProperties = { padding: '11px 16px', verticalAlign: 'top', color: C.ink }
 const card: React.CSSProperties = { background: '#fff', border: '1px solid ' + C.row, borderRadius: 8, padding: '14px 16px' }
-const chip: React.CSSProperties = { padding: '4px 10px', border: '1px dashed #C9B891', borderRadius: 20, fontSize: 12, color: '#8E6B1F', fontWeight: 600, background: '#fff', cursor: 'pointer', fontFamily: 'inherit' }
+const chip: React.CSSProperties = { padding: '4px 10px', border: '1px dashed #89CFF0', borderRadius: 20, fontSize: 12, color: '#89CFF0', fontWeight: 600, background: '#fff', cursor: 'pointer', fontFamily: 'inherit' }

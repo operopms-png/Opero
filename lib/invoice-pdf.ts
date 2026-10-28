@@ -51,12 +51,12 @@ export async function invoicePdf(inv: InvoiceData, s: InvoiceSettings, siteUrl: 
   const page: PDFPage = pdf.addPage([595.28, 841.89])
   const W = 595.28, H = 841.89, M = 42
   const reg = await pdf.embedFont(StandardFonts.Helvetica), bold = await pdf.embedFont(StandardFonts.HelveticaBold), ital = await pdf.embedFont(StandardFonts.TimesRomanItalic)
-  const ink = hex('#222222'), grey = hex('#666666'), light = hex('#888888'), goldLbl = hex('#D9B860')
+  const ink = hex('#222222'), grey = hex('#666666'), light = hex('#888888'), goldLbl = hex('#89CFF0')
   const text = (t: string, x: number, y: number, size: number, font = reg, color = ink) => page.drawText(safe(t), { x, y: H - y, size, font, color })
   const right = (t: string, x: number, y: number, size: number, font = reg, color = ink) => text(t, x - font.widthOfTextAtSize(safe(t), size), y, size, font, color)
 
   // logo block
-  page.drawRectangle({ x: M, y: H - 42 - 52, width: 162, height: 52, color: hex('#C9A24A') })
+  page.drawRectangle({ x: M, y: H - 42 - 52, width: 162, height: 52, color: hex('#89CFF0') })
   const logo = await loadImage(pdf, s.logo_url, siteUrl)
   if (logo) { const h = 44, w = logo.width / logo.height * h; page.drawImage(logo, { x: M + 6, y: H - 42 - 48, width: Math.min(w, 54), height: h }) }
   text(s.logo_line1 || '', M + 66, 63, 9.5, bold, hex('#2a1f0c'))

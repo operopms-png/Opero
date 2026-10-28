@@ -179,7 +179,7 @@ export default function JoinPage() {
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(25,24,21,0.88) 0%, rgba(25,24,21,0.6) 55%, rgba(25,24,21,0.25) 100%)' }} />
             <div style={{ position: 'relative', maxWidth: 1120, margin: '0 auto', padding: '56px 24px 0' }}>
               <div style={{ maxWidth: 560, color: '#fff' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#D9B866', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 14 }}>Partner Programme · Jamaica</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#89CFF0', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 14 }}>Partner Programme · Jamaica</div>
                 <h1 className="jh" style={{ fontSize: 44, lineHeight: 1.08, margin: '0 0 14px', fontWeight: 800 }}>{link.headline || 'Invest alongside us in Jamaica'}</h1>
                 {link.blurb && <div style={{ fontSize: 16.5, color: 'rgba(255,255,255,0.82)', lineHeight: 1.6 }}>{link.blurb}</div>}
               </div>
@@ -188,7 +188,7 @@ export default function JoinPage() {
 
           <div className="join-grid" style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 24px 56px', display: 'grid', gap: 40, alignItems: 'start' }}>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#8E6B1F', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: 6 }}>What membership includes</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#89CFF0', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: 6 }}>What membership includes</div>
               {FEATURES.map((f, i) => (
                 <div key={f.title} style={{ display: 'flex', gap: 14, padding: '18px 0', borderTop: i ? '1px solid #F0ECE3' : 'none' }}>
                   <div style={{ width: 42, height: 42, borderRadius: 10, background: '#FAF3E2', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon d={ICONS[f.icon]} /></div>
@@ -245,7 +245,7 @@ export default function JoinPage() {
                 {method === 'card'
                   ? 'Secure card payment by Stripe. Your account is created once payment succeeds, and you’ll go straight to your Partners portal.'
                   : 'We’ll show you our bank details and your payment reference. Your account unlocks once the team confirms your transfer.'}<br />
-                Already a partner? <a href="/login" style={{ color: '#8E6B1F', fontWeight: 700, textDecoration: 'none' }}>Sign in</a>
+                Already a partner? <a href="/login" style={{ color: '#89CFF0', fontWeight: 700, textDecoration: 'none' }}>Sign in</a>
               </div>
 
             </div>
@@ -256,7 +256,7 @@ export default function JoinPage() {
               <span><b style={{ color: INK }}>Sangsters Group</b> · Company No. 16171490</span>
               <span>Tallis House, 2 Tallis St, London EC4Y 0AB</span>
               <span>Shop 7, 45 Main Street, Porus, Manchester, Jamaica</span>
-              <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#8E6B1F', textDecoration: 'none', fontWeight: 600 }}>contact.us@sangstersgroup.com</a>
+              <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#89CFF0', textDecoration: 'none', fontWeight: 600 }}>contact.us@sangstersgroup.com</a>
             </div>
           </footer>
         </>

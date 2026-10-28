@@ -4,7 +4,7 @@
 // when a property has no photos yet.
 import { useEffect, useRef, useState } from 'react'
 
-export const BRAND = { gold: '#D0AE4C', gd: '#89CFF0', brown: '#624920', cream: '#FBF4E6', ink: '#323338', muted: '#676879', line: '#E6E9EF' }
+export const BRAND = { gold: '#89CFF0', gd: '#89CFF0', brown: '#89CFF0', cream: '#FBF4E6', ink: '#323338', muted: '#676879', line: '#E6E9EF' }
 const HOUSE = (s: number) => <svg viewBox="0 0 24 24" width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>
 
 export function Placeholder({ height, label = 'Photos coming soon' }: { height: number | string; label?: string }) {

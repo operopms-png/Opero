@@ -370,7 +370,7 @@ export default function Page() {
         </div>
         {identity.isAdmin && <button onClick={()=>setShowNewConvo(true)} style={{height:32,borderRadius:4,border:'none',background:ACCENT,color:'#fff',fontSize:13.5,fontWeight:500,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New team conversation</button>}
         {identity.isAdmin && <button onClick={openEveryoneConversation} style={{height:32,borderRadius:4,border:`1px solid ${ACCENT}`,background:'#fff',color:INK,fontSize:13.5,fontWeight:500,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>Message everyone</button>}
-        <button onClick={()=>setShowNewText(true)} style={{height:32,borderRadius:4,border:`1px solid ${ACCENT}`,background:'#fff',color:'#8E6B1F',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New text</button>
+        <button onClick={()=>setShowNewText(true)} style={{height:32,borderRadius:4,border:`1px solid ${ACCENT}`,background:'#fff',color:'#89CFF0',fontSize:13.5,fontWeight:600,cursor:'pointer',fontFamily:'inherit',marginBottom:10}}>+ New text</button>
         <button className="ib-nav" onClick={()=>{setTab('Unread');setFilter('All')}} style={navBtn(tab==='Unread')}><span style={{flex:1}}>Unread</span>{unreadCount>0&&<span style={{background:'#DF2F4A',color:'#fff',fontSize:11,fontWeight:600,borderRadius:9,padding:'0 7px'}}>{unreadCount}</span>}</button>
         <button className="ib-nav" onClick={()=>{setTab('All');setFilter('All')}} style={navBtn(tab==='All'&&filter==='All')}><span style={{flex:1}}>All conversations</span><span style={{fontSize:11.5,color:MUTED}}>{conversations.length}</span></button>
         <div style={{fontSize:12,color:MUTED,padding:'14px 10px 4px'}}>Channels</div>
