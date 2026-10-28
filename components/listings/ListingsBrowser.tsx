@@ -17,9 +17,8 @@ export function TopBar() {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: `1px solid ${BRAND.line}`, background: '#fff', position: 'sticky', top: 0, zIndex: 20 }}>
       <a href="/homes" style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, color: BRAND.brown, fontSize: 17, textDecoration: 'none' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-192.png" alt="" width={38} height={38} style={{ borderRadius: 8 }} />Sangsters Group
+        <img src="/logo-192.png" alt="" width={38} height={38} style={{ borderRadius: 8 }} />The NOVOURQ
       </a>
-      <a href="tel:+442071640329" style={{ fontSize: 14, color: BRAND.gd, fontWeight: 600, textDecoration: 'none' }}>020 7164 0329</a>
     </div>
   )
 }
@@ -92,7 +91,7 @@ export default function ListingsBrowser({ homes }: { homes: Listing[] }) {
 
       <div style={{ background: BRAND.cream, padding: '26px 20px', textAlign: 'center', color: BRAND.brown, fontSize: 15 }}>
         Can’t see what you’re looking for? <button onClick={() => setWanted(true)} style={{ border: 'none', background: 'none', color: BRAND.gd, fontWeight: 700, cursor: 'pointer', font: 'inherit', padding: 0 }}>Tell us what you need</button> and we’ll let you know when something comes up.
-        <div style={{ fontSize: 12.5, color: BRAND.muted, marginTop: 10 }}><a href="https://www.sangstersgroup.com" style={{ color: BRAND.gd, textDecoration: 'none' }}>www.sangstersgroup.com</a></div>
+        <div style={{ fontSize: 12.5, color: BRAND.muted, marginTop: 10 }}><a href="https://www.thenovourq.com" style={{ color: BRAND.gd, textDecoration: 'none' }}>www.thenovourq.com</a></div>
       </div>
       {wanted && <WantedForm areas={areas} onClose={() => setWanted(false)} />}
     </div>

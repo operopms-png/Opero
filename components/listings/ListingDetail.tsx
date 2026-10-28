@@ -115,7 +115,7 @@ function ViewingForm({ home }: { home: Listing }) {
           <input tabIndex={-1} autoComplete="off" value={f.website} onChange={e => set('website', e.target.value)} aria-hidden="true" style={{ position: 'absolute', left: -9999, width: 1, height: 1, opacity: 0 }} />
           {err && <div style={{ color: '#C62828', fontSize: 14 }}>{err}</div>}
           <button disabled={busy} style={{ padding: 13, border: 'none', borderRadius: 10, background: BRAND.gd, color: '#fff', fontWeight: 600, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', opacity: busy ? 0.7 : 1 }}>{busy ? 'Sending…' : 'Request a viewing'}</button>
-          <div style={{ textAlign: 'center', color: BRAND.muted, fontSize: 12.5 }}>We’ll contact you to confirm a time · 020 7164 0329</div>
+          <div style={{ textAlign: 'center', color: BRAND.muted, fontSize: 12.5 }}>We’ll contact you to confirm a time</div>
         </form>
       )}
     </div>
