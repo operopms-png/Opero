@@ -17,7 +17,7 @@ export default function Page() {
       <header style={{ borderBottom: '1px solid #ece8df', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12, maxWidth: 1100, margin: '0 auto' }}>
         <img src="/logo-192.png" alt="NOVOURQ" style={{ width: 40, height: 40, borderRadius: 8 }} />
         <span style={{ fontWeight: 700, fontSize: 19, color: '#5A4320' }}>NOVOURQ</span>
-        <a href="https://sangstersgroup.com" style={{ marginLeft: 'auto', fontSize: 13.5, color: '#191815', fontWeight: 600 }}>sangstersgroup.com</a>
+        <a href="https://sangstersgroup.com" style={{ marginLeft: 'auto', fontSize: 13.5, color: '#191815', fontWeight: 600 }}>thenovourq.com</a>
       </header>
       <main style={{ padding: '40px 16px 64px' }}>
         <div style={{ maxWidth: 980, margin: '0 auto' }}><div data-sg-earnings="" /></div>

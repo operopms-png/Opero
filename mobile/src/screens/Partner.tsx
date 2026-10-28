@@ -13,8 +13,8 @@ function Returns({ months }: { months: { label: string; value: number }[] }) {
   return (
     <View onLayout={e => setW(e.nativeEvent.layout.width)}>
       <Svg width={w} height={h}>
-        {!empty && <Polygon points={`0,${h} ${pts} ${w},${h}`} fill="#B08A2E" opacity={0.1} />}
-        <Polyline points={pts} fill="none" stroke={empty ? '#d9d4c8' : '#B08A2E'} strokeWidth={2} strokeLinejoin="round" />
+        {!empty && <Polygon points={`0,${h} ${pts} ${w},${h}`} fill="#1B2F6E" opacity={0.1} />}
+        <Polyline points={pts} fill="none" stroke={empty ? '#d9d4c8' : '#1B2F6E'} strokeWidth={2} strokeLinejoin="round" />
       </Svg>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
         {[months[0], months[Math.floor(months.length / 2)], months[months.length - 1]].map((m, i) => <Muted key={i} style={{ fontSize: 11 }}>{m?.label}</Muted>)}
@@ -53,7 +53,7 @@ export function PartnerInvestments({ data }: ScreenProps) {
       <Header title="Investments" />
       <Card>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}><Muted>Repaid so far</Muted><T style={{ fontFamily: F.bold }}>{money(p?.returned)} of {money(p?.invested)}</T></View>
-        <View style={{ height: 8, backgroundColor: '#f0ede6', borderRadius: 4, marginTop: 10, overflow: 'hidden' }}><View style={{ height: 8, width: `${Math.min(100, p?.repaidPct ?? 0)}%`, backgroundColor: '#B08A2E' }} /></View>
+        <View style={{ height: 8, backgroundColor: '#f0ede6', borderRadius: 4, marginTop: 10, overflow: 'hidden' }}><View style={{ height: 8, width: `${Math.min(100, p?.repaidPct ?? 0)}%`, backgroundColor: '#1B2F6E' }} /></View>
         <Muted style={{ marginTop: 8 }}>{money(p?.outstanding)} still to be returned</Muted>
       </Card>
       <Section>Properties</Section>

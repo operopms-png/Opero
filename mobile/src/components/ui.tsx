@@ -81,7 +81,7 @@ export function Empty({ title, sub }: { title: string; sub?: string }) {
 export function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
   return (
     <View style={{ flex: 1, borderWidth: 1, borderColor: highlight ? C.creamLine : C.line, backgroundColor: highlight ? C.cream : '#fff', borderRadius: 12, padding: 11 }}>
-      <Muted style={{ fontSize: 11.5, color: highlight ? '#8A6B2E' : C.mute }}>{label}</Muted>
+      <Muted style={{ fontSize: 11.5, color: highlight ? '#1B2F6E' : C.mute }}>{label}</Muted>
       <T style={{ fontFamily: F.head, fontSize: 22, marginTop: 2 }}>{String(value)}</T>
     </View>
   )

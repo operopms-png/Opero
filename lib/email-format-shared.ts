@@ -15,15 +15,15 @@ export const DEFAULT_FORMAT: EmailFormat = {
   closing: 'Kind regards,',
   sign_name: true,
   footer_enabled: true,
-  company: 'NOVOURQ Group',
-  tagline: 'Global real estate leaders · #FeelAtHomeAnywhere',
-  contact_email: 'contact.us@sangstersgroup.com',
-  phone: '020 7164 0329',
-  website: 'www.sangstersgroup.com',
-  address_uk: 'Tallis House, 2 Tallis St, Blackfriars, London EC4Y 0AB, United Kingdom',
-  address_jm: 'Shop 7, 45 Main Street, Porus, Manchester, Jamaica, JMDMR21',
-  company_number: '16171490',
-  rating: 'We are rated 4.0 out of 5',
+  company: 'The NOVOURQ',
+  tagline: '',
+  contact_email: 'contact.us@thenovourq.com',
+  phone: '',
+  website: 'www.thenovourq.com',
+  address_uk: '2 Tallis Street, London',
+  address_jm: '',
+  company_number: '',
+  rating: '',
   disclaimer: 'This email and any attachments are confidential and intended only for the named recipient. If you received it in error, please let us know and delete it.',
   footer_html: '',
 }
@@ -31,11 +31,11 @@ export const FORMAT_FIELDS = Object.keys(DEFAULT_FORMAT) as (keyof EmailFormat)[
 export type EmailTemplate = EmailFormat & { id: string; name: string; is_default: boolean }
 
 const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-const LOGO = 'https://app.sangstersgroup.com/logo-192.png'
+const LOGO = 'https://app.thenovourq.com/logo-192.png'
 
 // "Full signature" template: the fuller layout from the NOVOURQ template PDF.
 // Selected by template name so Standard keeps the short footer below.
-const FULL_SIGNATURE_LAYOUT = (email: string) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#323338;max-width:600px;width:100%"><tr><td style="padding-top:14px;line-height:1.6"><div style="font-weight:bold;color:#1B2F6E">London Headquarters</div><div>2 Tallis Street, London</div><div style="margin-top:12px;font-weight:bold;color:#1B2F6E">Schedule a meeting with us</div><div>Website: <a href="https://www.thenovourq.com" style="color:#1B2F6E;text-decoration:none">www.thenovourq.com</a></div><div style="margin-top:12px">Want to make income? Earn competitive commission by connecting clients with the right property opportunities. Our referral program makes it simple to generate income from property sales and Airbnb agent introductions. Contact the team <a href="mailto:career@thenovourq.com" style="color:#1B2F6E;text-decoration:none">career@thenovourq.com</a></div></td></tr><tr><td style="padding-top:18px"><img src="https://app.thenovourq.com/novouq-logo.jpg" width="240" alt="NOVOURQ" style="display:block;border:0"></td></tr><tr><td style="padding-top:14px;color:#9699A6;font-size:10.5px;line-height:1.4">The information contained in this e-mail (including any attachments) is intended only for the personal and confidential use of the recipients named above. If you are not an intended recipient, please notify the sender by replying to this message and then delete the message and any copies from your system. Any use, dissemination, distribution, or reproduction of this message by unintended recipients is not authorised.</td></tr></table>`
+const FULL_SIGNATURE_LAYOUT = (email: string) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#323338;max-width:600px;width:100%"><tr><td style="padding-top:14px;line-height:1.6"><div style="font-weight:bold;color:#1B2F6E">London Headquarters</div><div>2 Tallis Street, London</div><div style="margin-top:12px;font-weight:bold"><a href="https://app.thenovourq.com/meeting" style="color:#1B2F6E;text-decoration:none">Schedule a meeting with us</a></div><div>Website: <a href="https://www.thenovourq.com" style="color:#1B2F6E;text-decoration:none">www.thenovourq.com</a></div><div style="margin-top:12px">Want to make income? Earn competitive commission by connecting clients with the right property opportunities. Our referral program makes it simple to generate income from property sales and Airbnb agent introductions. Contact the team <a href="mailto:career@thenovourq.com" style="color:#1B2F6E;text-decoration:none">career@thenovourq.com</a></div></td></tr><tr><td style="padding-top:18px"><img src="https://app.thenovourq.com/novouq-logo.jpg" width="240" alt="NOVOURQ" style="display:block;border:0"></td></tr><tr><td style="padding-top:14px;color:#9699A6;font-size:10.5px;line-height:1.4">The information contained in this e-mail (including any attachments) is intended only for the personal and confidential use of the recipients named above. If you are not an intended recipient, please notify the sender by replying to this message and then delete the message and any copies from your system. Any use, dissemination, distribution, or reproduction of this message by unintended recipients is not authorised.</td></tr></table>`
 
 // Email-safe (table + inline styles) footer. Shows the company contact email;
 // falls back to the sending address if that's left blank.

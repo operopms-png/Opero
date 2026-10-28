@@ -413,7 +413,7 @@ export default function Page() {
               <ol style={{margin:0,paddingLeft:18,color:MUTED}}>
                 <li>Create a Twilio account and buy a number that can send texts.</li>
                 <li>In Netlify → Environment variables add <b style={{color:INK}}>TWILIO_ACCOUNT_SID</b>, <b style={{color:INK}}>TWILIO_AUTH_TOKEN</b> and <b style={{color:INK}}>TWILIO_SMS_FROM</b> (the number, e.g. +44…), then redeploy.</li>
-                <li>In Twilio → the number → Messaging, set “A message comes in” to <b style={{color:INK,wordBreak:'break-all'}}>https://app.sangstersgroup.com/api/sms/inbound</b> (HTTP POST).</li>
+                <li>In Twilio → the number → Messaging, set “A message comes in” to <b style={{color:INK,wordBreak:'break-all'}}>https://app.thenovourq.com/api/sms/inbound</b> (HTTP POST).</li>
               </ol>
             </div>
           ) : sorted.length===0?(

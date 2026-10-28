@@ -62,7 +62,7 @@ export default function SignIn() {
           </Pressable>
           <View style={{ backgroundColor: '#fff', borderRadius: 18, padding: 22 }}>
             <Image source={require('../../assets/images/logo.png')} style={{ width: 42, height: 42, borderRadius: 10 }} />
-            <H size={26} style={{ marginTop: 14 }}>{isStaff ? 'Staff sign in' : 'Welcome to Sangsters'}</H>
+            <H size={26} style={{ marginTop: 14 }}>{isStaff ? 'Staff sign in' : 'Welcome to NOVOURQ'}</H>
             <Muted style={{ fontSize: 14, marginTop: 5 }}>{isStaff ? 'Use your portal email and password' : 'Sign in to your account'}</Muted>
 
             {!isStaff && apple && (

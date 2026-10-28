@@ -74,7 +74,7 @@ export default function ListingEditor({ value, onChange, rentLabel, propertyId }
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: CREAM, border: '1px solid #F0E3C4', borderRadius: 8, padding: '10px 12px', marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 13.5, fontWeight: 600, color: BROWN }}>Show on listings link</div>
-          <div style={{ fontSize: 12, color: '#89CFF0' }}>Tenants can see it at {typeof window !== 'undefined' ? window.location.host : 'app.sangstersgroup.com'}/homes{value.listed && link ? <> · <a href={link} target="_blank" rel="noreferrer" style={{ color: GD }}>view ↗</a></> : null}. Rented properties are hidden automatically.</div>
+          <div style={{ fontSize: 12, color: '#89CFF0' }}>Tenants can see it at {typeof window !== 'undefined' ? window.location.host : 'app.thenovourq.com'}/homes{value.listed && link ? <> · <a href={link} target="_blank" rel="noreferrer" style={{ color: GD }}>view ↗</a></> : null}. Rented properties are hidden automatically.</div>
         </div>
         <button type="button" role="switch" aria-checked={value.listed} onClick={() => onChange({ listed: !value.listed })} style={{ width: 46, height: 26, borderRadius: 13, border: 'none', background: value.listed ? '#00C875' : '#C4C4C4', position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
           <span style={{ position: 'absolute', top: 3, left: value.listed ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left .15s' }} />
