@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase'
 // Live via Supabase Realtime, with a light poll as a fallback.
 
 // Same palette as the Staff Centre dashboard
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 const ACCENT_SOFT = '#FBF4E6'
 const TEXT = '#323338'
 const FEED_BG = '#F7F8FA'

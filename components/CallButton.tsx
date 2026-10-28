@@ -10,7 +10,7 @@ export default function CallButton({ phone, name, contactId, size = 14 }: { phon
     <button
       onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('opero:call', { detail: { phone, name, contactId } })) }}
       title={`Call ${name || phone}`}
-      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#A8862E', fontSize: size, padding: 2, lineHeight: 1 }}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#89CFF0', fontSize: size, padding: 2, lineHeight: 1 }}
     >📞</button>
   )
 }

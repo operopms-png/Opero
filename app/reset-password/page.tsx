@@ -47,7 +47,7 @@ function ResetPasswordForm() {
               <div style={{ fontSize: 13, color: '#067647', background: '#ECFDF3', border: '1px solid #ABEFC6', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
                 Password updated. You can now sign in.
               </div>
-              <a href="/login" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#A8862E', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Go to sign in</a>
+              <a href="/login" style={{ display: 'block', textAlign: 'center', padding: '10px', background: '#89CFF0', color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Go to sign in</a>
             </div>
           ) : !ready ? (
             <div style={{ fontSize: 13, color: '#98A2B3' }}>Verifying your reset link…</div>
@@ -61,7 +61,7 @@ function ResetPasswordForm() {
               <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required minLength={8}
                 style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, marginBottom: 20, boxSizing: 'border-box' }} />
               <button type="submit" disabled={loading}
-                style={{ width: '100%', padding: '10px', background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+                style={{ width: '100%', padding: '10px', background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.7 : 1 }}>
                 {loading ? 'Updating…' : 'Update password'}
               </button>
             </form>

@@ -49,7 +49,7 @@ export default function HubTabs() {
         const on = tabMatches(t, pathname, search)
         const n = t.badge ? counts[t.badge] ?? 0 : 0
         return (
-          <Link key={t.href} href={t.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 10px', borderBottom: '2px solid ' + (on ? '#A8862E' : 'transparent'), color: on ? '#191815' : '#676879', fontWeight: on ? 600 : 500, fontSize: 13.5, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          <Link key={t.href} href={t.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 10px', borderBottom: '2px solid ' + (on ? '#89CFF0' : 'transparent'), color: on ? '#191815' : '#676879', fontWeight: on ? 600 : 500, fontSize: 13.5, textDecoration: 'none', whiteSpace: 'nowrap' }}>
             {t.label}
             {n > 0 && <span style={{ minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, background: '#EF4444', color: '#fff', fontSize: 10.5, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{n > 99 ? '99+' : n}</span>}
           </Link>

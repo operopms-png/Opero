@@ -11,7 +11,7 @@ import { BRAND_NAME } from '@/lib/brand'
 // card (Stripe, when the business has connected Stripe) or bank transfer
 // (bank details + unique reference; staff confirm to unlock the account).
 
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 const TEXT = '#323338'
 
 const INK = '#191815'

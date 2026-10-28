@@ -7,7 +7,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-const INK = '#191815', GOLD = '#A8862E', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4'
+const INK = '#191815', GOLD = '#89CFF0', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4'
 // "Mr. Campbell" stays formal; "Andrea Brown" → "Andrea"
 const first = (n?: string | null) => { const t = (n || '').trim(); if (!t) return ''; const m = t.match(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+(.+)$/i); return m ? `${m[1]}. ${m[2].split(/\s+/).pop()}` : t.split(/\s+/)[0] }
 export const TEXT_TEMPLATES: { k: string; l: string; t: (name: string) => string }[] = [

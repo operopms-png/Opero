@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
             <tr><td style="padding:2px 16px 2px 0;color:#667085">Phone</td><td>${esc(signup.phone)}</td></tr>
           </table>
           <p>When the money shows in your bank with this reference, click <b>Confirm</b> in Partners → Investors to unlock their account.</p>
-          <p><a href="${site}/staff-centre/partners" style="display:inline-block;background:#A8862E;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Partners</a></p>
+          <p><a href="${site}/staff-centre/partners" style="display:inline-block;background:#89CFF0;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Partners</a></p>
         </div>`,
         signup.email ?? undefined,
       )

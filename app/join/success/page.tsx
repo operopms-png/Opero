@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation'
 // After Stripe: wait for the webhook to activate the account, then send
 // the new partner to sign in (email prefilled) → their Partners portal.
 
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 
 function Success() {
   const params = useSearchParams()

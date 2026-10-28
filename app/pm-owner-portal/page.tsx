@@ -5,7 +5,7 @@ import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
@@ -199,9 +199,9 @@ function PMOwnerPortalInner() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
       {isStaffView && (
-        <div style={{ background: '#FBF4E6', borderBottom: '1px solid #EADBB8', padding: '8px 28px', fontSize: 13, color: '#A8862E', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FBF4E6', borderBottom: '1px solid #EADBB8', padding: '8px 28px', fontSize: 13, color: '#89CFF0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>👁️ Viewing as {landlord.name} — you can view and manage everything here as staff</span>
-          <a href="/pm?tab=Landlords" style={{ color: '#A8862E', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
+          <a href="/pm?tab=Landlords" style={{ color: '#89CFF0', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
         </div>
       )}
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -262,7 +262,7 @@ function PMOwnerPortalInner() {
           <div>
             {isStaffView && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-                <button onClick={() => setShowAddPayment(true)} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Payment</button>
+                <button onClick={() => setShowAddPayment(true)} style={{ background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Payment</button>
               </div>
             )}
             {showAddPayment && (
@@ -276,7 +276,7 @@ function PMOwnerPortalInner() {
                   <div><label style={lbl}>Notes</label><input style={inp} value={payForm.notes} onChange={e=>setPayForm({...payForm,notes:e.target.value})}/></div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={addPayment} disabled={saving} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{saving?'Saving…':'Save'}</button>
+                  <button onClick={addPayment} disabled={saving} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{saving?'Saving…':'Save'}</button>
                   <button onClick={()=>setShowAddPayment(false)} style={{ padding: '9px 20px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#344054' }}>Cancel</button>
                 </div>
               </div>
@@ -391,7 +391,7 @@ function PMOwnerPortalInner() {
               <div><label style={lbl}>Sort Code</label><input style={inp} value={contactForm.sort_code} onChange={e=>setContactForm({...contactForm,sort_code:e.target.value})}/></div>
               <div><label style={lbl}>Routing Number (if applicable)</label><input style={inp} value={contactForm.routing_number} onChange={e=>setContactForm({...contactForm,routing_number:e.target.value})}/></div>
             </div>
-            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
+            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
           </div>
         )}
       </div>

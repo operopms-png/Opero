@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 
 // Global browser softphone -- mounted once in app/layout.tsx so it's
 // available on every authenticated page as a floating widget. Other

@@ -10,7 +10,7 @@
 //   2. portal auth for buyers (same portal_user_id pattern as
 //      pm_tenants/estate_tenants)
 //   3. a staff-side screen in Developments to create/manage plans
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 
 export default function DevInvestorPortalPreview() {
   const depositTotal = 5000

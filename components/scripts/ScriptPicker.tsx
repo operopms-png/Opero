@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { fillScript, categoryColor, type Script } from '../../lib/scripts-shared'
 
-const C = { ink: '#323338', muted: '#676879', faint: '#9699A6', border: '#D0D4E4', row: '#E6E9EF', cream: '#FBF4E6', gold: '#A8862E', brown: '#624920' }
+const C = { ink: '#323338', muted: '#676879', faint: '#9699A6', border: '#D0D4E4', row: '#E6E9EF', cream: '#FBF4E6', gold: '#89CFF0', brown: '#624920' }
 
 async function api(path: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession()

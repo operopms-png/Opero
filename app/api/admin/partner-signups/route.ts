@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
           <p>Hi ${esc(signup.name ?? '')},</p>
           <p>We've received your membership payment, so your partner account is now active.</p>
           <p>Sign in with the email and password you chose when you signed up.</p>
-          <p><a href="${site}/login?redirect=/staff-centre/partners&email=${encodeURIComponent(signup.email)}" style="display:inline-block;background:#A8862E;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Sign in</a></p>
+          <p><a href="${site}/login?redirect=/staff-centre/partners&email=${encodeURIComponent(signup.email)}" style="display:inline-block;background:#89CFF0;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Sign in</a></p>
         </div>`,
       )
     }

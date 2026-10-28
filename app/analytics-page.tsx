@@ -104,8 +104,8 @@ export default function AnalyticsPage() {
           {(['monthly', 'yearly'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-              fontSize: 14, fontWeight: 500, color: tab === t ? '#A8862E' : '#6B7280',
-              borderBottom: tab === t ? '2px solid #A8862E' : '2px solid transparent',
+              fontSize: 14, fontWeight: 500, color: tab === t ? '#89CFF0' : '#6B7280',
+              borderBottom: tab === t ? '2px solid #89CFF0' : '2px solid transparent',
               textTransform: 'capitalize',
             }}>{t}</button>
           ))}
@@ -141,7 +141,7 @@ export default function AnalyticsPage() {
                         return `${x},${y}`
                       }).join(' ')}
                       fill="none"
-                      stroke={card.dim ? '#FCA5A5' : i === 0 ? '#10B981' : '#A8862E'}
+                      stroke={card.dim ? '#FCA5A5' : i === 0 ? '#10B981' : '#89CFF0'}
                       strokeWidth="2"
                       strokeDasharray={card.dim ? '4 4' : 'none'}
                     />
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
                       const max = i === 0 ? maxRevenue : i === 1 ? maxBookings : 1
                       const x = (idx / (monthlyData.length - 1)) * 190 + 5
                       const y = 45 - (val / max) * 40
-                      return <circle key={idx} cx={x} cy={y} r="3" fill={card.dim ? '#FCA5A5' : i === 0 ? '#10B981' : '#A8862E'} />
+                      return <circle key={idx} cx={x} cy={y} r="3" fill={card.dim ? '#FCA5A5' : i === 0 ? '#10B981' : '#89CFF0'} />
                     })}
                   </svg>
                 </div>
@@ -165,16 +165,16 @@ export default function AnalyticsPage() {
                   {/* Track */}
                   <path d="M 20 80 A 80 80 0 0 1 180 80" fill="none" stroke="#F3F4F6" strokeWidth="16" strokeLinecap="round" />
                   {/* Fill */}
-                  <path d={`M 20 80 A 80 80 0 ${occupancy > 50 ? 1 : 0} 1 ${gx} ${gy}`} fill="none" stroke="#A8862E" strokeWidth="16" strokeLinecap="round" />
+                  <path d={`M 20 80 A 80 80 0 ${occupancy > 50 ? 1 : 0} 1 ${gx} ${gy}`} fill="none" stroke="#89CFF0" strokeWidth="16" strokeLinecap="round" />
                   {/* Labels */}
                   <text x="18" y="98" fontSize="10" fill="#9CA3AF">0%</text>
                   <text x="90" y="18" fontSize="10" fill="#9CA3AF" textAnchor="middle">50%</text>
                   <text x="175" y="98" fontSize="10" fill="#9CA3AF">100%</text>
                   {/* Needle */}
-                  <line x1="100" y1="80" x2={gx} y2={gy} stroke="#A8862E" strokeWidth="2.5" strokeLinecap="round" />
-                  <circle cx="100" cy="80" r="5" fill="#A8862E" />
+                  <line x1="100" y1="80" x2={gx} y2={gy} stroke="#89CFF0" strokeWidth="2.5" strokeLinecap="round" />
+                  <circle cx="100" cy="80" r="5" fill="#89CFF0" />
                   {/* Value */}
-                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#A8862E" textAnchor="middle">{occupancy}%</text>
+                  <text x="100" y="100" fontSize="18" fontWeight="bold" fill="#89CFF0" textAnchor="middle">{occupancy}%</text>
                 </svg>
               </div>
 
@@ -182,7 +182,7 @@ export default function AnalyticsPage() {
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E5E7EB', padding: '24px' }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Occupancy & Revenue</div>
                 <div style={{ display: 'flex', gap: 16, fontSize: 12, color: '#6B7280', marginBottom: 16 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 2, background: '#A8862E', display: 'inline-block' }}></span>Revenue</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 2, background: '#89CFF0', display: 'inline-block' }}></span>Revenue</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 2, background: '#10B981', display: 'inline-block', borderTop: '2px dashed #10B981' }}></span>Occupancy</span>
                 </div>
                 <svg viewBox="0 0 300 120" style={{ width: '100%' }}>
@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
                       const y = 110 - (m.revenue / maxRevenue) * 90
                       return `${x},${y}`
                     }).join(' ')}
-                    fill="none" stroke="#A8862E" strokeWidth="2"
+                    fill="none" stroke="#89CFF0" strokeWidth="2"
                   />
                   {/* Occupancy line (bookings as proxy) */}
                   <polyline

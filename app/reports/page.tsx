@@ -46,7 +46,7 @@ export default function ReportsPage() {
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {(['revenue', 'occupancy'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: tab === t ? '#624920' : '#667085', borderBottom: tab === t ? '2px solid #A8862E' : '2px solid transparent', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t === 'revenue' ? 'Revenue Report' : 'Occupancy'}</button>
+            <button key={t} onClick={() => setTab(t)} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: tab === t ? '#624920' : '#667085', borderBottom: tab === t ? '2px solid #89CFF0' : '2px solid transparent', fontFamily: 'inherit', textTransform: 'capitalize' }}>{t === 'revenue' ? 'Revenue Report' : 'Occupancy'}</button>
           ))}
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function ReportsPage() {
                         <span style={{ fontSize: 13, color: '#667085' }}>{pb.length} bookings · {nights} nights</span>
                       </div>
                       <div style={{ background: '#F2F4F7', borderRadius: 100, height: 8 }}>
-                        <div style={{ background: '#A8862E', borderRadius: 100, height: 8, width: `${occ}%` }} />
+                        <div style={{ background: '#89CFF0', borderRadius: 100, height: 8, width: `${occ}%` }} />
                       </div>
                       <div style={{ fontSize: 12, color: '#667085', marginTop: 6 }}>{occ}% occupancy</div>
                     </div>

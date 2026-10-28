@@ -16,7 +16,7 @@ export default function InvoiceView({ inv, s, status }: { inv: any; s: any; stat
     <div style={{ width: 794, minHeight: 1123, background: '#fff', padding: '56px', boxSizing: 'border-box', fontFamily: 'Helvetica, Arial, sans-serif', color: '#222', position: 'relative' }}>
       {status === 'paid' && <div style={{ position: 'absolute', top: 470, left: 70, transform: 'rotate(-10deg)', border: '4px solid #0E7C55', color: '#0E7C55', fontWeight: 800, fontSize: 40, padding: '4px 18px', letterSpacing: '.1em', opacity: .75 }}>PAID</div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#C9A24A', padding: '8px 16px 8px 8px', width: 216, height: 70, boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#89CFF0', padding: '8px 16px 8px 8px', width: 216, height: 70, boxSizing: 'border-box' }}>
           {s.logo_url && <img src={s.logo_url} alt="" style={{ width: 58, height: 58, objectFit: 'contain' }} />}
           <div style={{ fontWeight: 700, fontSize: 12.5, color: '#2a1f0c', lineHeight: 1.35 }}>{s.logo_line1}<br /><span style={{ fontWeight: 400, fontSize: 11 }}>{s.logo_line2}</span></div>
         </div>

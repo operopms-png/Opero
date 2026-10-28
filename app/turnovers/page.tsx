@@ -21,7 +21,7 @@ type Turnover = {
 }
 
 const STATUS_CONFIG = {
-  scheduled: { label: 'Scheduled', color: '#A8862E', bg: '#EADBB8' },
+  scheduled: { label: 'Scheduled', color: '#89CFF0', bg: '#EADBB8' },
   in_progress: { label: 'In Progress', color: '#F59E0B', bg: '#FEF3C7' },
   completed: { label: 'Completed', color: '#10B981', bg: '#D1FAE5' },
 }
@@ -106,7 +106,7 @@ export default function TurnoversPage() {
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Turnovers</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{upcoming.length} upcoming</span>
           </div>
-          <button onClick={() => setShowModal(true)} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={() => setShowModal(true)} style={{ background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
             + Schedule Turnover
           </button>
         </div>
@@ -171,7 +171,7 @@ export default function TurnoversPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.property_id || !form.turnover_date} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.property_id || !form.turnover_date} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
                 {saving ? 'Saving…' : 'Schedule'}
               </button>
             </div>

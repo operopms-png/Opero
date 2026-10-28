@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
             <tr><td style="padding:2px 16px 2px 0;color:#667085">Phone</td><td>${esc(phone || '—')}</td></tr>
           </table>
           ${message ? `<p style="white-space:pre-wrap;background:#F9FAFB;border:1px solid #EAECF0;border-radius:8px;padding:12px">${esc(message)}</p>` : ''}
-          <p><a href="${site}/staff-centre/applications" style="display:inline-block;background:#A8862E;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Applications</a></p>
+          <p><a href="${site}/staff-centre/applications" style="display:inline-block;background:#89CFF0;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open Applications</a></p>
         </div>`,
         email,
       )

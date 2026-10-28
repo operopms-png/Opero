@@ -188,9 +188,9 @@ export default function PropertiesPage() {
               {syncing ? 'Syncing…' : 'Sync iCal'}
             </button>
             {atLimit && plan !== 'professional' && (
-              <a href="/settings" style={{ fontSize: 13, color: '#A8862E', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
+              <a href="/settings" style={{ fontSize: 13, color: '#89CFF0', fontWeight: 500, textDecoration: 'none' }}>⚡ Upgrade for more</a>
             )}
-            <button onClick={openCreate} style={{ background: atLimit ? '#E5E7EB' : '#A8862E', color: atLimit ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: atLimit ? 'not-allowed' : 'pointer' }}>
+            <button onClick={openCreate} style={{ background: atLimit ? '#E5E7EB' : '#89CFF0', color: atLimit ? '#9CA3AF' : '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: atLimit ? 'not-allowed' : 'pointer' }}>
               + Add Property
             </button>
           </div>
@@ -249,8 +249,8 @@ export default function PropertiesPage() {
                     {/* Direct booking link */}
                     {p.slug && (
                       <div style={{ marginTop: 10, padding: '8px 12px', background: '#F8FAFF', borderRadius: 8, border: '1px solid #EADBB8', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <span style={{ fontSize: 11, color: '#A8862E', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>/book/{p.slug}</span>
-                        <button onClick={() => copyBookingLink(p.slug!)} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, border: 'none', background: copiedSlug === p.slug ? '#10B981' : '#A8862E', color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontSize: 11, color: '#89CFF0', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>/book/{p.slug}</span>
+                        <button onClick={() => copyBookingLink(p.slug!)} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 6, border: 'none', background: copiedSlug === p.slug ? '#10B981' : '#89CFF0', color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                           {copiedSlug === p.slug ? '✓ Copied' : 'Copy link'}
                         </button>
                       </div>
@@ -314,7 +314,7 @@ export default function PropertiesPage() {
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Property'}
               </button>
             </div>
@@ -332,7 +332,7 @@ export default function PropertiesPage() {
             <p style={{ fontSize: 14, color: '#6B7280', margin: '0 0 24px' }}>Upgrade to <strong>{nextPlan} ({nextPrice}/mo)</strong> to add more.</p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setShowUpgradeModal(false)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <a href="/settings" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>Upgrade to {nextPlan} →</a>
+              <a href="/settings" style={{ flex: 1, padding: '11px', borderRadius: 8, background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', display: 'block' }}>Upgrade to {nextPlan} →</a>
             </div>
           </div>
         </div>

@@ -2875,7 +2875,7 @@ function PMPageInner() {
                   <div style={{display:'grid',gridTemplateColumns:'repeat(12,1fr)',gap:4,alignItems:'flex-end',height:120,marginBottom:8}}>
                     {cfData.map(d=>(
                       <div key={d.m} style={{display:'flex',flexDirection:'column' as const,alignItems:'center',gap:4}}>
-                        <div style={{width:'100%',background:'#A8862E33',borderRadius:'4px 4px 0 0',height:Math.max(4,(d.moneyIn/maxVal)*80),minHeight:4}}/>
+                        <div style={{width:'100%',background:'#89CFF033',borderRadius:'4px 4px 0 0',height:Math.max(4,(d.moneyIn/maxVal)*80),minHeight:4}}/>
                         <div style={{fontSize:10,color:'#98A2B3'}}>{d.m}</div>
                       </div>
                     ))}

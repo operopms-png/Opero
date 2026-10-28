@@ -12,7 +12,7 @@ import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 // Agency -- this covers Dashboard, Properties, Tenancies, Documents,
 // Messages, and Contact & Payment.
 
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
 
@@ -159,9 +159,9 @@ function EstateOwnerPortalInner() {
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
       {isStaffView && (
-        <div style={{ background: '#FBF4E6', borderBottom: '1px solid #EADBB8', padding: '8px 28px', fontSize: 13, color: '#A8862E', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FBF4E6', borderBottom: '1px solid #EADBB8', padding: '8px 28px', fontSize: 13, color: '#89CFF0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span>👁️ Viewing as {landlord.name} — you can view everything here as staff</span>
-          <a href="/estate?tab=Landlords" style={{ color: '#A8862E', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
+          <a href="/estate?tab=Landlords" style={{ color: '#89CFF0', fontWeight: 600, textDecoration: 'none' }}>Exit preview</a>
         </div>
       )}
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '0 28px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -260,7 +260,7 @@ function EstateOwnerPortalInner() {
             </div>
             <div style={{ borderTop: '1px solid #E4E7EC', padding: 14, display: 'flex', gap: 10 }}>
               <input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()} placeholder="Type a message…" style={{ ...inp, flex: 1 }} />
-              <button onClick={sendMessage} disabled={sendingMessage || !newMessage.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: sendingMessage || !newMessage.trim() ? 0.6 : 1 }}>Send</button>
+              <button onClick={sendMessage} disabled={sendingMessage || !newMessage.trim()} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: sendingMessage || !newMessage.trim() ? 0.6 : 1 }}>Send</button>
             </div>
           </div>
         )}
@@ -282,7 +282,7 @@ function EstateOwnerPortalInner() {
               <div><label style={lbl}>Account Number</label><input style={inp} value={contactForm.account_number} onChange={e=>setContactForm({...contactForm,account_number:e.target.value})}/></div>
               <div><label style={lbl}>Sort Code</label><input style={inp} value={contactForm.sort_code} onChange={e=>setContactForm({...contactForm,sort_code:e.target.value})}/></div>
             </div>
-            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
+            <button onClick={saveContact} disabled={saving} style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving?0.6:1 }}>{saving?'Saving…':'Save Changes'}</button>
           </div>
         )}
       </div>

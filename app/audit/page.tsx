@@ -28,7 +28,7 @@ export default function AuditPage() {
     load()
   }, [])
 
-  const TYPE_COLOR: Record<string, string> = { booking: '#A8862E', cleaning: '#10B981', maintenance: '#F59E0B', property: '#A8862E' }
+  const TYPE_COLOR: Record<string, string> = { booking: '#89CFF0', cleaning: '#10B981', maintenance: '#F59E0B', property: '#89CFF0' }
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', sans-serif" }}>

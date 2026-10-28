@@ -139,9 +139,9 @@ export async function POST(req: NextRequest) {
     const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#323338">
       <div style="background:#191815;padding:16px 22px;color:#fff;font-weight:700;font-size:16px">${esc(s.company_name)}</div>
       <div style="padding:22px;font-size:14px;line-height:1.6">Hi ${esc(first)},<br><br>${esc(msg).replace(/\n/g, '<br>')}<br><br>
-      <a href="${link}" style="display:inline-block;background:#A8862E;color:#fff;font-weight:700;padding:11px 20px;border-radius:6px;text-decoration:none">View invoice</a><br><br>
+      <a href="${link}" style="display:inline-block;background:#89CFF0;color:#fff;font-weight:700;padding:11px 20px;border-radius:6px;text-decoration:none">View invoice</a><br><br>
       <span style="font-size:12.5px;color:#676879">The invoice is attached as a PDF. Please use <b>${esc(inv.number)}</b> as your payment reference.</span></div>
-      <div style="border-top:3px solid #C9A24A;padding:12px 22px;font-size:11px;color:#8A877F;background:#FAF8F3">${esc((s.contact_lines || '').split('\n').join(' · '))}</div></div>`
+      <div style="border-top:3px solid #89CFF0;padding:12px 22px;font-size:11px;color:#8A877F;background:#FAF8F3">${esc((s.contact_lines || '').split('\n').join(' · '))}</div></div>`
     const r = await sendEmail(to, `Invoice ${inv.number} from ${s.company_name}`, html, s.reply_to || undefined, `${s.company_name} <notifications@${EMAIL_DOMAIN}>`, [{ filename: `${inv.number}.pdf`, content: Buffer.from(bytes).toString('base64') }])
     if ((r as any).skipped) return bad('Email isn’t set up on the portal yet (RESEND_API_KEY missing in Netlify). Download the PDF and send it yourself for now.', 503)
     if ((r as any).error) return bad(`The email didn’t go: ${(r as any).error}`.slice(0, 400), 502)
