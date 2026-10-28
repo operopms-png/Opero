@@ -28,7 +28,7 @@ export default function Sidebar() {
   return (
     <div style={{ width:200, background:'#fff', borderRight:'1px solid #F2F4F7', display:'flex', flexDirection:'column', minHeight:'100vh', paddingTop:16, flexShrink:0 }}>
       <div style={{ padding:'0 16px 16px', borderBottom:'1px solid #F2F4F7', display:'flex', alignItems:'center', gap:8 }}>
-        <div style={{ width:28, height:28, background:'#A8862E', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ width:28, height:28, background:'#89CFF0', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center' }}>
           <span style={{ color:'#fff', fontSize:14, fontWeight:700 }}>O</span>
         </div>
         <span style={{ fontSize:15, fontWeight:700, color:'#323338' }}>{BRAND_NAME}</span>

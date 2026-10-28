@@ -46,7 +46,7 @@ const RULE_STATUS_COLORS: Record<string,string> = {
 }
 const CONFIDENCE_COLORS: Record<string,{color:string;bg:string}> = {
   VERIFIED:     { color:'#10B981', bg:'#ECFDF5' },
-  USER_PROVIDED:{ color:'#A8862E', bg:'#FBF4E6' },
+  USER_PROVIDED:{ color:'#89CFF0', bg:'#FBF4E6' },
   ESTIMATED:    { color:'#F59E0B', bg:'#FEF3C7' },
   MISSING:      { color:'#9699A6', bg:'#E6E9EF' },
 }
@@ -131,7 +131,7 @@ export default function InvestPage() {
 
   const inp = {width:'100%',padding:'10px 12px',border:'1px solid #D0D4E4',borderRadius:8,fontSize:14,fontFamily:'inherit',boxSizing:'border-box' as const}
   const lbl = {fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}
-  const BLUE = '#A8862E'
+  const BLUE = '#89CFF0'
   const WATCH_COLOR: Record<string,string> = { Watching:'#579BFC', Offered:'#FDAB3D', 'Under Offer':'#9D50DD', Purchased:'#00C875', Passed:'#DF2F4A' }
 
   async function authHeaders() {
@@ -342,7 +342,7 @@ export default function InvestPage() {
 
   const score = result ? (
     result.roi > 15 ? {label:'Excellent',color:'#10B981',bg:'#ECFDF5'} :
-    result.roi > 10 ? {label:'Good',color:'#A8862E',bg:'#FBF4E6'} :
+    result.roi > 10 ? {label:'Good',color:'#89CFF0',bg:'#FBF4E6'} :
     result.roi > 5  ? {label:'Average',color:'#F59E0B',bg:'#FEF3C7'} :
     {label:'Poor',color:'#EF4444',bg:'#FEE2E2'}
   ) : null

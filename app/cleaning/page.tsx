@@ -20,7 +20,7 @@ type CleaningTask = {
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#F59E0B', bg: '#FEF3C7' },
-  in_progress: { label: 'In Progress', color: '#A8862E', bg: '#EADBB8' },
+  in_progress: { label: 'In Progress', color: '#89CFF0', bg: '#EADBB8' },
   completed: { label: 'Completed', color: '#10B981', bg: '#D1FAE5' },
   skipped: { label: 'Skipped', color: '#6B7280', bg: '#F3F4F6' },
 }
@@ -119,7 +119,7 @@ export default function CleaningTasksPage() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             + New Task
           </button>
@@ -138,7 +138,7 @@ export default function CleaningTasksPage() {
                 borderRadius: 20,
                 border: '1px solid',
                 borderColor: filter === s ? '#323338' : '#E5E7EB',
-                background: filter === s ? '#A8862E' : '#fff',
+                background: filter === s ? '#89CFF0' : '#fff',
                 color: filter === s ? '#fff' : '#6B7280',
                 fontSize: 13,
                 fontWeight: 500,
@@ -290,7 +290,7 @@ export default function CleaningTasksPage() {
               <button
                 onClick={handleCreate}
                 disabled={saving || !form.property_id || !form.scheduled_date}
-                style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}
+                style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}
               >
                 {saving ? 'Saving…' : 'Create Task'}
               </button>

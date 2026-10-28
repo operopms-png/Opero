@@ -134,7 +134,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
 
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '18px 24px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 7, background: '#A8862E', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>O</div>
+          <div style={{ width: 26, height: 26, borderRadius: 7, background: '#89CFF0', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>O</div>
           <div style={{ fontWeight: 700, fontSize: 15, color: '#323338' }}>{BRAND_NAME}</div>
           <div style={{ fontSize: 13, color: '#667085', marginLeft: 6 }}>Document Signing</div>
         </div>
@@ -171,7 +171,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
             )}
 
             {record.document_url && (
-              <a href={record.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#A8862E', textDecoration: 'none', fontWeight: 500 }}>View full lease document →</a>
+              <a href={record.document_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#89CFF0', textDecoration: 'none', fontWeight: 500 }}>View full lease document →</a>
             )}
 
             <div style={{ marginTop: 28, borderTop: '1px solid #E4E7EC', paddingTop: 24 }}>
@@ -180,7 +180,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
                   <button key={r} onClick={() => setRole(r)} style={{
                     fontSize: 12, fontWeight: 600, padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
                     border: role === r ? 'none' : '1px solid #E4E7EC',
-                    background: role === r ? '#A8862E' : '#fff', color: role === r ? '#fff' : '#667085', textTransform: 'capitalize',
+                    background: role === r ? '#89CFF0' : '#fff', color: role === r ? '#fff' : '#667085', textTransform: 'capitalize',
                   }}>Sign as {r}</button>
                 ))}
               </div>
@@ -217,7 +217,7 @@ export default function SignLeasePage({ params }: { params: { token: string } })
                   </div>
 
                   <button onClick={handleSign} disabled={!canSign || !signerName.trim() || submitting}
-                    style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!canSign || !signerName.trim() || submitting) ? 0.5 : 1 }}>
+                    style={{ marginTop: 16, width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!canSign || !signerName.trim() || submitting) ? 0.5 : 1 }}>
                     {submitting ? 'Signing…' : 'Sign Document'}
                   </button>
                 </>
@@ -242,5 +242,5 @@ export default function SignLeasePage({ params }: { params: { token: string } })
 const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }
 const toggleBtn = (active: boolean): React.CSSProperties => ({
   fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? '#fff' : '#667085',
-  background: active ? '#A8862E' : '#fff', border: '1px solid ' + (active ? '#323338' : '#E4E7EC'), borderRadius: 6, padding: '6px 12px', cursor: 'pointer',
+  background: active ? '#89CFF0' : '#fff', border: '1px solid ' + (active ? '#323338' : '#E4E7EC'), borderRadius: 6, padding: '6px 12px', cursor: 'pointer',
 })

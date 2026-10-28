@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { symOf, curOf } from '../../lib/currency'
 
-const C = { gold: '#D0AE4C', gd: '#A8862E', brown: '#624920', cream: '#FBF4E6', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', green: '#10B981', red: '#EF4444', amber: '#F59E0B' }
+const C = { gold: '#D0AE4C', gd: '#89CFF0', brown: '#624920', cream: '#FBF4E6', ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', green: '#10B981', red: '#EF4444', amber: '#F59E0B' }
 
 // cost = you pay it (lower than market is good); income = you earn it (higher than market is optimistic)
 type Metric = { key: string; label: string; value: number; unit: string; compare: string; dir: 'cost' | 'income'; ref?: boolean }

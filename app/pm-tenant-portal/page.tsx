@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
 
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
 function fmtDate(d?: string | null) {
   if (!d) return '—'
@@ -331,7 +331,7 @@ function PMTenantPortalInner() {
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                   <button onClick={() => setShowMakePayment(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                  <button onClick={makePayment} disabled={makingPayment || !payAmount || parseFloat(payAmount) <= 0} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: makingPayment || !payAmount || parseFloat(payAmount) <= 0 ? 0.6 : 1 }}>{makingPayment ? 'Redirecting…' : 'Continue to Payment'}</button>
+                  <button onClick={makePayment} disabled={makingPayment || !payAmount || parseFloat(payAmount) <= 0} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: makingPayment || !payAmount || parseFloat(payAmount) <= 0 ? 0.6 : 1 }}>{makingPayment ? 'Redirecting…' : 'Continue to Payment'}</button>
                 </div>
               </div>
             )}
@@ -359,7 +359,7 @@ function PMTenantPortalInner() {
 
         {tab === 'Maintenance' && (
           <div>
-            <button onClick={() => setShowNewTicket(true)} style={{ marginBottom: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Submit Maintenance Request</button>
+            <button onClick={() => setShowNewTicket(true)} style={{ marginBottom: 16, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>+ Submit Maintenance Request</button>
 
             {showNewTicket && (
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 20 }}>
@@ -390,7 +390,7 @@ function PMTenantPortalInner() {
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                   <button onClick={() => setShowNewTicket(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                  <button onClick={submitTicket} disabled={submitting || !ticketForm.title.trim()} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submitting || !ticketForm.title.trim() ? 0.6 : 1 }}>{submitting ? 'Submitting…' : 'Submit Request'}</button>
+                  <button onClick={submitTicket} disabled={submitting || !ticketForm.title.trim()} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submitting || !ticketForm.title.trim() ? 0.6 : 1 }}>{submitting ? 'Submitting…' : 'Submit Request'}</button>
                 </div>
               </div>
             )}
@@ -480,7 +480,7 @@ function PMTenantPortalInner() {
                 <textarea style={{ ...inp, resize: 'vertical' } as React.CSSProperties} rows={3} value={renewalNotes} onChange={e => setRenewalNotes(e.target.value)} placeholder={renewalChoice === 'renewal_requested' ? 'e.g. preferred new term length' : 'e.g. planned move-out date'} />
                 <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                   <button onClick={() => setShowRenewalForm(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                  <button onClick={submitRenewalRequest} disabled={submittingRenewal} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submittingRenewal ? 0.6 : 1 }}>{submittingRenewal ? 'Submitting…' : 'Submit Request'}</button>
+                  <button onClick={submitRenewalRequest} disabled={submittingRenewal} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: submittingRenewal ? 0.6 : 1 }}>{submittingRenewal ? 'Submitting…' : 'Submit Request'}</button>
                 </div>
               </div>
             )}
@@ -525,7 +525,7 @@ function PMTenantPortalInner() {
                 <input type="checkbox" checked={profileForm.notify_sms} onChange={e => setProfileForm({ ...profileForm, notify_sms: e.target.checked })} /> SMS notifications
               </label>
             </div>
-            <button onClick={saveProfile} disabled={savingProfile} style={{ marginTop: 18, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: savingProfile ? 0.6 : 1 }}>{savingProfile ? 'Saving…' : 'Save Profile'}</button>
+            <button onClick={saveProfile} disabled={savingProfile} style={{ marginTop: 18, padding: '10px 20px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: savingProfile ? 0.6 : 1 }}>{savingProfile ? 'Saving…' : 'Save Profile'}</button>
           </div>
         )}
       </div>

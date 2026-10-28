@@ -57,8 +57,8 @@ export default function TeamPage() {
   }
 
   const ROLE_COLOR: Record<string, string> = {
-    cleaner: '#10B981', maintenance: '#F59E0B', manager: '#A8862E',
-    inspector: '#A8862E', admin: '#EF4444',
+    cleaner: '#10B981', maintenance: '#F59E0B', manager: '#89CFF0',
+    inspector: '#89CFF0', admin: '#EF4444',
   }
 
   return (
@@ -71,7 +71,7 @@ export default function TeamPage() {
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Team Members</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{members.length}</span>
           </div>
-          <button onClick={() => { setEditId(null); setForm(INITIAL_FORM); setShowModal(true) }} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={() => { setEditId(null); setForm(INITIAL_FORM); setShowModal(true) }} style={{ background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
             + Add Member
           </button>
         </div>
@@ -129,7 +129,7 @@ export default function TeamPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.name} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Member'}
               </button>
             </div>

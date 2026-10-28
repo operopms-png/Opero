@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 
 export default function MeetingBookingPage() {
   const params = useParams()

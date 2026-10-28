@@ -84,7 +84,7 @@ export default function OwnersPage() {
               {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             <button onClick={() => setAddRecord(true)}
-              style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+              style={{ background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
               + Add Record
             </button>
           </div>
@@ -96,8 +96,8 @@ export default function OwnersPage() {
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
               fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap',
-              color: tab === t.id ? '#A8862E' : '#6B7280',
-              borderBottom: tab === t.id ? '2px solid #A8862E' : '2px solid transparent',
+              color: tab === t.id ? '#89CFF0' : '#6B7280',
+              borderBottom: tab === t.id ? '2px solid #89CFF0' : '2px solid transparent',
             }}>
               {t.label}
             </button>
@@ -152,7 +152,7 @@ export default function OwnersPage() {
                     </div>
                     <div style={{ background: '#FBF4E6', borderRadius: 10, padding: '16px 20px', textAlign: 'center', border: '1px solid #BFDBFE' }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280', letterSpacing: '0.5px', marginBottom: 6 }}>MANAGEMENT TAKE ({mgmtPct}%)</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: '#A8862E' }}>£{managementFee.toLocaleString()}</div>
+                      <div style={{ fontSize: 24, fontWeight: 700, color: '#89CFF0' }}>£{managementFee.toLocaleString()}</div>
                       <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>Management Fee</div>
                     </div>
                   </div>
@@ -257,7 +257,7 @@ export default function OwnersPage() {
                         </div>
                         <div style={{ textAlign: 'center', background: '#FBF4E6', borderRadius: 8, padding: '12px' }}>
                           <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 4 }}>BOOKINGS</div>
-                          <div style={{ fontSize: 20, fontWeight: 700, color: '#A8862E' }}>{propBookings.length}</div>
+                          <div style={{ fontSize: 20, fontWeight: 700, color: '#89CFF0' }}>{propBookings.length}</div>
                         </div>
                       </div>
                     </div>
@@ -310,7 +310,7 @@ export default function OwnersPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setAddRecord(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={() => setAddRecord(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Save Record</button>
+              <button onClick={() => setAddRecord(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Save Record</button>
             </div>
           </div>
         </div>

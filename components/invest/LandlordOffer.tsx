@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import { symOf } from '../../lib/currency'
 
-const C = { gold: '#C9A24A', goldText: '#8E6B1F', cream: '#FAF3E2', creamLine: '#EADBB8', ink: '#191815', ink2: '#55524b', mute: '#8a857a', line: '#ECE8DF', row: '#E6E9EF', border: '#D0D4E4', green: '#1F7A4D', greenBg: '#E7F4EC', amber: '#9A5B00', amberBg: '#FDF1DC', red: '#B3261E', redBg: '#FDECEA' }
+const C = { gold: '#89CFF0', goldText: '#8E6B1F', cream: '#FAF3E2', creamLine: '#EADBB8', ink: '#191815', ink2: '#55524b', mute: '#8a857a', line: '#ECE8DF', row: '#E6E9EF', border: '#D0D4E4', green: '#1F7A4D', greenBg: '#E7F4EC', amber: '#9A5B00', amberBg: '#FDF1DC', red: '#B3261E', redBg: '#FDECEA' }
 const num = (v: any) => { const x = parseFloat(v); return Number.isFinite(x) ? x : 0 }
 
 export function landlordOffer(form: any, result: any, market: any) {

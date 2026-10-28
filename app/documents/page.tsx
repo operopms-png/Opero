@@ -51,7 +51,7 @@ export default function DocumentsPage() {
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Document Storage</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{docs.length}</span>
           </div>
-          <button onClick={() => setShowModal(true)} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>+ Add Document</button>
+          <button onClick={() => setShowModal(true)} style={{ background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>+ Add Document</button>
         </div>
       </div>
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px' }}>
@@ -105,7 +105,7 @@ export default function DocumentsPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.name || !form.url} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name || !form.url ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Add Document'}</button>
+              <button onClick={handleSave} disabled={saving || !form.name || !form.url} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving || !form.name || !form.url ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Add Document'}</button>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@
 // Meetings as "New request" and the team contacts the client to book a time.
 import { useEffect, useState } from 'react'
 
-const GOLD = '#D0AE4C', GOLD_DARK = '#A8862E', BROWN = '#624920', CREAM = '#FBF4E6', INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF'
+const GOLD = '#D0AE4C', GOLD_DARK = '#89CFF0', BROWN = '#624920', CREAM = '#FBF4E6', INK = '#323338', MUTED = '#676879', LINE = '#E6E9EF'
 const TYPES = ['Phone call', 'Video call', 'In person']
 const PARTS = ['Morning', 'Afternoon', 'Evening', 'Any time']
 

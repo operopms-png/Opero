@@ -6,7 +6,7 @@ import AIStaffSection from '../../components/settings/AIStaffSection'
 import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
 import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
 import TeamBoard from '@/components/settings/TeamBoard'
-const ACCENT = '#A8862E'
+const ACCENT = '#89CFF0'
 const NAV = [
   {group:'ACCOUNT',items:[
     {s:'My Account',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>},
@@ -488,7 +488,7 @@ function SettingsInner() {
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:12}}>
               {messages.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:40,textAlign:'center',color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:8}}>🔔</div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:4}}>No messages yet</div><div style={{fontSize:13}}>System announcements will appear here.</div></div>):messages.map(msg=>{
-                const colors:any = {success:{bg:'#ECFDF5',border:'#6EE7B7',icon:'✅',tag:'#10B981',tagBg:'#ECFDF5'},info:{bg:'#FBF4E6',border:'#93C5FD',icon:'ℹ️',tag:'#A8862E',tagBg:'#FBF4E6'},update:{bg:'#FBF4E6',border:'#A5B4FC',icon:'🚀',tag:'#A8862E',tagBg:'#FBF4E6'},warning:{bg:'#FFFBEB',border:'#FCD34D',icon:'⚠️',tag:'#F59E0B',tagBg:'#FFFBEB'}}
+                const colors:any = {success:{bg:'#ECFDF5',border:'#6EE7B7',icon:'✅',tag:'#10B981',tagBg:'#ECFDF5'},info:{bg:'#FBF4E6',border:'#93C5FD',icon:'ℹ️',tag:'#89CFF0',tagBg:'#FBF4E6'},update:{bg:'#FBF4E6',border:'#A5B4FC',icon:'🚀',tag:'#89CFF0',tagBg:'#FBF4E6'},warning:{bg:'#FFFBEB',border:'#FCD34D',icon:'⚠️',tag:'#F59E0B',tagBg:'#FFFBEB'}}
                 const c = colors[msg.type]??colors.info
                 return(<div key={msg.id} style={{background:c.bg,borderRadius:12,border:'1px solid '+c.border,padding:20,display:'flex',gap:14}}>
                   <span style={{fontSize:24,flexShrink:0}}>{c.icon}</span>

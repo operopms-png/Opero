@@ -22,8 +22,8 @@ import { buckets, bucketSum, Kpi, Panel, StackedBars, TrendLine, Funnel, Legend,
 // capital returned = paid owner_statements, invested = owner_profiles.invested.
 
 const MGMT_FEE = 0.40
-// Matches the Staff Centre dashboard: Inter, #F7F8FA page, white #E4E7EC cards, #A8862E accent
-const ACCENT = '#A8862E'
+// Matches the Staff Centre dashboard: Inter, #F7F8FA page, white #E4E7EC cards, #89CFF0 accent
+const ACCENT = '#89CFF0'
 const ACCENT_SOFT = '#FBF4E6'
 const TEXT = '#323338'
 const PAGE_BG = '#F7F8FA'

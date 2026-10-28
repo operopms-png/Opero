@@ -130,7 +130,7 @@ export default function TenantDocuments({ kind, tenant, onClose, onChanged }: {
             onDragOver={e => { e.preventDefault(); setDragOver(true) }}
             onDragLeave={() => setDragOver(false)}
             onDrop={e => { e.preventDefault(); setDragOver(false); uploadAll(Array.from(e.dataTransfer.files)) }}
-            style={{ border: '2px dashed ' + (dragOver ? '#A8862E' : '#D0D5DD'), background: dragOver ? '#FBF4E6' : '#fff', borderRadius: 12, padding: '22px 16px', textAlign: 'center', cursor: 'pointer' }}
+            style={{ border: '2px dashed ' + (dragOver ? '#89CFF0' : '#D0D5DD'), background: dragOver ? '#FBF4E6' : '#fff', borderRadius: 12, padding: '22px 16px', textAlign: 'center', cursor: 'pointer' }}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', margin: '0 auto 6px' }}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <div style={{ fontSize: 13.5, fontWeight: 600, color: '#323338' }}>Click to upload or drop files here</div>
@@ -179,7 +179,7 @@ export default function TenantDocuments({ kind, tenant, onClose, onChanged }: {
                       style={{ fontSize: 11, fontWeight: 600, padding: '4px 9px', borderRadius: 20, border: 'none', cursor: 'pointer', fontFamily: 'inherit', background: d.visible_to_tenant ? '#ECFDF3' : '#F2F4F7', color: d.visible_to_tenant ? '#027A48' : '#667085', whiteSpace: 'nowrap' }}>
                       {d.visible_to_tenant ? 'Tenant can see' : 'Staff only'}
                     </button>
-                    {fileLink(d) && <a href={fileLink(d)} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600, color: '#A8862E', textDecoration: 'none' }}>Open</a>}
+                    {fileLink(d) && <a href={fileLink(d)} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600, color: '#89CFF0', textDecoration: 'none' }}>Open</a>}
                     <button onClick={() => remove(d)} aria-label="Delete" style={{ background: 'none', border: 'none', color: '#F04438', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
                   </div>
                 ))}

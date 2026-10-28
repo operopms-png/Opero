@@ -27,7 +27,7 @@ const PRIORITY_CONFIG = {
 }
 
 const STATUS_CONFIG = {
-  open: { label: 'Open', color: '#A8862E', bg: '#EADBB8' },
+  open: { label: 'Open', color: '#89CFF0', bg: '#EADBB8' },
   in_progress: { label: 'In Progress', color: '#F59E0B', bg: '#FEF3C7' },
   resolved: { label: 'Resolved', color: '#10B981', bg: '#D1FAE5' },
   closed: { label: 'Closed', color: '#6B7280', bg: '#F3F4F6' },
@@ -106,7 +106,7 @@ export default function MaintenancePage() {
             <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: '#323338' }}>Maintenance</h1>
             <span style={{ background: '#F3F4F6', color: '#6B7280', borderRadius: 20, padding: '2px 10px', fontSize: 13 }}>{tickets.filter(t => t.status === 'open').length} open</span>
           </div>
-          <button onClick={() => setShowModal(true)} style={{ background: '#A8862E', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={() => setShowModal(true)} style={{ background: '#89CFF0', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
             + New Ticket
           </button>
         </div>
@@ -118,7 +118,7 @@ export default function MaintenancePage() {
             <button key={s} onClick={() => setFilter(s)} style={{
               padding: '7px 16px', borderRadius: 20, border: '1px solid',
               borderColor: filter === s ? '#323338' : '#E5E7EB',
-              background: filter === s ? '#A8862E' : '#fff',
+              background: filter === s ? '#89CFF0' : '#fff',
               color: filter === s ? '#fff' : '#6B7280',
               fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
             }}>{s === 'in_progress' ? 'In Progress' : s.charAt(0).toUpperCase() + s.slice(1)}</button>
@@ -199,7 +199,7 @@ export default function MaintenancePage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-              <button onClick={handleSave} disabled={saving || !form.property_id || !form.title} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
+              <button onClick={handleSave} disabled={saving || !form.property_id || !form.title} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', opacity: saving ? 0.7 : 1 }}>
                 {saving ? 'Saving…' : 'Create Ticket'}
               </button>
             </div>

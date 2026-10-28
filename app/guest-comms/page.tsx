@@ -56,7 +56,7 @@ export default function GuestCommsPage() {
           <div style={{ fontSize: 12, fontWeight: 600, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Templates</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {TEMPLATES.map(t => (
-              <div key={t.id} onClick={() => setSelected(t)} style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${selected.id === t.id ? '#A8862E' : '#E4E7EC'}`, background: selected.id === t.id ? '#FBF4E6' : '#fff', cursor: 'pointer', fontSize: 13, fontWeight: selected.id === t.id ? 600 : 400, color: selected.id === t.id ? '#A8862E' : '#344054' }}>
+              <div key={t.id} onClick={() => setSelected(t)} style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${selected.id === t.id ? '#89CFF0' : '#E4E7EC'}`, background: selected.id === t.id ? '#FBF4E6' : '#fff', cursor: 'pointer', fontSize: 13, fontWeight: selected.id === t.id ? 600 : 400, color: selected.id === t.id ? '#89CFF0' : '#344054' }}>
                 {t.label}
               </div>
             ))}
@@ -78,7 +78,7 @@ export default function GuestCommsPage() {
               {copied ? 'Copied!' : 'Copy to clipboard'}
             </button>
             {selectedBooking?.guest_email && (
-              <a href={`mailto:${selectedBooking.guest_email}?subject=${encodeURIComponent(selected.subject)}&body=${encodeURIComponent(preview)}`} style={{ flex: 1, padding: '10px', borderRadius: 8, background: '#A8862E', color: '#fff', fontSize: 14, fontWeight: 500, textDecoration: 'none', textAlign: 'center', display: 'block' }}>Send via Email</a>
+              <a href={`mailto:${selectedBooking.guest_email}?subject=${encodeURIComponent(selected.subject)}&body=${encodeURIComponent(preview)}`} style={{ flex: 1, padding: '10px', borderRadius: 8, background: '#89CFF0', color: '#fff', fontSize: 14, fontWeight: 500, textDecoration: 'none', textAlign: 'center', display: 'block' }}>Send via Email</a>
             )}
           </div>
         </div>

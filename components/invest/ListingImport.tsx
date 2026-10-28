@@ -16,7 +16,7 @@ export type Listing = {
   description: string | null; lat: number | null; lng: number | null; photos: string[]; agent?: string | null
 }
 
-const C = { ink: '#191815', text: '#323338', muted: '#676879', line: '#E6E9EF', soft: '#F7F8FA', gold: '#A8862E', goldBg: '#FBF6EA', red: '#B42318' }
+const C = { ink: '#191815', text: '#323338', muted: '#676879', line: '#E6E9EF', soft: '#F7F8FA', gold: '#89CFF0', goldBg: '#FBF6EA', red: '#B42318' }
 const inp: React.CSSProperties = { padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D4E4', fontSize: 13.5, fontFamily: 'inherit', outline: 'none', background: '#fff', boxSizing: 'border-box' }
 const fmt = (n: number | null | undefined, d = 0) => n == null ? '—' : n.toLocaleString('en-GB', { maximumFractionDigits: d })
 

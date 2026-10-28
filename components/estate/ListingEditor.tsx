@@ -7,7 +7,7 @@ import { useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CURRENCIES } from '@/lib/listings-shared'
 
-const GD = '#A8862E', BROWN = '#624920', CREAM = '#FBF4E6', LINE = '#E4E7EC', MUTED = '#667085'
+const GD = '#89CFF0', BROWN = '#624920', CREAM = '#FBF4E6', LINE = '#E4E7EC', MUTED = '#667085'
 export type ListingFields = { listed: boolean; currency: string; available_from: string; description: string; features: string[]; image_urls: string; photo_captions: Record<string, string> }
 
 export function parseUrls(val: string | null | undefined): string[] {

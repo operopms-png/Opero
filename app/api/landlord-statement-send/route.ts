@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   const html = `
   <div style="font-family:Figtree,Arial,sans-serif;max-width:560px;margin:0 auto;color:#323338">
     <div style="background:linear-gradient(135deg,#FBF4E6,#F3E6C8);border:1px solid #EADBB8;border-radius:8px 8px 0 0;padding:20px 24px">
-      <div style="font-size:12px;font-weight:600;color:#A8862E;letter-spacing:.06em">LANDLORD STATEMENT</div>
+      <div style="font-size:12px;font-weight:600;color:#89CFF0;letter-spacing:.06em">LANDLORD STATEMENT</div>
       <div style="font-size:20px;color:#624920;margin-top:4px">${esc(st.period_label)}</div>
     </div>
     <div style="border:1px solid #E6E9EF;border-top:none;border-radius:0 0 8px 8px;padding:20px 24px">
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         ${owed ? 'Balance still to be paid to you' : 'Fully paid for this period'}: <b>${gbp(Math.abs(Number(st.balance) || 0))}</b>
       </div>
       ${st.note ? `<p style="margin:16px 0 0;white-space:pre-wrap;font-size:14px"><b>Note from your property manager:</b><br>${esc(st.note)}</p>` : ''}
-      <p style="margin:22px 0 0"><a href="${portal}" style="background:#A8862E;color:#fff;text-decoration:none;padding:10px 18px;border-radius:4px;display:inline-block">View full statement</a></p>
+      <p style="margin:22px 0 0"><a href="${portal}" style="background:#89CFF0;color:#fff;text-decoration:none;padding:10px 18px;border-radius:4px;display:inline-block">View full statement</a></p>
       <p style="margin:18px 0 0;font-size:12px;color:#9699A6">The full statement shows every rent payment, deduction and payment to you, and can be downloaded as a PDF from your landlord portal.</p>
     </div>
   </div>`
