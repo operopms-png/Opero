@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
+import PropertyLocationsPanel from '../../../components/ai/PropertyLocationsPanel'
 
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
 const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#667085', TXT = '#101828'
@@ -119,13 +120,7 @@ export default function AICommandCentre() {
               <Head t="Portfolio Performance" right={<span style={{ color: MUTED, fontSize: 11 }}>Last 30 days</span>} />
               <NotConnected text="No revenue or expense data connected yet" />
             </div>
-            <div style={panel}>
-              <Head t="Property Locations" right={<span style={{ color: MUTED, fontSize: 11 }}>Jamaica · UK</span>} />
-              <svg viewBox="0 0 200 110" style={{ width: '100%', height: 120 }}>
-                <path d="M10 60 Q40 40 80 48 Q120 36 160 50 Q190 58 186 66 Q160 78 120 74 Q80 84 40 76 Q14 74 10 60Z" fill="#DCEBFA" stroke={BLUE} strokeOpacity=".6" />
-              </svg>
-              <NotConnected text="No property locations to show" />
-            </div>
+            <PropertyLocationsPanel />
             </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
