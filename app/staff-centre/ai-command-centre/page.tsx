@@ -37,6 +37,7 @@ export default function AICommandCentre() {
   const [cards, setCards] = useState<any>(null)
   const [pf, setPf] = useState<any>(null)
   const [more, setMore] = useState<any>(null)
+  const [fx, setFx] = useState<any>(null)
   const [moreErr, setMoreErr] = useState('')
   const [pfErr, setPfErr] = useState('')
   const [cardsErr, setCardsErr] = useState('')
@@ -49,6 +50,7 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/cards').then(setCards).catch(e => setCardsErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/more').then(setMore).catch(e => setMoreErr(e.message)) }, [])
+  useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => setFx(d?.rates ?? null)).catch(() => {}) }, [])
   useEffect(() => { staffApi('/api/staff-dashboard?range=today').then(setDash).catch(e => setDashErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
@@ -119,7 +121,6 @@ export default function AICommandCentre() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {(more ? [
               ['Units', '/pm?tab=Units', `${more.units.occupied} of ${more.units.total} occupied`, ''],
-              ['Buildings', '/pm?tab=Buildings', `${more.buildings.count} buildings`, `${more.buildings.units} units`],
               ['Landlords', '/pm?tab=Landlords', `${more.landlords.count} landlords`, `${more.landlords.missingBank} missing bank details`],
               ['Tenants', '/pm?tab=Tenants', `${more.tenants.active} active`, `${more.tenants.total} in total`],
               ['Furniture', '/pm?tab=Furniture', `${more.furniture.items} items`, `${more.furniture.poor} in poor condition`],
@@ -130,7 +131,6 @@ export default function AICommandCentre() {
               ['HMO Rooms', '/pm?tab=HMO%20Rooms', `${more.hmo.rooms} rooms`, `${more.hmo.licence90} licences ending in 90 days`],
               ['Deadlines', '/pm?tab=Deadlines', `${more.deadlines.in30} due in 30 days`, `${more.deadlines.expired} expired`],
               ['Inspections', '/pm?tab=Inspections', `${more.inspections.next7} in next 7 days`, ''],
-              ['Inventories', '/pm?tab=Inventories', `${more.inventories.open} open`, ''],
               ['Keys', '/pm?tab=Keys', `${more.keys.sets} key sets`, ''],
               ['Utilities', '/pm?tab=Utilities', `${more.utilities.billsNext7} bills in next 7 days`, `£${more.utilities.monthly.toLocaleString('en-GB')} a month`],
               ['Documents', '/pm?tab=Documents', `${more.documents.property + more.documents.company} documents`, `${more.documents.company} company`],
@@ -140,7 +140,7 @@ export default function AICommandCentre() {
               ['Expenses', '/pm?tab=Expenses', `£${more.expenses.month.toLocaleString('en-GB')} this month`, `${more.expenses.count} recorded`],
               ['Banking', '/pm?tab=Banking', `${more.banking.accounts} accounts`, `£${more.banking.balance.toLocaleString('en-GB')} (GBP)`],
               ['Loans & Mortgages', '/pm?tab=Loans%20%26%20Mortgages', `${more.loans.count} loans`, ''],
-              ['Exchange Rates', '/pm?tab=Exchange%20Rates', 'Rates', ''],
+              ['Exchange Rates', '/pm?tab=Exchange%20Rates', fx?.USD ? `1 GBP = ${Number(fx.USD).toFixed(2)} USD` : 'Loading…', fx?.JMD ? `${Math.round(Number(fx.JMD)).toLocaleString('en-GB')} JMD · ${fx?.AED ? Number(fx.AED).toFixed(2) : '—'} AED` : ''],
               ['Landlord Reports', '/pm?tab=Landlord%20Reports', `${more.reports.landlords} landlords`, ''],
               ['Reports', '/pm?tab=Reports', `${more.reports.properties} properties`, ''],
               ['Accounting Export', '/pm?tab=Accounting%20Export', `${more.reports.expenses} records`, ''],
