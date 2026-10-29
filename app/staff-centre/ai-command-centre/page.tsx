@@ -38,6 +38,9 @@ export default function AICommandCentre() {
   const [pf, setPf] = useState<any>(null)
   const [more, setMore] = useState<any>(null)
   const [fx, setFx] = useState<any>(null)
+  const [money, setMoney] = useState<any>(null)
+  const [moneyErr, setMoneyErr] = useState('')
+  const [fin2, setFin2] = useState<any>({})
   const [moreErr, setMoreErr] = useState('')
   const [pfErr, setPfErr] = useState('')
   const [cardsErr, setCardsErr] = useState('')
@@ -51,6 +54,11 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/more').then(setMore).catch(e => setMoreErr(e.message)) }, [])
   useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => setFx(d?.rates ?? null)).catch(() => {}) }, [])
+  useEffect(() => { staffApi('/api/command-centre/money').then(setMoney).catch(e => setMoneyErr(e.message)) }, [])
+  useEffect(() => {
+    Promise.all([staffApi('/api/finance?view=payouts'), staffApi('/api/finance?view=partner-payouts'), staffApi('/api/finance?view=arrears')])
+      .then(([o, p, a]) => setFin2({ owner: o, partner: p, arrears: a })).catch(() => {})
+  }, [])
   useEffect(() => { staffApi('/api/staff-dashboard?range=today').then(setDash).catch(e => setDashErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
@@ -118,6 +126,21 @@ export default function AICommandCentre() {
             ))}
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {([
+              ['Owner Payouts', '/staff-centre/finance/payouts', fin2.owner ? `${fin2.owner.due.length} still to pay` : 'Loading…', fin2.owner ? `${fin2.owner.due.filter((r: any) => r.overdue).length} overdue` : ''],
+              ['Partner Payouts', '/staff-centre/finance/partner-payouts', fin2.partner ? `${fin2.partner.due.length} still to pay` : 'Loading…', fin2.partner ? `${fin2.partner.due.filter((r: any) => r.overdue).length} overdue` : ''],
+              ['Arrears', '/staff-centre/finance/arrears', fin2.arrears ? `${fin2.arrears.rows.length} overdue rent` : 'Loading…', fin2.arrears ? `${fin2.arrears.rows.length ? 'Oldest ' + Math.max(...fin2.arrears.rows.map((r: any) => r.days || 0)) + ' days' : 'None'}` : ''],
+              ['Invoices', '/staff-centre/invoices', money ? `${money.invoices.unpaid} unpaid` : (moneyErr ? 'Could not load' : 'Loading…'), money ? `${money.invoices.overdue} overdue · £${money.invoices.unpaidGBP.toLocaleString('en-GB')}` : ''],
+              ['Approvals', '/staff-centre/approvals', money ? `${money.approvals.pending} waiting for you` : (moneyErr ? 'Could not load' : 'Loading…'), money ? `£${money.approvals.pendingGBP.toLocaleString('en-GB')} requested` : ''],
+            ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{sub}</div>
+              </Link>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {((more ? [
               ['Units', '/pm?tab=Units', `${more.units.occupied} of ${more.units.total} occupied`, ''],
