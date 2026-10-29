@@ -35,6 +35,8 @@ export default function AICommandCentre() {
   const [fin, setFin] = useState<any>(null)
   const [dash, setDash] = useState<any>(null)
   const [cards, setCards] = useState<any>(null)
+  const [pf, setPf] = useState<any>(null)
+  const [pfErr, setPfErr] = useState('')
   const [cardsErr, setCardsErr] = useState('')
   const [dashErr, setDashErr] = useState('')
   const [finErr, setFinErr] = useState('')
@@ -43,6 +45,7 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/operations').then(setOps).catch(e => setOpsErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/finance').then(setFin).catch(e => setFinErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/cards').then(setCards).catch(e => setCardsErr(e.message)) }, [])
+  useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/staff-dashboard?range=today').then(setDash).catch(e => setDashErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
@@ -111,6 +114,23 @@ export default function AICommandCentre() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {(pf ? [
+              ['Leases', '/pm?tab=Leases', `${pf.leases.ending60} ending in 60 days`, `${pf.leases.expired} expired`],
+              ['Vacancies', '/pm?tab=Vacancies', `${pf.vacancies.vacant} vacant`, `${pf.vacancies.occupied} of ${pf.vacancies.total} occupied`],
+              ['Rent this month', '/pm?tab=Rent', `£${pf.rent.collected.toLocaleString('en-GB')} collected`, `${pf.rent.overdue} overdue · £${pf.rent.due.toLocaleString('en-GB')} due`],
+              ['Deposits held', '/pm?tab=Deposits', `£${pf.deposits.held.toLocaleString('en-GB')}`, 'Across occupied units'],
+              ['Insurance', '/pm?tab=Insurance', `${pf.insurance.renewing30} renewing in 30 days`, `${pf.insurance.expired} expired`],
+              ['Head Leases', '/pm?tab=Head%20Leases', `${pf.headLeases.ending90} ending in 90 days`, ''],
+              ['Viewings', '/pm?tab=Viewings', `${pf.viewings.next7} in next 7 days`, ''],
+            ] : [
+              ['Property Management', '/pm', pfErr ? 'Could not load' : 'Loading…', ''],
+            ]) as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{sub}</div>
+              </Link>
+            ))}
             {([
               ['Maintenance', '/staff-centre/maintenance', ops ? `${ops.open} open` : '—', ops ? `${ops.urgent} urgent` : ''],
               ['Cleaning', '/cleaning', ops ? `${ops.pending} pending` : '—', ops ? `${ops.overdue} overdue` : ''],
