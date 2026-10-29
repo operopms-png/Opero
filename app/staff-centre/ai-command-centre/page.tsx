@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
 import PropertyLocationsPanel from '../../../components/ai/PropertyLocationsPanel'
+import { staffApi } from '../../../lib/staff-api'
 
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
 const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#667085', TXT = '#101828'
@@ -30,7 +31,10 @@ export default function AICommandCentre() {
   const [userName, setUserName] = useState('')
   const [agents, setAgents] = useState<Agent[] | null>(null)
   const [propCount, setPropCount] = useState<number | null>(null)
+  const [ops, setOps] = useState<any>(null)
+  const [opsErr, setOpsErr] = useState('')
   const [now, setNow] = useState(new Date())
+  useEffect(() => { staffApi('/api/command-centre/operations').then(setOps).catch(e => setOpsErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t) }, [])
@@ -97,6 +101,20 @@ export default function AICommandCentre() {
             ))}
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {([
+              ['Maintenance', '/staff-centre/maintenance', ops ? `${ops.open} open` : '—', ops ? `${ops.urgent} urgent` : ''],
+              ['Cleaning', '/cleaning', ops ? `${ops.pending} pending` : '—', ops ? `${ops.overdue} overdue` : ''],
+              ['Turnovers', '/turnovers', ops ? `${ops.upcoming} in next 7 days` : '—', ''],
+              ['Compliance', '/staff-centre/compliance', ops ? `${ops.expired} expired` : '—', ops ? `${ops.expiring} expiring in 30 days` : ''],
+            ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{opsErr ? 'Could not load' : sub}</div>
+              </Link>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
             <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Total Properties</div><div style={{ fontSize: 26, fontWeight: 800 }}>{propCount ?? '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>Active properties</div></div>
             <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Active Leads</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
