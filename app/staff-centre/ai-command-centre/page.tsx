@@ -125,7 +125,7 @@ export default function AICommandCentre() {
             <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Occupancy Rate</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 10, alignItems: 'start' }}>
             <div style={panel}>
               <Head t="AI Agent Activity" right={<Link href="/settings" style={{ color: CYAN, fontSize: 11 }}>View all</Link>} />
               {agents === null && <NotConnected text="Loading agents…" />}
@@ -148,10 +148,7 @@ export default function AICommandCentre() {
               </svg>
               <NotConnected text="No property locations to show" />
             </div>
-            <div id="ask-grok" style={{ minWidth: 0 }}>
-              <GrokPanel />
             </div>
-          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
             <div style={panel}><Head t="Top Property Opportunities" /><NotConnected text="No property opportunities yet" /></div>
@@ -160,6 +157,10 @@ export default function AICommandCentre() {
             <div style={panel}><Head t="Recent Conversations" /><NotConnected text="No recent conversations" /></div>
           </div>
 
+          <div id="ask-grok" style={{ background: '#fff', border: '1px solid #D9E2F0', borderRadius: 12, padding: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10 }}>Ask Grok</div>
+            <GrokPanel />
+          </div>
           <div style={{ textAlign: 'center', color: MUTED, fontSize: 11, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>NOVOURQ · Smart Properties. Stronger Returns. · Jamaica · UK</div>
         </div>
       </div>
