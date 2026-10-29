@@ -34,6 +34,7 @@ export default function AICommandCentre() {
   const [ops, setOps] = useState<any>(null)
   const [fin, setFin] = useState<any>(null)
   const [dash, setDash] = useState<any>(null)
+  const [tasks, setTasks] = useState<any[] | null>(null)
   const [dashErr, setDashErr] = useState('')
   const [finErr, setFinErr] = useState('')
   const [opsErr, setOpsErr] = useState('')
@@ -41,6 +42,15 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/operations').then(setOps).catch(e => setOpsErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/finance').then(setFin).catch(e => setFinErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/staff-dashboard?range=today').then(setDash).catch(e => setDashErr(e.message)) }, [])
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setTasks([]); return }
+      const uid = await getAccountId(user)
+      const { data } = await supabase.from('staff_tasks').select('id,title,status,due_date').eq('user_id', uid).order('due_date', { ascending: true, nullsFirst: false })
+      setTasks((data ?? []).filter((t: any) => !/^(done|completed)$/i.test(String(t.status || ''))))
+    })()
+  }, [])
   const [q, setQ] = useState('')
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t) }, [])
@@ -167,7 +177,23 @@ export default function AICommandCentre() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
             <div style={panel}><Head t="Top Property Opportunities" /><NotConnected text="No property opportunities yet" /></div>
-            <div style={panel}><Head t="Upcoming Tasks" /><NotConnected text="No upcoming tasks" /></div>
+            <Link href="/staff-centre/tasks" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+              <Head t="Upcoming Tasks →" />
+              {tasks === null ? <NotConnected text="Loading…" /> : tasks.length === 0 ? <NotConnected text="No upcoming tasks" /> : (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {tasks.slice(0, 4).map(t => {
+                    const overdue = !!t.due_date && t.due_date < new Date().toISOString().slice(0, 10)
+                    return (
+                      <div key={t.id} style={{ fontSize: 12, borderTop: `1px solid ${LINE}`, paddingTop: 6, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                        <span>{t.title}</span>
+                        <span style={{ color: overdue ? '#B42318' : MUTED, whiteSpace: 'nowrap' }}>{t.due_date ? new Date(t.due_date + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'No date'}{overdue ? ' · overdue' : ''}</span>
+                      </div>
+                    )
+                  })}
+                  <div style={{ fontSize: 11, color: MUTED }}>{tasks.length} open</div>
+                </div>
+              )}
+            </Link>
             <Link href="/staff-centre/finance" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
               <Head t="Financial Overview →" />
               {fin ? (
