@@ -42,6 +42,8 @@ export default function AICommandCentre() {
   const [moneyErr, setMoneyErr] = useState('')
   const [fin2, setFin2] = useState<any>({})
   const [crmF, setCrmF] = useState<any>(null)
+  const [sch, setSch] = useState<any>(null)
+  const [schErr, setSchErr] = useState('')
   const [crmErr, setCrmErr] = useState('')
   const [moreErr, setMoreErr] = useState('')
   const [pfErr, setPfErr] = useState('')
@@ -56,6 +58,7 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/more').then(setMore).catch(e => setMoreErr(e.message)) }, [])
   useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => setFx(d?.rates ?? null)).catch(() => {}) }, [])
+  useEffect(() => { staffApi('/api/command-centre/schedule').then(setSch).catch(e => setSchErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/crm').then(setCrmF).catch(e => setCrmErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/money').then(setMoney).catch(e => setMoneyErr(e.message)) }, [])
   useEffect(() => {
@@ -129,6 +132,19 @@ export default function AICommandCentre() {
             ))}
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {([
+              ['Calendar', '/staff-centre/calendar', sch ? `${sch.calendar.shiftsThisWeek} shifts this week` : (schErr ? 'Could not load' : 'Loading…'), sch ? `${sch.calendar.staffScheduled} staff scheduled` : ''],
+              ['Meetings', '/staff-centre/meetings', sch ? `${sch.meetings.requested} requested` : (schErr ? 'Could not load' : 'Loading…'), sch ? `${sch.meetings.awaitingBooking} awaiting a time · ${sch.meetings.upcoming} booked` : ''],
+              ['Tasks', '/staff-centre/tasks', sch ? `${sch.tasks.open} open` : (schErr ? 'Could not load' : 'Loading…'), sch ? `${sch.tasks.overdue} overdue · ${sch.tasks.dueSoon} due in 7 days` : ''],
+            ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{sub}</div>
+              </Link>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {([
               ['CRM', '/staff-centre/crm', crmF ? `${crmF.crm.items} items` : (crmErr ? 'Could not load' : 'Loading…'), crmF ? `${crmF.crm.boards} boards` : ''],
