@@ -3,7 +3,7 @@
 // Outline maps of Jamaica, the UK and Dubai (UAE), with a pin for each place where you have properties.
 // Counts come from your own records: properties, pm_properties and estate_properties. Pins use the
 // saved coordinates when there are any, otherwise the town listed in TOWNS, otherwise the country centre.
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, getAccountId } from '../../lib/supabase'
 
 const LINE = '#D9E2F0', BLUE = '#2F6DB5', NAVY = '#1B2F6E', MUTED = '#667085', TXT = '#101828', LIGHT = '#89CFF0'
@@ -33,6 +33,13 @@ const TOWNS: { match: RegExp; country: Key; name: string; lat: number; lng: numb
 ]
 const COUNTRY_NAMES: Record<string, Key> = { jamaica: 'JAM', 'united kingdom': 'GBR', uk: 'GBR', england: 'GBR', 'united arab emirates': 'ARE', uae: 'ARE', dubai: 'ARE' }
 const countryOf = (c?: string | null): Key | null => COUNTRY_NAMES[(c ?? '').trim().toLowerCase()] ?? null
+
+const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
+const VIEW: Record<Key, { lat: number; lng: number; zoom: number }> = {
+  JAM: { lat: 18.2, lng: -77.3, zoom: 9 },
+  GBR: { lat: 52.8, lng: -1.6, zoom: 6 },
+  ARE: { lat: 25.2, lng: 55.3, zoom: 10 },
+}
 
 type Pin = { key: string; name: string; lat: number; lng: number; count: number; placed: boolean }
 type Row = { address?: string | null; city?: string | null; name?: string | null; country?: string | null; lat?: number | null; lng?: number | null }
@@ -64,6 +71,9 @@ function buildPins(rows: Row[], country: Key): Pin[] {
 export default function PropertyLocationsPanel() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [tab, setTab] = useState<Key>('JAM')
+  const mapRef = useRef<HTMLDivElement>(null)
+  const gmap = useRef<any>(null)
+  const markers = useRef<any[]>([])
 
   useEffect(() => {
     (async () => {
@@ -88,6 +98,40 @@ export default function PropertyLocationsPanel() {
     return t
   }, [rows])
 
+  // Satellite view (Google Maps), used when NEXT_PUBLIC_GOOGLE_MAPS_KEY is set
+  useEffect(() => {
+    if (!MAPS_KEY || rows === null || !mapRef.current) return
+    let cancelled = false
+    loadGoogle().then((g: any) => {
+      if (cancelled || !mapRef.current) return
+      if (!gmap.current) {
+        gmap.current = new g.maps.Map(mapRef.current, { mapTypeId: 'hybrid', disableDefaultUI: true, zoomControl: true, gestureHandling: 'cooperative', clickableIcons: false })
+      }
+      const map = gmap.current
+      markers.current.forEach(m => m.setMap(null))
+      markers.current = []
+      const info = new g.maps.InfoWindow()
+      const bounds = new g.maps.LatLngBounds()
+      pins.forEach(p => {
+        const pos = { lat: p.lat, lng: p.lng }
+        const m = new g.maps.Marker({
+          position: pos, map, title: p.name,
+          label: { text: String(p.count), color: '#ffffff', fontWeight: '700' },
+          icon: { path: g.maps.SymbolPath.CIRCLE, scale: 13, fillColor: p.placed ? '#1B2F6E' : '#667085', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+        })
+        m.addListener('click', () => {
+          info.setContent(`<div style="font-family:Figtree,Arial,sans-serif;font-size:12px"><b>${p.name}</b><br/>${p.count} ${p.count === 1 ? 'property' : 'properties'}</div>`)
+          info.open({ map, anchor: m })
+        })
+        markers.current.push(m)
+        bounds.extend(pos)
+      })
+      if (pins.length > 1) map.fitBounds(bounds, 60)
+      else { map.setCenter({ lat: VIEW[tab].lat, lng: VIEW[tab].lng }); map.setZoom(pins.length === 1 ? 11 : VIEW[tab].zoom) }
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [pins, rows, tab])
+
   const pos = (p: Pin) => {
     const x = (p.lng - o.minLon) * o.cos * o.S
     const y = (o.maxLat - p.lat) * o.S
@@ -109,7 +153,12 @@ export default function PropertyLocationsPanel() {
       </div>
 
       {rows === null && <div style={{ color: MUTED, fontSize: 12, padding: '26px 0', textAlign: 'center' }}>Loading locations…</div>}
-      {rows !== null && (
+
+      {rows !== null && MAPS_KEY && (
+        <div ref={mapRef} style={{ width: '100%', height: 340, borderRadius: 10, overflow: 'hidden', background: '#E9EEF6' }} />
+      )}
+
+      {rows !== null && !MAPS_KEY && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 0' }}>
           <div style={{ position: 'relative', width: `min(100%, ${300 * o.vw / o.vh}px)`, aspectRatio: `${o.vw} / ${o.vh}` }}>
             <svg viewBox={`0 0 ${o.vw} ${o.vh}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
@@ -128,9 +177,27 @@ export default function PropertyLocationsPanel() {
           </div>
         </div>
       )}
+
       {rows !== null && total === 0 && (
         <div style={{ color: MUTED, fontSize: 12, textAlign: 'center', paddingTop: 6 }}>No properties in {COUNTRIES.find(c => c.key === tab)?.label} yet</div>
       )}
     </div>
   )
+}
+
+let googlePromise: Promise<any> | null = null
+function loadGoogle(): Promise<any> {
+  if (typeof window === 'undefined') return Promise.reject(new Error('no window'))
+  if ((window as any).google?.maps) return Promise.resolve((window as any).google)
+  if (!googlePromise) {
+    googlePromise = new Promise((resolve, reject) => {
+      const el = document.createElement('script')
+      el.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(MAPS_KEY)}`
+      el.async = true
+      el.onload = () => resolve((window as any).google)
+      el.onerror = () => reject(new Error('Google Maps failed to load'))
+      document.head.appendChild(el)
+    })
+  }
+  return googlePromise
 }
