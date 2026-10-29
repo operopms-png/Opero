@@ -45,7 +45,7 @@ function buildPins(rows: Row[], country: Key): Pin[] {
     const text = [r.name, r.address, r.city].filter(Boolean).join(' ')
     const town = TOWNS.find(t => t.country === country && t.match.test(text))
     const hasCoords = typeof r.lat === 'number' && typeof r.lng === 'number'
-    const name = town?.name ?? 'Other locations'
+    const name = town?.name ?? ((r.address || r.city || r.name || '').trim() || 'Other locations')
     const key = name
     const g = groups.get(key)
     if (g) { g.count += 1; return }
