@@ -11,6 +11,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Dashboard', icon: 'trendingup', tabs: [
     { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
     { href: '/staff-centre/ai-command-centre', label: 'AI Command Centre', scTab: 'oversight' },
+    { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight' },
   ] },
   { label: 'Ask Grok', icon: 'sparkles', tabs: [{ href: '/staff-centre/ask-grok', label: 'Ask Grok', scTab: 'oversight' }] },
   { label: 'Inbox', icon: 'message', tabs: [
