@@ -10,12 +10,6 @@ import GrokPanel from '../../../components/GrokPanel'
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
 const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#667085', TXT = '#101828'
 const panel: React.CSSProperties = { background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, padding: 14, minWidth: 0 }
-const NAV = [
-  ['Dashboard', '/staff-centre/oversight'], ['Properties', '/staff-centre/client-properties'], ['Leads & Acquisitions', '/staff-centre/crm'],
-  ['Landlords', '/staff-centre/landlord-leads'], ['Tenants & Bookings', '/staff-centre/receptionist'], ['Maintenance', '/staff-centre/maintenance'],
-  ['Finances', '/staff-centre/finance'], ['Reports', '/reports'], ['AI Command Centre', '/staff-centre/ai-command-centre'],
-  ['Messages', '/staff-centre/inbox'], ['Calendar', '/staff-centre/calendar'], ['Settings', '/settings'],
-]
 const ACTIONS = [
   ['Ask the AI', 'Get instant answers or run an analysis', '#ask-grok', CYAN],
   ['Find Properties', 'Search and qualify new opportunities', '/staff-centre/client-properties', GREEN],
@@ -81,23 +75,7 @@ export default function AICommandCentre() {
         <span style={{ marginLeft: 'auto' }}>{dt}</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '200px minmax(0,1fr)', minHeight: 'calc(100vh - 80px)' }}>
-        {/* sidebar */}
-        <nav style={{ borderRight: `1px solid ${LINE}`, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {NAV.map(([label, href]) => {
-            const active = label === 'AI Command Centre'
-            return (
-              <Link key={label} href={href} style={{ padding: '9px 12px', borderRadius: 8, color: active ? CYAN : MUTED, background: active ? '#E3F4FC' : 'transparent', textDecoration: 'none', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
-                {label}
-                {label === 'AI Command Centre' && <span style={{ fontSize: 10, background: GREEN, color: '#fff', borderRadius: 999, padding: '1px 7px' }}>New</span>}
-              </Link>
-            )
-          })}
-          <div style={{ marginTop: 'auto', borderRadius: 12, padding: 16, background: 'linear-gradient(160deg,#1B2F6E,#2F6DB5)', textAlign: 'center', fontWeight: 800, fontSize: 15 }}>
-            Build Wealth<br />Through Property
-            <div style={{ fontSize: 11, marginTop: 8, letterSpacing: 2 }}>NOVOURQ</div>
-          </div>
-        </nav>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', minHeight: 'calc(100vh - 80px)' }}>
 
         {/* main */}
         <div style={{ padding: 16, display: 'grid', gap: 12, minWidth: 0 }}>
