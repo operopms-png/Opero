@@ -6,8 +6,8 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase, getAccountId } from '../../../lib/supabase'
 
-const BG = '#050B1F', PANEL = '#0B1733', LINE = 'rgba(137,207,240,.22)', CYAN = '#89CFF0', BLUE = '#2F6DB5'
-const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#8FA3C7', TXT = '#E8F1FF'
+const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
+const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#667085', TXT = '#101828'
 const panel: React.CSSProperties = { background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, padding: 14, minWidth: 0 }
 const NAV = [
   ['Dashboard', '/staff-centre/oversight'], ['Properties', '/staff-centre/client-properties'], ['Leads & Acquisitions', '/staff-centre/crm'],
@@ -86,7 +86,7 @@ export default function AICommandCentre() {
           {NAV.map(([label, href]) => {
             const active = label === 'AI Command Centre'
             return (
-              <Link key={label} href={href} style={{ padding: '9px 12px', borderRadius: 8, color: active ? TXT : MUTED, background: active ? 'rgba(47,109,181,.35)' : 'transparent', textDecoration: 'none', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+              <Link key={label} href={href} style={{ padding: '9px 12px', borderRadius: 8, color: active ? CYAN : MUTED, background: active ? '#E3F4FC' : 'transparent', textDecoration: 'none', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
                 {label}
                 {label === 'AI Command Centre' && <span style={{ fontSize: 10, background: GREEN, color: '#fff', borderRadius: 999, padding: '1px 7px' }}>New</span>}
               </Link>
@@ -143,13 +143,13 @@ export default function AICommandCentre() {
             <div style={panel}>
               <Head t="Property Locations" right={<span style={{ color: MUTED, fontSize: 11 }}>Jamaica · UK</span>} />
               <svg viewBox="0 0 200 110" style={{ width: '100%', height: 120 }}>
-                <path d="M10 60 Q40 40 80 48 Q120 36 160 50 Q190 58 186 66 Q160 78 120 74 Q80 84 40 76 Q14 74 10 60Z" fill="#14305E" stroke={CYAN} strokeOpacity=".5" />
+                <path d="M10 60 Q40 40 80 48 Q120 36 160 50 Q190 58 186 66 Q160 78 120 74 Q80 84 40 76 Q14 74 10 60Z" fill="#DCEBFA" stroke={BLUE} strokeOpacity=".6" />
               </svg>
               <NotConnected text="No property locations to show" />
             </div>
             <div style={panel}>
               <Head t="Ask NOVOURQ AI" right={<span style={{ fontSize: 10, background: BLUE, borderRadius: 999, padding: '1px 8px' }}>Beta</span>} />
-              <div style={{ background: '#0F1F45', borderRadius: 10, padding: 10, fontSize: 12, color: TXT }}>
+              <div style={{ background: '#EEF3FC', borderRadius: 10, padding: 10, fontSize: 12, color: TXT }}>
                 Good day{userName ? `, ${userName.split(' ')[0].split('@')[0]}` : ''}. Pick a suggestion or type a question below.
               </div>
               <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
@@ -158,7 +158,7 @@ export default function AICommandCentre() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <input placeholder="Type your request..." style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#0F1F45', color: TXT, fontSize: 12 }} />
+                <input placeholder="Type your request..." style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#EEF3FC', color: TXT, fontSize: 12 }} />
                 <Link href="/staff-centre/ask-grok" style={{ padding: '8px 12px', borderRadius: 8, background: BLUE, color: '#fff', textDecoration: 'none', fontSize: 12 }}>Send</Link>
               </div>
             </div>
