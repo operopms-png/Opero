@@ -119,7 +119,7 @@ export default function AICommandCentre() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
-            {(more ? [
+            {((more ? [
               ['Units', '/pm?tab=Units', `${more.units.occupied} of ${more.units.total} occupied`, ''],
               ['Landlords', '/pm?tab=Landlords', `${more.landlords.count} landlords`, `${more.landlords.missingBank} missing bank details`],
               ['Tenants', '/pm?tab=Tenants', `${more.tenants.active} active`, `${more.tenants.total} in total`],
@@ -154,7 +154,7 @@ export default function AICommandCentre() {
             ))}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
-            {(pf ? [
+            {((pf ? [
               ['Leases', '/pm?tab=Leases', `${pf.leases.ending60} ending in 60 days`, `${pf.leases.expired} expired`],
               ['Vacancies', '/pm?tab=Vacancies', `${pf.vacancies.vacant} vacant`, `${pf.vacancies.occupied} of ${pf.vacancies.total} occupied`],
               ['Rent this month', '/pm?tab=Rent', `£${pf.rent.collected.toLocaleString('en-GB')} collected`, `${pf.rent.overdue} overdue · £${pf.rent.due.toLocaleString('en-GB')} due`],
