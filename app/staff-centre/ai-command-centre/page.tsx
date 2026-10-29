@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase, getAccountId } from '../../../lib/supabase'
+import GrokPanel from '../../../components/GrokPanel'
 
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
 const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#667085', TXT = '#101828'
@@ -16,7 +17,7 @@ const NAV = [
   ['Messages', '/staff-centre/inbox'], ['Calendar', '/staff-centre/calendar'], ['Settings', '/settings'],
 ]
 const ACTIONS = [
-  ['Ask the AI', 'Get instant answers or run an analysis', '/staff-centre/ask-grok', CYAN],
+  ['Ask the AI', 'Get instant answers or run an analysis', '#ask-grok', CYAN],
   ['Find Properties', 'Search and qualify new opportunities', '/staff-centre/client-properties', GREEN],
   ['Run a Deal Analysis', 'Check returns, costs and risks', '/invest', PURPLE],
   ['Create a Report', 'Financial, operational or custom', '/reports', BLUE],
@@ -147,20 +148,8 @@ export default function AICommandCentre() {
               </svg>
               <NotConnected text="No property locations to show" />
             </div>
-            <div style={panel}>
-              <Head t="Ask NOVOURQ AI" right={<span style={{ fontSize: 10, background: BLUE, borderRadius: 999, padding: '1px 8px' }}>Beta</span>} />
-              <div style={{ background: '#EEF3FC', borderRadius: 10, padding: 10, fontSize: 12, color: TXT }}>
-                Good day{userName ? `, ${userName.split(' ')[0].split('@')[0]}` : ''}. Pick a suggestion or type a question below.
-              </div>
-              <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
-                {[['Find property opportunities', '/staff-centre/client-properties'], ['Run a deal analysis', '/invest'], ['Check upcoming lease expiries', '/staff-centre/ask-grok'], ['Generate a financial report', '/reports']].map(([t, h]) => (
-                  <Link key={t} href={h} style={{ color: TXT, fontSize: 12, textDecoration: 'none', border: `1px solid ${LINE}`, borderRadius: 8, padding: '7px 10px' }}>{t}</Link>
-                ))}
-              </div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <input placeholder="Type your request..." style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#EEF3FC', color: TXT, fontSize: 12 }} />
-                <Link href="/staff-centre/ask-grok" style={{ padding: '8px 12px', borderRadius: 8, background: BLUE, color: '#fff', textDecoration: 'none', fontSize: 12 }}>Send</Link>
-              </div>
+            <div id="ask-grok" style={{ minWidth: 0 }}>
+              <GrokPanel />
             </div>
           </div>
 
