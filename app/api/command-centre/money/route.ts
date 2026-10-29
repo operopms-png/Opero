@@ -10,12 +10,12 @@ export async function GET(req: NextRequest) {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
   const [inv, appr] = await Promise.all([
     db.from('invoices').select('status,due_date,paid_at,total,currency').eq('business_id', biz),
-    db.from('approvals').select('status,decided_at,amount,currency').eq('business_id', biz),
+    db.from('approvals').select('status,amount,currency').eq('business_id', biz),
   ])
   const invoices = (inv.data ?? []) as any[]
   const unpaid = invoices.filter(i => !i.paid_at && !/paid|cancel|void|draft/i.test(i.status || ''))
   const approvals = (appr.data ?? []) as any[]
-  const pending = approvals.filter(a => !a.decided_at && !/approved|rejected|declined|cancel/i.test(a.status || ''))
+  const pending = approvals.filter(a => a.status === 'pending')
   return NextResponse.json({
     invoices: {
       unpaid: unpaid.length,
