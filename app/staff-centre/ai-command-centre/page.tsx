@@ -1,144 +1,179 @@
 'use client'
 // Staff Centre → Dashboard → AI Command Centre.
-// Shows the AI agents set up in ai_staff (the Grok bots), their status, what
-// they do and when they hand over to a person, plus the Ask Grok panel.
-// Only real data is shown: anything not yet connected says so instead of a number.
+// Copies the supplied reference dashboard layout and colours. Figures come from
+// the records where they exist; anything not yet connected says so.
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase, getAccountId } from '../../../lib/supabase'
-import GrokPanel from '../../../components/GrokPanel'
 
-const C = { ink: '#191815', navy: '#1B2F6E', blue: '#89CFF0', muted: '#667085', line: '#E4E7EC', bg: '#F5F7FB', green: '#067647', greenBg: '#ECFDF3', amber: '#B54708', amberBg: '#FFFAEB', grey: '#667085', greyBg: '#F2F4F7' }
-const card: React.CSSProperties = { background: '#fff', border: '1px solid ' + C.line, borderRadius: 12 }
-
-type Agent = {
-  id: string
-  name: string
-  job_role: string
-  responsibilities: string | null
-  escalation: string | null
-  access: string | null
-  status: 'active' | 'not_set_up' | 'paused'
-  grok_bot: string | null
-  created_at?: string
-}
-
-const STATUS: Record<Agent['status'], { label: string; fg: string; bg: string }> = {
-  active: { label: 'Active', fg: C.green, bg: C.greenBg },
-  paused: { label: 'Paused', fg: C.amber, bg: C.amberBg },
-  not_set_up: { label: 'Not set up', fg: C.grey, bg: C.greyBg },
-}
-
-const ACTIONS = [
-  { href: '/staff-centre/ask-grok', title: 'Ask the AI', desc: 'Instant answers from your records', color: C.navy },
-  { href: '/staff-centre/client-properties', title: 'Find Properties', desc: 'Search and review your properties', color: '#2F6DB5' },
-  { href: '/invest', title: 'Run a Deal Analysis', desc: 'Check returns, costs and risks', color: '#7A4FB0' },
-  { href: '/reports', title: 'Create a Report', desc: 'Financial and operational reports', color: '#138A62' },
+const BG = '#050B1F', PANEL = '#0B1733', LINE = 'rgba(137,207,240,.22)', CYAN = '#89CFF0', BLUE = '#2F6DB5'
+const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#8FA3C7', TXT = '#E8F1FF'
+const panel: React.CSSProperties = { background: PANEL, border: `1px solid ${LINE}`, borderRadius: 12, padding: 14, minWidth: 0 }
+const NAV = [
+  ['Dashboard', '/staff-centre/oversight'], ['Properties', '/staff-centre/client-properties'], ['Leads & Acquisitions', '/staff-centre/crm'],
+  ['Landlords', '/staff-centre/landlord-leads'], ['Tenants & Bookings', '/staff-centre/receptionist'], ['Maintenance', '/staff-centre/maintenance'],
+  ['Finances', '/staff-centre/finance'], ['Reports', '/reports'], ['AI Command Centre', '/staff-centre/ai-command-centre'],
+  ['Messages', '/staff-centre/inbox'], ['Calendar', '/staff-centre/calendar'], ['Settings', '/settings'],
 ]
+const ACTIONS = [
+  ['Ask the AI', 'Get instant answers or run an analysis', '/staff-centre/ask-grok', CYAN],
+  ['Find Properties', 'Search and qualify new opportunities', '/staff-centre/client-properties', GREEN],
+  ['Run a Deal Analysis', 'Check returns, costs and risks', '/invest', PURPLE],
+  ['Create a Report', 'Financial, operational or custom', '/reports', BLUE],
+]
+type Agent = { id: string; name: string; job_role: string; status: 'active' | 'not_set_up' | 'paused'; responsibilities: string | null }
+
+function Head({ t, right }: { t: string; right?: React.ReactNode }) {
+  return <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}><div style={{ fontWeight: 700, fontSize: 14, color: TXT }}>{t}</div>{right}</div>
+}
+function NotConnected({ text = 'Not connected yet' }: { text?: string }) {
+  return <div style={{ color: MUTED, fontSize: 12, padding: '26px 0', textAlign: 'center' }}>{text}</div>
+}
 
 export default function AICommandCentre() {
+  const [userName, setUserName] = useState('')
   const [agents, setAgents] = useState<Agent[] | null>(null)
-  const [agentError, setAgentError] = useState('')
-  const [propertyCount, setPropertyCount] = useState<number | null>(null)
-  const [propertyError, setPropertyError] = useState('')
+  const [propCount, setPropCount] = useState<number | null>(null)
+  const [now, setNow] = useState(new Date())
+  const [q, setQ] = useState('')
 
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t) }, [])
   useEffect(() => {
-    let cancelled = false
-    async function load() {
-      const { data, error } = await supabase.from('ai_staff').select('*').order('created_at', { ascending: true })
-      if (cancelled) return
-      if (error) setAgentError(error.message)
-      setAgents((data ?? []) as Agent[])
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) { setPropertyError('Not signed in'); return }
+    let live = true
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!live) return
+      if (user) setUserName((user.user_metadata?.full_name as string) || user.email || '')
+      const { data } = await supabase.from('ai_staff').select('id,name,job_role,status,responsibilities').order('created_at', { ascending: true })
+      if (live) setAgents((data ?? []) as Agent[])
+      if (user) {
         const uid = await getAccountId(user)
-        const { count, error: pErr } = await supabase.from('properties').select('id', { count: 'exact', head: true }).eq('user_id', uid)
-        if (cancelled) return
-        if (pErr) setPropertyError(pErr.message); else setPropertyCount(count ?? 0)
-      } catch (e: any) {
-        if (!cancelled) setPropertyError(e?.message || 'Could not load properties')
+        const { count } = await supabase.from('properties').select('id', { count: 'exact', head: true }).eq('user_id', uid)
+        if (live) setPropCount(count ?? 0)
       }
-    }
-    load()
-    return () => { cancelled = true }
+    })()
+    return () => { live = false }
   }, [])
 
-  const activeCount = (agents ?? []).filter(a => a.status === 'active').length
-  const online = activeCount > 0
+  const online = (agents ?? []).some(a => a.status === 'active')
+  const dt = now.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', padding: '24px 28px', fontFamily: 'Figtree, Arial, sans-serif', color: C.ink }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: C.navy }}>AI Command Centre</h1>
-          <p style={{ margin: '6px 0 0', fontSize: 14, color: C.muted }}>Your AI-powered real estate operations hub. Get insights, take action and stay in control.</p>
+    <div style={{ background: BG, color: TXT, minHeight: '100vh', fontFamily: 'Figtree, Arial, sans-serif', fontSize: 13 }}>
+      {/* top bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '10px 18px', borderBottom: `1px solid ${LINE}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 210 }}>
+          <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: .5, color: TXT }}>NOVOURQ</div>
+          <div style={{ fontSize: 9, color: MUTED, letterSpacing: 1 }}>REAL ESTATE · JAMAICA & UK</div>
         </div>
-        <div style={{ ...card, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 999, background: online ? '#12B76A' : '#98A2B3' }} />
-          {agents === null ? 'Checking agents…' : online ? `${activeCount} AI agent${activeCount === 1 ? '' : 's'} working in the background` : 'No AI agents active'}
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search properties, landlords, tenants, deals, or ask the AI..."
+          onKeyDown={e => { if (e.key === 'Enter' && q.trim()) window.location.href = `/staff-centre/ask-grok` }}
+          style={{ flex: 1, maxWidth: 620, padding: '9px 14px', borderRadius: 8, border: `1px solid ${LINE}`, background: PANEL, color: TXT, fontSize: 13, fontFamily: 'inherit' }} />
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span style={{ width: 34, height: 34, borderRadius: 999, border: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔔</span>
+          <div style={{ textAlign: 'right' }}><div style={{ fontWeight: 700 }}>{userName || 'Signed in'}</div><div style={{ color: MUTED, fontSize: 11 }}>Staff</div></div>
         </div>
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginBottom: 16 }}>
-        {ACTIONS.map(a => (
-          <Link key={a.title} href={a.href} style={{ ...card, padding: 16, textDecoration: 'none', color: C.ink, borderLeft: `4px solid ${a.color}` }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: a.color }}>{a.title}</div>
-            <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>{a.desc}</div>
-          </Link>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 18px', fontSize: 11, color: MUTED }}>
+        <span style={{ width: 7, height: 7, borderRadius: 999, background: online ? GREEN : '#667085' }} />
+        AI Command Centre {online ? 'Online' : 'Offline'}
+        <span style={{ marginLeft: 'auto' }}>{dt}</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginBottom: 16 }}>
-        <Kpi label="Total Properties" value={propertyCount} error={propertyError} />
-        <Kpi label="Active Leads" value={null} note="Not connected yet" />
-        <Kpi label="Monthly Revenue" value={null} note="Not connected yet" />
-        <Kpi label="Occupancy Rate" value={null} note="Not connected yet" />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(300px, 1fr)', gap: 16, alignItems: 'start' }}>
-        <div style={{ ...card, padding: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>AI Agents</div>
-            <Link href="/settings" style={{ fontSize: 13, color: C.navy, fontWeight: 600 }}>Manage in Settings</Link>
-          </div>
-          {agents === null && <div style={{ color: C.muted, fontSize: 14 }}>Loading agents…</div>}
-          {agentError && <div style={{ color: '#B42318', fontSize: 14 }}>Could not load agents: {agentError}</div>}
-          {agents !== null && !agentError && agents.length === 0 && (
-            <div style={{ color: C.muted, fontSize: 14, padding: '18px 0' }}>No AI agents set up yet. Add them under Settings → Team Management.</div>
-          )}
-          {(agents ?? []).map(a => {
-            const s = STATUS[a.status] ?? STATUS.not_set_up
+      <div style={{ display: 'grid', gridTemplateColumns: '200px minmax(0,1fr)', minHeight: 'calc(100vh - 80px)' }}>
+        {/* sidebar */}
+        <nav style={{ borderRight: `1px solid ${LINE}`, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {NAV.map(([label, href]) => {
+            const active = label === 'AI Command Centre'
             return (
-              <div key={a.id} style={{ border: '1px solid ' + C.line, borderRadius: 10, padding: 14, marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15 }}>{a.name} <span style={{ fontWeight: 400, color: C.muted, fontSize: 13 }}>· {a.job_role}</span></div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: s.fg, background: s.bg, padding: '3px 10px', borderRadius: 999 }}>{s.label}</span>
-                </div>
-                {a.responsibilities && <div style={{ fontSize: 13, color: C.ink, marginTop: 8 }}><strong>Does:</strong> {a.responsibilities}</div>}
-                {a.escalation && <div style={{ fontSize: 13, color: C.ink, marginTop: 4 }}><strong>Hands over to a person when:</strong> {a.escalation}</div>}
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>{a.grok_bot ? `Grok bot: ${a.grok_bot}` : 'No Grok bot linked'}</div>
-              </div>
+              <Link key={label} href={href} style={{ padding: '9px 12px', borderRadius: 8, color: active ? TXT : MUTED, background: active ? 'rgba(47,109,181,.35)' : 'transparent', textDecoration: 'none', fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+                {label}
+                {label === 'AI Command Centre' && <span style={{ fontSize: 10, background: GREEN, color: '#fff', borderRadius: 999, padding: '1px 7px' }}>New</span>}
+              </Link>
             )
           })}
-        </div>
+          <div style={{ marginTop: 'auto', borderRadius: 12, padding: 16, background: 'linear-gradient(160deg,#1B2F6E,#2F6DB5)', textAlign: 'center', fontWeight: 800, fontSize: 15 }}>
+            Build Wealth<br />Through Property
+            <div style={{ fontSize: 11, marginTop: 8, letterSpacing: 2 }}>NOVOURQ</div>
+          </div>
+        </nav>
 
-        <div>
-          <GrokPanel />
+        {/* main */}
+        <div style={{ padding: 16, display: 'grid', gap: 12, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 700 }}>AI Command Centre</div>
+              <div style={{ color: MUTED, fontSize: 12 }}>Your AI-powered real estate operations hub. Get insights, take action and stay in control.</div>
+            </div>
+            <div style={{ color: MUTED, fontSize: 12, maxWidth: 260 }}>Your AI agents are working behind the scenes to keep your business moving forward.</div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
+            {ACTIONS.map(([t, d, href, c]) => (
+              <Link key={t} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, borderColor: c }}>
+                <div style={{ fontWeight: 700, color: c }}>{t}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 4 }}>{d}</div>
+              </Link>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
+            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Total Properties</div><div style={{ fontSize: 26, fontWeight: 800 }}>{propCount ?? '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>Active properties</div></div>
+            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Active Leads</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
+            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Monthly Revenue</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
+            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Occupancy Rate</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
+            <div style={panel}>
+              <Head t="AI Agent Activity" right={<Link href="/settings" style={{ color: CYAN, fontSize: 11 }}>View all</Link>} />
+              {agents === null && <NotConnected text="Loading agents…" />}
+              {agents !== null && agents.length === 0 && <NotConnected text="No AI agents set up yet" />}
+              {(agents ?? []).map(a => (
+                <div key={a.id} style={{ padding: '8px 0', borderBottom: `1px solid ${LINE}` }}>
+                  <div style={{ color: CYAN, fontWeight: 600 }}>{a.name} <span style={{ color: a.status === 'active' ? GREEN : MUTED, fontSize: 11 }}>· {a.status === 'active' ? 'Live' : a.status === 'paused' ? 'Paused' : 'Not set up'}</span></div>
+                  <div style={{ color: MUTED, fontSize: 11 }}>{a.responsibilities ?? a.job_role}</div>
+                </div>
+              ))}
+            </div>
+            <div style={panel}>
+              <Head t="Portfolio Performance" right={<span style={{ color: MUTED, fontSize: 11 }}>Last 30 days</span>} />
+              <NotConnected text="No revenue or expense data connected yet" />
+            </div>
+            <div style={panel}>
+              <Head t="Property Locations" right={<span style={{ color: MUTED, fontSize: 11 }}>Jamaica · UK</span>} />
+              <svg viewBox="0 0 200 110" style={{ width: '100%', height: 120 }}>
+                <path d="M10 60 Q40 40 80 48 Q120 36 160 50 Q190 58 186 66 Q160 78 120 74 Q80 84 40 76 Q14 74 10 60Z" fill="#14305E" stroke={CYAN} strokeOpacity=".5" />
+              </svg>
+              <NotConnected text="No property locations to show" />
+            </div>
+            <div style={panel}>
+              <Head t="Ask NOVOURQ AI" right={<span style={{ fontSize: 10, background: BLUE, borderRadius: 999, padding: '1px 8px' }}>Beta</span>} />
+              <div style={{ background: '#0F1F45', borderRadius: 10, padding: 10, fontSize: 12, color: TXT }}>
+                Good day{userName ? `, ${userName.split(' ')[0].split('@')[0]}` : ''}. Pick a suggestion or type a question below.
+              </div>
+              <div style={{ display: 'grid', gap: 6, marginTop: 10 }}>
+                {[['Find property opportunities', '/staff-centre/client-properties'], ['Run a deal analysis', '/invest'], ['Check upcoming lease expiries', '/staff-centre/ask-grok'], ['Generate a financial report', '/reports']].map(([t, h]) => (
+                  <Link key={t} href={h} style={{ color: TXT, fontSize: 12, textDecoration: 'none', border: `1px solid ${LINE}`, borderRadius: 8, padding: '7px 10px' }}>{t}</Link>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                <input placeholder="Type your request..." style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${LINE}`, background: '#0F1F45', color: TXT, fontSize: 12 }} />
+                <Link href="/staff-centre/ask-grok" style={{ padding: '8px 12px', borderRadius: 8, background: BLUE, color: '#fff', textDecoration: 'none', fontSize: 12 }}>Send</Link>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
+            <div style={panel}><Head t="Top Property Opportunities" /><NotConnected text="No property opportunities yet" /></div>
+            <div style={panel}><Head t="Upcoming Tasks" /><NotConnected text="No upcoming tasks" /></div>
+            <div style={panel}><Head t="Financial Overview" /><NotConnected text="No financial data connected yet" /></div>
+            <div style={panel}><Head t="Recent Conversations" /><NotConnected text="No recent conversations" /></div>
+          </div>
+
+          <div style={{ textAlign: 'center', color: MUTED, fontSize: 11, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>NOVOURQ · Smart Properties. Stronger Returns. · Jamaica · UK</div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function Kpi({ label, value, note, error }: { label: string; value: number | null; note?: string; error?: string }) {
-  return (
-    <div style={{ background: '#fff', border: '1px solid ' + C.line, borderRadius: 12, padding: 16 }}>
-      <div style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: C.navy }}>
-        {value !== null ? value.toLocaleString('en-GB') : '—'}
-      </div>
-      <div style={{ fontSize: 12, color: error ? '#B42318' : C.muted, marginTop: 4 }}>{error ? `Could not load: ${error}` : note ?? ''}</div>
     </div>
   )
 }
