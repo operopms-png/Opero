@@ -43,6 +43,8 @@ export default function AICommandCentre() {
   const [fin2, setFin2] = useState<any>({})
   const [crmF, setCrmF] = useState<any>(null)
   const [sch, setSch] = useState<any>(null)
+  const [ppl, setPpl] = useState<any>(null)
+  const [pplErr, setPplErr] = useState('')
   const [schErr, setSchErr] = useState('')
   const [crmErr, setCrmErr] = useState('')
   const [moreErr, setMoreErr] = useState('')
@@ -58,6 +60,7 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/more').then(setMore).catch(e => setMoreErr(e.message)) }, [])
   useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => setFx(d?.rates ?? null)).catch(() => {}) }, [])
+  useEffect(() => { staffApi('/api/command-centre/people').then(setPpl).catch(e => setPplErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/schedule').then(setSch).catch(e => setSchErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/crm').then(setCrmF).catch(e => setCrmErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/money').then(setMoney).catch(e => setMoneyErr(e.message)) }, [])
@@ -132,6 +135,19 @@ export default function AICommandCentre() {
             ))}
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {([
+              ['Investors', '/staff-centre/investors', ppl ? `${ppl.investors.active} active` : (pplErr ? 'Could not load' : 'Loading…'), ppl ? `£${ppl.investors.invested.toLocaleString('en-GB')} invested · £${ppl.investors.paidBack.toLocaleString('en-GB')} paid back` : ''],
+              ['Partners', '/staff-centre/partners', ppl ? `${ppl.partners.active} active` : (pplErr ? 'Could not load' : 'Loading…'), ppl ? `${ppl.partners.referrals} referrals · ${ppl.partners.awaitingPayment} awaiting payment` : ''],
+              ['Owners', '/pm?tab=Landlords', ppl ? `${ppl.owners.count} owners` : (pplErr ? 'Could not load' : 'Loading…'), ''],
+            ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{sub}</div>
+              </Link>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {([
               ['Calendar', '/staff-centre/calendar', sch ? `${sch.calendar.shiftsThisWeek} shifts this week` : (schErr ? 'Could not load' : 'Loading…'), sch ? `${sch.calendar.staffScheduled} staff scheduled` : ''],
