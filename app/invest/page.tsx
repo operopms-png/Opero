@@ -51,10 +51,10 @@ const CONFIDENCE_COLORS: Record<string,{color:string;bg:string}> = {
   MISSING:      { color:'#9699A6', bg:'#E6E9EF' },
 }
 
-export default function InvestPage() {
+export default function InvestPage({ deckOnly = false }: { deckOnly?: boolean } = {}) {
   const [section, setSection] = useState('Deal Analyser')
   useEffect(() => {
-    const read = () => { const q = new URLSearchParams(window.location.search).get('section'); const want = q && SECTIONS.includes(q) ? q : 'Deal Analyser'; setSection(cur => { if (cur !== want) { setResult(null); setStrategy(null) } return want }) }
+    const read = () => { const q = new URLSearchParams(window.location.search).get('section'); const want = !deckOnly && q && SECTIONS.includes(q) ? q : 'Deal Analyser'; setSection(cur => { if (cur !== want) { setResult(null); setStrategy(null) } return want }) }
     read(); window.addEventListener('popstate', read); window.addEventListener('opero:nav', read)
     return () => { window.removeEventListener('popstate', read); window.removeEventListener('opero:nav', read) }
   }, [])
@@ -75,7 +75,7 @@ export default function InvestPage() {
   const [clientSaved, setClientSaved] = useState<string|null>(null)
   useEffect(() => {
     const cid = new URLSearchParams(window.location.search).get('client')
-    if (!cid) return
+    if (!cid || deckOnly) return
     ;(async () => {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/client-properties?id=' + encodeURIComponent(cid), { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } })
@@ -354,7 +354,7 @@ export default function InvestPage() {
         <h1 style={{fontSize:26,fontWeight:500,color:'#89CFF0',margin:'0 0 2px'}}>Invest</h1>
         <div style={{fontSize:13,color:'#89CFF0',marginBottom:12}}>Analyse deals, keep the ones worth comparing and track properties you are watching.</div>
         <div style={{display:'flex',gap:22}}>
-          {SECTIONS.map(s=>(
+          {(deckOnly?[]:SECTIONS).map(s=>(
             <button key={s} onClick={()=>goSection(s)} style={{padding:'8px 2px',marginBottom:-1,border:'none',borderBottom:'2px solid '+(section===s?BLUE:'transparent'),background:'none',color:section===s?'#323338':'#676879',fontSize:14,fontWeight:section===s?600:400,cursor:'pointer',fontFamily:'inherit'}}>{s}{s==='Saved Deals'&&savedDeals.length>0?` (${savedDeals.length})`:''}{s==='Watchlist'&&watchlist.length>0?` (${watchlist.length})`:''}</button>
           ))}
         </div>
