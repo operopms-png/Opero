@@ -61,6 +61,15 @@ export async function GET(req: NextRequest) {
   const name = (list: any[], id: string, f = 'name') => list.find((x: any) => x.id === id)?.[f] || null
   const pmProp = (id: string) => d.pmProps.find((p: any) => p.id === id), eaProp = (id: string) => d.eaProps.find((p: any) => p.id === id)
 
+  if (view === 'partner-payouts') {
+    const { data, error } = await db.from('partner_payouts').select('*').eq('user_id', c.businessId)
+    if (error) return bad(error.message, 500)
+    const rows = (data ?? []).map((r: any) => ({ ...r, overdue: !r.paid_date && !!r.due_date && r.due_date < T }))
+    const due = rows.filter((r: any) => !r.paid_date).sort((a: any, b: any) => String(a.due_date || '9').localeCompare(String(b.due_date || '9')))
+    const paid = rows.filter((r: any) => r.paid_date).sort((a: any, b: any) => b.paid_date.localeCompare(a.paid_date)).slice(0, 60)
+    return NextResponse.json({ today: T, due, paid })
+  }
+
   if (view === 'payouts') {
     const rows = [
       ...d.pmPay.map((p: any) => ({ ...p, module: 'pm', landlord: name(d.pmLl, p.landlord_id), phone: name(d.pmLl, p.landlord_id, 'phone'), property: pmProp(p.property_id)?.name || null, currency: pmCur(pmProp(p.property_id)) })),
@@ -131,6 +140,17 @@ export async function POST(req: NextRequest) {
   if (b.action === 'payout-paid') {
     const table = b.module === 'ea' ? 'estate_landlord_payments' : 'pm_landlord_payments'
     const { error } = await db.from(table).update({ paid_date: b.paid === false ? null : today() }).eq('id', id).eq('user_id', c.businessId)
+    return error ? bad(error.message, 500) : NextResponse.json({ ok: true })
+  }
+  if (b.action === 'partner-add') {
+    const name = String(b.payee_name || '').trim()
+    if (!name) return bad('Enter the partner or co-founder’s name.')
+    const type = b.payee_type === 'Co-founder' ? 'Co-founder' : 'Partner'
+    const { error } = await db.from('partner_payouts').insert({ user_id: c.businessId, payee_name: name, payee_type: type, amount: Number(b.amount) || 0, currency: String(b.currency || 'GBP'), due_date: b.due_date || null, notes: b.notes || null })
+    return error ? bad(error.message, 500) : NextResponse.json({ ok: true })
+  }
+  if (b.action === 'partner-paid') {
+    const { error } = await db.from('partner_payouts').update({ paid_date: b.paid === false ? null : today() }).eq('id', id).eq('user_id', c.businessId)
     return error ? bad(error.message, 500) : NextResponse.json({ ok: true })
   }
   if (b.action === 'rent-paid') {
