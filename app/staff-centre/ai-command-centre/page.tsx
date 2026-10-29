@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
 import PropertyLocationsPanel from '../../../components/ai/PropertyLocationsPanel'
-import { staffApi } from '../../../lib/staff-api'
+import { staffApi, money } from '../../../lib/staff-api'
 
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
 const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#667085', TXT = '#101828'
@@ -32,9 +32,12 @@ export default function AICommandCentre() {
   const [agents, setAgents] = useState<Agent[] | null>(null)
   const [propCount, setPropCount] = useState<number | null>(null)
   const [ops, setOps] = useState<any>(null)
+  const [fin, setFin] = useState<any>(null)
+  const [finErr, setFinErr] = useState('')
   const [opsErr, setOpsErr] = useState('')
   const [now, setNow] = useState(new Date())
   useEffect(() => { staffApi('/api/command-centre/operations').then(setOps).catch(e => setOpsErr(e.message)) }, [])
+  useEffect(() => { staffApi('/api/finance').then(setFin).catch(e => setFinErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t) }, [])
@@ -118,7 +121,7 @@ export default function AICommandCentre() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
             <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Total Properties</div><div style={{ fontSize: 26, fontWeight: 800 }}>{propCount ?? '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>Active properties</div></div>
             <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Active Leads</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
-            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Monthly Revenue</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
+            <Link href="/staff-centre/finance" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}><div style={{ color: MUTED, fontSize: 12 }}>Monthly Revenue →</div><div style={{ fontSize: 26, fontWeight: 800 }}>{fin ? money(fin.moneyIn, 'GBP') : '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>{finErr ? 'Could not load' : fin ? `Profit ${money(fin.profit, 'GBP')} this month` : 'Loading…'}</div></Link>
             <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Occupancy Rate</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
           </div>
 
@@ -136,7 +139,25 @@ export default function AICommandCentre() {
             </div>
             <div style={panel}>
               <Head t="Portfolio Performance" right={<span style={{ color: MUTED, fontSize: 11 }}>Last 30 days</span>} />
-              <NotConnected text="No revenue or expense data connected yet" />
+              {fin ? (() => {
+                const max = Math.max(1, ...fin.trend.flatMap((t: any) => [t.in, t.out]))
+                return (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 130, borderBottom: `1px solid ${LINE}` }}>
+                      {fin.trend.map((t: any) => (
+                        <div key={t.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                          <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: '100%' }}>
+                            <div title={`In ${money(t.in, 'GBP')}`} style={{ width: 10, height: `${(t.in / max) * 100}%`, background: BLUE, borderRadius: '3px 3px 0 0' }} />
+                            <div title={`Out ${money(t.out, 'GBP')}`} style={{ width: 10, height: `${(t.out / max) * 100}%`, background: LINE, borderRadius: '3px 3px 0 0' }} />
+                          </div>
+                          <div style={{ fontSize: 10, color: MUTED, marginTop: 4 }}>{t.month.slice(5)}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, fontSize: 11, color: MUTED, marginTop: 8 }}><span style={{ color: BLUE }}>■ Money in</span><span>■ Money out</span></div>
+                  </div>
+                )
+              })() : <NotConnected text={finErr ? 'Could not load finance' : 'Loading…'} />}
             </div>
             <PropertyLocationsPanel />
             </div>
@@ -144,7 +165,17 @@ export default function AICommandCentre() {
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
             <div style={panel}><Head t="Top Property Opportunities" /><NotConnected text="No property opportunities yet" /></div>
             <div style={panel}><Head t="Upcoming Tasks" /><NotConnected text="No upcoming tasks" /></div>
-            <div style={panel}><Head t="Financial Overview" /><NotConnected text="No financial data connected yet" /></div>
+            <Link href="/staff-centre/finance" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+              <Head t="Financial Overview →" />
+              {fin ? (
+                <div style={{ display: 'grid', gap: 6, fontSize: 13 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: MUTED }}>Money in</span><b>{money(fin.moneyIn, 'GBP')}</b></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: MUTED }}>Money out</span><b>{money(fin.moneyOut, 'GBP')}</b></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: MUTED }}>Owner payouts due</span><b>{money(fin.payoutsDue, 'GBP')}</b></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: MUTED }}>Rent roll (per month)</span><b>{money(fin.rentRoll, 'GBP')}</b></div>
+                </div>
+              ) : <div style={{ color: MUTED, fontSize: 12, padding: '26px 0', textAlign: 'center' }}>{finErr ? 'Could not load finance' : 'Loading…'}</div>}
+            </Link>
             <div style={panel}><Head t="Recent Conversations" /><NotConnected text="No recent conversations" /></div>
           </div>
 
