@@ -60,6 +60,12 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/invoices', label: 'Invoices' },
     { href: '/staff-centre/approvals', label: 'Approvals', badge: 'approvals' },
   ] },
+  { label: 'Reports', icon: 'revenue', tabs: [
+    { href: '/pm?tab=Reports', label: 'Portfolio Reports', requiresModule: 'pm' },
+    { href: '/pm?tab=Unit%20Profit', label: 'Unit Profit', requiresModule: 'pm' },
+    { href: '/pm?tab=Landlord%20Reports', label: 'Landlord Reports', requiresModule: 'pm' },
+    { href: '/pm?tab=Accounting%20Export', label: 'Accounting Export', requiresModule: 'pm' },
+  ] },
   { label: 'Operations', icon: 'wrench', tabs: [
     { href: '/staff-centre/maintenance', label: 'Maintenance Board', scTab: 'maintenance', badge: 'maintenance' },
     { href: '/staff-centre/compliance', label: 'Compliance', scTab: 'compliance', badge: 'compliance' },
