@@ -30,6 +30,10 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/invest', label: 'Deal Analyser', requiresModule: 'invest' },
     { href: '/invest?section=Watchlist', label: 'Watchlist', requiresModule: 'invest' },
   ] },
+  { label: 'Owners & Tenants', icon: 'users', tabs: [
+    { href: '/pm?tab=Landlords', label: 'Owners', requiresModule: 'pm' },
+    { href: '/pm?tab=Tenants', label: 'Tenants', requiresModule: 'pm' },
+  ] },
   { label: 'Partners & Investors', icon: 'users', tabs: [
     { href: '/staff-centre/partners', label: 'Partners', scTab: 'partners', badge: 'partners' },
     { href: '/staff-centre/investors', label: 'Investors', scTab: 'investors' },
