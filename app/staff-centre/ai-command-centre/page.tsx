@@ -36,6 +36,8 @@ export default function AICommandCentre() {
   const [dash, setDash] = useState<any>(null)
   const [cards, setCards] = useState<any>(null)
   const [pf, setPf] = useState<any>(null)
+  const [more, setMore] = useState<any>(null)
+  const [moreErr, setMoreErr] = useState('')
   const [pfErr, setPfErr] = useState('')
   const [cardsErr, setCardsErr] = useState('')
   const [dashErr, setDashErr] = useState('')
@@ -46,6 +48,7 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/finance').then(setFin).catch(e => setFinErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/cards').then(setCards).catch(e => setCardsErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
+  useEffect(() => { staffApi('/api/command-centre/more').then(setMore).catch(e => setMoreErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/staff-dashboard?range=today').then(setDash).catch(e => setDashErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
@@ -113,6 +116,43 @@ export default function AICommandCentre() {
             ))}
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {(more ? [
+              ['Units', '/pm?tab=Units', `${more.units.occupied} of ${more.units.total} occupied`, ''],
+              ['Buildings', '/pm?tab=Buildings', `${more.buildings.count} buildings`, `${more.buildings.units} units`],
+              ['Landlords', '/pm?tab=Landlords', `${more.landlords.count} landlords`, `${more.landlords.missingBank} missing bank details`],
+              ['Tenants', '/pm?tab=Tenants', `${more.tenants.active} active`, `${more.tenants.total} in total`],
+              ['Furniture', '/pm?tab=Furniture', `${more.furniture.items} items`, `${more.furniture.poor} in poor condition`],
+              ['Renewals & Notices', '/pm?tab=Renewals%20%26%20Notices', `${more.renewals.ending60} due in 90 days`, ''],
+              ['Developments', '/dev', `${more.developments.active} active projects`, `£${more.developments.budget.toLocaleString('en-GB')} budget`],
+              ['Vacation Rentals', '/str', `${more.vacationRentals.bookable} bookable`, `${more.vacationRentals.total} properties`],
+              ['Tenant Checks & Right to Rent', '/pm?tab=Right%20to%20Rent', `${more.rightToRent.due} rechecks due`, `${more.rightToRent.pending} pending`],
+              ['HMO Rooms', '/pm?tab=HMO%20Rooms', `${more.hmo.rooms} rooms`, `${more.hmo.licence90} licences ending in 90 days`],
+              ['Deadlines', '/pm?tab=Deadlines', `${more.deadlines.in30} due in 30 days`, `${more.deadlines.expired} expired`],
+              ['Inspections', '/pm?tab=Inspections', `${more.inspections.next7} in next 7 days`, ''],
+              ['Inventories', '/pm?tab=Inventories', `${more.inventories.open} open`, ''],
+              ['Keys', '/pm?tab=Keys', `${more.keys.sets} key sets`, ''],
+              ['Utilities', '/pm?tab=Utilities', `${more.utilities.billsNext7} bills in next 7 days`, `£${more.utilities.monthly.toLocaleString('en-GB')} a month`],
+              ['Documents', '/pm?tab=Documents', `${more.documents.property + more.documents.company} documents`, `${more.documents.company} company`],
+              ['Company SOPs', '/pm?tab=Company%20SOPs', `${more.sops.count} SOPs`, ''],
+              ['Contract Templates', '/pm?tab=Contract%20Templates', `${more.templates.count} templates`, ''],
+              ['Audit Log', '/pm?tab=Audit%20Log', `${more.audit.last7} changes`, 'Last 7 days'],
+              ['Expenses', '/pm?tab=Expenses', `£${more.expenses.month.toLocaleString('en-GB')} this month`, `${more.expenses.count} recorded`],
+              ['Banking', '/pm?tab=Banking', `${more.banking.accounts} accounts`, `£${more.banking.balance.toLocaleString('en-GB')} (GBP)`],
+              ['Loans & Mortgages', '/pm?tab=Loans%20%26%20Mortgages', `${more.loans.count} loans`, ''],
+              ['Exchange Rates', '/pm?tab=Exchange%20Rates', 'Rates', ''],
+              ['Landlord Reports', '/pm?tab=Landlord%20Reports', `${more.reports.landlords} landlords`, ''],
+              ['Reports', '/pm?tab=Reports', `${more.reports.properties} properties`, ''],
+              ['Accounting Export', '/pm?tab=Accounting%20Export', `${more.reports.expenses} records`, ''],
+              ['Unit Profit', '/pm?tab=Unit%20Profit', `${more.units.total} units`, ''],
+            ] : [['More areas', '/pm', moreErr ? 'Could not load' : 'Loading…', '']]) as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 16, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{sub}</div>
+              </Link>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {(pf ? [
               ['Leases', '/pm?tab=Leases', `${pf.leases.ending60} ending in 60 days`, `${pf.leases.expired} expired`],
