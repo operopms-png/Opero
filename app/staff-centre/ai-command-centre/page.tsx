@@ -34,12 +34,15 @@ export default function AICommandCentre() {
   const [ops, setOps] = useState<any>(null)
   const [fin, setFin] = useState<any>(null)
   const [dash, setDash] = useState<any>(null)
+  const [cards, setCards] = useState<any>(null)
+  const [cardsErr, setCardsErr] = useState('')
   const [dashErr, setDashErr] = useState('')
   const [finErr, setFinErr] = useState('')
   const [opsErr, setOpsErr] = useState('')
   const [now, setNow] = useState(new Date())
   useEffect(() => { staffApi('/api/command-centre/operations').then(setOps).catch(e => setOpsErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/finance').then(setFin).catch(e => setFinErr(e.message)) }, [])
+  useEffect(() => { staffApi('/api/command-centre/cards').then(setCards).catch(e => setCardsErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/staff-dashboard?range=today').then(setDash).catch(e => setDashErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
@@ -123,9 +126,9 @@ export default function AICommandCentre() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
             <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Total Properties</div><div style={{ fontSize: 26, fontWeight: 800 }}>{propCount ?? '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>Active properties</div></div>
-            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Active Leads</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
+            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Active Leads</div><div style={{ fontSize: 26, fontWeight: 800 }}>{cards ? cards.leads.active : '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>{cardsErr ? 'Could not load' : cards ? 'Open leads in the sales pipeline' : 'Loading…'}</div></div>
             <Link href="/staff-centre/finance" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}><div style={{ color: MUTED, fontSize: 12 }}>Monthly Revenue →</div><div style={{ fontSize: 26, fontWeight: 800 }}>{fin ? money(fin.moneyIn, 'GBP') : '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>{finErr ? 'Could not load' : fin ? `Profit ${money(fin.profit, 'GBP')} this month` : 'Loading…'}</div></Link>
-            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Occupancy Rate</div><div style={{ fontSize: 26, fontWeight: 800 }}>—</div><div style={{ color: MUTED, fontSize: 11 }}>Not connected yet</div></div>
+            <div style={panel}><div style={{ color: MUTED, fontSize: 12 }}>Occupancy Rate</div><div style={{ fontSize: 26, fontWeight: 800 }}>{cards?.occupancy?.pct != null ? `${cards.occupancy.pct}%` : '—'}</div><div style={{ color: MUTED, fontSize: 11 }}>{cardsErr ? 'Could not load' : cards ? `${cards.occupancy.occupied} of ${cards.occupancy.units} units occupied` : 'Loading…'}</div></div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 10, alignItems: 'start' }}>
@@ -166,8 +169,32 @@ export default function AICommandCentre() {
             </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
-            <div style={panel}><Head t="Top Property Opportunities" /><NotConnected text="No property opportunities yet" /></div>
-            <div style={panel}><Head t="Upcoming Tasks" /><NotConnected text="No upcoming tasks" /></div>
+            <Link href="/staff-centre/client-properties" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+              <Head t={`Top Property Opportunities${cards ? ` (${cards.opportunities.count})` : ''} →`} />
+              {!cards ? <NotConnected text={cardsErr ? 'Could not load' : 'Loading…'} /> : cards.opportunities.top.length === 0 ? <NotConnected text="No property opportunities yet" /> : (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {cards.opportunities.top.map((o: any) => (
+                    <div key={o.id} style={{ fontSize: 12, borderTop: `1px solid ${LINE}`, paddingTop: 6 }}>
+                      <b>{o.address || 'Property'}</b>{o.area ? <span style={{ color: MUTED }}> · {o.area}</span> : null}
+                      <div style={{ color: MUTED }}>{o.price ? `${o.currency || ''} ${Number(o.price).toLocaleString('en-GB')}${o.rent ? ' / month' : ''}` : 'Price not set'}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Link>
+            <Link href="/staff-centre/tasks" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+              <Head t={`Upcoming Tasks${cards ? ` (${cards.tasks.dueSoon})` : ''} →`} />
+              {!cards ? <NotConnected text={cardsErr ? 'Could not load' : 'Loading…'} /> : cards.tasks.next.length === 0 ? <NotConnected text="No upcoming tasks" /> : (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {cards.tasks.next.map((t: any, i: number) => (
+                    <div key={i} style={{ fontSize: 12, borderTop: `1px solid ${LINE}`, paddingTop: 6 }}>
+                      <b>{t.title}</b><div style={{ color: MUTED }}>Due {new Date(t.due + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                    </div>
+                  ))}
+                  {cards.tasks.overdue > 0 && <div style={{ fontSize: 12, color: '#B42318' }}>{cards.tasks.overdue} overdue</div>}
+                </div>
+              )}
+            </Link>
             <Link href="/staff-centre/finance" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
               <Head t="Financial Overview →" />
               {fin ? (
