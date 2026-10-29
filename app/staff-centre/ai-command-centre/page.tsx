@@ -33,11 +33,14 @@ export default function AICommandCentre() {
   const [propCount, setPropCount] = useState<number | null>(null)
   const [ops, setOps] = useState<any>(null)
   const [fin, setFin] = useState<any>(null)
+  const [dash, setDash] = useState<any>(null)
+  const [dashErr, setDashErr] = useState('')
   const [finErr, setFinErr] = useState('')
   const [opsErr, setOpsErr] = useState('')
   const [now, setNow] = useState(new Date())
   useEffect(() => { staffApi('/api/command-centre/operations').then(setOps).catch(e => setOpsErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/finance').then(setFin).catch(e => setFinErr(e.message)) }, [])
+  useEffect(() => { staffApi('/api/staff-dashboard?range=today').then(setDash).catch(e => setDashErr(e.message)) }, [])
   const [q, setQ] = useState('')
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(t) }, [])
@@ -176,7 +179,21 @@ export default function AICommandCentre() {
                 </div>
               ) : <div style={{ color: MUTED, fontSize: 12, padding: '26px 0', textAlign: 'center' }}>{finErr ? 'Could not load finance' : 'Loading…'}</div>}
             </Link>
-            <div style={panel}><Head t="Recent Conversations" /><NotConnected text="No recent conversations" /></div>
+            <Link href="/staff-centre/inbox" style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+              <Head t="Recent Conversations →" />
+              {!dash ? <NotConnected text={dashErr ? 'Could not load conversations' : 'Loading…'} /> : (
+                <div>
+                  <div style={{ fontSize: 22, fontWeight: 800 }}>{dash.hero?.messages?.n ?? 0} <span style={{ fontSize: 12, fontWeight: 500, color: MUTED }}>{dash.hero?.messages?.sub || 'unread'}</span></div>
+                  <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                    {(dash.activity ?? []).filter((a: any) => a.where === 'Website Chats').slice(0, 4).length === 0
+                      ? <div style={{ color: MUTED, fontSize: 12 }}>No recent website chats</div>
+                      : (dash.activity ?? []).filter((a: any) => a.where === 'Website Chats').slice(0, 4).map((a: any, i: number) => (
+                        <div key={i} style={{ fontSize: 12, borderTop: `1px solid ${LINE}`, paddingTop: 6 }}>{a.text}</div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </Link>
           </div>
 
           <div id="ask-grok" style={{ background: '#fff', border: '1px solid #D9E2F0', borderRadius: 12, padding: 16 }}>
