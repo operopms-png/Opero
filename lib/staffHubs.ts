@@ -10,7 +10,6 @@ export type Hub = { label: string; icon: string; tabs: HubTab[] }
 export const STAFF_HUBS: Hub[] = [
   { label: 'Dashboard', icon: 'trendingup', tabs: [{ href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' }] },
   { label: 'AI Command Centre', icon: 'sparkles', tabs: [
-    { href: '/staff-centre/ai-command-centre', label: 'AI Command Centre', scTab: 'oversight' },
     { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight' },
     { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Ask Grok', scTab: 'oversight' },
     { href: '/staff-centre/ai-command-centre/deal-analyser', label: 'Deal Analyser', requiresModule: 'invest' },
