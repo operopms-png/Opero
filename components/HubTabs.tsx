@@ -31,7 +31,7 @@ export default function HubTabs() {
   const allowed = (t: HubTab) => t.requiresModule ? roleModules.includes(t.requiresModule) : t.scTab ? scTabs.includes(t.scTab) : role !== 'Partner'
 
   const hub = hubFor(pathname, search)
-  const tabs = hub ? hub.tabs.filter(allowed) : []
+  const tabs = hub ? hub.tabs.filter(t => !t.hidden && allowed(t)) : []
   const show = tabs.length > 1
   const wantsCounts = show && tabs.some(t => t.badge)
 
