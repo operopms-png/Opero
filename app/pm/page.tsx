@@ -11,6 +11,8 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import { SITE_HOST } from '@/lib/brand'
 
+// Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
+const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
 const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
@@ -1019,7 +1021,7 @@ function PMPageInner() {
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
       {/* Sidebar */}
-      <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:['Landlords','Tenants'].includes(tab)?'none':'flex',flexDirection:'column',flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
+      <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:NO_INNER_MENU.includes(tab)?'none':'flex',flexDirection:'column',flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
         <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)'}}>
           <div style={{width:8,height:8,background:'#2F6DB5',borderRadius:'50%'}}/>
           <span style={{fontSize:14,fontWeight:700,color:'#1D4E89'}}>Property Operations</span>
