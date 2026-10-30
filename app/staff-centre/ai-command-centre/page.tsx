@@ -45,6 +45,8 @@ export default function AICommandCentre() {
   const [sch, setSch] = useState<any>(null)
   const [ppl, setPpl] = useState<any>(null)
   const [tm, setTm] = useState<any>(null)
+  const [ib, setIb] = useState<any>(null)
+  const [ibErr, setIbErr] = useState('')
   const [tmErr, setTmErr] = useState('')
   const [pplErr, setPplErr] = useState('')
   const [schErr, setSchErr] = useState('')
@@ -62,6 +64,7 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/more').then(setMore).catch(e => setMoreErr(e.message)) }, [])
   useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => setFx(d?.rates ?? null)).catch(() => {}) }, [])
+  useEffect(() => { staffApi('/api/command-centre/inbox').then(setIb).catch(e => setIbErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/team').then(setTm).catch(e => setTmErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/people').then(setPpl).catch(e => setPplErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/schedule').then(setSch).catch(e => setSchErr(e.message)) }, [])
@@ -138,6 +141,21 @@ export default function AICommandCentre() {
             ))}
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {([
+              ['Inbox', '/staff-centre/inbox', ib ? `${ib.conversations.total} conversations` : (ibErr ? 'Could not load' : 'Loading…'), ''],
+              ['Email', '/staff-centre/email', ib ? `${ib.email.unseen} unread` : (ibErr ? 'Could not load' : 'Loading…'), ib ? `${ib.email.mailboxes} mailboxes · ${ib.email.aiMode} with AI on` : ''],
+              ['Airbnb Inbox', '/staff-centre/airbnb', ib ? `${ib.airbnb.open} open` : (ibErr ? 'Could not load' : 'Loading…'), ib ? `${ib.airbnb.total} threads` : ''],
+              ['Website Chats', '/staff-centre/website-chats', ib ? `${ib.websiteChats.unread} unread` : (ibErr ? 'Could not load' : 'Loading…'), ib ? `${ib.websiteChats.total} chats` : ''],
+              ['AI Assistant', '/staff-centre/receptionist', ib ? `${ib.aiAssistant.handled7d} handled this week` : (ibErr ? 'Could not load' : 'Loading…'), ''],
+            ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{sub}</div>
+              </Link>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {([
               ['Portal Access', '/staff-centre/portal-access', tm ? `${tm.portals.live} of ${tm.portals.total} live` : (tmErr ? 'Could not load' : 'Loading…'), tm ? 'Client portals' : ''],
