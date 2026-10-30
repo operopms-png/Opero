@@ -96,9 +96,20 @@ const ALL_TABS = STAFF_HUBS.flatMap(h => h.tabs)
 export function tabMatches(tab: HubTab, pathname: string, search: string) {
   const [p, q] = tab.href.split('?')
   if (pathname !== p && !pathname.startsWith(p + '/')) return false
-  const cur = new URLSearchParams(search).get('section')
-  if (q) return new URLSearchParams(q).get('section') === cur
-  return !ALL_TABS.some(t => { const [p2, q2] = t.href.split('?'); return p2 === p && q2 && new URLSearchParams(q2).get('section') === cur })
+  const sp = new URLSearchParams(search)
+  const KEYS = ['section', 'tab']
+  if (q) {
+    const want = new URLSearchParams(q)
+    const key = KEYS.find(k => want.has(k))
+    return key ? sp.get(key) === want.get(key) : true
+  }
+  // a link with no query matches only when no sibling link on this path claims the current query
+  return !ALL_TABS.some(t => {
+    const [p2, q2] = t.href.split('?')
+    if (p2 !== p || !q2) return false
+    const w = new URLSearchParams(q2)
+    return KEYS.some(k => w.has(k) && sp.get(k) === w.get(k))
+  })
 }
 
 export function hubFor(pathname: string, search: string) {
