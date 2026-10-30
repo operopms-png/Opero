@@ -1019,7 +1019,7 @@ function PMPageInner() {
   return (
     <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
       {/* Sidebar */}
-      <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:'flex',flexDirection:'column',flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
+      <div style={{width:200,background:'#fff',borderRight:'1px solid #E4E7EC',display:['Landlords','Tenants'].includes(tab)?'none':'flex',flexDirection:'column',flexShrink:0,minHeight:'100vh',overflowY:'auto'}}>
         <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #E4E7EC',display:'flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)'}}>
           <div style={{width:8,height:8,background:'#2F6DB5',borderRadius:'50%'}}/>
           <span style={{fontSize:14,fontWeight:700,color:'#1D4E89'}}>Property Operations</span>
