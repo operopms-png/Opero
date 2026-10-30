@@ -44,6 +44,8 @@ export default function AICommandCentre() {
   const [crmF, setCrmF] = useState<any>(null)
   const [sch, setSch] = useState<any>(null)
   const [ppl, setPpl] = useState<any>(null)
+  const [tm, setTm] = useState<any>(null)
+  const [tmErr, setTmErr] = useState('')
   const [pplErr, setPplErr] = useState('')
   const [schErr, setSchErr] = useState('')
   const [crmErr, setCrmErr] = useState('')
@@ -60,6 +62,7 @@ export default function AICommandCentre() {
   useEffect(() => { staffApi('/api/command-centre/portfolio').then(setPf).catch(e => setPfErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/more').then(setMore).catch(e => setMoreErr(e.message)) }, [])
   useEffect(() => { fetch('/api/fx').then(r => r.json()).then(d => setFx(d?.rates ?? null)).catch(() => {}) }, [])
+  useEffect(() => { staffApi('/api/command-centre/team').then(setTm).catch(e => setTmErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/people').then(setPpl).catch(e => setPplErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/schedule').then(setSch).catch(e => setSchErr(e.message)) }, [])
   useEffect(() => { staffApi('/api/command-centre/crm').then(setCrmF).catch(e => setCrmErr(e.message)) }, [])
@@ -135,6 +138,21 @@ export default function AICommandCentre() {
             ))}
           </div>
 
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
+            {([
+              ['Portal Access', '/staff-centre/portal-access', tm ? `${tm.portals.live} of ${tm.portals.total} live` : (tmErr ? 'Could not load' : 'Loading…'), tm ? 'Client portals' : ''],
+              ['Property Portals', '/staff-centre/portals', tm ? `${tm.portals.propertyPortals} listed` : (tmErr ? 'Could not load' : 'Loading…'), tm ? 'Listing portals' : ''],
+              ['Smart Home', '/staff-centre/smart-home', tm ? `${tm.smartHome.online} of ${tm.smartHome.devices} devices online` : (tmErr ? 'Could not load' : 'Loading…'), tm ? `${tm.smartHome.locations} locations` : ''],
+              ['Team', '/settings?section=Team+Management', tm ? `${tm.team.members} members` : (tmErr ? 'Could not load' : 'Loading…'), ''],
+              ['Announcements', '/staff-centre/announcements', tm ? `${tm.announcements.last30} in last 30 days` : (tmErr ? 'Could not load' : 'Loading…'), tm ? `${tm.announcements.total} in total` : ''],
+            ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
+              <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
+                <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>{big}</div>
+                <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{sub}</div>
+              </Link>
+            ))}
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {([
               ['Investors', '/staff-centre/investors', ppl ? `${ppl.investors.active} active` : (pplErr ? 'Could not load' : 'Loading…'), ppl ? `£${ppl.investors.invested.toLocaleString('en-GB')} invested · £${ppl.investors.paidBack.toLocaleString('en-GB')} paid back` : ''],
