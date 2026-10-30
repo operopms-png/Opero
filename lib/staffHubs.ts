@@ -64,7 +64,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/invoices', label: 'Invoices' },
     { href: '/staff-centre/approvals', label: 'Approvals', badge: 'approvals' },
   ] },
-  { label: 'Tax Compliance', icon: 'revenue', tabs: [{ href: '/staff-centre/tax-compliance', label: 'Tax Compliance', scTab: 'finance' }] },
+  { label: 'Tax Compliance', icon: 'taxshield', tabs: [{ href: '/staff-centre/tax-compliance', label: 'Tax Compliance', scTab: 'finance' }] },
   { label: 'Reports', icon: 'revenue', tabs: [
     { href: '/pm?tab=Reports', label: 'Portfolio Reports', requiresModule: 'pm' },
     { href: '/pm?tab=Unit%20Profit', label: 'Unit Profit', requiresModule: 'pm' },
