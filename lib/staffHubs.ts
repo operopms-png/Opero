@@ -60,6 +60,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/finance/partner-payouts', label: 'Partner Payouts', scTab: 'finance' },
     { href: '/staff-centre/invoices', label: 'Invoices' },
     { href: '/staff-centre/approvals', label: 'Approvals', badge: 'approvals' },
+    { href: '/staff-centre/tax-compliance', label: 'Tax Compliance', scTab: 'finance' },
   ] },
   { label: 'Reports', icon: 'revenue', tabs: [
     { href: '/pm?tab=Reports', label: 'Portfolio Reports', requiresModule: 'pm' },
