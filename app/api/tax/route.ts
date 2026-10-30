@@ -22,6 +22,8 @@ const SCOPES = [
   { key: 'flag_risks', label: 'Flag compliance risks' },
 ]
 const XERO = ['not_connected', 'pending_authorisation']
+const REG = ['not_registered', 'incorporated', 'registered_for_tax']
+const KINDS = ['dividend', 'loan', 'management_charge', 'other']
 
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
 
@@ -46,15 +48,18 @@ export async function GET(req: NextRequest) {
   if (!c) return bad('Not signed in', 401)
   if (!c.isAdmin) return bad('Tax and Compliance is for admins only.', 403)
   await ensureSeeded(c.businessId)
-  const [ents, obs, log, perms, appr] = await Promise.all([
+  const [ents, obs, log, perms, appr, banks, xfers] = await Promise.all([
     db.from('legal_entities').select('*').eq('business_id', c.businessId).order('created_at'),
     db.from('tax_obligations').select('*').eq('business_id', c.businessId).order('created_at'),
     db.from('tax_audit_log').select('*').eq('business_id', c.businessId).order('created_at', { ascending: false }).limit(40),
     db.from('ai_agent_permissions').select('*').eq('business_id', c.businessId).eq('agent_key', AGENT),
     db.from('approvals').select('id,title,status,requested_by,created_at').eq('business_id', c.businessId).like('title', 'Tax:%').eq('status', 'pending'),
+    db.from('entity_bank_accounts').select('*').eq('business_id', c.businessId).order('created_at'),
+    db.from('intercompany_transfers').select('*').eq('business_id', c.businessId).order('transfer_date', { ascending: false }).limit(200),
   ])
   return NextResponse.json({
-    entities: (ents.data ?? []).map((e: any) => ({ ...e, obligations: (obs.data ?? []).filter((o: any) => o.entity_id === e.id) })),
+    entities: (ents.data ?? []).map((e: any) => ({ ...e, obligations: (obs.data ?? []).filter((o: any) => o.entity_id === e.id), banks: (banks.data ?? []).filter((b: any) => b.entity_id === e.id) })),
+    transfers: xfers.data ?? [],
     audit: log.data ?? [],
     agent: { key: AGENT, name: 'Remick Vincent', role: 'Finance and Tax Director', scopes: SCOPES.map(s => ({ ...s, granted: !!(perms.data ?? []).find((p: any) => p.scope === s.key)?.granted })) },
     approvals: appr.data ?? [],
@@ -111,6 +116,56 @@ export async function POST(req: NextRequest) {
     if (error) return bad(error.message, 500)
     await audit(biz, actor, 'approval requested', e.id, { title })
     return NextResponse.json({ ok: true, id: data?.id })
+  }
+
+  if (b.action === 'registration-save') {
+    const { data: e } = await db.from('legal_entities').select('id,name').eq('id', String(b.entity_id || '')).eq('business_id', biz).maybeSingle()
+    if (!e) return bad('Company not found', 404)
+    const status = REG.includes(b.registration_status) ? b.registration_status : null
+    if (!status) return bad('Choose a registration status.')
+    const patch = { registration_status: status, company_number: String(b.company_number || '').trim().slice(0, 50) || null, tax_registration_note: String(b.tax_registration_note || '').trim().slice(0, 300) || null }
+    const { error } = await db.from('legal_entities').update(patch).eq('id', e.id)
+    if (error) return bad(error.message, 500)
+    await audit(biz, actor, 'registration set to ' + status, e.id, { company: e.name, company_number: patch.company_number })
+    return NextResponse.json({ ok: true })
+  }
+
+  if (b.action === 'bank-add') {
+    const { data: e } = await db.from('legal_entities').select('id,name').eq('id', String(b.entity_id || '')).eq('business_id', biz).maybeSingle()
+    if (!e) return bad('Company not found', 404)
+    const label = String(b.account_label || '').trim().slice(0, 100)
+    if (!label) return bad('Name the account, for example "Operating account".')
+    const currency = ['GBP', 'JMD', 'USD'].includes(b.currency) ? b.currency : null
+    if (!currency) return bad('Choose a currency.')
+    await db.from('entity_bank_accounts').insert({ business_id: biz, entity_id: e.id, bank_name: String(b.bank_name || '').trim().slice(0, 100) || null, account_label: label, currency, feed_status: 'not_connected' })
+    await audit(biz, actor, 'bank account added', e.id, { company: e.name, account: label, currency })
+    return NextResponse.json({ ok: true })
+  }
+
+  if (b.action === 'transfer-add') {
+    const ids = [String(b.from_entity_id || ''), String(b.to_entity_id || '')]
+    if (ids[0] === ids[1]) return bad('Choose two different companies.')
+    const { data: es } = await db.from('legal_entities').select('id,name').eq('business_id', biz).in('id', ids)
+    if ((es ?? []).length !== 2) return bad('Company not found', 404)
+    const amount = Number(b.amount)
+    if (!(amount > 0)) return bad('Enter an amount above zero.')
+    if (!KINDS.includes(b.kind)) return bad('Choose the type of transfer.')
+    const currency = ['GBP', 'JMD', 'USD'].includes(b.currency) ? b.currency : null
+    if (!currency) return bad('Choose a currency.')
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.transfer_date || ''))) return bad('Choose a date.')
+    const { error } = await db.from('intercompany_transfers').insert({ business_id: biz, from_entity_id: ids[0], to_entity_id: ids[1], kind: b.kind, amount, currency, transfer_date: b.transfer_date, description: String(b.description || '').trim().slice(0, 300) || null, status: 'recorded' })
+    if (error) return bad(error.message, 500)
+    const names = Object.fromEntries((es ?? []).map((e: any) => [e.id, e.name]))
+    await audit(biz, actor, 'intercompany ' + b.kind + ' recorded', ids[0], { from: names[ids[0]], to: names[ids[1]], amount, currency, date: b.transfer_date })
+    return NextResponse.json({ ok: true })
+  }
+
+  if (b.action === 'transfer-review') {
+    const { data: t } = await db.from('intercompany_transfers').select('id,from_entity_id,kind,amount,currency').eq('id', String(b.id || '')).eq('business_id', biz).maybeSingle()
+    if (!t) return bad('Transfer not found', 404)
+    await db.from('intercompany_transfers').update({ status: 'reviewed', reviewed_by: actor }).eq('id', t.id)
+    await audit(biz, actor, 'intercompany transfer reviewed', t.from_entity_id, { kind: t.kind, amount: t.amount, currency: t.currency })
+    return NextResponse.json({ ok: true })
   }
 
   return bad('Unknown action')
