@@ -12,11 +12,11 @@ import { STAFF_HUBS, tabMatches } from '@/lib/staffHubs'
 
 const NAV_GROUPS = [
   {
-    label: 'Property Operations',
+    label: 'Operations',
     module: 'pm',
     modulePrice: '£39/mo',
     items: [
-      { href: '/pm', label: 'Operations', key: 'pm', icon: 'building', badge: 'pm' },
+      { href: '/pm', label: 'Property', key: 'pm', icon: 'building', badge: 'pm' },
     ]
   },
   {
