@@ -10,7 +10,6 @@ export type Hub = { label: string; icon: string; tabs: HubTab[] }
 export const STAFF_HUBS: Hub[] = [
   { label: 'Dashboard', icon: 'trendingup', tabs: [
     { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
-    { href: '/staff-centre/tax-compliance', label: 'Tax Compliance', scTab: 'finance' },
   ] },
   { label: 'AI Command Centre', icon: 'sparkles', tabs: [
     { href: '/staff-centre/ai-command-centre', label: 'AI Command Centre', scTab: 'oversight', hidden: true },
@@ -64,6 +63,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/invoices', label: 'Invoices' },
     { href: '/staff-centre/approvals', label: 'Approvals', badge: 'approvals' },
   ] },
+  { label: 'Tax Compliance', icon: 'revenue', tabs: [{ href: '/staff-centre/tax-compliance', label: 'Tax Compliance', scTab: 'finance' }] },
   { label: 'Reports', icon: 'revenue', tabs: [
     { href: '/pm?tab=Reports', label: 'Portfolio Reports', requiresModule: 'pm' },
     { href: '/pm?tab=Unit%20Profit', label: 'Unit Profit', requiresModule: 'pm' },
