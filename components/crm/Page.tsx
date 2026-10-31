@@ -5,7 +5,7 @@
 import React from 'react'
 
 export const C = {
-  gold: '#2F6DB5', goldDark: '#2F6DB5', brown: '#1D4E89', cream: '#EAF3FC', creamLine: '#C9DEF3',
+  gold: '#1B2F6E', goldDark: '#1B2F6E', brown: '#1D4E89', cream: '#EAF3FC', creamLine: '#C9DEF3',
   ink: '#323338', muted: '#676879', faint: '#9699A6', row: '#E6E9EF', border: '#D0D4E4', hover: '#F5F6F8',
   green: '#00C875', orange: '#FDAB3D', red: '#DF2F4A', blue: '#579BFC', purple: '#9D50DD', grey: '#C4C4C4',
 }

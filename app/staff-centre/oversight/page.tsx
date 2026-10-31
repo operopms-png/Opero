@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
 
-const C = { ink: '#191815', brown: '#5A4320', gold: '#2F6DB5', goldT: '#89CFF0', gold2: '#89CFF0', cream: '#EAF3FC', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
+const C = { ink: '#191815', brown: '#5A4320', gold: '#1B2F6E', goldT: '#89CFF0', gold2: '#89CFF0', cream: '#EAF3FC', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
 const MOD: Record<string, string> = { vr: '#89CFF0', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
 const TONE = { red: { c: '#B42318', bg: '#FDECEC' }, amber: { c: '#89CFF0', bg: '#FFF4DE' }, blue: { c: '#1F5BB0', bg: '#E8F0FB' } }
 const P: Record<string, string> = {

@@ -40,8 +40,8 @@ export const GROUP_COLORS = ['#579BFC', '#00C875', '#FDAB3D', '#DF2F4A', '#9D50D
 
 // NOVOURQ brand
 export const BRAND = {
-  gold: '#89CFF0',
-  goldDark: '#89CFF0',
+  gold: '#1B2F6E',
+  goldDark: '#1B2F6E',
   brown: '#89CFF0',
   ink: '#323338',
   muted: '#676879',
