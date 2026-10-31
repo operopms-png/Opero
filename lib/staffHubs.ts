@@ -4,7 +4,9 @@
 // Centre tab permission) or requiresModule. The hub link goes to the first tab
 // the person can open, and its red badge is the total of its tabs' badges.
 
-export type HubTab = { href: string; label: string; scTab?: string; requiresModule?: string; badge?: string; hidden?: boolean }
+import type { StaffCentreKey, ModuleKey } from './accessRegistry'
+
+export type HubTab = { href: string; label: string; scTab?: StaffCentreKey; requiresModule?: ModuleKey; badge?: string; hidden?: boolean }
 export type Hub = { label: string; icon: string; tabs: HubTab[] }
 
 export const STAFF_HUBS: Hub[] = [

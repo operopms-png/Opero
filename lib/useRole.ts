@@ -1,6 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { STAFF_CENTRE_TABS, TEAM_MODULES, type StaffCentreKey } from '@/lib/accessRegistry'
+
+export { STAFF_CENTRE_TABS, TEAM_MODULES }
+export type { StaffCentreKey, ModuleKey } from '@/lib/accessRegistry'
 
 export type UserRole = 'Admin' | 'Co Founder' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Finance Team' | 'Partner'
 
@@ -45,32 +49,9 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
   return RESTRICTED_TABS[role]?.[moduleKey] ?? null
 }
 
-export const STAFF_CENTRE_TABS: { k: string; l: string }[] = [
-  { k: 'oversight',  l: 'Dashboard' },
-  { k: 'partners',   l: 'Partners' },
-  { k: 'investors',  l: 'Investors' },
-  { k: 'customeronboarding', l: 'Customer Onboarding' },
-  { k: 'meetings',    l: 'Meetings' },
-  { k: 'listings',    l: 'Listings' },
-  { k: 'smarthome',   l: 'Smart Home' },
-  { k: 'inbox',       l: 'Conversations' },
-  { k: 'portalaccess', l: 'Portal Access' },
-  { k: 'portals',     l: 'Property Portals' },
-  { k: 'maintenance', l: 'Maintenance Board' },
-  { k: 'compliance',  l: 'Compliance' },
-  { k: 'finance',     l: 'Finance (money, payouts, arrears)' },
-  { k: 'crm',         l: 'CRM' },
-  { k: 'marketing',   l: 'Marketing' },
-  { k: 'applications', l: 'Applications' },
-  { k: 'performance', l: 'Staff Performance' },
-  { k: 'hr',          l: 'People & HR' },
-  { k: 'training',    l: 'Staff Training' },
-  { k: 'calendar',    l: 'Calendar' },
-  { k: 'tasks',       l: 'Tasks' },
-]
-export const SC_TABS = STAFF_CENTRE_TABS.map(t => t.k)
+export const SC_TABS: StaffCentreKey[] = STAFF_CENTRE_TABS.map(t => t.k)
 // Finance is admin-only unless an admin ticks it for someone in Team Management
-export const DEFAULT_SC_TABS = SC_TABS.filter(t => t !== 'finance')
+export const DEFAULT_SC_TABS: StaffCentreKey[] = SC_TABS.filter(t => t !== 'finance')
 
 export function getScTabs(role: string, modules: string[]): string[] {
   if (!modules.includes('sc')) return []
