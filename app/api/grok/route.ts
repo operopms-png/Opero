@@ -21,6 +21,17 @@ const ROLES: Record<string, { label: string; instructions: string }> = {
     label: 'Property Manager',
     instructions: `You are the Property Manager assistant for The NOVOURQ Portal. Each day you check every daily area in the records given: rent and arrears, leases ending, head leases, maintenance, cleaning, inspections, keys, compliance, HMO rooms, deadlines, insurance, utilities, right-to-rent rechecks, viewings and vacancies, today's short stay check-ins and check-outs, bookings, and reviews without a reply. Say what needs a person and why, most urgent first. Draft tenant replies and contractor requests for a person to approve, and never send them yourself.\n${RULES}`,
   },
+  finance_director: {
+    label: 'Finance Director',
+    instructions: `You are the Finance Director assistant for The NOVOURQ Portal. Each day you review the money position in the records given: overdue invoices, approvals waiting for a decision, late rent and owner payouts. Report amounts and counts exactly as they appear. Never estimate a figure, a tax rate or a deadline that is not in the records.
+You cannot submit tax returns, make or approve payments, move money or change records. Anything that needs money moved or a tax filing is for a named person to authorise.
+${RULES}`,
+  },
+  acquisitions: {
+    label: 'Acquisitions',
+    instructions: `You are the Acquisitions assistant for The NOVOURQ Portal. Each day you review the pipeline in the records given: open landlord estimates, properties under review and client properties not yet signed. Summarise what needs a decision and by when, using only the records given.
+${RULES}`,
+  },
 }
 
 const DAY = 86400000
@@ -31,7 +42,8 @@ type Check = {
   table: string
   // 'open': not closed yet. 'due': open and a date field is within 60 days (or past).
   // 'today': a date field is today. 'all': every row (small lists).
-  mode: 'open' | 'due' | 'today' | 'all'
+  mode: 'open' | 'due' | 'today' | 'all' | 'eq'
+  eqStatus?: string
   dates?: string[]
   unreplied?: boolean
 }
@@ -60,13 +72,34 @@ const CHECKS: Check[] = [
   { label: 'reviews_unanswered', table: 'str_reviews', mode: 'open', unreplied: true },
 ]
 
+// Finance Director: money the business is owed, owes, or needs to decide on.
+const FINANCE_CHECKS: Check[] = [
+  { label: 'overdue_invoices', table: 'invoices', mode: 'open', dates: ['due_date'] },
+  { label: 'approvals_waiting', table: 'approvals', mode: 'eq', eqStatus: 'pending' },
+  { label: 'late_rent', table: 'pm_rent_payments', mode: 'due', dates: ['due_date'] },
+]
+
+// Acquisitions: pipeline that needs a decision.
+const ACQUISITIONS_CHECKS: Check[] = [
+  { label: 'landlord_estimates', table: 'landlord_estimates', mode: 'open' },
+  { label: 'estate_properties', table: 'estate_properties', mode: 'open' },
+  { label: 'client_properties', table: 'client_properties', mode: 'open' },
+]
+
+// Which roles get a records snapshot sent with each question.
+const SNAPSHOT_CHECKS: Record<string, Check[]> = {
+  property_manager: CHECKS,
+  finance_director: FINANCE_CHECKS,
+  acquisitions: ACQUISITIONS_CHECKS,
+}
+
 function isOpen(row: any) {
   return !CLOSED.includes(String(row.status ?? '').toLowerCase())
 }
 
 // Builds a read-only snapshot of the daily checks. Uses the signed-in member's own token,
 // so the database's access rules decide what they can see.
-async function propertyManagerSnapshot(token: string) {
+async function roleSnapshot(token: string, checks: Check[]) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   const db = createClient(url, anon, { global: { headers: { Authorization: `Bearer ${token}` } } })
@@ -81,14 +114,15 @@ async function propertyManagerSnapshot(token: string) {
       return []
     }
   }
-  const results = await Promise.all(CHECKS.map(c => fetchRows(c.table)))
+  const results = await Promise.all(checks.map(c => fetchRows(c.table)))
 
   const snapshot: Record<string, any> = { date: today }
-  CHECKS.forEach((check, i) => {
+  checks.forEach((check, i) => {
     const rows = (results[i] as any[]).filter(row => {
       if (check.unreplied) return row.responded !== true
       if (check.mode === 'all') return true
       if (check.mode === 'open') return isOpen(row)
+      if (check.mode === 'eq') return String(row.status ?? '').toLowerCase() === check.eqStatus
       const dates = (check.dates ?? []).map(f => row[f]).filter(Boolean).map(String)
       if (check.mode === 'due') return isOpen(row) && dates.some(d => d <= in60)
       if (check.mode === 'today') return dates.some(d => d.slice(0, 10) === today)
@@ -114,9 +148,10 @@ export async function POST(req: NextRequest) {
   const role = ROLES[roleId]
 
   let input = message
-  if (roleId === 'property_manager') {
+  const checks = SNAPSHOT_CHECKS[roleId]
+  if (checks) {
     const token = (req.headers.get('authorization') ?? '').replace('Bearer ', '')
-    const snapshot = await propertyManagerSnapshot(token)
+    const snapshot = await roleSnapshot(token, checks)
     input = `${message}\n\nRecords as of today (JSON):\n${JSON.stringify(snapshot).slice(0, 60000)}`
   }
 

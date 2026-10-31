@@ -27,6 +27,61 @@ const nodePos = (i: number, width: number) => {
   return { x, y }
 }
 
+// Which Grok role answers for each agent, by its job role. Anything not listed uses the general assistant.
+const ROLE_FOR_JOB: Record<string, string> = {
+  'Property Manager': 'property_manager',
+  'Finance Director': 'finance_director',
+  'Acquisitions': 'acquisitions',
+}
+
+// Ask one agent a question. Goes through /api/grok, which answers from the records only
+// and cannot change records, send messages or move money.
+function AskAgent({ agent }: { agent: Agent }) {
+  const [q, setQ] = useState('')
+  const [reply, setReply] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const role = ROLE_FOR_JOB[agent.job_role] ?? 'general'
+
+  async function ask() {
+    const message = q.trim()
+    if (!message || busy) return
+    setBusy(true); setErr(''); setReply('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/grok', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ message, role }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) setErr(data.error ?? 'The agent could not answer.')
+      else setReply(data.reply ?? '')
+    } catch {
+      setErr('The agent could not answer.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ fontSize: 13, fontWeight: 700 }}>Ask {agent.name}</div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+        <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') ask() }}
+          placeholder="Ask a question about today's records" maxLength={4000}
+          style={{ flex: 1, padding: '8px 10px', border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 13, fontFamily: 'inherit' }} />
+        <button onClick={ask} disabled={busy || !q.trim()}
+          style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: NAVY, color: '#fff', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: busy ? 'default' : 'pointer', opacity: busy || !q.trim() ? 0.6 : 1 }}>
+          {busy ? 'Asking…' : 'Ask'}
+        </button>
+      </div>
+      {err && <div style={{ fontSize: 12, color: '#B42318', marginTop: 8 }}>{err}</div>}
+      {reply && <div style={{ fontSize: 13, marginTop: 10, whiteSpace: 'pre-wrap', background: '#fff', border: `1px solid ${LINE}`, borderRadius: 8, padding: 10 }}>{reply}</div>}
+    </div>
+  )
+}
+
 export default function AgentPool() {
   const [agents, setAgents] = useState<Agent[] | null>(null)
   const [handoffs, setHandoffs] = useState<Handoff[]>([])
@@ -170,6 +225,7 @@ export default function AgentPool() {
                       )
                     })}
                   </div>}
+              <AskAgent agent={open} />
             </div>
           )}
         </div>
