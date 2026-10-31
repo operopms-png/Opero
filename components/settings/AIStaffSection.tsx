@@ -15,6 +15,7 @@ type AIStaff = {
   access: string | null
   status: 'active' | 'not_set_up' | 'paused'
   grok_bot: string | null
+  grok_email: string | null
 }
 
 const STATUS_LABEL: Record<AIStaff['status'], string> = { active: 'Active', not_set_up: 'Not set up', paused: 'Paused' }
@@ -24,7 +25,7 @@ const STATUS_COLOR: Record<AIStaff['status'], { bg: string; fg: string }> = {
   paused: { bg: '#FFFAEB', fg: '#B54708' },
 }
 
-const EMPTY = { name: '', job_role: '', responsibilities: '', escalation: '', access: '', grok_bot: '', status: 'active' as AIStaff['status'] }
+const EMPTY = { name: '', job_role: '', responsibilities: '', escalation: '', access: '', grok_bot: '', grok_email: '', status: 'active' as AIStaff['status'] }
 
 export default function AIStaffSection() {
   const [rows, setRows] = useState<AIStaff[]>([])
@@ -53,7 +54,7 @@ export default function AIStaffSection() {
     setEditingId(r.id)
     setForm({
       name: r.name, job_role: r.job_role, responsibilities: r.responsibilities ?? '',
-      escalation: r.escalation ?? '', access: r.access ?? '', grok_bot: r.grok_bot ?? '', status: r.status,
+      escalation: r.escalation ?? '', access: r.access ?? '', grok_bot: r.grok_bot ?? '', grok_email: r.grok_email ?? '', status: r.status,
     })
     setError(''); setShowForm(true)
   }
@@ -67,6 +68,7 @@ export default function AIStaffSection() {
       escalation: form.escalation.trim() || null,
       access: form.access.trim() || null,
       grok_bot: form.grok_bot.trim() || null,
+      grok_email: form.grok_email.trim() || null,
       status: form.status,
     }
     const res = editingId
@@ -154,6 +156,10 @@ export default function AIStaffSection() {
             <div style={{ marginBottom: 14 }}>
               <label style={label}>Grok bot</label>
               <input style={input} value={form.grok_bot} onChange={e => setForm({ ...form, grok_bot: e.target.value })} placeholder="e.g. Sarah Bennett | Property Manager" />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={label}>Grok login email</label>
+              <input style={input} type="email" value={form.grok_email} onChange={e => setForm({ ...form, grok_email: e.target.value })} placeholder="e.g. sarahbennett@thenovourq.com" />
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={label}>Does day to day</label>
