@@ -16,6 +16,7 @@ type AIStaff = {
   status: 'active' | 'not_set_up' | 'paused'
   grok_bot: string | null
   grok_email: string | null
+  grok_password_set_at: string | null
 }
 
 const STATUS_LABEL: Record<AIStaff['status'], string> = { active: 'Active', not_set_up: 'Not set up', paused: 'Paused' }
@@ -28,6 +29,8 @@ const STATUS_COLOR: Record<AIStaff['status'], { bg: string; fg: string }> = {
 const EMPTY = { name: '', job_role: '', responsibilities: '', escalation: '', access: '', grok_bot: '', grok_email: '', status: 'active' as AIStaff['status'] }
 
 export default function AIStaffSection() {
+  const [pwd, setPwd] = useState('')
+  const [shown, setShown] = useState<string | null>(null)
   const [rows, setRows] = useState<AIStaff[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -38,7 +41,7 @@ export default function AIStaffSection() {
 
   async function load() {
     setLoading(true)
-    const { data, error } = await supabase.from('ai_staff').select('*').order('created_at', { ascending: true })
+    const { data, error } = await supabase.from('ai_staff').select('id,name,job_role,responsibilities,escalation,access,status,grok_bot,grok_email,grok_password_set_at,created_at').order('created_at', { ascending: true })
     if (error) setError(error.message)
     setRows((data ?? []) as AIStaff[])
     setLoading(false)
@@ -56,7 +59,19 @@ export default function AIStaffSection() {
       name: r.name, job_role: r.job_role, responsibilities: r.responsibilities ?? '',
       escalation: r.escalation ?? '', access: r.access ?? '', grok_bot: r.grok_bot ?? '', grok_email: r.grok_email ?? '', status: r.status,
     })
+    setPwd(''); setShown(null)
     setError(''); setShowForm(true)
+  }
+
+  // Admin only: reveal the stored Grok password for this agent (the server logs it).
+  async function revealPwd() {
+    if (!editingId) return
+    setError('')
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(`/api/ai-staff/password?id=${editingId}`, { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) { setError(data.error ?? 'Could not show the password.'); return }
+    setShown(data.password ?? 'No password set yet')
   }
 
   async function save() {
@@ -76,6 +91,17 @@ export default function AIStaffSection() {
       : await supabase.from('ai_staff').insert(payload).select('id')
     setSaving(false)
     if (res.error) { setError(res.error.message); return }
+    const savedId = editingId ?? (res.data as any)?.[0]?.id
+    if (pwd && savedId) {
+      const { data: { session } } = await supabase.auth.getSession()
+      const pr = await fetch('/api/ai-staff/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ id: savedId, password: pwd }),
+      })
+      if (!pr.ok) { const d = await pr.json().catch(() => ({})); setError(d.error ?? 'Could not save the password.'); return }
+    }
+    setPwd(''); setShown(null)
     setShowForm(false); setEditingId(null); setForm(EMPTY)
     await load()
   }
@@ -160,6 +186,18 @@ export default function AIStaffSection() {
             <div style={{ marginBottom: 14 }}>
               <label style={label}>Grok login email</label>
               <input style={input} type="email" value={form.grok_email} onChange={e => setForm({ ...form, grok_email: e.target.value })} placeholder="e.g. sarahbennett@thenovourq.com" />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={label}>Grok password</label>
+              <input style={input} type="password" autoComplete="new-password" value={pwd} onChange={e => setPwd(e.target.value)}
+                placeholder={rows.find(r => r.id === editingId)?.grok_password_set_at ? 'Leave blank to keep the current password' : 'Set a password (8 characters or more)'} />
+              {editingId && (
+                <div style={{ fontSize: 12, color: '#667085', marginTop: 6, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span>{rows.find(r => r.id === editingId)?.grok_password_set_at ? 'Password is set.' : 'No password set yet.'}</span>
+                  <button type="button" onClick={revealPwd} style={{ border: '1px solid #D0D5DD', background: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Show password</button>
+                  {shown !== null && <span style={{ fontFamily: 'monospace', color: '#101828', userSelect: 'all' }}>{shown}</span>}
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={label}>Does day to day</label>
