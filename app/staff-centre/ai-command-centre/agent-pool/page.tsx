@@ -13,7 +13,7 @@ const STATUS: Record<string, { label: string; color: string; bg: string }> = {
   paused: { label: 'Paused', color: '#B54708', bg: '#FFFAEB' },
   not_set_up: { label: 'Not set up', color: MUTED, bg: '#F2F4F7' },
 }
-type Agent = { id: string; name: string; job_role: string; status: 'active' | 'not_set_up' | 'paused'; responsibilities: string | null; escalation: string | null; grok_bot: string | null }
+type Agent = { id: string; name: string; job_role: string; status: 'active' | 'not_set_up' | 'paused'; responsibilities: string | null; escalation: string | null; grok_bot: string | null; last_used_at: string | null }
 type Handoff = { id: string; from_agent_id: string; to_agent_id: string }
 const TABS = [['Agent Pool', '/staff-centre/ai-command-centre/agent-pool'], ['Dashboard', '/staff-centre/ai-command-centre']]
 const METRICS = ['Task Throughput', 'Agent Efficiency', 'Error Rate', 'Collaborative Output']
@@ -52,7 +52,7 @@ function AskAgent({ agent }: { agent: Agent }) {
       const res = await fetch('/api/grok', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ message, role }),
+        body: JSON.stringify({ message, role, agent_id: agent.id }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) setErr(data.error ?? 'The agent could not answer.')
@@ -95,7 +95,7 @@ export default function AgentPool() {
     .then(({ data }) => setHandoffs((data ?? []) as Handoff[]))
 
   useEffect(() => {
-    supabase.from('ai_staff').select('id,name,job_role,status,responsibilities,escalation,grok_bot').order('created_at', { ascending: true })
+    supabase.from('ai_staff').select('id,name,job_role,status,responsibilities,escalation,grok_bot,last_used_at').order('created_at', { ascending: true })
       .then(({ data, error }) => { if (error) setError(error.message); setAgents((data ?? []) as Agent[]) })
     loadHandoffs()
   }, [])
@@ -210,6 +210,7 @@ export default function AgentPool() {
               <div style={{ fontSize: 13, marginTop: 6 }}><strong>Does:</strong> {open.responsibilities || 'Not described yet'}</div>
               <div style={{ fontSize: 13, marginTop: 4 }}><strong>Hands over to a person when:</strong> {open.escalation || 'Not described yet'}</div>
               <div style={{ fontSize: 12, color: MUTED, marginTop: 6 }}>{open.grok_bot ? `Grok bot: ${open.grok_bot}` : 'No Grok bot linked'}</div>
+              <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>Last asked a question: {open.last_used_at ? new Date(open.last_used_at).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' }) : 'Not yet'}</div>
 
               <div style={{ fontSize: 13, marginTop: 12, fontWeight: 700 }}>Hands over to another agent</div>
               {(agents ?? []).filter(a => a.id !== open.id).length === 0
