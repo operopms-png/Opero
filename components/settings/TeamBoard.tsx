@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from 'react'
 import Popover, { menuItem } from '@/components/crm/Popover'
 import { BRAND, initials, avatarColor } from '@/lib/crm-board'
 import { normalizeRole } from '@/lib/useRole'
+import { TEAM_MODULES } from '@/lib/accessRegistry'
 
 // Team Management in the CRM board style: members grouped by role,
 // click the role pill to change it, open a member to edit access.
@@ -18,7 +19,7 @@ export const ROLE_COLORS: Record<string, string> = {
   'Viewer': '#A1B4C6',
   'Partner': '#1D4E89',
 }
-const MOD_LABEL: Record<string, string> = { str: 'Vacation Rentals', pm: 'Property Operations', dev: 'Developments', sc: 'Staff Centre', aipm: 'AI Property Manager', invest: 'Deal Analyser' }
+const MOD_LABEL: Record<string, string> = Object.fromEntries(TEAM_MODULES.map(m => [m.k, m.l] as const))
 const NAME_W = 300
 const ROW_H = 40
 const tb: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 10px', border: 'none', background: 'none', borderRadius: 4, fontSize: 13.5, color: BRAND.ink, cursor: 'pointer', fontFamily: 'inherit' }
