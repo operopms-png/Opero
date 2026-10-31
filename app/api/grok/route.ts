@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { requireStaff } from '@/lib/admin-auth'
+import { requireStaff, serviceClient } from '@/lib/admin-auth'
 
 // Staff assistant for the Staff Centre dashboard. Read only: it answers questions
 // from the records it is given and cannot change records or send messages.
@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
   const message = String(body?.message ?? '').trim().slice(0, 4000)
   if (!message) return NextResponse.json({ error: 'Type a question first.' }, { status: 400 })
   const roleId = ROLES[body?.role] ? String(body.role) : 'general'
+  const agentId = typeof body?.agent_id === 'string' && /^[0-9a-f-]{36}$/i.test(body.agent_id) ? body.agent_id : null
   const role = ROLES[roleId]
 
   let input = message
@@ -187,5 +188,8 @@ export async function POST(req: NextRequest) {
         .filter((part: any) => part?.type === 'output_text')
         .map((part: any) => part?.text ?? '')
         .join('')
+  // Record when this agent was last asked something (shown on the Agent Pool).
+  if (agentId) await serviceClient.from('ai_staff').update({ last_used_at: new Date().toISOString() }).eq('id', agentId)
+
   return NextResponse.json({ reply, role: role.label })
 }
