@@ -14,7 +14,7 @@ const GRANTABLE_MODULES = ['str', 'pm', 'ea', 'dev']
 const GRANTABLE_SC_TABS = [
   'oversight', 'partners', 'investors', 'customeronboarding', 'meetings', 'inbox', 'portalaccess',
   'portals', 'maintenance', 'crm', 'marketing', 'applications', 'performance', 'hr',
-  'training', 'calendar', 'tasks',
+  'training', 'calendar', 'tasks', 'finance', 'compliance', 'smarthome', 'listings',
 ]
 
 export async function POST(req: NextRequest) {
