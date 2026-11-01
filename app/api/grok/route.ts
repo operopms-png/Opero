@@ -32,6 +32,22 @@ ${RULES}`,
     instructions: `You are the Acquisitions assistant for The NOVOURQ Portal. Each day you review the pipeline in the records given: open landlord estimates, properties under review and client properties not yet signed. Summarise what needs a decision and by when, using only the records given.
 ${RULES}`,
   },
+  executive_assistant: {
+    label: 'Executive Assistant',
+    instructions: `You are the Executive Assistant for The NOVOURQ Portal and run its Command Centre. Look across every area in the records given and tell the team what needs attention today, most urgent first, and who should handle it: property management, finance, compliance, acquisitions or reception. Draft summaries and follow-ups for a person to approve, and never send them yourself.\n${RULES}`,
+  },
+  risk_compliance: {
+    label: 'Risk and Compliance',
+    instructions: `You are the Risk and Compliance assistant for The NOVOURQ Portal. Review certificate and licence expiries, head lease dates, insurance, maintenance risk, right-to-rent rechecks, HMO licences and late rent in the records given. Say what is a risk, how urgent it is and who must act. Safety, legal and regulatory matters always go to a person.\n${RULES}`,
+  },
+  deal_analyst: {
+    label: 'Deal Analyst',
+    instructions: `You are the Deal Analyst for The NOVOURQ Portal. Using only the pipeline in the records given, summarise each opportunity, what figures are missing, and what a person needs to decide. Never invent a price, rent or return that is not in the records. Any decision to proceed, offer or commit funds is for a person.\n${RULES}`,
+  },
+  receptionist: {
+    label: 'Receptionist',
+    instructions: `You are the Receptionist for The NOVOURQ Portal. Using the records given, help staff with today's check-ins and check-outs, viewings, vacancies and reviews waiting for a reply, and say which team member each enquiry should go to. Complaints, money, legal and safety matters always go to a person.\n${RULES}`,
+  },
 }
 
 const DAY = 86400000
@@ -91,6 +107,10 @@ const SNAPSHOT_CHECKS: Record<string, Check[]> = {
   property_manager: CHECKS,
   finance_director: FINANCE_CHECKS,
   acquisitions: ACQUISITIONS_CHECKS,
+  deal_analyst: ACQUISITIONS_CHECKS,
+  executive_assistant: CHECKS,
+  risk_compliance: CHECKS.filter(c => ['late_rent', 'head_leases', 'maintenance', 'maintenance_str', 'compliance', 'compliance_str', 'hmo_licences', 'insurance', 'right_to_rent'].includes(c.label)),
+  receptionist: CHECKS.filter(c => ['viewings', 'vacancies', 'stays_today', 'reviews_unanswered'].includes(c.label)),
 }
 
 function isOpen(row: any) {

@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { supabase, getAccountId } from '../../../../lib/supabase'
+import { grokRoleForJob } from '../../../../lib/grok-agent-roles'
 
 const NAVY = '#1B2F6E', BLUE = '#2F6DB5', LIGHT = '#89CFF0', INK = '#101828', MUTED = '#667085', LINE = '#D9E2F0', BG = '#F5F7FB'
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {
@@ -27,12 +28,6 @@ const nodePos = (i: number, width: number) => {
   return { x, y }
 }
 
-// Which Grok role answers for each agent, by its job role. Anything not listed uses the general assistant.
-const ROLE_FOR_JOB: Record<string, string> = {
-  'Property Manager': 'property_manager',
-  'Finance Director': 'finance_director',
-  'Acquisitions': 'acquisitions',
-}
 
 // Ask one agent a question. Goes through /api/grok, which answers from the records only
 // and cannot change records, send messages or move money.
@@ -41,7 +36,7 @@ function AskAgent({ agent }: { agent: Agent }) {
   const [reply, setReply] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
-  const role = ROLE_FOR_JOB[agent.job_role] ?? 'general'
+  const role = grokRoleForJob(agent.job_role)
 
   async function ask() {
     const message = q.trim()
