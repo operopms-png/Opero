@@ -94,7 +94,13 @@ export async function POST(req: NextRequest) {
   if (b.action === 'create') {
     const f = clean(b)
     if (!f.address) return bad('Add the property address (or import a listing link).')
-    if (!f.owner_name) return bad('Add the owner’s name.')
+    // A listing found through an agent may not have an owner we can name yet:
+    // keep it under the listing agent until the owner is known.
+    if (!f.owner_name) {
+      const agentName = (f.agent || '').split('·')[0].trim()
+      if (!agentName) return bad('Add the owner’s name, or the listing agent if the owner isn’t known yet.')
+      f.owner_name = `Owner not known yet (via ${agentName})`
+    }
     const activity = [] as any[]
     if (b.note && String(b.note).trim()) activity.push(entry(by, 'note', String(b.note).trim()))
     if (f.source_url) activity.push(entry(by, 'import', `Imported from ${f.mls ? 'MLS# ' + f.mls : 'a listing link'}${f.agent ? ' (agent: ' + f.agent + ')' : ''}`))
