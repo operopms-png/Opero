@@ -14,6 +14,7 @@ import { generateRentReminders } from './rent-reminders'
 import { runEstimate } from './earnings-estimate'
 import { sendPush } from './push'
 import { proposePortfolioReview } from './ai-portfolio'
+import { proposeChiefPlan } from './ai-chief'
 import { proposeLeaseDocs } from './ai-proposals-docs'
 import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
@@ -357,6 +358,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.maintenance = await proposeMaintenance()
       out.rentReminders = await proposeRentReminders()
       out.compliance = await proposeCompliance()
+      out.chief = await proposeChiefPlan()
       out.renewals = await proposeRenewals()
       out.arrears = await proposeArrears()
       out.viewings = await proposeViewings()

@@ -3,6 +3,7 @@
 export type Workflow = { agent: string; label: string; module: string; schedule: string; resultKey?: string; live?: boolean }
 
 export const WORKFLOWS: Workflow[] = [
+  { agent: 'chief', label: 'Chief of Staff', module: 'Whole business', schedule: 'Daily, 07:30', resultKey: 'chief' },
   { agent: 'guest', label: 'Guest agent', module: 'Vacation rentals', schedule: 'Live, as each guest message arrives', live: true },
   { agent: 'cleaning', label: 'Cleaning coordinator', module: 'Vacation rentals', schedule: 'Daily, 07:30', resultKey: 'cleaning' },
   { agent: 'maintenance', label: 'Maintenance coordinator', module: 'Vacation rentals', schedule: 'Daily, 07:30', resultKey: 'maintenance' },

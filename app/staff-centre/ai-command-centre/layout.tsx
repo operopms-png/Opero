@@ -22,6 +22,7 @@ const NAV: { heading: string; items: { href: string; label: string; badge?: 'app
     { href: '/staff-centre/tasks', label: 'Task board' },
     { href: BASE + '/escalation', label: 'Escalation rules' },
     { href: BASE + '/pricing', label: 'Pricing' },
+    { href: BASE + '/chief', label: 'Chief of Staff' },
   ] },
   { heading: 'Insight', items: [
     { href: BASE + '/results', label: 'Results' },

@@ -164,6 +164,14 @@ const AGENTS = [
     capabilities: ['Count the week from your records','Write a short plain-English summary','Email it to you once you approve'],
   },
   {
+    key: 'chief',
+    module: 'Whole business',
+    name: 'AI Chief of Staff',
+    icon: ICON,
+    desc: 'Reads the whole business each morning and writes a ranked plan for the day, as tasks on the Task board. You can also type an instruction in plain English and it sets up the work. Emails wait in Approvals.',
+    capabilities: ['Plan the day from your records','Turn plain-English instructions into tasks','Draft emails to addresses you give it','Nothing is sent until you approve'],
+  },
+  {
     key: 'portfolio',
     module: 'Investment & Portfolio',
     name: 'AI Portfolio Intelligence',
@@ -187,7 +195,7 @@ export default function PropertyManagerAgents() {
   const [style, setStyle] = useState({ tone: '', country_rules: '', signoff: '' })
   const [styleMsg, setStyleMsg] = useState('')
   const [section, setSection] = useState<'Agents'|'Activity log'|'Settings'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,weekly_report:false,portfolio:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,weekly_report:false,portfolio:false,chief:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})
