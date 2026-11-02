@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
   const props = await rows(db.from('properties').select('id').eq('user_id', biz))
   const propIds = props.map(p => p.id)
 
-  const [approvals, rent, pmComp, eaComp, devComp, pmLeases, eaLeases, pmMaint, strMaint, checkins, cleans, viewings, snags] = await Promise.all([
+  const [budgetLines, projects, oldSnags, approvals, rent, pmComp, eaComp, devComp, pmLeases, eaLeases, pmMaint, strMaint, checkins, cleans, viewings, snags] = await Promise.all([
+    rows(db.from('dev_budget_items').select('budgeted, actual').eq('user_id', biz)),
+    rows(db.from('dev_projects').select('status, end_date').eq('user_id', biz)),
+    rows(db.from('dev_snagging').select('status, reported_date').eq('user_id', biz).lt('reported_date', day(-7))),
     rows(db.from('ai_pending_actions').select('id').eq('user_id', biz).in('status', ['pending', 'failed'])),
     rows(db.from('pm_rent_payments').select('status, due_date').eq('user_id', biz).lt('due_date', today)),
     rows(db.from('pm_compliance').select('expiry_date').eq('user_id', biz).not('expiry_date', 'is', null).lte('expiry_date', in30)),
@@ -47,11 +50,17 @@ export async function GET(req: NextRequest) {
   const openSnags = snags.filter(s => open(s.status))
   const urgentSnags = openSnags.filter(s => /high|urgent|critical/i.test(String(s.priority ?? '')))
 
+  const overBudget = budgetLines.filter(b => Number(b.budgeted) > 0 && Number(b.actual) > Number(b.budgeted) * 1.1)
+  const lateProjects = projects.filter(p => p.end_date && p.end_date < today && !/complet|clos|done|sold/i.test(String(p.status ?? '')))
+  const staleSnags = oldSnags.filter(s => open(s.status))
   const all: Item[] = [
     { key: 'approvals', label: 'AI drafts waiting for your approval', count: approvals.length, href: '/staff-centre/ai-approvals', level: 'urgent' },
     { key: 'arrears', label: 'Overdue rent payments', count: overdue.length, href: '/pm', level: 'urgent' },
     { key: 'expired', label: 'Compliance certificates expired', count: expired.length, href: '/staff-centre/compliance', level: 'urgent' },
     { key: 'snags', label: 'High-priority snagging items open', count: urgentSnags.length, href: '/dev', level: 'urgent' },
+    { key: 'overbudget', label: 'Budget lines more than 10% over budget', count: overBudget.length, href: '/dev', level: 'urgent' },
+    { key: 'lateprojects', label: 'Projects past their target end date', count: lateProjects.length, href: '/dev', level: 'soon' },
+    { key: 'stalesnags', label: 'Snagging items open more than 7 days', count: staleSnags.length, href: '/dev', level: 'soon' },
     { key: 'expiring', label: 'Certificates expiring within 30 days', count: expiring.length, href: '/staff-centre/compliance', level: 'soon' },
     { key: 'leases', label: 'Tenancies ending within 60 days', count: ending.length, href: '/pm', level: 'soon' },
     { key: 'maint', label: 'Open maintenance jobs', count: maint.length, href: '/pm', level: 'soon' },

@@ -82,13 +82,37 @@ const AGENTS = [
     desc: 'Drafts a firmer email to tenants whose rent is more than 14 days overdue. The earlier text reminders stay on Finance, Reminders.',
     capabilities: ['Find rent more than 14 days overdue','Draft a firm payment request to the tenant','Ask the tenant to report any payment already made','Wait for your approval before anything is sent'],
   },
+  {
+    key: 'ea_viewings',
+    module: 'Estate agency',
+    name: 'AI Viewings Assistant',
+    icon: ICON,
+    desc: 'Drafts a reminder to the prospect the day before a viewing and a follow-up after it, from the Viewings tab.',
+    capabilities: ['Draft viewing reminders','Draft follow-ups after the viewing','Skip cancelled viewings and no-shows','Wait for your approval before anything is sent'],
+  },
+  {
+    key: 'ea_listings',
+    module: 'Estate agency',
+    name: 'AI Listing Writer',
+    icon: ICON,
+    desc: 'Writes a first-draft website description for listings that have none, using only the details on the property record.',
+    capabilities: ['Find listings with no description','Write from the record only, with nothing invented','Save the description once you approve it'],
+  },
+  {
+    key: 'dev_investors',
+    module: 'Developments',
+    name: 'AI Investor Updates',
+    icon: ICON,
+    desc: 'Drafts a monthly progress update to each investor from the project status, budget and open snagging items.',
+    capabilities: ['Draft one update per investor each month','Use only the figures on the project record','No forecasts or promises of returns','Wait for your approval before anything is sent'],
+  },
 ]
 
 export default function PropertyManagerAgents() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [section, setSection] = useState<'Agents'|'Activity log'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})

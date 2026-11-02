@@ -12,6 +12,7 @@ import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
 import { expireStaleDrafts } from './ai-proposal-utils'
+import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
 import { proposeCompliance, proposeRenewals, proposeArrears } from './ai-proposals-modules'
 
 function getServiceClient() {
@@ -243,8 +244,10 @@ export async function runAiProposals(force = false) {
     out.compliance = await proposeCompliance()
     out.renewals = await proposeRenewals()
     out.arrears = await proposeArrears()
+    out.viewings = await proposeViewings()
+    out.listings = await proposeListings()
     if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
-    if (force || now.getUTCDate() === 1) out.ownerReports = await proposeOwnerReports()
+    if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }
     return { ok: true, ...out }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }

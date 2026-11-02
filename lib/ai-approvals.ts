@@ -8,7 +8,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -102,6 +102,14 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     if (Number.isFinite(current) && current > 0 && (rate < current * 0.5 || rate > current * 2)) return { error: `A change of more than 50% (from ${current} to ${rate}) needs to be made by hand.` }
     const db = getServiceClient()
     const { data, error } = await db.from('properties').update({ nightly_rate: rate }).eq('id', p.property_id).eq('user_id', action.user_id).select('id')
+    if (error) return { error: error.message }
+    if (!data?.length) return { error: 'Property not found for this account.' }
+    return { success: true }
+  }
+
+  if (action.action_type === 'listing_description') {
+    if (!p.property_id) return { error: 'Missing property_id' }
+    const { data, error } = await getServiceClient().from('estate_properties').update({ description: body }).eq('id', p.property_id).eq('user_id', action.user_id).select('id')
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Property not found for this account.' }
     return { success: true }
