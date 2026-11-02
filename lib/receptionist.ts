@@ -5,6 +5,7 @@
 import { serviceClient } from '@/lib/admin-auth'
 import { callClaude } from '@/lib/claude'
 import { queueAiAction } from '@/lib/ai-approvals'
+import { sendPush } from '@/lib/push'
 import { sendEmail } from '@/lib/send-email'
 import { sendFromMailbox } from '@/lib/mailbox'
 import { getFormat, formatEmail } from '@/lib/email-format'
@@ -85,6 +86,7 @@ export async function finish(id: string, patch: Record<string, any>) {
 
 export async function alertStaff(s: Settings, title: string, message: string, link: string) {
   await serviceClient.from('notifications').insert({ user_id: s.business_id, title, message: message.slice(0, 500), type: 'ai_receptionist', module: 'staffcentre', link, read: false })
+  await sendPush(s.business_id, { title: title.slice(0, 100), body: message.slice(0, 140), url: link }).catch(() => {})
   const to = s.alert_email
   if (to) await sendEmail(to, `${s.assistant_name}: ${title}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5"><p><b>${esc(title)}</b></p><p style="white-space:pre-wrap">${esc(message)}</p><p><a href="${SITE_URL}${link}">Open in the portal</a></p></div>`).catch(() => {})
 }

@@ -2,10 +2,13 @@
 // the business chose. Each rule creates an in-app alert (Alerts) and emails the named person.
 // Runs hourly. Nothing is sent to guests, tenants or owners from here.
 import { svc, dayStr } from './ai-proposal-utils'
+import { sendPush } from './push'
+import { sendSms } from './send-sms'
+import { normalizePhone } from './sms'
 
 const esc = (t: string) => String(t ?? '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 
-type Rule = { id: string; user_id: string; trigger: string; after_hours: number; notify_email: string; notify_name: string | null }
+type Rule = { id: string; user_id: string; trigger: string; after_hours: number; notify_email: string; notify_name: string | null; notify_phone?: string | null }
 
 async function findItems(rule: Rule): Promise<{ title: string; message: string; link: string } | null> {
   const db = svc(), biz = rule.user_id, today = dayStr()
@@ -51,6 +54,11 @@ export async function runEscalations() {
       if (already?.length) continue
       await db.from('notifications').insert({ user_id: rule.user_id, title: hit.title, message: hit.message, type: 'ai_alert', module: 'staffcentre', link: hit.link, read: false })
       out.fired++
+      await sendPush(rule.user_id, { title: hit.title, body: hit.message, url: hit.link }).catch(() => {})
+      if (rule.notify_phone) {
+        const to = normalizePhone(rule.notify_phone)
+        if (to) await sendSms(to, `${hit.title}. ${hit.message}`.slice(0, 300)).catch(() => {})
+      }
       try {
         const { sendEmail } = await import('./send-email')
         const r: any = await sendEmail(rule.notify_email, `Needs attention: ${hit.title}`, `<p><b>${esc(hit.title)}</b></p><p>${esc(hit.message)}</p>`)

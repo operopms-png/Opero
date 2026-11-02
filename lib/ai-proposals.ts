@@ -12,6 +12,7 @@ import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
 import { runEstimate } from './earnings-estimate'
+import { sendPush } from './push'
 import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
@@ -256,6 +257,7 @@ Nights booked: ${nights}${await styleInstructions(businessId)}`
 export async function runAiProposals(force = false, businessId?: string) {
   return runScoped(businessId, async () => {
     try {
+      const startedAt = new Date().toISOString()
       const now = new Date()
       const out: Record<string, unknown> = {}
       out.expiry = await expireStaleDrafts()
@@ -271,6 +273,11 @@ export async function runAiProposals(force = false, businessId?: string) {
       if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
       if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }
       await svcClient().from('ai_run_log').insert({ user_id: businessId ?? null, workflow: 'proposals', ok: true, result: out })
+      // Tell each business's phones how many new drafts are waiting (one message per business).
+      const { data: fresh } = await svcClient().from('ai_pending_actions').select('user_id').eq('status', 'pending').gte('created_at', startedAt)
+      const per = new Map<string, number>()
+      for (const r of fresh ?? []) per.set(r.user_id, (per.get(r.user_id) ?? 0) + 1)
+      for (const [biz, n] of per) await sendPush(biz, { title: `${n} new AI draft${n === 1 ? '' : 's'} to approve`, body: 'Open AI Approvals to review them.', url: '/staff-centre/ai-command-centre/approvals' }).catch(() => {})
       return { ok: true, ...out }
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e)

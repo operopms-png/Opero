@@ -15,14 +15,14 @@ export default function Escalation() {
   const [rules, setRules] = useState<any[] | null>(null)
   const [me, setMe] = useState('')
   const [err, setErr] = useState('')
-  const [f, setF] = useState({ trigger: 'draft_waiting', after_hours: '24', notify_email: '', notify_name: '' })
+  const [f, setF] = useState({ trigger: 'draft_waiting', after_hours: '24', notify_email: '', notify_name: '', notify_phone: '' })
   const load = () => staffApi<{ rules: any[]; me: string }>('/api/ai-escalation').then(d => { setRules(d.rules); setMe(d.me); setErr('') }).catch(e => setErr(e.message))
   useEffect(() => { load() }, [])
   const act = async (body: any) => { try { await staffApi('/api/ai-escalation', body); await load() } catch (e: any) { setErr(e.message) } }
 
   return (
     <CrmPage>
-      <CrmHeader title="Escalation rules" subtitle="Choose who is told when AI work needs a person. Each rule creates an alert in Alerts and emails the person you name. It is checked every hour, and each problem is reported once a day." />
+      <CrmHeader title="Escalation rules" subtitle="Choose who is told when AI work needs a person. Each rule creates an alert in Alerts, sends a notification to phones that turned them on, emails the person you name and texts them if you add a mobile. It is checked every hour, and each problem is reported once a day." />
       <Body>
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         <div style={{ background: '#fff', border: '1px solid ' + C.border, borderRadius: 8, padding: 16, marginBottom: 18, maxWidth: 760 }}>
@@ -37,8 +37,9 @@ export default function Escalation() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 12 }}>
             <input style={input} placeholder="Name" value={f.notify_name} onChange={e => setF({ ...f, notify_name: e.target.value })} />
             <input style={input} placeholder="Email address" value={f.notify_email} onChange={e => setF({ ...f, notify_email: e.target.value })} />
+            <input style={input} placeholder="Mobile for a text (optional)" value={f.notify_phone} onChange={e => setF({ ...f, notify_phone: e.target.value })} />
           </div>
-          <button style={btn('gold')} onClick={async () => { await act({ action: 'add', ...f }); setF({ ...f, notify_email: '', notify_name: '' }) }}>Add rule</button>
+          <button style={btn('gold')} onClick={async () => { await act({ action: 'add', ...f }); setF({ ...f, notify_email: '', notify_name: '', notify_phone: '' }) }}>Add rule</button>
         </div>
 
         {!rules ? (!err && <Loading />) : rules.length === 0 ? (
@@ -52,7 +53,7 @@ export default function Escalation() {
               <div key={r.id} style={{ background: '#fff', border: '1px solid ' + C.border, borderRadius: 6, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', opacity: r.enabled ? 1 : 0.55 }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14.5 }}>{TRIGGERS[r.trigger]?.l ?? r.trigger}{TRIGGERS[r.trigger]?.hours ? ` (after ${r.after_hours} h)` : ''}</div>
-                  <div style={{ fontSize: 13, color: C.muted }}>Tell {r.notify_name ? `${r.notify_name}, ` : ''}{r.notify_email}</div>
+                  <div style={{ fontSize: 13, color: C.muted }}>Tell {r.notify_name ? `${r.notify_name}, ` : ''}{r.notify_email}{r.notify_phone ? `, text ${r.notify_phone}` : ''}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button style={btn('ghost', true)} onClick={() => act({ action: 'toggle', id: r.id, enabled: !r.enabled })}>{r.enabled ? 'Pause' : 'Resume'}</button>

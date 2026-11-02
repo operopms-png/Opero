@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getCaller } from '@/lib/mailbox'
 import { executeAiAction } from '@/lib/ai-approvals'
 import { aiTask } from '@/lib/ai-proposal-utils'
+import { sendPush } from '@/lib/push'
 
 // Staff Centre → AI Approvals. GET lists the queue for the caller's business;
 // POST approves (optionally with an edited body) or rejects one action.
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
   const result = await executeAiAction(row, bodyToSend)
   if ('error' in result && result.error) {
     await db.from('ai_pending_actions').update({ status: 'failed', error: String(result.error).slice(0, 500) }).eq('id', id)
+    await sendPush(c.businessId, { title: 'An approved AI action failed', body: String(row.title ?? '').slice(0, 100), url: '/staff-centre/ai-command-centre/approvals' }).catch(() => {})
     await aiTask(c.businessId, `Fix failed AI action: ${String(row.title ?? '').slice(0, 80)}`, String(result.error), 0)
     await db.from('notifications').insert({ user_id: c.businessId, title: `An approved AI action failed: ${String(row.title ?? '').slice(0, 80)}`, message: String(result.error).slice(0, 300), type: 'ai_alert', module: 'staffcentre', link: '/staff-centre/ai-command-centre/approvals', read: false })
     return NextResponse.json({ error: result.error }, { status: 502 })

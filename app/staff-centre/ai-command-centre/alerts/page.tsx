@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { C, CrmPage, CrmHeader, Body, Loading, Empty, btn } from '../../../../components/crm/Page'
 import { staffApi } from '../../../../lib/staff-api'
+import PushToggle from '../../../../components/ai/PushToggle'
 
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -20,6 +21,7 @@ export default function Alerts() {
       <CrmHeader title="Alerts" subtitle="Things the AI needs a person to know about: failed actions, waiting drafts, expired certificates and new messages. Set who is emailed under Escalation rules."
         actions={unread > 0 ? <button style={btn('ghost')} onClick={() => mark({ action: 'read_all' })}>Mark all read</button> : undefined} />
       <Body>
+        <PushToggle />
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         {!rows ? (!err && <Loading />) : rows.length === 0 ? <Empty>No alerts.</Empty> : (
           <div style={{ display: 'grid', gap: 8 }}>
