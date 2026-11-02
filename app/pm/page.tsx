@@ -105,19 +105,25 @@ const TAB_INTROS: Record<string,string> = {
   'Messages': 'messages sent to and from tenants, landlords and staff, kept in one place.',
 }
 
-const PM_NAV_GROUPS = [
+// Sidebar. Each module (Property Management, Developments, Vacation Rentals, Estate
+// Agency) is one heading. Property Management holds every property management page,
+// grouped under sub-headings; the other three are a single link to their own area.
+type PmNavGroup = { label: string; items?: string[]; sub?: { label: string; items: string[] }[] }
+const PM_NAV_GROUPS: PmNavGroup[] = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PORTFOLIO', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
+  { label: 'PROPERTY MANAGEMENT', sub: [
+    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
+    { label: 'Compliance', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms','Deadlines','Insurance'] },
+    { label: 'Operations', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
+    { label: 'Documents', items: ['Documents'] },
+    { label: 'Company', items: ['Company SOPs','Contract Templates','Audit Log'] },
+    { label: 'Finance', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Exchange Rates'] },
+    { label: 'Reports', items: ['Landlord Reports','Reports','Accounting Export','Unit Profit'] },
+    { label: 'Comms', items: ['Messages'] },
+  ] },
   { label: 'DEVELOPMENTS', items: ['Developments'] },
   { label: 'VACATION RENTALS', items: ['Vacation Rentals'] },
   { label: 'ESTATE AGENCY', items: ['Estate Agency'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms','Deadlines','Insurance'] },
-  { label: 'OPERATIONS', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
-  { label: 'DOCUMENTS', items: ['Documents'] },
-  { label: 'COMPANY', items: ['Company SOPs','Contract Templates','Audit Log'] },
-  { label: 'FINANCE', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Exchange Rates'] },
-  { label: 'REPORTS', items: ['Landlord Reports','Reports','Accounting Export','Unit Profit'] },
-  { label: 'COMMS', items: ['Messages'] },
 ]
 
 async function uploadFile(file: File, folder: string): Promise<string | null> {
@@ -1027,16 +1033,25 @@ function PMPageInner() {
           <span style={{fontSize:14,fontWeight:700,color:'#1D4E89'}}>Property Operations</span>
         </div>
         <div style={{padding:'8px 10px'}}>
-          {PM_NAV_GROUPS.map(group=>(
-            <div key={group.label}>
-              <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
-              {group.items.map(t=>{
-                const locked = !!(allowedTab && t !== allowedTab)
-                const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? [...complianceRecords,...strCompliance].filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
-                return <button key={t} onClick={()=>{ if(t==='Developments'){ window.location.assign('/dev'); return } if(t==='Vacation Rentals'){ window.location.assign('/str'); return } if(t==='Estate Agency'){ window.location.assign('/estate'); return } if(!locked) setTab(t) }} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
-              })}
-            </div>
-          ))}
+          {(()=>{
+            const renderNavItem = (t:string) => {
+              const locked = !!(allowedTab && t !== allowedTab)
+              const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? [...complianceRecords,...strCompliance].filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
+              return <button key={t} onClick={()=>{ if(t==='Developments'){ window.location.assign('/dev'); return } if(t==='Vacation Rentals'){ window.location.assign('/str'); return } if(t==='Estate Agency'){ window.location.assign('/estate'); return } if(!locked) setTab(t) }} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+            }
+            return PM_NAV_GROUPS.map(group=>(
+              <div key={group.label}>
+                <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
+                {group.items?.map(renderNavItem)}
+                {group.sub?.map(s=>(
+                  <div key={s.label}>
+                    <div style={{fontSize:11,fontWeight:600,color:'#667085',padding:'8px 12px 3px'}}>{s.label}</div>
+                    {s.items.map(renderNavItem)}
+                  </div>
+                ))}
+              </div>
+            ))
+          })()}
         </div>
       </div>
 
