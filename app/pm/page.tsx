@@ -110,8 +110,7 @@ const TAB_INTROS: Record<string,string> = {
 // grouped under sub-headings; the other three are a single link to their own area.
 type PmNavGroup = { label: string; items?: string[]; sub?: { label: string; items: string[] }[] }
 const PM_NAV_GROUPS: PmNavGroup[] = [
-  { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PROPERTY MANAGEMENT', sub: [
+  { label: 'PROPERTY MANAGEMENT', items: ['Property Management'], sub: [
     { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
     { label: 'Compliance', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms','Deadlines','Insurance'] },
     { label: 'Operations', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
@@ -316,6 +315,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 function PMPageInner() {
   const searchParams = useSearchParams()
   const [tab, setTab] = useState('Dashboard')
+  const [pmOpen, setPmOpen] = useState(true)
   const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'pm')
 
@@ -1042,8 +1042,13 @@ function PMPageInner() {
             return PM_NAV_GROUPS.map(group=>(
               <div key={group.label}>
                 <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
-                {group.items?.map(renderNavItem)}
-                {group.sub?.map(s=>(
+                {group.items?.map(t=>{
+                  if(t!=='Property Management') return renderNavItem(t)
+                  const locked = !!(allowedTab && allowedTab !== 'Dashboard')
+                  const active = tab==='Dashboard'&&!locked
+                  return <button key={t} disabled={locked} onClick={()=>{ if(tab==='Dashboard') setPmOpen(o=>!o); else { setTab('Dashboard'); setPmOpen(true) } }} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:active?'1px solid #2F6DB5':'1px solid transparent',background:active?'#B9D6F2':'transparent',color:locked?'#C1C9D2':active?'#1D4E89':'#344054',fontSize:13,fontWeight:active?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span><span style={{fontSize:10}}>{pmOpen?'▾':'▸'}</span></button>
+                })}
+                {pmOpen && group.sub?.map(s=>(
                   <div key={s.label}>
                     <div style={{fontSize:11,fontWeight:600,color:'#667085',padding:'8px 12px 3px'}}>{s.label}</div>
                     {s.items.map(renderNavItem)}
