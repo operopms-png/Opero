@@ -6,7 +6,7 @@ export const WORKFLOWS: Workflow[] = [
   { agent: 'chief', label: 'Chief of Staff', module: 'Whole business', schedule: 'Daily, 07:30', resultKey: 'chief' },
   { agent: 'guest', label: 'Guest agent', module: 'Vacation rentals', schedule: 'Live, as each guest message arrives', live: true },
   { agent: 'cleaning', label: 'Cleaning coordinator', module: 'Vacation rentals', schedule: 'Daily, 07:30', resultKey: 'cleaning' },
-  { agent: 'maintenance', label: 'Maintenance coordinator', module: 'Vacation rentals', schedule: 'Daily, 07:30', resultKey: 'maintenance' },
+  { agent: 'maintenance', label: 'Maintenance coordinator (also Property management repairs)', module: 'Vacation rentals', schedule: 'Daily, 07:30', resultKey: 'maintenance' },
   { agent: 'revenue', label: 'Revenue manager', module: 'Vacation rentals', schedule: 'Mondays, 07:30', resultKey: 'rates' },
   { agent: 'owner', label: 'Owner relations', module: 'Vacation rentals', schedule: '1st of the month, 07:30', resultKey: 'ownerReports' },
   { agent: 'leads', label: 'Lead qualification', module: 'Vacation rentals', schedule: 'Live, when a lead is submitted', live: true },

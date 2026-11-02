@@ -15,6 +15,7 @@ import { runEstimate } from './earnings-estimate'
 import { sendPush } from './push'
 import { proposePortfolioReview } from './ai-portfolio'
 import { proposeChiefPlan } from './ai-chief'
+import { proposePmContractorRequests, listContractors, pickContractor } from './ai-contractors'
 import { proposeLeaseDocs } from './ai-proposals-docs'
 import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
@@ -103,7 +104,8 @@ export async function proposeMaintenance() {
       .in('property_id', ids).eq('status', 'open').gte('created_at', new Date(Date.now() - 3 * 86400000).toISOString())
     for (const t of tickets ?? []) {
       const property: any = (props ?? []).find((p: any) => p.id === t.property_id)
-      const to = await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%maint%,role.ilike.%contractor%,role.ilike.%repair%,role.ilike.%handy%')
+      let to: { name: string; email: string } | null = await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%maint%,role.ilike.%contractor%,role.ilike.%repair%,role.ilike.%handy%')
+      if (!to && !t.assigned_to) { const c = await pickContractor(businessId, await listContractors(businessId, 'str'), `${t.title ?? ''}. ${t.description ?? ''}`); if (c) to = { name: c.name, email: c.email } }
       if (!to) { result.noRecipient!++; await aiTask(businessId, `Assign a contractor: ${String(t.title ?? 'maintenance job').slice(0, 60)} at ${property?.name ?? 'a property'}`, 'An open maintenance ticket has nobody to send the request to. Assign it to a team member who has an email address.'); continue }
       const system = `You are a maintenance coordinator for a short-term rental company. Draft a short, clear message to ${to.name} asking them to deal with the issue below. Include the property, the problem, the priority and what you need back from them. Plain text, no subject line, ready to send. Use only the information given.
 
@@ -359,6 +361,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.rentReminders = await proposeRentReminders()
       out.compliance = await proposeCompliance()
       out.chief = await proposeChiefPlan()
+      out.pmRepairs = await proposePmContractorRequests()
       out.renewals = await proposeRenewals()
       out.arrears = await proposeArrears()
       out.viewings = await proposeViewings()
