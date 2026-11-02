@@ -76,7 +76,7 @@ export async function proposeListings() {
         p.features && `Features: ${Array.isArray(p.features) ? p.features.join(', ') : p.features}`, p.available_from && `Available from: ${p.available_from}`,
       ].filter(Boolean).join('\n')
       if (!facts) { result.skipped++; continue }
-      const system = `You write property listing descriptions for an estate agency website. Use only the facts given below. Do not invent features, views, transport links, distances or condition. 80 to 120 words, plain professional English, no emojis, no exclamation marks.\n\n${facts}${await styleInstructions(businessId)}`
+      const system = `You write property listing descriptions for an estate agency website. Use only the facts given below. Do not invent features, views, transport links, distances or condition. 80 to 120 words, plain professional English, no emojis, no exclamation marks.\n\n${facts}${await styleInstructions(businessId, 'ea_listings')}`
       const { text, error } = await callClaude(system, 'Write the listing description.', 400)
       if (error || !text) { result.errors.push(`${p.name}: ${error ?? 'no text'}`); continue }
       const q = await queueAiAction({
@@ -111,7 +111,7 @@ export async function proposeInvestorUpdates() {
       if (!proj) { result.skipped++; continue }
       const open = (snags ?? []).filter((s: any) => !/clos|resolv|complet|done/i.test(String(s.status ?? ''))).length
       const facts = `Project: ${proj.name}\nStatus: ${proj.status ?? 'not set'}\nStart: ${proj.start_date ?? 'not set'}\nTarget completion: ${proj.end_date ?? 'not set'}\nBudget: ${proj.total_budget ?? 'not set'}\nSpent so far: ${proj.spent ?? 'not set'}\nOpen snagging items: ${open}`
-      const system = `You draft a short, factual monthly progress update email from a property developer to an investor. Use only the facts below. Do not predict returns, promise dates or invent progress. If a figure says "not set", leave it out. Plain professional English, no emojis, under 150 words, end by inviting questions.\n\nInvestor: ${inv.name}\n${facts}${await styleInstructions(businessId)}`
+      const system = `You draft a short, factual monthly progress update email from a property developer to an investor. Use only the facts below. Do not predict returns, promise dates or invent progress. If a figure says "not set", leave it out. Plain professional English, no emojis, under 150 words, end by inviting questions.\n\nInvestor: ${inv.name}\n${facts}${await styleInstructions(businessId, 'dev_investors')}`
       const { text, error } = await callClaude(system, 'Draft the update email body (no subject line).', 450)
       if (error || !text) { result.errors.push(`${inv.name}: ${error ?? 'no text'}`); continue }
       const q = await queueAiAction({

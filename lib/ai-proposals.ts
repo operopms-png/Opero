@@ -18,7 +18,7 @@ import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask 
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
-import { proposeCompliance, proposeRenewals, proposeArrears } from './ai-proposals-modules'
+import { proposeCompliance, proposeRenewals, proposeArrears, proposeDeposits, proposeInsurance, proposeInspections, proposeStatementReminders } from './ai-proposals-modules'
 
 function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -70,7 +70,7 @@ export async function proposeCleaning() {
 Property: ${property?.name ?? 'Unknown'} (${property?.address ?? ''}, ${property?.city ?? ''})
 Max guests: ${property?.max_guests ?? 'Unknown'}
 House rules: ${property?.house_rules ?? 'None on file'}
-Notes for this job: ${t.notes ?? 'None'}`
+Notes for this job: ${t.notes ?? 'None'}${await styleInstructions(businessId, 'cleaning')}`
       const { text, error } = await callClaude(system, `Cleaning date: ${t.scheduled_date}. Draft the instruction message.`, 450)
       if (error || !text) { result.errors.push(`cleaning ${t.id}: ${error ?? 'no text'}`); continue }
       const q = await queueAiAction({
@@ -106,7 +106,7 @@ export async function proposeMaintenance() {
       const system = `You are a maintenance coordinator for a short-term rental company. Draft a short, clear message to ${to.name} asking them to deal with the issue below. Include the property, the problem, the priority and what you need back from them. Plain text, no subject line, ready to send. Use only the information given.
 
 Property: ${property?.name ?? 'Unknown'} (${property?.address ?? ''}, ${property?.city ?? ''})
-Priority: ${t.priority ?? 'medium'}`
+Priority: ${t.priority ?? 'medium'}${await styleInstructions(businessId, 'maintenance')}`
       const { text, error } = await callClaude(system, `Issue: ${t.title ?? 'Maintenance issue'}\nDetails: ${t.description || 'No further details provided.'}`, 400)
       if (error || !text) { result.errors.push(`maintenance ${t.id}: ${error ?? 'no text'}`); continue }
       const q = await queueAiAction({
@@ -235,7 +235,7 @@ Properties: ${propertyNames || 'None on file'}
 Period: last 30 days
 Total bookings revenue: ${money(revenue)}
 Owner's share (${share}%): ${money(ownerShare)}
-Nights booked: ${nights}${await styleInstructions(businessId)}`
+Nights booked: ${nights}${await styleInstructions(businessId, 'owner')}`
       const { text, error } = await callClaude(system, 'Draft the monthly owner report email body (no subject line).', 500)
       if (error || !text) { result.errors.push(`${owner.name}: ${error ?? 'no text'}`); continue }
 
@@ -249,6 +249,96 @@ Nights booked: ${nights}${await styleInstructions(businessId)}`
       })
       if ('queued' in q) result.queued++; else { result.skipped++; if ('error' in q) result.errors.push(`${owner.name}: ${q.error}`) }
     }
+  }
+  return result
+}
+
+// ---------- maintenance follow-up ----------
+// Jobs still open after 3 days: ask whoever is assigned for a status update. Vacation-rental tickets go to the
+// assigned team member by email; Property Management jobs (the assignee there is just a name) become a task.
+export async function proposeMaintenanceFollowups() {
+  const db = getServiceClient()
+  const result = fresh(); result.noRecipient = 0
+  const businesses = await enabledBusinesses('maint_followup')
+  result.businesses = businesses.length
+  const cutoff = new Date(Date.now() - 3 * 86400000).toISOString()
+
+  for (const businessId of businesses) {
+    const { data: props } = await db.from('properties').select('id, name').eq('user_id', businessId)
+    const ids = (props ?? []).map((p: any) => p.id)
+    if (ids.length) {
+      const { data: tickets } = await db.from('maintenance_tickets').select('id, property_id, assigned_to, title, created_at, status').in('property_id', ids).eq('status', 'open').lt('created_at', cutoff).limit(30)
+      for (const t of tickets ?? []) {
+        const property: any = (props ?? []).find((p: any) => p.id === t.property_id)
+        const to = t.assigned_to ? await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%maint%') : null
+        const days = Math.floor((Date.now() - new Date(t.created_at).getTime()) / 86400000)
+        if (!to) { result.noRecipient!++; await aiTask(businessId, `Chase maintenance: ${String(t.title ?? 'job').slice(0, 60)} at ${property?.name ?? 'a property'}`, `Open for ${days} days and not assigned to anyone with an email address.`); continue }
+        const body = `Hi ${to.name.split(' ')[0]},\n\nA quick check on this job: "${t.title ?? 'Maintenance issue'}" at ${property?.name ?? 'the property'}. It was reported ${days} days ago and is still open.\n\nCould you let us know when it will be done, or tell us if you need anything from us to get it finished?\n\nThank you.`
+        const q = await queueAiAction({
+          userId: businessId, agentKey: 'maint_followup', actionType: 'email_out',
+          title: `Follow up: ${String(t.title ?? 'maintenance job').slice(0, 60)}`, propertyName: property?.name ?? null, draftBody: body,
+          payload: { to: to.email, subject: `Update needed: ${t.title ?? 'maintenance job'}`, ticket_id: t.id },
+          context: { summary: `Open ${days} days · will be emailed to ${to.name}` },
+          dedupe: { key: 'ticket_id', value: t.id, sinceIso: dayStr(-3) },
+        })
+        if ('queued' in q) result.queued++; else result.skipped++
+      }
+    }
+    const { data: pmJobs } = await db.from('pm_maintenance').select('id, property_id, title, status, assigned_to, created_at').eq('user_id', businessId).lt('created_at', cutoff).limit(30)
+    for (const j of (pmJobs ?? []).filter((x: any) => /open|new|pending|progress/i.test(String(x.status ?? '')))) {
+      const { data: prop } = await db.from('pm_properties').select('name, address').eq('id', j.property_id).eq('user_id', businessId).maybeSingle()
+      const days = Math.floor((Date.now() - new Date(j.created_at).getTime()) / 86400000)
+      result.queued++
+      await aiTask(businessId, `Chase repair: ${String(j.title ?? 'job').slice(0, 60)} at ${prop?.name || prop?.address || 'a property'}`, `Open for ${days} days${j.assigned_to ? `, with ${j.assigned_to}` : ', and not assigned'}. Ask for a status update and tell the tenant what is happening.`)
+    }
+  }
+  return result
+}
+
+// ---------- weekly management report ----------
+// Monday email to the business owner: this week in counts. The AI writes the short summary from the
+// figures; the figures themselves are added by code so they cannot be altered.
+export async function proposeWeeklyReport() {
+  const db = getServiceClient()
+  const result = fresh()
+  const businesses = await enabledBusinesses('weekly_report')
+  result.businesses = businesses.length
+  const weekAgo = dayStr(-7), today = dayStr()
+  const monday = dayStr(-((new Date().getUTCDay() + 6) % 7))
+
+  for (const businessId of businesses) {
+    const { data: u } = await db.auth.admin.getUserById(businessId)
+    const to = u?.user?.email
+    if (!to) { result.errors.push(`weekly ${businessId}: no owner email`); continue }
+    const count = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0
+    const head = { count: 'exact' as const, head: true }
+    const [sent, waiting, rejected, rentIn, overdue, openPm, openStr, ending, expired] = await Promise.all([
+      count(db.from('ai_pending_actions').select('id', head).eq('user_id', businessId).eq('status', 'executed').gte('decided_at', weekAgo)),
+      count(db.from('ai_pending_actions').select('id', head).eq('user_id', businessId).eq('status', 'pending')),
+      count(db.from('ai_pending_actions').select('id', head).eq('user_id', businessId).eq('status', 'rejected').not('decided_by', 'is', null).gte('decided_at', weekAgo)),
+      count(db.from('pm_rent_payments').select('id', head).eq('user_id', businessId).gte('paid_date', weekAgo).lte('paid_date', today)),
+      count(db.from('pm_rent_payments').select('id', head).eq('user_id', businessId).lt('due_date', today).not('status', 'ilike', 'paid')),
+      count(db.from('pm_maintenance').select('id', head).eq('user_id', businessId).not('status', 'ilike', '%resolv%').not('status', 'ilike', '%clos%').not('status', 'ilike', '%complet%').not('status', 'ilike', '%done%').not('status', 'ilike', '%cancel%')),
+      count(db.from('maintenance_tickets').select('id', head).eq('status', 'open').in('property_id', ((await db.from('properties').select('id').eq('user_id', businessId)).data ?? []).map((p: any) => p.id))),
+      count(db.from('pm_leases').select('id', head).eq('user_id', businessId).gte('end_date', today).lte('end_date', dayStr(60))),
+      count(db.from('pm_compliance').select('id', head).eq('user_id', businessId).lt('expiry_date', today)),
+    ])
+    const figures = [
+      `AI drafts approved and sent this week: ${sent}`, `AI drafts rejected this week: ${rejected}`, `AI drafts waiting for approval: ${waiting}`,
+      `Rent payments received this week: ${rentIn}`, `Rent payments overdue: ${overdue}`,
+      `Open maintenance jobs: ${openPm + openStr}`, `Tenancies ending in the next 60 days: ${ending}`, `Compliance certificates expired: ${expired}`,
+    ]
+    const system = `You write the opening paragraph of a weekly management report for a property company's owner. Use only the figures below. Two or three sentences in plain professional English: say what looks fine and what needs attention. No emojis, no advice beyond pointing at the figures, and do not invent numbers.\n\n${figures.join('\n')}${await styleInstructions(businessId, 'weekly_report')}`
+    const { text, error } = await callClaude(system, 'Write the opening paragraph.', 250)
+    if (error || !text) { result.errors.push(`weekly ${businessId}: ${error ?? 'no text'}`); continue }
+    const q = await queueAiAction({
+      userId: businessId, agentKey: 'weekly_report', actionType: 'email_out',
+      title: `Weekly report, week of ${monday}`, draftBody: `${text.trim()}\n\nThe figures:\n${figures.map(f => '- ' + f).join('\n')}`,
+      payload: { to, subject: `Weekly report, week of ${monday}`, week: monday },
+      context: { summary: `Counts from your records · will be emailed to ${to}` },
+      dedupe: { key: 'week', value: monday },
+    })
+    if ('queued' in q) result.queued++; else { result.skipped++; if ('error' in q) result.errors.push(q.error!) }
   }
   return result
 }
@@ -272,6 +362,12 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.rentMatches = await proposeRentMatches()
       out.listings = await proposeListings()
       out.leaseDocs = await proposeLeaseDocs()
+      out.deposits = await proposeDeposits()
+      out.insurance = await proposeInsurance()
+      out.inspections = await proposeInspections()
+      out.maintFollowups = await proposeMaintenanceFollowups()
+      if (force || (now.getUTCDate() >= 2 && now.getUTCDate() <= 10)) out.statements = await proposeStatementReminders()
+      if (force || now.getUTCDay() === 1) out.weeklyReport = await proposeWeeklyReport()
       if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
       if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }
       await svcClient().from('ai_run_log').insert({ user_id: businessId ?? null, workflow: 'proposals', ok: true, result: out })

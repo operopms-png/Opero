@@ -128,3 +128,131 @@ export async function proposeArrears() {
   }
   return result
 }
+
+// ---------- deposit protection ----------
+// A deposit taken on a UK tenancy has to be put in a government-approved scheme, and the tenant
+// given the prescribed information, within 30 days. This watches the lease record and warns staff
+// (an alert and a task) before the deadline and every day after it, until the protected date is
+// filled in. It never contacts the tenant or the landlord.
+const LEASE_OVER = /end|terminat|expir|cancel|draft/i
+export async function proposeDeposits() {
+  const db = svc()
+  const result = freshCounts()
+  const businesses = await enabledBusinesses('pm_deposits')
+  result.businesses = businesses.length
+  const today = dayStr()
+  const { aiAlert } = await import('./push')
+
+  for (const businessId of businesses) {
+    const { data: props } = await db.from('pm_properties').select('id, name, address, country').eq('user_id', businessId)
+    const { data: leases } = await db.from('pm_leases').select('id, tenant_id, property_id, start_date, status, deposit')
+      .eq('user_id', businessId).gt('deposit', 0).is('deposit_protected_date', null).gte('start_date', dayStr(-180))
+    let overdue = 0, soon = 0
+    for (const l of leases ?? []) {
+      const prop: any = (props ?? []).find((p: any) => p.id === l.property_id)
+      if (!l.start_date || LEASE_OVER.test(l.status || '') || /jamaica|st\.? james/i.test(prop?.country || '')) continue
+      const deadline = new Date(new Date(l.start_date + 'T12:00:00Z').getTime() + 30 * 86400000).toISOString().slice(0, 10)
+      const left = daysBetween(deadline, today)
+      if (left > 10) continue
+      const { data: tenant } = await db.from('pm_tenants').select('name').eq('id', l.tenant_id).eq('user_id', businessId).maybeSingle()
+      const where = prop?.name || prop?.address || 'a property'
+      left < 0 ? overdue++ : soon++
+      result.queued++
+      await aiTask(businessId, `Protect deposit: ${tenant?.name ?? 'tenant'} at ${where}`,
+        `The deposit has no protected date on the lease. It should be in a government-approved scheme, with the prescribed information given to the tenant, within 30 days of receipt (about ${niceDate(deadline)} counting from the lease start). ${left < 0 ? `That is ${-left} days overdue.` : `${left} days left.`} Enter the scheme and protected date on the lease once done.`, Math.max(0, left))
+    }
+    if (overdue) await aiAlert(businessId, `${overdue} tenancy deposit${overdue === 1 ? ' is' : 's are'} past the 30-day protection deadline`, 'Check Leases: no protected date is recorded. Protect the deposit and give the tenant the prescribed information.', '/staff-centre/tasks')
+    else if (soon) await aiAlert(businessId, `${soon} tenancy deposit${soon === 1 ? '' : 's'} must be protected within 10 days`, 'No protected date is recorded on the lease yet.', '/staff-centre/tasks')
+  }
+  return result
+}
+
+// ---------- insurance renewals ----------
+export async function proposeInsurance() {
+  const db = svc()
+  const result = freshCounts()
+  const businesses = await enabledBusinesses('pm_insurance')
+  result.businesses = businesses.length
+  const today = dayStr(), horizon = dayStr(30)
+
+  for (const businessId of businesses) {
+    const sign = await companyName(businessId)
+    const { data: rows } = await db.from('pm_insurance_policies').select('id, property_id, policy_type, insurer, policy_number, renewal_date')
+      .eq('user_id', businessId).not('renewal_date', 'is', null).lte('renewal_date', horizon).gte('renewal_date', dayStr(-30))
+    for (const r of rows ?? []) {
+      const { data: prop } = r.property_id ? await db.from('pm_properties').select('name, address, owner_id').eq('id', r.property_id).eq('user_id', businessId).maybeSingle() : { data: null }
+      const { data: landlord } = prop?.owner_id ? await db.from('pm_landlords').select('name, email').eq('id', prop.owner_id).eq('user_id', businessId).maybeSingle() : { data: null }
+      const where = prop?.name || prop?.address || 'your property'
+      const left = daysBetween(r.renewal_date, today)
+      if (!landlord?.email) { result.noRecipient++; await aiTask(businessId, `Chase insurance renewal: ${r.policy_type ?? 'policy'} at ${where}`, `The policy ${left < 0 ? 'passed its renewal date' : `renews on ${niceDate(r.renewal_date)}`}, and the landlord has no email address for a reminder.`); continue }
+      const hi = firstName(landlord.name) ? `Dear ${firstName(landlord.name)},` : 'Hello,'
+      const policy = [r.policy_type, r.insurer && `with ${r.insurer}`, r.policy_number && `(policy ${r.policy_number})`].filter(Boolean).join(' ')
+      const body = `${hi}\n\nThe ${policy || 'insurance policy'} for ${where} ${left < 0 ? `was due for renewal on ${niceDate(r.renewal_date)}` : `renews on ${niceDate(r.renewal_date)}`}.\n\nPlease let us know whether it is being renewed, and send us the new schedule or certificate when you have it. If you would like us to help arrange cover, reply and we will look into it.\n\nKind regards,\n${sign}`
+      const q = await queueAiAction({
+        userId: businessId, agentKey: 'pm_insurance', actionType: 'email_out',
+        title: `Insurance ${left < 0 ? 'overdue' : 'renewal'}: ${where}`, propertyName: where, draftBody: body,
+        payload: { to: landlord.email, subject: `Insurance renewal - ${where}`, policy_id: `${r.id}:${r.renewal_date}` },
+        context: { summary: `${r.policy_type ?? 'Policy'} ${left < 0 ? `${-left} days past renewal` : `renews in ${left} days`} · will be emailed to ${landlord.name}` },
+        dedupe: { key: 'policy_id', value: `${r.id}:${r.renewal_date}`, sinceIso: dayStr(-21) },
+      })
+      if ('queued' in q) result.queued++; else { result.skipped++; if ('error' in q) result.errors.push(q.error!) }
+    }
+  }
+  return result
+}
+
+// ---------- inspections ----------
+// Properties with no inspection booked or done in the last six months get a task to book one.
+export async function proposeInspections() {
+  const db = svc()
+  const result = freshCounts()
+  const businesses = await enabledBusinesses('pm_inspections')
+  result.businesses = businesses.length
+
+  for (const businessId of businesses) {
+    const { data: props } = await db.from('pm_properties').select('id, name, address, status').eq('user_id', businessId)
+    const { data: insp } = await db.from('pm_inspections').select('property_id, scheduled_date, status').eq('user_id', businessId).gte('scheduled_date', dayStr(-182))
+    const covered = new Set((insp ?? []).filter((i: any) => !/cancel/i.test(String(i.status ?? ''))).map((i: any) => i.property_id))
+    for (const p of (props ?? []).filter((x: any) => !/sold|clos|inactive|archiv|vacat/i.test(String(x.status ?? '')))) {
+      if (covered.has(p.id)) { result.skipped++; continue }
+      result.queued++
+      await aiTask(businessId, `Book an inspection: ${p.name || p.address}`, 'No inspection has been done or booked in the last six months. Book one on the Inspections tab.', 7)
+    }
+  }
+  return result
+}
+
+// ---------- landlord statements ----------
+// The statement figures are built on Reports -> Landlord Reports from the full records. This makes
+// sure none are forgotten: from the 2nd to the 10th it lists landlords who received rent last month
+// but have no statement for it.
+export async function proposeStatementReminders() {
+  const db = svc()
+  const result = freshCounts()
+  const businesses = await enabledBusinesses('pm_statements')
+  result.businesses = businesses.length
+  const now = new Date()
+  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)), to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0))
+  const f = from.toISOString().slice(0, 10), t = to.toISOString().slice(0, 10)
+  const monthName = from.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+  const { aiAlert } = await import('./push')
+
+  for (const businessId of businesses) {
+    const { data: props } = await db.from('pm_properties').select('id, owner_id').eq('user_id', businessId).not('owner_id', 'is', null)
+    const owner = new Map((props ?? []).map((p: any) => [p.id, p.owner_id as string]))
+    if (!owner.size) continue
+    const { data: paid } = await db.from('pm_rent_payments').select('property_id, status, paid_date').eq('user_id', businessId).gte('paid_date', f).lte('paid_date', t)
+    const withRent = new Set((paid ?? []).filter((r: any) => String(r.status).toLowerCase() === 'paid').map((r: any) => owner.get(r.property_id)).filter(Boolean) as string[])
+    if (!withRent.size) continue
+    const { data: done } = await db.from('landlord_statements').select('landlord_id').eq('user_id', businessId).eq('module', 'pm').lte('period_from', t).gte('period_to', f)
+    const have = new Set((done ?? []).map((d: any) => d.landlord_id))
+    const missing = Array.from(withRent).filter(id => !have.has(id))
+    if (!missing.length) continue
+    const { data: names } = await db.from('pm_landlords').select('name').eq('user_id', businessId).in('id', missing)
+    result.queued += missing.length
+    const list = (names ?? []).map((n: any) => n.name).slice(0, 8).join(', ')
+    await aiTask(businessId, `Prepare ${monthName} landlord statements`, `${missing.length} landlord${missing.length === 1 ? ' has' : 's have'} rent received in ${monthName} but no statement: ${list}. Build and send them on Reports, Landlord Reports.`, 3)
+    await aiAlert(businessId, `${missing.length} landlord statement${missing.length === 1 ? '' : 's'} for ${monthName} not prepared`, list, '/pm?tab=Landlord%20Reports')
+  }
+  return result
+}

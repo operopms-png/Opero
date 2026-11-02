@@ -33,3 +33,13 @@ export async function sendPush(businessId: string, msg: { title: string; body: s
   }
   return { sent }
 }
+
+// An in-app alert (AI Command Centre -> Alerts) plus a phone notification. Once per title per day.
+export async function aiAlert(businessId: string, title: string, message: string, link: string) {
+  const db = svc()
+  const dayStart = `${new Date().toISOString().slice(0, 10)}T00:00:00Z`
+  const { data } = await db.from('notifications').select('id').eq('user_id', businessId).eq('type', 'ai_alert').eq('title', title).gte('created_at', dayStart).limit(1)
+  if (data?.length) return
+  await db.from('notifications').insert({ user_id: businessId, title, message: message.slice(0, 500), type: 'ai_alert', module: 'staffcentre', link, read: false })
+  await sendPush(businessId, { title, body: message.slice(0, 140), url: link }).catch(() => {})
+}

@@ -116,6 +116,54 @@ const AGENTS = [
     capabilities: ['Read PDF or photo agreements on leases and tenancies','Compare rent, deposit, start and end dates with the record','Show you each difference before anything changes','Update the record only after you approve','Read up to 5 documents per day, and each only once'],
   },
   {
+    key: 'pm_deposits',
+    module: 'Property management',
+    name: 'AI Deposit Protection Watch',
+    icon: ICON,
+    desc: 'Watches lease records for UK deposits with no protected date and warns you before the 30-day deadline and every day after it. It never contacts the tenant or landlord.',
+    capabilities: ['Find deposits not yet protected','Alert you and create a task before the deadline','Keep reminding you daily once it is overdue','Skip Jamaica properties and ended leases'],
+  },
+  {
+    key: 'pm_insurance',
+    module: 'Property management',
+    name: 'AI Insurance Renewals',
+    icon: ICON,
+    desc: 'Drafts a reminder to the landlord when a policy on the Insurance tab renews within 30 days or has passed its date.',
+    capabilities: ['Find policies renewing within 30 days','Draft the reminder to the landlord','Create a task if the landlord has no email','Wait for your approval before anything is sent'],
+  },
+  {
+    key: 'pm_inspections',
+    module: 'Property management',
+    name: 'AI Inspection Scheduler',
+    icon: ICON,
+    desc: 'Creates a task to book an inspection for any property with none done or booked in the last six months.',
+    capabilities: ['Find properties not inspected in six months','Create a task for your team','Skip sold, closed and vacated properties'],
+  },
+  {
+    key: 'pm_statements',
+    module: 'Property management',
+    name: 'AI Landlord Statement Reminders',
+    icon: ICON,
+    desc: 'From the 2nd to the 10th of each month, lists landlords who received rent last month but have no statement yet. The statement figures are still built on Reports, Landlord Reports.',
+    capabilities: ['Find landlords with rent received last month and no statement','Create a task and alert listing them','Stop reminding once the statements are saved'],
+  },
+  {
+    key: 'maint_followup',
+    module: 'Property management',
+    name: 'AI Maintenance Follow-up',
+    icon: ICON,
+    desc: 'Chases jobs still open after 3 days. Vacation-rental tickets get a drafted status request to the assigned person; Property Management jobs become a task.',
+    capabilities: ['Find jobs open more than 3 days','Draft a status request to the assigned person','Create a task when nobody is assigned','Wait for your approval before anything is sent'],
+  },
+  {
+    key: 'weekly_report',
+    module: 'Property management',
+    name: 'AI Weekly Management Report',
+    icon: ICON,
+    desc: 'Every Monday, drafts an email to you with the week in counts: AI work, rent, maintenance, tenancies ending and expired certificates. The AI writes the summary and the figures come straight from your records.',
+    capabilities: ['Count the week from your records','Write a short plain-English summary','Email it to you once you approve'],
+  },
+  {
     key: 'rent_match',
     module: 'Property management',
     name: 'AI Rent Matcher',
@@ -131,7 +179,7 @@ export default function PropertyManagerAgents() {
   const [style, setStyle] = useState({ tone: '', country_rules: '', signoff: '' })
   const [styleMsg, setStyleMsg] = useState('')
   const [section, setSection] = useState<'Agents'|'Activity log'|'Settings'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,weekly_report:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})
