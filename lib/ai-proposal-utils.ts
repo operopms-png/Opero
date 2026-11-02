@@ -26,3 +26,15 @@ export async function companyName(businessId: string) {
 }
 
 export const inList = <T,>(rows: T[] | null | undefined) => rows ?? []
+
+// Drafts nobody decided on go stale: replies to guests and tenants after 3 days, everything
+// else after 14. They are marked rejected with no decider, so they show as "Expired" in results.
+export async function expireStaleDrafts() {
+  const db = svc()
+  const now = new Date().toISOString()
+  const mark = { status: 'rejected', decided_at: now, decision_note: 'Expired: not approved in time' }
+  const live = ['guest_reply', 'portal_reply']
+  const a = await db.from('ai_pending_actions').update(mark).eq('status', 'pending').in('action_type', live).lt('created_at', dayStr(-3)).select('id')
+  const b = await db.from('ai_pending_actions').update(mark).eq('status', 'pending').not('action_type', 'in', `(${live.join(',')})`).lt('created_at', dayStr(-14)).select('id')
+  return { expired: (a.data?.length ?? 0) + (b.data?.length ?? 0) }
+}

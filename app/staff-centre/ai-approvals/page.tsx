@@ -21,6 +21,7 @@ export default function AiApprovals() {
   const [tab, setTab] = useState('pending')
   const [edits, setEdits] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<string | null>(null)
+  const [picked, setPicked] = useState<Record<string, boolean>>({})
 
   const load = () => staffApi<{ actions: any[] }>('/api/ai-approvals').then(d => { setRows(d.actions); setErr('') }).catch(e => setErr(e.message))
   useEffect(() => { load() }, [])
@@ -32,6 +33,22 @@ export default function AiApprovals() {
       await load()
     } catch (e: any) { setErr(e.message); await load() }
     setBusy(null)
+  }
+
+  // Bulk approve: sends each ticked draft as written, one after another. Rate changes are left
+  // out because the number needs checking by eye.
+  const bulkApprove = async () => {
+    const ids = Object.keys(picked).filter(id => picked[id])
+    if (!ids.length) return
+    if (!window.confirm(`Approve and send ${ids.length} draft${ids.length === 1 ? '' : 's'} exactly as written?`)) return
+    setBusy('bulk')
+    let failed = 0
+    for (const id of ids) {
+      const r = (rows ?? []).find(x => x.id === id)
+      try { await staffApi('/api/ai-approvals', { id, action: 'approve', body: edits[id] ?? r?.draft_body }) } catch { failed++ }
+    }
+    setPicked({}); await load(); setBusy(null)
+    if (failed) setErr(`${failed} of ${ids.length} could not be sent. They stay in the list with the reason.`)
   }
 
   const all = rows ?? []
@@ -46,6 +63,16 @@ export default function AiApprovals() {
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         {!rows ? (!err && <Loading />) : shown.length === 0 ? <Empty>{tab === 'pending' ? 'Nothing waiting for approval.' : 'Nothing here yet.'}</Empty> : (
           <div style={{ display: 'grid', gap: 12 }}>
+            {tab === 'pending' && (
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button style={btn('ghost')} onClick={() => { const next: Record<string, boolean> = {}; shown.filter(r => r.action_type !== 'rate_change').forEach(r => { next[r.id] = !Object.values(picked).some(Boolean) }); setPicked(next) }}>
+                  {Object.values(picked).some(Boolean) ? 'Clear selection' : 'Select all'}
+                </button>
+                <button style={btn('gold')} disabled={busy === 'bulk' || !Object.values(picked).some(Boolean)} onClick={bulkApprove}>
+                  {busy === 'bulk' ? 'Sending…' : `Approve selected (${Object.values(picked).filter(Boolean).length})`}
+                </button>
+              </div>
+            )}
             {shown.map(r => {
               const st = ST[r.status] ?? ST.pending
               const open = r.status === 'pending' || r.status === 'failed'
@@ -53,9 +80,12 @@ export default function AiApprovals() {
               return (
                 <div key={r.id} style={{ border: '1px solid ' + C.border, borderRadius: 6, padding: 16, background: '#fff' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
-                    <div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      {open && !isRate && <input type="checkbox" checked={!!picked[r.id]} onChange={e => setPicked({ ...picked, [r.id]: e.target.checked })} style={{ marginTop: 4 }} />}
+                      <div>
                       <div style={{ fontWeight: 600, fontSize: 15 }}>{r.title}</div>
                       <div style={{ fontSize: 12.5, color: C.muted }}>{AGENT[r.agent_key] ?? r.agent_key}{r.property_name ? ` · ${r.property_name}` : ''} · {when(r.created_at)}</div>
+                      </div>
                     </div>
                     <span style={{ alignSelf: 'flex-start', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: st.bg, color: st.c }}>{st.l}</span>
                   </div>

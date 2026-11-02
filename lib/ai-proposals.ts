@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
+import { expireStaleDrafts } from './ai-proposal-utils'
 import { proposeCompliance, proposeRenewals, proposeArrears } from './ai-proposals-modules'
 
 function getServiceClient() {
@@ -235,6 +236,7 @@ export async function runAiProposals(force = false) {
   try {
     const now = new Date()
     const out: Record<string, unknown> = {}
+    out.expiry = await expireStaleDrafts()
     out.cleaning = await proposeCleaning()
     out.maintenance = await proposeMaintenance()
     out.rentReminders = await proposeRentReminders()
