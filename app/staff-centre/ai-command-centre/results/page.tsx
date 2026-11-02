@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Loading, Empty } from '../../../../components/crm/Page'
 import { staffApi } from '../../../../lib/staff-api'
 
-const NAME: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Pricing', owner: 'Owner reports', portal: 'Portal chat', pm_compliance: 'Compliance', pm_renewals: 'Renewals', pm_arrears: 'Arrears', ea_viewings: 'Viewings', ea_listings: 'Listings', dev_investors: 'Investor updates', rent_match: 'Rent matching', doc_reader: 'Document reader', pm_insurance: 'Insurance', maint_followup: 'Maintenance follow-up', weekly_report: 'Weekly report', portfolio: 'Portfolio review', chief: 'Chief of Staff' }
+const NAME: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Pricing', owner: 'Owner reports', portal: 'Portal chat', pm_compliance: 'Compliance', pm_renewals: 'Renewals', pm_arrears: 'Arrears', ea_viewings: 'Viewings', ea_listings: 'Listings', dev_investors: 'Investor updates', rent_match: 'Rent matching', doc_reader: 'Document reader', pm_insurance: 'Insurance', maint_followup: 'Maintenance follow-up', weekly_report: 'Weekly report', portfolio: 'Portfolio review', onboarding: 'Import', chief: 'Chief of Staff' }
 const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) + '%' : '-')
 const th: React.CSSProperties = { textAlign: 'left', fontSize: 12, color: C.muted, fontWeight: 600, padding: '8px 10px', borderBottom: '1px solid ' + C.border }
 const td: React.CSSProperties = { fontSize: 13.5, padding: '10px', borderBottom: '1px solid ' + C.border }

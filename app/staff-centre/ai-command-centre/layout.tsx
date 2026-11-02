@@ -30,7 +30,7 @@ const NAV: { heading: string; items: { href: string; label: string; badge?: 'app
     { href: BASE + '/activity', label: 'Activity log' },
     { href: BASE + '/snapshot', label: 'Business snapshot' },
   ] },
-  { heading: 'Tools', items: [{ href: BASE + '/deal-analyser', label: 'Deal Analyser' }] },
+  { heading: 'Tools', items: [{ href: BASE + '/import', label: 'Import' }, { href: BASE + '/deal-analyser', label: 'Deal Analyser' }] },
 ]
 
 export default function AiCommandCentreLayout({ children }: { children: React.ReactNode }) {

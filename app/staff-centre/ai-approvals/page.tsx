@@ -12,7 +12,7 @@ const ST: Record<string, { l: string; bg: string; c: string }> = {
   failed: { l: 'Failed', bg: '#FDECEC', c: '#B42318' },
   approved: { l: 'Sending', bg: '#E8F0FB', c: '#1B2F6E' },
 }
-const AGENT: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Pricing', owner: 'Owner reports', portal: 'Portal chat', pm_compliance: 'Compliance', pm_renewals: 'Renewals', pm_arrears: 'Arrears', ea_viewings: 'Viewings', ea_listings: 'Listings', dev_investors: 'Investor updates', rent_match: 'Rent matching', doc_reader: 'Document reader', pm_insurance: 'Insurance', maint_followup: 'Maintenance follow-up', weekly_report: 'Weekly report', portfolio: 'Portfolio review', chief: 'Chief of Staff' }
+const AGENT: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Pricing', owner: 'Owner reports', portal: 'Portal chat', pm_compliance: 'Compliance', pm_renewals: 'Renewals', pm_arrears: 'Arrears', ea_viewings: 'Viewings', ea_listings: 'Listings', dev_investors: 'Investor updates', rent_match: 'Rent matching', doc_reader: 'Document reader', pm_insurance: 'Insurance', maint_followup: 'Maintenance follow-up', weekly_report: 'Weekly report', portfolio: 'Portfolio review', onboarding: 'Import', chief: 'Chief of Staff' }
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export default function AiApprovals() {
@@ -65,7 +65,7 @@ export default function AiApprovals() {
           <div style={{ display: 'grid', gap: 12 }}>
             {tab === 'pending' && (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                <button style={btn('ghost')} onClick={() => { const next: Record<string, boolean> = {}; shown.filter(r => r.action_type !== 'rate_change' && r.action_type !== 'lease_update').forEach(r => { next[r.id] = !Object.values(picked).some(Boolean) }); setPicked(next) }}>
+                <button style={btn('ghost')} onClick={() => { const next: Record<string, boolean> = {}; shown.filter(r => r.action_type !== 'rate_change' && r.action_type !== 'lease_update' && r.action_type !== 'import_records').forEach(r => { next[r.id] = !Object.values(picked).some(Boolean) }); setPicked(next) }}>
                   {Object.values(picked).some(Boolean) ? 'Clear selection' : 'Select all'}
                 </button>
                 <button style={btn('gold')} disabled={busy === 'bulk' || !Object.values(picked).some(Boolean)} onClick={bulkApprove}>
@@ -81,7 +81,7 @@ export default function AiApprovals() {
                 <div key={r.id} style={{ border: '1px solid ' + C.border, borderRadius: 6, padding: 16, background: '#fff' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
                     <div style={{ display: 'flex', gap: 10 }}>
-                      {open && !isRate && r.action_type !== 'lease_update' && <input type="checkbox" checked={!!picked[r.id]} onChange={e => setPicked({ ...picked, [r.id]: e.target.checked })} style={{ marginTop: 4 }} />}
+                      {open && !isRate && r.action_type !== 'lease_update' && r.action_type !== 'import_records' && <input type="checkbox" checked={!!picked[r.id]} onChange={e => setPicked({ ...picked, [r.id]: e.target.checked })} style={{ marginTop: 4 }} />}
                       <div>
                       <div style={{ fontWeight: 600, fontSize: 15 }}>{r.title}</div>
                       <div style={{ fontSize: 12.5, color: C.muted }}>{AGENT[r.agent_key] ?? r.agent_key}{r.property_name ? ` · ${r.property_name}` : ''} · {when(r.created_at)}</div>
@@ -95,7 +95,7 @@ export default function AiApprovals() {
                   {r.context?.incoming && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>{r.context.incoming_from || 'They'} wrote:</b> {r.context.incoming}</div>}
                   {open ? (
                     <>
-                      {r.action_type === 'lease_update' ? (
+                      {r.action_type === 'lease_update' || r.action_type === 'import_records' ? (
                         <div style={{ whiteSpace: 'pre-wrap', fontSize: 14, background: C.hover, borderRadius: 4, padding: '10px 12px' }}>{r.draft_body}{r.payload?.doc_url && <div style={{ marginTop: 8 }}><a href={r.payload.doc_url} target="_blank" rel="noreferrer" style={{ color: '#1B2F6E', fontWeight: 600 }}>Open the document</a></div>}</div>
                       ) : isRate ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -107,7 +107,7 @@ export default function AiApprovals() {
                       )}
                       {r.status === 'failed' && <div style={{ color: C.red, fontSize: 12.5, marginTop: 6 }}>Last attempt failed: {r.error}</div>}
                       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                        <button style={btn('gold')} disabled={busy === r.id} onClick={() => decide(r, 'approve')}>{busy === r.id ? 'Working…' : isRate ? 'Approve & change rate' : r.action_type === 'mark_rent_paid' ? 'Approve & mark paid' : r.action_type === 'listing_description' ? 'Approve & save' : r.action_type === 'lease_update' ? 'Approve & update record' : 'Approve & send'}</button>
+                        <button style={btn('gold')} disabled={busy === r.id} onClick={() => decide(r, 'approve')}>{busy === r.id ? 'Working…' : isRate ? 'Approve & change rate' : r.action_type === 'mark_rent_paid' ? 'Approve & mark paid' : r.action_type === 'listing_description' ? 'Approve & save' : r.action_type === 'import_records' ? 'Approve & import' : r.action_type === 'lease_update' ? 'Approve & update record' : 'Approve & send'}</button>
                         <button style={btn('danger')} disabled={busy === r.id} onClick={() => decide(r, 'reject')}>Reject</button>
                       </div>
                     </>

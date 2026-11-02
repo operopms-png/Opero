@@ -8,7 +8,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -105,6 +105,11 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Property not found for this account.' }
     return { success: true }
+  }
+
+  if (action.action_type === 'import_records') {
+    const { runImport } = await import('./ai-import')
+    return runImport(action.user_id, p)
   }
 
   if (action.action_type === 'lease_update') {
