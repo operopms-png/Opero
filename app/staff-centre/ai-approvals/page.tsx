@@ -12,7 +12,7 @@ const ST: Record<string, { l: string; bg: string; c: string }> = {
   failed: { l: 'Failed', bg: '#FDECEC', c: '#B42318' },
   approved: { l: 'Sending', bg: '#E8F0FB', c: '#1B2F6E' },
 }
-const AGENT: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Revenue', owner: 'Owner reports' }
+const AGENT: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Pricing', owner: 'Owner reports', portal: 'Portal chat' }
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export default function AiApprovals() {
@@ -49,6 +49,7 @@ export default function AiApprovals() {
             {shown.map(r => {
               const st = ST[r.status] ?? ST.pending
               const open = r.status === 'pending' || r.status === 'failed'
+              const isRate = r.action_type === 'rate_change'
               return (
                 <div key={r.id} style={{ border: '1px solid ' + C.border, borderRadius: 6, padding: 16, background: '#fff' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
@@ -59,19 +60,27 @@ export default function AiApprovals() {
                     <span style={{ alignSelf: 'flex-start', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: st.bg, color: st.c }}>{st.l}</span>
                   </div>
                   {r.context?.summary && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10 }}><b>Based on:</b> {r.context.summary}{r.payload?.to ? ` · will be emailed to ${r.payload.to}` : ''}</div>}
-                  {r.context?.guest_message &&<div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>Guest wrote:</b> {r.context.guest_message}</div>}
+                  {r.context?.guest_message && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>Guest wrote:</b> {r.context.guest_message}</div>}
+                  {r.context?.incoming && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>{r.context.incoming_from || 'They'} wrote:</b> {r.context.incoming}</div>}
                   {open ? (
                     <>
-                      <textarea style={{ ...input, minHeight: 110, resize: 'vertical' }} value={edits[r.id] ?? r.draft_body} onChange={e => setEdits({ ...edits, [r.id]: e.target.value })} />
+                      {isRate ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 14, color: C.muted }}>Now £{r.payload?.current_rate}. New nightly rate: £</span>
+                          <input style={{ ...input, width: 110 }} inputMode="decimal" value={edits[r.id] ?? r.draft_body} onChange={e => setEdits({ ...edits, [r.id]: e.target.value })} />
+                        </div>
+                      ) : (
+                        <textarea style={{ ...input, minHeight: 110, resize: 'vertical' }} value={edits[r.id] ?? r.draft_body} onChange={e => setEdits({ ...edits, [r.id]: e.target.value })} />
+                      )}
                       {r.status === 'failed' && <div style={{ color: C.red, fontSize: 12.5, marginTop: 6 }}>Last attempt failed: {r.error}</div>}
                       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                        <button style={btn('gold')} disabled={busy === r.id} onClick={() => decide(r, 'approve')}>{busy === r.id ? 'Working…' : 'Approve & send'}</button>
+                        <button style={btn('gold')} disabled={busy === r.id} onClick={() => decide(r, 'approve')}>{busy === r.id ? 'Working…' : isRate ? 'Approve & change rate' : 'Approve & send'}</button>
                         <button style={btn('danger')} disabled={busy === r.id} onClick={() => decide(r, 'reject')}>Reject</button>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize: 14, whiteSpace: 'pre-wrap' }}>{r.final_body || r.draft_body}</div>
+                      <div style={{ fontSize: 14, whiteSpace: 'pre-wrap' }}>{isRate ? `Nightly rate £${r.payload?.current_rate} to £${r.final_body || r.draft_body}` : (r.final_body || r.draft_body)}</div>
                       <div style={{ fontSize: 12, color: C.faint, marginTop: 8 }}>
                         {r.decided_by_name ? `${r.status === 'rejected' ? 'Rejected' : 'Approved'} by ${r.decided_by_name}` : ''}{r.decided_at ? ` · ${when(r.decided_at)}` : ''}{r.final_body && r.final_body !== r.draft_body ? ' · edited before sending' : ''}
                       </div>

@@ -4,6 +4,7 @@
 // ai_receptionist_log so staff can see and follow up. Server-only.
 import { serviceClient } from '@/lib/admin-auth'
 import { callClaude } from '@/lib/claude'
+import { queueAiAction } from '@/lib/ai-approvals'
 import { sendEmail } from '@/lib/send-email'
 import { sendFromMailbox } from '@/lib/mailbox'
 import { getFormat, formatEmail } from '@/lib/email-format'
@@ -189,11 +190,20 @@ ${canTicket ? '- If the tenant is reporting a repair/fault that is not already a
     const { data: t } = await serviceClient.from(cfg.maint!).insert(row).select('id').single()
     ticketId = t?.id ?? null
   }
-  await serviceClient.from(cfg.table).insert({ [cfg.fk]: person.id, sender: 'ai', message: out.reply, created_at: new Date().toISOString() })
-  const action = ticketId ? 'maintenance_created' : 'replied'
-  await finish(logId, { action, summary: out.summary ?? null, needs_staff: !!out.needs_staff || out.maintenance?.priority === 'urgent', details: { kind, ticket_id: ticketId, maintenance: out.maintenance ?? null } })
-  if (out.needs_staff || ticketId) await alertStaff(s, ticketId ? `Repair logged for ${person.name}` : `${person.name} needs a reply`, `${out.summary ?? ''}\n\nThey wrote: ${msg.message ?? ''}`, cfg.link)
-  return { replied: true, ticketId }
+  // The reply is held for approval (Staff Centre -> AI Approvals). The tenant or landlord sees
+  // nothing in their chat until a person approves it, so staff are always alerted.
+  const queued = await queueAiAction({
+    userId: s.business_id, agentKey: 'portal', actionType: 'portal_reply',
+    title: `Reply to ${person.name}`, draftBody: out.reply,
+    payload: { table: cfg.table, fk: cfg.fk, person_id: person.id, message_id: messageId },
+    context: { incoming: msg.message ?? '', incoming_from: person.name, summary: out.summary ?? undefined },
+    dedupe: { key: 'message_id', value: messageId },
+  })
+  if ('error' in queued && queued.error) { await finish(logId, { action: 'skipped', summary: 'Could not queue the reply for approval' }); return { skipped: 'queue failed' } }
+  const action = ticketId ? 'maintenance_created' : 'drafted'
+  await finish(logId, { action, summary: out.summary ?? null, needs_staff: true, details: { kind, ticket_id: ticketId, maintenance: out.maintenance ?? null } })
+  await alertStaff(s, ticketId ? `Repair logged for ${person.name}, reply waiting` : `${person.name} is waiting for a reply`, `${out.summary ?? ''}\n\nThey wrote: ${msg.message ?? ''}\n\nThe AI's drafted reply is waiting for your approval.`, '/staff-centre/ai-approvals')
+  return { drafted: true, ticketId }
 }
 
 // Fallback sweep (scheduled): answer anything in the last 2 hours that the
@@ -210,7 +220,7 @@ export async function sweepPortalMessages() {
       const ids = (people ?? []).map((p: any) => p.id)
       if (!ids.length) continue
       const { data: msgs } = await serviceClient.from(cfg.table).select('id').in(cfg.fk, ids).eq('sender', cfg.who).gte('created_at', since).order('created_at', { ascending: false }).limit(10)
-      for (const m of msgs ?? []) { const r: any = await handlePortalMessage(kind, m.id); if (r.replied) n++ }
+      for (const m of msgs ?? []) { const r: any = await handlePortalMessage(kind, m.id); if (r.replied || r.drafted) n++ }
     }
   }
   return n

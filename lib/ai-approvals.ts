@@ -8,7 +8,13 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply'
+
+// Portal chat tables an approved portal reply may be written to.
+const PORTAL_TABLES: Record<string, string> = {
+  pm_tenant_messages: 'tenant_id', pm_landlord_messages: 'landlord_id',
+  estate_tenant_messages: 'tenant_id', estate_landlord_messages: 'landlord_id',
+}
 
 export async function queueAiAction(input: {
   userId: string
@@ -19,6 +25,9 @@ export async function queueAiAction(input: {
   draftBody: string
   payload: Record<string, any>
   context?: Record<string, any>
+  // Skip if an action of this type already exists with payload[key] = value (any status),
+  // optionally only looking back to `sinceIso`. Stops the same job being proposed twice.
+  dedupe?: { key: string; value: string; sinceIso?: string }
 }) {
   const supabase = getServiceClient()
 
@@ -35,6 +44,14 @@ export async function queueAiAction(input: {
     if (existing?.length) return { skipped: 'a draft is already waiting for this booking' }
   }
 
+  if (input.dedupe) {
+    let q = supabase.from('ai_pending_actions').select('id')
+      .eq('user_id', input.userId).eq('action_type', input.actionType).eq(`payload->>${input.dedupe.key}`, input.dedupe.value)
+    if (input.dedupe.sinceIso) q = q.gte('created_at', input.dedupe.sinceIso)
+    const { data: existing } = await q.limit(1)
+    if (existing?.length) return { skipped: 'already proposed' }
+  }
+
   const { data, error } = await supabase.from('ai_pending_actions').insert({
     user_id: input.userId,
     agent_key: input.agentKey,
@@ -49,24 +66,53 @@ export async function queueAiAction(input: {
   return { queued: true, id: data.id as string }
 }
 
+const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
+
+async function emailOut(to: string | undefined, subject: string, body: string) {
+  if (!to) return { error: 'Missing recipient email' }
+  const { sendEmail } = await import('./send-email')
+  const result: any = await sendEmail(to, subject, `<p>${esc(body).replace(/\n/g, '<br/>')}</p>`)
+  if (result?.skipped) return { error: 'Email is not configured (RESEND_API_KEY missing), so nothing was sent.' }
+  if (result?.error) return { error: String(result.error) }
+  return { success: true }
+}
+
 // Carries out an approved action. Only called from the approve route.
 export async function executeAiAction(action: { user_id: string; action_type: string; payload: any }, body: string) {
+  const p = action.payload ?? {}
+
   if (action.action_type === 'guest_reply') {
-    const { booking_id, subject } = action.payload ?? {}
-    if (!booking_id) return { error: 'Missing booking_id' }
+    if (!p.booking_id) return { error: 'Missing booking_id' }
     // Imported lazily: ai-guest-receptionist imports this file too.
     const { sendGuestMessage } = await import('./ai-guest-receptionist')
-    return sendGuestMessage(action.user_id, booking_id, subject, body, 'ai')
+    return sendGuestMessage(action.user_id, p.booking_id, p.subject, body, 'ai')
   }
-  if (action.action_type === 'owner_report') {
-    const { to, subject } = action.payload ?? {}
-    if (!to) return { error: 'Missing owner email' }
-    const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
-    const { sendEmail } = await import('./send-email')
-    const result: any = await sendEmail(to, subject || 'Your monthly property report', `<p>${esc(body).replace(/\n/g, '<br/>')}</p>`)
-    if (result?.skipped) return { error: 'Email is not configured (RESEND_API_KEY missing), so nothing was sent.' }
-    if (result?.error) return { error: String(result.error) }
+
+  if (action.action_type === 'owner_report') return emailOut(p.to, p.subject || 'Your monthly property report', body)
+  if (action.action_type === 'cleaning_instruction') return emailOut(p.to, p.subject || 'Cleaning instructions', body)
+  if (action.action_type === 'maintenance_instruction') return emailOut(p.to, p.subject || 'Maintenance request', body)
+
+  if (action.action_type === 'rate_change') {
+    // The approved text is the new nightly rate. Staff can change the number before approving.
+    const rate = Number(String(body).replace(/[^0-9.]/g, ''))
+    const current = Number(p.current_rate)
+    if (!p.property_id || !Number.isFinite(rate) || rate <= 0) return { error: 'Enter the new nightly rate as a number.' }
+    if (Number.isFinite(current) && current > 0 && (rate < current * 0.5 || rate > current * 2)) return { error: `A change of more than 50% (from ${current} to ${rate}) needs to be made by hand.` }
+    const db = getServiceClient()
+    const { data, error } = await db.from('properties').update({ nightly_rate: rate }).eq('id', p.property_id).eq('user_id', action.user_id).select('id')
+    if (error) return { error: error.message }
+    if (!data?.length) return { error: 'Property not found for this account.' }
     return { success: true }
   }
+
+  if (action.action_type === 'portal_reply') {
+    const fk = PORTAL_TABLES[p.table]
+    if (!fk || fk !== p.fk || !p.person_id) return { error: 'Invalid portal reply target.' }
+    const db = getServiceClient()
+    const { error } = await db.from(p.table).insert({ [fk]: p.person_id, sender: 'ai', message: body, created_at: new Date().toISOString() })
+    if (error) return { error: error.message }
+    return { success: true }
+  }
+
   return { error: `Unknown action type: ${action.action_type}` }
 }
