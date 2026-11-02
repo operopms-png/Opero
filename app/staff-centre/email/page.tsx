@@ -494,7 +494,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
                   <Pill width={60} color={b.use_for_marketing ? C.green : C.grey} onClick={() => act({ action: 'update', id: b.id, use_for_marketing: !b.use_for_marketing })} title="Can Marketing send from this address?">{b.use_for_marketing ? 'Yes' : 'No'}</Pill>
                 </div>
                 <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Pill width={96} color={b.ai_mode === 'auto' ? C.green : b.ai_mode === 'draft' ? C.gold : C.grey} onClick={() => act({ action: 'update', id: b.id, ai_mode: b.ai_mode === 'off' || !b.ai_mode ? 'draft' : b.ai_mode === 'draft' ? 'auto' : 'off' })} title="Off → Drafts (staff approve) → Auto-reply">{b.ai_mode === 'auto' ? 'Auto-reply' : b.ai_mode === 'draft' ? 'Drafts' : 'Off'}</Pill>
+                  <Pill width={96} color={b.ai_mode === 'draft' || b.ai_mode === 'auto' ? C.gold : C.grey} onClick={() => act({ action: 'update', id: b.id, ai_mode: b.ai_mode === 'off' || !b.ai_mode ? 'draft' : 'off' })} title="Off → Drafts (staff approve every reply)">{b.ai_mode === 'draft' || b.ai_mode === 'auto' ? 'Drafts' : 'Off'}</Pill>
                 </div>
                 <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <button onClick={() => onConnect(b)} style={btn(b.status === 'connected' ? 'ghost' : 'gold', true)}>{b.status === 'connected' ? 'Reconnect' : 'Connect'}</button>

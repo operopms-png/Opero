@@ -122,12 +122,9 @@ Reply ONLY with JSON: {"should_reply": boolean, "category": "Enquiry"|"Booking"|
     const patch: any = { ai_category: out.category ?? null }
     let action = 'skipped'
     if (!out.should_reply || !out.reply) { patch.ai_status = 'skipped' }
-    else if (mb.ai_mode === 'auto' && !out.needs_staff && mb.status === 'connected') {
-      try {
-        await sendFromMailbox(mb, { sentBy: s.assistant_name + ' (AI)', to: m.from_name ? `${m.from_name} <${m.from_email}>` : m.from_email, subject: /^re:/i.test(m.subject || '') ? m.subject : `Re: ${m.subject || ''}`, ...formatEmail(await getFormat(mb.user_id), mb.email, out.reply), inReplyTo: m.message_id, references: [m.references_ids, m.message_id].filter(Boolean).join(' ') || null })
-        Object.assign(patch, { ai_status: 'replied', ai_draft: out.reply }); action = 'replied'
-      } catch { Object.assign(patch, { ai_status: 'drafted', ai_draft: out.reply }); action = 'drafted' }
-    } else { Object.assign(patch, { ai_status: 'drafted', ai_draft: out.reply }); action = 'drafted' }
+    // Email replies are never sent automatically: every one is left as a draft for staff to
+    // approve and send (an older mailbox still set to 'auto' behaves as 'draft').
+    else { Object.assign(patch, { ai_status: 'drafted', ai_draft: out.reply }); action = 'drafted' }
     await serviceClient.from('mailbox_messages').update(patch).eq('id', m.id)
     await finish(logId, { action, summary: out.summary ?? null, needs_staff: !!out.needs_staff, details: { category: out.category, mailbox: mb.email } })
     if (out.needs_staff) await alertStaff(s, `Email needs attention (${mb.email})`, `${m.from_name || m.from_email}: ${m.subject}\n${out.summary ?? ''}`, '/staff-centre/email')

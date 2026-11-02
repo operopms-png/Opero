@@ -197,12 +197,12 @@ export default function ReceptionistPage() {
             </Card>}
 
             <Card title="Email" color={CH.email.c} status={<Pill width={0} color={d.mailboxes.some((m: any) => m.ai_mode !== 'off') ? C.green : C.grey}>{d.mailboxes.filter((m: any) => m.ai_mode !== 'off').length} of {d.mailboxes.length} mailboxes</Pill>}>
-              <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}><b>Drafts:</b> the AI writes a reply for each new email and staff send it with one click. <b>Auto-reply:</b> it sends the reply itself when it’s confident, and leaves a draft when a person needs to decide. Newsletters, receipts and no-reply emails are ignored.</div>
+              <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}><b>Drafts:</b> the AI writes a reply for each new email and staff approve and send it with one click. Nothing is sent automatically. Newsletters, receipts and no-reply emails are ignored.</div>
               <div style={{ border: '1px solid ' + C.row, borderRadius: 4 }}>
                 {d.mailboxes.map((m: any) => (
                   <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid ' + C.row }}>
                     <span style={{ flex: 1, fontSize: 14 }}>{m.email}{m.status !== 'connected' && <span style={{ fontSize: 12, color: C.faint }}> · not connected</span>}</span>
-                    <ModePicker disabled={!admin} value={m.ai_mode || 'off'} onChange={async v => { try { await api({ action: 'mailbox_mode', id: m.id, ai_mode: v }); await load() } catch (e: any) { flash(e.message) } }} options={[{ v: 'off', l: 'Off', c: C.grey }, { v: 'draft', l: 'Drafts', c: C.gold }, { v: 'auto', l: 'Auto-reply', c: C.green }]} />
+                    <ModePicker disabled={!admin} value={m.ai_mode === 'auto' ? 'draft' : (m.ai_mode || 'off')} onChange={async v => { try { await api({ action: 'mailbox_mode', id: m.id, ai_mode: v }); await load() } catch (e: any) { flash(e.message) } }} options={[{ v: 'off', l: 'Off', c: C.grey }, { v: 'draft', l: 'Drafts', c: C.gold }]} />
                   </div>
                 ))}
               </div>

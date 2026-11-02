@@ -8,7 +8,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply'
+export type AiActionType = 'guest_reply' | 'owner_report'
 
 export async function queueAiAction(input: {
   userId: string
@@ -57,6 +57,16 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     // Imported lazily: ai-guest-receptionist imports this file too.
     const { sendGuestMessage } = await import('./ai-guest-receptionist')
     return sendGuestMessage(action.user_id, booking_id, subject, body, 'ai')
+  }
+  if (action.action_type === 'owner_report') {
+    const { to, subject } = action.payload ?? {}
+    if (!to) return { error: 'Missing owner email' }
+    const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
+    const { sendEmail } = await import('./send-email')
+    const result: any = await sendEmail(to, subject || 'Your monthly property report', `<p>${esc(body).replace(/\n/g, '<br/>')}</p>`)
+    if (result?.skipped) return { error: 'Email is not configured (RESEND_API_KEY missing), so nothing was sent.' }
+    if (result?.error) return { error: String(result.error) }
+    return { success: true }
   }
   return { error: `Unknown action type: ${action.action_type}` }
 }

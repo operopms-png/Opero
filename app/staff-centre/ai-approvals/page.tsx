@@ -58,7 +58,8 @@ export default function AiApprovals() {
                     </div>
                     <span style={{ alignSelf: 'flex-start', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: st.bg, color: st.c }}>{st.l}</span>
                   </div>
-                  {r.context?.guest_message && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>Guest wrote:</b> {r.context.guest_message}</div>}
+                  {r.context?.summary && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10 }}><b>Based on:</b> {r.context.summary}{r.payload?.to ? ` · will be emailed to ${r.payload.to}` : ''}</div>}
+                  {r.context?.guest_message &&<div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>Guest wrote:</b> {r.context.guest_message}</div>}
                   {open ? (
                     <>
                       <textarea style={{ ...input, minHeight: 110, resize: 'vertical' }} value={edits[r.id] ?? r.draft_body} onChange={e => setEdits({ ...edits, [r.id]: e.target.value })} />
