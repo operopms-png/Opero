@@ -7,9 +7,12 @@ import { supabase, getAccountId } from '../../lib/supabase'
 import { C, Stat, Pill, Group, Row, Empty, btn, input as inp, label as lbl } from '../crm/Page'
 const ACCENT = C.goldDark
 
+const ICON = <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+
 const AGENTS = [
   {
     key: 'guest',
+    module: 'Vacation rentals',
     name: 'AI Guest Agent',
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>,
     desc: 'Answers guest questions 24/7, sends check-in/check-out instructions, Wi-Fi details, house rules, and handles common complaints.',
@@ -17,6 +20,7 @@ const AGENTS = [
   },
   {
     key: 'maintenance',
+    module: 'Vacation rentals',
     name: 'AI Maintenance Coordinator',
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>,
     desc: 'Logs maintenance issues, assigns jobs to contractors, tracks repairs and follows up until work is completed.',
@@ -24,6 +28,7 @@ const AGENTS = [
   },
   {
     key: 'cleaning',
+    module: 'Vacation rentals',
     name: 'AI Cleaning Coordinator',
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3l18 18M9 9l-6 6a2 2 0 002.83 2.83L12 11.8M14 4l6 6-3.5 3.5L10 7l4-3z"/></svg>,
     desc: 'Automatically schedules cleaners after bookings, notifies them of turnovers, tracks completion and generates reports.',
@@ -31,6 +36,7 @@ const AGENTS = [
   },
   {
     key: 'revenue',
+    module: 'Vacation rentals',
     name: 'AI Revenue Manager',
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
     desc: 'Adjusts nightly rates automatically, monitors competitor pricing, increases rates during high demand and fills calendar gaps.',
@@ -38,6 +44,7 @@ const AGENTS = [
   },
   {
     key: 'owner',
+    module: 'Vacation rentals',
     name: 'AI Owner Relations Manager',
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
     desc: 'Generates monthly income reports, occupancy reports, expense tracking and profit & loss statements for owners.',
@@ -45,10 +52,35 @@ const AGENTS = [
   },
   {
     key: 'leads',
+    module: 'Vacation rentals',
     name: 'AI Lead Qualification Agent',
     icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
     desc: 'Finds landlord leads, qualifies property owners, books appointments automatically and follows up with prospects.',
     capabilities: ['Find landlord leads','Qualify property owners','Book appointments automatically','Follow up with prospects','Score lead quality'],
+  },
+  {
+    key: 'pm_compliance',
+    module: 'Property management',
+    name: 'AI Compliance Chaser',
+    icon: ICON,
+    desc: 'Watches the Compliance tab and drafts a reminder to the landlord when a certificate has expired or is due within 30 days.',
+    capabilities: ['Spot expired and expiring certificates','Draft the reminder to the landlord','Chase again after three weeks if still out of date','Wait for your approval before anything is sent'],
+  },
+  {
+    key: 'pm_renewals',
+    module: 'Property management',
+    name: 'AI Renewals Agent',
+    icon: ICON,
+    desc: 'Finds tenancies ending within 60 days with no renewal decision and drafts an email asking the tenant their plans.',
+    capabilities: ['Find tenancies ending within 60 days','Skip tenancies already renewed or ended','Draft the email to the tenant','Wait for your approval before anything is sent'],
+  },
+  {
+    key: 'pm_arrears',
+    module: 'Property management',
+    name: 'AI Arrears Escalation',
+    icon: ICON,
+    desc: 'Drafts a firmer email to tenants whose rent is more than 14 days overdue. The earlier text reminders stay on Finance, Reminders.',
+    capabilities: ['Find rent more than 14 days overdue','Draft a firm payment request to the tenant','Ask the tenant to report any payment already made','Wait for your approval before anything is sent'],
   },
 ]
 
@@ -56,7 +88,7 @@ export default function PropertyManagerAgents() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [section, setSection] = useState<'Agents'|'Activity log'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})
@@ -203,8 +235,12 @@ export default function PropertyManagerAgents() {
       </div>
 
       {section === 'Agents' && !current && (
+        <div>
+        {Array.from(new Set(AGENTS.map(a => a.module))).map(mod => (
+        <div key={mod} style={{ marginBottom: 22 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: C.muted, marginBottom: 10 }}>{mod}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 12 }}>
-          {AGENTS.map(agent => (
+          {AGENTS.filter(a => a.module === mod).map(agent => (
             <div key={agent.key} onClick={() => setSelectedAgent(agent.key)} style={{ background: '#fff', borderRadius: 8, border: '1px solid ' + (activeAgents[agent.key] ? C.gold : C.row), padding: 18, cursor: 'pointer' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>{agent.icon}{toggle(agent.key)}</div>
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{agent.name}</div>
@@ -212,6 +248,9 @@ export default function PropertyManagerAgents() {
               <div style={{ marginTop: 10 }}><Pill width={0} color={activeAgents[agent.key] ? C.green : C.grey}>{activeAgents[agent.key] ? 'On' : 'Off'}</Pill></div>
             </div>
           ))}
+        </div>
+        </div>
+        ))}
         </div>
       )}
 

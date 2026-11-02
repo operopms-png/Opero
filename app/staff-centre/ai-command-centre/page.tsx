@@ -8,6 +8,7 @@ import { supabase, getAccountId } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
 import PropertyLocationsPanel from '../../../components/ai/PropertyLocationsPanel'
 import { staffApi, money } from '../../../lib/staff-api'
+import DailyBriefing from '../../../components/ai/DailyBriefing'
 
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
 const GREEN = '#12B76A', PURPLE = '#7A4FB0', MUTED = '#667085', TXT = '#101828'
@@ -131,6 +132,8 @@ export default function AICommandCentre() {
             </div>
             <div style={{ color: MUTED, fontSize: 12, maxWidth: 260 }}>Your AI agents are working behind the scenes to keep your business moving forward.</div>
           </div>
+
+          <DailyBriefing />
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
             {ACTIONS.map(([t, d, href, c]) => (

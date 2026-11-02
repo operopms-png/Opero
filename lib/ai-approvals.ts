@@ -8,7 +8,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -88,6 +88,8 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     return sendGuestMessage(action.user_id, p.booking_id, p.subject, body, 'ai')
   }
 
+  // Generic email to a named recipient (compliance, renewals, arrears and other agents).
+  if (action.action_type === 'email_out') return emailOut(p.to, p.subject || 'Message from your property manager', body)
   if (action.action_type === 'owner_report') return emailOut(p.to, p.subject || 'Your monthly property report', body)
   if (action.action_type === 'cleaning_instruction') return emailOut(p.to, p.subject || 'Cleaning instructions', body)
   if (action.action_type === 'maintenance_instruction') return emailOut(p.to, p.subject || 'Maintenance request', body)

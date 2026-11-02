@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
+import { proposeCompliance, proposeRenewals, proposeArrears } from './ai-proposals-modules'
 
 function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -237,6 +238,9 @@ export async function runAiProposals(force = false) {
     out.cleaning = await proposeCleaning()
     out.maintenance = await proposeMaintenance()
     out.rentReminders = await proposeRentReminders()
+    out.compliance = await proposeCompliance()
+    out.renewals = await proposeRenewals()
+    out.arrears = await proposeArrears()
     if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
     if (force || now.getUTCDate() === 1) out.ownerReports = await proposeOwnerReports()
     return { ok: true, ...out }
