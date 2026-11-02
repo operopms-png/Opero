@@ -12,14 +12,38 @@ const headers = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+const MODULES = ['str', 'pm', 'ea', 'dev']
+const clip = (v: unknown, n: number) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null)
+
+// Website enquiry form -> CRM. The api_key (Settings -> API key, one per account)
+// decides WHICH account the contact lands in; without a valid key nothing is written.
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const {
-      name, email, phone, postcode, bedrooms, source, module, type,
-      address1, town, county, status, priceRange, comments, marketingConsent,
-      issue, urgency, description, propertyName, accessNotes
-    } = body
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400, headers })
+
+    const apiKey = clip(body.api_key, 100)
+    if (!apiKey) return NextResponse.json({ success: false, error: 'api_key is required' }, { status: 401, headers })
+    const { data: sub, error: subError } = await supabase.from('subscriptions').select('user_id').eq('api_key', apiKey).limit(1).maybeSingle()
+    if (subError) { console.error('crm-enquiry: api key lookup failed', subError); return NextResponse.json({ success: false, error: 'Server error' }, { status: 500, headers }) }
+    if (!sub?.user_id) return NextResponse.json({ success: false, error: 'Invalid api_key' }, { status: 401, headers })
+    const ownerId: string = sub.user_id
+
+    const name = clip(body.name, 200)
+    const email = clip(body.email, 200)
+    const phone = clip(body.phone, 50)
+    if (!name && !email && !phone) return NextResponse.json({ success: false, error: 'Provide at least a name, email or phone' }, { status: 400, headers })
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ success: false, error: 'Invalid email' }, { status: 400, headers })
+
+    const postcode = clip(body.postcode, 20), bedrooms = clip(String(body.bedrooms ?? ''), 20)
+    const address1 = clip(body.address1, 200), town = clip(body.town, 100), county = clip(body.county, 100)
+    const status = clip(body.status, 100), priceRange = clip(body.priceRange, 100), comments = clip(body.comments, 2000)
+    const marketingConsent = clip(String(body.marketingConsent ?? ''), 20)
+    const issue = clip(body.issue, 300), urgency = clip(body.urgency, 100), description = clip(body.description, 2000)
+    const propertyName = clip(body.propertyName, 200), accessNotes = clip(body.accessNotes, 1000)
+    const module = MODULES.includes(body.module) ? body.module : 'str'
+    const type = clip(body.type, 50) ?? 'guest'
+    const source = clip(body.source, 100) ?? 'Website'
 
     const noteLines = [
       address1 ? `Address: ${address1}${town ? `, ${town}` : ''}${county ? `, ${county}` : ''}${postcode ? `, ${postcode}` : ''}` : (postcode ? `Postcode: ${postcode}` : null),
@@ -36,26 +60,29 @@ export async function POST(req: NextRequest) {
     ].filter(Boolean)
 
     const { data: inserted, error: insertError } = await supabase.from('crm_contacts').insert([{
-      user_id: 'bd780fdd-15e3-4306-8c87-788b23647ee5',
+      user_id: ownerId,
       name: name ?? 'Unknown',
-      email: email ?? null,
-      phone: phone ?? null,
-      source: source ?? 'Website',
-      module: module ?? 'str',
-      type: type ?? 'guest',
+      email,
+      phone,
+      source,
+      module,
+      type,
       status: 'prospect',
       notes: noteLines.length ? noteLines.join('\n') : null,
     }]).select().single()
 
-    if (insertError) throw insertError
+    if (insertError) {
+      console.error('crm-enquiry: contact insert failed', insertError)
+      return NextResponse.json({ success: false, error: 'Could not save enquiry' }, { status: 500, headers })
+    }
 
     // Also drop a matching Deal into the Enquiry stage so Pipeline reflects new leads automatically
     const dealLabel = issue ? `${name ?? 'Unknown'} — ${issue}` : `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`
     const { error: dealError } = await supabase.from('crm_deals').insert([{
-      user_id: 'bd780fdd-15e3-4306-8c87-788b23647ee5',
+      user_id: ownerId,
       name: dealLabel,
       contact_id: inserted?.id ?? null,
-      module: module ?? 'str',
+      module,
       stage: 'Enquiry',
       value: null,
     }])
@@ -63,7 +90,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true }, { headers })
   } catch (e) {
-    return NextResponse.json({ success: false }, { status: 500, headers })
+    console.error('crm-enquiry: unexpected error', e)
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500, headers })
   }
 }
 

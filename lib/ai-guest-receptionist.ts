@@ -1,17 +1,16 @@
-// Real AI auto-reply for guest messages -- checks if the AI Guest
-// Agent (ai_agents, agent_key='guest') is switched on for the
-// account, and if so, generates a reply using the same property-
-// knowledge prompt as the manual "test agent" flow in /api/ai/
-// guest-reply, then sends it back through whichever real channel the
-// message came in on (Smoobu or email) via sendGuestMessage() below.
+// AI guest replies -- checks if the AI Guest Agent (ai_agents,
+// agent_key='guest') is switched on for the account, and if so,
+// generates a draft using the same property-knowledge prompt as the
+// manual "test agent" flow in /api/ai/guest-reply.
 //
-// Deliberately auto-sends with no human review, per an explicit
-// decision -- every reply is logged with sender:'ai' (not 'staff') so
-// it's always visible in the thread which messages were AI-written
-// versus human-typed, and staff can always jump in and correct
-// anything in the same conversation.
+// The draft is NEVER sent automatically. It goes into the shared
+// approvals queue (ai_pending_actions) and only goes out through
+// sendGuestMessage() below once a staff member approves it in
+// Staff Centre -> AI Approvals. Approved replies are logged with
+// sender:'ai' so the thread still shows which messages were AI-written.
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
+import { queueAiAction } from './ai-approvals'
 import { sendEmail } from './send-email'
 import { sendSmoobuGuestMessage } from './smoobu-client'
 import { EMAIL_DOMAIN } from '@/lib/brand'
@@ -88,10 +87,20 @@ ${knowledge}`
   const { text: reply, error } = await callClaude(systemPrompt, `Guest name: ${booking.guest_name || 'Guest'}\nGuest message: ${guestMessage}`, 500)
   if (error || !reply) return { skipped: `AI generation failed: ${error}` }
 
-  const sendResult = await sendGuestMessage(userId, bookingId, undefined, reply, 'ai')
-  if (sendResult.error) return { skipped: `send failed: ${sendResult.error}` }
+  const queued = await queueAiAction({
+    userId,
+    agentKey: 'guest',
+    actionType: 'guest_reply',
+    title: `Reply to ${booking.guest_name || 'guest'}`,
+    propertyName: property?.name,
+    draftBody: reply,
+    payload: { booking_id: bookingId },
+    context: { guest_name: booking.guest_name || null, guest_message: guestMessage },
+  })
+  if ('error' in queued && queued.error) return { skipped: `queue failed: ${queued.error}` }
+  if ('skipped' in queued) return { skipped: queued.skipped }
 
-  await supabase.from('ai_activity_log').insert({ user_id: userId, agent_key: 'guest', action: `Auto-replied to ${booking.guest_name || 'guest'}`, property_name: property?.name })
+  await supabase.from('ai_activity_log').insert({ user_id: userId, agent_key: 'guest', action: `Drafted reply for ${booking.guest_name || 'guest'} (awaiting approval)`, property_name: property?.name })
 
-  return { replied: true }
+  return { drafted: true }
 }

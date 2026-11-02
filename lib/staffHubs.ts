@@ -17,6 +17,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'AI Command Centre', icon: 'sparkles', tabs: [
     { href: '/staff-centre/ai-command-centre', label: 'AI Command Centre', scTab: 'oversight', hidden: true },
     { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight' },
+    { href: '/staff-centre/ai-approvals', label: 'AI Approvals', scTab: 'oversight' },
     { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Ask Grok', scTab: 'oversight' },
     { href: '/staff-centre/ai-command-centre/deal-analyser', label: 'Deal Analyser', requiresModule: 'invest' },
   ] },
