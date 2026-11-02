@@ -27,10 +27,10 @@ export default function Chief() {
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         <div style={card}>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>Tell the AI what to do</div>
-          <textarea style={{ ...input, minHeight: 80, resize: 'vertical' }} placeholder="For example: Chase all overdue rent this week, and draft an email to name@example.com about the boiler service." value={text} onChange={e => setText(e.target.value)} />
+          <textarea style={{ ...input, minHeight: 80, resize: 'vertical' }} placeholder="For example: Chase all overdue rent this week, and email the landlord of 12 Park Road about the boiler service." value={text} onChange={e => setText(e.target.value)} />
           <div style={{ marginTop: 10 }}><button style={btn('gold')} disabled={busy === 'ask' || text.trim().length < 4} onClick={send}>{busy === 'ask' ? 'Working…' : 'Give instruction'}</button></div>
           {res && <div style={{ marginTop: 12, fontSize: 14, background: C.hover, borderRadius: 6, padding: '10px 12px' }}>{res.reply}<div style={{ color: C.muted, marginTop: 4 }}>{res.tasks} task{res.tasks === 1 ? '' : 's'} added to the <a href="/staff-centre/tasks" style={{ color: '#1B2F6E' }}>Task board</a> · {res.drafts} email draft{res.drafts === 1 ? '' : 's'} in <a href="/staff-centre/ai-command-centre/approvals" style={{ color: '#1B2F6E' }}>Approvals</a></div></div>}
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>Emails are only drafted to addresses you type into the instruction. Otherwise the AI makes a task for your team to send it.</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>Emails are only drafted to tenants and landlords on file, or to addresses you type into the instruction. Otherwise the AI makes a task for your team to send it.</div>
         </div>
         <div style={card}>
           <div style={{ fontWeight: 700, marginBottom: 6 }}>Today&apos;s plan</div>

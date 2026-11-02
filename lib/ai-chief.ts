@@ -10,6 +10,16 @@ import { aiAlert } from './push'
 const rows = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => (r.data ?? []) as any[]).catch(() => [] as any[])
 const open = (s: any) => !/paid|clos|resolv|complet|done|cancel/i.test(String(s ?? ''))
 
+// Tenants and landlords on file, so an instruction can name them. Drafts may go only to these or to addresses typed in.
+async function contactDirectory(biz: string) {
+  const db = svc()
+  const [t, l] = await Promise.all([
+    rows(db.from('pm_tenants').select('name, email').eq('user_id', biz).not('email', 'is', null).limit(150)),
+    rows(db.from('pm_landlords').select('name, email').eq('user_id', biz).not('email', 'is', null).limit(150)),
+  ])
+  return [...t.map(x => ({ role: 'tenant', name: String(x.name ?? ''), email: String(x.email).toLowerCase() })), ...l.map(x => ({ role: 'landlord', name: String(x.name ?? ''), email: String(x.email).toLowerCase() }))].filter(c => c.email.includes('@'))
+}
+
 export type ChiefStep = { title: string; why: string; notes: string; due_in_days: number }
 
 // Plain counts from the records. The AI only ever sees these, so it cannot invent a figure.
@@ -83,8 +93,10 @@ export async function proposeChiefPlan() {
 // A person types an instruction; the AI turns it into tasks, and into email drafts only for addresses typed in it.
 export async function followInstruction(biz: string, instruction: string) {
   const facts = await businessFacts(biz)
+  const dir = await contactDirectory(biz)
   const given = Array.from(new Set(instruction.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g) ?? [])).map(e => e.toLowerCase())
-  const system = `You are the chief of staff for a property business. A team member has given you an instruction. Turn it into work for the team. Return only JSON: {"reply": "one or two sentences saying what you will set up, or what you need that you do not have", "tasks": [{"title": "short imperative task", "notes": "what to do", "due_in_days": 0}], "emails": [{"to": "address", "subject": "subject", "body": "full email text"}]}. At most 6 tasks. Draft an email only to an address that appears in the instruction (given addresses: ${given.join(', ') || 'none'}); otherwise make a task for the team to send it. Never invent facts, names, amounts or addresses. Nothing is sent without a person approving it. Plain professional English, no emojis.${await styleInstructions(biz, 'chief')}\n\nCurrent figures:\n${facts.join('\n')}`
+  const allowed = new Set([...given, ...dir.map(c => c.email)])
+  const system = `You are the chief of staff for a property business. A team member has given you an instruction. Turn it into work for the team. Return only JSON: {"reply": "one or two sentences saying what you will set up, or what you need that you do not have", "tasks": [{"title": "short imperative task", "notes": "what to do", "due_in_days": 0}], "emails": [{"to": "address", "subject": "subject", "body": "full email text"}]}. At most 6 tasks. Draft an email only to an address in the instruction or in the contacts list below; otherwise make a task for the team to send it. Never invent facts, names, amounts or addresses. Nothing is sent without a person approving it. Plain professional English, no emojis.${await styleInstructions(biz, 'chief')}\n\nContacts on file (role, name, email):\n${dir.map(c => `${c.role}, ${c.name}, ${c.email}`).join('\n') || 'None'}\n\nCurrent figures:\n${facts.join('\n')}`
   const { text, error } = await callClaude(system, instruction.slice(0, 2000), 1500)
   if (error || !text) return { error: error ?? 'No reply from the AI' }
   const j = parseJson(text)
@@ -96,7 +108,7 @@ export async function followInstruction(biz: string, instruction: string) {
   }
   for (const m of (Array.isArray(j.emails) ? j.emails : []).slice(0, 4)) {
     const to = String(m?.to ?? '').toLowerCase()
-    if (!given.includes(to) || !m.body) continue
+    if (!allowed.has(to) || !m.body) continue
     const q = await queueAiAction({ userId: biz, agentKey: 'chief', actionType: 'email_out', title: String(m.subject || 'Message').slice(0, 120), draftBody: String(m.body), payload: { to, subject: String(m.subject || 'Message') }, context: { summary: `Drafted from your instruction: "${instruction.slice(0, 120)}" · will be emailed to ${to}` } })
     if ('queued' in q) drafts++
   }
