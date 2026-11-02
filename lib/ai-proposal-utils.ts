@@ -21,6 +21,8 @@ export async function enabledBusinesses(agentKey: string) {
 
 // Name used to sign drafts: the business's own company name, never a fixed one.
 export async function companyName(businessId: string) {
+  const custom = await svc().from('ai_client_settings').select('signoff').eq('user_id', businessId).maybeSingle()
+  if (custom.data?.signoff?.trim()) return String(custom.data.signoff).trim()
   const { data } = await svc().from('invoice_settings').select('company_name').eq('business_id', businessId).maybeSingle()
   return (data?.company_name as string | undefined)?.trim() || 'Your property management team'
 }

@@ -8,7 +8,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -104,6 +104,21 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     const { data, error } = await db.from('properties').update({ nightly_rate: rate }).eq('id', p.property_id).eq('user_id', action.user_id).select('id')
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Property not found for this account.' }
+    return { success: true }
+  }
+
+  if (action.action_type === 'mark_rent_paid') {
+    // Re-checked at approval time: the rent must still be unpaid and the bank line must still match.
+    const db = getServiceClient()
+    const [{ data: pay }, { data: txn }] = await Promise.all([
+      db.from('pm_rent_payments').select('id, amount, status').eq('id', p.payment_id).eq('user_id', action.user_id).maybeSingle(),
+      db.from('pm_transactions').select('id, amount, date').eq('id', p.transaction_id).eq('user_id', action.user_id).maybeSingle(),
+    ])
+    if (!pay || !txn) return { error: 'The rent record or bank line no longer exists.' }
+    if (String(pay.status).toLowerCase() === 'paid') return { error: 'This rent is already marked as paid.' }
+    if (Math.abs(Number(pay.amount) - Number(txn.amount)) >= 0.01) return { error: 'The amounts no longer match. Mark it by hand.' }
+    const { error } = await db.from('pm_rent_payments').update({ status: 'paid', paid_date: txn.date }).eq('id', pay.id).eq('user_id', action.user_id)
+    if (error) return { error: error.message }
     return { success: true }
   }
 

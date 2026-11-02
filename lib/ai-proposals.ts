@@ -12,6 +12,8 @@ import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
 import { expireStaleDrafts } from './ai-proposal-utils'
+import { styleInstructions } from './ai-style'
+import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
 import { proposeCompliance, proposeRenewals, proposeArrears } from './ai-proposals-modules'
 
@@ -214,7 +216,7 @@ Properties: ${propertyNames || 'None on file'}
 Period: last 30 days
 Total bookings revenue: ${money(revenue)}
 Owner's share (${share}%): ${money(ownerShare)}
-Nights booked: ${nights}`
+Nights booked: ${nights}${await styleInstructions(businessId)}`
       const { text, error } = await callClaude(system, 'Draft the monthly owner report email body (no subject line).', 500)
       if (error || !text) { result.errors.push(`${owner.name}: ${error ?? 'no text'}`); continue }
 
@@ -245,6 +247,7 @@ export async function runAiProposals(force = false) {
     out.renewals = await proposeRenewals()
     out.arrears = await proposeArrears()
     out.viewings = await proposeViewings()
+    out.rentMatches = await proposeRentMatches()
     out.listings = await proposeListings()
     if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
     if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }

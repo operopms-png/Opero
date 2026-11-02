@@ -4,6 +4,7 @@
 // (Staff Centre → AI Receptionist); /ai-manager redirects there.
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { staffApi } from '../../lib/staff-api'
 import { C, Stat, Pill, Group, Row, Empty, btn, input as inp, label as lbl } from '../crm/Page'
 const ACCENT = C.goldDark
 
@@ -106,13 +107,23 @@ const AGENTS = [
     desc: 'Drafts a monthly progress update to each investor from the project status, budget and open snagging items.',
     capabilities: ['Draft one update per investor each month','Use only the figures on the project record','No forecasts or promises of returns','Wait for your approval before anything is sent'],
   },
+  {
+    key: 'rent_match',
+    module: 'Property management',
+    name: 'AI Rent Matcher',
+    icon: ICON,
+    desc: 'Matches money received on the Banking tab to unpaid rent and proposes marking it paid. Only exact matches are proposed.',
+    capabilities: ['Match on the same amount, a date near the due date and the tenant name','Propose only when exactly one bank line fits','Leave unclear ones for you','Mark paid only after you approve'],
+  },
 ]
 
 export default function PropertyManagerAgents() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
-  const [section, setSection] = useState<'Agents'|'Activity log'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false})
+  const [style, setStyle] = useState({ tone: '', country_rules: '', signoff: '' })
+  const [styleMsg, setStyleMsg] = useState('')
+  const [section, setSection] = useState<'Agents'|'Activity log'|'Settings'>('Agents')
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})
@@ -159,6 +170,7 @@ export default function PropertyManagerAgents() {
       setLoading(false)
     })
   },[])
+  useEffect(() => { staffApi('/api/ai-client-settings').then((d: any) => setStyle({ tone: d.tone, country_rules: d.country_rules, signoff: d.signoff })).catch(() => {}) }, [])
   if(loading) return <div style={{padding:40,color:C.faint,fontSize:14}}>Loading…</div>
 
   const toggleAgent = async (key:string) => {
@@ -253,10 +265,25 @@ export default function PropertyManagerAgents() {
         <Stat label="Estimated time saved" value={activeCount * 8 + 'h/wk'} highlight />
       </div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-        {(['Agents', 'Activity log'] as const).map(s => <button key={s} onClick={() => { setSection(s); setSelectedAgent(null) }} style={btn(section === s ? 'gold' : 'ghost', true)}>{s}</button>)}
+        {(['Agents', 'Activity log', 'Settings'] as const).map(s => <button key={s} onClick={() => { setSection(s); setSelectedAgent(null) }} style={btn(section === s ? 'gold' : 'ghost', true)}>{s}</button>)}
         <div style={{ flex: 1 }} />
         {section === 'Activity log' && <button onClick={() => setShowLogForm(true)} style={btn('ghost', true)}>+ Log activity</button>}
       </div>
+
+      {section === 'Settings' && (
+        <div style={{ background: '#fff', borderRadius: 8, border: '1px solid ' + C.row, padding: 20, maxWidth: 720 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>How your AI agents write</div>
+          <div style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>These apply to the drafts the agents write for you. Your team still approves every draft.</div>
+          <label style={lbl}>Tone</label>
+          <input style={{ ...inp, marginBottom: 12 }} value={style.tone} onChange={e => setStyle({ ...style, tone: e.target.value })} placeholder="e.g. warm and professional, short sentences" />
+          <label style={lbl}>Country rules and wording</label>
+          <textarea style={{ ...inp, minHeight: 100, resize: 'vertical', marginBottom: 12 }} value={style.country_rules} onChange={e => setStyle({ ...style, country_rules: e.target.value })} placeholder="e.g. UK lettings: refer to deposits as protected in a government scheme. Jamaica: amounts in J$, never mention UK legislation." />
+          <label style={lbl}>Sign-off</label>
+          <input style={{ ...inp, marginBottom: 14 }} value={style.signoff} onChange={e => setStyle({ ...style, signoff: e.target.value })} placeholder="Name used at the end of emails. Leave blank to use your company name." />
+          <button style={btn('gold')} onClick={async () => { setStyleMsg(''); try { await staffApi('/api/ai-client-settings', style); setStyleMsg('Saved.') } catch (e: any) { setStyleMsg(e.message) } }}>Save</button>
+          {styleMsg && <span style={{ marginLeft: 12, fontSize: 13, color: C.muted }}>{styleMsg}</span>}
+        </div>
+      )}
 
       {section === 'Agents' && !current && (
         <div>
