@@ -1,5 +1,6 @@
 // Small helpers shared by the scheduled AI agents (lib/ai-proposals*.ts).
 import { createClient } from '@supabase/supabase-js'
+import { AsyncLocalStorage } from 'node:async_hooks'
 
 export function svc() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -13,9 +14,18 @@ export const daysBetween = (a: string, b: string) => Math.round((new Date(a).get
 export const niceDate = (iso: string) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 export const firstName = (n?: string | null) => (n || '').trim().split(/\s+/)[0] || ''
 
+// "Run now" from the screen runs every agent for one business only. The scheduled run has no scope
+// and covers every business.
+const scope = new AsyncLocalStorage<{ businessId: string }>()
+export const runScoped = <T,>(businessId: string | undefined, fn: () => Promise<T>) => (businessId ? scope.run({ businessId }, fn) : fn())
+export const scopedBusiness = () => scope.getStore()?.businessId
+
 // Only businesses that switched this agent on in AI Manager.
 export async function enabledBusinesses(agentKey: string) {
-  const { data } = await svc().from('ai_agents').select('user_id').eq('agent_key', agentKey).eq('enabled', true)
+  let q = svc().from('ai_agents').select('user_id').eq('agent_key', agentKey).eq('enabled', true)
+  const only = scopedBusiness()
+  if (only) q = q.eq('user_id', only)
+  const { data } = await q
   return (data ?? []).map((a: any) => a.user_id as string)
 }
 
@@ -36,7 +46,11 @@ export async function expireStaleDrafts() {
   const now = new Date().toISOString()
   const mark = { status: 'rejected', decided_at: now, decision_note: 'Expired: not approved in time' }
   const live = ['guest_reply', 'portal_reply']
-  const a = await db.from('ai_pending_actions').update(mark).eq('status', 'pending').in('action_type', live).lt('created_at', dayStr(-3)).select('id')
-  const b = await db.from('ai_pending_actions').update(mark).eq('status', 'pending').not('action_type', 'in', `(${live.join(',')})`).lt('created_at', dayStr(-14)).select('id')
+  const only = scopedBusiness()
+  let qa = db.from('ai_pending_actions').update(mark).eq('status', 'pending').in('action_type', live).lt('created_at', dayStr(-3))
+  let qb = db.from('ai_pending_actions').update(mark).eq('status', 'pending').not('action_type', 'in', `(${live.join(',')})`).lt('created_at', dayStr(-14))
+  if (only) { qa = qa.eq('user_id', only); qb = qb.eq('user_id', only) }
+  const a = await qa.select('id')
+  const b = await qb.select('id')
   return { expired: (a.data?.length ?? 0) + (b.data?.length ?? 0) }
 }

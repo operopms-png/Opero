@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
   const result = await executeAiAction(row, bodyToSend)
   if ('error' in result && result.error) {
     await db.from('ai_pending_actions').update({ status: 'failed', error: String(result.error).slice(0, 500) }).eq('id', id)
+    await db.from('notifications').insert({ user_id: c.businessId, title: `An approved AI action failed: ${String(row.title ?? '').slice(0, 80)}`, message: String(result.error).slice(0, 300), type: 'ai_alert', module: 'staffcentre', link: '/staff-centre/ai-command-centre/approvals', read: false })
     return NextResponse.json({ error: result.error }, { status: 502 })
   }
   await db.from('ai_pending_actions').update({ status: 'executed', executed_at: new Date().toISOString(), error: null }).eq('id', id)

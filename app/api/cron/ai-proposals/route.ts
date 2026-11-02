@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runAiProposals } from '@/lib/ai-proposals'
+import { runEscalations } from '@/lib/ai-escalation'
 
 // Manual trigger for the AI proposals without waiting for the schedule. Needs CRON_SECRET
 // in Netlify env vars:
@@ -10,6 +11,7 @@ export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (!secret) return NextResponse.json({ error: 'CRON_SECRET is not set in Netlify env vars' }, { status: 500 })
   if (req.nextUrl.searchParams.get('secret') !== secret) return NextResponse.json({ error: 'Invalid or missing secret' }, { status: 401 })
+  if (req.nextUrl.searchParams.get('escalate') === '1') return NextResponse.json(await runEscalations())
   const result = await runAiProposals(req.nextUrl.searchParams.get('all') === '1')
   return NextResponse.json(result, { status: result.ok ? 200 : 500 })
 }

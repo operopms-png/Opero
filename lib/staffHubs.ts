@@ -16,11 +16,11 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'oversight' }] },
   { label: 'AI Command Centre', icon: 'sparkles', tabs: [
     { href: '/staff-centre/ai-command-centre', label: 'AI Command Centre', scTab: 'oversight', hidden: true },
-    { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight' },
-    { href: '/staff-centre/ai-approvals', label: 'AI Approvals', scTab: 'oversight' },
-    { href: '/staff-centre/ai-command-centre/results', label: 'AI Results', scTab: 'oversight' },
-    { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Ask Grok', scTab: 'oversight' },
-    { href: '/staff-centre/ai-command-centre/deal-analyser', label: 'Deal Analyser', requiresModule: 'invest' },
+    { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight', hidden: true },
+    { href: '/staff-centre/ai-approvals', label: 'AI Approvals', scTab: 'oversight', hidden: true },
+    { href: '/staff-centre/ai-command-centre/results', label: 'AI Results', scTab: 'oversight', hidden: true },
+    { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Ask Grok', scTab: 'oversight', hidden: true },
+    { href: '/staff-centre/ai-command-centre/deal-analyser', label: 'Deal Analyser', requiresModule: 'invest', hidden: true },
   ] },
   { label: 'Inbox', icon: 'message', tabs: [
     { href: '/staff-centre/inbox', label: 'Conversations', scTab: 'inbox', badge: 'inbox' },

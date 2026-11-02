@@ -11,7 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
-import { expireStaleDrafts } from './ai-proposal-utils'
+import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
@@ -174,7 +174,8 @@ export async function proposeRentReminders() {
   const db = getServiceClient()
   const result = { businesses: 0, created: 0, skippedNoPhone: 0, errors: [] as string[] }
   const { data } = await db.from('rent_reminders').select('business_id')
-  const businesses = Array.from(new Set((data ?? []).map((r: any) => r.business_id as string)))
+  const only = scopedBusiness()
+  const businesses = Array.from(new Set((data ?? []).map((r: any) => r.business_id as string))).filter(b => !only || b === only)
   result.businesses = businesses.length
   for (const businessId of businesses) {
     const r = await generateRentReminders(businessId, 'AI (daily)')
@@ -234,25 +235,31 @@ Nights booked: ${nights}${await styleInstructions(businessId)}`
   return result
 }
 
-// force = run everything now regardless of the day (for manual testing).
-export async function runAiProposals(force = false) {
-  try {
-    const now = new Date()
-    const out: Record<string, unknown> = {}
-    out.expiry = await expireStaleDrafts()
-    out.cleaning = await proposeCleaning()
-    out.maintenance = await proposeMaintenance()
-    out.rentReminders = await proposeRentReminders()
-    out.compliance = await proposeCompliance()
-    out.renewals = await proposeRenewals()
-    out.arrears = await proposeArrears()
-    out.viewings = await proposeViewings()
-    out.rentMatches = await proposeRentMatches()
-    out.listings = await proposeListings()
-    if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
-    if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }
-    return { ok: true, ...out }
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) }
-  }
+// force = run everything now regardless of the day (for manual testing and "Run now").
+// businessId = run for that one business only; leave empty for the scheduled run over everyone.
+export async function runAiProposals(force = false, businessId?: string) {
+  return runScoped(businessId, async () => {
+    try {
+      const now = new Date()
+      const out: Record<string, unknown> = {}
+      out.expiry = await expireStaleDrafts()
+      out.cleaning = await proposeCleaning()
+      out.maintenance = await proposeMaintenance()
+      out.rentReminders = await proposeRentReminders()
+      out.compliance = await proposeCompliance()
+      out.renewals = await proposeRenewals()
+      out.arrears = await proposeArrears()
+      out.viewings = await proposeViewings()
+      out.rentMatches = await proposeRentMatches()
+      out.listings = await proposeListings()
+      if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
+      if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }
+      await svcClient().from('ai_run_log').insert({ user_id: businessId ?? null, workflow: 'proposals', ok: true, result: out })
+      return { ok: true, ...out }
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e)
+      await svcClient().from('ai_run_log').insert({ user_id: businessId ?? null, workflow: 'proposals', ok: false, result: { error } })
+      return { ok: false, error }
+    }
+  })
 }

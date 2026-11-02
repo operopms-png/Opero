@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   const lateProjects = projects.filter(p => p.end_date && p.end_date < today && !/complet|clos|done|sold/i.test(String(p.status ?? '')))
   const staleSnags = oldSnags.filter(s => open(s.status))
   const all: Item[] = [
-    { key: 'approvals', label: 'AI drafts waiting for your approval', count: approvals.length, href: '/staff-centre/ai-approvals', level: 'urgent' },
+    { key: 'approvals', label: 'AI drafts waiting for your approval', count: approvals.length, href: '/staff-centre/ai-command-centre/approvals', level: 'urgent' },
     { key: 'arrears', label: 'Overdue rent payments', count: overdue.length, href: '/pm', level: 'urgent' },
     { key: 'expired', label: 'Compliance certificates expired', count: expired.length, href: '/staff-centre/compliance', level: 'urgent' },
     { key: 'snags', label: 'High-priority snagging items open', count: urgentSnags.length, href: '/dev', level: 'urgent' },
