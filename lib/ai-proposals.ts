@@ -13,6 +13,7 @@ import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
 import { runEstimate } from './earnings-estimate'
 import { sendPush } from './push'
+import { proposePortfolioReview } from './ai-portfolio'
 import { proposeLeaseDocs } from './ai-proposals-docs'
 import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
@@ -369,7 +370,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       if (force || (now.getUTCDate() >= 2 && now.getUTCDate() <= 10)) out.statements = await proposeStatementReminders()
       if (force || now.getUTCDay() === 1) out.weeklyReport = await proposeWeeklyReport()
       if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
-      if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }
+      if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates(); out.portfolio = await proposePortfolioReview() }
       await svcClient().from('ai_run_log').insert({ user_id: businessId ?? null, workflow: 'proposals', ok: true, result: out })
       // Tell each business's phones how many new drafts are waiting (one message per business).
       const { data: fresh } = await svcClient().from('ai_pending_actions').select('user_id').eq('status', 'pending').gte('created_at', startedAt)

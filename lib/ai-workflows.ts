@@ -20,6 +20,7 @@ export const WORKFLOWS: Workflow[] = [
   { agent: 'pm_statements', label: 'Landlord statement reminders', module: 'Property management', schedule: 'Daily from the 2nd to the 10th, 07:30', resultKey: 'statements' },
   { agent: 'maint_followup', label: 'Maintenance follow-up', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'maintFollowups' },
   { agent: 'weekly_report', label: 'Weekly management report', module: 'Property management', schedule: 'Mondays, 07:30', resultKey: 'weeklyReport' },
+  { agent: 'portfolio', label: 'Portfolio review', module: 'Investment & Portfolio', schedule: '1st of the month, 07:30', resultKey: 'portfolio' },
   { agent: 'ea_viewings', label: 'Viewings assistant', module: 'Estate agency', schedule: 'Daily, 07:30', resultKey: 'viewings' },
   { agent: 'ea_listings', label: 'Listing writer', module: 'Estate agency', schedule: 'Daily, 07:30', resultKey: 'listings' },
   { agent: 'dev_investors', label: 'Investor updates', module: 'Developments', schedule: '1st of the month, 07:30', resultKey: 'investorUpdates' },

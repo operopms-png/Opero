@@ -164,6 +164,14 @@ const AGENTS = [
     capabilities: ['Count the week from your records','Write a short plain-English summary','Email it to you once you approve'],
   },
   {
+    key: 'portfolio',
+    module: 'Investment & Portfolio',
+    name: 'AI Portfolio Intelligence',
+    icon: ICON,
+    desc: 'Used across Property Management and Developments. Totals rent, costs, mortgages and cash flow, estimates property values from public listings, and drafts a monthly portfolio review for you. The Portfolio page shows it all with a forecast.',
+    capabilities: ['Portfolio valuation (estimated from public listings)','Asset performance and cash flow per property','Rental yields','Return and equity from your loan records','Investment forecasting with your own assumptions','Portfolio growth from rent actually received','Monthly review emailed to you once you approve'],
+  },
+  {
     key: 'rent_match',
     module: 'Property management',
     name: 'AI Rent Matcher',
@@ -179,7 +187,7 @@ export default function PropertyManagerAgents() {
   const [style, setStyle] = useState({ tone: '', country_rules: '', signoff: '' })
   const [styleMsg, setStyleMsg] = useState('')
   const [section, setSection] = useState<'Agents'|'Activity log'|'Settings'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,weekly_report:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,weekly_report:false,portfolio:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})

@@ -1,5 +1,5 @@
 // Starts the AI proposals run in the Netlify background function and returns straight away.
-export async function startBackgroundRun(opts: { force: boolean; businessId?: string }): Promise<{ ok: boolean; error?: string }> {
+export async function startBackgroundRun(opts: { force: boolean; businessId?: string; task?: 'portfolio' }): Promise<{ ok: boolean; error?: string }> {
   const secret = process.env.CRON_SECRET
   const base = process.env.URL || process.env.DEPLOY_URL
   if (!secret) return { ok: false, error: 'CRON_SECRET is not set in Netlify env vars' }

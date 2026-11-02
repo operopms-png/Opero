@@ -25,6 +25,7 @@ const NAV: { heading: string; items: { href: string; label: string; badge?: 'app
   ] },
   { heading: 'Insight', items: [
     { href: BASE + '/results', label: 'Results' },
+    { href: BASE + '/portfolio', label: 'Portfolio' },
     { href: BASE + '/activity', label: 'Activity log' },
     { href: BASE + '/snapshot', label: 'Business snapshot' },
   ] },
