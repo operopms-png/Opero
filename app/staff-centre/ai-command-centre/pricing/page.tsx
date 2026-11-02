@@ -21,7 +21,7 @@ export default function Pricing() {
       <Body>
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         <div style={{ background: '#fff', border: '1px solid ' + C.border, borderLeft: '3px solid #C9A84C', borderRadius: 6, padding: '10px 14px', fontSize: 13, color: C.muted, marginBottom: 16, maxWidth: 760 }}>
-          These proposals come from your own booking history over the last 90 days. They do not use competitor or market rates yet, so treat them as a prompt to review, not a market price.
+          Each proposal uses your own bookings over the last 90 days and current market rates for similar holiday lets nearby, found by a live web search. The market range and the listings it used are shown on the approval. It is an estimate from public listings, not a licensed data feed, so check it before approving.
           {waiting > 0 && <> <Link href="/staff-centre/ai-command-centre/approvals" style={{ color: '#1B2F6E', fontWeight: 600 }}>{waiting} waiting for approval.</Link></>}
         </div>
         {!rows ? (!err && <Loading />) : rows.length === 0 ? <Empty>No rate proposals yet. Switch on the Revenue manager under Agents.</Empty> : (

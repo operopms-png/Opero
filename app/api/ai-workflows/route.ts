@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getCaller } from '@/lib/mailbox'
 import { WORKFLOWS } from '@/lib/ai-workflows'
-import { runAiProposals } from '@/lib/ai-proposals'
+import { startBackgroundRun } from '@/lib/ai-run'
 
 // Workflows screen: what each agent does, when it runs, whether it is on and what the last run did.
 // POST {action:'run'} runs every agent now for the caller's business only. It only adds drafts to Approvals.
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   if (!c) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const b = await req.json().catch(() => ({}))
   if (b.action !== 'run') return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
-  const r: any = await runAiProposals(true, c.businessId)
-  if (!r.ok) return NextResponse.json({ error: r.error || 'The run failed' }, { status: 500 })
-  return NextResponse.json({ success: true })
+  const r = await startBackgroundRun({ force: true, businessId: c.businessId })
+  if (!r.ok) return NextResponse.json({ error: r.error || 'Could not start the run' }, { status: 500 })
+  return NextResponse.json({ success: true, started: true })
 }

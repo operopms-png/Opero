@@ -54,3 +54,18 @@ export async function expireStaleDrafts() {
   const b = await qb.select('id')
   return { expired: (a.data?.length ?? 0) + (b.data?.length ?? 0) }
 }
+
+// When an agent cannot act (nobody to send to, a missing email), it leaves a task for a person on
+// Staff Centre -> Tasks instead of skipping silently. One task per title while it is still open,
+// and no more than 10 new ones per business per run.
+const madeThisRun = new Map<string, number>()
+export async function aiTask(businessId: string, title: string, notes: string, dueInDays = 1) {
+  const n = madeThisRun.get(businessId) ?? 0
+  if (n >= 10) return
+  const db = svc()
+  const t = title.slice(0, 140)
+  const { data: open } = await db.from('staff_tasks').select('id').eq('user_id', businessId).eq('title', t).neq('status', 'Done').limit(1)
+  if (open?.length) return
+  const { error } = await db.from('staff_tasks').insert({ user_id: businessId, title: t, status: 'On track', due_date: dayStr(dueInDays), notes: `[AI] ${notes}`.slice(0, 500) })
+  if (!error) madeThisRun.set(businessId, n + 1)
+}

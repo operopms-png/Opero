@@ -4,7 +4,7 @@
 //
 // Each agent runs only for a business that switched it on in AI Assistant -> Property manager.
 import { queueAiAction } from './ai-approvals'
-import { svc, freshCounts, enabledBusinesses, companyName, dayStr, daysBetween, niceDate, firstName } from './ai-proposal-utils'
+import { svc, aiTask, freshCounts, enabledBusinesses, companyName, dayStr, daysBetween, niceDate, firstName } from './ai-proposal-utils'
 
 const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
 const money = (n: number, cur: string) => (SYM[cur] ?? '') + Math.round(n).toLocaleString('en-GB')
@@ -27,7 +27,7 @@ export async function proposeCompliance() {
       const { data: landlord } = prop?.owner_id
         ? await db.from('pm_landlords').select('name, email').eq('id', prop.owner_id).eq('user_id', businessId).maybeSingle()
         : { data: null }
-      if (!prop || !landlord?.email) { result.noRecipient++; continue }
+      if (!prop || !landlord?.email) { result.noRecipient++; if (prop) await aiTask(businessId, `Add a landlord email for ${prop.name || prop.address}`, `The ${r.type} certificate is ${daysBetween(r.expiry_date, today) < 0 ? 'expired' : 'expiring'}, but the landlord has no email address, so no reminder can be drafted.`); continue }
 
       const left = daysBetween(r.expiry_date, today)
       const expired = left < 0
@@ -72,7 +72,7 @@ export async function proposeRenewals() {
         db.from('pm_tenants').select('name, email').eq('id', l.tenant_id).eq('user_id', businessId).maybeSingle(),
         db.from('pm_properties').select('name, address').eq('id', l.property_id).eq('user_id', businessId).maybeSingle(),
       ])
-      if (!tenant?.email) { result.noRecipient++; continue }
+      if (!tenant?.email) { result.noRecipient++; await aiTask(businessId, `Add an email for ${tenant?.name ?? 'a tenant'}`, 'Their tenancy ends within 60 days but they have no email address, so no renewal message can be drafted.'); continue }
       const where = prop?.name || prop?.address || 'your home'
       const left = daysBetween(l.end_date, today)
       const hi = firstName(tenant.name) ? `Dear ${firstName(tenant.name)},` : 'Hello,'
@@ -109,7 +109,7 @@ export async function proposeArrears() {
         db.from('pm_tenants').select('name, email').eq('id', r.tenant_id).eq('user_id', businessId).maybeSingle(),
         db.from('pm_properties').select('name, address, country, currency').eq('id', r.property_id).eq('user_id', businessId).maybeSingle(),
       ])
-      if (!tenant?.email) { result.noRecipient++; continue }
+      if (!tenant?.email) { result.noRecipient++; await aiTask(businessId, `Chase rent by phone: ${tenant?.name ?? 'a tenant'}`, 'Rent is more than 14 days overdue and the tenant has no email address, so no message can be drafted.', 0); continue }
       const cur = prop?.currency || (/jamaica/i.test(prop?.country || '') ? 'JMD' : 'GBP')
       const days = daysBetween(today, r.due_date)
       const where = prop?.name || prop?.address || 'your property'

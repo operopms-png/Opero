@@ -19,7 +19,7 @@ export default function Workflows() {
   const run = async () => {
     if (!window.confirm('Run every switched-on agent now? They only add drafts to Approvals. Nothing is sent.')) return
     setBusy(true); setMsg('')
-    try { await staffApi('/api/ai-workflows', { action: 'run' }); setMsg('Done. New drafts are in Approvals.'); await load() } catch (e: any) { setErr(e.message) }
+    try { await staffApi('/api/ai-workflows', { action: 'run' }); setMsg('Started. New drafts appear in Approvals in a minute or two, and this page shows the result when it finishes.'); await load() } catch (e: any) { setErr(e.message) }
     setBusy(false)
   }
   const groups = d ? Array.from(new Set(d.workflows.map((w: any) => w.module))) as string[] : []

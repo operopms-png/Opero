@@ -19,6 +19,7 @@ const NAV: { heading: string; items: { href: string; label: string; badge?: 'app
   ] },
   { heading: 'Automation', items: [
     { href: BASE + '/workflows', label: 'Workflows' },
+    { href: '/staff-centre/tasks', label: 'Task board' },
     { href: BASE + '/escalation', label: 'Escalation rules' },
     { href: BASE + '/pricing', label: 'Pricing' },
   ] },

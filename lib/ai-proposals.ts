@@ -11,7 +11,8 @@ import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
-import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient } from './ai-proposal-utils'
+import { runEstimate } from './earnings-estimate'
+import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
@@ -61,7 +62,7 @@ export async function proposeCleaning() {
     for (const t of tasks ?? []) {
       const property: any = (props ?? []).find((p: any) => p.id === t.property_id)
       const to = await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%clean%')
-      if (!to) { result.noRecipient!++; continue }
+      if (!to) { result.noRecipient!++; await aiTask(businessId, `Assign a cleaner for ${property?.name ?? 'a property'}`, `A clean on ${t.scheduled_date} has nobody to send instructions to. Assign the clean to a team member who has an email address.`); continue }
       const system = `You are a cleaning coordinator for a short-term rental company. Draft a short, practical turnover-cleaning checklist and instruction message to send to the cleaner ${to.name} for the property below. Plain text, no subject line, ready to send. Use only the information given.
 
 Property: ${property?.name ?? 'Unknown'} (${property?.address ?? ''}, ${property?.city ?? ''})
@@ -99,7 +100,7 @@ export async function proposeMaintenance() {
     for (const t of tickets ?? []) {
       const property: any = (props ?? []).find((p: any) => p.id === t.property_id)
       const to = await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%maint%,role.ilike.%contractor%,role.ilike.%repair%,role.ilike.%handy%')
-      if (!to) { result.noRecipient!++; continue }
+      if (!to) { result.noRecipient!++; await aiTask(businessId, `Assign a contractor: ${String(t.title ?? 'maintenance job').slice(0, 60)} at ${property?.name ?? 'a property'}`, 'An open maintenance ticket has nobody to send the request to. Assign it to a team member who has an email address.'); continue }
       const system = `You are a maintenance coordinator for a short-term rental company. Draft a short, clear message to ${to.name} asking them to deal with the issue below. Include the property, the problem, the priority and what you need back from them. Plain text, no subject line, ready to send. Use only the information given.
 
 Property: ${property?.name ?? 'Unknown'} (${property?.address ?? ''}, ${property?.city ?? ''})
@@ -133,6 +134,7 @@ export async function proposeRates() {
   const businesses = await enabledBusinesses('revenue')
   result.businesses = businesses.length
   const ninetyAgo = dayStr(-90)
+  const marketCache = new Map<string, any>() // one web search per place per run
   for (const businessId of businesses) {
     const { data: props } = await db.from('properties').select('id, name, nightly_rate, max_guests, city, country').eq('user_id', businessId).gt('nightly_rate', 0).limit(15)
     for (const p of props ?? []) {
@@ -142,12 +144,26 @@ export async function proposeRates() {
       const occupancyPct = Math.min(100, Math.round((nights / 90) * 100))
       const avgNightly = nights > 0 ? Math.round(active.reduce((s: number, b: any) => s + (Number(b.total_amount) || 0), 0) / nights) : 0
       const current = Number(p.nightly_rate)
-      const system = `You are a revenue manager for a short-term rental. From the property's own booking performance below (no competitor data is available), recommend one nightly rate. Reply with ONLY JSON: {"recommended_rate": number, "reason": "one or two plain sentences"}. Keep the change modest and only move the rate if the data supports it; otherwise return the current rate.
+      // Live market rates for the area, from a web search of current listings. Treated as a guide:
+      // it is shown to the approver with its sources, never applied without approval.
+      const country = /jamaica|st\.? james/i.test(p.country ?? '') ? 'Jamaica' : (p.country ?? '')
+      const cur = country === 'Jamaica' ? 'USD' : 'GBP'
+      const sym = cur === 'USD' ? '$' : '£'
+      const place = `${String(p.city ?? '').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}|${country}`
+      if (!marketCache.has(place) && p.city) {
+        const est = await runEstimate({ location: String(p.city), country, currency: cur as 'USD' | 'GBP' }).catch(() => null)
+        marketCache.set(place, est?.short_let ?? null)
+      }
+      const market = marketCache.get(place) ?? null
+      const marketLine = market?.nightly_typical
+        ? `Market nightly rates for similar holiday lets nearby, from a live web search (confidence ${market.confidence}): low ${sym}${market.nightly_low}, typical ${sym}${market.nightly_typical}, high ${sym}${market.nightly_high}. Basis: ${market.basis}`
+        : 'No market data could be found for this area.'
+      const system = `You are a revenue manager for a short-term rental. From the property's own booking performance below and the market data below, recommend one nightly rate. Do not go outside the market range unless the property's own results clearly justify it. Reply with ONLY JSON: {"recommended_rate": number, "reason": "one or two plain sentences"}. Keep the change modest and only move the rate if the data supports it; otherwise return the current rate.
 
 Property: ${p.name} (${p.city ?? ''}, ${p.country ?? ''}), max ${p.max_guests ?? '?'} guests
-Current listed nightly rate: £${current}
+Current listed nightly rate: ${sym}${current}
 Last 90 days occupancy: ${occupancyPct}%
-Last 90 days average realised nightly rate: ${avgNightly ? '£' + avgNightly : 'no bookings in period'}`
+Last 90 days average realised nightly rate: ${avgNightly ? sym + avgNightly : 'no bookings in period'}\n${marketLine}`
       const { text, error } = await callClaude(system, 'Give your rate recommendation as JSON.', 250)
       const out = parseJson(text)
       const rate = Math.round(Number(out?.recommended_rate))
@@ -156,9 +172,9 @@ Last 90 days average realised nightly rate: ${avgNightly ? '£' + avgNightly : '
       if (Math.abs(rate - current) / current < 0.05 || rate < current * 0.7 || rate > current * 1.3) { result.skipped++; continue }
       const q = await queueAiAction({
         userId: businessId, agentKey: 'revenue', actionType: 'rate_change',
-        title: `Nightly rate: ${p.name} ${money(current)} to ${money(rate)}`, propertyName: p.name, draftBody: String(rate),
+        title: `Nightly rate: ${p.name} ${sym}${current} to ${sym}${rate}`, propertyName: p.name, draftBody: String(rate),
         payload: { property_id: p.id, current_rate: current },
-        context: { summary: `${occupancyPct}% occupancy over 90 days, average realised rate ${avgNightly ? money(avgNightly) : 'n/a'}. ${String(out.reason ?? '').slice(0, 300)}`, current_rate: current },
+        context: { market: market?.nightly_typical ? { low: market.nightly_low, typical: market.nightly_typical, high: market.nightly_high, confidence: market.confidence, basis: market.basis, symbol: sym, comparables: (market.comparables ?? []).slice(0, 4) } : null, summary: `${occupancyPct}% occupancy over 90 days, average realised rate ${avgNightly ? sym + avgNightly : 'n/a'}. ${String(out.reason ?? '').slice(0, 300)}`, current_rate: current },
         dedupe: { key: 'property_id', value: p.id, sinceIso: new Date(Date.now() - 7 * 86400000).toISOString() },
       })
       if ('queued' in q) result.queued++; else { result.skipped++; if ('error' in q) result.errors.push(`rate ${p.name}: ${q.error}`) }

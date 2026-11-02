@@ -90,13 +90,14 @@ export default function AiApprovals() {
                     <span style={{ alignSelf: 'flex-start', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600, background: st.bg, color: st.c }}>{st.l}</span>
                   </div>
                   {r.context?.summary && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10 }}><b>Based on:</b> {r.context.summary}{r.payload?.to ? ` · will be emailed to ${r.payload.to}` : ''}</div>}
+                  {r.context?.market && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10 }}><b>Market (live web search, {r.context.market.confidence} confidence):</b> {r.context.market.symbol}{r.context.market.low} to {r.context.market.symbol}{r.context.market.high}, typical {r.context.market.symbol}{r.context.market.typical}. {r.context.market.basis}{(r.context.market.comparables ?? []).filter((c: any) => c.url).length > 0 && <div style={{ marginTop: 4 }}>{(r.context.market.comparables as any[]).filter(c => c.url).map((c, i) => <a key={i} href={c.url} target="_blank" rel="noreferrer" style={{ marginRight: 10, color: '#1B2F6E' }}>{c.source || 'Listing'} {c.price_text}</a>)}</div>}</div>}
                   {r.context?.guest_message && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>Guest wrote:</b> {r.context.guest_message}</div>}
                   {r.context?.incoming && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>{r.context.incoming_from || 'They'} wrote:</b> {r.context.incoming}</div>}
                   {open ? (
                     <>
                       {isRate ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontSize: 14, color: C.muted }}>Now £{r.payload?.current_rate}. New nightly rate: £</span>
+                          <span style={{ fontSize: 14, color: C.muted }}>Now {r.context?.market?.symbol ?? '£'}{r.payload?.current_rate}. New nightly rate: {r.context?.market?.symbol ?? '£'}</span>
                           <input style={{ ...input, width: 110 }} inputMode="decimal" value={edits[r.id] ?? r.draft_body} onChange={e => setEdits({ ...edits, [r.id]: e.target.value })} />
                         </div>
                       ) : (
