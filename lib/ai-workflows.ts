@@ -13,6 +13,7 @@ export const WORKFLOWS: Workflow[] = [
   { agent: 'pm_renewals', label: 'Renewals agent', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'renewals' },
   { agent: 'pm_arrears', label: 'Arrears escalation', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'arrears' },
   { agent: 'rent_match', label: 'Rent matcher', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'rentMatches' },
+  { agent: 'doc_reader', label: 'Document reader', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'leaseDocs' },
   { agent: 'ea_viewings', label: 'Viewings assistant', module: 'Estate agency', schedule: 'Daily, 07:30', resultKey: 'viewings' },
   { agent: 'ea_listings', label: 'Listing writer', module: 'Estate agency', schedule: 'Daily, 07:30', resultKey: 'listings' },
   { agent: 'dev_investors', label: 'Investor updates', module: 'Developments', schedule: '1st of the month, 07:30', resultKey: 'investorUpdates' },

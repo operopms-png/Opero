@@ -8,7 +8,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -104,6 +104,25 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     const { data, error } = await db.from('properties').update({ nightly_rate: rate }).eq('id', p.property_id).eq('user_id', action.user_id).select('id')
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Property not found for this account.' }
+    return { success: true }
+  }
+
+  if (action.action_type === 'lease_update') {
+    // Applies only the four fields the document reader can propose, re-validated here.
+    const { LEASE_TABLES } = await import('./ai-proposals-docs')
+    const cfg = LEASE_TABLES[p.table]
+    if (!cfg || !p.id || !p.fields) return { error: 'Invalid record to update.' }
+    const f = p.fields as Record<string, any>, upd: Record<string, any> = {}
+    const pos = (n: any) => { const x = Number(n); return Number.isFinite(x) && x > 0 ? x : null }
+    const dt = (s: any) => (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s).getTime()) ? s : null)
+    if (f.rent != null) { const v = pos(f.rent); if (v == null) return { error: 'Invalid rent.' }; upd[cfg.rent] = v }
+    if (f.deposit != null) { const v = pos(f.deposit); if (v == null) return { error: 'Invalid deposit.' }; upd.deposit = v }
+    if (f.start_date != null) { const v = dt(f.start_date); if (!v) return { error: 'Invalid start date.' }; upd.start_date = v }
+    if (f.end_date != null) { const v = dt(f.end_date); if (!v) return { error: 'Invalid end date.' }; upd.end_date = v }
+    if (!Object.keys(upd).length) return { error: 'Nothing to update.' }
+    const { data, error } = await getServiceClient().from(p.table).update(upd).eq('id', p.id).eq('user_id', action.user_id).select('id')
+    if (error) return { error: error.message }
+    if (!data?.length) return { error: 'Record not found for this account.' }
     return { success: true }
   }
 

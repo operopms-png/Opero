@@ -13,6 +13,7 @@ import { queueAiAction } from './ai-approvals'
 import { generateRentReminders } from './rent-reminders'
 import { runEstimate } from './earnings-estimate'
 import { sendPush } from './push'
+import { proposeLeaseDocs } from './ai-proposals-docs'
 import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
@@ -270,6 +271,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.viewings = await proposeViewings()
       out.rentMatches = await proposeRentMatches()
       out.listings = await proposeListings()
+      out.leaseDocs = await proposeLeaseDocs()
       if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
       if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.investorUpdates = await proposeInvestorUpdates() }
       await svcClient().from('ai_run_log').insert({ user_id: businessId ?? null, workflow: 'proposals', ok: true, result: out })

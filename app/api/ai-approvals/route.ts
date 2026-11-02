@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     .from('ai_pending_actions')
     .select('*')
     .eq('user_id', c.businessId)
+    .neq('title', 'Document matches the record')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

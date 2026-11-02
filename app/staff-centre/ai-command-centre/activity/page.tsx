@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Loading, Empty } from '../../../../components/crm/Page'
 import { staffApi } from '../../../../lib/staff-api'
 
-const NAME: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Pricing', owner: 'Owner reports', leads: 'Leads', portal: 'Portal chat', pm_compliance: 'Compliance', pm_renewals: 'Renewals', pm_arrears: 'Arrears', ea_viewings: 'Viewings', ea_listings: 'Listings', dev_investors: 'Investor updates', rent_match: 'Rent matching' }
+const NAME: Record<string, string> = { guest: 'Guest agent', cleaning: 'Cleaning', maintenance: 'Maintenance', revenue: 'Pricing', owner: 'Owner reports', leads: 'Leads', portal: 'Portal chat', pm_compliance: 'Compliance', pm_renewals: 'Renewals', pm_arrears: 'Arrears', ea_viewings: 'Viewings', ea_listings: 'Listings', dev_investors: 'Investor updates', rent_match: 'Rent matching', doc_reader: 'Document reader' }
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export default function Activity() {

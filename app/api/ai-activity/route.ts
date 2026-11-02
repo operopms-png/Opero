@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   if (!c) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const [log, decided] = await Promise.all([
     db.from('ai_activity_log').select('agent_key, action, property_name, notes, created_at').eq('user_id', c.businessId).order('created_at', { ascending: false }).limit(100),
-    db.from('ai_pending_actions').select('agent_key, title, status, decided_by_name, decided_at, property_name').eq('user_id', c.businessId).not('decided_at', 'is', null).order('decided_at', { ascending: false }).limit(100),
+    db.from('ai_pending_actions').select('agent_key, title, status, decided_by_name, decided_at, property_name').eq('user_id', c.businessId).neq('title', 'Document matches the record').not('decided_at', 'is', null).order('decided_at', { ascending: false }).limit(100),
   ])
   const items = [
     ...(log.data ?? []).map((r: any) => ({ at: r.created_at, agent: r.agent_key, text: [r.action, r.property_name].filter(Boolean).join(' · '), note: r.notes ?? '' })),

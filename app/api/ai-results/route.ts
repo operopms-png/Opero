@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const since = new Date(Date.now() - 30 * 86400000).toISOString()
   const { data, error } = await db.from('ai_pending_actions')
     .select('agent_key, status, draft_body, final_body, created_at, decided_at, decided_by')
-    .eq('user_id', c.businessId).gte('created_at', since).limit(5000)
+    .eq('user_id', c.businessId).neq('title', 'Document matches the record').gte('created_at', since).limit(5000)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const by: Record<string, any> = {}
