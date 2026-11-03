@@ -21,6 +21,7 @@ import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask 
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeMaintenancePredictions, proposeMarketForecast } from './ai-forecasting'
+import { proposeWatchers, proposeInvoiceChase, proposeReviewReplies, proposeTeamWeekly } from './ai-watchers'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
 import { proposeCompliance, proposeRenewals, proposeArrears, proposeDeposits, proposeInsurance, proposeInspections, proposeStatementReminders } from './ai-proposals-modules'
 
@@ -373,9 +374,13 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.insurance = await proposeInsurance()
       out.inspections = await proposeInspections()
       out.maintFollowups = await proposeMaintenanceFollowups()
+      Object.assign(out, await proposeWatchers())
+      out.invoiceChase = await proposeInvoiceChase()
+      out.reviewReplies = await proposeReviewReplies()
       if (force || (now.getUTCDate() >= 2 && now.getUTCDate() <= 10)) out.statements = await proposeStatementReminders()
       if (force || now.getUTCDay() === 1) out.maintPredictions = await proposeMaintenancePredictions()
       if (force || now.getUTCDay() === 1) out.weeklyReport = await proposeWeeklyReport()
+      if (force || now.getUTCDay() === 1) out.teamWeekly = await proposeTeamWeekly()
       if (force || now.getUTCDay() === 1) out.rates = await proposeRates()
       if (force || now.getUTCDate() === 1) { out.ownerReports = await proposeOwnerReports(); out.marketForecast = await proposeMarketForecast(); out.investorUpdates = await proposeInvestorUpdates(); out.portfolio = await proposePortfolioReview() }
       await svcClient().from('ai_run_log').insert({ user_id: businessId ?? null, workflow: 'proposals', ok: true, result: out })
