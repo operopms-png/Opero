@@ -1,7 +1,7 @@
 // One plain line for every tab in Real Estate Intelligence: what it does.
 // Shown in the blue banner at the top of each tab (components/TabBanner.tsx).
 // A module-specific entry ("dev:Units") wins over the shared one ("Units").
-const D: Record<string, string> = {
+export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Dashboard': 'Your day at a glance: rents due, open jobs, upcoming checks and anything waiting for your approval.',
   'Home': 'Your day at a glance: bookings, check-ins, cleaning and anything waiting for your approval.',
   'Short Stays Overview': 'Occupancy, income and upcoming stays across all your short-stay properties.',
@@ -71,5 +71,5 @@ const D: Record<string, string> = {
   'str:Reports': 'Revenue, occupancy and expense reports for your short-stay portfolio.',
 }
 export function describeTab(module: 'pm' | 'estate' | 'str' | 'dev', name: string): string {
-  return D[`${module}:${name}`] ?? D[name] ?? ''
+  return TAB_DESCRIPTIONS[`${module}:${name}`] ?? TAB_DESCRIPTIONS[name] ?? ''
 }

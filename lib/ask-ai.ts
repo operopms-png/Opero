@@ -3,6 +3,7 @@
 // calls Claude with the whole conversation (optionally with web search).
 // Admins see everything; other staff only get properties, scripts and the
 // Airbnb chats from mailboxes they can already open. Server-only.
+import { portalGuide } from './portal-guide'
 import { serviceClient } from '@/lib/admin-auth'
 import type { Caller } from '@/lib/mailbox'
 import { buildThreads } from '@/lib/airbnb-inbox'
@@ -79,11 +80,12 @@ export async function portalContext(c: Caller): Promise<string> {
 
 export function systemPrompt(o: { c: Caller; portal: string | null; web: boolean; deal?: any }) {
   const now = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  let s = `You are the AI assistant inside the NOVOURQ staff portal. NOVOURQ Group is a property company working in Jamaica, the UK and the UAE: short-stay (Airbnb) management and co-hosting, guaranteed rent / rent-to-rent, lettings and estate agency, property management and developments.
+  let s = `You are Novourq Cloud AI, the AI that runs the NOVOURQ platform and answers questions inside it. NOVOURQ Group is a property company working in Jamaica, the UK and the UAE: short-stay (Airbnb) management and co-hosting, guaranteed rent / rent-to-rent, lettings and estate agency, property management and developments.
 You are talking to ${o.c.name} (${o.c.isAdmin ? 'admin' : o.c.role || 'staff'}). It is ${now} (UK time).
 
 How to answer:
 - British English. Clear, direct and practical; short paragraphs, bullet points and markdown tables where they help. No waffle.
+- For questions about how the platform works or where to find something, answer from the PORTAL GUIDE below with the exact click path, and say if the guide does not cover it. Never invent a page, button or setting.
 - For questions about the business, use ONLY the portal data below. Never invent properties, figures, names or dates; if something isn't in the data, say so and say where in the portal they could check.
 - Mention which part of the portal a fact comes from when useful (e.g. "Estate Agency → Properties").
 - Point out anything that looks wrong or risky (e.g. a rent that looks too low, a lease about to end).
@@ -91,6 +93,7 @@ How to answer:
 - For legal, tax or financial questions give useful general information, be clear about the country (Jamaica vs UK rules differ) and suggest checking with a professional for the final decision.
 - Don't include phone numbers or WhatsApp numbers in drafts unless the user gives them.`
   s += o.web ? `\n- You can search the web for current information (market rents, laws, news). Prefer recent, reputable sources and list the links you used at the end under "Sources".` : `\n- Web search is off: for current prices, rents, laws or news, say your information may be out of date and suggest switching on "Search the web".`
+  s += `\n\n${portalGuide()}`
   if (o.deal) s += `\n\nTHE DEAL BEING DISCUSSED (from the Deal Analyser — figures are the user's inputs and the analyser's results):\n${JSON.stringify(o.deal, null, 1).slice(0, 12000)}\n\nWhen asked for your opinion: act as an experienced property investor. Give a clear view (would you do it, why / why not), the biggest risks, what to check before committing, what figures look optimistic or missing, and what would make it work (price, rent, terms to negotiate). If there is an AI Verdict above, say where you agree or disagree with it. Use the actual numbers. Remind them briefly that it's not financial advice only once, at the end.`
   if (o.portal) s += `\n\nPORTAL DATA (live, read-only):\n${o.portal}`
   else s += `\n\n(Portal data is switched off for this chat — answer generally.)`

@@ -1,4 +1,5 @@
 import { callClaude } from '@/lib/claude'
+import { portalGuide } from '@/lib/portal-guide'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireStaff, serviceClient } from '@/lib/admin-auth'
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
     input = `${message}\n\nRecords as of today (JSON):\n${JSON.stringify(snapshot).slice(0, 60000)}`
   }
 
-  const out = await callClaude(role.instructions, input, 1500)
+  const out = await callClaude(`${role.instructions}\n\nIf the question is about how the platform works or where to find something, answer from the PORTAL GUIDE below with the exact click path, and never invent a page or setting.\n\n${portalGuide()}`, input, 1500)
   if (out.error) return NextResponse.json({ error: 'The assistant could not answer.' }, { status: 502 })
   const reply = out.text ?? ''
   // Record when this agent was last asked something (shown on the Agent Pool).
