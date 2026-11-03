@@ -21,7 +21,7 @@ export default function PrivacyPage() {
       <p>To provide the service (contract). To bill you (contract and legal obligation). To keep the service secure and prevent abuse (legitimate interests). To improve the product (legitimate interests). To send service messages and, where you agree, product news (consent).</p>
 
       <H>4. AI processing</H>
-      <p>Content you ask Novourq Cloud AI to work on is sent to our AI provider to produce the result.</p>
+      <p>Content you ask Novourq Cloud AI to work on is sent to our AI provider to produce the result. If you use the WhatsApp assistant and send a voice note, the recording is sent to a speech-to-text provider to turn it into text.</p>
 
       <H>5. Who we share it with</H>
       <p>Only providers that help us run the service: hosting and database, payments, email, AI, and any integration you turn on (such as text messaging, accounting or channel managers). We also share data where the law requires.</p>
