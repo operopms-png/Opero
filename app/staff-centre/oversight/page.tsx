@@ -8,8 +8,9 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
+import DashboardAiPanel from '../../../components/ai/DashboardAiPanel'
 
-const C = { ink: '#191815', brown: '#5A4320', gold: '#1B2F6E', goldT: '#89CFF0', gold2: '#89CFF0', cream: '#EAF3FC', line: '#E7E4DC', muted: '#8A877F', text: '#3b3833', bg: '#F7F6F2' }
+const C = { ink: '#0f2150', brown: '#0f2150', gold: '#2f5bd6', goldT: '#5470a8', gold2: '#89CFF0', cream: '#EAF3FC', line: '#dfe6f4', muted: '#6b7fae', text: '#2b3f6e', bg: '#eaf3ff' }
 const MOD: Record<string, string> = { vr: '#89CFF0', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
 const TONE = { red: { c: '#B42318', bg: '#FDECEC' }, amber: { c: '#89CFF0', bg: '#FFF4DE' }, blue: { c: '#1F5BB0', bg: '#E8F0FB' } }
 const P: Record<string, string> = {
@@ -21,7 +22,7 @@ const P: Record<string, string> = {
   pound: 'M17 20H7c2-2 2-5 1.5-8H15M6 12h7M16.5 6.5A4 4 0 0 0 9 8c0 1.5.5 3 .5 4', arrow: 'M5 12h14M13 6l6 6-6 6', refresh: 'M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5',
 }
 const Ico = ({ k, s = 16, c = 'currentColor' }: { k: string; s?: number; c?: string }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0 }}><path d={P[k] || P.check} /></svg>
-const card: React.CSSProperties = { background: '#fff', border: '1px solid ' + C.line, borderRadius: 10 }
+const card: React.CSSProperties = { background: 'rgba(255,255,255,.88)', border: '1px solid rgba(47,91,214,.14)', borderRadius: 16, boxShadow: '0 6px 20px rgba(47,91,214,.08)' }
 const RANGES = [['today', 'Today'], ['week', 'This week'], ['month', 'This month']] as const
 
 function ago(iso: string) {
@@ -77,7 +78,7 @@ export default function Dashboard() {
   ] : []
 
   return (
-    <div style={{ minHeight: 'calc(100vh - var(--hub-h, 0px))', background: C.bg, fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: C.text }}>
+    <div style={{ minHeight: 'calc(100vh - var(--hub-h, 0px))', background: 'linear-gradient(180deg,#eaf3ff,#d9e9fd)', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: C.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
         .dash-grid3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
         .dash-cols{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
@@ -89,14 +90,14 @@ export default function Dashboard() {
         .dash-link:hover{background:#FFFCF5}`}</style>
 
       {/* Band — NOVOURQ cream & gold */}
-      <div style={{ background: 'linear-gradient(135deg,#EAF3FC 0%,#C9DEF3 100%)', borderBottom: '1px solid #C9DEF3', padding: '24px 30px 22px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', right: -60, top: -90, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(168,134,46,.22)' }} />
-        <div style={{ position: 'absolute', right: 40, top: -150, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(168,134,46,.14)' }} />
+      <div style={{ background: 'radial-gradient(900px 300px at 88% -20%,rgba(120,170,255,.45),transparent 60%), linear-gradient(135deg,#eaf3ff 0%,#cfe2fb 100%)', borderBottom: '1px solid #bcd3fb', padding: '24px 30px 22px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', right: -60, top: -90, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(47,91,214,.16)' }} />
+        <div style={{ position: 'absolute', right: 40, top: -150, width: 300, height: 300, borderRadius: 300, border: '1px solid rgba(47,91,214,.1)' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap', position: 'relative' }}>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.14em', color: C.goldT }}>OPERATIONS · {rangeName.toUpperCase()}</div>
             <h1 style={{ margin: '4px 0 0', fontSize: 28, fontWeight: 700, color: C.brown, letterSpacing: '-.01em' }}>{title}</h1>
-            <div style={{ fontSize: 13, color: '#89CFF0', marginTop: 3 }}>Jamaica {t('America/Jamaica')} · London {t('Europe/London')}</div>
+            <div style={{ fontSize: 13, color: '#5470a8', marginTop: 3 }}>Jamaica {t('America/Jamaica')} · London {t('Europe/London')}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ display: 'inline-flex', border: '1px solid #89CFF0', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
@@ -107,7 +108,7 @@ export default function Dashboard() {
         </div>
         <div className="dash-hero" style={{ marginTop: 20, position: 'relative' }}>
           {(d ? hero : Array.from({ length: 5 })).map((h: any, i) => h ? (
-            <Link key={h.k} href={h.href} className="dash-link" style={{ background: '#fff', border: '1px solid #C9DEF3', borderRadius: 10, padding: '14px 16px', textDecoration: 'none', color: C.text, boxShadow: '0 1px 0 rgba(90,67,32,.04)' }}>
+            <Link key={h.k} href={h.href} className="dash-link" style={{ background: 'rgba(255,255,255,.85)', border: '1px solid rgba(47,91,214,.14)', borderRadius: 16, padding: '14px 16px', textDecoration: 'none', color: C.text, boxShadow: '0 6px 20px rgba(47,91,214,.08)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: C.goldT, fontWeight: 600 }}><Ico k={h.k} s={14} />{h.l}</div>
               <div style={{ fontSize: 30, fontWeight: 800, color: C.ink, marginTop: 4, letterSpacing: '-.02em' }}>{h.n}</div>
               <div style={{ fontSize: 11.5, color: C.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minHeight: 15 }}>{h.sub || (h.n ? '' : 'None ' + rangeName)}</div>
@@ -129,6 +130,8 @@ export default function Dashboard() {
           </div>
         )}
         {err && <div style={{ ...card, padding: 14, color: '#B42318', marginBottom: 16 }}>{err} <button onClick={() => load()} style={{ marginLeft: 8, border: 'none', background: 'none', color: C.goldT, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Try again</button></div>}
+
+        <DashboardAiPanel />
 
         {/* Business cards */}
         <div className="dash-grid3">
@@ -194,7 +197,7 @@ function ModuleCard({ m }: { m: any }) {
     <Link href={m.href} className="dash-link" style={{ ...card, borderTop: `3px solid ${col}`, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12, textDecoration: 'none', color: C.text, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <svg width="62" height="62" viewBox="0 0 62 62" role="img" aria-label={`${m.occ}% ${m.ringLabel || (m.key === 'vr' ? 'booked this month' : 'let')}`} style={{ flexShrink: 0 }}>
-          <circle cx="31" cy="31" r={r} fill="none" stroke="#EFECE4" strokeWidth="7" />
+          <circle cx="31" cy="31" r={r} fill="none" stroke="#cfe0f7" strokeWidth="7" />
           <circle cx="31" cy="31" r={r} fill="none" stroke={col} strokeWidth="7" strokeLinecap="round" strokeDasharray={`${(Cc * m.occ) / 100} ${Cc}`} transform="rotate(-90 31 31)" />
           <text x="31" y="35.5" textAnchor="middle" fontSize="13.5" fontWeight="800" fill={C.ink}>{m.occ}%</text>
         </svg>
