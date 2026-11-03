@@ -1,10 +1,11 @@
+import { callClaude } from '@/lib/claude'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireStaff, serviceClient } from '@/lib/admin-auth'
 
 // Staff assistant for the Staff Centre dashboard. Read only: it answers questions
 // from the records it is given and cannot change records or send messages.
-// Requires XAI_API_KEY and XAI_MODEL in the Netlify environment variables.
+// Requires ANTHROPIC_API_KEY in the Netlify environment variables.
 
 export const maxDuration = 60
 
@@ -157,9 +158,7 @@ export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
   if (!staffId) return NextResponse.json({ error: 'Sign in to use the assistant.' }, { status: 401 })
 
-  const apiKey = process.env.XAI_API_KEY
-  const model = process.env.XAI_MODEL
-  if (!apiKey || !model) return NextResponse.json({ error: 'The assistant is not set up yet. Add XAI_API_KEY and XAI_MODEL in the site settings.' }, { status: 503 })
+  if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'The assistant is not set up yet. Add ANTHROPIC_API_KEY in the site settings.' }, { status: 503 })
 
   const body = await req.json().catch(() => null)
   const message = String(body?.message ?? '').trim().slice(0, 4000)
@@ -176,38 +175,9 @@ export async function POST(req: NextRequest) {
     input = `${message}\n\nRecords as of today (JSON):\n${JSON.stringify(snapshot).slice(0, 60000)}`
   }
 
-  const ctrl = new AbortController()
-  const stop = setTimeout(() => ctrl.abort(), 50000)
-  let res: Response
-  try {
-    res = await fetch('https://api.x.ai/v1/responses', {
-      method: 'POST',
-      signal: ctrl.signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        instructions: role.instructions,
-        input,
-      }),
-    })
-  } catch {
-    return NextResponse.json({ error: 'The assistant did not answer in time. Try again.' }, { status: 504 })
-  } finally {
-    clearTimeout(stop)
-  }
-
-  const data = await res.json().catch(() => null)
-  if (!res.ok) return NextResponse.json({ error: data?.error?.message ?? 'The assistant could not answer.' }, { status: 502 })
-
-  // Responses API: text is in output[] message items as output_text parts.
-  const reply = typeof data?.output_text === 'string'
-    ? data.output_text
-    : (data?.output ?? [])
-        .filter((item: any) => item?.type === 'message')
-        .flatMap((item: any) => item?.content ?? [])
-        .filter((part: any) => part?.type === 'output_text')
-        .map((part: any) => part?.text ?? '')
-        .join('')
+  const out = await callClaude(role.instructions, input, 1500)
+  if (out.error) return NextResponse.json({ error: 'The assistant could not answer.' }, { status: 502 })
+  const reply = out.text ?? ''
   // Record when this agent was last asked something (shown on the Agent Pool).
   if (agentId) await serviceClient.from('ai_staff').update({ last_used_at: new Date().toISOString() }).eq('id', agentId)
 

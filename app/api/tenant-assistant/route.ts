@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { callClaude } from '@/lib/claude'
 import { serviceClient } from '@/lib/admin-auth'
 import { APPROVED_ANSWERS, HOLDING_REPLY, escalationReason } from '@/lib/tenantAssistant'
 
@@ -11,35 +12,18 @@ import { APPROVED_ANSWERS, HOLDING_REPLY, escalationReason } from '@/lib/tenantA
 export const maxDuration = 60
 
 async function pickTopic(text: string): Promise<{ topic: string; asks_for_person: boolean } | null> {
-  const apiKey = process.env.XAI_API_KEY
-  const model = process.env.XAI_MODEL
-  if (!apiKey || !model || APPROVED_ANSWERS.length === 0) return null
+  if (!process.env.ANTHROPIC_API_KEY || APPROVED_ANSWERS.length === 0) return null
 
   const list = APPROVED_ANSWERS.map(a => `${a.id}: ${a.topic}`).join('\n')
-  const ctrl = new AbortController()
-  const stop = setTimeout(() => ctrl.abort(), 40000)
   try {
-    const res = await fetch('https://api.x.ai/v1/responses', {
-      method: 'POST',
-      signal: ctrl.signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        instructions: `You sort tenant messages. Choose the one topic id from the list that the message is about, or "none" if no topic clearly fits. Set asks_for_person to true if the tenant wants to speak to a person. Reply with JSON only: {"topic": "<id or none>", "asks_for_person": true|false}.\nTopics:\n${list}`,
-        input: text,
-      }),
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    const out: string = typeof data?.output_text === 'string'
-      ? data.output_text
-      : (data?.output ?? []).filter((i: any) => i?.type === 'message').flatMap((i: any) => i?.content ?? []).filter((p: any) => p?.type === 'output_text').map((p: any) => p?.text ?? '').join('')
+    const r = await callClaude(
+      `You sort tenant messages. Choose the one topic id from the list that the message is about, or "none" if no topic clearly fits. Set asks_for_person to true if the tenant wants to speak to a person. Reply with JSON only: {"topic": "<id or none>", "asks_for_person": true|false}.\nTopics:\n${list}`,
+      text, 200)
+    const out = r.text ?? ''
     const parsed = JSON.parse(out.slice(out.indexOf('{'), out.lastIndexOf('}') + 1))
     return { topic: String(parsed.topic ?? 'none'), asks_for_person: parsed.asks_for_person === true }
   } catch {
     return null
-  } finally {
-    clearTimeout(stop)
   }
 }
 
