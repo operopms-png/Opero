@@ -229,6 +229,161 @@ const WATCHERS: Watcher[] = [
     if (!team) todo.push('Open Workflows and press "Run all now" to see Novourq Cloud AI work')
     return todo.length ? { title: `Finish setting up Novourq: ${todo.length} step${todo.length === 1 ? '' : 's'} left`, lines: [...todo, 'The Guide tab in Settings explains each step.'], dueInDays: 3 } : null
   } },
+  // ---------- Intelligence skills: read the records, find patterns, leave one task with figures and a recommendation ----------
+  // Operations: slow jobs, voids, rent collection, repeat repairs (first week of the month)
+  { agent: 'ops_intel', resultKey: 'opsIntel', async find(db, biz, nm) {
+    const now = new Date()
+    if (now.getUTCDate() > 7) return null
+    const month = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    const title = `Operations review for ${month}`
+    const { data: prev } = await db.from('staff_tasks').select('id').eq('user_id', biz).eq('title', title).limit(1)
+    if (prev?.length) return null
+    const [{ data: props }, { data: jobs }, { data: pays }] = await Promise.all([
+      db.from('pm_properties').select('id, name, status').eq('user_id', biz),
+      db.from('pm_maintenance').select('property_id, title, status, created_at').eq('user_id', biz).gte('created_at', dayStr(-90)),
+      db.from('pm_rent_payments').select('due_date, paid_date, status').eq('user_id', biz).gte('due_date', dayStr(-90)).lte('due_date', today()),
+    ])
+    if (!(props?.length) && !(jobs?.length) && !(pays?.length)) return null
+    const lines: string[] = [], recs: string[] = []
+    const dueN = (pays ?? []).length
+    if (dueN) {
+      const late = (pays ?? []).filter((p: any) => (p.paid_date ? new Date(p.paid_date).getTime() - new Date(p.due_date).getTime() > 3 * 864e5 : !done(p.status) && p.due_date < dayStr(-3))).length
+      const pct = Math.round(((dueN - late) / dueN) * 100)
+      lines.push(`Rent collection, last 90 days: ${pct}% paid on time (${late} of ${dueN} payments late or unpaid)`)
+      if (pct < 90) recs.push('Rent is being paid late often. Check that reminders go out before the due date and that late payers are on the right payment method.')
+    }
+    const open = (jobs ?? []).filter((j: any) => !done(j.status))
+    const aged = open.filter((j: any) => new Date(j.created_at).getTime() < Date.now() - 14 * 864e5)
+    lines.push(`Maintenance: ${(jobs ?? []).length} jobs in 90 days, ${open.length} still open, ${aged.length} open for more than 14 days`)
+    if (aged.length) recs.push(`${aged.length} job${aged.length === 1 ? ' has' : 's have'} been open over two weeks. Assign or chase them first: ${cap(aged.map((j: any) => `${nm.get(j.property_id) ?? 'Property'}: ${String(j.title ?? 'job').slice(0, 40)}`), 5).join('; ')}.`)
+    const byProp: Record<string, number> = {}
+    for (const j of jobs ?? []) byProp[j.property_id] = (byProp[j.property_id] || 0) + 1
+    const top = Object.entries(byProp).sort((a, b) => b[1] - a[1]).filter(([, n]) => n >= 3).slice(0, 3)
+    if (top.length) { lines.push(`Most repairs: ${top.map(([id, n]) => `${nm.get(id) ?? 'Property'} (${n})`).join(', ')}`); recs.push('Properties with three or more repairs in 90 days may need an inspection or a bigger fix instead of repeat call-outs.') }
+    const vac = (props ?? []).filter((p: any) => /vacan|void|empty|available/i.test(String(p.status ?? '')))
+    lines.push(`Vacant properties: ${vac.length} of ${(props ?? []).length}${vac.length ? ' (' + cap(vac.map((p: any) => p.name || 'Property'), 5).join(', ') + ')' : ''}`)
+    if (vac.length) recs.push('Every empty week costs a week of rent. Check each vacant property has a live listing and viewings booked.')
+    return { title, lines: [...lines, ...(recs.length ? ['Recommendations:', ...recs] : ['Nothing needs attention. Operations look healthy.'])], dueInDays: 3 }
+  } },
+  // Tenants: complaints, repeat issues, chronic late payers (Mondays)
+  { agent: 'tenant_insights', resultKey: 'tenantInsights', async find(db, biz) {
+    if (new Date().getUTCDay() !== 1) return null
+    const { data: tenants } = await db.from('pm_tenants').select('id, name').eq('user_id', biz)
+    if (!tenants?.length) return null
+    const name = new Map(tenants.map((t: any) => [t.id, t.name || 'Tenant']))
+    const ids = tenants.map((t: any) => t.id)
+    const [{ data: msgs }, { data: jobs }, { data: pays }] = await Promise.all([
+      db.from('pm_tenant_messages').select('tenant_id, sender, message, created_at').in('tenant_id', ids).gte('created_at', dayStr(-30)).limit(500),
+      db.from('pm_maintenance').select('tenant_id, title').eq('user_id', biz).gte('created_at', dayStr(-90)),
+      db.from('pm_rent_payments').select('tenant_id, due_date, paid_date, status').eq('user_id', biz).lte('due_date', today()).order('due_date', { ascending: false }).limit(600),
+    ])
+    const COMPLAIN = /complain|unacceptable|disgust|fed up|appalling|terrible|ridiculous|still (not|hasn|haven)|no ?one (has )?(replied|responded|come)|ignored|for weeks|legal action|solicitor|tribunal|council/i
+    const complaints = (msgs ?? []).filter((m: any) => /tenant/i.test(String(m.sender ?? '')) && COMPLAIN.test(String(m.message ?? '')))
+    const lines: string[] = []
+    const cBy: Record<string, number> = {}
+    for (const m of complaints) cBy[m.tenant_id] = (cBy[m.tenant_id] || 0) + 1
+    for (const [id, n] of Object.entries(cBy)) lines.push(`Possible complaint: ${name.get(id)} sent ${n} message${n === 1 ? '' : 's'} with complaint wording in the last 30 days. Read the portal chat and reply personally.`)
+    const jBy: Record<string, number> = {}
+    for (const j of jobs ?? []) if (j.tenant_id) jBy[j.tenant_id] = (jBy[j.tenant_id] || 0) + 1
+    for (const [id, n] of Object.entries(jBy)) if (n >= 3) lines.push(`Repeat issues: ${name.get(id)} reported ${n} repairs in 90 days. Check for an underlying problem or a tenant who needs a call.`)
+    const recent: Record<string, any[]> = {}
+    for (const p of pays ?? []) { const a = (recent[p.tenant_id] ??= []); if (a.length < 6) a.push(p) }
+    for (const [id, a] of Object.entries(recent)) {
+      const late = a.filter((p: any) => p.paid_date ? new Date(p.paid_date).getTime() - new Date(p.due_date).getTime() > 3 * 864e5 : !done(p.status)).length
+      if (a.length >= 4 && late >= 3) lines.push(`Pays late: ${name.get(id)} was late or unpaid on ${late} of their last ${a.length} payments. Consider a payment plan or a conversation about the due date.`)
+    }
+    if (!lines.length) return null
+    return { title: `Tenant watch: ${lines.length} to look at`, lines: cap(lines, 14), dueInDays: 1 }
+  } },
+  // Money: 12-month outlook of income, mortgage and running costs (first three days of the month)
+  { agent: 'cashflow_forecast', resultKey: 'cashflowForecast', async find(db, biz) {
+    const now = new Date()
+    if (now.getUTCDate() > 3) return null
+    const month = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    const title = `Cash-flow outlook from ${month}`
+    const { data: prev } = await db.from('staff_tasks').select('id').eq('user_id', biz).eq('title', title).limit(1)
+    if (prev?.length) return null
+    const [{ data: leases }, { data: props }, { data: mort }, { data: off }, { data: est }] = await Promise.all([
+      db.from('pm_leases').select('property_id, monthly_rent, end_date, status').eq('user_id', biz),
+      db.from('pm_properties').select('id, currency').eq('user_id', biz),
+      db.from('pm_mortgages').select('property_id, monthly_payment, start_date, end_date').eq('user_id', biz),
+      db.from('office_expenses').select('amount').eq('user_id', biz).gte('date', dayStr(-90)),
+      db.from('estate_expenses').select('amount').eq('user_id', biz).gte('date', dayStr(-90)),
+    ])
+    const live = (leases ?? []).filter((l: any) => !done(l.status) && Number(l.monthly_rent) > 0 && (!l.end_date || l.end_date >= today()))
+    if (!live.length && !(mort?.length)) return null
+    const cur = new Map((props ?? []).map((p: any) => [p.id, p.currency || 'GBP']))
+    const base = ([...cur.values()].sort((a, b) => [...cur.values()].filter(x => x === b).length - [...cur.values()].filter(x => x === a).length)[0]) || 'GBP'
+    const monthlyCosts = ([...(off ?? []), ...(est ?? [])].reduce((a: number, x: any) => a + Number(x.amount || 0), 0)) / 3
+    const rows: { label: string; net: number }[] = []
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + i, 1))
+      const iso = d.toISOString().slice(0, 10), eom = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).toISOString().slice(0, 10)
+      const inc = live.filter((l: any) => cur.get(l.property_id) === base && (!l.end_date || l.end_date >= eom)).reduce((a: number, l: any) => a + Number(l.monthly_rent), 0)
+      const mp = (mort ?? []).filter((m: any) => cur.get(m.property_id) === base && Number(m.monthly_payment) > 0 && (!m.start_date || m.start_date <= eom) && (!m.end_date || m.end_date >= iso)).reduce((a: number, m: any) => a + Number(m.monthly_payment), 0)
+      rows.push({ label: d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit', timeZone: 'UTC' }), net: inc - mp - monthlyCosts })
+    }
+    const total = rows.reduce((a, r) => a + r.net, 0), low = rows.reduce((a, r) => (r.net < a.net ? r : a), rows[0])
+    const endingSoon = live.filter((l: any) => l.end_date && l.end_date <= dayStr(365)).length
+    const lines = [
+      `All figures in ${base}. Income is the rent on current tenancies until each one ends. Costs are your last 3 months of logged expenses carried forward, plus mortgage payments until each mortgage ends.`,
+      `Next 3 months, net: ${rows.slice(0, 3).map(r => `${r.label} ${money(r.net)}`).join(', ')}`,
+      `12-month net: ${money(total)}. Weakest month: ${low.label} (${money(low.net)})`,
+      endingSoon ? `${endingSoon} tenancy${endingSoon === 1 ? '' : 'ies'} end${endingSoon === 1 ? 's' : ''} within 12 months. If not renewed, income falls from then, so chase renewals early.` : 'No tenancies end in the next 12 months.',
+    ]
+    if (low.net < 0) lines.push('At least one month is forecast to lose money. Check mortgage payments and expenses for that month.')
+    return { title, lines, dueInDays: 3 }
+  } },
+  // Developments: budget, progress and sales together, per project (Mondays)
+  { agent: 'dev_feasibility', resultKey: 'devFeasibility', async find(db, biz) {
+    if (new Date().getUTCDay() !== 1) return null
+    const { data: projects } = await db.from('dev_projects').select('id, name, status, total_budget, spent, end_date').eq('user_id', biz)
+    const live = (projects ?? []).filter((p: any) => !done(p.status) && Number(p.total_budget) > 0)
+    if (!live.length) return null
+    const ids = live.map((p: any) => p.id)
+    const [{ data: ms }, { data: units }] = await Promise.all([
+      db.from('dev_milestones').select('project_id, status').in('project_id', ids),
+      db.from('dev_units').select('project_id, price, status').in('project_id', ids),
+    ])
+    const lines: string[] = []
+    for (const p of live as any[]) {
+      const m = (ms ?? []).filter((x: any) => x.project_id === p.id), u = (units ?? []).filter((x: any) => x.project_id === p.id)
+      const progress = m.length ? m.filter((x: any) => done(x.status)).length / m.length : 0
+      const budget = Number(p.total_budget), spent = Number(p.spent || 0)
+      const projected = progress >= 0.1 ? Math.round(spent / progress) : null
+      const gdv = u.reduce((a: number, x: any) => a + Number(x.price || 0), 0)
+      const sold = u.filter((x: any) => /sold|exchang|complet|reserv/i.test(String(x.status ?? ''))).length
+      const cost = Math.max(budget, projected ?? 0)
+      const parts = [`${p.name}: ${Math.round(progress * 100)}% of milestones done, ${money(spent)} spent of ${money(budget)} budget`]
+      if (projected) parts.push(`at this pace it finishes at about ${money(projected)}${projected > budget * 1.1 ? ' (over budget by ' + Math.round((projected / budget - 1) * 100) + '%)' : ''}`)
+      if (gdv > 0) { const margin = ((gdv - cost) / gdv) * 100; parts.push(`sales value ${money(gdv)}, projected margin ${margin.toFixed(0)}%${margin < 15 ? ' (below the 15% a lender usually wants)' : ''}`); parts.push(`${sold} of ${u.length} units reserved or sold`) }
+      else parts.push('no unit prices entered, so margin cannot be worked out')
+      lines.push(parts.join('. ') + '.')
+    }
+    return { title: `Development feasibility: ${live.length} project${live.length === 1 ? '' : 's'}`, lines: cap(lines, 8), dueInDays: 2 }
+  } },
+  // Documents: certificates and contracts that are on file but missing from Compliance, and tenancies with no agreement on file (Mondays)
+  { agent: 'doc_intel', resultKey: 'docIntel', async find(db, biz, nm) {
+    if (new Date().getUTCDay() !== 1) return null
+    const KINDS: [string, RegExp][] = [['Gas safety', /gas/i], ['Electrical (EICR)', /eicr|electrical/i], ['Energy certificate (EPC)', /\bepc\b|energy/i], ['Fire / smoke alarms', /smoke|fire|alarm/i], ['Insurance', /insur/i], ['Licence', /licen/i]]
+    const [{ data: docs }, { data: comp }, { data: leases }] = await Promise.all([
+      db.from('pm_documents').select('property_id, name, type, category').eq('user_id', biz),
+      db.from('pm_compliance').select('property_id, type').eq('user_id', biz),
+      db.from('pm_leases').select('property_id, status, document_url, signed_document_url').eq('user_id', biz),
+    ])
+    const lines: string[] = []
+    for (const d of docs ?? []) {
+      const text = `${d.name ?? ''} ${d.type ?? ''} ${d.category ?? ''}`
+      const kind = KINDS.find(([, re]) => re.test(text))
+      if (!kind || !d.property_id) continue
+      const has = (comp ?? []).some((c: any) => c.property_id === d.property_id && kind[1].test(String(c.type ?? '')))
+      if (!has) lines.push(`${nm.get(d.property_id) ?? 'Property'}: "${String(d.name ?? 'document').slice(0, 50)}" is on file but has no ${kind[0]} record in Compliance, so no expiry reminder will fire. Add the expiry date.`)
+    }
+    const noAgreement = (leases ?? []).filter((l: any) => !done(l.status) && !l.document_url && !l.signed_document_url)
+    if (noAgreement.length) lines.push(`${noAgreement.length} active tenancy${noAgreement.length === 1 ? ' has' : 'ies have'} no agreement uploaded: ${cap([...new Set(noAgreement.map((l: any) => nm.get(l.property_id) ?? 'Property'))], 5).join(', ')}. Upload the signed agreement so the AI can check rent, deposit and dates against it.`)
+    if (!lines.length) return null
+    return { title: `Document check: ${lines.length} gap${lines.length === 1 ? '' : 's'}`, lines: cap(lines, 12), dueInDays: 3 }
+  } },
 ]
 
 export async function proposeWatchers() {
