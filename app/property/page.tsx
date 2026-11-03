@@ -87,8 +87,8 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
   ] },
 ]
 
-const C = { ink: '#10234d', text: '#34456b', muted: '#6b7a9f', blue: '#2f5bd6', soft: '#eaf0fd', line: '#dfe6f4', chip: '#e3edff', chipText: '#1d3f9e' }
-const shadow = '0 1px 2px rgba(16,35,77,.05), 0 8px 24px rgba(16,35,77,.06)'
+const C = { ink: '#10234d', text: '#34456b', muted: '#6b7a9f', blue: '#2f5bd6', soft: '#eaf0fd', line: '#e4e9f4' }
+const shadow = '0 1px 2px rgba(16,35,77,.04)'
 
 export default function PropertyHub() {
   const { role, modules: teamModules } = useRole()
@@ -104,55 +104,63 @@ export default function PropertyHub() {
     items: g.items.map(i => ({ ...i, targets: i.targets.filter(t => has(t.mod)) })).filter(i => i.targets.length),
   })).filter(g => g.items.length), [roleModules.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const shown = term
-    ? [{ name: 'Results', note: `Pages matching "${q.trim()}"`, items: groups.flatMap(g => g.items).filter(i => i.name.toLowerCase().includes(term)) }]
-    : [groups[Math.min(cat, Math.max(0, groups.length - 1))]].filter(Boolean)
+  const found = term ? groups.flatMap(g => g.items).filter(i => i.name.toLowerCase().includes(term)) : []
+  const active = groups[Math.min(cat, Math.max(0, groups.length - 1))]
 
   const row = (i: Item) => (
-    <div key={i.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: `1px solid ${C.line}`, flexWrap: 'wrap' }}>
-      <b style={{ color: C.ink, fontSize: 14.5, fontWeight: 600 }}>{i.name}</b>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    <div key={i.name} className="prop-row" style={{ display: 'grid', gridTemplateColumns: '190px minmax(0,1fr)', gap: 12, alignItems: 'center', padding: '17px 0', borderTop: `1px solid ${C.line}` }}>
+      <b style={{ color: C.ink, fontSize: 15, fontWeight: 600 }}>{i.name}</b>
+      <div style={{ display: 'flex', gap: '6px 22px', flexWrap: 'wrap' }}>
         {i.shared
-          ? <Link href={HREF(i.targets[0])} style={chip}>All areas</Link>
-          : i.targets.map(t => <Link key={t.mod} href={HREF(t)} style={chip}>{AREA[t.mod]}</Link>)}
+          ? <Link href={HREF(i.targets[0])} style={link}>All areas</Link>
+          : i.targets.map(t => <Link key={t.mod} href={HREF(t)} style={link}>{AREA[t.mod]}</Link>)}
       </div>
     </div>
   )
 
   return (
-    <div style={{ background: 'linear-gradient(180deg,#eaf3ff,#d9e9fd)', minHeight: '100vh', padding: '24px 28px 48px', fontFamily: "'Figtree', system-ui, sans-serif" }}>
-      <div style={{ maxWidth: 1040, margin: '0 auto' }}>
-        <h1 style={{ margin: 0, fontSize: 24, color: C.ink, letterSpacing: '-.01em' }}>Property</h1>
-        <p style={{ margin: '4px 0 14px', fontSize: 14, color: C.text }}>Estate agency, developments, vacation rentals and property management in one place. Each page appears once.</p>
-        <input value={q} onChange={e => setQ(e.target.value)} type="search" placeholder="Search pages, e.g. maintenance" aria-label="Search pages"
-          style={{ width: '100%', maxWidth: 340, fontFamily: 'inherit', fontSize: 14, color: C.ink, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 10, padding: '10px 12px', marginBottom: 14 }} />
-        <div className="prop-grid" style={{ display: 'grid', gridTemplateColumns: '230px minmax(0,1fr)', gap: 14, alignItems: 'start' }}>
+    <div style={{ background: '#f6f8fc', minHeight: '100vh', padding: '28px 32px 56px', fontFamily: "'Figtree', system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <h1 style={{ margin: 0, fontSize: 30, color: C.ink, letterSpacing: '-.01em' }}>Property</h1>
+        <p style={{ margin: '6px 0 18px', fontSize: 15, color: C.muted }}>Estate agency, developments, vacation rentals and property management in one place. Each page appears once.</p>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '0 16px', marginBottom: 18, boxShadow: shadow }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+          <input value={q} onChange={e => setQ(e.target.value)} type="search" placeholder="Search any page, such as maintenance or viewings" aria-label="Search pages"
+            style={{ flex: 1, minWidth: 0, fontFamily: 'inherit', fontSize: 15, color: C.ink, background: 'none', border: 0, padding: '15px 0', outline: 0 }} />
+        </label>
+        <div className="prop-grid" style={{ display: 'grid', gridTemplateColumns: '240px minmax(0,1fr)', gap: 18, alignItems: 'start' }}>
           <nav aria-label="Property areas" className="prop-cats" style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: 8, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: shadow }}>
             {groups.map((g, i) => {
-              const on = !term && i === cat
+              const on = !term && g === active
               return (
                 <button key={g.name} type="button" aria-pressed={on} onClick={() => { setCat(i); setQ('') }}
-                  style={{ font: 'inherit', fontSize: 14, textAlign: 'left', border: 0, background: on ? C.soft : 'none', color: on ? C.ink : C.text, fontWeight: on ? 600 : 400, padding: '10px 12px', borderRadius: 9, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', gap: 8, whiteSpace: 'nowrap' }}>
-                  <span>{g.name}</span><small style={{ color: C.muted, fontSize: 12 }}>{g.items.length}</small>
+                  style={{ font: 'inherit', textAlign: 'left', border: 0, background: on ? C.soft : 'none', color: C.ink, padding: '11px 14px', borderRadius: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <b style={{ display: 'block', fontSize: 15, fontWeight: 600 }}>{g.name}</b>
+                  <small style={{ display: 'block', fontSize: 12.5, color: C.muted, marginTop: 2 }}>{g.items.length} pages</small>
                 </button>
               )
             })}
           </nav>
-          <section style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: 18, minWidth: 0, boxShadow: shadow }}>
-            {shown.map(g => (
-              <div key={g.name}>
-                <h2 style={{ margin: 0, fontSize: 18, color: C.ink }}>{g.name}</h2>
-                <p style={{ margin: '3px 0 14px', fontSize: 13, color: C.muted }}>{g.note}</p>
-                {g.items.length ? g.items.map(row) : <p style={{ fontSize: 14, color: C.muted }}>No page matches that.</p>}
+          <section style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '22px 24px', minWidth: 0, boxShadow: shadow }}>
+            {term ? (
+              <div>
+                <h2 style={{ margin: 0, fontSize: 21, color: C.ink }}>Results</h2>
+                <p style={{ margin: '3px 0 14px', fontSize: 14, color: C.muted }}>{found.length} page{found.length === 1 ? '' : 's'} match</p>
+                {found.map(row)}
               </div>
-            ))}
+            ) : active ? (
+              <div>
+                <h2 style={{ margin: 0, fontSize: 21, color: C.ink }}>{active.name}</h2>
+                <p style={{ margin: '3px 0 14px', fontSize: 14, color: C.muted }}>{active.note}</p>
+                {active.items.map(row)}
+              </div>
+            ) : <p style={{ fontSize: 14, color: C.muted }}>No Property pages are available for your role.</p>}
           </section>
         </div>
-        <p style={{ fontSize: 12.5, color: C.muted, marginTop: 14 }}>Lettings is Property Management. Short stays is Vacation Rentals. Chips open that area&apos;s version of the page.</p>
       </div>
-      <style>{`@media (max-width: 720px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; overflow-x: auto } }`}</style>
+      <style>{`@media (max-width: 760px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; overflow-x: auto } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
     </div>
   )
 }
 
-const chip: React.CSSProperties = { fontSize: 11.5, fontWeight: 600, color: C.chipText, background: C.chip, borderRadius: 999, padding: '4px 10px', textDecoration: 'none' }
+const link: React.CSSProperties = { color: '#34456b', fontSize: 14.5, textDecoration: 'none' }
