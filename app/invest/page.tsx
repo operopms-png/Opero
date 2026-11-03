@@ -32,7 +32,8 @@ const STRATEGIES = [
 ]
 
 import { DEAL_STAGES, STAGE_COLOR } from '@/lib/deal-stages'
-const SECTIONS = ['Deal Analyser','Saved Deals','Watchlist']
+import FindDeals from '@/components/invest/FindDeals'
+const SECTIONS = ['Deal Analyser','Find Deals','Saved Deals','Watchlist']
 
 // Money fields converted when you switch currency
 const MONEY_FIELDS = ['price','rent','rentPerRoom','subletRent','landlordDeposit','advanceRent','wifiCost','utilitiesCost','managementCost','insuranceCost','propertyTaxCost','cleaningCost','maintenanceCost','marketingCost','vacancyCost','setupCost','conversionCost','salePrice','planningCost','buildCost','gdv','refurb']
@@ -274,6 +275,11 @@ export default function InvestPage() {
     setClientSaved(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
   }
 
+  async function reloadDeals(){
+    const { data } = await supabase.from('investment_deals').select('*').order('created_at',{ascending:false})
+    setSavedDeals((data??[]).map((d:any)=>({ id:d.id, strategy:d.strategy, address:d.address, savedAt:new Date(d.created_at).toLocaleDateString(), ...d.data, stage:d.stage||'Found', propertyId:d.property_id||null })))
+  }
+
   async function changeStage(id:string, stage:string){
     setStageBusy(id); setStageMsg('')
     try{
@@ -386,6 +392,8 @@ export default function InvestPage() {
       <div style={{padding:'24px 28px 40px',maxWidth:1200}}>
 
         {/* DEAL ANALYSER */}
+        {section==='Find Deals'&&<FindDeals onSaved={reloadDeals} />}
+
         {section==='Deal Analyser'&&(
           <div>
             <div style={{marginBottom:24}}>
