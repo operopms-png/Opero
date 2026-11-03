@@ -20,21 +20,12 @@ const NAV_GROUPS = [
     ]
   },
   {
-    // The AI side, kept apart from the people's tabs below
-    label: 'Novourq AI',
-    module: 'staffcentre',
-    staffCentre: true,
-    items: [
-      ...STAFF_HUBS.filter(h => h.label === 'AI Command Centre').map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs })),
-    ]
-  },
-  {
     label: 'Staff Centre',
     module: 'staffcentre',
     staffCentre: true,
     items: [
       // Grouped into hubs — see lib/staffHubs.ts (tabs show along the top of each page)
-      ...STAFF_HUBS.filter(h => h.label !== 'AI Command Centre').map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs })),
+      ...STAFF_HUBS.map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs })),
     ]
   },
 ]
