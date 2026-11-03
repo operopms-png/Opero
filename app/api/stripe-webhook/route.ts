@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { activatePartnerSignup } from '@/lib/partner-activation'
+import { SITE_URL } from '@/lib/brand'
 
 const PLAN_MAP: Record<string, string> = {
   // Old 3-tier prices (kept for backwards compat)
@@ -153,9 +154,35 @@ export async function POST(request: NextRequest) {
       const isOneTime = fullSession.mode === 'payment'
       await supabase.from('webhook_debug_log').insert({ step: 'session_parsed', detail: { email, priceId, plan, isOneTime, sessionId: fullSession.id } })
       if (email) {
-        const { data: users, error: listError } = await supabase.auth.admin.listUsers()
-        await supabase.from('webhook_debug_log').insert({ step: 'list_users', detail: { userCount: users?.users?.length ?? null, listError: listError?.message ?? null } })
-        const user = users?.users?.find((u) => u.email === email)
+        // Look through every page of users (the default page is only 50), matching email case-insensitively
+        let user: { id: string; email?: string } | undefined
+        let listError: string | null = null
+        for (let page = 1; page <= 50 && !user; page++) {
+          const { data: batch, error: le } = await supabase.auth.admin.listUsers({ page, perPage: 1000 })
+          if (le) { listError = le.message; break }
+          user = batch?.users?.find((u) => (u.email ?? '').toLowerCase() === String(email).toLowerCase())
+          if (!batch?.users || batch.users.length < 1000) break
+        }
+        await supabase.from('webhook_debug_log').insert({ step: 'list_users', detail: { listError } })
+        // New customer who paid on the website: create their login and email them a link to set a password
+        if (!user && !listError) {
+          const created = await supabase.auth.admin.createUser({ email, email_confirm: true })
+          if (created.data?.user) {
+            user = created.data.user
+            try {
+              const link = await supabase.auth.admin.generateLink({ type: 'recovery', email, options: { redirectTo: `${SITE_URL}/reset-password` } })
+              const url = link.data?.properties?.action_link
+              if (url) {
+                const { sendEmail } = await import('@/lib/send-email')
+                await sendEmail(email, 'Welcome to Novourq: set your password', `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1D2433"><h2 style="margin:0 0 12px">Welcome to Novourq</h2><p>Your account is ready. Set your password to sign in and start your 14-day free trial.</p><p><a href="${url}" style="display:inline-block;background:#1B2F6E;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600">Set my password</a></p><p style="color:#667085;font-size:13px">This link works once. After setting your password, sign in at ${SITE_URL}/login. If you did not buy Novourq, ignore this email.</p></div>`)
+              }
+            } catch (e) {
+              await supabase.from('webhook_debug_log').insert({ step: 'welcome_email_failed', detail: { message: e instanceof Error ? e.message : String(e) } })
+            }
+          } else {
+            await supabase.from('webhook_debug_log').insert({ step: 'create_user_failed', detail: { message: created.error?.message ?? null } })
+          }
+        }
         await supabase.from('webhook_debug_log').insert({ step: 'user_match', detail: { matchedUserId: user?.id ?? null, searchedEmail: email } })
         if (user) {
           const { data: existing } = await supabase.from('subscriptions').select('modules').eq('user_id', user.id).single()
