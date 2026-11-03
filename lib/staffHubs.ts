@@ -84,7 +84,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/turnovers', label: 'Turnovers', requiresModule: 'str' },
   ] },
   { label: 'Smart Home', icon: 'shield', tabs: [{ href: '/staff-centre/smart-home', label: 'Smart Home', scTab: 'smarthome' }] },
-  { label: 'Human Intelligence Hub', icon: 'team', tabs: [
+  { label: 'Team', icon: 'team', tabs: [
     { href: '/settings?section=Team+Management', label: 'Team Management' },
     { href: '/staff-centre/announcements', label: 'Announcements', badge: 'announcements' },
     { href: '/staff-centre/hr', label: 'People & HR', scTab: 'hr', badge: 'hr' },
@@ -93,6 +93,9 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/applications', label: 'Applications', scTab: 'applications', badge: 'applications' },
   ] },
 ]
+
+// Hubs that stay on their own in the menu; every other hub sits inside the Human Intelligence Hub.
+export const NON_HUMAN_HUBS = ['Dashboard', 'Novourq Cloud AI']
 
 const ALL_TABS = STAFF_HUBS.flatMap(h => h.tabs)
 

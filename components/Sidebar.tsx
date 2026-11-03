@@ -8,7 +8,7 @@ import { useRole, ROLE_MODULES, getScTabs, resolveAccess } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import { BRAND_NAME } from '@/lib/brand'
-import { STAFF_HUBS, tabMatches } from '@/lib/staffHubs'
+import { STAFF_HUBS, NON_HUMAN_HUBS, tabMatches } from '@/lib/staffHubs'
 
 const NAV_GROUPS = [
   {
@@ -25,7 +25,10 @@ const NAV_GROUPS = [
     staffCentre: true,
     items: [
       // Grouped into hubs — see lib/staffHubs.ts (tabs show along the top of each page)
-      ...STAFF_HUBS.map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs })),
+      ...STAFF_HUBS.filter(h => NON_HUMAN_HUBS.includes(h.label)).map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs })),
+      // All the people-run hubs sit inside this one (opens and closes in the menu)
+      { hubHeading: true, label: 'Human Intelligence Hub', icon: 'users', href: '#', key: 'staffcentre' },
+      ...STAFF_HUBS.filter(h => !NON_HUMAN_HUBS.includes(h.label)).map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs, inHub: true })),
     ]
   },
 ]
@@ -84,6 +87,7 @@ export default function Sidebar() {
   const [userEmail, setUserEmail] = useState('')
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [search, setSearch] = useState('')
+  const [hiOpen, setHiOpen] = useState<boolean | null>(null)
   useEffect(() => {
     const read = () => setSearch(window.location.search)
     const h: any = window.history
@@ -181,6 +185,20 @@ export default function Sidebar() {
                 </div>
               )}
               {group.items.map((item: any) => {
+                const hiActive = STAFF_HUBS.some(h => !NON_HUMAN_HUBS.includes(h.label) && h.tabs.some(t => tabMatches(t, pathname, search)))
+                const hiShown = isCollapsed || isPartner || (hiOpen ?? hiActive)
+                if (item.hubHeading) {
+                  if (isCollapsed || isPartner) return null
+                  return (
+                    <button key="hi-heading" type="button" onClick={() => setHiOpen(!hiShown)} aria-expanded={hiShown}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', marginBottom: 1, border: 'none', background: 'transparent', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, color: '#1B2F4B', textAlign: 'left' }}>
+                      <Icon name={item.icon} size={16} color="#2F6DB5" />
+                      <span style={{ flex: 1, lineHeight: 1.2 }}>{item.label}</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2F6DB5" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ transform: hiShown ? 'rotate(180deg)' : 'none' }}><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                  )
+                }
+                if (item.inHub && !hiShown) return null
                 let { href, icon, label, key, requiresModule, scTab, badge, hubTabs } = item
                 let badgeCount = badge ? (counts[badge] ?? 0) : 0
                 let itemHasModule: boolean, active: boolean
@@ -205,7 +223,7 @@ export default function Sidebar() {
                     data-active={active ? '1' : undefined}
                     title={isCollapsed ? label : undefined}
                     onClick={(e: any) => { if (!itemHasModule && !requiresModule) e.preventDefault(); else if (itemHasModule && !hasAccess) e.preventDefault(); else setOpen(false) }}
-                    style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#B9D6F2' : 'transparent', color: !itemHasModule ? '#89CFF0' : !hasAccess ? '#89CFF0' : active ? '#1D4E89' : '#1B2F4B', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : (item.inHub ? '7px 10px 7px 28px' : '7px 10px'), justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: active ? 600 : 400, background: active ? '#B9D6F2' : 'transparent', color: !itemHasModule ? '#89CFF0' : !hasAccess ? '#89CFF0' : active ? '#1D4E89' : '#1B2F4B', cursor: itemHasModule && hasAccess ? 'pointer' : 'not-allowed', opacity: !itemHasModule ? 0.5 : 1 }}>
                     <Icon name={icon} size={16} color={!itemHasModule ? '#89CFF0' : !hasAccess ? '#89CFF0' : active ? '#1D4E89' : '#2F6DB5'} />
                     {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{label}</span>}
                     {itemHasModule && badgeCount > 0 && (
