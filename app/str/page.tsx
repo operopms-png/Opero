@@ -178,6 +178,8 @@ export default function STRPage() {
   const [lastSmoobuSyncResult, setLastSmoobuSyncResult] = useState<any>(null)
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
+  const [expEditId, setExpEditId] = useState<string|null>(null)
+  const [bankEditId, setBankEditId] = useState<string|null>(null)
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [showAddBank, setShowAddBank] = useState(false)
@@ -265,14 +267,25 @@ export default function STRPage() {
     setStats({ properties:restrictedProps.length, cleaning:(c.data??[]).filter((x:any)=>x.status==='pending').length, maintenance:(m.data??[]).filter((x:any)=>x.status==='open').length, revenue:rev })
   }
 
+  function openExpenseEdit(e: any) {
+    const f: any = {}
+    for (const k of Object.keys(expForm)) f[k] = e[k] ?? (typeof (expForm as any)[k] === 'boolean' ? false : '')
+    f.amount = e.amount != null ? String(e.amount) : ''
+    setExpForm(f); setExpEditId(e.id); setShowAddExpense(true)
+  }
+
   async function addOfficeExpense() {
     if (!expForm.description || !expForm.amount) return
     const { data: { user } } = await supabase.auth.getUser()
     const accountId = user ? await getAccountId(user) : undefined
-    const { error } = await supabase.from('office_expenses').insert({ ...expForm, amount: parseFloat(expForm.amount), user_id: accountId })
+    const payload = { ...expForm, amount: parseFloat(expForm.amount) }
+    const { error } = expEditId
+      ? await supabase.from('office_expenses').update(payload).eq('id', expEditId)
+      : await supabase.from('office_expenses').insert({ ...payload, user_id: accountId })
     if (error) { alert(error.message); return }
     await loadAll()
     setExpForm({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
+    setExpEditId(null)
     setShowAddExpense(false)
   }
 
@@ -281,14 +294,23 @@ export default function STRPage() {
     setExpenses(expenses.filter((x:any)=>x.id!==id))
   }
 
+  function openBankEdit(a: any) {
+    setBankForm({ name: a.name ?? '', type: a.type ?? 'Current', balance: a.balance != null ? String(a.balance) : '', currency: a.currency ?? 'GBP' })
+    setBankEditId(a.id); setShowAddBank(true)
+  }
+
   async function addBankAccount() {
     if (!bankForm.name) return
     const { data: { user } } = await supabase.auth.getUser()
     const accountId = user ? await getAccountId(user) : undefined
-    const { error } = await supabase.from('str_bank_accounts').insert({ ...bankForm, balance: parseFloat(bankForm.balance)||0, user_id: accountId })
+    const bpayload = { ...bankForm, balance: parseFloat(bankForm.balance)||0 }
+    const { error } = bankEditId
+      ? await supabase.from('str_bank_accounts').update(bpayload).eq('id', bankEditId)
+      : await supabase.from('str_bank_accounts').insert({ ...bpayload, user_id: accountId })
     if (error) { alert(error.message); return }
     await loadAll()
     setBankForm({name:'',type:'Current',balance:'',currency:'GBP'})
+    setBankEditId(null)
     setShowAddBank(false)
   }
 
@@ -1138,7 +1160,7 @@ export default function STRPage() {
             {/* Add form */}
             {showAddExpense&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
-                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add expense</h3>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{expEditId?'Edit expense':'Add expense'}</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={lbl}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Office rent" style={inp}/></div>
                   <div><label style={lbl}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Landlord" style={inp}/></div>
@@ -1150,8 +1172,8 @@ export default function STRPage() {
                   <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input value={expForm.notes} onChange={e=>setExpForm({...expForm,notes:e.target.value})} placeholder="Optional notes" style={inp}/></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={addOfficeExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
-                  <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                  <button onClick={addOfficeExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{expEditId?'Save changes':'Add expense'}</button>
+                  <button onClick={()=>{setShowAddExpense(false);setExpEditId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
             )}
@@ -1169,7 +1191,7 @@ export default function STRPage() {
               ):expenses.map((e:any)=>(
                 <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div>
-                    <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}<button onClick={()=>openExpenseEdit(e)} style={{marginLeft:8,fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'1px 8px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button></div>
                     {e.notes&&<div style={{fontSize:11,color:'#98A2B3'}}>{e.notes}</div>}
                   </div>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
@@ -1244,7 +1266,7 @@ export default function STRPage() {
               <div>
                 {showAddBank&&(
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
-                    <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add bank account</h3>
+                    <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>{bankEditId?'Edit bank account':'Add bank account'}</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={lbl}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={inp}/></div>
                       <div><label style={lbl}>Type</label><select value={bankForm.type} onChange={e=>setBankForm({...bankForm,type:e.target.value})} style={inp}>{['Current','Savings','Business','Credit'].map(t=><option key={t}>{t}</option>)}</select></div>
@@ -1252,8 +1274,8 @@ export default function STRPage() {
                       <div><label style={lbl}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={inp}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
-                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add account</button>
-                      <button onClick={()=>setShowAddBank(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                      <button onClick={addBankAccount} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{bankEditId?'Save changes':'Add account'}</button>
+                      <button onClick={()=>{setShowAddBank(false);setBankEditId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                     </div>
                   </div>
                 )}
@@ -1270,7 +1292,7 @@ export default function STRPage() {
                       <div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                         <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
                           <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div>
-                          <button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button>
+                          <span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>openBankEdit(a)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span>
                         </div>
                         <div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div>
                         <div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div>

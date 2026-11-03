@@ -174,6 +174,8 @@ export default function DevPage() {
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:'',property_name:''})
+  const [expEditId, setExpEditId] = useState<string|null>(null)
+  const [bankEditId, setBankEditId] = useState<string|null>(null)
   const [expensePropertyFilter, setExpensePropertyFilter] = useState('All')
   const [bankAccounts, setBankAccounts] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
@@ -242,14 +244,25 @@ export default function DevPage() {
     setHealthSafety(hs.data ?? [])
   }
 
+  function openExpenseEdit(e: any) {
+    const f: any = {}
+    for (const k of Object.keys(expForm)) f[k] = e[k] ?? (typeof (expForm as any)[k] === 'boolean' ? false : '')
+    f.amount = e.amount != null ? String(e.amount) : ''
+    setExpForm(f); setExpEditId(e.id); setShowAddExpense(true)
+  }
+
   async function addExpense() {
     if (!expForm.description || !expForm.amount) return
     const { data: { user } } = await supabase.auth.getUser()
     const accountId = user ? await getAccountId(user) : undefined
-    const { error } = await supabase.from('office_expenses').insert({ ...expForm, amount: parseFloat(expForm.amount), user_id: accountId })
+    const payload = { ...expForm, amount: parseFloat(expForm.amount) }
+    const { error } = expEditId
+      ? await supabase.from('office_expenses').update(payload).eq('id', expEditId)
+      : await supabase.from('office_expenses').insert({ ...payload, user_id: accountId })
     if (error) { alert(error.message); return }
     await loadAll()
     setExpForm({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:'',property_name:''})
+    setExpEditId(null)
     setShowAddExpense(false)
   }
 
@@ -410,7 +423,7 @@ export default function DevPage() {
             </div>
             {showAddExpense&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
-                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add expense</h3>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{expEditId?'Edit expense':'Add expense'}</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Cleaning supplies" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Amazon" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
@@ -425,8 +438,8 @@ export default function DevPage() {
                   <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
-                  <button onClick={addExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add expense</button>
-                  <button onClick={()=>setShowAddExpense(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                  <button onClick={addExpense} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{expEditId?'Save changes':'Add expense'}</button>
+                  <button onClick={()=>{setShowAddExpense(false);setExpEditId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
             )}
@@ -442,7 +455,7 @@ export default function DevPage() {
               </div>
               {expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).length===0?(<div style={{textAlign:'center' as const,padding:60,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🧾</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No expenses yet</div></div>):expenses.filter((e:any)=>expensePropertyFilter==='All'?true:expensePropertyFilter==='Office / General'?!e.property_name:e.property_name===expensePropertyFilter).map((e:any)=>(
                 <div key={e.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 130px 110px 90px 90px 90px 70px 30px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}<button onClick={()=>openExpenseEdit(e)} style={{marginLeft:8,fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'1px 8px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button></span>
                   <span style={{fontSize:12,color:'#344054'}}>{e.property_name||<span style={{color:'#98A2B3'}}>Office</span>}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{e.category}</span>
