@@ -3,6 +3,7 @@
 // to /api/grok and shows the reply. It cannot change records or send messages.
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { speak as speakShared } from '../lib/speak'
 
 const C = { blue: '#2F6DB5', brown: '#1D4E89', soft: '#EAF3FC', line: '#E4E7EC', muted: '#667085', text: '#323338', bg: '#F9FAFB' }
 
@@ -39,31 +40,11 @@ export default function GrokPanel() {
     return () => { try { recRef.current?.abort() } catch {} ; window.speechSynthesis?.cancel() }
   }, [])
 
-  // Best female British voice on this device: natural/enhanced voices first, never a male one.
-  function pickVoice(all: SpeechSynthesisVoice[]) {
-    const male = /daniel|arthur|oliver|rishi|male(?!.*female)|james|gordon|fred|alex\b/i
-    const female = /serena|kate|stephanie|martha|hazel|libby|sonia|female|samantha|moira|karen|tessa|susan|fiona|victoria|zira|jenny|emma|amy/i
-    const rich = /premium|enhanced|natural|neural|online|siri/i
-    const en = all.filter(v => /^en/i.test(v.lang) && !male.test(v.name))
-    const score = (v: SpeechSynthesisVoice) => (/en-GB/i.test(v.lang) ? 4 : /^en-(AU|IE|ZA)/i.test(v.lang) ? 2 : 0) + (female.test(v.name) ? 3 : 0) + (rich.test(v.name) ? 5 : 0)
-    return en.sort((x, y) => score(y) - score(x))[0]
-  }
+  // Uses the voice chosen in Settings -> Voice (woman or man).
   function speak(text: string) {
-    const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
-    if (!synth || !text) return
-    synth.cancel()
-    if (!synth.getVoices().length) { synth.onvoiceschanged = () => speak(text); return }
-    const clean = text.replace(/[*_#`>|]/g, '').replace(/\s+/g, ' ').trim().slice(0, 3000)
-    const u = new SpeechSynthesisUtterance(clean)
-    u.lang = 'en-GB'
-    const v = pickVoice(synth.getVoices())
-    u.rate = 0.97
-    u.pitch = 1.04
-    if (v) u.voice = v
-    u.onstart = () => setSpeaking(true)
-    u.onend = () => setSpeaking(false)
-    u.onerror = () => setSpeaking(false)
-    synth.speak(u)
+    if (!text) return
+    setSpeaking(true)
+    speakShared(text, () => setSpeaking(false))
   }
   // iPhones only allow speech that starts from a tap, so each tap primes the speaker first.
   function unlockSpeech() {

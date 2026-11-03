@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { speak, stopSpeech, unlockSpeech, canSpeak } from '@/lib/speak'
+import { speak, stopSpeech, unlockSpeech, canSpeak, setGender } from '@/lib/speak'
 
 type Editable = HTMLInputElement | HTMLTextAreaElement | HTMLElement
 const TEXT_TYPES = ['text', 'search', 'email', 'url', 'tel', '']
@@ -87,6 +87,7 @@ export default function VoiceDictation() {
     const w = window as any
     setSupported(!!(navigator.mediaDevices && w.MediaRecorder) || !!(w.SpeechRecognition || w.webkitSpeechRecognition))
     try { setSpeakOn(localStorage.getItem('nvq-voice-speak') !== 'off') } catch {}
+    supabase.auth.getUser().then(({ data }) => { const g = (data.user?.user_metadata as any)?.voice_gender; if (g === 'male' || g === 'female') setGender(g) }).catch(() => {})
     const onFocus = (e: FocusEvent) => { if (isEditable(e.target as Element)) lastField.current = e.target as Editable }
     document.addEventListener('focusin', onFocus)
     return () => document.removeEventListener('focusin', onFocus)

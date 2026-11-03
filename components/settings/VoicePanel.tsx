@@ -3,6 +3,7 @@
 // (spellings and shortcuts the AI applies when you dictate).
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getGender, setGender, speak, unlockSpeech, type Gender } from '@/lib/speak'
 
 type E = { id: string; term: string; replacement: string | null }
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 22, marginBottom: 18 }
@@ -24,6 +25,13 @@ export default function VoicePanel() {
   const [term, setTerm] = useState('')
   const [replacement, setReplacement] = useState('')
   const [err, setErr] = useState('')
+  const [gender, setG] = useState<Gender>('female')
+  useEffect(() => { setG(getGender()) }, [])
+  function chooseVoice(g: Gender) {
+    setG(g); setGender(g)
+    supabase.auth.updateUser({ data: { voice_gender: g } }).catch(() => {})
+    unlockSpeech(); speak(g === 'male' ? 'Hi, Novourq here. This is the male voice.' : 'Hi, Novourq here. This is the female voice.')
+  }
   const [calls, setCalls] = useState<{ id: string; started_at: string; seconds: number; tasks: number; turns: { role: string; text: string }[] }[]>([])
   const [open, setOpen] = useState<string | null>(null)
   const load = () => call('GET').then(d => { setEntries(d.entries); setWords(d.words); setSpeechKey(d.speechKey) }).catch(() => {})
@@ -49,6 +57,18 @@ export default function VoicePanel() {
         <b>On your phone:</b> open app.thenovourq.com in Chrome or Safari and tap Novourq Voice. The call fills the bottom of the screen and keeps the screen awake. To open it like an app, use your browser's Add to Home Screen.<br />
         <b>Say "new line", "full stop" or "question mark"</b> and it types the symbol. Correct yourself mid-sentence ("Thursday, no, Friday") and only Friday is typed.<br />
         <span style={{ color: '#667085' }}>Your last 30 days: {words.toLocaleString('en-GB')} words by voice. Audio is not stored.</span>
+      </div>
+      <div style={card}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Novourq's voice</div>
+        <div style={{ fontSize: 13, color: '#667085', marginBottom: 12 }}>Choose the voice you hear on calls and spoken replies. Tap one to hear it. The exact sound depends on the voices installed on your device.</div>
+        <div role="radiogroup" aria-label="Novourq's voice" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {(['female', 'male'] as Gender[]).map(g => (
+            <button key={g} role="radio" aria-checked={gender === g} onClick={() => chooseVoice(g)}
+              style={{ flex: '1 1 140px', padding: '12px 16px', borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', border: `2px solid ${gender === g ? '#2F6DB5' : '#D0D5DD'}`, background: gender === g ? '#EAF3FC' : '#fff', color: gender === g ? '#1D4E89' : '#344054' }}>
+              {g === 'female' ? 'Woman' : 'Man'}
+            </button>
+          ))}
+        </div>
       </div>
       <div style={card}>
         <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Dictionary and shortcuts</div>
