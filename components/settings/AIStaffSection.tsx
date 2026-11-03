@@ -63,7 +63,7 @@ export default function AIStaffSection() {
     setError(''); setShowForm(true)
   }
 
-  // Admin only: reveal the stored Grok password for this agent (the server logs it).
+  // Admin only: reveal the stored agent password for this agent (the server logs it).
   async function revealPwd() {
     if (!editingId) return
     setError('')
@@ -138,7 +138,7 @@ export default function AIStaffSection() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#F9FAFB' }}>
-                  {['Name', 'Job role', 'Grok bot', 'Does day to day', 'Hands over to a person', 'Status', ''].map(h => (
+                  {['Name', 'Job role', 'Agent', 'Does day to day', 'Hands over to a person', 'Status', ''].map(h => (
                     <th key={h} style={{ textAlign: 'left', padding: '9px 14px', fontSize: 11, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #E4E7EC' }}>{h}</th>
                   ))}
                 </tr>
@@ -180,15 +180,15 @@ export default function AIStaffSection() {
               <input style={input} value={form.job_role} onChange={e => setForm({ ...form, job_role: e.target.value })} placeholder="e.g. Property Manager" />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <label style={label}>Grok bot</label>
+              <label style={label}>Agent</label>
               <input style={input} value={form.grok_bot} onChange={e => setForm({ ...form, grok_bot: e.target.value })} placeholder="e.g. Sarah Bennett | Property Manager" />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <label style={label}>Grok login email</label>
+              <label style={label}>Agent login email</label>
               <input style={input} type="email" value={form.grok_email} onChange={e => setForm({ ...form, grok_email: e.target.value })} placeholder="e.g. sarahbennett@thenovourq.com" />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <label style={label}>Grok password</label>
+              <label style={label}>Agent password</label>
               <input style={input} type="password" autoComplete="new-password" value={pwd} onChange={e => setPwd(e.target.value)}
                 placeholder={rows.find(r => r.id === editingId)?.grok_password_set_at ? 'Leave blank to keep the current password' : 'Set a password (8 characters or more)'} />
               {editingId && (

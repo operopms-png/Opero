@@ -204,7 +204,7 @@ export default function AgentPool() {
               <div style={{ fontWeight: 700 }}>{open.name} <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: STATUS[open.status]?.color ?? MUTED, background: STATUS[open.status]?.bg ?? '#F2F4F7', padding: '2px 9px', borderRadius: 999 }}>{(STATUS[open.status] ?? STATUS.not_set_up).label}</span></div>
               <div style={{ fontSize: 13, marginTop: 6 }}><strong>Does:</strong> {open.responsibilities || 'Not described yet'}</div>
               <div style={{ fontSize: 13, marginTop: 4 }}><strong>Hands over to a person when:</strong> {open.escalation || 'Not described yet'}</div>
-              <div style={{ fontSize: 12, color: MUTED, marginTop: 6 }}>{open.grok_bot ? `Grok bot: ${open.grok_bot}` : 'No Grok bot linked'}</div>
+              <div style={{ fontSize: 12, color: MUTED, marginTop: 6 }}>{open.grok_bot ? `Agent: ${open.grok_bot}` : 'No agent linked'}</div>
               <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>Last asked a question: {open.last_used_at ? new Date(open.last_used_at).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'medium', timeStyle: 'short' }) : 'Not yet'}</div>
 
               <div style={{ fontSize: 13, marginTop: 12, fontWeight: 700 }}>Hands over to another agent</div>
