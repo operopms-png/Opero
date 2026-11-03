@@ -27,6 +27,7 @@ export const WORKFLOWS: Workflow[] = [
   { agent: 'ea_viewings', label: 'Viewings assistant (also books viewings from the website chat)', module: 'Estate agency', schedule: 'Daily, 07:30, and live from the website chat', resultKey: 'viewings' },
   { agent: 'ea_listings', label: 'Listing writer', module: 'Estate agency', schedule: 'Daily, 07:30', resultKey: 'listings' },
   { agent: 'dev_investors', label: 'Investor updates', module: 'Developments', schedule: '1st of the month, 07:30', resultKey: 'investorUpdates' },
+  { agent: 'goal_planner', label: 'Goal planner', module: 'Investment & Portfolio', schedule: 'Mondays, 07:30', resultKey: 'goalPlanner' },
   { agent: 'deal_finder', label: 'Deal finder', module: 'Investment & Portfolio', schedule: 'Daily, 07:30', resultKey: 'dealFinder' },
   { agent: 'deal_screening', label: 'Deal screening', module: 'Investment & Portfolio', schedule: 'Daily, 07:30', resultKey: 'dealScreening' },
   { agent: 'keys_check', label: 'Key check', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'keysCheck' },

@@ -21,7 +21,7 @@ import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask 
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeMaintenancePredictions, proposeMarketForecast } from './ai-forecasting'
-import { proposeDealScreening, proposeDealFinder } from './ai-deals'
+import { proposeDealScreening, proposeDealFinder, proposeGoalPlanner } from './ai-deals'
 import { proposeWatchers, proposeInvoiceChase, proposeReviewReplies, proposeTeamWeekly } from './ai-watchers'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
 import { proposeCompliance, proposeRenewals, proposeArrears, proposeDeposits, proposeInsurance, proposeInspections, proposeStatementReminders } from './ai-proposals-modules'
@@ -382,6 +382,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.reviewReplies = await proposeReviewReplies()
       out.dealScreening = await proposeDealScreening()
       out.dealFinder = await proposeDealFinder()
+      if (force || now.getUTCDay() === 1) out.goalPlanner = await proposeGoalPlanner()
       if (force || (now.getUTCDate() >= 2 && now.getUTCDate() <= 10)) out.statements = await proposeStatementReminders()
       if (force || now.getUTCDay() === 1) out.maintPredictions = await proposeMaintenancePredictions()
       if (force || now.getUTCDay() === 1) out.weeklyReport = await proposeWeeklyReport()

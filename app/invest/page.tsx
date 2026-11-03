@@ -33,7 +33,8 @@ const STRATEGIES = [
 
 import { DEAL_STAGES, STAGE_COLOR } from '@/lib/deal-stages'
 import FindDeals from '@/components/invest/FindDeals'
-const SECTIONS = ['Deal Analyser','Find Deals','Saved Deals','Watchlist']
+import Goals from '@/components/invest/Goals'
+const SECTIONS = ['Deal Analyser','Find Deals','Goals','Saved Deals','Watchlist']
 
 // Money fields converted when you switch currency
 const MONEY_FIELDS = ['price','rent','rentPerRoom','subletRent','landlordDeposit','advanceRent','wifiCost','utilitiesCost','managementCost','insuranceCost','propertyTaxCost','cleaningCost','maintenanceCost','marketingCost','vacancyCost','setupCost','conversionCost','salePrice','planningCost','buildCost','gdv','refurb']
@@ -392,6 +393,7 @@ export default function InvestPage() {
       <div style={{padding:'24px 28px 40px',maxWidth:1200}}>
 
         {/* DEAL ANALYSER */}
+        {section==='Goals'&&<Goals />}
         {section==='Find Deals'&&<FindDeals onSaved={reloadDeals} />}
 
         {section==='Deal Analyser'&&(

@@ -51,3 +51,22 @@ export async function proposeDealFinder() {
   }
   return result
 }
+
+// Goal planner skill: Mondays, reviews every active goal, keeps a deal-finder search aimed at it, and leaves one task with the report.
+import { reviewGoal, type Goal } from './portfolio-goals'
+export async function proposeGoalPlanner() {
+  const db = svc(); const result = freshCounts()
+  const businesses = await enabledBusinesses('goal_planner'); result.businesses = businesses.length
+  for (const biz of businesses) {
+    try {
+      const { data: goals } = await db.from('portfolio_goals').select('*').eq('user_id', biz).eq('status', 'active').limit(5)
+      if (!goals?.length) { result.skipped++; continue }
+      for (const g of goals) {
+        const { report, progress: p } = await reviewGoal(g as Goal)
+        const made = await aiTask(biz, `Goal update: ${String(g.text).slice(0, 80)} (${p.pct}%)`, report, 2)
+        if (made) result.queued++; else result.skipped++
+      }
+    } catch (e) { result.errors.push(`goal_planner ${biz}: ${e instanceof Error ? e.message : String(e)}`) }
+  }
+  return result
+}
