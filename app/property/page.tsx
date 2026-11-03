@@ -124,8 +124,6 @@ export default function PropertyHub() {
   return (
     <div style={{ background: '#f6f8fc', minHeight: '100vh', padding: '28px 32px 56px', fontFamily: "'Figtree', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <h1 style={{ margin: 0, fontSize: 30, color: C.ink, letterSpacing: '-.01em' }}>Real Estate Intelligence</h1>
-        <p style={{ margin: '6px 0 18px', fontSize: 15, color: C.muted }}>Estate agency, developments, vacation rentals and property management in one place. Each page appears once.</p>
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '0 16px', marginBottom: 18, boxShadow: shadow }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <input value={q} onChange={e => setQ(e.target.value)} type="search" placeholder="Search any page, such as maintenance or viewings" aria-label="Search pages"
