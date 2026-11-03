@@ -1,6 +1,7 @@
 // Rent reminder drafting, shared by the Finance -> Reminders screen and the daily AI job.
 // Drafts here; the daily AI job sends the ones it drafted (see sendPendingReminders at the bottom).
 import { serviceClient as db } from '@/lib/admin-auth'
+import { companyName } from '@/lib/ai-proposal-utils'
 
 export const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
 export const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
@@ -25,11 +26,11 @@ export function windowFor(days: number): string {
   if (days <= 20) return 'late14'
   return 'late21'
 }
-export function draft(stage: string, i: Item) {
+export function draft(stage: string, i: Item, company = 'Your property management team') {
   const hi = `Hi${first(i.tenant) ? ' ' + first(i.tenant) : ''}`
   const amt = money(i.amount, i.currency), when = nice(i.due_date)
   const of = `${amt}${i.property ? ' for ' + i.property : ''}`
-  const sign = ' — NOVOURQ Group'
+  const sign = ` — ${company}`
   if (stage === 'before7') return `${hi}, just a heads up that your rent of ${of} is due on ${when}. Reply here if you have any questions.${sign}`
   if (stage === 'before') return `${hi}, a friendly reminder that your rent of ${of} is due on ${when}. Reply here if you have any questions.${sign}`
   if (stage === 'due') return `${hi}, your rent of ${of} is due today. Thank you for paying on time. Reply here if you need anything.${sign}`
@@ -75,9 +76,10 @@ export async function candidates(biz: string): Promise<Item[]> {
 // a reminder already drafted for the same rent and stage is not created again.
 export async function generateRentReminders(businessId: string, draftedBy: string) {
   const items = await candidates(businessId)
+  const company = await companyName(businessId)
   const rows = items.map(i => {
     const stage = windowFor(i.days)
-    return { business_id: businessId, module: i.module, rent_ref: i.ref, stage, tenant: i.tenant, phone: i.phone, tenant_id: i.tenantId, email: i.email, property: i.property, amount: i.amount, currency: i.currency, due_date: i.due_date, message: draft(stage, i), drafted_by: draftedBy }
+    return { business_id: businessId, module: i.module, rent_ref: i.ref, stage, tenant: i.tenant, phone: i.phone, tenant_id: i.tenantId, email: i.email, property: i.property, amount: i.amount, currency: i.currency, due_date: i.due_date, message: draft(stage, i, company), drafted_by: draftedBy }
   }).filter(r => r.email || r.tenant_id)
   const skippedNoPhone = items.length - rows.length
   if (!rows.length) return { created: 0, skippedNoPhone }
