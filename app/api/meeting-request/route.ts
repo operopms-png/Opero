@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 import { SITE_URL } from '@/lib/brand'
-import { addCrmLead } from '@/lib/crm-lead'
+import { addCrmLead, alertEmail } from '@/lib/crm-lead'
 
 // Public "book a meeting" link (/meeting). Anyone can open it and send a
 // meeting request; it lands in Staff Centre → Meetings as "New request" so
@@ -67,9 +67,8 @@ export async function POST(req: NextRequest) {
   // Tell the team (bell notification + email to the alert address)
   const summary = [`${name} <${email}>${phone ? ` · ${phone}` : ''}`, topic && `About: ${topic}`, type && `Prefers: ${type}`, when && `When: ${when}`, message && `\n${message}`].filter(Boolean).join('\n')
   await serviceClient.from('notifications').insert({ user_id: p.business_id, title: `New meeting request: ${name}`, message: summary.slice(0, 500), type: 'meeting_request', module: 'staffcentre', link: '/staff-centre/meetings', read: false })
-  const { data: s } = await serviceClient.from('ai_receptionist_settings').select('alert_email').eq('business_id', p.business_id).maybeSingle()
-  const alertTo = s?.alert_email || 'contact.us@sangstersgroup.com'
-  await sendEmail(alertTo, `New meeting request: ${name}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5"><p><b>New meeting request from the booking link</b></p><p style="white-space:pre-wrap">${esc(summary)}</p><p><a href="${SITE_URL}/staff-centre/meetings">Open Meetings in the portal</a></p></div>`, email).catch(() => {})
+  const alertTo = (await alertEmail(p.business_id)) ?? undefined
+  if (alertTo) await sendEmail(alertTo, `New meeting request: ${name}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5"><p><b>New meeting request from the booking link</b></p><p style="white-space:pre-wrap">${esc(summary)}</p><p><a href="${SITE_URL}/staff-centre/meetings">Open Meetings in the portal</a></p></div>`, email).catch(() => {})
 
   // Confirmation to the client
   await sendEmail(email, 'We’ve received your meeting request', `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for requesting a meeting with NOVOURQ Group${topic ? ` about <b>${esc(topic.toLowerCase())}</b>` : ''}. A member of our team will be in touch shortly to confirm a time${when ? ` — we’ve noted you prefer <b>${esc(when)}</b>` : ''}.</p><p>If anything changes, just reply to this email or call us on 020 7164 0329.</p><p>Kind regards,<br>NOVOURQ Group</p></div>`, alertTo).catch(() => {})

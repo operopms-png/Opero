@@ -33,11 +33,18 @@ export async function addCrmLead(l: Lead): Promise<string | null> {
 
 const esc = (t: string) => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 
+// Where a business's lead alerts go: its own alert address, else the account owner's login email. Never another company's.
+export async function alertEmail(businessId: string): Promise<string | null> {
+  const { data: s } = await serviceClient.from('ai_receptionist_settings').select('alert_email').eq('business_id', businessId).maybeSingle()
+  if (s?.alert_email) return s.alert_email as string
+  try { const { data: u } = await serviceClient.auth.admin.getUserById(businessId); return u?.user?.email ?? null } catch { return null }
+}
+
 // Bell notification + email to the team's alert address. Returns that address.
 export async function alertTeam(businessId: string, title: string, body: string, link: string, replyTo?: string) {
   await serviceClient.from('notifications').insert({ user_id: businessId, title: title.slice(0, 300), message: body.slice(0, 500), type: 'lead', module: 'staffcentre', link, read: false })
-  const { data: s } = await serviceClient.from('ai_receptionist_settings').select('alert_email').eq('business_id', businessId).maybeSingle()
-  const to = s?.alert_email || 'contact.us@sangstersgroup.com'
+  const to = await alertEmail(businessId)
+  if (!to) return undefined
   await sendEmail(to, title, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5"><p><b>${esc(title)}</b></p><p style="white-space:pre-wrap">${esc(body)}</p><p><a href="${SITE_URL}${link}">Open in the portal</a></p></div>`, replyTo).catch(() => {})
   return to
 }

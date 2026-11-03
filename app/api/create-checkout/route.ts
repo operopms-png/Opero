@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
       success_url: `${SITE_URL}${successPath}`,
       cancel_url: `${SITE_URL}/settings`,
       allow_promotion_codes: true,
+      // Asked at payment so the new client's emails and invoices carry their own company name from day one
+      custom_fields: [{ key: 'company_name', label: { type: 'custom', custom: 'Company name' }, type: 'text', optional: true, text: { maximum_length: 120 } }],
     })
     const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
     return NextResponse.json({ url: fullSession.url })

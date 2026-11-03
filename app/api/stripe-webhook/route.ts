@@ -187,6 +187,18 @@ export async function POST(request: NextRequest) {
             }, { onConflict: 'user_id' })
             await supabase.from('webhook_debug_log').insert({ step: 'upsert_subscription', detail: { upsertError: upsertError?.message ?? null } })
           }
+          // Company name typed at checkout becomes the client's name on emails and invoices (only if none is set yet)
+          try {
+            const typed = ((fullSession as any).custom_fields ?? []).find((f: any) => f.key === 'company_name')?.text?.value
+            const name = typeof typed === 'string' ? typed.trim().slice(0, 120) : ''
+            if (name) {
+              const { data: cur } = await supabase.from('invoice_settings').select('company_name').eq('business_id', user.id).maybeSingle()
+              if (!cur) await supabase.from('invoice_settings').insert({ business_id: user.id, company_name: name })
+              else if (!String(cur.company_name ?? '').trim()) await supabase.from('invoice_settings').update({ company_name: name }).eq('business_id', user.id)
+            }
+          } catch (e) {
+            await supabase.from('webhook_debug_log').insert({ step: 'company_name_seed_failed', detail: { message: e instanceof Error ? e.message : String(e) } })
+          }
         }
       }
     } catch (err: unknown) {
