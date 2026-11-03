@@ -6,7 +6,7 @@ import { TAB_DESCRIPTIONS } from './tab-descriptions'
 
 const HOW_TO = `
 HOW THINGS WORK (answer from this; give the exact click path)
-- Menu: the left menu is the NOVOURQ Ecosystem. It holds Dashboard, Real Estate Intelligence, Novourq Cloud AI, then the Human Intelligence Hub. Settings is at the bottom.
+- Menu: the left menu is the NOVOURQ Ecosystem. It holds Dashboard, Real Estate Intelligence, Novourq Cloud AI, then the Human Intelligence Hub. Settings sits just under the Human Intelligence Hub. In Settings: My Account, Team Management, Payments, System Messages (news from us), Submissions (report an issue or bug, leave a review or suggest an idea, and see our replies) and Guide (how to use the platform).
 - Real Estate Intelligence is one place for property management, estate agency, short stays (vacation rentals) and developments. Open it, search any page or pick an area, and use "← Real Estate Intelligence" to go back. Every tab has a blue banner saying what it does.
 - Human Intelligence Hub lists every people-run area (inbox, CRM, finance, reports, operations, team) grouped under headings, with a search box.
 - Editing: records on every page have an Edit button (leases, units, maintenance, expenses and so on). Summary pages (Deadlines, Finance overview, Audit Log) are read-only.
