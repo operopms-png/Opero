@@ -17,6 +17,9 @@ const str = (tab: string): Target => ({ mod: 'str', tab })
 const dev = (tab: string): Target => ({ mod: 'dev', tab })
 
 const GROUPS: { name: string; note: string; items: Item[] }[] = [
+  { name: 'Overview', note: 'Dashboards for each area', items: [
+    { name: 'Dashboard', targets: [pm('Dashboard'), ea('Dashboard'), str('Home'), dev('Dashboard')] },
+  ] },
   { name: 'Portfolio', note: 'Properties, people and tenancies', items: [
     { name: 'Properties', targets: [pm('Properties'), ea('Properties'), str('Properties')] },
     { name: 'Units', targets: [pm('Units'), ea('Units')] },
