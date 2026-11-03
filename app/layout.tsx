@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import HubTabs from '@/components/HubTabs'
+import PageBanner from '@/components/PageBanner'
 import Sidebar from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
 import { resolveAccess, ROLE_SETTINGS, ROLE_MODULES, getScTabs } from '@/lib/useRole'
@@ -152,6 +153,7 @@ function LayoutBody({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="app-main" style={{ marginLeft: width, flex: 1, minHeight: '100vh', transition: 'margin-left 0.15s ease' }}>
         <HubTabs />
+        <PageBanner />
         {children}
       </main>
     </>

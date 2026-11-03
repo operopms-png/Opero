@@ -18,6 +18,12 @@ export default function HubTabs() {
   const [search, setSearch] = useState('')
   const [counts, setCounts] = useState<Record<string, number>>({})
   const { role, modules: teamModules } = useRole()
+  const [bannerH, setBannerH] = useState(0)
+  useEffect(() => {
+    const on = () => setBannerH((window as any).__bannerH ?? 0)
+    on(); window.addEventListener('novourq:banner-h', on)
+    return () => window.removeEventListener('novourq:banner-h', on)
+  }, [])
 
   useEffect(() => {
     const read = () => setSearch(window.location.search)
@@ -35,7 +41,7 @@ export default function HubTabs() {
   const show = tabs.length > 1
   const wantsCounts = show && tabs.some(t => t.badge)
 
-  useEffect(() => { document.documentElement.style.setProperty('--hub-h', show ? BAR_H + 'px' : '0px') }, [show])
+  useEffect(() => { document.documentElement.style.setProperty('--hub-h', ((show ? BAR_H : 0) + bannerH) + 'px') }, [show, bannerH])
   useEffect(() => {
     if (!wantsCounts) return
     supabase.rpc('sidebar_counts').then(({ data }) => { if (data) setCounts(data as Record<string, number>) })
