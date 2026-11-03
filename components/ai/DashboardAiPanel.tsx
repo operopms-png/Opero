@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { staffApi } from '../../lib/staff-api'
+import AiBrainIcon from './AiBrainIcon'
 
 const K = { ink: '#0f2150', mid: '#34508a', muted: '#5470a8', soft: '#7a8fbd', line: '#e3ecfa', blue: '#2f5bd6', chip: '#eef4ff', chipLine: '#cfe0f7' }
 const box: React.CSSProperties = { background: 'rgba(255,255,255,.85)', border: '1px solid rgba(47,91,214,.14)', borderRadius: 16, boxShadow: '0 6px 20px rgba(47,91,214,.08)' }
@@ -64,16 +65,7 @@ export default function DashboardAiPanel() {
 
       <h2 style={{ ...head, marginTop: 18 }}>Novourq Cloud AI</h2>
       <div style={{ ...box, padding: 18, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span aria-hidden="true" style={{ width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg,#2f5bd6,#4f7fe8)', display: 'grid', placeItems: 'center', flex: 'none' }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="7" y="7" width="10" height="10" rx="2.5" fill="rgba(255,255,255,.18)" />
-            <path d="M10 10.5h4M10 13.5h2.5" />
-            <path d="M9.5 7V4M14.5 7V4M9.5 20v-3M14.5 20v-3M7 9.5H4M7 14.5H4M20 9.5h-3M20 14.5h-3" />
-            <circle cx="9.5" cy="3.2" r=".9" fill="#fff" stroke="none" /><circle cx="14.5" cy="3.2" r=".9" fill="#fff" stroke="none" />
-            <circle cx="3.2" cy="9.5" r=".9" fill="#fff" stroke="none" /><circle cx="3.2" cy="14.5" r=".9" fill="#fff" stroke="none" />
-            <circle cx="20.8" cy="9.5" r=".9" fill="#fff" stroke="none" /><circle cx="20.8" cy="14.5" r=".9" fill="#fff" stroke="none" />
-          </svg>
-        </span>
+        <AiBrainIcon size={68} />
         <span style={{ flex: '1 1 260px', minWidth: 0 }}>
           <b style={{ display: 'block', fontSize: 15, color: K.ink }}>One AI running your whole business</b>
           <small style={{ display: 'block', fontSize: 12.5, color: K.muted, marginTop: 2 }}>{ov ? `${on} skills switched on` : 'Loading…'}{act && act[0] ? ` · last action ${ago(act[0].at)}` : ''}. Ask it anything about your portfolio, or message it from your phone.</small>
