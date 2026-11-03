@@ -105,10 +105,15 @@ async function autoSendIfOn(userId: string, agentKey: string, actionType: string
 
 const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 
-async function emailOut(to: string | undefined, subject: string, body: string) {
+async function emailOut(to: string | undefined, subject: string, body: string, businessId?: string) {
   if (!to) return { error: 'Missing recipient email' }
   const { sendEmail } = await import('./send-email')
-  const result: any = await sendEmail(to, subject, `<p>${esc(body).replace(/\n/g, '<br/>')}</p>`)
+  let result: any
+  if (businessId) {
+    const { brandedEmail } = await import('./branded-email')
+    const b = await brandedEmail(businessId, body)
+    result = await sendEmail(to, subject, b.html, b.replyTo, b.from)
+  } else result = await sendEmail(to, subject, `<p>${esc(body).replace(/\n/g, '<br/>')}</p>`)
   if (result?.skipped) return { error: 'Email is not configured (RESEND_API_KEY missing), so nothing was sent.' }
   if (result?.error) return { error: String(result.error) }
   return { success: true }
@@ -127,16 +132,16 @@ export async function executeAiAction(action: { user_id: string; action_type: st
 
   // Generic email to a named recipient (compliance, renewals, arrears and other agents).
   if (action.action_type === 'email_out') {
-    const r: any = await emailOut(p.to, p.subject || 'Message from your property manager', body)
+    const r: any = await emailOut(p.to, p.subject || 'Message from your property manager', body, action.user_id)
     // A chat-booked viewing becomes Scheduled once its confirmation email has gone out.
     if (r?.success && p.confirm_viewing_id) {
       await getServiceClient().from('estate_viewings').update({ status: 'Scheduled' }).eq('id', p.confirm_viewing_id).eq('user_id', action.user_id).ilike('status', 'requested')
     }
     return r
   }
-  if (action.action_type === 'owner_report') return emailOut(p.to, p.subject || 'Your monthly property report', body)
-  if (action.action_type === 'cleaning_instruction') return emailOut(p.to, p.subject || 'Cleaning instructions', body)
-  if (action.action_type === 'maintenance_instruction') return emailOut(p.to, p.subject || 'Maintenance request', body)
+  if (action.action_type === 'owner_report') return emailOut(p.to, p.subject || 'Your monthly property report', body, action.user_id)
+  if (action.action_type === 'cleaning_instruction') return emailOut(p.to, p.subject || 'Cleaning instructions', body, action.user_id)
+  if (action.action_type === 'maintenance_instruction') return emailOut(p.to, p.subject || 'Maintenance request', body, action.user_id)
 
   if (action.action_type === 'rate_change') {
     // The approved text is the new nightly rate. Staff can change the number before approving.

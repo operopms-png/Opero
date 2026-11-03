@@ -100,15 +100,15 @@ async function stillOwed(row: any) {
   return !!data && String(data.status).toLowerCase() === 'overdue'
 }
 
-const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
-
 // Sends one reminder by email and portal message. Returns which channels worked and any errors.
 export async function deliverReminder(row: any, by: string) {
   const sent: string[] = [], errors: string[] = []
     if (row.email) {
     try {
       const { sendEmail } = await import('./send-email')
-      const r: any = await sendEmail(row.email, 'Your rent reminder', `<p>${esc(row.message).replace(/\n/g, '<br/>')}</p>`)
+      const { brandedEmail } = await import('./branded-email')
+      const b = await brandedEmail(row.business_id, row.message)
+      const r: any = await sendEmail(row.email, 'Your rent reminder', b.html, b.replyTo, b.from)
       if (r?.error) errors.push(`email: ${r.error}`); else if (!r?.skipped) sent.push('email')
     } catch (e) { errors.push(`email: ${e instanceof Error ? e.message : String(e)}`) }
   }
