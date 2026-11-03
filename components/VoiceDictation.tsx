@@ -150,14 +150,23 @@ export default function VoiceDictation() {
           {note && !listening && state === 'idle' && <button onClick={() => setNote(null)} aria-label="Close" style={{ marginLeft: 8, background: 'none', border: 0, color: '#667085', cursor: 'pointer', fontSize: 14 }}>×</button>}
         </div>
       )}
+      <style>{`@media (prefers-reduced-motion:no-preference){.nvq-rec .nvq-bar{transform-origin:center;animation:nvqw .9s ease-in-out infinite}.nvq-rec .nvq-bar:nth-child(2){animation-delay:.15s}.nvq-rec .nvq-bar:nth-child(3){animation-delay:.3s}.nvq-rec .nvq-bar:nth-child(4){animation-delay:.45s}.nvq-rec .nvq-bar:nth-child(5){animation-delay:.6s}}@keyframes nvqw{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}`}</style>
       <button type="button"
+        className={listening ? 'nvq-rec' : ''}
         onMouseDown={e => e.preventDefault()}
         onClick={() => (listening ? stop() : start())}
         disabled={state === 'working'}
-        aria-label={listening ? 'Stop voice' : 'Talk to Novourq'}
-        title={listening ? 'Tap to finish' : 'Voice: tap, or hold Ctrl+Shift+Space. Say "Novourq, …" to give an instruction'}
-        style={{ width: 52, height: 52, borderRadius: '50%', border: 0, cursor: 'pointer', color: '#fff', background: listening ? '#B42318' : '#2F6DB5', boxShadow: listening ? '0 0 0 6px rgba(180,35,24,.2)' : '0 4px 14px rgba(47,109,181,.4)', display: 'grid', placeItems: 'center', opacity: state === 'working' ? 0.6 : 1 }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+        aria-label={listening ? 'Stop Novourq Voice' : 'Novourq Voice'}
+        title={listening ? 'Tap to finish' : 'Tap, or hold Ctrl+Shift+Space. Say "Novourq, …" to give an instruction'}
+        style={{ height: 46, borderRadius: 23, border: 0, cursor: 'pointer', color: '#fff', background: '#0B1B45', padding: '0 18px 0 8px', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'inherit', fontSize: 13, fontWeight: 700, boxShadow: listening ? '0 0 0 5px rgba(229,72,77,.25), 0 6px 18px rgba(11,27,69,.35)' : '0 6px 18px rgba(11,27,69,.35)', opacity: state === 'working' ? 0.6 : 1 }}>
+        <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', background: listening ? '#E5484D' : 'linear-gradient(135deg,#7fe4ff,#3a8bff)' }}>
+          {listening ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path className="nvq-bar" d="M4 10v4" /><path className="nvq-bar" d="M8 6v12" /><path className="nvq-bar" d="M12 3v18" /><path className="nvq-bar" d="M16 7v10" /><path className="nvq-bar" d="M20 10v4" /></svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+          )}
+        </span>
+        {listening ? 'Listening' : state === 'working' ? 'Working' : 'Novourq Voice'}
       </button>
     </div>
   )
