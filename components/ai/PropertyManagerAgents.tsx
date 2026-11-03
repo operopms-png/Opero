@@ -417,8 +417,10 @@ export default function PropertyManagerAgents() {
       ])
       if (agentsRes.data?.length) {
         const loaded: Record<string,boolean> = {guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false}
-        agentsRes.data.forEach((a:any) => { loaded[a.agent_key] = a.enabled })
+        const autos: Record<string,boolean> = {}
+        agentsRes.data.forEach((a:any) => { loaded[a.agent_key] = a.enabled; autos[a.agent_key] = a.auto_send !== false })
         setActiveAgents(loaded)
+        setAutoSend(autos)
       }
       setProperties(propsRes.data ?? [])
       setOwners(ownersRes.data ?? [])
@@ -429,6 +431,13 @@ export default function PropertyManagerAgents() {
   useEffect(() => { staffApi('/api/ai-client-settings').then((d: any) => setStyle({ tone: d.tone, country_rules: d.country_rules, signoff: d.signoff })).catch(() => {}) }, [])
   if(loading) return <div style={{padding:40,color:C.faint,fontSize:14}}>Loading…</div>
 
+  const [autoSend, setAutoSend] = useState<Record<string,boolean>>({})
+  const toggleAuto = async (key:string) => {
+    const next = !(autoSend[key] ?? true)
+    setAutoSend({...autoSend,[key]:next})
+    const {error} = await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: activeAgents[key] ?? false, auto_send: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
+    if (error) { setAutoSend({...autoSend,[key]:!next}) }
+  }
   const toggleAgent = async (key:string) => {
     const next = !activeAgents[key]
     setActiveAgents({...activeAgents,[key]:next})
@@ -570,6 +579,10 @@ export default function PropertyManagerAgents() {
               <button onClick={() => toggleAgent(agent.key)} style={btn(activeAgents[agent.key] ? 'danger' : 'gold')}>{activeAgents[agent.key] ? 'Switch off' : 'Switch on'}</button>
             </div>
             <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: '0 0 16px' }}>{agent.desc}</p>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, marginBottom: 16, cursor: 'pointer' }}>
+              <input type="checkbox" checked={autoSend[agent.key] ?? true} onChange={() => toggleAuto(agent.key)} />
+              <span><b>Send automatically.</b> Messages from this skill go out without waiting for approval (up to 40 a day). Untick to approve each one yourself.</span>
+            </label>
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>What it does</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 8 }}>
               {agent.capabilities.map(c => <div key={c} style={{ display: 'flex', gap: 8, fontSize: 13 }}><span style={{ color: C.green }}>✓</span>{c}</div>)}

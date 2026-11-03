@@ -3,6 +3,7 @@
 // AI Approvals, and only then does executeAiAction() carry it out. Every row
 // keeps who proposed, who decided, when, and exactly what went out.
 import { createClient } from '@supabase/supabase-js'
+import { aiTask } from './ai-proposal-utils'
 
 function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -63,7 +64,38 @@ export async function queueAiAction(input: {
     context: input.context ?? {},
   }).select('id').single()
   if (error) return { error: error.message }
-  return { queued: true, id: data.id as string }
+  const autoSent = await autoSendIfOn(input.userId, input.agentKey, input.actionType, data.id as string).catch(() => false)
+  return { queued: true, id: data.id as string, autoSent }
+}
+
+// Messages go out without waiting when the skill's "Send automatically" switch is on (it is by default).
+// Only message-type actions qualify; price changes, rent matching, lease and listing edits always wait for a person.
+// At most 40 a day per business: past that, drafts wait in Approvals as before.
+const AUTO_TYPES = new Set(['email_out', 'guest_reply', 'portal_reply', 'owner_report', 'cleaning_instruction', 'maintenance_instruction'])
+const AUTO_DAILY_CAP = 40
+
+async function autoSendIfOn(userId: string, agentKey: string, actionType: string, id: string) {
+  if (!AUTO_TYPES.has(actionType)) return false
+  const db = getServiceClient()
+  const { data: ag } = await db.from('ai_agents').select('auto_send, enabled').eq('user_id', userId).eq('agent_key', agentKey).maybeSingle()
+  if (!ag?.enabled || !ag?.auto_send) return false
+  const startOfDay = new Date(); startOfDay.setUTCHours(0, 0, 0, 0)
+  const { count } = await db.from('ai_pending_actions').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('decision_note', 'Sent automatically').gte('decided_at', startOfDay.toISOString())
+  if ((count ?? 0) >= AUTO_DAILY_CAP) return false
+  const { data: claimed } = await db.from('ai_pending_actions')
+    .update({ status: 'approved', decided_by_name: 'Novourq Cloud AI', decision_note: 'Sent automatically', decided_at: new Date().toISOString() })
+    .eq('id', id).eq('status', 'pending').select('*')
+  const row = claimed?.[0]
+  if (!row || !row.draft_body) return false
+  const result: any = await executeAiAction(row, row.draft_body)
+  if (result && 'error' in result && result.error) {
+    await db.from('ai_pending_actions').update({ status: 'failed', error: String(result.error).slice(0, 500) }).eq('id', id)
+    await aiTask(userId, `Fix failed AI action: ${String(row.title ?? '').slice(0, 80)}`, String(result.error), 0)
+    return false
+  }
+  await db.from('ai_pending_actions').update({ status: 'executed', executed_at: new Date().toISOString(), error: null }).eq('id', id)
+  await db.from('ai_activity_log').insert({ user_id: userId, agent_key: agentKey, action: `Sent automatically: ${row.title}`, property_name: row.property_name })
+  return true
 }
 
 const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))

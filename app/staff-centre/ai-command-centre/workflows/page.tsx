@@ -26,7 +26,7 @@ export default function Workflows() {
 
   return (
     <CrmPage>
-      <CrmHeader title="Workflows" subtitle="What each AI agent does and when. Scheduled agents run at 07:30 UTC and only draft: a person approves everything."
+      <CrmHeader title="Workflows" subtitle="What each AI agent does and when. Scheduled skills run at 07:30 UTC. Messages go out automatically unless you switch a skill's automatic sending off; anything else waits for a person."
         actions={<button style={btn('gold')} disabled={busy} onClick={run}>{busy ? 'Running…' : 'Run all now'}</button>} />
       <Body>
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
