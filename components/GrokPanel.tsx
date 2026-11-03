@@ -1,7 +1,7 @@
 'use client'
 // "Ask Novourq AI" panel on the Staff Centre dashboard. Read only: it sends the question
 // to /api/grok and shows the reply. It cannot change records or send messages.
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { grokRoleForJob } from '../lib/grok-agent-roles'
 
@@ -25,6 +25,61 @@ export default function GrokPanel() {
   const [agentId, setAgentId] = useState('')
   const agent = agents.find(a => a.id === agentId)
   const role = agent ? grokRoleForJob(agent.job_role) : 'general'
+
+  // Voice: speak a question with the mic, and have the reply read aloud. Uses the browser's own
+  // speech tools, so it needs no extra keys. Mic works in Chrome, Edge and Safari.
+  const [listening, setListening] = useState(false)
+  const [speakReplies, setSpeakReplies] = useState(true)
+  const [speaking, setSpeaking] = useState(false)
+  const [micOk, setMicOk] = useState(false)
+  const recRef = useRef<any>(null)
+  const speakRef = useRef(true)
+  speakRef.current = speakReplies
+  useEffect(() => {
+    const w = window as any
+    setMicOk(!!(w.SpeechRecognition || w.webkitSpeechRecognition))
+    return () => { try { recRef.current?.abort() } catch {} ; window.speechSynthesis?.cancel() }
+  }, [])
+
+  function speak(text: string) {
+    const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
+    if (!synth || !text) return
+    synth.cancel()
+    const clean = text.replace(/[*_#`>|]/g, '').replace(/\s+/g, ' ').trim().slice(0, 3000)
+    const u = new SpeechSynthesisUtterance(clean)
+    u.lang = 'en-GB'
+    const v = synth.getVoices().find(x => /en-GB/i.test(x.lang)) ?? synth.getVoices().find(x => /^en/i.test(x.lang))
+    if (v) u.voice = v
+    u.onstart = () => setSpeaking(true)
+    u.onend = () => setSpeaking(false)
+    u.onerror = () => setSpeaking(false)
+    synth.speak(u)
+  }
+  function stopSpeaking() { window.speechSynthesis?.cancel(); setSpeaking(false) }
+
+  function toggleMic() {
+    if (listening) { try { recRef.current?.stop() } catch {} ; return }
+    const w = window as any
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition
+    if (!SR) return
+    stopSpeaking()
+    const rec = new SR()
+    rec.lang = 'en-GB'
+    rec.interimResults = true
+    rec.continuous = false
+    let finalText = ''
+    rec.onresult = (e: any) => {
+      let t = ''
+      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript
+      finalText = t
+      setInput(t)
+    }
+    rec.onerror = () => setListening(false)
+    rec.onend = () => { setListening(false); if (finalText.trim()) send(finalText) }
+    recRef.current = rec
+    setListening(true)
+    rec.start()
+  }
 
   // Each AI staff member is listed by name. Falls back to the general assistant if none load.
   useEffect(() => {
@@ -53,6 +108,7 @@ export default function GrokPanel() {
       const data = await res.json().catch(() => ({}))
       const reply = res.ok ? (data.reply || 'No answer came back.') : (data.error || 'The assistant could not answer.')
       setMessages(m => [...m, { role: 'bot', text: reply }])
+      if (res.ok && speakRef.current) speak(reply)
     } catch {
       setMessages(m => [...m, { role: 'bot', text: 'The assistant could not be reached. Try again.' }])
     } finally {
@@ -69,6 +125,10 @@ export default function GrokPanel() {
             {agents.length === 0 && <option value="">Assistant</option>}
             {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: C.brown, cursor: 'pointer' }}>
+            <input type="checkbox" checked={speakReplies} onChange={e => { setSpeakReplies(e.target.checked); if (!e.target.checked) stopSpeaking() }} /> Speak replies
+          </label>
+          {speaking && <button type="button" onClick={stopSpeaking} style={{ fontSize: 12, fontWeight: 600, color: C.brown, background: '#fff', border: '1px solid #C9DEF3', borderRadius: 8, padding: '4px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>Stop</button>}
           <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: '#fff', color: C.brown, border: '1px solid #C9DEF3' }}>Read only. Drafts need approval</span>
         </div>
       </div>
@@ -92,7 +152,13 @@ export default function GrokPanel() {
       </div>
 
       <form onSubmit={e => { e.preventDefault(); send(input) }} style={{ display: 'flex', gap: 10, padding: '14px 18px', borderTop: `1px solid ${C.line}` }}>
-        <input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask about arrears, compliance, maintenance or bookings" maxLength={4000}
+        {micOk && (
+          <button type="button" onClick={toggleMic} disabled={busy} aria-label={listening ? 'Stop listening' : 'Speak your question'} title={listening ? 'Listening. Tap to stop' : 'Speak your question'}
+            style={{ width: 42, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: listening ? '#B42318' : C.soft, color: listening ? '#fff' : C.brown, border: `1px solid ${listening ? '#B42318' : '#C9DEF3'}`, borderRadius: 8, cursor: busy ? 'default' : 'pointer' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+          </button>
+        )}
+        <input value={input} onChange={e => setInput(e.target.value)} placeholder={listening ? 'Listening…' : 'Ask about arrears, compliance, maintenance or bookings'} maxLength={4000}
           style={{ flex: 1, fontSize: 13, border: `1px solid #D0D5DD`, borderRadius: 8, padding: '10px 12px', fontFamily: 'inherit', color: C.text, minWidth: 0 }} />
         <button type="submit" disabled={busy || !input.trim()} style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: C.blue, border: 'none', borderRadius: 8, padding: '10px 18px', cursor: busy || !input.trim() ? 'default' : 'pointer', opacity: busy || !input.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>Send</button>
       </form>
