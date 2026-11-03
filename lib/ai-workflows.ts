@@ -20,9 +20,11 @@ export const WORKFLOWS: Workflow[] = [
   { agent: 'pm_inspections', label: 'Inspection scheduler', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'inspections' },
   { agent: 'pm_statements', label: 'Landlord statement reminders', module: 'Property management', schedule: 'Daily from the 2nd to the 10th, 07:30', resultKey: 'statements' },
   { agent: 'maint_followup', label: 'Maintenance follow-up', module: 'Property management', schedule: 'Daily, 07:30', resultKey: 'maintFollowups' },
+  { agent: 'maint_predict', label: 'Predictive maintenance', module: 'Property management', schedule: 'Mondays, 07:30', resultKey: 'maintPredictions' },
   { agent: 'weekly_report', label: 'Weekly management report', module: 'Property management', schedule: 'Mondays, 07:30', resultKey: 'weeklyReport' },
+  { agent: 'market_forecast', label: 'Market and rent forecast', module: 'Investment & Portfolio', schedule: '1st of the month, 07:30', resultKey: 'marketForecast' },
   { agent: 'portfolio', label: 'Portfolio review', module: 'Investment & Portfolio', schedule: '1st of the month, 07:30', resultKey: 'portfolio' },
-  { agent: 'ea_viewings', label: 'Viewings assistant', module: 'Estate agency', schedule: 'Daily, 07:30', resultKey: 'viewings' },
+  { agent: 'ea_viewings', label: 'Viewings assistant (also books viewings from the website chat)', module: 'Estate agency', schedule: 'Daily, 07:30, and live from the website chat', resultKey: 'viewings' },
   { agent: 'ea_listings', label: 'Listing writer', module: 'Estate agency', schedule: 'Daily, 07:30', resultKey: 'listings' },
   { agent: 'dev_investors', label: 'Investor updates', module: 'Developments', schedule: '1st of the month, 07:30', resultKey: 'investorUpdates' },
 ]

@@ -156,6 +156,22 @@ const AGENTS = [
     capabilities: ['Find jobs open more than 3 days','Draft a status request to the assigned person','Create a task when nobody is assigned','Wait for your approval before anything is sent'],
   },
   {
+    key: 'maint_predict',
+    module: 'Property management',
+    name: 'AI Predictive Maintenance',
+    icon: ICON,
+    desc: 'Every Monday, looks for properties with repeat repair problems of the same kind in the last 12 months and drafts a note to the landlord recommending a preventive check.',
+    capabilities: ['Spot repeat boiler, leak, electrical, roof, appliance and air conditioning jobs','Draft a preventive-check note to the landlord','Wait for your approval before anything is sent'],
+  },
+  {
+    key: 'market_forecast',
+    module: 'Investment & Portfolio',
+    name: 'AI Market and Rent Forecast',
+    icon: ICON,
+    desc: 'On the 1st of each month, compares your lettings rents with live market rates and drafts a short rent outlook to you, with a suggestion for each property.',
+    capabilities: ['Check live market rents for each letting','Say whether rent is below, in line with or above the market','Email the outlook to you once you approve'],
+  },
+  {
     key: 'weekly_report',
     module: 'Property management',
     name: 'AI Weekly Management Report',
@@ -195,7 +211,7 @@ export default function PropertyManagerAgents() {
   const [style, setStyle] = useState({ tone: '', country_rules: '', signoff: '' })
   const [styleMsg, setStyleMsg] = useState('')
   const [section, setSection] = useState<'Agents'|'Activity log'|'Settings'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,weekly_report:false,portfolio:false,chief:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,maint_predict:false,market_forecast:false,weekly_report:false,portfolio:false,chief:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})

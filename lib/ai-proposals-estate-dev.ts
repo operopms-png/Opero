@@ -23,7 +23,7 @@ export async function proposeViewings() {
     const sign = await companyName(businessId)
     const { data: views } = await db.from('estate_viewings').select('id, property_id, prospect_name, prospect_email, scheduled_at, status')
       .eq('user_id', businessId).gte('scheduled_at', dayStr(-3)).lt('scheduled_at', dayStr(2))
-    for (const v of (views ?? []).filter((x: any) => !/cancel|no.?show/i.test(String(x.status ?? '')))) {
+    for (const v of (views ?? []).filter((x: any) => !/cancel|no.?show|request/i.test(String(x.status ?? '')))) {
       if (!v.prospect_email) { result.noRecipient++; await aiTask(businessId, `Add an email for viewing contact ${v.prospect_name ?? ''}`.trim(), 'A viewing is coming up or has just happened, but the prospect has no email address, so no reminder or follow-up can be drafted.'); continue }
       const { data: prop } = await db.from('estate_properties').select('name, address').eq('id', v.property_id).eq('user_id', businessId).maybeSingle()
       const where = prop?.name || prop?.address || 'the property'

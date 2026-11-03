@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 30
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
-import { CORS_HEADERS, CURRENCY_SYMBOL, settingsByKey, liveListings, systemPrompt, callClaudeChat, saveLead } from '@/lib/website-chat'
+import { CORS_HEADERS, CURRENCY_SYMBOL, settingsByKey, liveListings, systemPrompt, callClaudeChat, saveLead, bookViewing } from '@/lib/website-chat'
 
 // Public endpoint used by the website chat box (public/chat-widget.js).
 // GET  ?key=  -> assistant name for the widget header
@@ -99,6 +99,11 @@ export async function POST(req: NextRequest) {
         } else if (t.name === 'save_contact') {
           await saveLead(s, chat.id, t.input ?? {})
           results.push({ type: 'tool_result', tool_use_id: t.id, content: 'Saved. The team has been notified.' })
+        } else if (t.name === 'book_viewing') {
+          const r = await bookViewing(s, chat.id, listings, t.input ?? {})
+          results.push(r.ok
+            ? { type: 'tool_result', tool_use_id: t.id, content: 'Viewing request recorded. Tell the visitor the team will confirm the time by email shortly.' }
+            : { type: 'tool_result', tool_use_id: t.id, content: r.error ?? 'Could not book.', is_error: true })
         } else {
           results.push({ type: 'tool_result', tool_use_id: t.id, content: 'Unknown tool', is_error: true })
         }

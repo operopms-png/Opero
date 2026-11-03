@@ -89,7 +89,14 @@ export async function executeAiAction(action: { user_id: string; action_type: st
   }
 
   // Generic email to a named recipient (compliance, renewals, arrears and other agents).
-  if (action.action_type === 'email_out') return emailOut(p.to, p.subject || 'Message from your property manager', body)
+  if (action.action_type === 'email_out') {
+    const r: any = await emailOut(p.to, p.subject || 'Message from your property manager', body)
+    // A chat-booked viewing becomes Scheduled once its confirmation email has gone out.
+    if (r?.success && p.confirm_viewing_id) {
+      await getServiceClient().from('estate_viewings').update({ status: 'Scheduled' }).eq('id', p.confirm_viewing_id).eq('user_id', action.user_id).ilike('status', 'requested')
+    }
+    return r
+  }
   if (action.action_type === 'owner_report') return emailOut(p.to, p.subject || 'Your monthly property report', body)
   if (action.action_type === 'cleaning_instruction') return emailOut(p.to, p.subject || 'Cleaning instructions', body)
   if (action.action_type === 'maintenance_instruction') return emailOut(p.to, p.subject || 'Maintenance request', body)

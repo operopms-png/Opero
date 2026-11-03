@@ -114,6 +114,7 @@ RULES:
 - Only state facts from the sections above. If you don't know something (prices not listed, legal, tax, specific contract terms, exact availability beyond the booked dates shown), say the team will confirm and offer to take their details. Never invent numbers, guarantees, discounts or promises.
 - When a visitor asks what's available, or asks about specific properties, call show_properties with the matching listing ids (so they see cards), and add a short sentence. For furnished apartments, a date range is free only if it does not overlap any booked_dates.
 - When someone shows real interest (viewing, booking, valuation, listing their property, investing, a job, a callback) call request_contact so they get a quick form, unless you already have their details.
+- To book a viewing of a long-let property ("type: long-let property"), collect the visitor's name, email and a day and time that suits them, then call book_viewing. Only book once you have all three. Say the team will confirm the time by email; never promise it is confirmed. Furnished apartments are booked on the website, not viewed.
 - If the visitor types their name, email or phone in the chat, call save_contact with what they gave.
 - Keep replies short and friendly: 1–4 sentences, plain text, British English. No markdown headings or tables.
 - Refer to furnished homes as "furnished apartments" with flexible 6–12 month stays for corporate and relocation guests; never call them "short-term rentals".
@@ -130,6 +131,20 @@ export const TOOLS = [
     name: 'request_contact',
     description: 'Show the visitor a short form to leave their name, email and phone so the team can follow up.',
     input_schema: { type: 'object', properties: { reason: { type: 'string', description: 'What the team will follow up about, e.g. "Viewing at Trinity Heights"' } }, required: ['reason'] },
+  },
+  {
+    name: 'book_viewing',
+    description: 'Request a viewing of a long-let property. Needs the visitor name, email and preferred day/time. The team confirms by email.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        listing_id: { type: 'string', description: 'id of the long-let property from LIVE LISTINGS' },
+        name: { type: 'string' }, email: { type: 'string' }, phone: { type: 'string' },
+        preferred_time: { type: 'string', description: 'The visitor\'s wording, e.g. "Thursday after 5pm"' },
+        scheduled_at: { type: 'string', description: 'ISO 8601 date-time if they gave an exact time, otherwise leave out' },
+      },
+      required: ['listing_id', 'name', 'email', 'preferred_time'],
+    },
   },
   {
     name: 'save_contact',
@@ -254,4 +269,45 @@ export async function saveLead(s: ChatSettings, chatId: string, input: { name?: 
       merged.email ?? undefined,
     )
   }
+}
+
+// Chat-booked viewing: records the request, then queues a confirmation email for a person to approve.
+// Approving it sends the email and marks the viewing Scheduled (see executeAiAction).
+export async function bookViewing(s: ChatSettings, chatId: string, listings: Listing[], input: { listing_id?: string; name?: string; email?: string; phone?: string; preferred_time?: string; scheduled_at?: string }) {
+  const home = listings.find(l => l.id === input.listing_id && l.kind === 'long_let')
+  if (!home) return { ok: false, error: 'That property cannot be viewed through the chat.' }
+  const name = (input.name ?? '').toString().trim().slice(0, 120)
+  const email = (input.email ?? '').toString().trim().toLowerCase().slice(0, 200)
+  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'A name and a valid email are needed.' }
+  const phone = (input.phone ?? '').toString().trim().slice(0, 40) || null
+  const when = (input.preferred_time ?? '').toString().trim().slice(0, 200)
+  const at = input.scheduled_at ? new Date(input.scheduled_at) : null
+  const scheduledAt = at && !isNaN(at.getTime()) && at.getTime() > Date.now() ? at.toISOString() : null
+
+  const since = new Date(Date.now() - 864e5).toISOString()
+  const { count } = await serviceClient.from('estate_viewings').select('id', { count: 'exact', head: true }).eq('user_id', s.business_id).ilike('prospect_email', email).gte('created_at', since)
+  if ((count ?? 0) >= 6) return { ok: false, error: 'Too many requests from this email today.' }
+
+  const { data: v, error } = await serviceClient.from('estate_viewings').insert({
+    user_id: s.business_id, property_id: home.id, prospect_name: name, prospect_email: email, prospect_phone: phone,
+    scheduled_at: scheduledAt, status: 'Requested', source: 'Website chat',
+    notes: when ? `Prefers: ${when}` : null,
+  }).select('id').single()
+  if (error || !v) return { ok: false, error: 'Could not save the request.' }
+
+  // Make sure the visitor is on the chat record and in the CRM like any other lead.
+  await saveLead(s, chatId, { name, email, phone: phone ?? undefined, interest: 'rent_a_home', summary: `Viewing request: ${home.name}${when ? ` (${when})` : ''}` })
+
+  const company = s.company_name || 'our team'
+  const first = name.split(/\s+/)[0]
+  const body = `Dear ${first},\n\nThank you for asking to view ${home.name}${home.area ? ` (${home.area})` : ''}.${when ? ` You said ${when} would suit you.` : ''} We are pleased to confirm your viewing request and will be in touch to agree the exact time.\n\nIf you need to change anything, just reply to this email.\n\nKind regards,\n${company}`
+  const { queueAiAction } = await import('./ai-approvals')
+  await queueAiAction({
+    userId: s.business_id, agentKey: 'ea_viewings', actionType: 'email_out',
+    title: `Viewing booked in chat: ${name} (${home.name})`, propertyName: home.name, draftBody: body,
+    payload: { to: email, subject: `Your viewing of ${home.name}`, confirm_viewing_id: v.id },
+    context: { summary: `Website chat viewing request${when ? `, prefers ${when}` : ''} · approving emails ${name} and marks the viewing Scheduled` },
+    dedupe: { key: 'confirm_viewing_id', value: v.id },
+  })
+  return { ok: true }
 }
