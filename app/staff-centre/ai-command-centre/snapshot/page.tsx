@@ -116,7 +116,7 @@ export default function AICommandCentre() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 18px', fontSize: 11, color: MUTED }}>
         <span style={{ width: 7, height: 7, borderRadius: 999, background: online ? GREEN : '#667085' }} />
-        AI Command Centre {online ? 'Online' : 'Offline'}
+        Novourq Cloud AI {online ? 'Online' : 'Offline'}
         <span style={{ marginLeft: 'auto' }}>{dt}</span>
       </div>
 
@@ -126,7 +126,7 @@ export default function AICommandCentre() {
         <div style={{ padding: 16, display: 'grid', gap: 12, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 700 }}>AI Command Centre</div>
+              <div style={{ fontSize: 22, fontWeight: 700 }}>Novourq Cloud AI</div>
               <div style={{ color: MUTED, fontSize: 12 }}>Your AI-powered real estate operations hub. Get insights, take action and stay in control.</div>
             </div>
             <div style={{ color: MUTED, fontSize: 12, maxWidth: 260 }}>Your AI agents are working behind the scenes to keep your business moving forward.</div>

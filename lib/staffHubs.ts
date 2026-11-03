@@ -14,8 +14,8 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
   ] },
   { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'oversight' }] },
-  { label: 'AI Command Centre', icon: 'sparkles', tabs: [
-    { href: '/staff-centre/ai-command-centre', label: 'AI Command Centre', scTab: 'oversight', hidden: true },
+  { label: 'Novourq Cloud AI', icon: 'sparkles', tabs: [
+    { href: '/staff-centre/ai-command-centre', label: 'Novourq Cloud AI', scTab: 'oversight', hidden: true },
     { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight', hidden: true },
     { href: '/staff-centre/ai-approvals', label: 'AI Approvals', scTab: 'oversight', hidden: true },
     { href: '/staff-centre/ai-command-centre/results', label: 'AI Results', scTab: 'oversight', hidden: true },
