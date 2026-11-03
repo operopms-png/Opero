@@ -310,6 +310,8 @@ export default function Page() {
   const [rentForm, setRentForm] = useState({tenancy:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
   const [maintenance, setMaintenance] = useState<any[]>([])
   const [showAddMaint, setShowAddMaint] = useState(false)
+  const [complianceEditId, setComplianceEditId] = useState<string|null>(null)
+  const [rentEditId, setRentEditId] = useState<string|null>(null)
   const [maintEditId, setMaintEditId] = useState<string|null>(null)
   const [cleanEditId, setCleanEditId] = useState<string|null>(null)
   const [vacEditId, setVacEditId] = useState<string|null>(null)
@@ -800,11 +802,11 @@ export default function Page() {
             {section==='Owner Reports'&&<button style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Export Report</button>}
             {section==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Expense</button>}
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
-            {section==='Rent Collection'&&<button onClick={()=>setShowAddRent(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
+            {section==='Rent Collection'&&<button onClick={()=>{setRentEditId(null);setRentForm({tenancy:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'});setShowAddRent(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add schedule</button>}
             {section==='Loans & Mortgages'&&<button onClick={()=>{setEditItem(null);setMortgageForm({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'});setShowAddMortgage(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Loan</button>}
             {section==='Tenancies'&&<button onClick={()=>{setEditItem(null);setShowAddTenancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenancy</button>}
             {section==='Landlords'&&<button onClick={()=>{setEditItem(null);setLandlordForm({name:'',email:'',phone:'',address:'',bank_name:'',account_name:'',account_number:'',sort_code:'',notes:'',id_type:'',id_url:'',iban:'',swift:''});setShowAddLandlord(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add landlord</button>}
-            {section==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
+            {section==='Compliance'&&<button onClick={()=>{setComplianceEditId(null);setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add record</button>}
             {section==='Buildings'&&<button onClick={()=>{setEditItem(null);setShowAddBuilding(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add building</button>}
             {section==='Units'&&<button onClick={()=>{setEditItem(null);setShowAddUnit(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add unit</button>}
             {section==='Viewings'&&<button onClick={()=>{setEditItem(null);setShowAddViewing(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add viewing</button>}
@@ -1080,7 +1082,7 @@ export default function Page() {
             </div>
 
             {showAddCompliance&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
-              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
+              <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{complianceEditId?'Edit':'Add'} {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Scope</label>
                   <select value={complianceForm.scope} onChange={e=>setComplianceForm({...complianceForm,scope:e.target.value,property_id:'',type:(e.target.value==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0]})} style={inputStyle}>
@@ -1100,11 +1102,12 @@ export default function Page() {
                   if(!complianceForm.type)return
                   if(complianceForm.scope==='property'&&!complianceForm.property_id)return
                   const payload = complianceForm.scope==='business' ? {...complianceForm,property_id:null} : complianceForm
-                  await saveRecord('estate_compliance',payload)
+                  await saveRecord('estate_compliance',payload,complianceEditId||undefined)
+                  setComplianceEditId(null)
                   setComplianceForm({scope:complianceScope,property_id:'',type:(complianceScope==='property'?COMPLIANCE_TYPES:BUSINESS_COMPLIANCE_TYPES)[0],reference:'',issued_date:'',expiry_date:'',notes:''})
                   setShowAddCompliance(false)
-                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
-                <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{complianceEditId?'Save changes':'Add record'}</button>
+                <button onClick={()=>{setShowAddCompliance(false);setComplianceEditId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
 
@@ -1137,7 +1140,7 @@ export default function Page() {
                       <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
                       <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:complianceStatusColor[status]+'18',color:complianceStatusColor[status],textAlign:'center' as const}}>{status}</span>
-                      <button onClick={()=>delRecord('estate_compliance',c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                      <button onClick={()=>{setComplianceForm({scope:c.scope??'property',property_id:c.property_id??'',type:c.type??'',reference:c.reference??'',issued_date:c.issued_date??'',expiry_date:c.expiry_date??'',notes:c.notes??''});setComplianceEditId(c.id);setShowAddCompliance(true)}} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #2F6DB5',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#2F6DB5',marginRight:6}}>Edit</button><button onClick={()=>delRecord('estate_compliance',c.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                     </div>
                   )})}
                 </div>
@@ -1793,8 +1796,8 @@ export default function Page() {
                 <div><label style={labelStyle}>Method</label><select value={rentForm.method} onChange={e=>setRentForm({...rentForm,method:e.target.value})} style={inputStyle}>{['Bank Transfer','Direct Debit','Standing Order','Cash','Cheque'].map(m=><option key={m}>{m}</option>)}</select></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!rentForm.tenancy||!rentForm.amount)return;const today=new Date();const due=new Date(today.getFullYear(),today.getMonth(),parseInt(rentForm.dueDay));const selectedTenancy=tenancies.find((t:any)=>t.id===rentForm.tenancy);saveRecord('estate_rent_schedules',{tenancy_id:rentForm.tenancy,tenant_id:selectedTenancy?.tenant_id??null,amount:rentForm.amount,due_day:rentForm.dueDay,frequency:rentForm.frequency,method:rentForm.method,status:due<today?'Overdue':'Pending'});setRentForm({tenancy:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'});setShowAddRent(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add schedule</button>
-                <button onClick={()=>setShowAddRent(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
+                <button onClick={()=>{if(!rentForm.tenancy||!rentForm.amount)return;const today=new Date();const due=new Date(today.getFullYear(),today.getMonth(),parseInt(rentForm.dueDay));const selectedTenancy=tenancies.find((t:any)=>t.id===rentForm.tenancy);saveRecord('estate_rent_schedules',{tenancy_id:rentForm.tenancy,tenant_id:selectedTenancy?.tenant_id??null,amount:rentForm.amount,due_day:rentForm.dueDay,frequency:rentForm.frequency,method:rentForm.method,...(rentEditId?{}:{status:due<today?'Overdue':'Pending'})},rentEditId||undefined);setRentEditId(null);setRentForm({tenancy:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'});setShowAddRent(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{rentEditId?'Save changes':'Add schedule'}</button>
+                <button onClick={()=>{setShowAddRent(false);setRentEditId(null)}} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
@@ -1816,7 +1819,7 @@ export default function Page() {
                     <option value="Overdue">Overdue</option>
                   </select>
                   <div style={{display:'flex',gap:4,justifyContent:'flex-end'}}>
-                    <button onClick={()=>delRecord('estate_rent_schedules',r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                    <button onClick={()=>{setRentForm({tenancy:r.tenancy_id??'',amount:r.amount!=null?String(r.amount):'',dueDay:r.due_day!=null?String(r.due_day):'1',frequency:r.frequency??'Monthly',method:r.method??'Bank Transfer'});setRentEditId(r.id);setShowAddRent(true)}} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #2F6DB5',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#2F6DB5',marginRight:6}}>Edit</button><button onClick={()=>delRecord('estate_rent_schedules',r.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
                 )
