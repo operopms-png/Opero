@@ -71,6 +71,7 @@ export default function VoiceDictation() {
   const silent = useRef(0)
   const clock = useRef<any>(null)
   const callStream = useRef<MediaStream | null>(null)
+  const callId = useRef('')
   const wake = useRef<any>(null)
   const END = /^\s*(?:no,? )?(?:thanks|thank you|cheers|that'?s all|that is all|stop|cancel|no thanks|nothing else|goodbye|bye)\b/i
 
@@ -97,7 +98,7 @@ export default function VoiceDictation() {
       if (blob && blob.size > 800) fd.append('audio', blob, 'voice.webm')
       fd.append('text', text)
       if (asCommand) fd.append('mode', 'command')
-      if (call.current) { fd.append('call', '1'); fd.append('history', JSON.stringify(hist.current)) }
+      if (call.current) { fd.append('call', '1'); fd.append('call_id', callId.current); fd.append('history', JSON.stringify(hist.current)) }
       fd.append('hint', label(field.current) + ' ' + location.pathname)
       const res = await fetch('/api/voice', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token ?? ''}` }, body: fd })
       const d = await res.json().catch(() => ({}))
@@ -200,6 +201,7 @@ export default function VoiceDictation() {
     unlockSpeech(); stopSpeech()
     call.current = true; convo.current = true; cancelled.current = false
     hist.current = []; silent.current = 0
+    callId.current = (crypto as any).randomUUID ? crypto.randomUUID() : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, ch => (Number(ch) ^ (Math.random() * 16) >> (Number(ch) / 4)).toString(16))
     setCallActive(true); setSecs(0); setLastUser(''); setLastAi(''); setNote(null)
     clock.current = setInterval(() => setSecs(n => n + 1), 1000)
     // Ask for the mic inside the tap (phones require it) and keep the screen awake for the call.

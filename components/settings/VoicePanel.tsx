@@ -24,8 +24,12 @@ export default function VoicePanel() {
   const [term, setTerm] = useState('')
   const [replacement, setReplacement] = useState('')
   const [err, setErr] = useState('')
+  const [calls, setCalls] = useState<{ id: string; started_at: string; seconds: number; tasks: number; turns: { role: string; text: string }[] }[]>([])
+  const [open, setOpen] = useState<string | null>(null)
   const load = () => call('GET').then(d => { setEntries(d.entries); setWords(d.words); setSpeechKey(d.speechKey) }).catch(() => {})
-  useEffect(() => { load() }, [])
+  const loadCalls = () => call('GET', '/api/voice?calls=1').then(d => setCalls(d.calls)).catch(() => {})
+  useEffect(() => { load(); loadCalls() }, [])
+  async function delCall(id: string) { await call('DELETE', '/api/voice?call=' + id).catch(() => {}); loadCalls() }
   async function add() {
     setErr('')
     try { await call('PUT', '/api/voice', { term, replacement }); setTerm(''); setReplacement(''); load() } catch (e: any) { setErr(e.message) }
@@ -60,6 +64,30 @@ export default function VoicePanel() {
             <button onClick={() => remove(e.id)} style={{ background: 'none', border: 0, color: '#B42318', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Remove</button>
           </div>
         ))}
+      </div>
+      <div style={card}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Call history</div>
+        <div style={{ fontSize: 13, color: '#667085', marginBottom: 8 }}>Your calls with Novourq Cloud AI and what was said. Only you can see these. Delete any call you no longer need.</div>
+        {calls.length === 0 && <div style={{ fontSize: 13, color: '#667085', paddingTop: 6 }}>No calls yet. Tap Novourq Voice to make one.</div>}
+        {calls.map(k => {
+          const mins = Math.floor(k.seconds / 60), secs = k.seconds % 60
+          return (
+            <div key={k.id} style={{ borderTop: '1px solid #E4E7EC', padding: '10px 0', fontSize: 14 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => setOpen(open === k.id ? null : k.id)} aria-expanded={open === k.id} style={{ background: 'none', border: 0, padding: 0, font: 'inherit', fontWeight: 600, color: '#1D4E89', cursor: 'pointer', textAlign: 'left' }}>
+                  {new Date(k.started_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </button>
+                <span style={{ color: '#667085', fontSize: 13 }}>{mins}m {secs}s · {Math.ceil(k.turns.length / 2)} exchanges{k.tasks ? ` · ${k.tasks} task${k.tasks === 1 ? '' : 's'} added` : ''}</span>
+                <button onClick={() => delCall(k.id)} style={{ marginLeft: 'auto', background: 'none', border: 0, color: '#B42318', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Delete</button>
+              </div>
+              {open === k.id && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, lineHeight: 1.5 }}>
+                  {k.turns.map((t, i) => <div key={i}><b style={{ color: t.role === 'user' ? '#323338' : '#2F6DB5' }}>{t.role === 'user' ? 'You' : 'Novourq'}:</b> {t.text}</div>)}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
