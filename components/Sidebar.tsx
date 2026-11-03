@@ -12,7 +12,7 @@ import { STAFF_HUBS, NON_HUMAN_HUBS, HUMAN_HUB_HREF, humanHubTabs, tabMatches } 
 
 const NAV_GROUPS = [
   {
-    label: 'Staff Centre',
+    label: 'NOVOURQ Ecosystem',
     module: 'staffcentre',
     staffCentre: true,
     items: [
