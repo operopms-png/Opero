@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import HubTabs from '@/components/HubTabs'
 import PageBanner from '@/components/PageBanner'
 import Sidebar from '@/components/Sidebar'
+import VoiceDictation from '@/components/VoiceDictation'
 import { supabase } from '@/lib/supabase'
 import { resolveAccess, ROLE_SETTINGS, ROLE_MODULES, getScTabs } from '@/lib/useRole'
 import { SidebarCollapseProvider, useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
@@ -156,6 +157,7 @@ function LayoutBody({ children }: { children: React.ReactNode }) {
         <PageBanner />
         {children}
       </main>
+      <VoiceDictation />
     </>
   )
 }

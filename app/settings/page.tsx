@@ -11,6 +11,7 @@ import SubmissionsPanel from '@/components/settings/SubmissionsPanel'
 import GuidePanel from '@/components/settings/GuidePanel'
 import PrivacyPanel from '@/components/settings/PrivacyPanel'
 import PhoneAssistantPanel from '@/components/settings/PhoneAssistantPanel'
+import VoicePanel from '@/components/settings/VoicePanel'
 import AiAuthorityPanel from '@/components/settings/AiAuthorityPanel'
 const ACCENT = '#89CFF0'
 const NAV = [
@@ -21,6 +22,7 @@ const NAV = [
     {s:'System Messages',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>},
     {s:'Submissions',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>},
     {s:'AI Authority',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>},
+    {s:'Voice',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>},
     {s:'Phone Assistant',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>},
     {s:'Privacy & Data',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>},
     {s:'Guide',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>},
@@ -509,6 +511,7 @@ function SettingsInner() {
           {section==='Guide'&&<GuidePanel />}
           {section==='AI Authority'&&<AiAuthorityPanel />}
           {section==='Phone Assistant'&&<PhoneAssistantPanel />}
+          {section==='Voice'&&<VoicePanel />}
           {section==='Privacy & Data'&&<PrivacyPanel />}
 
           {section==='System Messages'&&(<div>
