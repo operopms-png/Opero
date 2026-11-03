@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Stat, Loading, Empty } from '../../../../components/crm/Page'
 import { staffApi, money, MODULE_LABEL, MODULE_COL } from '../../../../lib/staff-api'
 
-const STAGE: Record<string, string> = { before: 'Friendly reminder', late1: 'Missed payment', late7: 'Final notice' }
+const STAGE: Record<string, string> = { before7: 'Early reminder', before: 'Friendly reminder', due: 'Due today', late1: 'Missed payment', late3: 'Second reminder', late7: 'Final notice', late14: 'Overdue two weeks', late21: 'Overdue three weeks' }
 const fmt = (iso?: string | null) => iso ? new Date(iso.length === 10 ? iso + 'T12:00:00Z' : iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'
 
 export default function Reminders() {
@@ -56,8 +56,8 @@ export default function Reminders() {
         {!d ? (!err && <Loading />) : <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 18 }}>
             <Stat label="Awaiting approval" value={pending.length} sub={d.canApprove ? 'You can approve these' : 'An admin or co-founder approves these'} highlight />
-            <Stat label="Missed payments" value={pending.filter(r => r.stage !== 'before').length} sub="Late rent drafts" />
-            <Stat label="Due soon" value={pending.filter(r => r.stage === 'before').length} sub="Friendly reminders" />
+            <Stat label="Missed payments" value={pending.filter(r => r.stage.startsWith('late')).length} sub="Late rent drafts" />
+            <Stat label="Due soon" value={pending.filter(r => !r.stage.startsWith('late')).length} sub="Friendly reminders" />
           </div>
           {pending.length === 0 ? <div style={{ background: '#fff', border: '1px solid ' + C.row, borderRadius: 8, padding: 18, marginBottom: 18 }}><Empty>No drafts waiting. Use Generate drafts to check for rent that is due soon or late.</Empty></div> : (
             <div style={{ display: 'grid', gap: 12, marginBottom: 22 }}>

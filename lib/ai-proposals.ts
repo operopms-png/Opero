@@ -10,7 +10,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
-import { generateRentReminders } from './rent-reminders'
+import { generateRentReminders, sendPendingReminders } from './rent-reminders'
 import { runEstimate } from './earnings-estimate'
 import { sendPush } from './push'
 import { proposePortfolioReview } from './ai-portfolio'
@@ -205,6 +205,8 @@ export async function proposeRentReminders() {
     const r = await generateRentReminders(businessId, 'AI (daily)')
     result.created += r.created; result.skippedNoPhone += r.skippedNoPhone
     if (r.error) result.errors.push(`rent ${businessId}: ${r.error}`)
+    const sent = await sendPendingReminders(businessId).catch(e => ({ sent: 0, skipped: 0, errors: [String(e)] }))
+    result.errors.push(...sent.errors)
   }
   return result
 }
