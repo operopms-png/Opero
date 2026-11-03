@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Also drop a matching Deal into the Enquiry stage so Pipeline reflects new leads automatically
-    const dealLabel = service ? `${name ?? 'Unknown'} — Let with us: ${service}` : issue ? `${name ?? 'Unknown'} — ${issue}` : `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`
+    const dealLabel = service ? `${name ?? 'Unknown'} — ${service}` : issue ? `${name ?? 'Unknown'} — ${issue}` : `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`
     const { error: dealError } = await supabase.from('crm_deals').insert([{
       user_id: ownerId,
       name: dealLabel,
