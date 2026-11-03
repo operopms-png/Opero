@@ -55,6 +55,12 @@ export default function GrokPanel() {
     u.onerror = () => setSpeaking(false)
     synth.speak(u)
   }
+  // iPhones only allow speech that starts from a tap, so each tap primes the speaker first.
+  function unlockSpeech() {
+    const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
+    if (!synth) return
+    try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); synth.getVoices() } catch {}
+  }
   function stopSpeaking() { window.speechSynthesis?.cancel(); setSpeaking(false) }
 
   function toggleMic() {
@@ -63,6 +69,7 @@ export default function GrokPanel() {
     const SR = w.SpeechRecognition || w.webkitSpeechRecognition
     if (!SR) return
     stopSpeaking()
+    unlockSpeech()
     const rec = new SR()
     rec.lang = 'en-GB'
     rec.interimResults = true
@@ -136,7 +143,7 @@ export default function GrokPanel() {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '12px 18px', borderBottom: '1px solid #F2F4F7' }}>
         {CHIPS.map(c => (
-          <button key={c} onClick={() => send(c)} disabled={busy} style={{ fontSize: 12, color: C.brown, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 20, padding: '5px 11px', cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit' }}>{c}</button>
+          <button key={c} onClick={() => { unlockSpeech(); send(c) }} disabled={busy} style={{ fontSize: 12, color: C.brown, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 20, padding: '5px 11px', cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit' }}>{c}</button>
         ))}
       </div>
 
@@ -147,12 +154,17 @@ export default function GrokPanel() {
             ? { alignSelf: 'flex-end', background: C.blue, color: '#fff', padding: '9px 13px', borderRadius: '12px 12px 2px 12px', maxWidth: '80%', whiteSpace: 'pre-wrap' }
             : { alignSelf: 'flex-start', background: C.bg, border: `1px solid ${C.line}`, color: C.text, padding: '10px 13px', borderRadius: '12px 12px 12px 2px', maxWidth: '90%', whiteSpace: 'pre-wrap' }}>
             {m.text}
+            {m.role === 'bot' && (
+              <div style={{ marginTop: 8 }}>
+                <button type="button" onClick={() => speak(m.text)} style={{ fontSize: 12, fontWeight: 600, color: C.brown, background: '#fff', border: '1px solid #C9DEF3', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Play reply</button>
+              </div>
+            )}
           </div>
         ))}
         {busy && <div style={{ color: C.muted, fontSize: 12 }}>Working on it…</div>}
       </div>
 
-      <form onSubmit={e => { e.preventDefault(); send(input) }} style={{ display: 'flex', gap: 10, padding: '14px 18px', borderTop: `1px solid ${C.line}` }}>
+      <form onSubmit={e => { e.preventDefault(); unlockSpeech(); send(input) }} style={{ display: 'flex', gap: 10, padding: '14px 18px', borderTop: `1px solid ${C.line}` }}>
         {micOk && (
           <button type="button" onClick={toggleMic} disabled={busy} aria-label={listening ? 'Stop listening' : 'Speak your question'} title={listening ? 'Listening. Tap to stop' : 'Speak your question'}
             style={{ width: 42, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: listening ? '#B42318' : C.soft, color: listening ? '#fff' : C.brown, border: `1px solid ${listening ? '#B42318' : '#C9DEF3'}`, borderRadius: 8, cursor: busy ? 'default' : 'pointer' }}>
