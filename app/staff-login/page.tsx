@@ -68,8 +68,8 @@ function StaffLoginForm() {
           <div style={{ width: 96, height: 96, borderRadius: 14, overflow: 'hidden' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/sangsters-logo.jpg"
-              alt="NOVOURQ Group Development"
+              src="/logo-192.png"
+              alt="NOVOURQ"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           </div>
@@ -87,7 +87,7 @@ function StaffLoginForm() {
             marginBottom: 28,
           }}
         >
-          Sangsters Group Developments Ltd
+          Sign in to your company's staff portal
         </div>
 
         <div

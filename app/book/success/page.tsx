@@ -32,9 +32,7 @@ function SuccessContent() {
           ))}
         </div>
       )}
-      <a href="https://www.sangstersgroup.com" style={{display:'block',padding:'12px',background:'#323338',color:'#fff',borderRadius:10,fontSize:14,fontWeight:700,textDecoration:'none'}}>
-        Back to {BRAND_NAME}
-      </a>
+      <div style={{padding:'12px',color:'#6b7280',fontSize:14}}>You can close this window. A confirmation is on its way to your email.</div>
     </div>
   )
 }

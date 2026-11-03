@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient, requireUser } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
-import { BRAND_NAME, SITE_URL, CONTACT_EMAIL } from '@/lib/brand'
+import { BRAND_NAME, SITE_URL } from '@/lib/brand'
+import { replyToFor } from '@/lib/branded-email'
+import { companyName } from '@/lib/ai-proposal-utils'
 
 // Emails a landlord the summary of a statement that staff just saved in
 // landlord_statements, with a link to the full copy in their portal.
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
     </div>
   </div>`
 
-  const res = await sendEmail(landlord.email, `${BRAND_NAME}: your ${st.period_label} statement`, html, CONTACT_EMAIL)
+  const res = await sendEmail(landlord.email, `${await companyName(st.user_id)}: your ${st.period_label} statement`, html, await replyToFor(st.user_id))
   const emailed = !!(res as any)?.success
   if (emailed) await serviceClient.from('landlord_statements').update({ emailed_to: landlord.email }).eq('id', id)
   return NextResponse.json({ emailed, skipped: !!(res as any)?.skipped })

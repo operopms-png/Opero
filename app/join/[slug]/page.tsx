@@ -123,10 +123,10 @@ export default function JoinPage() {
         .join-card{margin-top:-150px}
         @media(max-width:860px){.join-grid{grid-template-columns:1fr}.join-card{margin-top:0;order:-1}.join-hero h1{font-size:32px !important}.join-hero{height:auto !important;padding-bottom:36px !important}}`}</style>
       <nav style={{ height: 68, background: '#fff', borderBottom: '1px solid #ECE8DF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px' }}>
-        <a href="https://sangstersgroup.com" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src="/logo-192.png" alt={BRAND_NAME} style={{ width: 36, height: 36, borderRadius: 8 }} />
-          <span className="jh" style={{ fontWeight: 700, fontSize: 20, color: '#5A4320' }}>{BRAND_NAME}</span>
-        </a>
+          <span className="jh" style={{ fontWeight: 700, fontSize: 20, color: '#5A4320' }}>{link?.company || BRAND_NAME}</span>
+        </div>
         <a href="/login" style={{ fontSize: 14, fontWeight: 600, color: INK, textDecoration: 'none' }}>Partner sign in</a>
       </nav>
 
@@ -253,10 +253,8 @@ export default function JoinPage() {
 
           <footer style={{ borderTop: '1px solid #ECE8DF', background: '#FBFAF7' }}>
             <div style={{ maxWidth: 1120, margin: '0 auto', padding: '24px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontSize: 13, color: '#55524B' }}>
-              <span><b style={{ color: INK }}>NOVOURQ Group</b> · Company No. 16171490</span>
-              <span>Tallis House, 2 Tallis St, London EC4Y 0AB</span>
-              <span>Shop 7, 45 Main Street, Porus, Manchester, Jamaica</span>
-              <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#89CFF0', textDecoration: 'none', fontWeight: 600 }}>contact.us@sangstersgroup.com</a>
+              {link?.company && <span><b style={{ color: INK }}>{link.company}</b></span>}
+              {String(link?.contact_lines ?? '').split('\n').map((l: string) => l.trim()).filter(Boolean).map((l: string) => <span key={l}>{l}</span>)}
             </div>
           </footer>
         </>

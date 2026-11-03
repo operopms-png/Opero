@@ -5,6 +5,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { EMAIL_DOMAIN, SITE_URL } from './brand'
 import { companyName } from './ai-proposal-utils'
+import { alertEmail } from './crm-lead'
 
 const SITE = SITE_URL
 const esc = (t: string) => t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
@@ -22,4 +23,11 @@ export async function brandedEmail(businessId: string, body: string) {
   ${contact.length ? `<div style="padding:14px 24px;font-size:12px;line-height:1.6;color:#667085;background:#f7f9fb;border-top:1px solid #e4e7ec">${contact.map(esc).join('<br>')}</div>` : ''}
   </div></div>`
   return { html, replyTo: (s?.reply_to as string | null) || undefined, from: `${company.replace(/[<>"]/g, '')} <notifications@${EMAIL_DOMAIN}>` }
+}
+
+// Where replies to a business's emails should go: its own reply-to, else its alert address, else the owner's login email.
+export async function replyToFor(businessId: string): Promise<string | undefined> {
+  const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const { data } = await db.from('invoice_settings').select('reply_to').eq('business_id', businessId).maybeSingle()
+  return (data?.reply_to as string | undefined)?.trim() || (await alertEmail(businessId)) || undefined
 }

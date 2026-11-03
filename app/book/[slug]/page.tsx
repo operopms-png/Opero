@@ -158,10 +158,10 @@ export default function BookingPage() {
     <div style={{minHeight:'100vh',background:'#f8f9fc',fontFamily:"'Inter',system-ui",WebkitFontSmoothing:'antialiased'}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{box-sizing:border-box}input,button{font-family:inherit}`}</style>
       <nav style={{background:'#fff',borderBottom:'1px solid #e4e6ef',height:60,display:'flex',alignItems:'center',padding:'0 24px',position:'sticky',top:0,zIndex:10}}>
-        <a href="https://www.sangstersgroup.com" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
           <img src="/logo.PNG" alt={BRAND_NAME} style={{width:26,height:26,objectFit:'contain'}}/>
           <span style={{fontWeight:700,fontSize:15,color:'#323338'}}>{BRAND_NAME}</span>
-        </a>
+        </div>
         <div style={{marginLeft:'auto',fontSize:13,color:'#9ca3af'}}>🔒 Secure booking</div>
       </nav>
 
