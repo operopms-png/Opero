@@ -39,10 +39,10 @@ export default function SubmissionsPanel() {
       <h2 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Submissions</h2>
       <div style={{ fontSize: 13, color: '#667085', marginBottom: 20 }}>Send us an issue, a review or an idea. Company updates from us are under System Messages.</div>
       <div style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 22, marginBottom: 22 }}>
-        <div role="group" aria-label="What are you sending" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+        <div role="group" aria-label="What are you sending" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 8, marginBottom: 16 }}>
           {KINDS.map(x => (
             <button key={x.k} onClick={() => { setKind(x.k); setErr(''); setMsg('') }} aria-pressed={kind === x.k}
-              style={{ padding: '8px 14px', borderRadius: 20, border: '1px solid ' + (kind === x.k ? '#2F6DB5' : '#D0D5DD'), background: kind === x.k ? '#2F6DB5' : '#fff', color: kind === x.k ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{x.label}</button>
+              style={{ padding: '10px 14px', borderRadius: 20, textAlign: 'center', border: '1px solid ' + (kind === x.k ? '#2F6DB5' : '#D0D5DD'), background: kind === x.k ? '#2F6DB5' : '#fff', color: kind === x.k ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{x.label}</button>
           ))}
         </div>
         <div style={{ fontSize: 13, color: '#667085', marginBottom: 14 }}>{cur.hint}</div>

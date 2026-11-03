@@ -186,16 +186,31 @@ function SettingsInner() {
   if(loading) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
-      <div style={{width:210,background:'#fff',borderRight:'1px solid #F2F4F7',display:'flex',flexDirection:'column',paddingTop:16,flexShrink:0,minHeight:'100vh'}}>
-        <div style={{padding:'0 16px 14px',borderBottom:'1px solid #F2F4F7'}}>
+    <div className="set-wrap" style={{minHeight:'100vh',background:'#F7F8FA',fontFamily:"'Inter',sans-serif",display:'flex'}}>
+      <style>{`
+        @media (max-width: 760px) {
+          .set-wrap { flex-direction: column !important; }
+          .set-side { width: 100% !important; min-height: 0 !important; border-right: 0 !important; border-bottom: 1px solid #E4E7EC !important; padding-top: 0 !important; }
+          .set-brand { display: none !important; }
+          .set-nav { padding: 8px 12px !important; display: flex !important; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+          .set-nav::-webkit-scrollbar { display: none; }
+          .set-group { display: flex !important; gap: 6px; flex-wrap: nowrap; }
+          .set-group-label { display: none !important; }
+          .set-nav button { width: auto !important; white-space: nowrap; padding: 9px 14px !important; border: 1px solid #E4E7EC !important; border-radius: 99px !important; margin: 0 !important; flex-shrink: 0; font-size: 14px !important; }
+          .set-head { padding: 0 16px !important; height: 52px !important; }
+          .set-body { padding: 16px !important; }
+          .set-body > div { max-width: 100% !important; }
+        }
+      `}</style>
+      <div className="set-side" style={{width:210,background:'#fff',borderRight:'1px solid #F2F4F7',display:'flex',flexDirection:'column',paddingTop:16,flexShrink:0,minHeight:'100vh'}}>
+        <div className="set-brand" style={{padding:'0 16px 14px',borderBottom:'1px solid #F2F4F7'}}>
           <div style={{fontSize:11,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4}}>{BRAND_NAME}</div>
           <div style={{fontSize:14,fontWeight:700,color:'#323338'}}>{section}</div>
         </div>
-        <nav style={{flex:1,padding:'8px 10px'}}>
+        <nav className="set-nav" style={{flex:1,padding:'8px 10px'}}>
           {NAV.map(group=>(
-            <div key={group.group}>
-              <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px'}}>{group.group}</div>
+            <div key={group.group} className="set-group">
+              <div className="set-group-label" style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px'}}>{group.group}</div>
               {group.items.map(({s,i})=>{
                 const locked = false
                 return (
@@ -209,10 +224,10 @@ function SettingsInner() {
         </nav>
       </div>
       <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
-        <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div className="set-head" style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#323338'}}>{section}</h1>
         </div>
-        <div style={{flex:1,padding:24,overflowY:'auto'}}>
+        <div className="set-body" style={{flex:1,padding:24,overflowY:'auto'}}>
 
           {section==='My Account'&&(<div style={{maxWidth:600}}>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
@@ -321,7 +336,7 @@ function SettingsInner() {
               )}
               <h3 style={{fontSize:22,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>{editingMemberId?'Edit team member':addMode==='invite'?'Invite team member':'Create staff account'}</h3>
               <div style={{fontSize:12,color:'#667085',marginBottom:16}}>{editingMemberId?'Update their details, role, and assigned properties.':addMode==='invite'?'Sends a real invite email — they set their own password via the link.':"Sets a password now — no email needed. Share the login details with them yourself (text, WhatsApp, in person)."}</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginBottom:16}}>
                 <div>
                   <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Full name</div>
                   <input value={inviteName} onChange={e=>setInviteName(e.target.value)} placeholder="Jane Smith" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
