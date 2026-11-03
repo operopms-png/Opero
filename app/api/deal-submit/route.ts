@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { requireUser, serviceClient as db } from '@/lib/admin-auth'
-import { aiTask, companyName } from '@/lib/ai-proposal-utils'
+import { aiTask, aiTaskBy, companyName } from '@/lib/ai-proposal-utils'
 import { sendEmail } from '@/lib/send-email'
 
 // GET (signed in)        -> this client's agent link token (created on first use)
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   const { error } = await db.from('investment_deals').insert({ user_id: uid, strategy, address, stage: 'Found', data: { form, source: 'agent', submittedBy, listingUrl: form.listingUrl } })
   if (error) return j({ error: 'Could not save this right now. Please try again.' }, 500)
 
-  await aiTask(uid, `New deal from ${name}: ${address}`, `${submittedBy.company ? submittedBy.company + '. ' : ''}${currency} ${price.toLocaleString('en-GB')}. ${email || phone}. Open Deal Analyser → Saved Deals (stage Found).`, 1).catch(() => {})
+  await aiTaskBy('deal_submit', uid, `New deal from ${name}: ${address}`, `${submittedBy.company ? submittedBy.company + '. ' : ''}${currency} ${price.toLocaleString('en-GB')}. ${email || phone}. Open Deal Analyser → Saved Deals (stage Found).`, 1).catch(() => {})
   const { data: owner } = await db.auth.admin.getUserById(uid)
   if (owner?.user?.email) {
     await sendEmail(owner.user.email, `New deal submitted: ${address}`,

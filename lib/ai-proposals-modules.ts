@@ -4,7 +4,7 @@
 //
 // Each agent runs only for a business that switched it on in AI Assistant -> Property manager.
 import { queueAiAction } from './ai-approvals'
-import { svc, aiTask, freshCounts, enabledBusinesses, companyName, dayStr, daysBetween, niceDate, firstName } from './ai-proposal-utils'
+import { svc, aiTask, aiTaskBy, freshCounts, enabledBusinesses, companyName, dayStr, daysBetween, niceDate, firstName } from './ai-proposal-utils'
 
 const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
 const money = (n: number, cur: string) => (SYM[cur] ?? '') + Math.round(n).toLocaleString('en-GB')
@@ -27,7 +27,7 @@ export async function proposeCompliance() {
       const { data: landlord } = prop?.owner_id
         ? await db.from('pm_landlords').select('name, email').eq('id', prop.owner_id).eq('user_id', businessId).maybeSingle()
         : { data: null }
-      if (!prop || !landlord?.email) { result.noRecipient++; if (prop) await aiTask(businessId, `Add a landlord email for ${prop.name || prop.address}`, `The ${r.type} certificate is ${daysBetween(r.expiry_date, today) < 0 ? 'expired' : 'expiring'}, but the landlord has no email address, so no reminder can be drafted.`); continue }
+      if (!prop || !landlord?.email) { result.noRecipient++; if (prop) await aiTaskBy('pm_compliance', businessId, `Add a landlord email for ${prop.name || prop.address}`, `The ${r.type} certificate is ${daysBetween(r.expiry_date, today) < 0 ? 'expired' : 'expiring'}, but the landlord has no email address, so no reminder can be drafted.`); continue }
 
       const left = daysBetween(r.expiry_date, today)
       const expired = left < 0
@@ -72,7 +72,7 @@ export async function proposeRenewals() {
         db.from('pm_tenants').select('name, email').eq('id', l.tenant_id).eq('user_id', businessId).maybeSingle(),
         db.from('pm_properties').select('name, address').eq('id', l.property_id).eq('user_id', businessId).maybeSingle(),
       ])
-      if (!tenant?.email) { result.noRecipient++; await aiTask(businessId, `Add an email for ${tenant?.name ?? 'a tenant'}`, 'Their tenancy ends within 60 days but they have no email address, so no renewal message can be drafted.'); continue }
+      if (!tenant?.email) { result.noRecipient++; await aiTaskBy('pm_renewals', businessId, `Add an email for ${tenant?.name ?? 'a tenant'}`, 'Their tenancy ends within 60 days but they have no email address, so no renewal message can be drafted.'); continue }
       const where = prop?.name || prop?.address || 'your home'
       const left = daysBetween(l.end_date, today)
       const hi = firstName(tenant.name) ? `Dear ${firstName(tenant.name)},` : 'Hello,'
@@ -109,7 +109,7 @@ export async function proposeArrears() {
         db.from('pm_tenants').select('name, email').eq('id', r.tenant_id).eq('user_id', businessId).maybeSingle(),
         db.from('pm_properties').select('name, address, country, currency').eq('id', r.property_id).eq('user_id', businessId).maybeSingle(),
       ])
-      if (!tenant?.email) { result.noRecipient++; await aiTask(businessId, `Chase rent by phone: ${tenant?.name ?? 'a tenant'}`, 'Rent is more than 14 days overdue and the tenant has no email address, so no message can be drafted.', 0); continue }
+      if (!tenant?.email) { result.noRecipient++; await aiTaskBy('pm_arrears', businessId, `Chase rent by phone: ${tenant?.name ?? 'a tenant'}`, 'Rent is more than 14 days overdue and the tenant has no email address, so no message can be drafted.', 0); continue }
       const cur = prop?.currency || (/jamaica/i.test(prop?.country || '') ? 'JMD' : 'GBP')
       const days = daysBetween(today, r.due_date)
       const where = prop?.name || prop?.address || 'your property'
@@ -158,7 +158,7 @@ export async function proposeDeposits() {
       const where = prop?.name || prop?.address || 'a property'
       left < 0 ? overdue++ : soon++
       result.queued++
-      await aiTask(businessId, `Protect deposit: ${tenant?.name ?? 'tenant'} at ${where}`,
+      await aiTaskBy('pm_deposits', businessId, `Protect deposit: ${tenant?.name ?? 'tenant'} at ${where}`,
         `The deposit has no protected date on the lease. It should be in a government-approved scheme, with the prescribed information given to the tenant, within 30 days of receipt (about ${niceDate(deadline)} counting from the lease start). ${left < 0 ? `That is ${-left} days overdue.` : `${left} days left.`} Enter the scheme and protected date on the lease once done.`, Math.max(0, left))
     }
     if (overdue) await aiAlert(businessId, `${overdue} tenancy deposit${overdue === 1 ? ' is' : 's are'} past the 30-day protection deadline`, 'Check Leases: no protected date is recorded. Protect the deposit and give the tenant the prescribed information.', '/staff-centre/tasks')
@@ -184,7 +184,7 @@ export async function proposeInsurance() {
       const { data: landlord } = prop?.owner_id ? await db.from('pm_landlords').select('name, email').eq('id', prop.owner_id).eq('user_id', businessId).maybeSingle() : { data: null }
       const where = prop?.name || prop?.address || 'your property'
       const left = daysBetween(r.renewal_date, today)
-      if (!landlord?.email) { result.noRecipient++; await aiTask(businessId, `Chase insurance renewal: ${r.policy_type ?? 'policy'} at ${where}`, `The policy ${left < 0 ? 'passed its renewal date' : `renews on ${niceDate(r.renewal_date)}`}, and the landlord has no email address for a reminder.`); continue }
+      if (!landlord?.email) { result.noRecipient++; await aiTaskBy('pm_insurance', businessId, `Chase insurance renewal: ${r.policy_type ?? 'policy'} at ${where}`, `The policy ${left < 0 ? 'passed its renewal date' : `renews on ${niceDate(r.renewal_date)}`}, and the landlord has no email address for a reminder.`); continue }
       const hi = firstName(landlord.name) ? `Dear ${firstName(landlord.name)},` : 'Hello,'
       const policy = [r.policy_type, r.insurer && `with ${r.insurer}`, r.policy_number && `(policy ${r.policy_number})`].filter(Boolean).join(' ')
       const body = `${hi}\n\nThe ${policy || 'insurance policy'} for ${where} ${left < 0 ? `was due for renewal on ${niceDate(r.renewal_date)}` : `renews on ${niceDate(r.renewal_date)}`}.\n\nPlease let us know whether it is being renewed, and send us the new schedule or certificate when you have it. If you would like us to help arrange cover, reply and we will look into it.\n\nKind regards,\n${sign}`
@@ -216,7 +216,7 @@ export async function proposeInspections() {
     for (const p of (props ?? []).filter((x: any) => !/sold|clos|inactive|archiv|vacat/i.test(String(x.status ?? '')))) {
       if (covered.has(p.id)) { result.skipped++; continue }
       result.queued++
-      await aiTask(businessId, `Book an inspection: ${p.name || p.address}`, 'No inspection has been done or booked in the last six months. Book one on the Inspections tab.', 7)
+      await aiTaskBy('pm_inspections', businessId, `Book an inspection: ${p.name || p.address}`, 'No inspection has been done or booked in the last six months. Book one on the Inspections tab.', 7)
     }
   }
   return result
@@ -251,7 +251,7 @@ export async function proposeStatementReminders() {
     const { data: names } = await db.from('pm_landlords').select('name').eq('user_id', businessId).in('id', missing)
     result.queued += missing.length
     const list = (names ?? []).map((n: any) => n.name).slice(0, 8).join(', ')
-    await aiTask(businessId, `Prepare ${monthName} landlord statements`, `${missing.length} landlord${missing.length === 1 ? ' has' : 's have'} rent received in ${monthName} but no statement: ${list}. Build and send them on Reports, Landlord Reports.`, 3)
+    await aiTaskBy('pm_statements', businessId, `Prepare ${monthName} landlord statements`, `${missing.length} landlord${missing.length === 1 ? ' has' : 's have'} rent received in ${monthName} but no statement: ${list}. Build and send them on Reports, Landlord Reports.`, 3)
     await aiAlert(businessId, `${missing.length} landlord statement${missing.length === 1 ? '' : 's'} for ${monthName} not prepared`, list, '/pm?tab=Landlord%20Reports')
   }
   return result

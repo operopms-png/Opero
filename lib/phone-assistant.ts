@@ -3,7 +3,7 @@
 import { serviceClient as db } from '@/lib/admin-auth'
 import type { Caller } from '@/lib/mailbox'
 import { portalContext, systemPrompt, askClaude, type ChatMsg } from '@/lib/ask-ai'
-import { aiTask } from '@/lib/ai-proposal-utils'
+import { aiTask, aiTaskBy } from '@/lib/ai-proposal-utils'
 
 const HOURLY_LIMIT = 30
 
@@ -60,7 +60,7 @@ export async function handleAssistantMessage(row: { business_id: string; user_em
 
   let made = 0
   for (const t of tasks) {
-    if (t?.title && await aiTask(row.business_id, String(t.title), String(t.notes || 'Added from WhatsApp'), Math.min(30, Math.max(0, Number(t.days) || 1)))) made++
+    if (t?.title && await aiTaskBy('phone_assistant', row.business_id, String(t.title), String(t.notes || 'Added from WhatsApp'), Math.min(30, Math.max(0, Number(t.days) || 1)))) made++
   }
   await db.from('assistant_messages').insert([
     { business_id: row.business_id, phone: row.phone, role: 'user', content: text.slice(0, 4000), via },

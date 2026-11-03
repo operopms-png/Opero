@@ -8,7 +8,7 @@ import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { runEstimate } from './earnings-estimate'
 import { styleInstructions } from './ai-style'
-import { svc, aiTask, freshCounts, enabledBusinesses, companyName, dayStr, firstName } from './ai-proposal-utils'
+import { svc, aiTask, aiTaskBy, freshCounts, enabledBusinesses, companyName, dayStr, firstName } from './ai-proposal-utils'
 
 // ---------- predictive maintenance ----------
 const CATEGORIES: [string, RegExp][] = [
@@ -49,7 +49,7 @@ export async function proposeMaintenancePredictions() {
       const { data: landlord } = prop.owner_id
         ? await db.from('pm_landlords').select('name, email').eq('id', prop.owner_id).eq('user_id', businessId).maybeSingle()
         : { data: null }
-      if (!landlord?.email) { result.noRecipient++; await aiTask(businessId, `Look at repeat ${g.category} problems at ${where}`, `${g.rows.length} ${g.category} jobs in the last 12 months and no landlord email to send a note to. Consider a preventive inspection.`, 3); continue }
+      if (!landlord?.email) { result.noRecipient++; await aiTaskBy('maint_predict', businessId, `Look at repeat ${g.category} problems at ${where}`, `${g.rows.length} ${g.category} jobs in the last 12 months and no landlord email to send a note to. Consider a preventive inspection.`, 3); continue }
 
       const history = g.rows.sort((a, b) => a.created_at.localeCompare(b.created_at)).map(r => `- ${r.created_at.slice(0, 10)}: ${r.title ?? 'job'}${r.description ? ` (${String(r.description).slice(0, 120)})` : ''}`).join('\n')
       const system = `You are a property manager writing to a landlord. The records below show repeat repair jobs of the same kind at their property. Write a short, plain email body (no subject line, no emojis) that: states the facts from the records, explains in one or two sentences why repeat jobs like this often point to an underlying cause, and recommends a preventive inspection or servicing, offering to arrange it. Do not state costs, causes or guarantees you do not know. Address the landlord as ${firstName(landlord.name) || 'there'} and sign off as ${sign}.${await styleInstructions(businessId, 'maint_predict')}`

@@ -1,6 +1,6 @@
 // Deal screening skill. Runs the deterministic Deal Decision Engine on deals still at "Found" and leaves
 // ONE task listing a go / review / no-go for each. It never moves a deal or spends money: a person decides.
-import { svc, aiTask, freshCounts, enabledBusinesses } from './ai-proposal-utils'
+import { svc, aiTask, aiTaskBy, freshCounts, enabledBusinesses } from './ai-proposal-utils'
 import { screenDeal } from './deal-engine-run'
 import { searchBrief, type Criteria } from './deal-finder'
 import { dayStr } from './ai-proposal-utils'
@@ -22,7 +22,7 @@ export async function proposeDealScreening() {
         lines.push(`${d.address || 'Deal'} (${d.strategy.toUpperCase()}): ${WORD[o.status] ?? o.status}${why ? ' — ' + why : ''}`)
         await db.from('investment_deals').update({ stage: 'Screened', stage_updated_at: new Date().toISOString(), data: { ...(d.data ?? {}), screening: { status: o.status, at: dayStr() } } }).eq('id', d.id)
       }
-      const made = await aiTask(biz, `Deals screened: ${lines.length} ready for your decision`, lines.join('\n') + '\nOpen Deal Analyser → Saved Deals to move each one forward or reject it.', 1)
+      const made = await aiTaskBy('deal_screening', biz, `Deals screened: ${lines.length} ready for your decision`, lines.join('\n') + '\nOpen Deal Analyser → Saved Deals to move each one forward or reject it.', 1)
       if (made) result.queued++; else result.skipped++
     } catch (e) { result.errors.push(`deal_screening ${biz}: ${e instanceof Error ? e.message : String(e)}`) }
   }
@@ -45,7 +45,7 @@ export async function proposeDealFinder() {
         added += r.added
       }
       if (!added) { result.skipped++; continue }
-      const made = await aiTask(biz, `${added} new deal${added === 1 ? '' : 's'} match your brief`, 'Open Deal Analyser → Find Deals to like, pass or save them. Your choices teach the AI what to look for.', 1)
+      const made = await aiTaskBy('deal_finder', biz, `${added} new deal${added === 1 ? '' : 's'} match your brief`, 'Open Deal Analyser → Find Deals to like, pass or save them. Your choices teach the AI what to look for.', 1)
       if (made) result.queued++; else result.skipped++
     } catch (e) { result.errors.push(`deal_finder ${biz}: ${e instanceof Error ? e.message : String(e)}`) }
   }
@@ -63,7 +63,7 @@ export async function proposeGoalPlanner() {
       if (!goals?.length) { result.skipped++; continue }
       for (const g of goals) {
         const { report, progress: p } = await reviewGoal(g as Goal)
-        const made = await aiTask(biz, `Goal update: ${String(g.text).slice(0, 80)} (${p.pct}%)`, report, 2)
+        const made = await aiTaskBy('goal_planner', biz, `Goal update: ${String(g.text).slice(0, 80)} (${p.pct}%)`, report, 2)
         if (made) result.queued++; else result.skipped++
       }
     } catch (e) { result.errors.push(`goal_planner ${biz}: ${e instanceof Error ? e.message : String(e)}`) }

@@ -17,7 +17,7 @@ import { proposePortfolioReview } from './ai-portfolio'
 import { proposeChiefPlan } from './ai-chief'
 import { proposePmContractorRequests, listContractors, pickContractor } from './ai-contractors'
 import { proposeLeaseDocs } from './ai-proposals-docs'
-import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask } from './ai-proposal-utils'
+import { expireStaleDrafts, runScoped, scopedBusiness, svc as svcClient, aiTask, aiTaskBy } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
 import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeMaintenancePredictions, proposeMarketForecast } from './ai-forecasting'
@@ -70,7 +70,7 @@ export async function proposeCleaning() {
     for (const t of tasks ?? []) {
       const property: any = (props ?? []).find((p: any) => p.id === t.property_id)
       const to = await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%clean%')
-      if (!to) { result.noRecipient!++; await aiTask(businessId, `Assign a cleaner for ${property?.name ?? 'a property'}`, `A clean on ${t.scheduled_date} has nobody to send instructions to. Assign the clean to a team member who has an email address.`); continue }
+      if (!to) { result.noRecipient!++; await aiTaskBy('cleaning', businessId, `Assign a cleaner for ${property?.name ?? 'a property'}`, `A clean on ${t.scheduled_date} has nobody to send instructions to. Assign the clean to a team member who has an email address.`); continue }
       const system = `You are a cleaning coordinator for a short-term rental company. Draft a short, practical turnover-cleaning checklist and instruction message to send to the cleaner ${to.name} for the property below. Plain text, no subject line, ready to send. Use only the information given.
 
 Property: ${property?.name ?? 'Unknown'} (${property?.address ?? ''}, ${property?.city ?? ''})
@@ -109,7 +109,7 @@ export async function proposeMaintenance() {
       const property: any = (props ?? []).find((p: any) => p.id === t.property_id)
       let to: { name: string; email: string } | null = await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%maint%,role.ilike.%contractor%,role.ilike.%repair%,role.ilike.%handy%')
       if (!to && !t.assigned_to) { const c = await pickContractor(businessId, await listContractors(businessId, 'str'), `${t.title ?? ''}. ${t.description ?? ''}`); if (c) to = { name: c.name, email: c.email } }
-      if (!to) { result.noRecipient!++; await aiTask(businessId, `Assign a contractor: ${String(t.title ?? 'maintenance job').slice(0, 60)} at ${property?.name ?? 'a property'}`, 'An open maintenance ticket has nobody to send the request to. Assign it to a team member who has an email address.'); continue }
+      if (!to) { result.noRecipient!++; await aiTaskBy('maintenance', businessId, `Assign a contractor: ${String(t.title ?? 'maintenance job').slice(0, 60)} at ${property?.name ?? 'a property'}`, 'An open maintenance ticket has nobody to send the request to. Assign it to a team member who has an email address.'); continue }
       const system = `You are a maintenance coordinator for a short-term rental company. Draft a short, clear message to ${to.name} asking them to deal with the issue below. Include the property, the problem, the priority and what you need back from them. Plain text, no subject line, ready to send. Use only the information given.
 
 Property: ${property?.name ?? 'Unknown'} (${property?.address ?? ''}, ${property?.city ?? ''})
@@ -281,7 +281,7 @@ export async function proposeMaintenanceFollowups() {
         const property: any = (props ?? []).find((p: any) => p.id === t.property_id)
         const to = t.assigned_to ? await resolveRecipient(businessId, t.assigned_to, t.property_id, 'role.ilike.%maint%') : null
         const days = Math.floor((Date.now() - new Date(t.created_at).getTime()) / 86400000)
-        if (!to) { result.noRecipient!++; await aiTask(businessId, `Chase maintenance: ${String(t.title ?? 'job').slice(0, 60)} at ${property?.name ?? 'a property'}`, `Open for ${days} days and not assigned to anyone with an email address.`); continue }
+        if (!to) { result.noRecipient!++; await aiTaskBy('maint_followup', businessId, `Chase maintenance: ${String(t.title ?? 'job').slice(0, 60)} at ${property?.name ?? 'a property'}`, `Open for ${days} days and not assigned to anyone with an email address.`); continue }
         const body = `Hi ${to.name.split(' ')[0]},\n\nA quick check on this job: "${t.title ?? 'Maintenance issue'}" at ${property?.name ?? 'the property'}. It was reported ${days} days ago and is still open.\n\nCould you let us know when it will be done, or tell us if you need anything from us to get it finished?\n\nThank you.`
         const q = await queueAiAction({
           userId: businessId, agentKey: 'maint_followup', actionType: 'email_out',
@@ -298,7 +298,7 @@ export async function proposeMaintenanceFollowups() {
       const { data: prop } = await db.from('pm_properties').select('name, address').eq('id', j.property_id).eq('user_id', businessId).maybeSingle()
       const days = Math.floor((Date.now() - new Date(j.created_at).getTime()) / 86400000)
       result.queued++
-      await aiTask(businessId, `Chase repair: ${String(j.title ?? 'job').slice(0, 60)} at ${prop?.name || prop?.address || 'a property'}`, `Open for ${days} days${j.assigned_to ? `, with ${j.assigned_to}` : ', and not assigned'}. Ask for a status update and tell the tenant what is happening.`)
+      await aiTaskBy('maint_followup', businessId, `Chase repair: ${String(j.title ?? 'job').slice(0, 60)} at ${prop?.name || prop?.address || 'a property'}`, `Open for ${days} days${j.assigned_to ? `, with ${j.assigned_to}` : ', and not assigned'}. Ask for a status update and tell the tenant what is happening.`)
     }
   }
   return result

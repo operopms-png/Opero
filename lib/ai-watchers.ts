@@ -3,7 +3,7 @@
 // The three that write (invoice chase, review replies, team summary) only add drafts for approval.
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
-import { svc, aiTask, freshCounts, enabledBusinesses, companyName, dayStr, firstName } from './ai-proposal-utils'
+import { svc, aiTask, aiTaskBy, freshCounts, enabledBusinesses, companyName, dayStr, firstName } from './ai-proposal-utils'
 
 type Db = ReturnType<typeof svc>
 type Found = { title: string; lines: string[]; dueInDays?: number } | null
@@ -245,7 +245,7 @@ export async function proposeWatchers() {
         if (!namesCache.has(biz)) namesCache.set(biz, await propertyNames(db, biz))
         const found = await w.find(db, biz, namesCache.get(biz)!)
         if (!found) { result.skipped++; continue }
-        const made = await aiTask(biz, found.title, found.lines.join('\n'), found.dueInDays ?? 1)
+        const made = await aiTaskBy(w.agent, biz, found.title, found.lines.join('\n'), found.dueInDays ?? 1)
         if (made) { result.queued++; result.created++ } else result.skipped++
       } catch (e) { result.errors.push(`${w.agent} ${biz}: ${e instanceof Error ? e.message : String(e)}`) }
     }
@@ -290,7 +290,7 @@ export async function proposeReviewReplies() {
       const system = `You reply to a guest review for a property company. Warm, specific, honest, under 80 words, no emojis. Thank them; for criticism, acknowledge it and say what will be looked at. Sign off with "${sign}".`
       const { text, error } = await callClaude(system, `Guest: ${firstName(r.guest_name)}\nPlatform: ${r.platform}\nRating: ${r.rating}\nReview: ${String(r.review_text).slice(0, 800)}`, 250)
       if (error || !text) { result.errors.push(`review_replies: ${error ?? 'no text'}`); continue }
-      const made = await aiTask(biz, `Post reply to ${r.guest_name || 'guest'}'s ${r.platform || ''} review`.trim(), `Draft reply: ${text.trim()}`.slice(0, 480), 2)
+      const made = await aiTaskBy('review_replies', biz, `Post reply to ${r.guest_name || 'guest'}'s ${r.platform || ''} review`.trim(), `Draft reply: ${text.trim()}`.slice(0, 480), 2)
       if (made) result.queued++; else result.skipped++
     }
   }

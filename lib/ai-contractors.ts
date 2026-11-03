@@ -3,7 +3,7 @@
 // and the request is only sent after a person approves it in AI Approvals.
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
-import { svc, enabledBusinesses, aiTask, freshCounts } from './ai-proposal-utils'
+import { svc, enabledBusinesses, aiTask, aiTaskBy, freshCounts } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
 
 export type Contractor = { id: string; name: string; email: string; type: string; company: string }
@@ -40,7 +40,7 @@ export async function proposePmContractorRequests() {
       const prop: any = (props ?? []).find((p: any) => p.id === j.property_id)
       const issue = `${j.title ?? ''}. ${j.description ?? ''}`
       const to = await pickContractor(biz, list, issue)
-      if (!to) { result.noRecipient++; await aiTask(biz, `Find a contractor: ${String(j.title ?? 'repair').slice(0, 60)} at ${prop?.name ?? 'a property'}`, list.length ? 'No contractor on your Vendors list fits this job. Add one with an email address.' : 'There are no contractors with an email address on your Vendors list. Add one so the AI can send repair requests.'); continue }
+      if (!to) { result.noRecipient++; await aiTaskBy('maintenance', biz, `Find a contractor: ${String(j.title ?? 'repair').slice(0, 60)} at ${prop?.name ?? 'a property'}`, list.length ? 'No contractor on your Vendors list fits this job. Add one with an email address.' : 'There are no contractors with an email address on your Vendors list. Add one so the AI can send repair requests.'); continue }
       const system = `You are a maintenance coordinator for a property management company. Draft a short, clear message to ${to.name} asking them to quote for or deal with the repair below. Include the property, the problem and the priority, and ask when they can attend and for a quote. Plain text, no subject line, ready to send. Use only the information given.\n\nProperty: ${prop?.name ?? 'Unknown'} (${prop?.address ?? ''})\nPriority: ${j.priority ?? 'medium'}${await styleInstructions(biz, 'maintenance')}`
       const { text, error } = await callClaude(system, `Repair: ${j.title ?? 'Repair'}\nDetails: ${j.description || 'No further details provided.'}`, 400)
       if (error || !text) { result.errors.push(`pm repair ${j.id}: ${error ?? 'no text'}`); continue }

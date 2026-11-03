@@ -3,7 +3,7 @@
 // AI Approvals, and only then does executeAiAction() carry it out. Every row
 // keeps who proposed, who decided, when, and exactly what went out.
 import { createClient } from '@supabase/supabase-js'
-import { aiTask } from './ai-proposal-utils'
+import { aiTask, aiTaskBy } from './ai-proposal-utils'
 import { authorityFor } from './ai-authority'
 
 function getServiceClient() {
@@ -98,7 +98,7 @@ async function autoSendIfOn(userId: string, agentKey: string, actionType: string
   const result: any = await executeAiAction(row, row.draft_body)
   if (result && 'error' in result && result.error) {
     await db.from('ai_pending_actions').update({ status: 'failed', error: String(result.error).slice(0, 500) }).eq('id', id)
-    await aiTask(userId, `Fix failed AI action: ${String(row.title ?? '').slice(0, 80)}`, String(result.error), 0)
+    await aiTaskBy(agentKey, userId, `Fix failed AI action: ${String(row.title ?? '').slice(0, 80)}`, String(result.error), 0)
     return false
   }
   await db.from('ai_pending_actions').update({ status: 'executed', executed_at: new Date().toISOString(), error: null }).eq('id', id)

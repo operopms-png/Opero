@@ -6,7 +6,7 @@
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
 import { styleInstructions } from './ai-style'
-import { svc, aiTask, freshCounts, enabledBusinesses, companyName, dayStr, niceDate, firstName } from './ai-proposal-utils'
+import { svc, aiTask, aiTaskBy, freshCounts, enabledBusinesses, companyName, dayStr, niceDate, firstName } from './ai-proposal-utils'
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' })
 const monthStart = () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1)).toISOString()
@@ -24,7 +24,7 @@ export async function proposeViewings() {
     const { data: views } = await db.from('estate_viewings').select('id, property_id, prospect_name, prospect_email, scheduled_at, status')
       .eq('user_id', businessId).gte('scheduled_at', dayStr(-3)).lt('scheduled_at', dayStr(2))
     for (const v of (views ?? []).filter((x: any) => !/cancel|no.?show|request/i.test(String(x.status ?? '')))) {
-      if (!v.prospect_email) { result.noRecipient++; await aiTask(businessId, `Add an email for viewing contact ${v.prospect_name ?? ''}`.trim(), 'A viewing is coming up or has just happened, but the prospect has no email address, so no reminder or follow-up can be drafted.'); continue }
+      if (!v.prospect_email) { result.noRecipient++; await aiTaskBy('ea_viewings', businessId, `Add an email for viewing contact ${v.prospect_name ?? ''}`.trim(), 'A viewing is coming up or has just happened, but the prospect has no email address, so no reminder or follow-up can be drafted.'); continue }
       const { data: prop } = await db.from('estate_properties').select('name, address').eq('id', v.property_id).eq('user_id', businessId).maybeSingle()
       const where = prop?.name || prop?.address || 'the property'
       const hi = firstName(v.prospect_name) ? `Dear ${firstName(v.prospect_name)},` : 'Hello,'
@@ -103,7 +103,7 @@ export async function proposeInvestorUpdates() {
     const sign = await companyName(businessId)
     const { data: investors } = await db.from('dev_investors').select('id, name, email, project_id, status').eq('user_id', businessId)
     for (const inv of (investors ?? []).filter((i: any) => i.project_id && !/exit|closed|withdrawn/i.test(String(i.status ?? '')))) {
-      if (!inv.email) { result.noRecipient++; await aiTask(businessId, `Add an email for investor ${inv.name}`, 'No email address, so the monthly progress update cannot be drafted.', 3); continue }
+      if (!inv.email) { result.noRecipient++; await aiTaskBy('dev_investors', businessId, `Add an email for investor ${inv.name}`, 'No email address, so the monthly progress update cannot be drafted.', 3); continue }
       const [{ data: proj }, { data: snags }] = await Promise.all([
         db.from('dev_projects').select('name, status, start_date, end_date, total_budget, spent').eq('id', inv.project_id).eq('user_id', businessId).maybeSingle(),
         db.from('dev_snagging').select('status').eq('project_id', inv.project_id).eq('user_id', businessId),

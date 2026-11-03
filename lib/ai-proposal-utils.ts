@@ -74,3 +74,6 @@ export async function aiTask(businessId: string, title: string, notes: string, d
   }
   return false
 }
+
+// Same as aiTask, but records which AI skill created the task in the activity log.
+export const aiTaskBy = (agentKey: string, businessId: string, title: string, notes: string, dueInDays = 1) => aiTask(businessId, title, notes, dueInDays, agentKey)

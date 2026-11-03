@@ -3,7 +3,7 @@
 // that wait in AI Approvals. Emails are only drafted to addresses a person typed into the instruction.
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
-import { svc, enabledBusinesses, dayStr, aiTask, freshCounts } from './ai-proposal-utils'
+import { svc, enabledBusinesses, dayStr, aiTask, aiTaskBy, freshCounts } from './ai-proposal-utils'
 import { styleInstructions } from './ai-style'
 import { aiAlert } from './push'
 
@@ -83,7 +83,7 @@ export async function proposeChiefPlan() {
     if (done?.length) { result.skipped++; continue }
     const plan = await planDay(biz)
     if ('error' in plan) { result.errors.push(`chief ${biz}: ${plan.error}`); continue }
-    for (const s of plan.steps) { await aiTask(biz, s.title, `${s.why} ${s.notes}`, s.due_in_days); result.queued++ }
+    for (const s of plan.steps) { await aiTaskBy('chief', biz, s.title, `${s.why} ${s.notes}`, s.due_in_days); result.queued++ }
     await svc().from('ai_run_log').insert({ user_id: biz, workflow: 'chief', ok: true, result: plan })
     if (plan.steps.length) await aiAlert(biz, 'Your AI plan for today is ready', plan.summary || `${plan.steps.length} tasks added to the task board.`, '/staff-centre/ai-command-centre/chief').catch(() => {})
   }
@@ -104,7 +104,7 @@ export async function followInstruction(biz: string, instruction: string) {
   let tasks = 0, drafts = 0
   for (const t of (Array.isArray(j.tasks) ? j.tasks : []).slice(0, 6)) {
     if (!t?.title) continue
-    await aiTask(biz, String(t.title), `${String(t.notes ?? '')} (Instruction: ${instruction.slice(0, 120)})`, Math.min(14, Math.max(0, Number(t.due_in_days) || 1))); tasks++
+    await aiTaskBy('chief', biz, String(t.title), `${String(t.notes ?? '')} (Instruction: ${instruction.slice(0, 120)})`, Math.min(14, Math.max(0, Number(t.due_in_days) || 1))); tasks++
   }
   for (const m of (Array.isArray(j.emails) ? j.emails : []).slice(0, 4)) {
     const to = String(m?.to ?? '').toLowerCase()
