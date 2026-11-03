@@ -84,7 +84,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/turnovers', label: 'Turnovers', requiresModule: 'str' },
   ] },
   { label: 'Smart Home', icon: 'shield', tabs: [{ href: '/staff-centre/smart-home', label: 'Smart Home', scTab: 'smarthome' }] },
-  { label: 'Team', icon: 'team', tabs: [
+  { label: 'Human Intelligence Hub', icon: 'team', tabs: [
     { href: '/settings?section=Team+Management', label: 'Team Management' },
     { href: '/staff-centre/announcements', label: 'Announcements', badge: 'announcements' },
     { href: '/staff-centre/hr', label: 'People & HR', scTab: 'hr', badge: 'hr' },
