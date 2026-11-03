@@ -16,7 +16,7 @@ const NAV_GROUPS = [
     module: 'pm',
     modulePrice: '£39/mo',
     items: [
-      { href: '/pm', label: 'Property', key: 'pm', icon: 'building', badge: 'pm' },
+      { href: '/property', label: 'Property', key: 'pm', icon: 'building', badge: 'pm' },
     ]
   },
   {
@@ -198,6 +198,7 @@ export default function Sidebar() {
                   const [hp, hq] = href.split('?')
                   const cur = new URLSearchParams(search).get('section')
                   active = pathname === hp && (hq ? new URLSearchParams(hq).get('section') === cur : !NAV_GROUPS.some((g: any) => g.items.some((it: any) => { const [p2, q2] = String(it.href).split('?'); return p2 === hp && q2 && new URLSearchParams(q2).get('section') === cur })))
+                  if (href === '/property' && ['/pm', '/estate', '/str', '/dev'].some(p => pathname === p || pathname.startsWith(p + '/'))) active = true
                 }
                 if (isPartner && (!itemHasModule || String(href).startsWith('/settings'))) return null
                 const hasAccess = itemHasModule && features.includes(key)

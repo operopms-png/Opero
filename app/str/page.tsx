@@ -97,6 +97,7 @@ function Modal({ title, onClose, children }: any) {
 
 export default function STRPage() {
   const [tab, setTab] = useState('Home')
+  useEffect(() => { const t = new URLSearchParams(window.location.search).get('tab'); if (t && TABS.includes(t)) setTab(t) }, [])
   const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'str')
 

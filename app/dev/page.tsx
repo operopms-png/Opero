@@ -167,6 +167,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
 }
 export default function DevPage() {
   const [tab, setTab] = useState('Dashboard')
+  useEffect(() => { const t = new URLSearchParams(window.location.search).get('tab'); if (t && TABS.includes(t)) setTab(t) }, [])
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
   const [loading, setLoading] = useState(true)
