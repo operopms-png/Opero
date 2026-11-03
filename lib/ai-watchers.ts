@@ -151,6 +151,84 @@ const WATCHERS: Watcher[] = [
     }
     return lines.length ? { title: 'Job applications needing a reply', lines: cap(lines) } : null
   } },
+  // Month-end summary for the accountant (first three days of the month)
+  { agent: 'accounting_export', resultKey: 'accountingExport', async find(db, biz) {
+    const now = new Date()
+    if (now.getUTCDate() > 3) return null
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)), end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+    const s = start.toISOString().slice(0, 10), e = end.toISOString().slice(0, 10)
+    const label = start.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    const [{ data: inv }, { data: off }, { data: est }] = await Promise.all([
+      db.from('invoices').select('currency, total, status, paid_at').eq('business_id', biz).gte('issue_date', s).lt('issue_date', e),
+      db.from('office_expenses').select('amount, category').eq('user_id', biz).gte('date', s).lt('date', e),
+      db.from('estate_expenses').select('amount, category').eq('user_id', biz).gte('date', s).lt('date', e),
+    ])
+    const invoiced: Record<string, number> = {}, paid: Record<string, number> = {}
+    for (const i of (inv ?? []).filter((x: any) => !/draft|void|cancel/i.test(String(x.status ?? '')))) {
+      const c = i.currency || 'GBP'; invoiced[c] = (invoiced[c] || 0) + Number(i.total || 0); if (i.paid_at) paid[c] = (paid[c] || 0) + Number(i.total || 0)
+    }
+    const exp = [...(off ?? []), ...(est ?? [])]
+    const spend = exp.reduce((a: number, x: any) => a + Number(x.amount || 0), 0)
+    const uncat = exp.filter((x: any) => !String(x.category ?? '').trim()).length
+    if (!Object.keys(invoiced).length && !exp.length) return null
+    const lines = [
+      ...Object.keys(invoiced).map(c => `Invoiced ${c} ${money(invoiced[c])}, paid ${c} ${money(paid[c] || 0)}, still unpaid ${c} ${money(invoiced[c] - (paid[c] || 0))}`),
+      `Expenses logged: ${exp.length}, total ${money(spend)}`,
+      uncat ? `${uncat} expense${uncat === 1 ? ' has' : 's have'} no category. Fix these before sending to your accountant.` : 'Every expense has a category.',
+      'Export the invoices and expenses from Finance and send them to your accountant.',
+    ]
+    return { title: `Month-end for your accountant: ${label}`, lines, dueInDays: 5 }
+  } },
+  // SOPs, policies and contract templates not reviewed for a year (first of the month)
+  { agent: 'templates_review', resultKey: 'templatesReview', async find(db, biz) {
+    if (new Date().getUTCDate() !== 1) return null
+    const cutoff = dayStr(-365)
+    const [{ data: docs }, { data: tpl }] = await Promise.all([
+      db.from('company_documents').select('name, category, created_at').eq('user_id', biz),
+      db.from('doc_templates').select('name, updated_at').eq('business_id', biz).eq('active', true),
+    ])
+    const lines = [
+      ...(docs ?? []).filter((d: any) => /sop|polic|procedure|handbook/i.test(`${d.category ?? ''} ${d.name ?? ''}`) && String(d.created_at).slice(0, 10) < cutoff).map((d: any) => `${d.name}: last added ${String(d.created_at).slice(0, 10)}`),
+      ...(tpl ?? []).filter((t: any) => String(t.updated_at).slice(0, 10) < cutoff).map((t: any) => `Contract template "${t.name}": last changed ${String(t.updated_at).slice(0, 10)}`),
+    ]
+    return lines.length ? { title: 'SOPs and templates not reviewed in a year', lines: [...cap(lines), 'Check they still match the law and how you work.'], dueInDays: 14 } : null
+  } },
+  // Tomorrow's meetings, with the open tasks that are due
+  { agent: 'meetings_prep', resultKey: 'meetingsPrep', async find(db, biz) {
+    const t = soon(1), t2 = soon(2)
+    const [{ data: crm }, { data: bk }, { data: sales }, { data: tasks }] = await Promise.all([
+      db.from('crm_meetings').select('title, time, location, status').eq('user_id', biz).eq('date', t),
+      db.from('meetings').select('title, attendee_name, scheduled_at, status').eq('user_id', biz).gte('scheduled_at', t).lt('scheduled_at', t2),
+      db.from('sales_meetings').select('title, contact, meeting_time').eq('user_id', biz).eq('meeting_date', t),
+      db.from('staff_tasks').select('title, due_date, status').eq('user_id', biz).neq('status', 'Done').lte('due_date', t),
+    ])
+    const lines = [
+      ...(crm ?? []).filter((m: any) => !done(m.status)).map((m: any) => `${m.time || ''} ${m.title}${m.location ? ' at ' + m.location : ''}`.trim()),
+      ...(bk ?? []).filter((m: any) => !done(m.status)).map((m: any) => `${String(m.scheduled_at).slice(11, 16)} ${m.title || 'Meeting'}${m.attendee_name ? ' with ' + m.attendee_name : ''}`),
+      ...(sales ?? []).map((m: any) => `${m.meeting_time || ''} ${m.title}${m.contact ? ' with ' + m.contact : ''}`.trim()),
+    ]
+    if (!lines.length) return null
+    const open = (tasks ?? []).slice(0, 6).map((x: any) => `Open task: ${x.title}${x.due_date ? ' (due ' + x.due_date + ')' : ''}`)
+    return { title: `Meetings tomorrow (${t}): ${lines.length}`, lines: [...cap(lines), ...open], dueInDays: 1 }
+  } },
+  // New accounts: what is left to set up in the first three weeks
+  { agent: 'onboarding_help', resultKey: 'onboardingHelp', async find(db, biz) {
+    const { data: sub } = await db.from('subscriptions').select('created_at').eq('user_id', biz).order('created_at', { ascending: true }).limit(1).maybeSingle()
+    if (!sub || String(sub.created_at).slice(0, 10) < dayStr(-21)) return null
+    const [{ data: pm }, { data: est }, { data: set }, { count: team }] = await Promise.all([
+      db.from('pm_properties').select('id').eq('user_id', biz).limit(1),
+      db.from('estate_properties').select('id').eq('user_id', biz).limit(1),
+      db.from('invoice_settings').select('company_name, logo_url, contact_lines').eq('business_id', biz).maybeSingle(),
+      db.from('staff_tasks').select('id', { count: 'exact', head: true }).eq('user_id', biz),
+    ])
+    const todo: string[] = []
+    if (!pm?.length && !est?.length) todo.push('Add your first property in Real Estate Intelligence')
+    if (!set?.company_name) todo.push('Add your company name in Invoice settings')
+    if (!set?.logo_url) todo.push('Upload your logo in Invoice settings so your emails carry it')
+    if (!String(set?.contact_lines ?? '').trim()) todo.push('Add your contact details in Invoice settings for the email footer')
+    if (!team) todo.push('Open Workflows and press "Run all now" to see Novourq Cloud AI work')
+    return todo.length ? { title: `Finish setting up Novourq: ${todo.length} step${todo.length === 1 ? '' : 's'} left`, lines: [...todo, 'The Guide tab in Settings explains each step.'], dueInDays: 3 } : null
+  } },
 ]
 
 export async function proposeWatchers() {
