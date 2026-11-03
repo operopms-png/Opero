@@ -923,6 +923,7 @@ export default function InvestPage() {
                       <select id={'stage-'+d.id} value={d.stage||'Found'} disabled={stageBusy===d.id||!!d.propertyId} onChange={e=>changeStage(d.id,e.target.value)} style={{...inp,padding:'7px 10px',fontSize:13,borderLeft:'4px solid '+(STAGE_COLOR[d.stage||'Found']||'#C4C4C4')}}>
                         {DEAL_STAGES.map(s=><option key={s}>{s}</option>)}
                       </select>
+                      {d.source==='agent'&&d.submittedBy&&<div style={{fontSize:11,color:'#676879',marginTop:6}}>Submitted by {d.submittedBy.name}{d.submittedBy.company?` (${d.submittedBy.company})`:''} · {d.submittedBy.email||d.submittedBy.phone}</div>}
                       {d.propertyId&&<a href="/property" style={{display:'block',fontSize:12,color:'#2F6DB5',marginTop:6}}>Added to Real Estate Intelligence →</a>}
                       {d.screening?.status&&(d.stage||'Found')==='Screened'&&<div style={{fontSize:11,color:'#676879',marginTop:6}}>AI screening: {d.screening.status==='PASS'?'Go':d.screening.status==='REJECT'?'No-go':'Review'}</div>}
                     </div>

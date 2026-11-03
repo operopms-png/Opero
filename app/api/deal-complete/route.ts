@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const f = deal.data?.form ?? deal.data ?? {}
   const address = String(deal.address || f.address || '').trim()
   const name = address.split(',')[0].trim() || 'New property'
-  const income = Number(deal.data?.monthlyRent ?? f.monthlyRent ?? f.rent ?? 0)
+  const income = Number(f.rent ?? deal.data?.monthlyRent ?? 0)
   const { data: prop, error } = await serviceClient.from('pm_properties').insert({
     user_id: uid, name, address: address || null, status: 'Active', currency: curOf(f),
     monthly_income: Number.isFinite(income) && income > 0 ? income : null,

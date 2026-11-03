@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
   const currency = ['GBP', 'JMD', 'USD'].includes(b.currency) ? b.currency : 'JMD'
   const strategy = ['btl', 'brrr', 'hmo', 'r2r', 'flip', 'land'].includes(b.strategy) ? b.strategy : 'btl'
   const rent = num(b.rent)
-  const form: Record<string, any> = { address, price: String(price), currency, bedrooms: b.beds ? String(num(b.beds) ?? '') : '', ...(rent ? { monthlyRent: String(rent) } : {}), listingUrl: clip(b.url, 400) }
+  const form: Record<string, any> = { address, price: String(price), currency, bedrooms: b.beds ? String(num(b.beds) ?? '') : '', ...(rent ? { rent: String(rent) } : {}), listingUrl: clip(b.url, 400) }
   const submittedBy = { name, company: clip(b.company, 120), email, phone, notes: clip(b.notes, 1500), propertyType: clip(b.propertyType, 60) }
   const { error } = await db.from('investment_deals').insert({ user_id: uid, strategy, address, stage: 'Found', data: { form, source: 'agent', submittedBy, listingUrl: form.listingUrl } })
   if (error) return j({ error: 'Could not save this right now. Please try again.' }, 500)

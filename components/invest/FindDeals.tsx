@@ -17,8 +17,19 @@ export default function FindDeals({ onSaved }: { onSaved?: () => void }) {
   const [busy, setBusy] = useState('')
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
+  const [link, setLink] = useState<{ token: string; active: boolean } | null>(null)
+  const [copied, setCopied] = useState(false)
+  const linkUrl = link ? `${typeof window !== 'undefined' ? window.location.origin : ''}/submit-deal/${link.token}` : ''
+  const loadLink = () => staffApi<{ token: string; active: boolean }>('/api/deal-submit').then(setLink).catch(() => {})
+  async function patchLink(body: any) {
+    const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession()
+    const r = await fetch('/api/deal-submit', { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify(body) })
+    const d = await r.json().catch(() => ({}))
+    if (!r.ok) { setErr(d.error || 'Something went wrong'); return }
+    await loadLink()
+  }
   const load = () => staffApi<{ briefs: Brief[]; matches: Match[]; learning: string }>('/api/deal-finder').then(d => { setBriefs(d.briefs); setMatches(d.matches); setLearning(d.learning) }).catch(e => setErr(e.message))
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(); loadLink() }, [])
 
   async function search(id: string) {
     setBusy('search:' + id); setErr(''); setMsg('Searching the web for listings. This takes up to a minute.')
@@ -78,6 +89,19 @@ export default function FindDeals({ onSaved }: { onSaved?: () => void }) {
           <div style={{ fontSize: 13, color: '#344054', whiteSpace: 'pre-wrap' }}>{learning}</div>
         </div>
       )}
+
+      <div style={{ ...card, marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Agent deal link</div>
+        <div style={{ fontSize: 13, color: '#676879', marginBottom: 10 }}>Send this link to local agents and partners. Deals they submit land in Saved Deals at the Found stage, and you get an email.</div>
+        {link ? (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input readOnly aria-label="Agent deal link" value={linkUrl} onFocus={e => e.currentTarget.select()} style={{ flex: 1, minWidth: 220, padding: '8px 10px', border: '1px solid #D0D4E4', borderRadius: 6, fontSize: 13, fontFamily: 'inherit' }} />
+            <button style={btn(true)} onClick={() => { navigator.clipboard?.writeText(linkUrl); setCopied(true); setTimeout(() => setCopied(false), 2000) }}>{copied ? 'Copied' : 'Copy link'}</button>
+            <button style={btn()} onClick={() => patchLink({ active: !link.active })}>{link.active ? 'Turn off' : 'Turn on'}</button>
+            <button style={btn()} onClick={() => { if (window.confirm('This stops the old link working and makes a new one. Continue?')) patchLink({ regenerate: true }) }}>New link</button>
+          </div>
+        ) : <div style={{ fontSize: 13, color: '#9699A6' }}>Loading…</div>}
+      </div>
 
       <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 8 }}>Matches</div>
       {matches.length === 0 ? <div style={{ ...card, textAlign: 'center', color: '#9699A6', padding: 40, fontSize: 13 }}>No matches yet. Describe what you want above.</div> : (
