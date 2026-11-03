@@ -12,20 +12,18 @@ import { STAFF_HUBS, NON_HUMAN_HUBS, HUMAN_HUB_HREF, humanHubTabs, tabMatches } 
 
 const NAV_GROUPS = [
   {
-    label: 'Operations',
-    module: 'pm',
-    modulePrice: '£39/mo',
-    items: [
-      { href: '/property', label: 'Property', key: 'pm', icon: 'building', badge: 'pm' },
-    ]
-  },
-  {
     label: 'Staff Centre',
     module: 'staffcentre',
     staffCentre: true,
     items: [
       // Grouped into hubs — see lib/staffHubs.ts (tabs show along the top of each page)
-      ...STAFF_HUBS.filter(h => NON_HUMAN_HUBS.includes(h.label)).map(h => ({ href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs })),
+      ...STAFF_HUBS.filter(h => NON_HUMAN_HUBS.includes(h.label)).flatMap(h => {
+        const hub = { href: h.tabs[0].href, label: h.label, key: 'staffcentre', icon: h.icon, hubTabs: h.tabs }
+        // Real Estate Intelligence (estate agency, developments, short stays, property management) sits between Dashboard and Novourq Cloud AI
+        return h.label === 'Dashboard'
+          ? [hub, { href: '/property', label: 'Real Estate Intelligence', key: 'pm', icon: 'building', badge: 'pm', requiresModule: 'pm' }]
+          : [hub]
+      }),
       // One link; the people-run hubs open from its page (app/staff-centre/human-intelligence)
       { href: HUMAN_HUB_HREF, label: 'Human Intelligence Hub', key: 'staffcentre', icon: 'users', hubTabs: humanHubTabs() },
     ]

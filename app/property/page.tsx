@@ -124,7 +124,7 @@ export default function PropertyHub() {
   return (
     <div style={{ background: '#f6f8fc', minHeight: '100vh', padding: '28px 32px 56px', fontFamily: "'Figtree', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <h1 style={{ margin: 0, fontSize: 30, color: C.ink, letterSpacing: '-.01em' }}>Property</h1>
+        <h1 style={{ margin: 0, fontSize: 30, color: C.ink, letterSpacing: '-.01em' }}>Real Estate Intelligence</h1>
         <p style={{ margin: '6px 0 18px', fontSize: 15, color: C.muted }}>Estate agency, developments, vacation rentals and property management in one place. Each page appears once.</p>
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '0 16px', marginBottom: 18, boxShadow: shadow }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
@@ -132,7 +132,7 @@ export default function PropertyHub() {
             style={{ flex: 1, minWidth: 0, fontFamily: 'inherit', fontSize: 15, color: C.ink, background: 'none', border: 0, padding: '15px 0', outline: 0 }} />
         </label>
         <div className="prop-grid" style={{ display: 'grid', gridTemplateColumns: '240px minmax(0,1fr)', gap: 18, alignItems: 'start' }}>
-          <nav aria-label="Property areas" className="prop-cats" style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: 8, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: shadow }}>
+          <nav aria-label="Real Estate Intelligence areas" className="prop-cats" style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: 8, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: shadow }}>
             {groups.map((g, i) => {
               const on = !term && g === active
               return (
@@ -157,7 +157,7 @@ export default function PropertyHub() {
                 <p style={{ margin: '3px 0 14px', fontSize: 14, color: C.muted }}>{active.note}</p>
                 {active.items.map(row)}
               </div>
-            ) : <p style={{ fontSize: 14, color: C.muted }}>No Property pages are available for your role.</p>}
+            ) : <p style={{ fontSize: 14, color: C.muted }}>No Real Estate Intelligence pages are available for your role.</p>}
           </section>
         </div>
       </div>
