@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller, type Caller } from '@/lib/mailbox'
 import { hasScTab } from '@/lib/staff-access'
-import { sendSms } from '@/lib/send-sms'
-import { normalizePhone, smsConnection, nameForPhone } from '@/lib/sms'
-import { generateRentReminders } from '@/lib/rent-reminders'
+import { generateRentReminders, deliverReminder } from '@/lib/rent-reminders'
 
 // Staff Centre → Finance → Reminders. Drafts rent reminder and missed-payment texts
 // and holds them until a person approves them. Nothing is sent to a tenant without
@@ -76,16 +74,12 @@ export async function POST(req: NextRequest) {
       await db.from('rent_reminders').update({ status: 'skipped', error: 'Rent already paid, so nothing was sent.', ...decided }).eq('id', id)
       return NextResponse.json({ ok: true, notSent: 'That rent has been paid since the draft was written, so no text was sent.' })
     }
-    const to = normalizePhone(row.phone)
-    if (!to) return bad('Check the tenant’s number — it needs a country code, e.g. +1 876… or +44 7…')
-    const conn = await smsConnection(c.businessId)
-    if (!conn) return bad('Texts aren’t switched on yet. Add the Twilio details in Netlify (see Inbox → Texts).', 503)
-    const r = await sendSms(to, row.message, conn.phone)
-    if (r.skipped) return bad('Texts aren’t switched on yet. Add the Twilio details in Netlify.', 503)
-    if (r.error) { await db.from('rent_reminders').update({ error: r.error }).eq('id', id); return bad(`Twilio couldn’t send it: ${r.error}`, 502) }
-    const known = await nameForPhone(c.businessId, to)
-    await db.from('sms_messages').insert({ connection_id: conn.id, business_id: c.businessId, contact_phone: to, contact_name: known.name || row.tenant, contact_id: known.contactId, sender: 'staff', sent_by: c.name || c.email, body: row.message, twilio_sid: r.sid || null, status: r.status || 'queued' })
-    await db.from('rent_reminders').update({ status: 'sent', error: null, ...decided }).eq('id', id)
+    const r = await deliverReminder(row, c.name || c.email)
+    if (!r.sent.length) {
+      if (r.errors.length) await db.from('rent_reminders').update({ error: r.errors.join('; ').slice(0, 400) }).eq('id', id)
+      return bad(r.errors[0] ? `Couldn’t send it: ${r.errors[0]}` : 'This tenant has no phone, email or portal to send to.', 502)
+    }
+    await db.from('rent_reminders').update({ status: 'sent', channels: r.sent.join(', '), error: r.errors.length ? r.errors.join('; ').slice(0, 400) : null, ...decided }).eq('id', id)
     return NextResponse.json({ ok: true })
   }
 
