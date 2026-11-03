@@ -393,6 +393,7 @@ function PMPageInner() {
   const [docsTenant, setDocsTenant] = useState<any>(null)
   const [complianceRecords, setComplianceRecords] = useState<any[]>([])
   const [showAddCompliance, setShowAddCompliance] = useState(false)
+  const [complianceEditId, setComplianceEditId] = useState<string|null>(null)
   const [complianceScope, setComplianceScope] = useState<'property'|'business'>('property')
   const [complianceForm, setComplianceForm] = useState<any>({scope:'property',property_id:'',type:PROPERTY_COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
   const [loading, setLoading] = useState(true)
@@ -1125,7 +1126,7 @@ function PMPageInner() {
             {tab==='Loans & Mortgages'&&<button onClick={()=>{setModal('mortgage');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add loan</button>}
             {tab==='Inventories'&&<button onClick={()=>{setModal('inventory');setForm({type:'Check-in',status:'Draft'})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add inventory</button>}
             {tab==='Inspections'&&<button onClick={()=>{setModal('inspection');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Schedule</button>}
-            {tab==='Compliance'&&<button onClick={()=>{setComplianceForm({scope:complianceScope,property_id:'',type:complianceTypeList(complianceKind,complianceScope)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
+            {tab==='Compliance'&&<button onClick={()=>{setComplianceEditId(null);setComplianceForm({scope:complianceScope,property_id:'',type:complianceTypeList(complianceKind,complianceScope)[0],reference:'',issued_date:'',expiry_date:'',notes:''});setShowAddCompliance(true)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Record</button>}
             {tab==='Documents'&&<button onClick={()=>{setModal('document');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Document</button>}
             {tab==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Expense</button>}
             {tab==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Bank Account</button>}
@@ -2584,7 +2585,7 @@ function PMPageInner() {
 
             {showAddCompliance&&(
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
-                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
+                <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>{complianceEditId?'Edit':'Add'} {complianceForm.scope==='property'?'property':'business'} compliance record</h3>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
                   <div><label style={lbl}>Type</label><select value={complianceKind} onChange={e=>{const k=e.target.value as 'long'|'short';setComplianceKind(k);setComplianceForm({...complianceForm,property_id:'',type:complianceTypeList(k,complianceForm.scope)[0]})}} style={inp}><option value="long">Long let</option><option value="short">Short stay</option></select></div>
                   <div><label style={lbl}>Scope</label>
@@ -2615,14 +2616,19 @@ function PMPageInner() {
                     if(complianceForm.scope==='property'&&!complianceForm.property_id) return
                     const { data: { user } } = await supabase.auth.getUser()
                     const accountId = user ? await getAccountId(user) : undefined
-                    const payload = complianceForm.scope==='business' ? {...complianceForm,property_id:null} : complianceForm
-                    const { error } = complianceKind==='short'
-                      ? await supabase.from('str_compliance').insert({...payload,user_id:accountId})
-                      : await supabase.from('pm_compliance').insert({...payload,user_id:accountId})
+                    const base = complianceForm.scope==='business' ? {...complianceForm,property_id:null} : complianceForm
+                    // Keep only the real columns (an opened record also carries id and joined rows)
+                    const payload = Object.fromEntries(Object.entries(base).filter(([k,v])=>!['id','user_id','created_at','_kind','properties','pm_properties'].includes(k)&&!(v&&typeof v==='object'&&!Array.isArray(v)))).valueOf() as any
+                    for(const k of ['issued_date','expiry_date']) if(payload[k]==='') payload[k]=null
+                    const tbl = complianceKind==='short' ? 'str_compliance' : 'pm_compliance'
+                    const { error } = complianceEditId
+                      ? await supabase.from(tbl).update(payload).eq('id',complianceEditId)
+                      : await supabase.from(tbl).insert({...payload,user_id:accountId})
                     if(error){alert(error.message);return}
+                    setComplianceEditId(null)
                     setShowAddCompliance(false)
                     await loadAll()
-                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add record</button>
+                  }} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{complianceEditId?'Save changes':'Add record'}</button>
                   <button onClick={()=>setShowAddCompliance(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
                 </div>
               </div>
@@ -2666,7 +2672,7 @@ function PMPageInner() {
                         <span style={{fontSize:13,color:'#667085'}}>{c.issued_date||'—'}</span>
                         <span style={{fontSize:13,color:'#667085'}}>{c.expiry_date||'—'}</span>
                         <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:complianceStatusColor[status]+'18',color:complianceStatusColor[status],textAlign:'center'}}>{status}</span>
-                        <button onClick={()=>del(c._kind==='long'?'pm_compliance':'str_compliance',c.id,c._kind==='long'?setComplianceRecords:setStrCompliance)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                        <button onClick={()=>{setComplianceKind(c._kind==='long'?'long':'short');setComplianceForm({scope:c.property_id?'property':'business',property_id:c.property_id??'',type:c.type??'',reference:c.reference??'',issued_date:c.issued_date??'',expiry_date:c.expiry_date??'',notes:c.notes??''});setComplianceEditId(c.id);setShowAddCompliance(true)}} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #2F6DB5',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#2F6DB5',marginRight:6}}>Edit</button><button onClick={()=>del(c._kind==='long'?'pm_compliance':'str_compliance',c.id,c._kind==='long'?setComplianceRecords:setStrCompliance)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                       </div>
                     )
                   })}
