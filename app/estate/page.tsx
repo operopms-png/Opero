@@ -310,6 +310,9 @@ export default function Page() {
   const [rentForm, setRentForm] = useState({tenancy:'',amount:'',dueDay:'1',frequency:'Monthly',method:'Bank Transfer'})
   const [maintenance, setMaintenance] = useState<any[]>([])
   const [showAddMaint, setShowAddMaint] = useState(false)
+  const [maintEditId, setMaintEditId] = useState<string|null>(null)
+  const [cleanEditId, setCleanEditId] = useState<string|null>(null)
+  const [vacEditId, setVacEditId] = useState<string|null>(null)
   const [maintForm, setMaintForm] = useState({title:'',property_id:'',description:'',priority:'medium',assigned_to:'',photos:[] as string[]})
   const [cleaning, setCleaning] = useState<any[]>([])
   const [showAddCleaning, setShowAddCleaning] = useState(false)
@@ -791,9 +794,9 @@ export default function Page() {
               ? <button onClick={()=>setShowUpgrade(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add more properties</button>
               : <button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>)}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
-            {section==='Vacancies'&&<button onClick={()=>setShowAddVacancy(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
-            {section==='Maintenance'&&<button onClick={()=>setShowAddMaint(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New ticket</button>}
-            {section==='Cleaning'&&<button onClick={()=>setShowAddCleaning(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Schedule cleaning</button>}
+            {section==='Vacancies'&&<button onClick={()=>{setVacEditId(null);setVacForm({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''});setShowAddVacancy(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add vacancy</button>}
+            {section==='Maintenance'&&<button onClick={()=>{setMaintEditId(null);setMaintForm({title:'',property_id:'',description:'',priority:'medium',assigned_to:'',photos:[]});setShowAddMaint(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ New ticket</button>}
+            {section==='Cleaning'&&<button onClick={()=>{setCleanEditId(null);setCleanForm({property_id:'',unit_id:'',scheduled_date:'',assigned_to:'',notes:''});setShowAddCleaning(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Schedule cleaning</button>}
             {section==='Owner Reports'&&<button style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Export Report</button>}
             {section==='Expenses'&&<button onClick={()=>setShowAddExpense(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Expense</button>}
             {section==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button>}
@@ -1564,7 +1567,7 @@ export default function Page() {
                 <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Description</label><input value={vacForm.description} onChange={e=>setVacForm({...vacForm,description:e.target.value})} placeholder='Brief description of the unit...' style={inputStyle}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!vacForm.property)return;saveRecord('estate_vacancies',{property_id:vacForm.property,type:vacForm.type,room_type:vacForm.roomType,rent:vacForm.rent,available_date:vacForm.available,bedrooms:vacForm.bedrooms,description:vacForm.description});setVacForm({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''});setShowAddVacancy(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add vacancy</button>
+                <button onClick={()=>{if(!vacForm.property)return;saveRecord('estate_vacancies',{property_id:vacForm.property,type:vacForm.type,room_type:vacForm.roomType,rent:vacForm.rent,available_date:vacForm.available,bedrooms:vacForm.bedrooms,description:vacForm.description},vacEditId||undefined);setVacEditId(null);setVacForm({property:'',type:'Apartment',roomType:'Whole Unit',rent:'',available:'',bedrooms:'1',description:''});setShowAddVacancy(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add vacancy</button>
                 <button onClick={()=>setShowAddVacancy(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -1597,7 +1600,7 @@ export default function Page() {
                       {v.available_date&&<div style={{fontSize:11,color:'#667085',marginBottom:12}}>Available from {v.available_date}</div>}
                       <div style={{display:'flex',gap:6}}>
                         <button onClick={()=>saveRecord('estate_vacancies',{status:v.status==='Available'?'Let Agreed':'Available'},v.id)} style={{flex:1,padding:'7px',borderRadius:6,border:'none',background:v.status==='Available'?ACCENT:'#F2F4F7',color:v.status==='Available'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{v.status==='Available'?'Mark let':'Re-list'}</button>
-                        <button onClick={()=>delRecord('estate_vacancies',v.id)} style={{padding:'7px 10px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                        <button onClick={()=>{setVacForm({property:v.property_id??'',type:v.type??'Apartment',roomType:v.room_type??'Whole Unit',rent:v.rent!=null?String(v.rent):'',available:v.available_date??'',bedrooms:v.bedrooms!=null?String(v.bedrooms):'1',description:v.description??''});setVacEditId(v.id);setShowAddVacancy(true)}} style={{padding:'7px 10px',borderRadius:6,border:'1px solid #2F6DB5',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#2F6DB5'}}>Edit</button><button onClick={()=>delRecord('estate_vacancies',v.id)} style={{padding:'7px 10px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                       </div>
                     </div>
                   </div>
@@ -1618,7 +1621,7 @@ export default function Page() {
                 <div style={{gridColumn:'span 2'}}><FileUpload label="Photo / Document" value={maintForm.photos[0]??''} onChange={url=>setMaintForm({...maintForm,photos:[url]})} folder="estate-maintenance-photos" /></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!maintForm.title)return;saveRecord('estate_maintenance',maintForm);setMaintForm({title:'',property_id:'',description:'',priority:'medium',assigned_to:'',photos:[]});setShowAddMaint(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Create ticket</button>
+                <button onClick={()=>{if(!maintForm.title)return;saveRecord('estate_maintenance',maintForm,maintEditId||undefined);setMaintEditId(null);setMaintForm({title:'',property_id:'',description:'',priority:'medium',assigned_to:'',photos:[]});setShowAddMaint(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{maintEditId?'Save changes':'Create ticket'}</button>
                 <button onClick={()=>setShowAddMaint(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -1637,7 +1640,7 @@ export default function Page() {
                   <select value={m.status} onChange={e=>saveRecord('estate_maintenance',{status:e.target.value},m.id)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
                     <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
                   </select>
-                  <button onClick={()=>delRecord('estate_maintenance',m.id)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                  <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>{setMaintForm({title:m.title??'',property_id:m.property_id??'',description:m.description??'',priority:m.priority??'medium',assigned_to:m.assigned_to??'',photos:Array.isArray(m.photos)?m.photos:[]});setMaintEditId(m.id);setShowAddMaint(true)}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>delRecord('estate_maintenance',m.id)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
                 </div>
               )
             })}
@@ -1654,7 +1657,7 @@ export default function Page() {
                 <div><div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Notes</div><input value={cleanForm.notes} onChange={e=>setCleanForm({...cleanForm,notes:e.target.value})} placeholder="Optional" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{if(!cleanForm.property_id)return;saveRecord('estate_cleaning_tasks',cleanForm);setCleanForm({property_id:'',unit_id:'',scheduled_date:'',assigned_to:'',notes:''});setShowAddCleaning(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Schedule</button>
+                <button onClick={()=>{if(!cleanForm.property_id)return;saveRecord('estate_cleaning_tasks',cleanForm,cleanEditId||undefined);setCleanEditId(null);setCleanForm({property_id:'',unit_id:'',scheduled_date:'',assigned_to:'',notes:''});setShowAddCleaning(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{cleanEditId?'Save changes':'Schedule'}</button>
                 <button onClick={()=>setShowAddCleaning(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}
@@ -1669,7 +1672,7 @@ export default function Page() {
                 <select value={c.status} onChange={e=>saveRecord('estate_cleaning_tasks',{status:e.target.value},c.id)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
                   <option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
                 </select>
-                <button onClick={()=>delRecord('estate_cleaning_tasks',c.id)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>{setCleanForm({property_id:c.property_id??'',unit_id:c.unit_id??'',scheduled_date:c.scheduled_date??'',assigned_to:c.assigned_to??'',notes:c.notes??''});setCleanEditId(c.id);setShowAddCleaning(true)}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>delRecord('estate_cleaning_tasks',c.id)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
           </div>)}
