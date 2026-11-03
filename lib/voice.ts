@@ -4,8 +4,7 @@ import { serviceClient as db } from '@/lib/admin-auth'
 import type { Caller } from '@/lib/mailbox'
 import { callClaude } from '@/lib/claude'
 import { FAST_MODEL } from '@/lib/receptionist'
-import { portalContext, systemPrompt, askClaude } from '@/lib/ask-ai'
-import { aiTaskBy } from '@/lib/ai-proposal-utils'
+import { runAgent, type ClientAction } from '@/lib/voice-agent'
 
 export const HOURLY_LIMIT = 150
 
@@ -69,35 +68,10 @@ export async function tidy(raw: string, dict: Dict, hint: string): Promise<strin
   return out || text
 }
 
-// "Novourq, chase the late rent at Oak Court" -> a short answer plus any jobs for the Task board.
-const COMMAND_RULES = `
-
-The account admin is speaking to you by voice from inside the portal. Reply in plain text: no markdown, no tables, under 90 words, because the answer is read aloud.
-- If they clearly ask for something to be done, chased, booked or followed up, add it to "tasks" so it lands on the Task board. You cannot send messages, move money or change records from here, so say the job has been added for the team or the right AI skill. Never claim something was sent or paid.
-- Do not create tasks for questions.
-Reply ONLY with JSON, no other text: {"reply": "text to say", "tasks": [{"title": "short title", "notes": "one line of detail", "days": 1}]}`
-
-const CALL_RULES = `
-This is a live phone call. Speak like a capable colleague on the phone: one to three short sentences, natural and warm, no lists, no numbers read out in bulk. Use what was said earlier in the call. If the request is unclear, ask one short question. If they say goodbye, say a brief goodbye.`
-
-export async function runCommand(c: Caller, text: string, history: { role: 'user' | 'assistant'; content: string }[] = [], call = false): Promise<{ reply: string; tasks: number }> {
-  const portal = await portalContext(c).catch(() => null)
-  const out = await askClaude(systemPrompt({ c, portal, web: false }) + COMMAND_RULES + (call ? CALL_RULES : ''), [...history.slice(-8), { role: 'user' as const, content: text }], false)
-  if (out.error || !out.text) return { reply: 'Sorry, I could not answer that just now. Try again in a minute.', tasks: 0 }
-  let reply = out.text.trim().slice(0, 1200)
-  let tasks: { title?: string; notes?: string; days?: number }[] = []
-  const m = out.text.match(/\{[\s\S]*\}/)
-  if (m) {
-    try {
-      const j = JSON.parse(m[0])
-      if (typeof j.reply === 'string' && j.reply.trim()) { reply = j.reply.trim(); tasks = Array.isArray(j.tasks) ? j.tasks.slice(0, 5) : [] }
-    } catch { /* keep plain reply */ }
-  }
-  let made = 0
-  for (const t of tasks) {
-    if (t?.title && await aiTaskBy('voice_command', c.businessId, String(t.title), String(t.notes || 'Added by voice'), Math.min(30, Math.max(0, Number(t.days) || 1)))) made++
-  }
-  return { reply, tasks: made }
+// "Novourq, chase the late rent at Oak Court" or a live call: the voice agent answers and uses its tools.
+export async function runCommand(c: Caller, text: string, history: { role: 'user' | 'assistant'; content: string }[] = [], call = false): Promise<{ reply: string; tasks: number; actions: ClientAction[] }> {
+  const r = await runAgent(c, text, history, call)
+  return { reply: r.reply, tasks: r.jobs, actions: r.actions }
 }
 
 // The speaker says "Novourq, ..." to give an instruction instead of dictating. Speech engines

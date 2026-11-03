@@ -59,9 +59,9 @@ export async function POST(req: NextRequest) {
     if (!wake) return bad('I heard the name but no instruction. Try "Novourq, what is overdue?"')
     const text = call ? wake : await tidy(wake, dict, 'an instruction to a property management assistant')
     const r = await runCommand(c, text, history, call)
-    out = { mode: 'command', text, reply: r.reply, tasks: r.tasks }
+    out = { mode: 'command', text, reply: r.reply, tasks: r.tasks, actions: r.actions }
     const callId = String(f.get('call_id') || '')
-    if (call && /^[0-9a-f-]{36}$/i.test(callId)) await logCall(c, callId, text, r.reply, r.tasks)
+    if (call && /^[0-9a-f-]{36}$/i.test(callId)) await logCall(c, callId, f.get('internal') === '1' ? '(deal search results)' : text, r.reply, r.tasks)
   } else {
     const text = await tidy(raw, dict, String(f.get('hint') || ''))
     out = { mode: 'dictate', text }
