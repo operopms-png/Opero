@@ -4,7 +4,6 @@
 // /api/ai-overview, /api/ai-workflows, /api/ai-activity and the ai_staff table.
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabase } from '../../lib/supabase'
 import { staffApi } from '../../lib/staff-api'
 
 const K = { ink: '#0f2150', mid: '#34508a', muted: '#5470a8', soft: '#7a8fbd', line: '#e3ecfa', blue: '#2f5bd6', chip: '#eef4ff', chipLine: '#cfe0f7' }
@@ -17,20 +16,16 @@ function ago(iso?: string | null) {
   if (m < 1) return 'just now'; if (m < 60) return `${Math.round(m)} min ago`; if (m < 1440) return `${Math.round(m / 60)} h ago`
   const d = Math.round(m / 1440); return d === 1 ? 'yesterday' : d < 7 ? `${d} days ago` : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
-const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || 'AI'
 
 export default function DashboardAiPanel() {
   const [ov, setOv] = useState<any>(null)
   const [wf, setWf] = useState<any[] | null>(null)
   const [act, setAct] = useState<any[] | null>(null)
-  const [team, setTeam] = useState<any[] | null>(null)
 
   useEffect(() => {
     staffApi('/api/ai-overview').then(setOv).catch(() => setOv(false))
     staffApi('/api/ai-workflows').then((d: any) => setWf(d.workflows ?? [])).catch(() => setWf([]))
     staffApi('/api/ai-activity').then((d: any) => setAct((d.items ?? []).slice(0, 6))).catch(() => setAct([]))
-    supabase.from('ai_staff').select('id,name,job_role,status,last_used_at').order('created_at', { ascending: true })
-      .then(({ data }) => setTeam(((data ?? []) as any[]).filter(a => !(a.name === a.job_role)))).then(undefined, () => setTeam([]))
   }, [])
 
   if (ov === false) return null
@@ -67,29 +62,19 @@ export default function DashboardAiPanel() {
         {stat('AI alerts', ov ? ov.alerts?.length ?? 0 : '…', 'unread from Novourq Cloud AI', '/staff-centre/ai-command-centre/alerts')}
       </div>
 
-      {team && team.length > 0 && (
-        <>
-          <h2 style={{ ...head, marginTop: 18 }}>How Novourq Cloud AI is set up</h2>
-          <div className="ai-team" style={{ marginTop: 0 }}>
-            {team.map(a => {
-              const live = a.status === 'active'
-              return (
-                <Link key={a.id} href="/staff-centre/ai-command-centre/agent-pool" style={{ ...box, padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start', textDecoration: 'none', minWidth: 0 }}>
-                  <span style={{ position: 'relative', width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg,#dbe9ff,#bcd3fb)', color: '#1d4ed8', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 14, flex: 'none' }}>
-                    {initials(a.name)}
-                    <i style={{ position: 'absolute', right: -3, bottom: -3, width: 11, height: 11, borderRadius: 11, background: live ? '#16a34a' : '#94a3b8', border: '2px solid #fff' }} />
-                  </span>
-                  <span style={{ minWidth: 0 }}>
-                    <b style={{ display: 'block', fontSize: 14, color: K.ink }}>{a.name}</b>
-                    <small style={{ display: 'block', fontSize: 12, color: K.muted }}>{a.job_role}</small>
-                    <em style={{ display: 'block', fontStyle: 'normal', fontSize: 12, color: K.mid, marginTop: 4 }}>{a.status === 'paused' ? 'Paused' : a.status === 'not_set_up' ? 'Not set up yet' : a.last_used_at ? `Last asked ${ago(a.last_used_at)}` : 'Ready'}</em>
-                  </span>
-                </Link>
-              )
-            })}
-          </div>
-        </>
-      )}
+      <h2 style={{ ...head, marginTop: 18 }}>Novourq Cloud AI</h2>
+      <div style={{ ...box, padding: 18, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg,#2f5bd6,#4f7fe8)', color: '#fff', display: 'grid', placeItems: 'center', fontWeight: 800, fontSize: 16, flex: 'none' }}>N</span>
+        <span style={{ flex: '1 1 260px', minWidth: 0 }}>
+          <b style={{ display: 'block', fontSize: 15, color: K.ink }}>One AI running your whole business</b>
+          <small style={{ display: 'block', fontSize: 12.5, color: K.muted, marginTop: 2 }}>{ov ? `${on} skills switched on` : 'Loading…'}{act && act[0] ? ` · last action ${ago(act[0].at)}` : ''}. Ask it anything about your portfolio, or message it from your phone.</small>
+        </span>
+        <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {[['Ask Novourq Cloud AI', '/staff-centre/ask-grok'], ['Phone Assistant', '/settings?section=Phone%20Assistant'], ['AI Authority', '/settings?section=AI%20Authority']].map(([l, h]) => (
+            <Link key={l} href={h} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${K.chipLine}`, background: K.chip, color: K.blue, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{l}</Link>
+          ))}
+        </span>
+      </div>
 
       <div className="ai-two">
         <div style={{ ...box, padding: 18, minWidth: 0 }}>
