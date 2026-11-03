@@ -41,14 +41,26 @@ export default function GrokPanel() {
     return () => { try { recRef.current?.abort() } catch {} ; window.speechSynthesis?.cancel() }
   }, [])
 
+  // Best female British voice on this device: natural/enhanced voices first, never a male one.
+  function pickVoice(all: SpeechSynthesisVoice[]) {
+    const male = /daniel|arthur|oliver|rishi|male(?!.*female)|james|gordon|fred|alex\b/i
+    const female = /serena|kate|stephanie|martha|hazel|libby|sonia|female|samantha|moira|karen|tessa|susan|fiona|victoria|zira|jenny|emma|amy/i
+    const rich = /premium|enhanced|natural|neural|online|siri/i
+    const en = all.filter(v => /^en/i.test(v.lang) && !male.test(v.name))
+    const score = (v: SpeechSynthesisVoice) => (/en-GB/i.test(v.lang) ? 4 : /^en-(AU|IE|ZA)/i.test(v.lang) ? 2 : 0) + (female.test(v.name) ? 3 : 0) + (rich.test(v.name) ? 5 : 0)
+    return en.sort((x, y) => score(y) - score(x))[0]
+  }
   function speak(text: string) {
     const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
     if (!synth || !text) return
     synth.cancel()
+    if (!synth.getVoices().length) { synth.onvoiceschanged = () => speak(text); return }
     const clean = text.replace(/[*_#`>|]/g, '').replace(/\s+/g, ' ').trim().slice(0, 3000)
     const u = new SpeechSynthesisUtterance(clean)
     u.lang = 'en-GB'
-    const v = synth.getVoices().find(x => /en-GB/i.test(x.lang)) ?? synth.getVoices().find(x => /^en/i.test(x.lang))
+    const v = pickVoice(synth.getVoices())
+    u.rate = 0.97
+    u.pitch = 1.04
     if (v) u.voice = v
     u.onstart = () => setSpeaking(true)
     u.onend = () => setSpeaking(false)
