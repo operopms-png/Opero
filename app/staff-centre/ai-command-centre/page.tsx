@@ -23,7 +23,7 @@ export default function Overview() {
         {!d ? (!err && <Loading />) : (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12, marginBottom: 16 }}>
-              {[['Waiting for approval', d.approvals, BASE + '/approvals'], ['Agents switched on', `${d.agentsOn} of ${d.agentsTotal}`, BASE + '/agents'], ['Sent in 30 days', d.sent30, BASE + '/results'], ['Estimated hours saved', d.hoursSaved, BASE + '/results']].map(([l, v, href]) => (
+              {[['Waiting for approval', d.approvals, BASE + '/approvals'], ['Skills switched on', `${d.agentsOn} of ${d.agentsTotal}`, BASE + '/agents'], ['Sent in 30 days', d.sent30, BASE + '/results'], ['Estimated hours saved', d.hoursSaved, BASE + '/results']].map(([l, v, href]) => (
                 <Link key={l as string} href={href as string} style={{ ...card, textDecoration: 'none', color: '#101828' }}>
                   <div style={{ fontSize: 12, color: '#667085' }}>{l}</div><div style={{ fontSize: 26, fontWeight: 700, marginTop: 2 }}>{v}</div>
                 </Link>
@@ -33,7 +33,7 @@ export default function Overview() {
               <div><DailyBriefing /></div>
               <div style={{ display: 'grid', gap: 14, alignContent: 'start' }}>
                 <div style={card}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10 }}>Agents running</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10 }}>Skills running</div>
                   {d.agents.length === 0 ? <div style={{ fontSize: 13, color: '#667085' }}>No agents are switched on. <Link href={BASE + '/agents'} style={{ color: '#1B2F6E' }}>Switch some on</Link>.</div>
                     : d.agents.map((a: any) => (
                       <div key={a.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 13.5, padding: '8px 0', borderBottom: '1px solid #F2F4F7' }}>

@@ -12,8 +12,8 @@ const NAV: { heading: string; items: { href: string; label: string; badge?: 'app
     { href: BASE + '/approvals', label: 'Approvals', badge: 'approvals' },
     { href: BASE + '/alerts', label: 'Alerts', badge: 'alerts' },
   ] },
-  { heading: 'Agents', items: [
-    { href: BASE + '/agents', label: 'Agents' },
+  { heading: 'Skills', items: [
+    { href: BASE + '/agents', label: 'Skills' },
     { href: BASE + '/agent-pool', label: 'Agent Pool' },
     { href: BASE + '/ask-grok', label: 'Novourq Cloud AI' },
   ] },
