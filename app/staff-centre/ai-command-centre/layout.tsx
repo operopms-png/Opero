@@ -23,6 +23,7 @@ const NAV: { heading: string; items: { href: string; label: string; badge?: 'app
     { href: BASE + '/escalation', label: 'Escalation rules' },
     { href: BASE + '/pricing', label: 'Pricing' },
     { href: BASE + '/chief', label: 'Chief of Staff' },
+    { href: BASE + '/matching', label: 'Matching' },
   ] },
   { heading: 'Insight', items: [
     { href: BASE + '/results', label: 'Results' },
