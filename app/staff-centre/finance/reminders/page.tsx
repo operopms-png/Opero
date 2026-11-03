@@ -1,6 +1,6 @@
 'use client'
-// Staff Centre → Finance → Reminders: drafted rent reminder and missed-payment texts,
-// held until an admin or co-founder approves them. Anyone with Finance can generate and
+// Staff Centre → Finance → Reminders: rent reminders by email and tenant portal. The daily AI job sends them itself;
+// anything drafted by hand here waits until an admin or co-founder approves it. Anyone with Finance can generate and
 // edit drafts; only an admin or co-founder can approve (send) or skip them.
 import React, { useEffect, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Stat, Loading, Empty } from '../../../../components/crm/Page'
@@ -23,19 +23,19 @@ export default function Reminders() {
     try {
       const r = await staffApi('/api/finance/reminders', { action: 'generate' })
       setNote(r.created ? `${r.created} new draft${r.created === 1 ? '' : 's'} added.` : 'No new drafts — nothing is due soon or late that isn’t already drafted.')
-      if (r.skippedNoPhone) setNote(n => `${n} ${r.skippedNoPhone} skipped because the tenant has no phone number.`)
+      if (r.skippedNoPhone) setNote(n => `${n} ${r.skippedNoPhone} skipped because the tenant has no email or portal.`)
       await load()
     } catch (e: any) { setErr(e.message) }
     setBusy(null)
   }
   async function act(id: string, action: 'edit' | 'approve' | 'skip', message?: string) {
-    if (action === 'approve' && !confirm('Send this text to the tenant now?')) return
+    if (action === 'approve' && !confirm('Send this reminder to the tenant now by email and portal?')) return
     setBusy(id); setErr(''); setNote('')
     try {
       if (action === 'approve' && edits[id] !== undefined) await staffApi('/api/finance/reminders', { action: 'edit', id, message: edits[id] })
       const r = await staffApi('/api/finance/reminders', { action, id, message })
       if (r.notSent) setNote(r.notSent)
-      else if (action === 'approve') setNote('Text sent.')
+      else if (action === 'approve') setNote('Reminder sent by email and portal.')
       else if (action === 'edit') setNote('Changes saved.')
       if (action !== 'edit') setEdits(e => { const n = { ...e }; delete n[id]; return n })
       await load()
@@ -49,13 +49,13 @@ export default function Reminders() {
 
   return (
     <CrmPage>
-      <CrmHeader title="Rent reminders" subtitle="Drafted texts for rent due soon or late. Nothing is sent until an admin or co-founder approves it." actions={<button onClick={generate} disabled={busy === 'gen'} style={btn(true)}>{busy === 'gen' ? 'Checking…' : 'Generate drafts'}</button>} />
+      <CrmHeader title="Rent reminders" subtitle="Reminders for rent due soon or late, sent to the tenant by email and portal. The daily AI job sends them automatically; drafts made by hand wait for approval." actions={<button onClick={generate} disabled={busy === 'gen'} style={btn(true)}>{busy === 'gen' ? 'Checking…' : 'Generate drafts'}</button>} />
       <Body>
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         {note && <div style={{ color: C.muted, marginBottom: 12, fontSize: 13.5 }}>{note}</div>}
         {!d ? (!err && <Loading />) : <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 18 }}>
-            <Stat label="Awaiting approval" value={pending.length} sub={d.canApprove ? 'You can approve these' : 'An admin or co-founder approves these'} highlight />
+            <Stat label="Waiting" value={pending.length} sub={d.canApprove ? 'You can approve these' : 'An admin or co-founder approves these'} highlight />
             <Stat label="Missed payments" value={pending.filter(r => r.stage.startsWith('late')).length} sub="Late rent drafts" />
             <Stat label="Due soon" value={pending.filter(r => !r.stage.startsWith('late')).length} sub="Friendly reminders" />
           </div>
