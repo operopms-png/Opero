@@ -3,6 +3,7 @@
  * Usage (Elementor → HTML widget):
  *   <div data-sg-properties="search"></div>     full search page: list + map
  *   <div data-sg-properties="carousel"></div>   home page "Stays & tenancies" cards
+ *   add data-sg-style="corporate" for the plain Novourq look (no tags, square cards)
  *   <script src="https://app.sangstersgroup.com/sg-properties.js" defer></script>
  */
 (function () {
@@ -59,6 +60,12 @@
       '.sgp-card .sgp-specs{border-top:1px solid ' + LINE + ';padding-top:10px;margin-top:auto}',
       '.sgp-btn{display:block;text-align:center;background:#17306F;color:#fff !important;text-decoration:none;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:14px 10px;border-radius:3px;margin-top:14px}',
       '.sgp-btn.off{background:#17306F;color:#fff !important;pointer-events:none;opacity:.6}',
+      '.sgp-corp .sgp-badge:not(.dark){display:none}',
+      '.sgp-corp .sgp-card{border:1px solid ' + LINE + ';border-radius:6px;box-shadow:none}',
+      '.sgp-corp .sgp-loc{color:' + MUTED + ';font-weight:600;letter-spacing:.07em;min-height:2.8em}',
+      '.sgp-corp .sgp-title{font-weight:600;min-height:2.6em}',
+      '.sgp-corp .sgp-btn{text-transform:none;letter-spacing:0;font-size:13px;font-weight:600;padding:11px 14px;border-radius:5px}',
+      '.sgp-corp .sgp-btn.off{background:transparent;color:' + MUTED + ' !important;border:1px solid ' + LINE + ';opacity:1}',
       '.sgp-empty{padding:30px;color:' + MUTED + ';font-size:14px}',
       '.sgp-lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999999;display:flex;align-items:center;justify-content:center}',
       '.sgp-lb img{max-width:92vw;max-height:84vh;object-fit:contain}',
@@ -264,6 +271,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-sg-properties]'), function (el) {
       if (el._sgp) return; el._sgp = 1
       var v = el.getAttribute('data-sg-properties')
+      if (el.getAttribute('data-sg-style') === 'corporate') el.classList.add('sgp-corp')
       if (v === 'search') search(el); else carousel(el)
     })
   }
