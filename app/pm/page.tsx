@@ -433,6 +433,8 @@ function PMPageInner() {
   const [form, setForm] = useState<any>({})
   const [saving, setSaving] = useState(false)
   const [editId, setEditId] = useState<string|null>(null)
+  // Closing any form forgets which record was being edited, so the next Add never overwrites it.
+  useEffect(() => { if (!modal) setEditId(null) }, [modal])
 
   // Poll for new landlord messages every 4s while the Messages tab is
   // open, mirroring the same pattern used on the Vacation Rentals
@@ -659,7 +661,14 @@ function PMPageInner() {
     const { data: { user } } = await supabase.auth.getUser()
     const accountId = user ? await getAccountId(user) : undefined
     if (editId) {
-      const { error } = await supabase.from(table).update({ ...data }).eq('id', editId)
+      // Records opened for editing carry joined rows (pm_properties, pm_units ...) and read-only columns: send only real fields.
+      const patch: Record<string, any> = {}
+      for (const [k, v] of Object.entries(data ?? {})) {
+        if (['id', 'user_id', 'created_at'].includes(k)) continue
+        if (v && typeof v === 'object' && !Array.isArray(v) && (/^(pm_|estate_|str_)/.test(k) || k === 'properties')) continue
+        patch[k] = v
+      }
+      const { error } = await supabase.from(table).update(patch).eq('id', editId)
       if (error) { alert(error.message); setSaving(false); return }
     } else {
       const { error } = await supabase.from(table).insert([{ ...data, user_id: accountId }])
@@ -1390,7 +1399,7 @@ function PMPageInner() {
                 <span>£{(u.monthly_rent??0).toLocaleString()}</span>
                 <span>{u.lease_end??'—'}</span>
                 <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:u.status==='occupied'?'#D1FAE5':'#F3F4F6',color:u.status==='occupied'?'#059669':'#6B7280'}}>{u.status}</span>
-                <button onClick={()=>del('pm_units',u.id,setUnits)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('unit',{...u,monthly_rent:u.monthly_rent??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_units',u.id,setUnits)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button></span>
               </div>
             ))}
           </div>
@@ -2217,7 +2226,7 @@ function PMPageInner() {
               }
               return(
                 <div key={l.id} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 90px 90px 80px 90px 110px 150px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
-                  <span style={{fontWeight:500,color:'#323338'}}>{l.pm_tenants?.name??'—'}</span>
+                  <span style={{fontWeight:500,color:'#323338',display:'flex',flexDirection:'column',gap:4,alignItems:'flex-start'}}>{l.pm_tenants?.name??'—'}<button onClick={()=>openEdit('lease',{...l,monthly_rent:l.monthly_rent??'',deposit:l.deposit??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button></span>
                   <span>{l.pm_properties?.name??'—'}</span>
                   <span>{l.pm_units?.unit_number??'—'}</span>
                   <span>{l.start_date??'—'}</span>
@@ -2297,7 +2306,7 @@ function PMPageInner() {
                     <select value={m.status} onChange={async e=>{await supabase.from(table).update({status:e.target.value}).eq('id',m.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
                       <option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option>
                     </select>
-                    <button onClick={()=>del(table,m.id,m._kind==='short'?setStrMaintenance:setMaintenance)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                    <span style={{display:'flex',gap:8,alignItems:'center'}}>{m._kind==='long'&&<button onClick={()=>openEdit('maintenance',m)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>}<button onClick={()=>del(table,m.id,m._kind==='short'?setStrMaintenance:setMaintenance)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
                   </div>
                 )
               })
@@ -2329,7 +2338,7 @@ function PMPageInner() {
                   <select value={c.status} onChange={async e=>{await supabase.from(table).update({status:e.target.value}).eq('id',c.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
                     <option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
                   </select>
-                  <button onClick={()=>del(table,c.id,isShort?setStrCleaning:setCleaning)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                  <span style={{display:'flex',gap:8,alignItems:'center'}}>{!isShort&&<button onClick={()=>openEdit('cleaning',c)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>}<button onClick={()=>del(table,c.id,isShort?setStrCleaning:setCleaning)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
                 </div>
                 )
               })
@@ -2350,7 +2359,7 @@ function PMPageInner() {
                 <select value={i.status} onChange={async e=>{await supabase.from('pm_inspections').update({status:e.target.value}).eq('id',i.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
                   <option value="scheduled">Scheduled</option><option value="in_progress">In Progress</option><option value="completed">Completed</option>
                 </select>
-                <button onClick={()=>del('pm_inspections',i.id,setInspections)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('inspection',i)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_inspections',i.id,setInspections)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
           </div>
@@ -2391,7 +2400,7 @@ function PMPageInner() {
                 <div style={{color:'#667085',fontSize:12}}>{f.pm_properties?.name??'—'}{f.pm_units?.unit_number?` · Unit ${f.pm_units.unit_number}`:''}</div>
                 <div style={{color:'#323338'}}>× {f.quantity}</div>
                 <span style={{fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:10,background:'#EAF3FC',color:'#1D4E89'}}>{f.condition??'—'}</span>
-                <button onClick={()=>del('pm_furniture',f.id,setFurniture)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('furniture',f)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_furniture',f.id,setFurniture)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
           </div>
@@ -2408,7 +2417,7 @@ function PMPageInner() {
                 </div>
                 <div style={{fontSize:13,color:'#323338'}}>{v.rent!=null?`£${Number(v.rent).toLocaleString()} / month`:'—'}</div>
                 <div style={{fontSize:12,color:'#667085'}}>Available {v.available_date??'—'}</div>
-                <button onClick={()=>del('pm_vacancies',v.id,setVacancies)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('vacancy',v)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_vacancies',v.id,setVacancies)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
           </div>
@@ -2427,7 +2436,7 @@ function PMPageInner() {
                 <select value={v.status??'Requested'} onChange={async e=>{await supabase.from('pm_viewings').update({status:e.target.value}).eq('id',v.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
                   {['Requested','Scheduled','Completed','Cancelled','No Show'].map(s=><option key={s}>{s}</option>)}
                 </select>
-                <button onClick={()=>del('pm_viewings',v.id,setViewings)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('viewing',{...v,scheduled_at:v.scheduled_at?String(v.scheduled_at).slice(0,16):''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_viewings',v.id,setViewings)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
           </div>
@@ -2444,7 +2453,7 @@ function PMPageInner() {
                 </div>
                 <div style={{fontSize:13,color:'#323338'}}>{m.amount!=null?`£${Number(m.amount).toLocaleString()}`:'—'}</div>
                 <div style={{fontSize:13,color:'#323338'}}>{m.monthly_payment!=null?`£${Number(m.monthly_payment).toLocaleString()} / month`:'—'}</div>
-                <button onClick={()=>del('pm_mortgages',m.id,setMortgages)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('mortgage',m)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_mortgages',m.id,setMortgages)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
           </div>
@@ -2537,7 +2546,7 @@ function PMPageInner() {
                 <select value={i.status} onChange={async e=>{await supabase.from('pm_inventories').update({status:e.target.value}).eq('id',i.id);loadAll()}} style={{padding:'6px 10px',borderRadius:8,border:'1px solid #E4E7EC',fontSize:13,fontFamily:'inherit'}}>
                   <option>Draft</option><option>Completed</option>
                 </select>
-                <button onClick={()=>del('pm_inventories',i.id,setInventories)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('inventory',i)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_inventories',i.id,setInventories)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
           </div>
@@ -2658,7 +2667,7 @@ function PMPageInner() {
                   <div style={{fontSize:12,color:'#667085',textTransform:'capitalize',marginTop:2}}>{d.type}{d.pm_properties?` · ${d.pm_properties.name}`:''}</div>
                 </div>
                 <a href={d.url||d.file_url} target="_blank" rel="noreferrer" style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:13,fontWeight:500,textDecoration:'none',color:'#344054'}}>View</a>
-                <button onClick={()=>del('pm_documents',d.id,setDocuments)} style={{padding:'7px 12px',borderRadius:8,border:'1px solid #FEE2E2',background:'#FFF5F5',color:'#EF4444',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>Delete</button>
+                <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('document',d)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_documents',d.id,setDocuments)} style={{padding:'7px 12px',borderRadius:8,border:'1px solid #FEE2E2',background:'#FFF5F5',color:'#EF4444',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>Delete</button></span>
               </div>
             ))}
           </div>
@@ -3652,7 +3661,7 @@ function PMPageInner() {
       )}
 
       {modal==='maintenance'&&(
-        <Modal title="New Maintenance Ticket" onClose={()=>setModal(null)}>
+        <Modal title={editId?"Edit Maintenance Ticket":"New Maintenance Ticket"} onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Type</label>
               <select style={{...inp,cursor:'pointer'}} value={form.kind??'long'} onChange={e=>setForm({...form,kind:e.target.value,property_id:''})}>
@@ -3690,7 +3699,7 @@ function PMPageInner() {
       )}
 
       {modal==='cleaning'&&(
-        <Modal title="Schedule Cleaning" onClose={()=>setModal(null)}>
+        <Modal title={editId?"Edit Cleaning":"Schedule Cleaning"} onClose={()=>setModal(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Type</label>
               <select style={{...inp,cursor:'pointer'}} value={form.kind??'long'} onChange={e=>setForm({...form,kind:e.target.value,property_id:'',unit_id:''})}>
