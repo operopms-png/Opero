@@ -41,13 +41,33 @@ export async function POST(req: NextRequest) {
     const marketingConsent = clip(String(body.marketingConsent ?? ''), 20)
     const issue = clip(body.issue, 300), urgency = clip(body.urgency, 100), description = clip(body.description, 2000)
     const propertyName = clip(body.propertyName, 200), accessNotes = clip(body.accessNotes, 1000)
+    // "Let with us" property enquiry (website): property, ownership, service wanted and the calculator inputs.
+    const list = (v: unknown, n: number) => (Array.isArray(v) ? v.map(x => clip(x, 60)).filter(Boolean).slice(0, 30).join(', ') : clip(v, n))
+    const propertyType = clip(body.propertyType, 100), country = clip(body.country, 100)
+    const bathrooms = clip(String(body.bathrooms ?? ''), 20), size = clip(String(body.size ?? ''), 40)
+    const amenities = list(body.amenities, 600)
+    const ownershipType = clip(body.ownershipType, 100), companyName = clip(body.companyName, 200)
+    const currentlyLet = clip(body.currentlyLet, 40), mortgage = clip(body.mortgage, 40)
+    const service = clip(body.service, 100), strategy = clip(body.strategy, 100)
+    const calc = clip(body.calculator, 600)
     const module = MODULES.includes(body.module) ? body.module : 'str'
     const type = clip(body.type, 50) ?? 'guest'
     const source = clip(body.source, 100) ?? 'Website'
 
     const noteLines = [
       address1 ? `Address: ${address1}${town ? `, ${town}` : ''}${county ? `, ${county}` : ''}${postcode ? `, ${postcode}` : ''}` : (postcode ? `Postcode: ${postcode}` : null),
+      propertyType ? `Property type: ${propertyType}` : null,
+      country ? `Country: ${country}` : null,
       bedrooms ? `Bedrooms: ${bedrooms}` : null,
+      bathrooms ? `Bathrooms: ${bathrooms}` : null,
+      size ? `Size: ${size}` : null,
+      amenities ? `Amenities: ${amenities}` : null,
+      ownershipType ? `Ownership: ${ownershipType}${companyName ? ` (${companyName})` : ''}` : null,
+      currentlyLet ? `Currently let: ${currentlyLet}` : null,
+      mortgage ? `Mortgage on property: ${mortgage}` : null,
+      service ? `Service wanted: ${service}` : null,
+      strategy ? `Strategy: ${strategy}` : null,
+      calc ? `Calculator: ${calc}` : null,
       status ? `Current status: ${status}` : null,
       priceRange ? `Price range: ${priceRange}` : null,
       marketingConsent ? `Marketing opt-in: ${marketingConsent}` : null,
@@ -77,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Also drop a matching Deal into the Enquiry stage so Pipeline reflects new leads automatically
-    const dealLabel = issue ? `${name ?? 'Unknown'} — ${issue}` : `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`
+    const dealLabel = service ? `${name ?? 'Unknown'} — Let with us: ${service}` : issue ? `${name ?? 'Unknown'} — ${issue}` : `${name ?? 'Unknown'} — ${type ?? 'Enquiry'}`
     const { error: dealError } = await supabase.from('crm_deals').insert([{
       user_id: ownerId,
       name: dealLabel,
