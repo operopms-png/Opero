@@ -202,6 +202,9 @@ export default function DevPage() {
   const [milestones, setMilestones] = useState<any[]>([])
   const [checklistProjectId, setChecklistProjectId] = useState('')
   const [expandedPhase, setExpandedPhase] = useState<string|null>(null)
+  const [editTaskId, setEditTaskId] = useState<string|null>(null)
+  const [editTaskName, setEditTaskName] = useState('')
+  const [newTaskName, setNewTaskName] = useState('')
   const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
@@ -332,6 +335,29 @@ export default function DevPage() {
     if (error) alert(error.message)
     await loadAll()
     setSeeding(false)
+  }
+
+  async function renameChecklistItem(id: string) {
+    const name = editTaskName.trim()
+    if (!name) return
+    await supabase.from('dev_milestones').update({ name }).eq('id', id)
+    setMilestones(prev => prev.map(m => m.id === id ? { ...m, name } : m))
+    setEditTaskId(null)
+  }
+
+  async function deleteChecklistItem(id: string) {
+    await supabase.from('dev_milestones').delete().eq('id', id)
+    setMilestones(prev => prev.filter(m => m.id !== id))
+  }
+
+  async function addChecklistItem(projectId: string, phase: string) {
+    const name = newTaskName.trim()
+    if (!name) return
+    const { data: { user } } = await supabase.auth.getUser()
+    const accountId = user ? await getAccountId(user) : undefined
+    const { data } = await supabase.from('dev_milestones').insert({ user_id: accountId, project_id: projectId, phase, name, status: 'pending' }).select('*, dev_projects(name)').single()
+    if (data) setMilestones(prev => [...prev, data])
+    setNewTaskName('')
   }
 
   async function toggleChecklistItem(id: string, completed: boolean) {
@@ -1044,11 +1070,27 @@ export default function DevPage() {
                         {isOpen && (
                           <div style={{ padding:'6px 16px 12px' }}>
                             {phaseItems.map(item=>(
-                              <label key={item.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', fontSize:13, cursor:'pointer' }}>
-                                <input type="checkbox" checked={item.status==='completed'} onChange={e=>toggleChecklistItem(item.id, e.target.checked)} />
-                                <span style={{ color: item.status==='completed'?'#98A2B3':'#323338', textDecoration: item.status==='completed'?'line-through':'none' }}>{item.name}</span>
-                              </label>
+                              editTaskId===item.id ? (
+                                <div key={item.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0' }}>
+                                  <input value={editTaskName} onChange={e=>setEditTaskName(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') renameChecklistItem(item.id) }} style={{ ...inp, flex:1 }} autoFocus />
+                                  <button onClick={()=>renameChecklistItem(item.id)} style={{ fontSize:12, color:'#fff', background:'#2F6DB5', border:'none', borderRadius:6, padding:'5px 12px', cursor:'pointer' }}>Save</button>
+                                  <button onClick={()=>setEditTaskId(null)} style={{ fontSize:12, color:'#344054', background:'#fff', border:'1px solid #D0D5DD', borderRadius:6, padding:'5px 12px', cursor:'pointer' }}>Cancel</button>
+                                </div>
+                              ) : (
+                                <div key={item.id} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 0', fontSize:13 }}>
+                                  <label style={{ display:'flex', alignItems:'center', gap:8, flex:1, cursor:'pointer' }}>
+                                    <input type="checkbox" checked={item.status==='completed'} onChange={e=>toggleChecklistItem(item.id, e.target.checked)} />
+                                    <span style={{ color: item.status==='completed'?'#98A2B3':'#323338', textDecoration: item.status==='completed'?'line-through':'none' }}>{item.name}</span>
+                                  </label>
+                                  <button onClick={()=>{ setEditTaskId(item.id); setEditTaskName(item.name ?? '') }} style={{ fontSize:11, color:'#2F6DB5', background:'none', border:'1px solid #2F6DB5', borderRadius:6, padding:'2px 8px', cursor:'pointer' }}>Edit</button>
+                                  <button onClick={()=>deleteChecklistItem(item.id)} style={{ fontSize:16, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
+                                </div>
+                              )
                             ))}
+                            <div style={{ display:'flex', gap:8, paddingTop:8 }}>
+                              <input value={newTaskName} onChange={e=>setNewTaskName(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') addChecklistItem(checklistProjectId, String(phase)) }} placeholder="Add a task to this phase" style={{ ...inp, flex:1 }} />
+                              <button onClick={()=>addChecklistItem(checklistProjectId, String(phase))} style={{ fontSize:12, color:'#fff', background:'#2F6DB5', border:'none', borderRadius:6, padding:'5px 12px', cursor:'pointer' }}>Add</button>
+                            </div>
                           </div>
                         )}
                       </div>
