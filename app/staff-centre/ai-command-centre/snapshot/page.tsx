@@ -235,7 +235,7 @@ export default function AICommandCentre() {
               ['Renewals & Notices', '/pm?tab=Renewals%20%26%20Notices', `${more.renewals.ending60} due in 90 days`, ''],
               ['Developments', '/dev', `${more.developments.active} active projects`, `£${more.developments.budget.toLocaleString('en-GB')} budget`],
               ['Vacation Rentals', '/str', `${more.vacationRentals.bookable} bookable`, `${more.vacationRentals.total} properties`],
-              ['Tenant Checks & Right to Rent', '/pm?tab=Right%20to%20Rent', `${more.rightToRent.due} rechecks due`, `${more.rightToRent.pending} pending`],
+              ['Tenant Checks', '/pm?tab=Tenant%20Checks', `${more.rightToRent.due} rechecks due`, `${more.rightToRent.pending} pending`],
               ['HMO Rooms', '/pm?tab=HMO%20Rooms', `${more.hmo.rooms} rooms`, `${more.hmo.licence90} licences ending in 90 days`],
               ['Deadlines', '/pm?tab=Deadlines', `${more.deadlines.in30} due in 30 days`, `${more.deadlines.expired} expired`],
               ['Inspections', '/pm?tab=Inspections', `${more.inspections.next7} in next 7 days`, ''],

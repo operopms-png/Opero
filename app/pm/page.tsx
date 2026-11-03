@@ -13,7 +13,7 @@ import { SITE_HOST } from '@/lib/brand'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
 const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
-const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Right to Rent','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -77,7 +77,6 @@ const TAB_INTROS: Record<string,string> = {
   'Integrations': 'connections to outside services used by the portal. Connect or disconnect each one here.',
   'Compliance': 'certificates and licences for each property and for the business, such as gas safety, EPC and insurance certificates, with their expiry dates. Records expiring within 60 days show as Expiring Soon.',
   'Tenant Checks': 'screening records for each applicant or tenant, with the checks completed and their outcome.',
-  'Right to Rent': 'Right to Rent checks made before a tenancy starts, with the document seen, the date checked and when a recheck is due.',
   'Deposits': 'the deposit register: the amount held for each tenancy, where it is protected and when it is due back.',
   'HMO Rooms': 'the rooms in each house in multiple occupation, with the maximum number of occupants, the licence expiry and the tenant in each room.',
   'Deadlines': 'one list of everything due soon across the portfolio: head lease expiry and break dates, HMO licences, compliance certificates, insurance renewals, tenancy end dates and bill due dates. Items due within 60 days, or already overdue, are shown in red. Dates come from the records in each tab, so update the source record to change a deadline.',
@@ -112,7 +111,7 @@ type PmNavGroup = { label: string; items?: string[]; sub?: { label: string; item
 const PM_NAV_GROUPS: PmNavGroup[] = [
   { label: 'PROPERTY MANAGEMENT', items: ['Property Management'], sub: [
     { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
-    { label: 'Compliance', items: ['Compliance','Tenant Checks','Right to Rent','Deposits','HMO Rooms','Deadlines','Insurance'] },
+    { label: 'Compliance', items: ['Compliance','Tenant Checks','Deposits','HMO Rooms','Deadlines','Insurance'] },
     { label: 'Operations', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
     { label: 'Documents', items: ['Documents'] },
     { label: 'Company', items: ['Company SOPs','Contract Templates','Audit Log'] },
@@ -3186,7 +3185,7 @@ function PMPageInner() {
           </div>
         )}
 
-        {(tab==='Tenant Checks'||tab==='Right to Rent')&&(() => {
+        {(tab==='Tenant Checks')&&(() => {
           const CHECK_TYPES = ['Manual','Online','Birth Certificate + NI']
           const rtrStatusColor: Record<string,{bg:string,fg:string}> = {'Unlimited':{bg:'#ECFDF5',fg:'#10B981'},'Time-limited':{bg:'#FFFBEB',fg:'#F59E0B'},'No Right to Rent':{bg:'#FEF2F2',fg:'#EF4444'}}
           const bankStatusColor: Record<string,{bg:string,fg:string}> = {'Passed':{bg:'#ECFDF5',fg:'#10B981'},'Flagged':{bg:'#FFFBEB',fg:'#F59E0B'},'Failed':{bg:'#FEF2F2',fg:'#EF4444'}}
