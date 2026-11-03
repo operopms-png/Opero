@@ -65,7 +65,7 @@ export default function Page() {
     let { data: s } = await supabase.from('website_chat_settings').select('*').eq('business_id', bid).maybeSingle()
     if (!s) {
       const { data: created } = await supabase.from('website_chat_settings')
-        .insert({ business_id: bid, assistant_name: 'Assistant', enabled: true }).select('*').single()
+        .insert({ business_id: bid, assistant_name: 'Novourq Cloud', enabled: true }).select('*').single()
       s = created
     }
     setSettings(s)
@@ -132,7 +132,7 @@ export default function Page() {
     setSaving(true)
     const { error } = await supabase.from('website_chat_settings').update({
       enabled: settings.enabled,
-      assistant_name: (settings.assistant_name || 'Assistant').trim(),
+      assistant_name: (settings.assistant_name || 'Novourq Cloud').trim(),
       company_name: settings.company_name?.trim() || null,
       knowledge: settings.knowledge?.trim() || null,
       alert_email: settings.alert_email?.trim() || null,
@@ -267,7 +267,7 @@ export default function Page() {
                 return (
                   <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
                     <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 3, textAlign: mine ? 'right' : 'left' }}>
-                      {m.role === 'visitor' ? (open.name || 'Visitor') : m.role === 'staff' ? `${m.meta?.by?.replace(/\s*\(.*\)$/, '') || 'Team'} · by email` : 'Assistant'} · {new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                      {m.role === 'visitor' ? (open.name || 'Visitor') : m.role === 'staff' ? `${m.meta?.by?.replace(/\s*\(.*\)$/, '') || 'Team'} · by email` : 'Novourq Cloud'} · {new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                     <div style={{ fontSize: 13.5, lineHeight: 1.5, padding: '10px 14px', borderRadius: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: m.role === 'visitor' ? '#fff' : m.role === 'staff' ? ACCENT : CREAM, color: m.role === 'staff' ? '#fff' : INK, border: m.role === 'visitor' ? `1px solid ${LINE}` : m.role === 'assistant' ? '1px solid #C9DEF3' : 'none' }}>
                       {m.content}

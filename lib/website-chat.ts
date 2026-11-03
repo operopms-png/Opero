@@ -201,7 +201,7 @@ export async function saveLead(s: ChatSettings, chatId: string, input: { name?: 
 
   const crm = INTEREST_TO_CRM[merged.interest ?? 'other']
   const { data: msgs } = await serviceClient.from('website_chat_messages').select('role, content').eq('chat_id', chatId).order('created_at').limit(40)
-  const transcript = (msgs ?? []).map(m => `${m.role === 'visitor' ? 'Visitor' : m.role === 'staff' ? 'Team' : 'Assistant'}: ${m.content}`).join('\n')
+  const transcript = (msgs ?? []).map(m => `${m.role === 'visitor' ? 'Visitor' : m.role === 'staff' ? 'Team' : 'Novourq Cloud'}: ${m.content}`).join('\n')
 
   const { data: contact } = await serviceClient.from('crm_contacts').insert({
     user_id: s.business_id,
