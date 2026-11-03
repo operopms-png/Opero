@@ -1,50 +1,45 @@
+import { LegalPage, H, link } from '@/components/legal/LegalPage'
+import { LEGAL, operatorLine } from '@/lib/legal-config'
+
+export const metadata = { title: 'Privacy Policy | Novourq' }
+
 export default function PrivacyPage() {
+  const contact = LEGAL.privacyEmail
+    ? <a href={`mailto:${LEGAL.privacyEmail}`} style={link}>{LEGAL.privacyEmail}</a>
+    : <>Submissions in Settings</>
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", padding: '48px 20px' }}>
-      <div style={{ maxWidth: 720, margin: '0 auto', background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '48px 40px' }}>
-        <a href="/login" style={{ fontSize: 13, color: '#89CFF0', textDecoration: 'none' }}>← Back to portal</a>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#323338', margin: '20px 0 4px' }}>Privacy Policy</h1>
-        <p style={{ fontSize: 13, color: '#98A2B3', margin: '0 0 32px' }}>Last updated: 23 September 2026</p>
+    <LegalPage title="Privacy Policy" updated={LEGAL.updated}>
+      <p>This policy covers personal data that {operatorLine()} (&ldquo;Novourq&rdquo;) handles for itself: its clients&rsquo; account holders and visitors to its website. When Novourq handles a client&rsquo;s tenants, landlords, guests or leads, it does so for that client under a data processing agreement, and the client&rsquo;s own privacy notice applies to those people.</p>
 
-        <div style={{ fontSize: 14, color: '#344054', lineHeight: 1.7 }}>
-          <p>This Privacy Policy explains how the Sangsters portal, operated by Sangsters Group ("Sangsters", "we", "us"), collects, uses, and protects personal data.</p>
+      <H>1. Who we are</H>
+      <p>{operatorLine()}. Privacy contact: {contact}.{LEGAL.icoNumber ? ` ICO registration number: ${LEGAL.icoNumber}.` : ''}</p>
 
-          <h2 style={sectionH}>1. Who this covers</h2>
-          <p>This policy covers portal users and their team members ("you"), and — where you enter it into the platform — the personal data of your tenants, guests, owners, and staff ("your users' data"), which you control and we process on your behalf.</p>
+      <H>2. What we collect</H>
+      <p>Account details (name, email, role), company details you enter (name, logo, contact lines), billing details held by Stripe (we do not store card numbers), usage and security logs, and messages you send us through Submissions, support or the website. Passwords are never stored in readable form.</p>
 
-          <h2 style={sectionH}>2. What we collect</h2>
-          <p>Account data: name, email, password (stored encrypted), and company details you provide at signup. Billing data: handled directly by Stripe — we receive confirmation of payment, not your card details. Platform data: property, booking, tenancy, staff, and messaging records you or your team enter to use the service. Usage data: basic technical logs (e.g. sign-in times) used to keep the platform secure and working.</p>
+      <H>3. Why we use it</H>
+      <p>To provide the service (contract). To bill you (contract and legal obligation). To keep the service secure and prevent abuse (legitimate interests). To improve the product (legitimate interests). To send service messages and, where you agree, product news (consent).</p>
 
-          <h2 style={sectionH}>3. Why we process it</h2>
-          <p>To provide and operate the portal; to process payments; to send essential account and service emails (e.g. password resets, booking notifications you've configured); and to keep the platform secure and improve it. We do not sell personal data.</p>
+      <H>4. AI processing</H>
+      <p>Content you ask Novourq Cloud AI to work on is sent to our AI provider to produce the result.</p>
 
-          <h2 style={sectionH}>4. Who we share it with</h2>
-          <p>We use trusted service providers to run the portal, including Supabase (database and authentication hosting), Netlify (application hosting), and Stripe (payment processing). These providers only process data as needed to provide their service to us and are bound by their own data protection obligations. We do not share your data with third parties for marketing purposes.</p>
+      <H>5. Who we share it with</H>
+      <p>Only providers that help us run the service: hosting and database, payments, email, AI, and any integration you turn on (such as text messaging, accounting or channel managers). We also share data where the law requires.</p>
 
-          <h2 style={sectionH}>5. Where data is stored</h2>
-          <p>Data is stored with our hosting providers' infrastructure, which may involve processing outside your home country. Where that happens, we rely on our providers' standard safeguards (such as the EU/UK Standard Contractual Clauses) for international transfers.</p>
+      <H>6. Where it is stored</H>
+      <p>Our providers may process data outside the UK. Where data leaves the UK or EEA we rely on adequacy decisions or standard contractual clauses.</p>
 
-          <h2 style={sectionH}>6. How long we keep it</h2>
-          <p>We keep account and platform data for as long as your account is active, and for a reasonable period afterward to meet legal, accounting, or dispute-resolution needs. You can request deletion of your account data at any time (see Section 8).</p>
+      <H>7. How long we keep it</H>
+      <p>Account data while the account is open and for a reasonable period after it closes. Billing records for 6 years. When you ask for deletion we complete it within 30 days, apart from records the law requires us to keep.</p>
 
-          <h2 style={sectionH}>7. Security</h2>
-          <p>We use industry-standard measures — encrypted connections, access controls, and row-level security on your data — to protect information stored in the portal. No system is completely secure, and we encourage you to use a strong, unique password.</p>
+      <H>8. Your rights</H>
+      <p>You can ask for access, correction, deletion, restriction, portability and to object. Account admins can download all company data and request deletion in Settings, under Privacy &amp; Data. Other requests: {contact}. You can complain to the Information Commissioner&rsquo;s Office.</p>
 
-          <h2 style={sectionH}>8. Your rights</h2>
-          <p>If you are in the UK or EU, you have rights under GDPR to access, correct, export, or request deletion of your personal data, and to object to certain processing. To exercise any of these rights, contact us at the email below. If you are a tenant, guest, owner, or staff member whose data was entered by an the portal account holder, please contact that business directly — they control that data — or contact us and we will help route your request.</p>
+      <H>9. Security</H>
+      <p>Data is encrypted in transit, access is limited by account and role, and client accounts are kept separate from each other.</p>
 
-          <h2 style={sectionH}>9. Cookies</h2>
-          <p>The portal uses only essential cookies needed to keep you signed in and the platform working. We do not use third-party advertising or tracking cookies.</p>
-
-          <h2 style={sectionH}>10. Changes to this policy</h2>
-          <p>We may update this policy from time to time. Material changes will be notified to account holders by email or an in-app notice.</p>
-
-          <h2 style={sectionH}>11. Contact</h2>
-          <p>For any privacy question or request, contact <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#89CFF0' }}>contact.us@sangstersgroup.com</a>.</p>
-        </div>
-      </div>
-    </div>
+      <H>10. Changes</H>
+      <p>We will tell account admins by email about material changes.</p>
+    </LegalPage>
   )
 }
-
-const sectionH = { fontSize: 16, fontWeight: 700, color: '#323338', margin: '28px 0 8px' } as const

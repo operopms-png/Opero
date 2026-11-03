@@ -1,47 +1,60 @@
+import { LegalPage, H, link } from '@/components/legal/LegalPage'
+import { LEGAL, operatorLine } from '@/lib/legal-config'
+
+export const metadata = { title: 'Terms of Service | Novourq' }
+
 export default function TermsPage() {
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", padding: '48px 20px' }}>
-      <div style={{ maxWidth: 720, margin: '0 auto', background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: '48px 40px' }}>
-        <a href="/login" style={{ fontSize: 13, color: '#89CFF0', textDecoration: 'none' }}>← Back to portal</a>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#323338', margin: '20px 0 4px' }}>Terms of Service</h1>
-        <p style={{ fontSize: 13, color: '#98A2B3', margin: '0 0 32px' }}>Last updated: 23 September 2026</p>
+    <LegalPage title="Terms of Service" updated={LEGAL.updated}>
+      <p>These terms are the agreement between {operatorLine()} (&ldquo;Novourq&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) and the business that subscribes (&ldquo;you&rdquo;). By creating an account or using Novourq you agree to them.</p>
 
-        <div style={{ fontSize: 14, color: '#344054', lineHeight: 1.7 }}>
-          <p>These Terms of Service ("Terms") govern access to and use of the Sangsters portal, a property management platform operated by Sangsters Group ("Sangsters", "we", "us"). By creating an account or using the portal, you agree to these Terms.</p>
+      <H>1. The service</H>
+      <p>Novourq provides a cloud platform for property businesses, including property, tenant, lease, finance and CRM tools and an AI assistant (&ldquo;Novourq Cloud AI&rdquo;) that works on your records and on your behalf.</p>
 
-          <h2 style={sectionH}>1. The service</h2>
-          <p>The portal is used by Sangsters staff, property owners, landlords, tenants and partners to manage and view properties, bookings, tenancies, statements and related operations.</p>
+      <H>2. Your account</H>
+      <p>You must give accurate details and keep logins secure. You are responsible for everything done under your account, including by people you invite. The account admin controls who has access.</p>
 
-          <h2 style={sectionH}>2. Accounts</h2>
-          <p>You must provide accurate information when creating an account and keep your login credentials secure. You are responsible for all activity that happens under your account, including actions taken by team members you invite.</p>
+      <H>3. Subscription and payment</H>
+      <p>The service costs £79 a month after a 14-day free trial. Payment is by card through Stripe, and we do not store card details. You can cancel at any time from your account settings or by contacting us. Cancellation takes effect at the end of the paid period. Fees already paid are not refundable, except where the law requires otherwise.</p>
 
-          <h2 style={sectionH}>3. Payments</h2>
-          <p>Any payments made through the portal (such as rent or partner fees) are processed by Stripe. We do not store your card details.</p>
+      <H>4. Your data</H>
+      <p>You own the data you put into Novourq. You give us permission to process it only to provide the service. Where we handle personal data of your landlords, tenants, guests or leads, you are the controller and we are the processor, and we handle it under a data processing agreement that forms part of these terms. Account admins can download all company data and request deletion under Settings, Privacy &amp; Data. See our <a href="/privacy" style={link}>Privacy Policy</a>.</p>
 
-          <h2 style={sectionH}>4. Your data and content</h2>
-          <p>You retain ownership of the property, tenant, guest, booking, and staff data you enter into the portal ("your data"). You are responsible for having the right to process that data, including any personal data belonging to your tenants, guests, or staff. We process it on your behalf to provide the service, as described in our <a href="/privacy" style={{ color: '#89CFF0' }}>Privacy Policy</a>.</p>
+      <H>5. The AI assistant</H>
+      <p>Novourq Cloud AI prepares and sends emails, tasks and messages using your records and your branding. It sends automatically unless you switch a skill to wait for approval. It never moves money or signs legal contracts without a person&rsquo;s approval. You are responsible for reviewing what it does. AI output can be wrong, so you must check anything that matters, in particular legal notices, rent demands, and deposit and tenancy documents.</p>
 
-          <h2 style={sectionH}>5. Acceptable use</h2>
-          <p>You agree not to use the portal to break the law, infringe anyone's rights, transmit malicious code, or attempt to gain unauthorized access to the platform or other users' data.</p>
+      <H>6. Compliance is yours</H>
+      <p>You are responsible for lawful use, including your own obligations to tenants, landlords and regulators, consents to contact people, and the content of notices. Novourq is a tool, not legal, tax or financial advice.</p>
 
-          <h2 style={sectionH}>6. Availability and changes</h2>
-          <p>We aim to keep the portal available and reliable but do not guarantee uninterrupted access. We may update, add to, or remove features from time to time, and may update these Terms; continued use after an update means you accept the revised Terms.</p>
+      <H>7. Acceptable use</H>
+      <p>No unlawful use, no attempts to break or overload the service, no spam, and no uploading material you have no right to use.</p>
 
-          <h2 style={sectionH}>7. Liability</h2>
-          <p>The portal is provided "as is". To the fullest extent permitted by law, we are not liable for indirect or consequential losses, or for disputes between you and your tenants, guests, owners, or staff. Nothing in these Terms limits liability that cannot be limited by law (for example, for fraud or death or personal injury caused by negligence).</p>
+      <H>8. Third-party services</H>
+      <p>Novourq relies on providers for hosting, payment, email and AI. We are not responsible for outages of services we do not control.</p>
 
-          <h2 style={sectionH}>8. Termination</h2>
-          <p>You may stop using the portal at any time. We may suspend or terminate accounts that breach these Terms.</p>
+      <H>9. Availability and support</H>
+      <p>We work to keep Novourq available but do not guarantee uninterrupted service. Support is through Submissions in Settings.</p>
 
-          <h2 style={sectionH}>9. Governing law</h2>
-          <p>These Terms are governed by the laws of England and Wales.</p>
+      <H>10. Intellectual property</H>
+      <p>Novourq owns the platform and its software. You keep ownership of your content, and give us a licence to host and process it to run the service.</p>
 
-          <h2 style={sectionH}>10. Contact</h2>
-          <p>Questions about these Terms can be sent to <a href="mailto:contact.us@sangstersgroup.com" style={{ color: '#89CFF0' }}>contact.us@sangstersgroup.com</a>.</p>
-        </div>
-      </div>
-    </div>
+      <H>11. Confidentiality</H>
+      <p>Each side keeps the other&rsquo;s confidential information private and uses it only for this agreement.</p>
+
+      <H>12. Liability</H>
+      <p>Nothing limits liability that cannot lawfully be limited. Otherwise our total liability in any 12 months is limited to the fees you paid in that period, and we are not liable for indirect or lost-profit losses.</p>
+
+      <H>13. Ending the agreement</H>
+      <p>Either side may end it for serious breach not fixed within 30 days. On ending, you can export your data for 30 days, after which we delete it.</p>
+
+      <H>14. Changes</H>
+      <p>We may update these terms with 30 days&rsquo; notice by email. If you do not agree, you can cancel before they take effect.</p>
+
+      <H>15. Law and disputes</H>
+      <p>These terms are governed by the law of England and Wales, and its courts have jurisdiction.</p>
+
+      <H>16. Contact</H>
+      <p>Questions about these terms: {LEGAL.privacyEmail ? <a href={`mailto:${LEGAL.privacyEmail}`} style={link}>{LEGAL.privacyEmail}</a> : 'send us a message through Submissions in Settings'}.</p>
+    </LegalPage>
   )
 }
-
-const sectionH = { fontSize: 16, fontWeight: 700, color: '#323338', margin: '28px 0 8px' } as const

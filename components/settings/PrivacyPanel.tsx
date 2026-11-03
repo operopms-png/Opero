@@ -80,6 +80,9 @@ export default function PrivacyPanel() {
           </div>
         </>
       )}
+      <p style={{ marginTop: 20, fontSize: 13, color: '#667085' }}>
+        <a href="/terms" style={{ color: '#2B7BB9' }}>Terms of Service</a> · <a href="/privacy" style={{ color: '#2B7BB9' }}>Privacy Policy</a>
+      </p>
     </div>
   )
 }

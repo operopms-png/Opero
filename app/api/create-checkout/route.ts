@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       success_url: `${SITE_URL}${successPath}`,
       cancel_url: `${SITE_URL}/settings`,
       allow_promotion_codes: true,
+      custom_text: { submit: { message: `By subscribing you agree to the Novourq Terms of Service (${SITE_URL}/terms) and Privacy Policy (${SITE_URL}/privacy).` } },
       // Asked at payment so the new client's emails and invoices carry their own company name from day one
       custom_fields: [{ key: 'company_name', label: { type: 'custom', custom: 'Company name' }, type: 'text', optional: true, text: { maximum_length: 120 } }],
     })

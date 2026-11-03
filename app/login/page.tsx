@@ -313,6 +313,9 @@ function LoginForm() {
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <a href="https://www.thenovourq.com" style={{ fontSize: 13, color: '#98A2B3', textDecoration: 'none' }}>← Back to www.thenovourq.com</a>
           </div>
+          <div style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: '#98A2B3' }}>
+            <a href="/terms" style={{ color: '#98A2B3' }}>Terms</a> · <a href="/privacy" style={{ color: '#98A2B3' }}>Privacy</a>
+          </div>
         </div>
       </div>
     </div>
