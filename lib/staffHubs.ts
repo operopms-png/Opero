@@ -19,7 +19,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight', hidden: true },
     { href: '/staff-centre/ai-approvals', label: 'AI Approvals', scTab: 'oversight', hidden: true },
     { href: '/staff-centre/ai-command-centre/results', label: 'AI Results', scTab: 'oversight', hidden: true },
-    { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Ask Novourq', scTab: 'oversight', hidden: true },
+    { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Ask Novourq AI', scTab: 'oversight', hidden: true },
     { href: '/staff-centre/ai-command-centre/deal-analyser', label: 'Deal Analyser', requiresModule: 'invest', hidden: true },
   ] },
   { label: 'Inbox', icon: 'message', tabs: [

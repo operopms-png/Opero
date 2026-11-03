@@ -392,7 +392,7 @@ export default function AICommandCentre() {
           </div>
 
           <div id="ask-grok" style={{ background: '#fff', border: '1px solid #D9E2F0', borderRadius: 12, padding: 16 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10 }}>Ask Novourq</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10 }}>Ask Novourq AI</div>
             <GrokPanel />
           </div>
           <div style={{ textAlign: 'center', color: MUTED, fontSize: 11, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>NOVOURQ · Smart Properties. Stronger Returns. · Jamaica · UK</div>

@@ -1,5 +1,5 @@
 'use client'
-// "Ask Novourq" panel on the Staff Centre dashboard. Read only: it sends the question
+// "Ask Novourq AI" panel on the Staff Centre dashboard. Read only: it sends the question
 // to /api/grok and shows the reply. It cannot change records or send messages.
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
@@ -63,7 +63,7 @@ export default function GrokPanel() {
   return (
     <div style={{ margin: '0 30px 30px', background: '#fff', border: `2px solid ${C.blue}`, borderRadius: 12, overflow: 'hidden', fontFamily: 'inherit' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '14px 18px', background: C.soft, borderBottom: '1px solid #C9DEF3' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.brown }}>Ask Novourq</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.brown }}>Ask Novourq AI</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <select value={agentId} onChange={e => setAgentId(e.target.value)} aria-label="Who to ask" style={{ fontSize: 12, fontWeight: 600, color: C.brown, background: '#fff', border: '1px solid #C9DEF3', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit' }}>
             {agents.length === 0 && <option value="">Assistant</option>}
