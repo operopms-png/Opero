@@ -31,6 +31,7 @@ const STRATEGIES = [
   { id:'land', label:'Land Purchase', desc:'Buy land for development or planning gain' },
 ]
 
+import { DEAL_STAGES, STAGE_COLOR } from '@/lib/deal-stages'
 const SECTIONS = ['Deal Analyser','Saved Deals','Watchlist']
 
 // Money fields converted when you switch currency
@@ -100,6 +101,9 @@ export default function InvestPage() {
   const [estimating, setEstimating] = useState(false)
   const [estimateError, setEstimateError] = useState<string|null>(null)
   const [savedDeals, setSavedDeals] = useState<any[]>([])
+  const [stageFilter, setStageFilter] = useState<string>('All')
+  const [stageBusy, setStageBusy] = useState<string|null>(null)
+  const [stageMsg, setStageMsg] = useState('')
   const [watchlist, setWatchlist] = useState<any[]>([])
   const [watchForm, setWatchForm] = useState({address:'',price:'',notes:'',status:'Watching'})
   const [showAddWatch, setShowAddWatch] = useState(false)
@@ -123,7 +127,7 @@ export default function InvestPage() {
         supabase.from('investment_deals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('investment_watchlist').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
       ])
-      setSavedDeals((dealsRes.data ?? []).map((d: any) => ({ id: d.id, strategy: d.strategy, address: d.address, savedAt: new Date(d.created_at).toLocaleDateString(), ...d.data })))
+      setSavedDeals((dealsRes.data ?? []).map((d: any) => ({ id: d.id, strategy: d.strategy, address: d.address, savedAt: new Date(d.created_at).toLocaleDateString(), ...d.data, stage: d.stage || 'Found', propertyId: d.property_id || null })))
       setWatchlist((watchRes.data ?? []).map((w: any) => ({ id: w.id, address: w.address, price: w.price, notes: w.notes, status: w.status })))
       setLoadingData(false)
     })
@@ -270,6 +274,25 @@ export default function InvestPage() {
     setClientSaved(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
   }
 
+  async function changeStage(id:string, stage:string){
+    setStageBusy(id); setStageMsg('')
+    try{
+      if(stage==='Completed'){
+        const { data:{ session } } = await supabase.auth.getSession()
+        const res = await fetch('/api/deal-complete',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(session?.access_token??'')},body:JSON.stringify({dealId:id})})
+        const j = await res.json().catch(()=>({}))
+        if(!res.ok||j.error){ setStageMsg(j.error||'Could not complete this deal.'); setStageBusy(null); return }
+        setSavedDeals(ds=>ds.map(d=>d.id===id?{...d,stage,propertyId:j.propertyId}:d))
+        setStageMsg('Deal completed. The property is now in Real Estate Intelligence.')
+      } else {
+        const { error } = await supabase.from('investment_deals').update({ stage, stage_updated_at: new Date().toISOString() }).eq('id', id)
+        if(error){ setStageMsg(error.message); setStageBusy(null); return }
+        setSavedDeals(ds=>ds.map(d=>d.id===id?{...d,stage}:d))
+      }
+    }catch(e:any){ setStageMsg(e.message||'Something went wrong.') }
+    setStageBusy(null)
+  }
+
   async function saveDeal() {
     if(!result || !userId) return
     const dealData = { ...form, ...result, savedAt: new Date().toLocaleDateString() }
@@ -277,7 +300,7 @@ export default function InvestPage() {
       user_id: userId, strategy: result.strategy, address: form.address || null, data: dealData, market_check: market,
     }).select().single()
     if (error) { alert(error.message); return }
-    setSavedDeals([{ id: data.id, strategy: data.strategy, address: data.address, savedAt: new Date(data.created_at).toLocaleDateString(), ...dealData }, ...savedDeals])
+    setSavedDeals([{ id: data.id, strategy: data.strategy, address: data.address, savedAt: new Date(data.created_at).toLocaleDateString(), ...dealData, stage: 'Found', propertyId: null }, ...savedDeals])
     setSavedDealId(data.id)
     alert('Deal saved!')
   }
@@ -863,6 +886,11 @@ export default function InvestPage() {
         {section==='Saved Deals'&&(
           <div>
             <div style={{fontSize:18,fontWeight:600,color:'#323338',marginBottom:16}}>Saved Deals</div>
+            <div role="group" aria-label="Filter by stage" style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
+              {['All',...DEAL_STAGES].map(s=>{const n=s==='All'?savedDeals.length:savedDeals.filter(d=>(d.stage||'Found')===s).length;return(
+                <button key={s} onClick={()=>setStageFilter(s)} aria-pressed={stageFilter===s} style={{padding:'6px 12px',borderRadius:20,border:'1px solid '+(stageFilter===s?'#2F6DB5':'#D0D4E4'),background:stageFilter===s?'#2F6DB5':'#fff',color:stageFilter===s?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{s} ({n})</button>)})}
+            </div>
+            {stageMsg&&<div role="status" style={{fontSize:13,color:'#344054',background:'#EAF3FC',borderRadius:8,padding:'8px 12px',marginBottom:12}}>{stageMsg}</div>}
             {savedDeals.length===0?(
               <div style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:60,textAlign:'center',color:'#9699A6'}}>
                                 <div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No saved deals yet</div>
@@ -870,7 +898,7 @@ export default function InvestPage() {
               </div>
             ):(
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                {savedDeals.map(d=>(
+                {savedDeals.filter(d=>stageFilter==='All'||(d.stage||'Found')===stageFilter).map(d=>(
                   <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E6E9EF',padding:24,overflow:'hidden'}}>
                     {d.listing?.photos?.[0]&&<img src={d.listing.photos[0]} alt="" style={{display:'block',width:'calc(100% + 48px)',height:150,objectFit:'cover',margin:'-24px -24px 16px'}}/>}
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
@@ -881,6 +909,14 @@ export default function InvestPage() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                       {d.monthlyCashflow!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F7F8FA',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:d.monthlyCashflow>=0?'#10B981':'#EF4444'}}>{symOf(d)}{Math.abs(d.monthlyCashflow).toFixed(0)}/mo</div><div style={{fontSize:10,color:'#9699A6'}}>CASH FLOW</div></div>}
                       {d.roi!==undefined&&<div style={{textAlign:'center',padding:12,background:'#F7F8FA',borderRadius:8}}><div style={{fontSize:16,fontWeight:700,color:BLUE}}>{d.roi.toFixed(1)}%</div><div style={{fontSize:10,color:'#9699A6'}}>ROI</div></div>}
+                    </div>
+                    <div style={{marginTop:12}}>
+                      <label style={{...lbl,fontSize:11}} htmlFor={'stage-'+d.id}>Stage</label>
+                      <select id={'stage-'+d.id} value={d.stage||'Found'} disabled={stageBusy===d.id||!!d.propertyId} onChange={e=>changeStage(d.id,e.target.value)} style={{...inp,padding:'7px 10px',fontSize:13,borderLeft:'4px solid '+(STAGE_COLOR[d.stage||'Found']||'#C4C4C4')}}>
+                        {DEAL_STAGES.map(s=><option key={s}>{s}</option>)}
+                      </select>
+                      {d.propertyId&&<a href="/property" style={{display:'block',fontSize:12,color:'#2F6DB5',marginTop:6}}>Added to Real Estate Intelligence →</a>}
+                      {d.screening?.status&&(d.stage||'Found')==='Screened'&&<div style={{fontSize:11,color:'#676879',marginTop:6}}>AI screening: {d.screening.status==='PASS'?'Go':d.screening.status==='REJECT'?'No-go':'Review'}</div>}
                     </div>
                     <div style={{fontSize:11,color:'#9699A6',marginTop:8}}>Saved {d.savedAt}</div>
                   </div>

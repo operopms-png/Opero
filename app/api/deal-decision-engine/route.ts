@@ -1,29 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireUser, serviceClient } from '@/lib/admin-auth'
 import { callClaude } from '@/lib/claude'
-import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand } from '@/lib/dealCalculators'
-import { runDecisionEngine, DecisionRules } from '@/lib/dealDecisionEngine'
-import { curOf, symOf, ratesPerGBP } from '@/lib/currency'
+import { screenDeal } from '@/lib/deal-engine-run'
+import { symOf } from '@/lib/currency'
 
-const DEFAULT_RULES: Record<string, DecisionRules> = {
-  btl:       { minBaseSurplus: 200, minStressedSurplus: 0,   maxUpfrontCash: 30000, minROI: 5 },
-  brrr:      { minBaseSurplus: 200, minStressedSurplus: 0,   maxUpfrontCash: 30000, minROI: 5 },
-  hmo:       { minBaseSurplus: 500, minStressedSurplus: 200, maxUpfrontCash: 40000, minROI: 8,  maxBreakEvenOccupancyPct: 80 },
-  social:    { minBaseSurplus: 200, minStressedSurplus: 0,   maxUpfrontCash: 30000, minROI: 5 },
-  supported: { minBaseSurplus: 200, minStressedSurplus: 0,   maxUpfrontCash: 30000, minROI: 5 },
-  r2r:       { minBaseSurplus: 500, minStressedSurplus: 200, maxUpfrontCash: 10000, maxBreakEvenOccupancyPct: 80 },
-  r2hmo:     { minBaseSurplus: 800, minStressedSurplus: 300, maxUpfrontCash: 15000, maxBreakEvenOccupancyPct: 80 },
-}
-
-function runCalc(strategy: string, form: any) {
-  if (strategy === 'btl' || strategy === 'brrr') return calcBTL(form)
-  if (strategy === 'social' || strategy === 'supported') return calcBTL({ ...form, expenses: form.expenses || '10' })
-  if (strategy === 'hmo') return calcHMO(form)
-  if (strategy === 'r2r' || strategy === 'r2hmo') return calcR2R(form)
-  if (strategy === 'flip') return calcFlip(form)
-  if (strategy === 'land') return calcLand(form)
-  return {}
-}
 
 // Runs the AI Deal Decision Engine on top of an EXISTING deal saved by the
 // Deal Analyser (app/invest/page.tsx -> investment_deals table). This route
@@ -54,27 +34,7 @@ export async function POST(req: NextRequest) {
   const strategy = deal.strategy
   const form = deal.data?.form ?? deal.data ?? {}
 
-  // Rules: per-user configurable thresholds (deal_analysis_rules), falling
-  // back to defaults above when the user hasn't set any yet -- so the
-  // engine is usable immediately without forcing setup first, per spec
-  // section 3 ("Create an admin/settings area where I can change the
-  // thresholds without changing the code").
-  const { data: rulesRow } = await serviceClient
-    .from('deal_analysis_rules')
-    .select('rules')
-    .eq('user_id', user_id)
-    .maybeSingle()
-
-  const userRules = rulesRow?.rules?.[strategy]
-  const baseRules: DecisionRules = userRules || DEFAULT_RULES[strategy] || {}
-  // Thresholds are set in £; scale the money ones when the deal is in J$ or $
-  const cur = curOf(form)
-  const fx = cur === 'GBP' ? 1 : (await ratesPerGBP())[cur]
-  const scale = (v?: number) => v === undefined ? undefined : Math.round(v * fx)
-  const rules: DecisionRules = cur === 'GBP' ? baseRules : { ...baseRules, minBaseSurplus: scale(baseRules.minBaseSurplus), minStressedSurplus: scale(baseRules.minStressedSurplus), maxUpfrontCash: scale(baseRules.maxUpfrontCash) }
-
-  const baseResult = runCalc(strategy, form)
-  const engineOutput = runDecisionEngine(strategy, form, baseResult, rules)
+  const { rules, engineOutput } = await screenDeal(user_id, strategy, form)
 
   // AI explanation step -- summarisation only. The prompt hands Claude the
   // already-computed, already-decided output and forbids it from doing

@@ -172,6 +172,14 @@ const AGENTS = [
     capabilities: ['Check live market rents for each letting','Say whether rent is below, in line with or above the market','Email the outlook to you once you approve'],
   },
   {
+    key: 'deal_screening',
+    module: 'Investment & Portfolio',
+    name: 'AI Deal screening',
+    icon: ICON,
+    desc: 'Screens every new deal in Saved Deals against your rules and tells you which to go for, review or reject.',
+    capabilities: ['Run your deal rules on each new deal','Mark screened deals and list a go, review or no-go for each','Leave the decision to move or reject a deal with you'],
+  },
+  {
     key: 'keys_check',
     module: 'Property management',
     name: 'AI Key checks',
@@ -379,7 +387,7 @@ export default function PropertyManagerAgents() {
   const [style, setStyle] = useState({ tone: '', country_rules: '', signoff: '' })
   const [styleMsg, setStyleMsg] = useState('')
   const [section, setSection] = useState<'Agents'|'Activity log'|'Settings'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,maint_predict:false,market_forecast:false,keys_check:false,head_lease_watch:false,risk_alerts:false,hmo_licence:false,utilities_watch:false,mortgage_watch:false,tenant_checks:false,expense_sorter:false,invoice_chase:false,tax_watch:false,partner_payouts:false,smart_watch:false,review_replies:false,dev_milestones:false,dev_budget:false,dev_snags:false,dev_compliance:false,dev_safety:false,hr_watch:false,applications_watch:false,team_weekly:false,weekly_report:false,portfolio:false,chief:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,maint_predict:false,market_forecast:false,deal_screening:false,keys_check:false,head_lease_watch:false,risk_alerts:false,hmo_licence:false,utilities_watch:false,mortgage_watch:false,tenant_checks:false,expense_sorter:false,invoice_chase:false,tax_watch:false,partner_payouts:false,smart_watch:false,review_replies:false,dev_milestones:false,dev_budget:false,dev_snags:false,dev_compliance:false,dev_safety:false,hr_watch:false,applications_watch:false,team_weekly:false,weekly_report:false,portfolio:false,chief:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})
