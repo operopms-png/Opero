@@ -9,6 +9,8 @@ import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import GrokPanel from '../../../components/GrokPanel'
 import DashboardAiPanel from '../../../components/ai/DashboardAiPanel'
+import PortfolioPerformancePanel from '../../../components/ai/PortfolioPerformancePanel'
+import PropertyLocationsPanel from '../../../components/ai/PropertyLocationsPanel'
 
 const C = { ink: '#0f2150', brown: '#0f2150', gold: '#2f5bd6', goldT: '#5470a8', gold2: '#89CFF0', cream: '#EAF3FC', line: '#dfe6f4', muted: '#6b7fae', text: '#2b3f6e', bg: '#eaf3ff' }
 const MOD: Record<string, string> = { vr: '#89CFF0', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
@@ -81,6 +83,8 @@ export default function Dashboard() {
     <div style={{ minHeight: 'calc(100vh - var(--hub-h, 0px))', background: 'linear-gradient(180deg,#eaf3ff,#d9e9fd)', fontFamily: 'Figtree, Inter, -apple-system, sans-serif', color: C.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap');
         .dash-grid3{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+        .dash-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}
+        @media(max-width:900px){.dash-two{grid-template-columns:1fr}}
         .dash-cols{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px}
         .dash-hero{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
         @media(max-width:1300px){.dash-grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -132,6 +136,11 @@ export default function Dashboard() {
         {err && <div style={{ ...card, padding: 14, color: '#B42318', marginBottom: 16 }}>{err} <button onClick={() => load()} style={{ marginLeft: 8, border: 'none', background: 'none', color: C.goldT, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Try again</button></div>}
 
         <DashboardAiPanel />
+
+        <div className="dash-two">
+          <PortfolioPerformancePanel />
+          <PropertyLocationsPanel />
+        </div>
 
         {/* Business cards */}
         <div className="dash-grid3">

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { supabase, getAccountId } from '../../../../lib/supabase'
 import GrokPanel from '../../../../components/GrokPanel'
 import PropertyLocationsPanel from '../../../../components/ai/PropertyLocationsPanel'
+import PortfolioPerformancePanel from '../../../../components/ai/PortfolioPerformancePanel'
 import { staffApi, money } from '../../../../lib/staff-api'
 
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
@@ -311,28 +312,7 @@ export default function AICommandCentre() {
                 </div>
               ))}
             </div>
-            <div style={panel}>
-              <Head t="Portfolio Performance" right={<span style={{ color: MUTED, fontSize: 11 }}>Last 30 days</span>} />
-              {fin ? (() => {
-                const max = Math.max(1, ...fin.trend.flatMap((t: any) => [t.in, t.out]))
-                return (
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 130, borderBottom: `1px solid ${LINE}` }}>
-                      {fin.trend.map((t: any) => (
-                        <div key={t.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
-                          <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: '100%' }}>
-                            <div title={`In ${money(t.in, 'GBP')}`} style={{ width: 10, height: `${(t.in / max) * 100}%`, background: BLUE, borderRadius: '3px 3px 0 0' }} />
-                            <div title={`Out ${money(t.out, 'GBP')}`} style={{ width: 10, height: `${(t.out / max) * 100}%`, background: LINE, borderRadius: '3px 3px 0 0' }} />
-                          </div>
-                          <div style={{ fontSize: 10, color: MUTED, marginTop: 4 }}>{t.month.slice(5)}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: 12, fontSize: 11, color: MUTED, marginTop: 8 }}><span style={{ color: BLUE }}>■ Money in</span><span>■ Money out</span></div>
-                  </div>
-                )
-              })() : <NotConnected text={finErr ? 'Could not load finance' : 'Loading…'} />}
-            </div>
+            <PortfolioPerformancePanel />
             <PropertyLocationsPanel />
             </div>
 
