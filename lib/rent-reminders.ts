@@ -1,8 +1,6 @@
 // Rent reminder drafting, shared by the Finance -> Reminders screen and the daily AI job.
 // Drafts here; the daily AI job sends the ones it drafted (see sendPendingReminders at the bottom).
 import { serviceClient as db } from '@/lib/admin-auth'
-import { sendSms } from '@/lib/send-sms'
-import { normalizePhone, smsConnection, nameForPhone } from '@/lib/sms'
 
 export const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
 export const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
@@ -80,7 +78,7 @@ export async function generateRentReminders(businessId: string, draftedBy: strin
   const rows = items.map(i => {
     const stage = windowFor(i.days)
     return { business_id: businessId, module: i.module, rent_ref: i.ref, stage, tenant: i.tenant, phone: i.phone, tenant_id: i.tenantId, email: i.email, property: i.property, amount: i.amount, currency: i.currency, due_date: i.due_date, message: draft(stage, i), drafted_by: draftedBy }
-  }).filter(r => r.phone || r.email || r.tenant_id)
+  }).filter(r => r.email || r.tenant_id)
   const skippedNoPhone = items.length - rows.length
   if (!rows.length) return { created: 0, skippedNoPhone }
   const { data, error } = await db.from('rent_reminders').upsert(rows, { onConflict: 'business_id,rent_ref,stage', ignoreDuplicates: true }).select('id')
@@ -89,7 +87,7 @@ export async function generateRentReminders(businessId: string, draftedBy: strin
 }
 
 
-// ---- delivery: every reminder goes to the tenant's text, email and portal message (whichever they have) ----
+// ---- delivery: every reminder goes to the tenant's email and portal message (whichever they have). No texts. ----
 async function stillOwed(row: any) {
   const id = String(row.rent_ref).split(':')[1]
   if (String(row.rent_ref).startsWith('pm:')) {
@@ -102,24 +100,10 @@ async function stillOwed(row: any) {
 
 const esc = (t: string) => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 
-// Sends one reminder on every channel the tenant has. Returns which channels worked and any errors.
+// Sends one reminder by email and portal message. Returns which channels worked and any errors.
 export async function deliverReminder(row: any, by: string) {
   const sent: string[] = [], errors: string[] = []
-  const biz = row.business_id as string
-  const to = normalizePhone(row.phone)
-  if (to) {
-    const conn = await smsConnection(biz)
-    if (conn) {
-      const r = await sendSms(to, row.message, conn.phone)
-      if (r.error) errors.push(`text: ${r.error}`)
-      else if (!r.skipped) {
-        sent.push('text')
-        const known = await nameForPhone(biz, to)
-        await db.from('sms_messages').insert({ connection_id: conn.id, business_id: biz, contact_phone: to, contact_name: known.name || row.tenant, contact_id: known.contactId, sender: 'staff', sent_by: by, body: row.message, twilio_sid: r.sid || null, status: r.status || 'queued' })
-      }
-    }
-  }
-  if (row.email) {
+    if (row.email) {
     try {
       const { sendEmail } = await import('./send-email')
       const r: any = await sendEmail(row.email, 'Your rent reminder', `<p>${esc(row.message).replace(/\n/g, '<br/>')}</p>`)

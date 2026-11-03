@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const r = await deliverReminder(row, c.name || c.email)
     if (!r.sent.length) {
       if (r.errors.length) await db.from('rent_reminders').update({ error: r.errors.join('; ').slice(0, 400) }).eq('id', id)
-      return bad(r.errors[0] ? `Couldn’t send it: ${r.errors[0]}` : 'This tenant has no phone, email or portal to send to.', 502)
+      return bad(r.errors[0] ? `Couldn’t send it: ${r.errors[0]}` : 'This tenant has no email or portal to send to.', 502)
     }
     await db.from('rent_reminders').update({ status: 'sent', channels: r.sent.join(', '), error: r.errors.length ? r.errors.join('; ').slice(0, 400) : null, ...decided }).eq('id', id)
     return NextResponse.json({ ok: true })
