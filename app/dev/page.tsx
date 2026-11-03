@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import TabBanner from '@/components/TabBanner'
 import WeatherWidget from '@/components/WeatherWidget'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { downloadCsv } from '@/lib/export-csv'
@@ -453,6 +454,8 @@ export default function DevPage() {
             {tab==='Milestones' && <button onClick={()=>{setModal('milestone');setForm({});setEditId(null)}} style={{ background:'#2F6DB5', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Milestone</button>}
           </div>
         </div>
+
+        <TabBanner module="dev" name={tab} />
 
         <div style={{ flex:1, padding:24, overflowY:'auto' }}>
 

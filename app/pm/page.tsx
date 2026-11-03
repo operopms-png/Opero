@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
+import TabBanner from '@/components/TabBanner'
 import { useSearchParams } from 'next/navigation'
 import WeatherWidget from '@/components/WeatherWidget'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
@@ -1134,6 +1135,8 @@ function PMPageInner() {
             {tab==='Banking'&&<button onClick={()=>setShowAddBank(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Bank Account</button>}
           </div>
         </div>
+
+        <TabBanner module="pm" name={tab} />
 
         <div style={{flex:1,padding:24,overflowY:'auto'}}>
 

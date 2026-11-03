@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import TabBanner from '@/components/TabBanner'
 import TenantDocuments from '@/components/TenantDocuments'
 import { supabase, getAccountId } from '../../lib/supabase'
 import LandlordStatements from '@/components/reports/LandlordStatements'
@@ -814,6 +815,8 @@ export default function Page() {
             {section==='Documents'&&<button onClick={()=>{setEditItem(null);setShowAddDocument(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Document</button>}
           </div>
         </div>
+
+        <TabBanner module="estate" name={section} />
 
         <div style={{flex:1,padding:24,overflowY:'auto'}}>
 
