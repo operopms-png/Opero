@@ -4,6 +4,7 @@
 // keeps who proposed, who decided, when, and exactly what went out.
 import { createClient } from '@supabase/supabase-js'
 import { aiTask } from './ai-proposal-utils'
+import { authorityFor } from './ai-authority'
 
 function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -26,6 +27,7 @@ export async function queueAiAction(input: {
   draftBody: string
   payload: Record<string, any>
   context?: Record<string, any>
+  reason?: string // why the AI is proposing this, shown in the audit trail
   // Skip if an action of this type already exists with payload[key] = value (any status),
   // optionally only looking back to `sinceIso`. Stops the same job being proposed twice.
   dedupe?: { key: string; value: string; sinceIso?: string }
@@ -53,8 +55,12 @@ export async function queueAiAction(input: {
     if (existing?.length) return { skipped: 'already proposed' }
   }
 
+  const gate = await authorityFor(input.userId, input.agentKey, input.actionType, `${input.title} ${input.draftBody}`).catch(() => null)
+  if (gate?.mode === 'never') return { skipped: gate.why }
   const { data, error } = await supabase.from('ai_pending_actions').insert({
     user_id: input.userId,
+    reason: (input.reason ?? input.context?.summary ?? `${input.agentKey} proposed this: ${input.title}`).toString().slice(0, 500),
+    authority: 'person',
     agent_key: input.agentKey,
     action_type: input.actionType,
     title: input.title,
@@ -72,22 +78,19 @@ export async function queueAiAction(input: {
 // listings, rent matching and imports. Two things always wait for a person for now: anything that sends money
 // and anything that is a legal contract (lease changes, renewal offers, signing). At most 40 a day per business;
 // past that, drafts wait in Approvals as before.
-const NEEDS_PERSON_TYPES = new Set(['lease_update'])
-const NEEDS_PERSON_AGENTS = new Set(['pm_renewals', 'doc_reader'])
-const MONEY_OR_CONTRACT = /contract|tenancy agreement|assured shorthold|sign(ing)?\b|e-?sign|payout|pay out|refund|transfer|send(ing)? (money|funds)|wire/i
 const AUTO_DAILY_CAP = 40
 
 async function autoSendIfOn(userId: string, agentKey: string, actionType: string, id: string, text: string) {
-  if (NEEDS_PERSON_TYPES.has(actionType) || NEEDS_PERSON_AGENTS.has(agentKey)) return false
-  if (MONEY_OR_CONTRACT.test(text)) return false
+  const gate = await authorityFor(userId, agentKey, actionType, text)
+  if (gate.mode !== 'auto') return false
   const db = getServiceClient()
-  const { data: ag } = await db.from('ai_agents').select('auto_send, enabled').eq('user_id', userId).eq('agent_key', agentKey).maybeSingle()
+  const { data: ag } = await db.from('ai_agents').select('auto_send, enabled, changed_by').eq('user_id', userId).eq('agent_key', agentKey).maybeSingle()
   if (!ag?.enabled || !ag?.auto_send) return false
   const startOfDay = new Date(); startOfDay.setUTCHours(0, 0, 0, 0)
   const { count } = await db.from('ai_pending_actions').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('decision_note', 'Sent automatically').gte('decided_at', startOfDay.toISOString())
   if ((count ?? 0) >= AUTO_DAILY_CAP) return false
   const { data: claimed } = await db.from('ai_pending_actions')
-    .update({ status: 'approved', decided_by_name: 'Novourq Cloud AI', decision_note: 'Sent automatically', decided_at: new Date().toISOString() })
+    .update({ status: 'approved', decided_by_name: 'Novourq Cloud AI', decision_note: 'Sent automatically', decided_at: new Date().toISOString(), authority: 'auto', authorised_by: ag.changed_by ? `${ag.changed_by} (switched on automatic sending)` : 'Account admin (automatic sending is on by default)' })
     .eq('id', id).eq('status', 'pending').select('*')
   const row = claimed?.[0]
   if (!row) return false
@@ -99,7 +102,7 @@ async function autoSendIfOn(userId: string, agentKey: string, actionType: string
     return false
   }
   await db.from('ai_pending_actions').update({ status: 'executed', executed_at: new Date().toISOString(), error: null }).eq('id', id)
-  await db.from('ai_activity_log').insert({ user_id: userId, agent_key: agentKey, action: `Sent automatically: ${row.title}`, property_name: row.property_name })
+  await db.from('ai_activity_log').insert({ user_id: userId, agent_key: agentKey, action: `Sent automatically: ${row.title}`, property_name: row.property_name, reason: row.reason ?? null, authorised_by: ag.changed_by ? `${ag.changed_by} (switched on automatic sending)` : 'Account admin (automatic sending is on by default)' })
   return true
 }
 

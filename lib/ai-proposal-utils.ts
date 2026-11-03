@@ -59,7 +59,7 @@ export async function expireStaleDrafts() {
 // Staff Centre -> Tasks instead of skipping silently. One task per title while it is still open,
 // and no more than 40 new ones per business per run.
 const madeThisRun = new Map<string, number>()
-export async function aiTask(businessId: string, title: string, notes: string, dueInDays = 1): Promise<boolean> {
+export async function aiTask(businessId: string, title: string, notes: string, dueInDays = 1, agentKey = 'ai'): Promise<boolean> {
   const n = madeThisRun.get(businessId) ?? 0
   if (n >= 40) return false
   const db = svc()
@@ -67,6 +67,10 @@ export async function aiTask(businessId: string, title: string, notes: string, d
   const { data: open } = await db.from('staff_tasks').select('id').eq('user_id', businessId).eq('title', t).neq('status', 'Done').limit(1)
   if (open?.length) return false
   const { error } = await db.from('staff_tasks').insert({ user_id: businessId, title: t, status: 'On track', due_date: dayStr(dueInDays), notes: `[AI] ${notes}`.slice(0, 500) })
-  if (!error) { madeThisRun.set(businessId, n + 1); return true }
+  if (!error) {
+    madeThisRun.set(businessId, n + 1)
+    await db.from('ai_activity_log').insert({ user_id: businessId, agent_key: agentKey, action: `Created task: ${t}`, reason: notes.slice(0, 500), authorised_by: 'Standing rule: the AI may create tasks' }).then(() => {}, () => {})
+    return true
+  }
   return false
 }

@@ -22,7 +22,7 @@ export default function Activity() {
               <div key={n} style={{ display: 'flex', gap: 14, padding: '10px 14px', borderBottom: n < items.length - 1 ? '1px solid ' + C.border : 0, fontSize: 13.5, flexWrap: 'wrap' }}>
                 <span style={{ color: C.faint, minWidth: 118 }}>{when(i.at)}</span>
                 <span style={{ fontWeight: 600, minWidth: 110 }}>{NAME[i.agent] ?? i.agent}</span>
-                <span style={{ flex: 1, minWidth: 180 }}>{i.text}{i.note ? <span style={{ color: C.muted }}> · {i.note}</span> : null}</span>
+                <span style={{ flex: 1, minWidth: 180 }}>{i.text}{i.note ? <span style={{ color: C.muted }}> · {i.note}</span> : null}{i.reason ? <div style={{ fontSize: 12.5, color: C.muted, marginTop: 2 }}>Why: {i.reason}</div> : null}{i.by ? <div style={{ fontSize: 12.5, color: C.muted }}>Authorised by: {i.by}</div> : null}</span>
               </div>))}
           </div>
         )}

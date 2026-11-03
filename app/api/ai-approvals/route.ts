@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     await db.from('notifications').insert({ user_id: c.businessId, title: `An approved AI action failed: ${String(row.title ?? '').slice(0, 80)}`, message: String(result.error).slice(0, 300), type: 'ai_alert', module: 'staffcentre', link: '/staff-centre/ai-command-centre/approvals', read: false })
     return NextResponse.json({ error: result.error }, { status: 502 })
   }
-  await db.from('ai_pending_actions').update({ status: 'executed', executed_at: new Date().toISOString(), error: null }).eq('id', id)
-  await db.from('ai_activity_log').insert({ user_id: c.businessId, agent_key: row.agent_key, action: `${c.name || 'Staff'} approved: ${row.title}`, property_name: row.property_name })
+  await db.from('ai_pending_actions').update({ status: 'executed', executed_at: new Date().toISOString(), error: null, authority: 'person', authorised_by: `${c.name || 'Staff'} (${c.email})` }).eq('id', id)
+  await db.from('ai_activity_log').insert({ user_id: c.businessId, agent_key: row.agent_key, action: `${c.name || 'Staff'} approved: ${row.title}`, property_name: row.property_name, reason: row.reason ?? null, authorised_by: `${c.name || 'Staff'} (${c.email})` })
   return NextResponse.json({ success: true })
 }

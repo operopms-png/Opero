@@ -491,14 +491,16 @@ export default function PropertyManagerAgents() {
   const toggleAuto = async (key:string) => {
     const next = !(autoSend[key] ?? true)
     setAutoSend({...autoSend,[key]:next})
-    const {error} = await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: activeAgents[key] ?? false, auto_send: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
+    const who = (await supabase.auth.getUser()).data.user?.email ?? null
+    const {error} = await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: activeAgents[key] ?? false, auto_send: next, updated_at: new Date().toISOString(), changed_by: who, changed_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
     if (error) { setAutoSend({...autoSend,[key]:!next}) }
   }
   const toggleAgent = async (key:string) => {
     const next = !activeAgents[key]
     setActiveAgents({...activeAgents,[key]:next})
     if (userId) {
-      const {error} = await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
+      const who = (await supabase.auth.getUser()).data.user?.email ?? null
+      const {error} = await supabase.from('ai_agents').upsert({ user_id: userId, agent_key: key, enabled: next, updated_at: new Date().toISOString(), changed_by: who, changed_at: new Date().toISOString() }, { onConflict: 'user_id,agent_key' })
       if (error) { alert(error.message); setActiveAgents({...activeAgents,[key]:!next}); }
     }
   }
