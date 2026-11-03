@@ -97,6 +97,12 @@ export const STAFF_HUBS: Hub[] = [
 // Hubs that stay on their own in the menu; every other hub sits inside the Human Intelligence Hub.
 export const NON_HUMAN_HUBS = ['Dashboard', 'Novourq Cloud AI']
 
+export const HUMAN_HUB_HREF = '/staff-centre/human-intelligence'
+// Every tab of every people-run hub, with the hub's own page first, so one sidebar link covers them all.
+export function humanHubTabs(): HubTab[] {
+  return [{ href: HUMAN_HUB_HREF, label: 'Human Intelligence Hub' }, ...STAFF_HUBS.filter(h => !NON_HUMAN_HUBS.includes(h.label)).flatMap(h => h.tabs)]
+}
+
 const ALL_TABS = STAFF_HUBS.flatMap(h => h.tabs)
 
 // Is this tab the page being shown? A tab with ?section=… matches only that
