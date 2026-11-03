@@ -41,6 +41,7 @@ export default function VoicePanel() {
         <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 6 }}>How to use it</div>
         <b>Dictate:</b> click in any box, then hold <b>Ctrl+Shift+Space</b> and talk, or tap the pencil button. Let go and the text appears.<br />
         <b>Call:</b> tap <b>Novourq Voice</b> and it answers like a phone call. Talk naturally, it replies out loud, remembers what you said earlier in the call, adds jobs to your Task board, and keeps listening. Say "goodbye" or tap the red button to hang up. Money and contracts still need a person.<br />
+        <b>On your phone:</b> open app.thenovourq.com in Chrome or Safari and tap Novourq Voice. The call fills the bottom of the screen and keeps the screen awake. To open it like an app, use your browser's Add to Home Screen.<br />
         <b>Say "new line", "full stop" or "question mark"</b> and it types the symbol. Correct yourself mid-sentence ("Thursday, no, Friday") and only Friday is typed.<br />
         <span style={{ color: '#667085' }}>Your last 30 days: {words.toLocaleString('en-GB')} words by voice. Audio is not stored.</span>
       </div>

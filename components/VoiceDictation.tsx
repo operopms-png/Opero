@@ -58,6 +58,8 @@ export default function VoiceDictation() {
   const speakRef = useRef(true)
   speakRef.current = speakOn
   const convo = useRef(false)
+  const speakingRef = useRef(false)
+  speakingRef.current = speaking
   // Phone-call mode: hands-free, keeps the conversation in mind, ends when you hang up or say goodbye.
   const [callActive, setCallActive] = useState(false)
   const [secs, setSecs] = useState(0)
@@ -68,6 +70,8 @@ export default function VoiceDictation() {
   const hist = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
   const silent = useRef(0)
   const clock = useRef<any>(null)
+  const callStream = useRef<MediaStream | null>(null)
+  const wake = useRef<any>(null)
   const END = /^\s*(?:no,? )?(?:thanks|thank you|cheers|that'?s all|that is all|stop|cancel|no thanks|nothing else|goodbye|bye)\b/i
 
   const say = useCallback((text: string, tone: 'ok' | 'err' = 'ok', ms = 6000) => {
@@ -134,11 +138,11 @@ export default function VoiceDictation() {
     cancelled.current = false
     heard.current = ''; chunks.current = []; setLive('')
     try {
-      stream.current = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.current = callStream.current && callStream.current.active ? callStream.current : await navigator.mediaDevices.getUserMedia({ audio: true })
       const mr = new MediaRecorder(stream.current)
       mr.ondataavailable = e => { if (e.data.size) chunks.current.push(e.data) }
       mr.onstop = () => {
-        stream.current?.getTracks().forEach(t => t.stop())
+        if (!call.current) stream.current?.getTracks().forEach(t => t.stop())
         const blob = new Blob(chunks.current, { type: mr.mimeType || 'audio/webm' })
         if (cancelled.current) return
         if (call.current) {
@@ -198,6 +202,9 @@ export default function VoiceDictation() {
     hist.current = []; silent.current = 0
     setCallActive(true); setSecs(0); setLastUser(''); setLastAi(''); setNote(null)
     clock.current = setInterval(() => setSecs(n => n + 1), 1000)
+    // Ask for the mic inside the tap (phones require it) and keep the screen awake for the call.
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(st => { callStream.current = st }).catch(() => { hangUp(); say('Allow the microphone in your browser to use voice.', 'err') })
+    try { (navigator as any).wakeLock?.request('screen').then((l: any) => { wake.current = l }).catch(() => {}) } catch {}
     setSpeaking(true)
     speak('Hi, Novourq here. What can I do for you?', () => { setSpeaking(false); if (call.current) start(true) })
   }
@@ -208,9 +215,20 @@ export default function VoiceDictation() {
     try { rec.current?.abort() } catch {}
     try { media.current?.state === 'recording' && media.current.stop() } catch {}
     try { stream.current?.getTracks().forEach(t => t.stop()) } catch {}
+    try { callStream.current?.getTracks().forEach(t => t.stop()) } catch {}
+    callStream.current = null
+    try { wake.current?.release(); wake.current = null } catch {}
     setState('idle'); setLive('')
   }
-  useEffect(() => () => { clearInterval(clock.current) }, [])
+  useEffect(() => {
+    const vis = () => {
+      if (document.visibilityState !== 'visible' || !call.current) return
+      try { (navigator as any).wakeLock?.request('screen').then((l: any) => { wake.current = l }).catch(() => {}) } catch {}
+      if (stateRef.current === 'idle' && !speakingRef.current) start(true)
+    }
+    document.addEventListener('visibilitychange', vis)
+    return () => { document.removeEventListener('visibilitychange', vis); clearInterval(clock.current) }
+  }, [])
 
   function stop() {
     if (stateRef.current !== 'listening') return
@@ -232,8 +250,8 @@ export default function VoiceDictation() {
     const status = speaking ? 'Speaking' : listening ? 'Listening' : 'Thinking'
     const mm = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0')
     return (
-      <div role="dialog" aria-label="Call with Novourq" style={{ position: 'fixed', right: 18, bottom: 18, zIndex: 9000, width: 'min(340px, calc(100vw - 36px))', background: '#0B1B45', color: '#fff', borderRadius: 18, padding: 16, boxShadow: '0 12px 36px rgba(7,18,48,.5)', fontFamily: 'inherit' }}>
-        <style>{`@media (prefers-reduced-motion:no-preference){.nvq-live .nvq-bar{transform-origin:center;animation:nvqw .9s ease-in-out infinite}.nvq-live .nvq-bar:nth-child(2){animation-delay:.15s}.nvq-live .nvq-bar:nth-child(3){animation-delay:.3s}.nvq-live .nvq-bar:nth-child(4){animation-delay:.45s}.nvq-live .nvq-bar:nth-child(5){animation-delay:.6s}}@keyframes nvqw{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}`}</style>
+      <div role="dialog" aria-label="Call with Novourq" className="nvq-call" style={{ position: 'fixed', right: 'max(18px, env(safe-area-inset-right, 0px))', bottom: 'max(18px, env(safe-area-inset-bottom, 0px))', zIndex: 9000, width: 'min(340px, calc(100vw - 36px))', background: '#0B1B45', color: '#fff', borderRadius: 18, padding: 16, boxShadow: '0 12px 36px rgba(7,18,48,.5)', fontFamily: 'inherit' }}>
+        <style>{`@media (max-width:600px){.nvq-call{left:0!important;right:0!important;bottom:0!important;width:auto!important;border-radius:18px 18px 0 0!important;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))!important}.nvq-call button{width:56px!important;height:56px!important}}@media (prefers-reduced-motion:no-preference){.nvq-live .nvq-bar{transform-origin:center;animation:nvqw .9s ease-in-out infinite}.nvq-live .nvq-bar:nth-child(2){animation-delay:.15s}.nvq-live .nvq-bar:nth-child(3){animation-delay:.3s}.nvq-live .nvq-bar:nth-child(4){animation-delay:.45s}.nvq-live .nvq-bar:nth-child(5){animation-delay:.6s}}@keyframes nvqw{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}`}</style>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span className={status === 'Thinking' ? '' : 'nvq-live'} style={{ width: 44, height: 44, borderRadius: '50%', display: 'grid', placeItems: 'center', flex: 'none', background: 'linear-gradient(135deg,#7fe4ff,#3a8bff)', color: '#fff' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path className="nvq-bar" d="M4 10v4" /><path className="nvq-bar" d="M8 6v12" /><path className="nvq-bar" d="M12 3v18" /><path className="nvq-bar" d="M16 7v10" /><path className="nvq-bar" d="M20 10v4" /></svg>
@@ -257,7 +275,7 @@ export default function VoiceDictation() {
     )
   }
   return (
-    <div style={{ position: 'fixed', right: 18, bottom: 18, zIndex: 9000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, maxWidth: 'min(380px, calc(100vw - 36px))', fontFamily: 'inherit' }}>
+    <div style={{ position: 'fixed', right: 'max(14px, env(safe-area-inset-right, 0px))', bottom: 'max(14px, env(safe-area-inset-bottom, 0px))', zIndex: 9000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, maxWidth: 'min(380px, calc(100vw - 36px))', fontFamily: 'inherit' }}>
       {(listening || state === 'working' || note) && (
         <div role="status" style={{ background: '#fff', border: `1px solid ${note?.tone === 'err' && !listening ? '#F4B7B0' : '#C9DEF3'}`, borderRadius: 12, padding: '10px 13px', fontSize: 13, lineHeight: 1.5, color: note?.tone === 'err' && !listening ? '#B42318' : '#1D4E89', boxShadow: '0 6px 24px rgba(16,24,40,.14)', whiteSpace: 'pre-wrap' }}>
           {listening ? (live || 'Listening… let go to finish') : state === 'working' ? 'Tidying…' : note?.text}
