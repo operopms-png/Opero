@@ -45,7 +45,7 @@ export async function relearn(userId: string) {
   return summary
 }
 
-const SYSTEM = `You find real property listings for an investor. Use web search to find REAL, CURRENT listings for sale that fit the brief. Look at the usual portals for the place (UK: Rightmove, Zoopla, OnTheMarket, auction sites; Jamaica: local property portals and agents; UAE: Bayut, PropertyFinder). Only return listings you actually found, each with its exact page URL. Never invent a listing, price or URL.
+const SYSTEM = `You find real property listings for an investor. Use web search to find REAL, CURRENT listings for sale that fit the brief. Look at the usual portals for the place (UK: Rightmove, Zoopla, OnTheMarket, auction sites; Jamaica: Terra Caribbean, RE/MAX Jamaica, Century 21 Jamaica, Coldwell Banker Jamaica, other Jamaican agents and the Gleaner and Observer classifieds, with prices in JMD or USD as listed). Only return listings you actually found, each with its exact page URL. Never invent a listing, price or URL.
 Reply with JSON only: {"matches":[{"title":"short description","address":"street/area","price":number,"currency":"GBP|JMD|USD","beds":number|null,"url":"exact URL","summary":"one sentence on the property","fit_score":0-100,"reason":"one sentence on why it fits the brief, or what is a stretch"}]}
 Give up to 6, best fit first. If you find nothing good, return {"matches":[]}.`
 
