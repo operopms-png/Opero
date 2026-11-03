@@ -107,7 +107,8 @@ export default function GrokPanel() {
       })
       const data = await res.json().catch(() => ({}))
       const reply = res.ok ? (data.reply || 'No answer came back.') : (data.error || 'The assistant could not answer.')
-      setMessages(m => [...m, { role: 'bot', text: reply }])
+      const shown = res.ok ? reply.replace(/\*\*/g, '').replace(/^#+\s*/gm, '') : reply
+      setMessages(m => [...m, { role: 'bot', text: shown }])
       if (res.ok && speakRef.current) speak(reply)
     } catch {
       setMessages(m => [...m, { role: 'bot', text: 'The assistant could not be reached. Try again.' }])
