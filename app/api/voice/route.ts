@@ -41,14 +41,20 @@ export async function POST(req: NextRequest) {
   }
   if (!raw.trim()) return bad('I could not hear anything. Try again, a little closer to the mic.')
 
+  const call = f.get('call') === '1'
+  let history: { role: 'user' | 'assistant'; content: string }[] = []
+  try {
+    const h = JSON.parse(String(f.get('history') || '[]'))
+    if (Array.isArray(h)) history = h.slice(-8).filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').map(m => ({ role: m.role, content: m.content.slice(0, 1200) }))
+  } catch { /* no history */ }
   const wake = f.get('mode') === 'command' ? raw.trim() : stripWake(raw)
   let kind = 'dictate'
   let out: Record<string, unknown>
   if (wake !== null) {
     kind = 'command'
     if (!wake) return bad('I heard the name but no instruction. Try "Novourq, what is overdue?"')
-    const text = await tidy(wake, dict, 'an instruction to a property management assistant')
-    const r = await runCommand(c, text)
+    const text = call ? wake : await tidy(wake, dict, 'an instruction to a property management assistant')
+    const r = await runCommand(c, text, history, call)
     out = { mode: 'command', text, reply: r.reply, tasks: r.tasks }
   } else {
     const text = await tidy(raw, dict, String(f.get('hint') || ''))

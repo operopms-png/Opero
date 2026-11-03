@@ -77,9 +77,12 @@ The account admin is speaking to you by voice from inside the portal. Reply in p
 - Do not create tasks for questions.
 Reply ONLY with JSON, no other text: {"reply": "text to say", "tasks": [{"title": "short title", "notes": "one line of detail", "days": 1}]}`
 
-export async function runCommand(c: Caller, text: string): Promise<{ reply: string; tasks: number }> {
+const CALL_RULES = `
+This is a live phone call. Speak like a capable colleague on the phone: one to three short sentences, natural and warm, no lists, no numbers read out in bulk. Use what was said earlier in the call. If the request is unclear, ask one short question. If they say goodbye, say a brief goodbye.`
+
+export async function runCommand(c: Caller, text: string, history: { role: 'user' | 'assistant'; content: string }[] = [], call = false): Promise<{ reply: string; tasks: number }> {
   const portal = await portalContext(c).catch(() => null)
-  const out = await askClaude(systemPrompt({ c, portal, web: false }) + COMMAND_RULES, [{ role: 'user', content: text }], false)
+  const out = await askClaude(systemPrompt({ c, portal, web: false }) + COMMAND_RULES + (call ? CALL_RULES : ''), [...history.slice(-8), { role: 'user' as const, content: text }], false)
   if (out.error || !out.text) return { reply: 'Sorry, I could not answer that just now. Try again in a minute.', tasks: 0 }
   let reply = out.text.trim().slice(0, 1200)
   let tasks: { title?: string; notes?: string; days?: number }[] = []

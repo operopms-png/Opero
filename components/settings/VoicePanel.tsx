@@ -39,8 +39,8 @@ export default function VoicePanel() {
       {!speechKey && <div style={{ ...card, color: '#9A6700', fontSize: 14 }}>High-accuracy speech is not switched on for the platform yet, so voice is using your browser's built-in speech for now. It still works, with less accurate names.</div>}
       <div style={{ ...card, fontSize: 13.5, color: '#344054', lineHeight: 1.7 }}>
         <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 6 }}>How to use it</div>
-        <b>Dictate:</b> click in any box, then hold <b>Ctrl+Shift+Space</b> and talk. Let go and the text appears. Or tap the blue mic at the bottom right.<br />
-        <b>Instruct:</b> start with "Novourq, ..." for example "Novourq, chase the late rent at Oak Court". It talks back, adds jobs to your Task board, then listens for a follow-up. Say "thanks" to finish, or use the speaker button to turn spoken replies off. Money and contracts still need a person.<br />
+        <b>Dictate:</b> click in any box, then hold <b>Ctrl+Shift+Space</b> and talk, or tap the pencil button. Let go and the text appears.<br />
+        <b>Call:</b> tap <b>Novourq Voice</b> and it answers like a phone call. Talk naturally, it replies out loud, remembers what you said earlier in the call, adds jobs to your Task board, and keeps listening. Say "goodbye" or tap the red button to hang up. Money and contracts still need a person.<br />
         <b>Say "new line", "full stop" or "question mark"</b> and it types the symbol. Correct yourself mid-sentence ("Thursday, no, Friday") and only Friday is typed.<br />
         <span style={{ color: '#667085' }}>Your last 30 days: {words.toLocaleString('en-GB')} words by voice. Audio is not stored.</span>
       </div>
