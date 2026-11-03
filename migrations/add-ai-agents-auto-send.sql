@@ -4,3 +4,4 @@
 ALTER TABLE public.ai_agents ADD COLUMN IF NOT EXISTS auto_send boolean NOT NULL DEFAULT true;
 UPDATE public.ai_agents SET auto_send = true;
 NOTIFY pgrst, 'reload schema';
+UPDATE public.ai_agents SET auto_send = false WHERE agent_key IN ('pm_renewals','doc_reader'); -- renewal offers and lease changes are legal contracts: a person approves

@@ -64,18 +64,22 @@ export async function queueAiAction(input: {
     context: input.context ?? {},
   }).select('id').single()
   if (error) return { error: error.message }
-  const autoSent = await autoSendIfOn(input.userId, input.agentKey, input.actionType, data.id as string).catch(() => false)
+  const autoSent = await autoSendIfOn(input.userId, input.agentKey, input.actionType, data.id as string, `${input.title} ${input.draftBody}`).catch(() => false)
   return { queued: true, id: data.id as string, autoSent }
 }
 
-// Messages go out without waiting when the skill's "Send automatically" switch is on (it is by default).
-// Only message-type actions qualify; price changes, rent matching, lease and listing edits always wait for a person.
-// At most 40 a day per business: past that, drafts wait in Approvals as before.
-const AUTO_TYPES = new Set(['email_out', 'guest_reply', 'portal_reply', 'owner_report', 'cleaning_instruction', 'maintenance_instruction'])
+// Novourq Cloud AI carries out its own work without waiting: messages, replies, instructions, price changes,
+// listings, rent matching and imports. Two things always wait for a person for now: anything that sends money
+// and anything that is a legal contract (lease changes, renewal offers, signing). At most 40 a day per business;
+// past that, drafts wait in Approvals as before.
+const NEEDS_PERSON_TYPES = new Set(['lease_update'])
+const NEEDS_PERSON_AGENTS = new Set(['pm_renewals', 'doc_reader'])
+const MONEY_OR_CONTRACT = /contract|tenancy agreement|assured shorthold|sign(ing)?\b|e-?sign|payout|pay out|refund|transfer|send(ing)? (money|funds)|wire/i
 const AUTO_DAILY_CAP = 40
 
-async function autoSendIfOn(userId: string, agentKey: string, actionType: string, id: string) {
-  if (!AUTO_TYPES.has(actionType)) return false
+async function autoSendIfOn(userId: string, agentKey: string, actionType: string, id: string, text: string) {
+  if (NEEDS_PERSON_TYPES.has(actionType) || NEEDS_PERSON_AGENTS.has(agentKey)) return false
+  if (MONEY_OR_CONTRACT.test(text)) return false
   const db = getServiceClient()
   const { data: ag } = await db.from('ai_agents').select('auto_send, enabled').eq('user_id', userId).eq('agent_key', agentKey).maybeSingle()
   if (!ag?.enabled || !ag?.auto_send) return false
@@ -86,7 +90,8 @@ async function autoSendIfOn(userId: string, agentKey: string, actionType: string
     .update({ status: 'approved', decided_by_name: 'Novourq Cloud AI', decision_note: 'Sent automatically', decided_at: new Date().toISOString() })
     .eq('id', id).eq('status', 'pending').select('*')
   const row = claimed?.[0]
-  if (!row || !row.draft_body) return false
+  if (!row) return false
+  if (!row.draft_body && actionType !== 'rate_change' && actionType !== 'mark_rent_paid' && actionType !== 'import_records') return false
   const result: any = await executeAiAction(row, row.draft_body)
   if (result && 'error' in result && result.error) {
     await db.from('ai_pending_actions').update({ status: 'failed', error: String(result.error).slice(0, 500) }).eq('id', id)
