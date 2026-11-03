@@ -5,6 +5,7 @@
 // instead. Never types into password boxes.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { speak, stopSpeech, unlockSpeech, canSpeak } from '@/lib/speak'
 
 type Editable = HTMLInputElement | HTMLTextAreaElement | HTMLElement
 const TEXT_TYPES = ['text', 'search', 'email', 'url', 'tel', '']
@@ -51,6 +52,13 @@ export default function VoiceDictation() {
   const rec = useRef<any>(null)
   const heard = useRef('')
   const noteTimer = useRef<any>(null)
+  // Talk-back: replies are read aloud, then it listens again for a follow-up until you say thanks or stay quiet.
+  const [speakOn, setSpeakOn] = useState(true)
+  const [speaking, setSpeaking] = useState(false)
+  const speakRef = useRef(true)
+  speakRef.current = speakOn
+  const convo = useRef(false)
+  const END = /^\s*(?:no,? )?(?:thanks|thank you|cheers|that'?s all|that is all|stop|cancel|no thanks|nothing else|goodbye|bye)\b/i
 
   const say = useCallback((text: string, tone: 'ok' | 'err' = 'ok', ms = 6000) => {
     setNote({ text, tone })
@@ -61,40 +69,52 @@ export default function VoiceDictation() {
   useEffect(() => {
     const w = window as any
     setSupported(!!(navigator.mediaDevices && w.MediaRecorder) || !!(w.SpeechRecognition || w.webkitSpeechRecognition))
+    try { setSpeakOn(localStorage.getItem('nvq-voice-speak') !== 'off') } catch {}
     const onFocus = (e: FocusEvent) => { if (isEditable(e.target as Element)) lastField.current = e.target as Editable }
     document.addEventListener('focusin', onFocus)
     return () => document.removeEventListener('focusin', onFocus)
   }, [])
 
-  async function send(blob: Blob | null, text: string) {
+  async function send(blob: Blob | null, text: string, asCommand = false) {
     setState('working')
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const fd = new FormData()
       if (blob && blob.size > 800) fd.append('audio', blob, 'voice.webm')
       fd.append('text', text)
+      if (asCommand) fd.append('mode', 'command')
       fd.append('hint', label(field.current) + ' ' + location.pathname)
       const res = await fetch('/api/voice', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token ?? ''}` }, body: fd })
       const d = await res.json().catch(() => ({}))
-      if (!res.ok) { say(d.error || 'Voice did not work. Try again.', 'err'); return }
+      if (!res.ok) { convo.current = false; say(d.error || 'Voice did not work. Try again.', 'err'); return }
       if (d.mode === 'command') {
         say(d.reply + (d.tasks ? `  (${d.tasks} task${d.tasks === 1 ? '' : 's'} added to your Task board)` : ''), 'ok', 14000)
-        try { const u = new SpeechSynthesisUtterance(String(d.reply).slice(0, 600)); u.lang = 'en-GB'; window.speechSynthesis?.speak(u) } catch {}
+        if (speakRef.current && canSpeak()) {
+          convo.current = true
+          setSpeaking(true)
+          speak(String(d.reply), () => {
+            setSpeaking(false)
+            if (convo.current) setTimeout(() => { if (convo.current) start(true) }, 250)
+          })
+        } else convo.current = false
       } else if (field.current && document.contains(field.current)) {
+        convo.current = false
         insertInto(field.current, d.text)
       } else {
         await navigator.clipboard?.writeText(d.text).catch(() => {})
         say('No box was selected, so it is copied: ' + d.text, 'ok', 9000)
       }
     } catch {
+      convo.current = false
       say('Could not reach Novourq. Check your connection and try again.', 'err')
     } finally {
       setState('idle'); setLive('')
     }
   }
 
-  async function start() {
+  async function start(followUp = false) {
     if (stateRef.current !== 'idle') return
+    if (!followUp) { convo.current = false; stopSpeech(); setSpeaking(false); unlockSpeech() }
     const w = window as any
     const active = document.activeElement
     field.current = isEditable(active) ? active : (lastField.current && document.contains(lastField.current) ? lastField.current : null)
@@ -106,6 +126,17 @@ export default function VoiceDictation() {
       mr.onstop = () => {
         stream.current?.getTracks().forEach(t => t.stop())
         const blob = new Blob(chunks.current, { type: mr.mimeType || 'audio/webm' })
+        if (convo.current) {
+          // Follow-up turn: nothing heard or a goodbye ends the conversation without sending.
+          if (!heard.current.trim() || END.test(heard.current)) {
+            const bye = END.test(heard.current)
+            convo.current = false; setState('idle'); setLive('')
+            if (bye && speakRef.current) speak('Anytime.')
+            return
+          }
+          send(blob, heard.current, true)
+          return
+        }
         send(blob, heard.current)
       }
       media.current = mr
@@ -117,13 +148,15 @@ export default function VoiceDictation() {
     const SR = w.SpeechRecognition || w.webkitSpeechRecognition
     if (SR) {
       try {
-        const r = new SR(); r.lang = 'en-GB'; r.interimResults = true; r.continuous = true
+        const r = new SR(); r.lang = 'en-GB'; r.interimResults = true; r.continuous = !followUp
+        if (followUp) r.onend = () => stop()
         r.onresult = (e: any) => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; heard.current = t; setLive(t) }
         r.onerror = () => {}
         rec.current = r; r.start()
       } catch {}
     }
     setState('listening')
+    if (followUp) setTimeout(() => { if (stateRef.current === 'listening' && !heard.current) stop() }, 9000)
   }
 
   function stop() {
@@ -151,10 +184,16 @@ export default function VoiceDictation() {
         </div>
       )}
       <style>{`@media (prefers-reduced-motion:no-preference){.nvq-rec .nvq-bar{transform-origin:center;animation:nvqw .9s ease-in-out infinite}.nvq-rec .nvq-bar:nth-child(2){animation-delay:.15s}.nvq-rec .nvq-bar:nth-child(3){animation-delay:.3s}.nvq-rec .nvq-bar:nth-child(4){animation-delay:.45s}.nvq-rec .nvq-bar:nth-child(5){animation-delay:.6s}}@keyframes nvqw{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}`}</style>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => { const v = !speakOn; setSpeakOn(v); try { localStorage.setItem('nvq-voice-speak', v ? 'on' : 'off') } catch {} if (!v) { convo.current = false; stopSpeech(); setSpeaking(false) } }}
+        aria-pressed={speakOn} aria-label={speakOn ? 'Turn spoken replies off' : 'Turn spoken replies on'} title={speakOn ? 'Spoken replies on' : 'Spoken replies off'}
+        style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid #C9DEF3', background: '#fff', color: speakOn ? '#0B1B45' : '#98A2B3', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H3v6h3l5 4z" />{speakOn ? <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /> : <path d="M16 9l5 6M21 9l-5 6" />}</svg>
+      </button>
       <button type="button"
         className={listening ? 'nvq-rec' : ''}
         onMouseDown={e => e.preventDefault()}
-        onClick={() => (listening ? stop() : start())}
+        onClick={() => { if (speaking) { convo.current = false; stopSpeech(); setSpeaking(false) } else if (listening) { convo.current = false; stop() } else start() }}
         disabled={state === 'working'}
         aria-label={listening ? 'Stop Novourq Voice' : 'Novourq Voice'}
         title={listening ? 'Tap to finish' : 'Tap, or hold Ctrl+Shift+Space. Say "Novourq, …" to give an instruction'}
@@ -166,8 +205,9 @@ export default function VoiceDictation() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
           )}
         </span>
-        {listening ? 'Listening' : state === 'working' ? 'Working' : 'Novourq Voice'}
+        {speaking ? 'Speaking. Tap to stop' : listening ? 'Listening' : state === 'working' ? 'Working' : 'Novourq Voice'}
       </button>
+      </div>
     </div>
   )
 }

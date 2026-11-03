@@ -40,7 +40,7 @@ export default function VoicePanel() {
       <div style={{ ...card, fontSize: 13.5, color: '#344054', lineHeight: 1.7 }}>
         <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 6 }}>How to use it</div>
         <b>Dictate:</b> click in any box, then hold <b>Ctrl+Shift+Space</b> and talk. Let go and the text appears. Or tap the blue mic at the bottom right.<br />
-        <b>Instruct:</b> start with "Novourq, ..." for example "Novourq, chase the late rent at Oak Court". It answers out loud and adds jobs to your Task board. Money and contracts still need a person.<br />
+        <b>Instruct:</b> start with "Novourq, ..." for example "Novourq, chase the late rent at Oak Court". It talks back, adds jobs to your Task board, then listens for a follow-up. Say "thanks" to finish, or use the speaker button to turn spoken replies off. Money and contracts still need a person.<br />
         <b>Say "new line", "full stop" or "question mark"</b> and it types the symbol. Correct yourself mid-sentence ("Thursday, no, Friday") and only Friday is typed.<br />
         <span style={{ color: '#667085' }}>Your last 30 days: {words.toLocaleString('en-GB')} words by voice. Audio is not stored.</span>
       </div>
