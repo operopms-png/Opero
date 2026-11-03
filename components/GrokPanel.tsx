@@ -3,7 +3,6 @@
 // to /api/grok and shows the reply. It cannot change records or send messages.
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { grokRoleForJob } from '../lib/grok-agent-roles'
 
 const C = { blue: '#2F6DB5', brown: '#1D4E89', soft: '#EAF3FC', line: '#E4E7EC', muted: '#667085', text: '#323338', bg: '#F9FAFB' }
 
@@ -21,10 +20,9 @@ export default function GrokPanel() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Msg[]>([])
   const [busy, setBusy] = useState(false)
-  const [agents, setAgents] = useState<Agent[]>([])
-  const [agentId, setAgentId] = useState('')
-  const agent = agents.find(a => a.id === agentId)
-  const role = agent ? grokRoleForJob(agent.job_role) : 'general'
+  // One assistant: Novourq Cloud AI. No separate named staff to pick from.
+  const role = 'general'
+  const agent: Agent | undefined = undefined
 
   // Voice: speak a question with the mic, and have the reply read aloud. Uses the browser's own
   // speech tools, so it needs no extra keys. Mic works in Chrome, Edge and Safari.
@@ -100,16 +98,6 @@ export default function GrokPanel() {
     rec.start()
   }
 
-  // Each AI staff member is listed by name. Falls back to the general assistant if none load.
-  useEffect(() => {
-    supabase.from('ai_staff').select('id,name,job_role,status').order('created_at', { ascending: true }).then(({ data }) => {
-      const rows = ((data ?? []) as any[]).filter(a => a.status !== 'paused')
-      // A bot named after its own job (e.g. "Receptionist") is hidden when a named person holds that job.
-      const list = rows.filter(a => !(a.name === a.job_role && rows.some(b => b !== a && b.job_role === a.job_role)))
-      setAgents(list)
-      if (list.length) setAgentId(list.find(a => /sharleen/i.test(a.name))?.id ?? list[0].id)
-    })
-  }, [])
 
   async function send(text: string) {
     const message = text.trim()
@@ -141,15 +129,11 @@ export default function GrokPanel() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '14px 18px', background: C.soft, borderBottom: '1px solid #C9DEF3' }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: C.brown }}>Novourq Cloud AI</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <select value={agentId} onChange={e => setAgentId(e.target.value)} aria-label="Who to ask" style={{ fontSize: 12, fontWeight: 600, color: C.brown, background: '#fff', border: '1px solid #C9DEF3', borderRadius: 8, padding: '5px 8px', fontFamily: 'inherit' }}>
-            {agents.length === 0 && <option value="">Assistant</option>}
-            {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
           <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: C.brown, cursor: 'pointer' }}>
             <input type="checkbox" checked={speakReplies} onChange={e => { setSpeakReplies(e.target.checked); if (!e.target.checked) stopSpeaking() }} /> Speak replies
           </label>
           {speaking && <button type="button" onClick={stopSpeaking} style={{ fontSize: 12, fontWeight: 600, color: C.brown, background: '#fff', border: '1px solid #C9DEF3', borderRadius: 8, padding: '4px 9px', cursor: 'pointer', fontFamily: 'inherit' }}>Stop</button>}
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: '#fff', color: C.brown, border: '1px solid #C9DEF3' }}>Read only. Drafts need approval</span>
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: '#fff', color: C.brown, border: '1px solid #C9DEF3' }}>Acts for you. Money and contracts need your approval</span>
         </div>
       </div>
 
