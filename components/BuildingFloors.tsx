@@ -2,8 +2,11 @@
 // Floor-by-floor view of one building: every flat is a block, coloured by status, stacked by floor.
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import FlatPlanEditor from '@/components/FlatPlanEditor'
+import FlatViewer3D from '@/components/FlatViewer3D'
+import { sanitizeLayout } from '@/lib/flat-layout'
 
-type U = { id: string; unit: string; status: 'let' | 'vac' | 'arr'; rent: string; tenant: string; detail: string }
+type U = { id: string; unit: string; status: 'let' | 'vac' | 'arr'; rent: string; tenant: string; detail: string; planUrl?: string | null; layout?: any }
 type D = { name: string; address: string; floors: { floor: number | null; units: U[] }[]; totals: Record<string, number>; certs: string[] }
 const LINE = '#D9E2F0', MUTED = '#667085', TXT = '#101828', NAVY = '#1B2F6E'
 const ST = { let: { label: 'Let', color: '#0E7C55' }, vac: { label: 'Vacant', color: '#2F6DB5' }, arr: { label: 'Rent behind', color: '#B42318' } } as const
@@ -14,6 +17,8 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
   const [err, setErr] = useState('')
   const [only, setOnly] = useState<K | null>(null)
   const [sel, setSel] = useState<U | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [viewing, setViewing] = useState(false)
 
   useEffect(() => {
     setD(null); setErr(''); setSel(null)
@@ -28,7 +33,7 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
 
   const g = useMemo(() => {
     if (!d) return null
-    const W = 64, H = 28, dx = 56, dy = -30, cols = Math.max(1, ...d.floors.map(f => f.units.length)), rows = d.floors.length
+    const W = 86, H = 36, dx = 56, dy = -30, cols = Math.max(1, ...d.floors.map(f => f.units.length)), rows = d.floors.length
     const ox = 74, oy = 44 - dy
     return { W, H, dx, dy, cols, rows, ox, oy, vw: ox + cols * W + dx + 16, vh: oy + rows * H + 20 }
   }, [d])
@@ -66,7 +71,8 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
                         <g key={u.id} tabIndex={0} role="button" aria-label={`Flat ${u.unit}, ${ST[u.status].label}`} opacity={dim ? .18 : 1} style={{ cursor: 'pointer', outline: 'none' }}
                           onClick={() => setSel(u)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSel(u) } }}>
                           <rect x={g.ox + c * g.W} y={g.oy + row * g.H} width={g.W - 2} height={g.H - 2} fill={ST[u.status].color} stroke={sel?.id === u.id ? TXT : '#fff'} strokeWidth={sel?.id === u.id ? 3 : 1} />
-                          <text x={g.ox + c * g.W + g.W / 2 - 1} y={g.oy + row * g.H + g.H / 2 + 3} fontSize="10.5" fontWeight="700" textAnchor="middle" fill="#fff" style={{ pointerEvents: 'none' }}>{u.unit.length > 8 ? u.unit.slice(0, 7) + '…' : u.unit}</text>
+                          <text x={g.ox + c * g.W + g.W / 2 - 1} y={g.oy + row * g.H + 14} fontSize="11" fontWeight="700" textAnchor="middle" fill="#fff" style={{ pointerEvents: 'none' }}>{u.unit.length > 9 ? u.unit.slice(0, 8) + '…' : u.unit}</text>
+                          <text x={g.ox + c * g.W + g.W / 2 - 1} y={g.oy + row * g.H + 27} fontSize="10.5" textAnchor="middle" fill="#fff" style={{ pointerEvents: 'none' }}>{u.status === 'vac' ? (u.rent ? `${u.rent} ask` : 'Vacant') : u.rent || ' '}{u.layout ? ' ●' : ''}</text>
                         </g>
                       )
                     })}
@@ -84,13 +90,25 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
                   {[['Tenant', sel.status === 'vac' ? 'None' : sel.tenant || 'Not recorded'], ['Rent', sel.rent || 'Not recorded'], ['Status', sel.detail]].map(([a, b]) => (
                     <div key={a} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13.5, padding: '7px 0', borderTop: `1px solid ${LINE}` }}><span style={{ color: MUTED }}>{a}</span><span style={{ fontWeight: 600, textAlign: 'right', color: TXT }}>{b}</span></div>
                   ))}
+                  {sel.planUrl && !/\.pdf($|\?)/i.test(sel.planUrl) && <a href={sel.planUrl} target="_blank" rel="noopener noreferrer"><img src={sel.planUrl} alt={`Floor plan of flat ${sel.unit}`} style={{ width: '100%', maxHeight: 180, objectFit: 'contain', border: `1px solid ${LINE}`, borderRadius: 8, background: '#fff' }} /></a>}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {sel.layout && <button type="button" onClick={() => setViewing(true)} style={pbtn(true)}>View in 3D and walk</button>}
+                    <button type="button" onClick={() => setEditing(true)} style={pbtn()}>{sel.layout || sel.planUrl ? 'Edit floor plan' : 'Add floor plan'}</button>
+                  </div>
                 </div>
               ) : <p style={{ margin: 0, fontSize: 13.5, color: MUTED, lineHeight: 1.5 }}>Click a flat to see its tenant, rent and status. The top row is the top floor. Floors come from each flat's number (for example 3B is floor 3).</p>}
             </div>
           </div>
         </>
       )}
+      {editing && sel && <FlatPlanEditor source={source} unit={sel} onClose={() => setEditing(false)} onSaved={p => {
+        const next = { ...sel, ...(p.planUrl !== undefined ? { planUrl: p.planUrl } : {}), ...(p.layout !== undefined ? { layout: p.layout } : {}) }
+        setSel(next); setD(x => x && { ...x, floors: x.floors.map(f => ({ ...f, units: f.units.map(u => (u.id === next.id ? next : u)) })) })
+      }} />}
+      {viewing && sel?.layout && sanitizeLayout(sel.layout) && <FlatViewer3D layout={sanitizeLayout(sel.layout)!} title={`${d?.name ?? 'Building'}, flat ${sel.unit}`} onClose={() => setViewing(false)} />}
       <style>{`@media (max-width:760px){.bf-grid{grid-template-columns:minmax(0,1fr)!important}.bf-side{border-left:0!important;border-top:1px solid ${LINE}}}`}</style>
     </div>
   )
 }
+
+const pbtn = (primary = false): React.CSSProperties => ({ font: 'inherit', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, border: `1px solid ${primary ? NAVY : LINE}`, background: primary ? NAVY : '#EAF3FC', color: primary ? '#fff' : '#2F6DB5', cursor: 'pointer' })

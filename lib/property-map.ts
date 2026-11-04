@@ -98,7 +98,7 @@ export async function loadPropertyMap(businessId: string): Promise<{ items: MapI
 }
 
 // ---------- floor-by-floor view of one building ----------
-export type FloorUnit = { id: string; unit: string; status: 'let' | 'vac' | 'arr'; rent: string; tenant: string; detail: string }
+export type FloorUnit = { id: string; unit: string; status: 'let' | 'vac' | 'arr'; rent: string; tenant: string; detail: string; planUrl?: string | null; layout?: any }
 export type FloorData = { name: string; address: string; floors: { floor: number | null; units: FloorUnit[] }[]; totals: Record<string, number>; certs: string[] }
 
 // Floor from the saved floor, else from the unit number: "3B" is floor 3, "204" is floor 2.
@@ -120,7 +120,7 @@ export async function loadBuildingFloors(businessId: string, source: 'pm' | 'est
   const units: FloorUnit[] & any[] = []
   let propIds: string[] = []
   if (source === 'pm') {
-    const { data: us } = await db.from('pm_units').select('id,property_id,unit_number,tenant_id,monthly_rent,status,floor').eq('building_id', buildingId).eq('user_id', businessId).limit(1000)
+    const { data: us } = await db.from('pm_units').select('id,property_id,unit_number,tenant_id,monthly_rent,status,floor,plan_url,layout').eq('building_id', buildingId).eq('user_id', businessId).limit(1000)
     propIds = [...new Set((us ?? []).map(u => String(u.property_id)))]
     const ids = (us ?? []).map(u => u.id)
     const [t, l, r, c] = await Promise.all([
@@ -136,11 +136,11 @@ export async function loadBuildingFloors(businessId: string, source: 'pm' | 'est
       const lateAmt = late.get(u.id)
       const occ = !!u.tenant_id || lease.has(u.id) || /rented|occupied|let/i.test(u.status || '')
       const ld: any = lease.get(u.id)
-      units.push({ id: u.id, unit: u.unit_number || '?', _f: floorOf(u.unit_number, u.floor), status: lateAmt ? 'arr' : occ ? 'let' : 'vac', rent: u.monthly_rent ? `£${Number(u.monthly_rent).toLocaleString('en-GB')}` : '', tenant: (u.tenant_id && name.get(u.tenant_id)) || '', detail: lateAmt ? `Rent overdue, £${lateAmt.toLocaleString('en-GB')}` : occ ? (ld?.end_date ? `Lease to ${new Date(ld.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'Let') : 'No active tenancy' })
+      units.push({ id: u.id, unit: u.unit_number || '?', _f: floorOf(u.unit_number, u.floor), status: lateAmt ? 'arr' : occ ? 'let' : 'vac', rent: u.monthly_rent ? `£${Number(u.monthly_rent).toLocaleString('en-GB')}` : '', tenant: (u.tenant_id && name.get(u.tenant_id)) || '', planUrl: u.plan_url, layout: u.layout, detail: lateAmt ? `Rent overdue, £${lateAmt.toLocaleString('en-GB')}` : occ ? (ld?.end_date ? `Lease to ${new Date(ld.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'Let') : 'No active tenancy' })
     }
     var certs = (c.data ?? []).map((x: any) => `${x.type || 'Certificate'} ${x.expiry_date < today ? 'expired' : 'due'} ${new Date(x.expiry_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`)
   } else {
-    const { data: us } = await db.from('estate_units').select('id,property_id,unit_number,floor,status').eq('building_id', buildingId).eq('user_id', businessId).limit(1000)
+    const { data: us } = await db.from('estate_units').select('id,property_id,unit_number,floor,status,plan_url,layout').eq('building_id', buildingId).eq('user_id', businessId).limit(1000)
     propIds = [...new Set((us ?? []).map(u => String(u.property_id)).filter(Boolean))]
     const [tn, c] = await Promise.all([
       propIds.length ? db.from('estate_tenancies').select('property_id').in('property_id', propIds).ilike('status', 'active') : Promise.resolve({ data: [] as any[] }),
@@ -149,7 +149,7 @@ export async function loadBuildingFloors(businessId: string, source: 'pm' | 'est
     const let_ = new Set((tn.data ?? []).map((x: any) => String(x.property_id)))
     for (const u of us ?? []) {
       const occ = /rented|occupied|let/i.test(u.status || '') || let_.has(String(u.property_id))
-      units.push({ id: u.id, unit: u.unit_number || '?', _f: floorOf(u.unit_number, u.floor), status: occ ? 'let' : 'vac', rent: '', tenant: '', detail: occ ? 'Let' : (u.status || 'Available') })
+      units.push({ id: u.id, unit: u.unit_number || '?', _f: floorOf(u.unit_number, u.floor), status: occ ? 'let' : 'vac', rent: '', tenant: '', detail: occ ? 'Let' : (u.status || 'Available'), planUrl: u.plan_url, layout: u.layout })
     }
     var certs = (c.data ?? []).map((x: any) => `${x.type || 'Certificate'} ${x.expiry_date < today ? 'expired' : 'due'} ${new Date(x.expiry_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`)
   }
