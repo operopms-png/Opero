@@ -34,6 +34,24 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'The website chat answers visitors, saves new leads and can book viewings.',
     'Viewings it books appear in Viewings, and the person receives a confirmation email.',
   ] },
+  { id: 'voice', title: 'Novourq Voice', steps: [
+    'Press the navy Novourq Voice button at the bottom right of any page to start a call with the AI. Say what you want, such as "add a repair at Oak Court" or "find me two-bed deals in Leeds", and it does it.',
+    'The pencil button next to it types what you say into the box you have open. The speaker button turns the AI replying out loud on or off.',
+    'In Settings, Voice, choose a Woman or Man voice, add words and shortcuts, and read or delete past call transcripts.',
+    'Tenants and landlords have their own version in their portal. It only knows their own records and can report repairs or pass messages to you.',
+    'Anything involving money or a contract still waits for your approval.',
+  ] },
+  { id: 'map', title: 'Map, floors and walk-through', steps: [
+    'Open Real Estate Intelligence, then Overview, then Map. Every property and deal the AI found is a pin coloured by status: let, vacant, rent behind, certificate due.',
+    'Click a pin to see the tenant, rent and what needs doing. Use the filters, and the UK and Jamaica buttons, to narrow it. Press 3D for a tilted view of the real buildings.',
+    'For a property in a building, press View floors to see every flat by floor with its rent and status.',
+    'Click a flat, then Add floor plan. Upload the plan and press Read plan with AI, or draw the rooms. Check the sizes and Save rooms.',
+    'Then press View in 3D and walk to see a furnished model of the flat and walk through it. If a property is missing from the map, check its address.',
+  ] },
+  { id: 'datahub', title: 'Data Hub', steps: [
+    'Admins open Human Intelligence Hub, then Oversight, then Data Hub. It shows what is stored, how complete it is, where it came from and what the AI changed.',
+    'Tenants and landlords ask to download, correct or delete their data from the My Data tab in their portal. Their requests arrive in the Data Hub, where you mark them completed or declined.',
+  ] },
   { id: 'help', title: 'Getting help', steps: [
     'Ask the AI panel first. It knows the platform and answers straight away.',
     'Found something broken, or want to leave a review or suggest an idea? Use the Submissions tab in Settings. We read every one and reply there.',
