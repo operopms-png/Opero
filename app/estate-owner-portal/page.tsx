@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
 import MyDataPanel from '@/components/portal/MyDataPanel'
+import VoiceDictation from '@/components/VoiceDictation'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
 // Mirrors app/pm-owner-portal closely -- same layout, same staff-preview
@@ -266,6 +267,7 @@ function EstateOwnerPortalInner() {
           </div>
         )}
 
+        <VoiceDictation portal />
         {tab === 'My Data' && <MyDataPanel />}
         {tab === 'Contact & Payment' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>

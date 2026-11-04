@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
 import MyDataPanel from '@/components/portal/MyDataPanel'
+import VoiceDictation from '@/components/VoiceDictation'
 
 const ACCENT = '#89CFF0'
 const inp = {width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}
@@ -512,6 +513,7 @@ function PMTenantPortalInner() {
           </div>
         )}
 
+        <VoiceDictation portal />
         {tab === 'My Data' && <MyDataPanel />}
         {tab === 'Profile' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, maxWidth: 460 }}>

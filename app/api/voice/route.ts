@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
-import { dictionaryFor, whisper, tidy, runCommand, stripWake, underLimit } from '@/lib/voice'
+import { dictionaryFor, whisper, tidy, runCommand, stripWake, underLimit, logCall } from '@/lib/voice'
 
 // Voice layer.
 //   POST multipart: audio (optional), text (browser transcript, used if there is no audio or no speech key),
@@ -69,17 +69,6 @@ export async function POST(req: NextRequest) {
   const words = String(out.text || '').split(/\s+/).filter(Boolean).length
   await db.from('voice_usage').insert({ business_id: c.businessId, user_email: c.email, kind, words }).then(() => {}, () => {})
   return NextResponse.json({ ...out, engine })
-}
-
-// Keep a transcript of each call: one row per call, a turn added on every exchange.
-async function logCall(c: { businessId: string; email: string }, id: string, user: string, reply: string, tasks: number) {
-  const now = new Date().toISOString()
-  const { data: row } = await db.from('voice_calls').select('started_at,turns,tasks,business_id,user_email').eq('id', id).maybeSingle()
-  if (row && (row.user_email !== c.email || row.business_id !== c.businessId)) return
-  const turns = [...(Array.isArray(row?.turns) ? row!.turns : []), { role: 'user', text: user.slice(0, 1500), at: now }, { role: 'assistant', text: reply.slice(0, 1500), at: now }].slice(-200)
-  const started = row?.started_at ?? now
-  const seconds = Math.max(0, Math.round((Date.now() - new Date(started).getTime()) / 1000))
-  await db.from('voice_calls').upsert({ id, business_id: c.businessId, user_email: c.email, started_at: started, ended_at: now, seconds, tasks: (row?.tasks ?? 0) + tasks, turns }).then(() => {}, () => {})
 }
 
 export async function PUT(req: NextRequest) {

@@ -38,7 +38,8 @@ function insertInto(el: Editable, text: string) {
 
 const label = (el: Editable | null) => el ? [el.getAttribute('aria-label'), (el as HTMLInputElement).placeholder, el.getAttribute('name'), el.id].filter(Boolean).join(' / ') : ''
 
-export default function VoiceDictation() {
+// portal = the tenant and landlord version: call mode only, talks to /api/my-voice, no dictation or staff actions.
+export default function VoiceDictation({ portal = false }: { portal?: boolean }) {
   const router = useRouter()
   const [state, setState] = useState<'idle' | 'listening' | 'working'>('idle')
   const [live, setLive] = useState('')
@@ -130,7 +131,7 @@ export default function VoiceDictation() {
       if (internal) fd.append('internal', '1')
       if (call.current) { fd.append('call', '1'); fd.append('call_id', callId.current); fd.append('history', JSON.stringify(hist.current)) }
       fd.append('hint', label(field.current) + ' ' + location.pathname)
-      const res = await fetch('/api/voice', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token ?? ''}` }, body: fd })
+      const res = await fetch(portal ? '/api/my-voice' : '/api/voice', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token ?? ''}` }, body: fd })
       const d = await res.json().catch(() => ({}))
       if (!res.ok) { convo.current = false; if (call.current) hangUp(); say(d.error || 'Voice did not work. Try again.', 'err'); return }
       if (d.mode === 'command') {
@@ -275,6 +276,7 @@ export default function VoiceDictation() {
 
   useEffect(() => {
     // Hold Ctrl+Shift+Space to talk, let go to finish.
+    if (portal) return
     const down = (e: KeyboardEvent) => { if (e.code === 'Space' && e.ctrlKey && e.shiftKey && !e.repeat) { e.preventDefault(); start() } }
     const up = (e: KeyboardEvent) => { if (e.code === 'Space' && stateRef.current === 'listening') { e.preventDefault(); stop() } }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up)
@@ -326,11 +328,11 @@ export default function VoiceDictation() {
         style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid #C9DEF3', background: '#fff', color: speakOn ? '#0B1B45' : '#98A2B3', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H3v6h3l5 4z" />{speakOn ? <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" /> : <path d="M16 9l5 6M21 9l-5 6" />}</svg>
       </button>
-      <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => (listening ? stop() : start())} disabled={state === 'working'}
+      {!portal && <button type="button" onMouseDown={e => e.preventDefault()} onClick={() => (listening ? stop() : start())} disabled={state === 'working'}
         aria-label="Dictate into the selected box" title="Dictate into the selected box (or hold Ctrl+Shift+Space)"
         style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid #C9DEF3', background: '#fff', color: '#0B1B45', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-      </button>
+      </button>}
       <button type="button"
         className={listening ? 'nvq-rec' : ''}
         onMouseDown={e => e.preventDefault()}

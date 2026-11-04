@@ -86,3 +86,15 @@ export async function underLimit(email: string): Promise<boolean> {
   const { count } = await db.from('voice_usage').select('id', { count: 'exact', head: true }).eq('user_email', email).gte('created_at', since)
   return (count ?? 0) < HOURLY_LIMIT
 }
+
+// Keep a transcript of each call: one row per call, a turn added on every exchange.
+export async function logCall(c: { businessId: string; email: string }, id: string, user: string, reply: string, tasks: number) {
+  const now = new Date().toISOString()
+  const { data: row } = await db.from('voice_calls').select('started_at,turns,tasks,business_id,user_email').eq('id', id).maybeSingle()
+  if (row && (row.user_email !== c.email || row.business_id !== c.businessId)) return
+  const turns = [...(Array.isArray(row?.turns) ? row!.turns : []), { role: 'user', text: user.slice(0, 1500), at: now }, { role: 'assistant', text: reply.slice(0, 1500), at: now }].slice(-200)
+  const started = row?.started_at ?? now
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(started).getTime()) / 1000))
+  await db.from('voice_calls').upsert({ id, business_id: c.businessId, user_email: c.email, started_at: started, ended_at: now, seconds, tasks: (row?.tasks ?? 0) + tasks, turns }).then(() => {}, () => {})
+}
+

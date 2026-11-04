@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
 import MyDataPanel from '@/components/portal/MyDataPanel'
+import VoiceDictation from '@/components/VoiceDictation'
 
 // Mirrors app/pm-tenant-portal closely -- same tabs, same layout, same
 // staff-preview pattern via ?tenant_id=. Schema differences from PM:
@@ -506,6 +507,7 @@ function EstateTenantPortalInner() {
           </div>
         )}
 
+        <VoiceDictation portal />
         {tab === 'My Data' && <MyDataPanel />}
         {tab === 'Profile' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, maxWidth: 460 }}>
