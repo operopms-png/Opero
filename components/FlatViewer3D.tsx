@@ -1,6 +1,7 @@
 'use client'
-// 3D model of one flat from its room layout: a furnished top-down plan you can turn, and a first-person walk-through
-// (drag to look; arrow keys, WASD or the on-screen joystick to move). Built from simple shapes, not photographs.
+// 3D model of one flat from its room layout: a furnished top-down plan you can turn, a first-person walk-through
+// (drag to look; arrow keys, WASD or the on-screen joystick to move), and a Tour where a person walks through every room
+// while the camera follows from above. Built from simple shapes, not photographs.
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -14,8 +15,10 @@ type Run = { vertical: boolean; at: number; from: number; to: number; a: number;
 
 export default function FlatViewer3D({ layout, title, onClose }: { layout: Layout; title: string; onClose: () => void }) {
   const box = useRef<HTMLDivElement>(null)
-  const api = useRef<{ setWalk: (on: boolean) => void; joy: { x: number; y: number } } | null>(null)
-  const [walk, setWalk] = useState(false)
+  const api = useRef<{ setMode: (m: 'plan' | 'walk' | 'tour') => void; joy: { x: number; y: number } } | null>(null)
+  const [mode, setModeState] = useState<'plan' | 'walk' | 'tour'>('plan')
+  const [roomName, setRoomName] = useState('')
+  const walk = mode === 'walk'
 
   useEffect(() => {
     const el = box.current; if (!el) return
@@ -135,6 +138,44 @@ export default function FlatViewer3D({ layout, title, onClose }: { layout: Layou
     // roof: shown in walk mode only
     const ceil = new THREE.Mesh(new THREE.PlaneGeometry(layout.w, layout.d), new THREE.MeshStandardMaterial({ color: '#FFFFFF', side: THREE.DoubleSide })); ceil.rotation.x = Math.PI / 2; ceil.position.set(layout.w / 2, WALL_H + 0.02, layout.d / 2); ceil.visible = false; scene.add(ceil)
 
+    // ---- the person who walks the tour ----
+    const fig = new THREE.Group(); fig.visible = false; scene.add(fig)
+    const fm = (c: string) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 })
+    const part = (geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, parent: THREE.Object3D = fig) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m }
+    const sweater = fm('#2F6DB5'), trou = fm('#C9A77A'), skin = fm('#D9A06B')
+    part(new THREE.BoxGeometry(0.5, 0.62, 0.28), sweater, 0, 1.2, 0)
+    part(new THREE.SphereGeometry(0.17, 16, 12), skin, 0, 1.7, 0); part(new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), fm('#2A2420'), 0, 1.74, -0.01)
+    const limb = (x: number, y: number, w: number, h: number, mat: THREE.Material) => { const g = new THREE.Group(); g.position.set(x, y, 0); fig.add(g); part(new THREE.BoxGeometry(w, h, w * 1.05), mat, 0, -h / 2, 0, g); return g }
+    const legL = limb(-0.13, 0.88, 0.19, 0.88, trou), legR = limb(0.13, 0.88, 0.19, 0.88, trou), armL = limb(-0.34, 1.47, 0.14, 0.6, sweater), armR = limb(0.34, 1.47, 0.14, 0.6, sweater)
+    let tour: { pts: THREE.Vector2[]; len: number[]; total: number } | null = null
+    let tourS = 0, tourYaw = 0, tourRoom = -2
+    const buildTour = () => {
+      const S = 0.25, cols = Math.ceil(layout.w / S), rowsN = Math.ceil(layout.d / S)
+      const free = (cx: number, cz: number) => { const x = (cx + 0.5) * S, z = (cz + 0.5) * S; return cx >= 0 && cz >= 0 && cx < cols && cz < rowsN && at(Math.floor(x / CELL), Math.floor(z / CELL)) >= 0 && !blocked(x, z) }
+      const nearest = (x: number, z: number) => { let best: [number, number] | null = null, bd = 1e9; for (let i = 0; i < cols; i++) for (let j = 0; j < rowsN; j++) { if (!free(i, j)) continue; const d = Math.hypot((i + 0.5) * S - x, (j + 0.5) * S - z); if (d < bd) { bd = d; best = [i, j] } } return best }
+      const bfs = (a: [number, number], b: [number, number]) => {
+        const prev = new Int32Array(cols * rowsN).fill(-2), q = [a[0] * rowsN + a[1]]; prev[q[0]] = -1
+        for (let h = 0; h < q.length; h++) { const c = q[h], ci = Math.floor(c / rowsN), cj = c % rowsN; if (ci === b[0] && cj === b[1]) break
+          for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) { const ni = ci + di, nj = cj + dj; if (!free(ni, nj) || prev[ni * rowsN + nj] !== -2) continue; if (di && dj && (!free(ci + di, cj) || !free(ci, cj + dj))) continue; prev[ni * rowsN + nj] = c; q.push(ni * rowsN + nj) } }
+        const out: THREE.Vector2[] = []; let c = b[0] * rowsN + b[1]; if (prev[c] === -2) return out
+        while (c >= 0) { out.push(new THREE.Vector2((Math.floor(c / rowsN) + 0.5) * S, (c % rowsN + 0.5) * S)); c = prev[c] }
+        return out.reverse()
+      }
+      const order = ['living', 'kitchen', 'dining', 'study', 'bedroom', 'bath', 'balcony']
+      const stops = [start, ...order.flatMap(k => rooms.filter(r => r.kind === k && r !== start))]
+      let all: THREE.Vector2[] = []; let from = nearest(start.x + start.w / 2, start.y + start.h / 2)
+      for (const r of stops.slice(1)) {
+        const to = nearest(r.x + r.w / 2, r.y + r.h / 2 + Math.min(0.8, r.h * 0.2)); if (!from || !to) continue
+        const seg = bfs(from, to); if (seg.length) all = all.concat(all.length ? seg.slice(1) : seg); from = to
+      }
+      if (all.length < 2) return null
+      for (let it = 0; it < 3; it++) all = all.map((p, i) => (i === 0 || i === all.length - 1 ? p : new THREE.Vector2((all[i - 1].x + p.x * 2 + all[i + 1].x) / 4, (all[i - 1].y + p.y * 2 + all[i + 1].y) / 4)))
+      const len = [0]; for (let i = 1; i < all.length; i++) len.push(len[i - 1] + all[i].distanceTo(all[i - 1]))
+      return { pts: all, len, total: len[len.length - 1] }
+    }
+    const tourPos = (s: number) => { const T = tour!; let i = 1; while (i < T.pts.length - 1 && T.len[i] < s) i++; const u = (s - T.len[i - 1]) / Math.max(1e-6, T.len[i] - T.len[i - 1]); return { p: T.pts[i - 1].clone().lerp(T.pts[i], Math.min(1, Math.max(0, u))), dir: T.pts[i].clone().sub(T.pts[i - 1]) } }
+
+    const blocked = (x: number, z: number) => solid.some(s => x > s.x0 - RADIUS && x < s.x1 + RADIUS && z > s.z0 - RADIUS && z < s.z1 + RADIUS)
     // ---- cameras and controls ----
     const centre = new THREE.Vector3(layout.w / 2, 0, layout.d / 2), span = Math.max(layout.w, layout.d)
     cam.position.set(centre.x, span * 1.05, centre.z + span * 0.75)
@@ -143,10 +184,12 @@ export default function FlatViewer3D({ layout, title, onClose }: { layout: Layou
     const start = rooms.find(r => r.kind === 'hall') ?? rooms.find(r => r.kind === 'living') ?? rooms[0]
     const me = { x: start.x + start.w / 2, z: start.y + start.h / 2, yaw: 0, pitch: 0 }
     const keys: Record<string, boolean> = {}; const joy = { x: 0, y: 0 }
-    let walking = false
-    const setWalk = (on: boolean) => {
-      walking = on; orbit.enabled = !on; ceil.visible = on; labels.forEach(l => (l.visible = !on)); scene.background = new THREE.Color(on ? '#DCE6F2' : '#EEF3F9')
-      if (on) {
+    let walking = false, touring = false
+    const setMode = (m: 'plan' | 'walk' | 'tour') => {
+      const on = m === 'walk'; walking = on; touring = m === 'tour'
+      orbit.enabled = m === 'plan'; ceil.visible = on; labels.forEach(l => (l.visible = m === 'plan')); fig.visible = touring; scene.background = new THREE.Color(on ? '#DCE6F2' : '#EEF3F9')
+      if (touring) { if (!tour) tour = buildTour(); tourS = 0; tourRoom = -2; cam.fov = 45; if (tour) { const { p } = tourPos(0); cam.position.set(p.x + 3, 8, p.y + 7) } }
+      else if (on) {
         me.x = start.x + start.w / 2; me.z = start.y + start.h / 2; cam.fov = 70; me.pitch = 0
         // face the living room (or the biggest other room) when you step in
         const look = rooms.find(r => r.kind === 'living' && r !== start) ?? rooms.filter(r => r !== start).sort((a, b) => b.w * b.h - a.w * a.h)[0]
@@ -154,7 +197,7 @@ export default function FlatViewer3D({ layout, title, onClose }: { layout: Layou
       } else { cam.fov = 50; cam.position.set(centre.x, span * 1.05, centre.z + span * 0.75); orbit.target.copy(centre) }
       cam.updateProjectionMatrix()
     }
-    api.current = { setWalk, joy }
+    api.current = { setMode, joy }
     let dragging = false, lx = 0, ly = 0
     const dom = renderer.domElement
     const down = (e: PointerEvent) => { if (!walking) return; dragging = true; lx = e.clientX; ly = e.clientY; dom.setPointerCapture(e.pointerId) }
@@ -162,7 +205,6 @@ export default function FlatViewer3D({ layout, title, onClose }: { layout: Layou
     const up = () => { dragging = false }
     const kd = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = true }, ku = (e: KeyboardEvent) => { keys[e.key.toLowerCase()] = false }
     dom.addEventListener('pointerdown', down); dom.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('keydown', kd); window.addEventListener('keyup', ku)
-    const blocked = (x: number, z: number) => solid.some(s => x > s.x0 - RADIUS && x < s.x1 + RADIUS && z > s.z0 - RADIUS && z < s.z1 + RADIUS)
 
     const resize = () => { const w = el.clientWidth, h = el.clientHeight; renderer.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix() }
     const ro = new ResizeObserver(resize); ro.observe(el); resize()
@@ -175,6 +217,17 @@ export default function FlatViewer3D({ layout, title, onClose }: { layout: Layou
         const sp = 1.6 * dt, dx = (-Math.sin(me.yaw) * f + Math.cos(me.yaw) * s) * sp, dz = (-Math.cos(me.yaw) * f - Math.sin(me.yaw) * s) * sp
         if (!blocked(me.x + dx, me.z)) me.x += dx; if (!blocked(me.x, me.z + dz)) me.z += dz
         cam.position.set(me.x, EYE, me.z); cam.rotation.set(me.pitch, me.yaw, 0, 'YXZ')
+      } else if (touring && tour) {
+        tourS += 1.25 * dt; if (tourS > tour.total + 1.5) { tourS = 0; tourRoom = -2 }
+        const { p, dir } = tourPos(Math.min(tourS, tour.total))
+        const moving = tourS < tour.total
+        if (dir.lengthSq() > 1e-8 && moving) { const want = Math.atan2(dir.x, dir.y); let d = want - tourYaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; tourYaw += d * Math.min(1, dt * 8) }
+        const ph = t / 1000 * 8.5, sw = moving ? 0.7 : 0
+        fig.position.set(p.x, Math.abs(Math.sin(ph)) * sw * 0.03, p.y); fig.rotation.y = tourYaw
+        legL.rotation.x = Math.sin(ph) * sw; legR.rotation.x = -Math.sin(ph) * sw; armL.rotation.x = -Math.sin(ph) * sw * 0.8; armR.rotation.x = Math.sin(ph) * sw * 0.8
+        const k = 0.85 + span / 40, want = new THREE.Vector3(p.x + 2.2 * k, 6.2 * k, p.y + 5.6 * k), f = 1 - Math.exp(-dt * 3)
+        cam.position.lerp(want, f); cam.lookAt(p.x, 0.5, p.y - 0.4)
+        const ri = at(Math.floor(p.x / CELL), Math.floor(p.y / CELL)); if (ri !== tourRoom) { tourRoom = ri; setRoomName(ri >= 0 ? rooms[ri].name : '') }
       } else orbit.update()
       renderer.render(scene, cam)
     }
@@ -187,7 +240,7 @@ export default function FlatViewer3D({ layout, title, onClose }: { layout: Layou
     }
   }, [layout])
 
-  const toggle = (on: boolean) => { setWalk(on); api.current?.setWalk(on) }
+  const toggle = (m: 'plan' | 'walk' | 'tour') => { setModeState(m); setRoomName(''); api.current?.setMode(m) }
   const stick = (e: React.PointerEvent<HTMLDivElement>, end = false) => {
     const j = api.current?.joy; if (!j) return
     if (end) { j.x = 0; j.y = 0; return }
@@ -198,13 +251,14 @@ export default function FlatViewer3D({ layout, title, onClose }: { layout: Layou
     <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(11,27,69,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} role="dialog" aria-label={`3D view of ${title}`}>
       <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', width: 'min(1100px, 100%)', height: 'min(760px, 100%)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: '#2F6DB5', color: '#fff', padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{title}</div><div style={{ fontSize: 12.5, opacity: .9 }}>{rooms} rooms. {walk ? 'Drag to look, keys or stick to walk.' : 'Drag to turn, scroll to zoom.'}</div></div>
-          {([false, true] as const).map(w => (
-            <button key={String(w)} type="button" onClick={() => toggle(w)} aria-pressed={walk === w} style={{ font: 'inherit', fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,.7)', background: walk === w ? '#fff' : 'transparent', color: walk === w ? '#1B2F6E' : '#fff', cursor: 'pointer' }}>{w ? 'Walk' : 'Plan'}</button>))}
+          <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 700, fontSize: 14 }}>{title}</div><div style={{ fontSize: 12.5, opacity: .9 }}>{rooms} rooms. {mode === 'walk' ? 'Drag to look, keys or stick to walk.' : mode === 'tour' ? 'A person walks through every room.' : 'Drag to turn, scroll to zoom.'}</div></div>
+          {([['plan', 'Plan'], ['walk', 'Walk'], ['tour', 'Tour']] as const).map(([m, label]) => (
+            <button key={m} type="button" onClick={() => toggle(m)} aria-pressed={mode === m} style={{ font: 'inherit', fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,.7)', background: mode === m ? '#fff' : 'transparent', color: mode === m ? '#1B2F6E' : '#fff', cursor: 'pointer' }}>{label}</button>))}
           <button type="button" onClick={onClose} style={{ font: 'inherit', fontSize: 13, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.7)', background: 'transparent', color: '#fff', cursor: 'pointer' }}>Close</button>
         </div>
         <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
           <div ref={box} style={{ position: 'absolute', inset: 0 }} />
+          {mode === 'tour' && roomName && <div style={{ position: 'absolute', left: 20, bottom: 20, color: '#fff', background: 'rgba(11,27,69,.78)', padding: '10px 18px', borderRadius: 12, fontWeight: 800, fontSize: 20 }}>{roomName}</div>}
           {walk && (
             <div onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); stick(e) }} onPointerMove={e => { if (e.buttons) stick(e) }} onPointerUp={e => stick(e, true)} onPointerCancel={e => stick(e, true)}
               style={{ position: 'absolute', left: 20, bottom: 20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,.55)', border: '2px solid rgba(27,47,110,.5)', touchAction: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1B2F6E', fontSize: 12, fontWeight: 700 }}>Move</div>)}
