@@ -8,7 +8,7 @@ import { useRole, ROLE_MODULES } from '@/lib/useRole'
 
 type Mod = 'pm' | 'ea' | 'str' | 'dev'
 type Target = { mod: Mod; tab: string }
-type Item = { name: string; targets: Target[]; shared?: boolean }
+type Item = { name: string; targets: Target[]; shared?: boolean; href?: string }
 const AREA: Record<Mod, string> = { pm: 'Lettings', ea: 'Estate agency', str: 'Short stays', dev: 'Developments' }
 const HREF = (t: Target) => t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
 const pm = (tab: string): Target => ({ mod: 'pm', tab })
@@ -19,6 +19,7 @@ const dev = (tab: string): Target => ({ mod: 'dev', tab })
 const GROUPS: { name: string; note: string; items: Item[] }[] = [
   { name: 'Overview', note: 'Dashboards for each area', items: [
     { name: 'Dashboard', targets: [pm('Dashboard'), ea('Dashboard'), str('Home'), dev('Dashboard')] },
+    { name: 'Map', targets: [pm('Properties')], href: '/property/map' },
   ] },
   { name: 'Portfolio', note: 'Properties, people and tenancies', items: [
     { name: 'Properties', targets: [pm('Properties'), ea('Properties'), str('Properties')] },
@@ -114,7 +115,9 @@ export default function PropertyHub() {
     <div key={i.name} className="prop-row" style={{ display: 'grid', gridTemplateColumns: '190px minmax(0,1fr)', gap: 12, alignItems: 'center', padding: '17px 0', borderTop: `1px solid ${C.line}` }}>
       <b style={{ color: C.ink, fontSize: 15, fontWeight: 600 }}>{i.name}</b>
       <div style={{ display: 'flex', gap: '6px 22px', flexWrap: 'wrap' }}>
-        {i.shared
+        {i.href
+          ? <Link href={i.href} style={link}>Open map</Link>
+          : i.shared
           ? <Link href={HREF(i.targets[0])} style={link}>All areas</Link>
           : i.targets.map(t => <Link key={t.mod} href={HREF(t)} style={link}>{AREA[t.mod]}</Link>)}
       </div>

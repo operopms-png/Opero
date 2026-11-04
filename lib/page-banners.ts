@@ -4,6 +4,7 @@ type B = { title: string; text: string }
 const PAGES: Record<string, B> = {
   '/property': { title: 'Real Estate Intelligence', text: 'Estate agency, developments, short stays and property management in one place. Each page appears once; search or pick an area.' },
   '/staff-centre/human-intelligence': { title: 'Human Intelligence Hub', text: 'Every people-run area of the business, grouped under four headings. Open any page from here.' },
+  '/property/map': { title: 'Map', text: 'Every property and deal on one street map, coloured by status. Click a pin to see the tenant, rent and what needs doing.' },
   '/staff-centre/oversight': { title: 'Dashboard', text: 'Your whole business at a glance, with Novourq Cloud AI showing what it has done and what is waiting for you.' },
   '/dashboard': { title: 'Dashboard', text: 'Your properties, bookings and jobs at a glance.' },
   '/crm': { title: 'CRM', text: 'Contacts, deals and follow-ups in one place.' },

@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase, getAccountId } from '../../../../lib/supabase'
 import GrokPanel from '../../../../components/GrokPanel'
-import PropertyLocationsPanel from '../../../../components/ai/PropertyLocationsPanel'
+import PropertyMap from '../../../../components/PropertyMap'
 import PortfolioPerformancePanel from '../../../../components/ai/PortfolioPerformancePanel'
 import { staffApi, money } from '../../../../lib/staff-api'
 
@@ -313,7 +313,7 @@ export default function AICommandCentre() {
               ))}
             </div>
             <PortfolioPerformancePanel />
-            <PropertyLocationsPanel />
+            <PropertyMap compact />
             </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 300px', gap: 10, alignItems: 'start' }}>
