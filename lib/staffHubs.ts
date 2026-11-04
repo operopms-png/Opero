@@ -13,6 +13,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Dashboard', icon: 'trendingup', tabs: [
     { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
   ] },
+  { label: 'Data Hub', icon: 'folder', tabs: [{ href: '/staff-centre/data-hub', label: 'Data Hub', scTab: 'oversight' }] },
   { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'oversight' }] },
   { label: 'Novourq Cloud AI', icon: 'sparkles', tabs: [
     { href: '/staff-centre/ai-command-centre', label: 'Novourq Cloud AI', scTab: 'oversight', hidden: true },

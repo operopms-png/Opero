@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
+import MyDataPanel from '@/components/portal/MyDataPanel'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
 const ACCENT = '#89CFF0'
@@ -194,7 +195,7 @@ function PMOwnerPortalInner() {
     await loadAll(landlord)
   }
 
-  const TABS = ['Dashboard', 'Reports', 'Properties', 'Payments', 'Messages', 'Contact & Payment']
+  const TABS = ['Dashboard', 'Reports', 'Properties', 'Payments', 'Messages', 'Contact & Payment', 'My Data']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -373,6 +374,7 @@ function PMOwnerPortalInner() {
           </div>
         )}
 
+        {tab === 'My Data' && <MyDataPanel />}
         {tab === 'Contact & Payment' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Contact Details</div>

@@ -39,6 +39,7 @@ export const PAGES: Record<string, { path: string; label: string }> = {
   short_stays: { path: '/str', label: 'Short stays' },
   estate_agency: { path: '/estate', label: 'Estate Agency' },
   developments: { path: '/dev', label: 'Developments' },
+  data_hub: { path: '/staff-centre/data-hub', label: 'Data Hub' },
   invest_deals: { path: '/invest', label: 'Invest and Deal Finder' },
   settings: { path: '/settings', label: 'Settings' },
 }

@@ -33,6 +33,7 @@ const PATH_MODULE: Record<string, string> = {
 
 const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/oversight': 'oversight',
+  '/staff-centre/data-hub': 'oversight',
   '/staff-centre/partners': 'partners',
   '/partners': 'partners',
   '/staff-centre/investors': 'investors',

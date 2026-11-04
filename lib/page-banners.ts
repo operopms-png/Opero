@@ -21,6 +21,7 @@ const PAGES: Record<string, B> = {
   '/reports': { title: 'Reports', text: 'Summary reports across your properties, ready to review or export.' },
   '/documents': { title: 'Documents', text: 'Contracts, certificates and other files, filed against the right property or person.' },
   '/analytics': { title: 'Analytics', text: 'Occupancy, average rate and revenue trends, so you can see what earns the most.' },
+  '/staff-centre/data-hub': { title: 'Data Hub', text: 'Everything stored for your business, how complete it is, where it came from, and what tenants and landlords have asked for.' },
   '/staff-centre/tasks': { title: 'Tasks', text: 'Assign tasks to the team and track them to done. Each person sees their own on their dashboard.' },
   '/staff-centre/meetings': { title: 'Meetings', text: 'Your booking links and scheduled meetings. Share a link and people pick a time that suits you.' },
   '/staff-centre/maintenance': { title: 'Maintenance', text: 'Repair jobs across all properties, with who is handling each one and its progress.' },
