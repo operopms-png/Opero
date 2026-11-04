@@ -46,7 +46,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'Click a pin to see the tenant, rent and what needs doing. Use the filters, and the UK and Jamaica buttons, to narrow it. Press 3D for a tilted view of the real buildings.',
     'For a property in a building, press View floors to see every flat by floor with its rent and status.',
     'Click a flat, then Add floor plan. Upload the plan and press Read plan with AI, or draw the rooms. Check the sizes and Save rooms.',
-    'Then press View in 3D and walk to see a furnished model of the flat. Plan turns the model, Walk is first person, and Tour shows a person walking through every room while the camera follows. If a property is missing from the map, check its address.',
+    'Then press View in 3D and walk to see a furnished model of the flat. Plan turns the model, Walk is first person, and Tour starts outside the building and then shows a person walking through every room while the camera follows. Save as video records the tour and downloads it. If a property is missing from the map, check its address.',
     'Showcase a development: your Development projects show as teal In development pins (set the project Location). Select one, press View floors for its units by floor with prices, then add each unit floor plan and walk through it in 3D before it is built.',
   ] },
   { id: 'datahub', title: 'Data Hub', steps: [

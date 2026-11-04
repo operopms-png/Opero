@@ -106,7 +106,7 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
         const next = { ...sel, ...(p.planUrl !== undefined ? { planUrl: p.planUrl } : {}), ...(p.layout !== undefined ? { layout: p.layout } : {}) }
         setSel(next); setD(x => x && { ...x, floors: x.floors.map(f => ({ ...f, units: f.units.map(u => (u.id === next.id ? next : u)) })) })
       }} />}
-      {viewing && sel?.layout && sanitizeLayout(sel.layout) && <FlatViewer3D layout={sanitizeLayout(sel.layout)!} title={`${d?.name ?? 'Building'}, flat ${sel.unit}`} onClose={() => setViewing(false)} />}
+      {viewing && sel?.layout && sanitizeLayout(sel.layout) && <FlatViewer3D layout={sanitizeLayout(sel.layout)!} building={d?.name} title={`${d?.name ?? 'Building'}, flat ${sel.unit}`} onClose={() => setViewing(false)} />}
       <style>{`@media (max-width:760px){.bf-grid{grid-template-columns:minmax(0,1fr)!important}.bf-side{border-left:0!important;border-top:1px solid ${LINE}}}`}</style>
     </div>
   )
