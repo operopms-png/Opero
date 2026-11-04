@@ -1116,6 +1116,7 @@ export default function DevPage() {
           const soldValue = units.filter(u=>u.status==='Completed').reduce((s,u)=>s+(parseFloat(u.price)||0),0)
           return (
           <div>
+            <p style={{ fontSize:13.5, color:'#667085', margin:'0 0 14px' }}>Showcase: your projects appear on the <a href="/property/map" style={{ color:'#2F6DB5', fontWeight:600 }}>Map</a> as In development. Select one and press View floors to see these units by floor, add each unit's floor plan, and open it in 3D to walk through before it is built.</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:24 }}>
               {[
                 { label:'Total Units', value:units.length },

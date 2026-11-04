@@ -4,8 +4,8 @@
 import { useEffect, useRef, useState } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-type Item = { id: string; name: string; lat: number | null; lng: number | null; status: 'let' | 'vac' | 'arr' | 'cert' | 'deal' }
-const COLOR = { let: '#0E7C55', vac: '#2F6DB5', arr: '#B42318', cert: '#C98A00', deal: '#7A3FB0' }
+type Item = { id: string; name: string; lat: number | null; lng: number | null; status: 'let' | 'vac' | 'arr' | 'cert' | 'deal' | 'plan' }
+const COLOR = { let: '#0E7C55', vac: '#2F6DB5', arr: '#B42318', cert: '#C98A00', deal: '#7A3FB0', plan: '#0B7285' }
 
 export default function PropertyMap3D({ items, selectedId, onSelect, height, visible }: { items: Item[]; selectedId: string | null; onSelect: (id: string) => void; height: number; visible: boolean }) {
   const box = useRef<HTMLDivElement>(null)

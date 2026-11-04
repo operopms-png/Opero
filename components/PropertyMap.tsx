@@ -8,14 +8,14 @@ import { supabase } from '@/lib/supabase'
 import BuildingFloors from '@/components/BuildingFloors'
 import PropertyMap3D from '@/components/PropertyMap3D'
 
-type Status = 'let' | 'vac' | 'arr' | 'cert' | 'deal'
-type Item = { id: string; source: string; name: string; address: string; country: string; lat: number | null; lng: number | null; status: Status; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate'; id: string; name: string } }
+type Status = 'let' | 'vac' | 'arr' | 'cert' | 'deal' | 'plan'
+type Item = { id: string; source: string; name: string; address: string; country: string; lat: number | null; lng: number | null; status: Status; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate' | 'dev'; id: string; name: string } }
 const LINE = '#D9E2F0', NAVY = '#1B2F6E', MUTED = '#667085', TXT = '#101828', BLUE = '#2F6DB5'
 const ST: Record<Status, { label: string; color: string }> = {
   let: { label: 'Let', color: '#0E7C55' }, vac: { label: 'Vacant', color: '#2F6DB5' },
-  arr: { label: 'Rent behind', color: '#B42318' }, cert: { label: 'Certificate due', color: '#C98A00' }, deal: { label: 'Deal found', color: '#7A3FB0' },
+  arr: { label: 'Rent behind', color: '#B42318' }, cert: { label: 'Certificate due', color: '#C98A00' }, deal: { label: 'Deal found', color: '#7A3FB0' }, plan: { label: 'In development', color: '#0B7285' },
 }
-const ORDER: Status[] = ['let', 'vac', 'arr', 'cert', 'deal']
+const ORDER: Status[] = ['let', 'vac', 'arr', 'cert', 'deal', 'plan']
 const REGIONS: { key: string; label: string; test: RegExp }[] = [
   { key: 'all', label: 'All', test: /./ }, { key: 'uk', label: 'UK', test: /united kingdom|^uk$|england|scotland|wales/i },
   { key: 'jam', label: 'Jamaica', test: /jamaica/i },
@@ -25,11 +25,11 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
   const [items, setItems] = useState<Item[] | null>(null)
   const [unplaced, setUnplaced] = useState(0)
   const [err, setErr] = useState('')
-  const [on, setOn] = useState<Record<Status, boolean>>({ let: true, vac: true, arr: true, cert: true, deal: true })
+  const [on, setOn] = useState<Record<Status, boolean>>({ let: true, vac: true, arr: true, cert: true, deal: true, plan: true })
   const [region, setRegion] = useState('all')
   const [sel, setSel] = useState<Item | null>(null)
   const [view, setView] = useState<'2d' | '3d'>('2d')
-  const [tower, setTower] = useState<{ source: 'pm' | 'estate'; id: string } | null>(null)
+  const [tower, setTower] = useState<{ source: 'pm' | 'estate' | 'dev'; id: string } | null>(null)
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const layer = useRef<any>(null)

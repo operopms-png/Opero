@@ -2,13 +2,13 @@
 // Positions are looked up once from the address (OpenStreetMap Nominatim) and saved on the record.
 import { serviceClient as db } from '@/lib/admin-auth'
 
-export type MapStatus = 'let' | 'vac' | 'arr' | 'cert' | 'deal'
+export type MapStatus = 'let' | 'vac' | 'arr' | 'cert' | 'deal' | 'plan'
 export type MapItem = {
-  id: string; source: 'pm' | 'estate' | 'str' | 'deal'; name: string; address: string; country: string
-  lat: number | null; lng: number | null; status: MapStatus; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate'; id: string; name: string }
+  id: string; source: 'pm' | 'estate' | 'str' | 'deal' | 'dev'; name: string; address: string; country: string
+  lat: number | null; lng: number | null; status: MapStatus; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate' | 'dev'; id: string; name: string }
 }
 
-const TABLE = { pm: 'pm_properties', estate: 'estate_properties', str: 'properties', deal: 'deal_matches' } as const
+const TABLE = { pm: 'pm_properties', estate: 'estate_properties', str: 'properties', deal: 'deal_matches', dev: 'dev_projects' } as const
 const money = (n: any, cur?: string | null) => (n == null || n === '' ? '' : `${cur === 'USD' ? '$' : cur === 'JMD' ? 'J$' : cur === 'AED' ? 'AED ' : '£'}${Number(n).toLocaleString('en-GB')}`)
 const day = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -24,7 +24,7 @@ async function geocode(q: string): Promise<{ lat: number; lng: number } | null> 
 export async function loadPropertyMap(businessId: string): Promise<{ items: MapItem[]; unplaced: number }> {
   const today = new Date().toISOString().slice(0, 10)
   const soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
-  const [pm, ea, st, leases, tenants, rent, comp, tenancies, deals, pmU, eaU, pmB, eaB] = await Promise.all([
+  const [pm, ea, st, leases, tenants, rent, comp, tenancies, deals, pmU, eaU, pmB, eaB, devP, devU] = await Promise.all([
     db.from('pm_properties').select('id,name,address,city,country,status,monthly_income,currency,lat,lng,geocoded_at').eq('user_id', businessId).limit(500),
     db.from('estate_properties').select('id,name,address,country,status,rent,currency,lat,lng,geocoded_at,pm_property_id').eq('user_id', businessId).limit(500),
     db.from('properties').select('id,name,address,city,country,status,lat,lng,geocoded_at').eq('user_id', businessId).limit(500),
@@ -38,6 +38,8 @@ export async function loadPropertyMap(businessId: string): Promise<{ items: MapI
     db.from('estate_units').select('property_id,building_id').eq('user_id', businessId).not('building_id', 'is', null).limit(3000),
     db.from('pm_buildings').select('id,name').eq('user_id', businessId).limit(500),
     db.from('estate_buildings').select('id,name').eq('user_id', businessId).limit(500),
+    db.from('dev_projects').select('id,name,location,status,total_budget,lat,lng,geocoded_at').eq('user_id', businessId).limit(200),
+    db.from('dev_units').select('project_id,status').eq('user_id', businessId).limit(5000),
   ])
   const by = <T extends { property_id: any }>(rows: T[] | null) => { const m = new Map<string, T[]>(); (rows ?? []).forEach(r => { const k = String(r.property_id); m.set(k, [...(m.get(k) ?? []), r]) }); return m }
   const lease = by(leases.data), ten = by(tenants.data), late = by(rent.data), cert = by(comp.data), etn = by(tenancies.data)
@@ -84,6 +86,19 @@ export async function loadPropertyMap(businessId: string): Promise<{ items: MapI
     items.push({ id: String(d.id), source: 'deal', name: d.title || d.address || 'Deal', address: d.address || '', country: '', lat: d.lat, lng: d.lng, status: 'deal', facts: [...(d.price ? [{ label: 'Asking price', value: money(d.price, d.currency) }] : []), ...(d.fit_score != null ? [{ label: 'Fit to your brief', value: `${d.fit_score}%` }] : []), { label: 'Source', value: 'Found by Novourq Cloud AI' }], href: '/staff-centre/ai-command-centre/deal-analyser', url: d.url || undefined, _geo: d.lat == null && !d.geocoded_at && !!d.address, _q: d.address || '' })
   }
 
+  // Development projects: planned and in-build schemes, so they can be shown off before they exist
+  const countryOf = (lat: number | null, lng: number | null, text: string) => {
+    if (lat != null && lng != null) { if (lat > 17 && lat < 19 && lng > -79 && lng < -76) return 'Jamaica'; if (lat > 49 && lat < 61 && lng > -9 && lng < 2.5) return 'United Kingdom' }
+    return /jamaica|kingston|porus|manchester, jam|st\.? (ann|james|catherine|elizabeth|mary|andrew|thomas)|montego|mandeville|ocho rios|negril/i.test(text) ? 'Jamaica' : /united kingdom|\buk\b|england|london|leeds|birmingham|manchester|liverpool|scotland|wales/i.test(text) ? 'United Kingdom' : ''
+  }
+  const devCount = new Map<string, { n: number; avail: number }>()
+  for (const u of devU.data ?? []) { const k = String(u.project_id); const c = devCount.get(k) ?? { n: 0, avail: 0 }; c.n++; if (/available/i.test(u.status || '')) c.avail++; devCount.set(k, c) }
+  for (const p of devP.data ?? []) {
+    const id = String(p.id), c = devCount.get(id)
+    const stage = ({ planning: 'Planning', active: 'Under construction', on_hold: 'On hold' } as Record<string, string>)[String(p.status)] || String(p.status || 'Planned')
+    items.push({ id, source: 'dev', name: p.name || 'Development', address: p.location || '', country: countryOf(p.lat, p.lng, p.location || ''), lat: p.lat, lng: p.lng, status: 'plan', facts: [{ label: 'Stage', value: stage }, ...(c ? [{ label: 'Units', value: `${c.avail} available of ${c.n}` }] : []), ...(p.total_budget ? [{ label: 'Budget', value: money(p.total_budget) }] : [])], href: '/dev', building: { source: 'dev', id, name: p.name || 'Development' }, _geo: p.lat == null && !p.geocoded_at && !!p.location, _q: p.location || '' })
+  }
+
   // Look up a few missing positions per visit (OpenStreetMap allows about one a second); the rest fill in on later visits.
   let n = 0
   for (const it of items) {
@@ -98,7 +113,7 @@ export async function loadPropertyMap(businessId: string): Promise<{ items: MapI
 }
 
 // ---------- floor-by-floor view of one building ----------
-export type FloorUnit = { id: string; unit: string; status: 'let' | 'vac' | 'arr'; rent: string; tenant: string; detail: string; planUrl?: string | null; layout?: any }
+export type FloorUnit = { id: string; unit: string; status: 'let' | 'vac' | 'arr' | 'avail' | 'res' | 'sold'; rent: string; tenant: string; detail: string; planUrl?: string | null; layout?: any }
 export type FloorData = { name: string; address: string; floors: { floor: number | null; units: FloorUnit[] }[]; totals: Record<string, number>; certs: string[] }
 
 // Floor from the saved floor, else from the unit number: "3B" is floor 3, "204" is floor 2.
@@ -111,15 +126,28 @@ export function floorOf(unit: string, saved?: any): number | null {
   return n >= 100 ? Math.floor(n / 100) : null
 }
 
-export async function loadBuildingFloors(businessId: string, source: 'pm' | 'estate', buildingId: string): Promise<FloorData | null> {
+export async function loadBuildingFloors(businessId: string, source: 'pm' | 'estate' | 'dev', buildingId: string): Promise<FloorData | null> {
   const today = new Date().toISOString().slice(0, 10)
   const soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
-  const bTable = source === 'pm' ? 'pm_buildings' : 'estate_buildings'
-  const { data: b } = await db.from(bTable).select('id,name,address').eq('id', buildingId).eq('user_id', businessId).maybeSingle()
+  let b: any = null
+  if (source === 'dev') {
+    const { data } = await db.from('dev_projects').select('id,name,location').eq('id', buildingId).eq('user_id', businessId).maybeSingle()
+    b = data && { id: data.id, name: data.name, address: data.location }
+  } else {
+    const { data } = await db.from(source === 'pm' ? 'pm_buildings' : 'estate_buildings').select('id,name,address').eq('id', buildingId).eq('user_id', businessId).maybeSingle()
+    b = data
+  }
   if (!b) return null
   const units: FloorUnit[] & any[] = []
   let propIds: string[] = []
-  if (source === 'pm') {
+  if (source === 'dev') {
+    const { data: us } = await db.from('dev_units').select('id,unit_number,unit_type,size_sqft,status,price,buyer_name,floor,plan_url,layout').eq('project_id', buildingId).eq('user_id', businessId).limit(1000)
+    for (const u of us ?? []) {
+      const st: FloorUnit['status'] = /complet|sold/i.test(u.status || '') ? 'sold' : /reserv|exchang/i.test(u.status || '') ? 'res' : 'avail'
+      units.push({ id: u.id, unit: u.unit_number || '?', _f: floorOf(u.unit_number, u.floor), status: st, rent: u.price ? Number(u.price).toLocaleString('en-GB') : '', tenant: u.buyer_name || '', planUrl: u.plan_url, layout: u.layout, detail: [u.unit_type, u.size_sqft ? `${Number(u.size_sqft).toLocaleString('en-GB')} sq ft` : '', u.status].filter(Boolean).join(', ') })
+    }
+    var certs: string[] = []
+  } else if (source === 'pm') {
     const { data: us } = await db.from('pm_units').select('id,property_id,unit_number,tenant_id,monthly_rent,status,floor,plan_url,layout').eq('building_id', buildingId).eq('user_id', businessId).limit(1000)
     propIds = [...new Set((us ?? []).map(u => String(u.property_id)))]
     const ids = (us ?? []).map(u => u.id)
@@ -154,7 +182,7 @@ export async function loadBuildingFloors(businessId: string, source: 'pm' | 'est
     var certs = (c.data ?? []).map((x: any) => `${x.type || 'Certificate'} ${x.expiry_date < today ? 'expired' : 'due'} ${new Date(x.expiry_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`)
   }
   const byFloor = new Map<number | null, FloorUnit[]>()
-  const totals: Record<string, number> = { let: 0, vac: 0, arr: 0 }
+  const totals: Record<string, number> = { let: 0, vac: 0, arr: 0, avail: 0, res: 0, sold: 0 }
   for (const u of units) {
     const { _f, ...rest } = u as any
     totals[rest.status]++

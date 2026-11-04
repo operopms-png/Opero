@@ -47,6 +47,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'For a property in a building, press View floors to see every flat by floor with its rent and status.',
     'Click a flat, then Add floor plan. Upload the plan and press Read plan with AI, or draw the rooms. Check the sizes and Save rooms.',
     'Then press View in 3D and walk to see a furnished model of the flat and walk through it. If a property is missing from the map, check its address.',
+    'Showcase a development: your Development projects show as teal In development pins (set the project Location). Select one, press View floors for its units by floor with prices, then add each unit floor plan and walk through it in 3D before it is built.',
   ] },
   { id: 'datahub', title: 'Data Hub', steps: [
     'Admins open Human Intelligence Hub, then Oversight, then Data Hub. It shows what is stored, how complete it is, where it came from and what the AI changed.',

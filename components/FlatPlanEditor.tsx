@@ -9,7 +9,7 @@ const LINE = '#D9E2F0', MUTED = '#667085', TXT = '#101828', NAVY = '#1B2F6E', BL
 const PAL: Record<RoomKind, string> = { bedroom: '#BFD7F2', living: '#F3D9A8', dining: '#F3D9A8', kitchen: '#D5E8D4', bath: '#CFE8EF', hall: '#E6E0D2', balcony: '#C9DDF0', study: '#E4D3EE', storage: '#E3E3E3', other: '#E3E3E3' }
 const snap = (n: number) => Math.round(n * 4) / 4
 
-export default function FlatPlanEditor({ source, unit, onSaved, onClose }: { source: 'pm' | 'estate'; unit: { id: string; unit: string; planUrl?: string | null; layout?: any }; onSaved: (p: { planUrl?: string | null; layout?: Layout | null }) => void; onClose: () => void }) {
+export default function FlatPlanEditor({ source, unit, onSaved, onClose }: { source: 'pm' | 'estate' | 'dev'; unit: { id: string; unit: string; planUrl?: string | null; layout?: any }; onSaved: (p: { planUrl?: string | null; layout?: Layout | null }) => void; onClose: () => void }) {
   const [rooms, setRooms] = useState<Room[]>(unit.layout?.rooms ?? [])
   const [planUrl, setPlanUrl] = useState<string | null>(unit.planUrl ?? null)
   const [W, setW] = useState<number>(Math.max(10, Math.ceil(unit.layout?.w ?? 12)))

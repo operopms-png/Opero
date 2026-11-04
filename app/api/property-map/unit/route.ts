@@ -20,6 +20,6 @@ export async function POST(req: NextRequest) {
     else { const l = sanitizeLayout(b.layout); if (!l) return NextResponse.json({ error: 'Add at least one room' }, { status: 400 }); patch.layout = l }
   }
   if (!Object.keys(patch).length) return NextResponse.json({ error: 'Nothing to save' }, { status: 400 })
-  const { error } = await db.from(b.source === 'estate' ? 'estate_units' : 'pm_units').update(patch).eq('id', b.unitId).eq('user_id', s.businessId)
+  const { error } = await db.from(b.source === 'estate' ? 'estate_units' : b.source === 'dev' ? 'dev_units' : 'pm_units').update(patch).eq('id', b.unitId).eq('user_id', s.businessId)
   return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ ok: true })
 }

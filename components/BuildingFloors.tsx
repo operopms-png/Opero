@@ -6,13 +6,13 @@ import FlatPlanEditor from '@/components/FlatPlanEditor'
 import FlatViewer3D from '@/components/FlatViewer3D'
 import { sanitizeLayout } from '@/lib/flat-layout'
 
-type U = { id: string; unit: string; status: 'let' | 'vac' | 'arr'; rent: string; tenant: string; detail: string; planUrl?: string | null; layout?: any }
+type U = { id: string; unit: string; status: 'let' | 'vac' | 'arr' | 'avail' | 'res' | 'sold'; rent: string; tenant: string; detail: string; planUrl?: string | null; layout?: any }
 type D = { name: string; address: string; floors: { floor: number | null; units: U[] }[]; totals: Record<string, number>; certs: string[] }
 const LINE = '#D9E2F0', MUTED = '#667085', TXT = '#101828', NAVY = '#1B2F6E'
-const ST = { let: { label: 'Let', color: '#0E7C55' }, vac: { label: 'Vacant', color: '#2F6DB5' }, arr: { label: 'Rent behind', color: '#B42318' } } as const
+const ST = { let: { label: 'Let', color: '#0E7C55' }, vac: { label: 'Vacant', color: '#2F6DB5' }, arr: { label: 'Rent behind', color: '#B42318' }, avail: { label: 'Available', color: '#2F6DB5' }, res: { label: 'Reserved or exchanged', color: '#C98A00' }, sold: { label: 'Sold', color: '#0E7C55' } } as const
 type K = keyof typeof ST
 
-export default function BuildingFloors({ source, id, onClose }: { source: 'pm' | 'estate'; id: string; onClose: () => void }) {
+export default function BuildingFloors({ source, id, onClose }: { source: 'pm' | 'estate' | 'dev'; id: string; onClose: () => void }) {
   const [d, setD] = useState<D | null>(null)
   const [err, setErr] = useState('')
   const [only, setOnly] = useState<K | null>(null)
@@ -38,7 +38,8 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
     return { W, H, dx, dy, cols, rows, ox, oy, vw: ox + cols * W + dx + 16, vh: oy + rows * H + 20 }
   }, [d])
 
-  const total = d ? d.totals.let + d.totals.vac + d.totals.arr : 0
+  const total = d ? Object.values(d.totals).reduce((a, b) => a + b, 0) : 0
+  const dev = source === 'dev'
   return (
     <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ background: '#2F6DB5', color: '#fff', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
@@ -47,11 +48,11 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
       </div>
       {err && <p style={{ padding: 16, margin: 0, color: MUTED, fontSize: 13.5 }}>{err}</p>}
       {!d && !err && <p style={{ padding: 16, margin: 0, color: MUTED, fontSize: 13.5 }}>Loading flats…</p>}
-      {d && g && total === 0 && <p style={{ padding: 16, margin: 0, color: MUTED, fontSize: 13.5 }}>No flats are saved against this building yet. Add flats to the building and they appear here.</p>}
+      {d && g && total === 0 && <p style={{ padding: 16, margin: 0, color: MUTED, fontSize: 13.5 }}>{dev ? 'No units are saved against this project yet. Add units in Development, Units, and they appear here.' : 'No flats are saved against this building yet. Add flats to the building and they appear here.'}</p>}
       {d && g && total > 0 && (
         <>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '12px 14px', borderBottom: `1px solid ${LINE}` }}>
-            {(Object.keys(ST) as K[]).map(k => (
+            {(Object.keys(ST) as K[]).filter(k => (d.totals[k] || 0) > 0).map(k => (
               <button key={k} type="button" aria-pressed={!only || only === k} onClick={() => setOnly(only === k ? null : k)}
                 style={{ font: 'inherit', fontSize: 12.5, fontWeight: 700, padding: '6px 12px', borderRadius: 20, border: `1px solid ${LINE}`, background: '#fff', color: TXT, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, opacity: !only || only === k ? 1 : .45 }}>
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: ST[k].color }} />{ST[k].label} ({d.totals[k]})
@@ -87,7 +88,7 @@ export default function BuildingFloors({ source, id, onClose }: { source: 'pm' |
                   <div style={{ fontSize: 11.5, letterSpacing: '.09em', textTransform: 'uppercase', color: MUTED, fontWeight: 700 }}>Flat</div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: TXT }}>{sel.unit}</div>
                   <span style={{ alignSelf: 'flex-start', background: ST[sel.status].color, color: '#fff', fontSize: 11.5, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{ST[sel.status].label}</span>
-                  {[['Tenant', sel.status === 'vac' ? 'None' : sel.tenant || 'Not recorded'], ['Rent', sel.rent || 'Not recorded'], ['Status', sel.detail]].map(([a, b]) => (
+                  {(dev ? [['Buyer', sel.tenant || 'None yet'], ['Price', sel.rent || 'Not set'], ['Details', sel.detail]] : [['Tenant', sel.status === 'vac' ? 'None' : sel.tenant || 'Not recorded'], ['Rent', sel.rent || 'Not recorded'], ['Status', sel.detail]]).map(([a, b]) => (
                     <div key={a} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13.5, padding: '7px 0', borderTop: `1px solid ${LINE}` }}><span style={{ color: MUTED }}>{a}</span><span style={{ fontWeight: 600, textAlign: 'right', color: TXT }}>{b}</span></div>
                   ))}
                   {sel.planUrl && !/\.pdf($|\?)/i.test(sel.planUrl) && <a href={sel.planUrl} target="_blank" rel="noopener noreferrer"><img src={sel.planUrl} alt={`Floor plan of flat ${sel.unit}`} style={{ width: '100%', maxHeight: 180, objectFit: 'contain', border: `1px solid ${LINE}`, borderRadius: 8, background: '#fff' }} /></a>}
