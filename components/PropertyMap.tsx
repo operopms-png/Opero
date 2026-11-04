@@ -5,9 +5,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import 'leaflet/dist/leaflet.css'
 import { supabase } from '@/lib/supabase'
+import BuildingFloors from '@/components/BuildingFloors'
 
 type Status = 'let' | 'vac' | 'arr' | 'cert' | 'deal'
-type Item = { id: string; source: string; name: string; address: string; country: string; lat: number | null; lng: number | null; status: Status; facts: { label: string; value: string }[]; href: string; url?: string }
+type Item = { id: string; source: string; name: string; address: string; country: string; lat: number | null; lng: number | null; status: Status; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate'; id: string; name: string } }
 const LINE = '#D9E2F0', NAVY = '#1B2F6E', MUTED = '#667085', TXT = '#101828', BLUE = '#2F6DB5'
 const ST: Record<Status, { label: string; color: string }> = {
   let: { label: 'Let', color: '#0E7C55' }, vac: { label: 'Vacant', color: '#2F6DB5' },
@@ -26,6 +27,7 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
   const [on, setOn] = useState<Record<Status, boolean>>({ let: true, vac: true, arr: true, cert: true, deal: true })
   const [region, setRegion] = useState('all')
   const [sel, setSel] = useState<Item | null>(null)
+  const [tower, setTower] = useState<{ source: 'pm' | 'estate'; id: string } | null>(null)
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
   const layer = useRef<any>(null)
@@ -95,12 +97,15 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
         </div>))}</div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <Link href={selOk.href} style={btn}>{selOk.status === 'deal' ? 'Open Deal Analyser' : 'Open property'}</Link>
+        {selOk.building && !compact && <button type="button" onClick={() => setTower({ source: selOk.building!.source, id: selOk.building!.id })} style={{ ...btn, cursor: 'pointer', font: 'inherit', fontSize: 13, fontWeight: 600 }}>View floors</button>}
+        {selOk.building && compact && <Link href="/property/map" style={btn}>Open map for floors</Link>}
         {selOk.url && <a href={selOk.url} target="_blank" rel="noopener noreferrer" style={btn}>View listing</a>}
       </div>
     </div>
   ) : <p style={{ margin: 0, fontSize: 13.5, color: MUTED, lineHeight: 1.5 }}>Click a pin to see the tenant, rent, repairs and certificates for that property. Purple diamonds are deals Novourq Cloud AI has found.</p>
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
     <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 12, overflow: 'hidden', minWidth: 0 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', padding: '12px 14px', borderBottom: `1px solid ${LINE}` }}>
         {compact && <b style={{ fontSize: 14, color: TXT, marginRight: 6 }}>Property map</b>}
@@ -127,6 +132,8 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
       {compact && selOk && <div style={{ padding: 14, borderTop: `1px solid ${LINE}` }}>{panel}</div>}
       {unplaced > 0 && <div style={{ padding: '9px 14px', borderTop: `1px solid ${LINE}`, fontSize: 12.5, color: MUTED }}>{unplaced} {unplaced === 1 ? 'property is' : 'properties are'} not on the map yet. Positions are looked up from each address; reload in a minute and more appear. Check the address if one stays missing.</div>}
       <style>{`.leaflet-container{font-family:inherit}@media (max-width:760px){.pmap-grid{grid-template-columns:minmax(0,1fr)!important}.pmap-side{border-left:0!important;border-top:1px solid ${LINE}}}`}</style>
+    </div>
+    {tower && !compact && <BuildingFloors source={tower.source} id={tower.id} onClose={() => setTower(null)} />}
     </div>
   )
 }
