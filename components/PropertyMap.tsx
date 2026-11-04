@@ -16,7 +16,7 @@ const ST: Record<Status, { label: string; color: string }> = {
 const ORDER: Status[] = ['let', 'vac', 'arr', 'cert', 'deal']
 const REGIONS: { key: string; label: string; test: RegExp }[] = [
   { key: 'all', label: 'All', test: /./ }, { key: 'uk', label: 'UK', test: /united kingdom|^uk$|england|scotland|wales/i },
-  { key: 'jam', label: 'Jamaica', test: /jamaica/i }, { key: 'uae', label: 'Dubai', test: /emirates|uae|dubai/i },
+  { key: 'jam', label: 'Jamaica', test: /jamaica/i },
 ]
 
 export default function PropertyMap({ compact = false }: { compact?: boolean }) {
