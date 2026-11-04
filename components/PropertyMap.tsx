@@ -6,6 +6,7 @@ import Link from 'next/link'
 import 'leaflet/dist/leaflet.css'
 import { supabase } from '@/lib/supabase'
 import BuildingFloors from '@/components/BuildingFloors'
+import PropertyMap3D from '@/components/PropertyMap3D'
 
 type Status = 'let' | 'vac' | 'arr' | 'cert' | 'deal'
 type Item = { id: string; source: string; name: string; address: string; country: string; lat: number | null; lng: number | null; status: Status; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate'; id: string; name: string } }
@@ -27,6 +28,7 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
   const [on, setOn] = useState<Record<Status, boolean>>({ let: true, vac: true, arr: true, cert: true, deal: true })
   const [region, setRegion] = useState('all')
   const [sel, setSel] = useState<Item | null>(null)
+  const [view, setView] = useState<'2d' | '3d'>('2d')
   const [tower, setTower] = useState<{ source: 'pm' | 'estate'; id: string } | null>(null)
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
@@ -118,11 +120,15 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
         {REGIONS.map(r => (
           <button key={r.key} type="button" aria-pressed={region === r.key} onClick={() => setRegion(r.key)}
             style={{ font: 'inherit', fontSize: 12.5, fontWeight: 600, padding: '6px 12px', borderRadius: 20, border: `1px solid ${region === r.key ? '#89CFF0' : LINE}`, background: region === r.key ? '#E3F4FC' : '#fff', color: region === r.key ? NAVY : MUTED, cursor: 'pointer' }}>{r.label}</button>))}
+        {!compact && (['2d', '3d'] as const).map(v => (
+          <button key={v} type="button" aria-pressed={view === v} onClick={() => { setView(v); if (v === '2d') setTimeout(() => map.current?.invalidateSize(), 60) }}
+            style={{ font: 'inherit', fontSize: 12.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, border: `1px solid ${view === v ? NAVY : LINE}`, background: view === v ? NAVY : '#fff', color: view === v ? '#fff' : NAVY, cursor: 'pointer' }}>{v === '2d' ? 'Map' : '3D'}</button>))}
         {compact && <Link href="/property/map" style={{ ...btn, padding: '6px 12px', fontSize: 12.5 }}>Open full map</Link>}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0,1fr)' : 'minmax(0,1.8fr) minmax(260px,1fr)' }} className={compact ? undefined : 'pmap-grid'}>
         <div style={{ position: 'relative', minWidth: 0 }}>
-          <div ref={box} style={{ height: h, background: '#E9EEF6', zIndex: 0 }} aria-label="Map of your properties" />
+          <div ref={box} style={{ height: h, background: '#E9EEF6', zIndex: 0, display: view === '2d' ? 'block' : 'none' }} aria-label="Map of your properties" />
+          {!compact && <PropertyMap3D items={shown} selectedId={selOk?.id ?? null} onSelect={id => setSel(shown.find(x => x.id === id) ?? null)} height={h} visible={view === '3d'} />}
           {items === null && <Overlay>Loading your properties…</Overlay>}
           {items !== null && err && <Overlay>{err}</Overlay>}
           {items !== null && !err && shown.length === 0 && <Overlay>{(items ?? []).length === 0 ? 'No properties yet. Add one and it appears here.' : 'Nothing to show with these filters.'}</Overlay>}
