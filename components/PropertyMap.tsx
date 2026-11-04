@@ -104,7 +104,19 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
         {selOk.url && <a href={selOk.url} target="_blank" rel="noopener noreferrer" style={btn}>View listing</a>}
       </div>
     </div>
-  ) : <p style={{ margin: 0, fontSize: 13.5, color: MUTED, lineHeight: 1.5 }}>Click a pin to see the tenant, rent, repairs and certificates for that property. Purple diamonds are deals Novourq Cloud AI has found.</p>
+  ) : (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <p style={{ margin: 0, fontSize: 13.5, color: MUTED, lineHeight: 1.5 }}>Click a pin or pick a property to see its tenant, rent, repairs and certificates. Purple diamonds are deals Novourq Cloud AI has found.</p>
+      <div style={{ maxHeight: h - 90, overflowY: 'auto' }}>
+        {shown.map(i => (
+          <button key={i.id} type="button" onClick={() => setSel(i)} style={{ font: 'inherit', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', border: 0, borderTop: `1px solid ${LINE}`, background: 'none', cursor: 'pointer', color: TXT, fontSize: 13.5 }}>
+            <span style={{ width: 10, height: 10, flex: 'none', borderRadius: i.status === 'deal' ? 2 : '50%', background: ST[i.status].color }} />
+            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.name}</span>
+            <span style={{ marginLeft: 'auto', color: MUTED, fontSize: 12 }}>{ST[i.status].label}</span>
+          </button>))}
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>

@@ -1,7 +1,7 @@
 'use client'
 // 3D city view: real buildings raised from OpenStreetMap data (served free by OpenFreeMap), with each of your
 // properties raised in its status colour. Drag to pan, right-drag or two fingers to tilt and rotate.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 type Item = { id: string; name: string; lat: number | null; lng: number | null; status: 'let' | 'vac' | 'arr' | 'cert' | 'deal' }
@@ -13,6 +13,7 @@ export default function PropertyMap3D({ items, selectedId, onSelect, height, vis
   const lib = useRef<any>(null)
   const markers = useRef<any[]>([])
   const fitted = useRef('')
+  const [ready, setReady] = useState(false)
   const latest = useRef({ items, onSelect })
   latest.current = { items, onSelect }
 
@@ -29,7 +30,7 @@ export default function PropertyMap3D({ items, selectedId, onSelect, height, vis
         m.addSource('ours', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
         m.addLayer({ id: 'ours-3d', type: 'fill-extrusion', source: 'ours', minzoom: 13, paint: { 'fill-extrusion-color': ['get', 'c'], 'fill-extrusion-height': ['get', 'h'], 'fill-extrusion-base': ['get', 'b'], 'fill-extrusion-opacity': 0.95 } })
         m.on('idle', () => raise())
-        draw()
+        setReady(true)
       })
     })()
     return () => { dead = true }
@@ -70,16 +71,23 @@ export default function PropertyMap3D({ items, selectedId, onSelect, height, vis
     const sig = pts.map(p => p.id).join(',')
     if (pts.length && fitted.current !== sig) {
       fitted.current = sig
-      const b = new ml.LngLatBounds()
-      pts.forEach(p => b.extend([p.lng!, p.lat!]))
-      m.fitBounds(b, { padding: 70, maxZoom: 16.5, pitch: 60, bearing: -20, duration: 900 })
+      const lats = pts.map(p => p.lat!), lngs = pts.map(p => p.lng!)
+      const span = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs))
+      if (span < 0.15) {
+        const b = new ml.LngLatBounds()
+        pts.forEach(p => b.extend([p.lng!, p.lat!]))
+        m.fitBounds(b, { padding: 90, maxZoom: 16.5, pitch: 62, bearing: -20, duration: 900 })
+      } else {
+        // Spread across a region: street level only works close up, so start at the first property
+        m.flyTo({ center: [pts[0].lng!, pts[0].lat!], zoom: 16.5, pitch: 62, bearing: -20, duration: 1200 })
+      }
     }
   }
-  useEffect(() => { if (map.current?.loaded()) { draw(); (map.current as any)._oursSig = ''; raise() } }, [items, selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (ready) { draw(); (map.current as any)._oursSig = ''; setTimeout(raise, 1500) } }, [ready, items, selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const m = map.current; const it = items.find(i => i.id === selectedId)
-    if (m && it && it.lat != null && it.lng != null) m.flyTo({ center: [it.lng, it.lat], zoom: 17, pitch: 65, duration: 1200 })
-  }, [selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (ready && m && it && it.lat != null && it.lng != null) m.flyTo({ center: [it.lng, it.lat], zoom: 17, pitch: 65, duration: 1200 })
+  }, [selectedId, ready]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (visible) setTimeout(() => map.current?.resize(), 60) }, [visible])
 
   return <div ref={box} style={{ height, background: '#E9EEF6', display: visible ? 'block' : 'none' }} aria-label="3D map of your properties" />
