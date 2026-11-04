@@ -23,10 +23,10 @@ export async function GET(req: NextRequest) {
   const since = new Date(Date.now() - 30 * 86400000).toISOString()
   const [e, u] = await Promise.all([
     db.from('voice_dictionary').select('id,term,replacement').eq('business_id', c.businessId).order('created_at', { ascending: false }).limit(300),
-    db.from('voice_usage').select('words').eq('user_email', c.email).gte('created_at', since).limit(5000),
+    db.from('voice_usage').select('words').eq('user_email', c.email).neq('kind', 'tts').gte('created_at', since).limit(5000),
   ])
   const words = (u.data ?? []).reduce((n, r) => n + (r.words || 0), 0)
-  return NextResponse.json({ entries: e.data ?? [], words, speechKey: !!process.env.OPENAI_API_KEY })
+  return NextResponse.json({ entries: e.data ?? [], words, speechKey: !!process.env.OPENAI_API_KEY, realisticVoice: !!(process.env.ELEVENLABS_API_KEY || process.env.OPENAI_API_KEY) })
 }
 
 export async function POST(req: NextRequest) {

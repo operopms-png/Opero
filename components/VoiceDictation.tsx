@@ -123,7 +123,8 @@ export default function VoiceDictation() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const fd = new FormData()
-      if (blob && blob.size > 800) fd.append('audio', blob, 'voice.webm')
+      // On a call the browser's live text is used as is: skipping the upload makes each turn faster.
+      if (blob && blob.size > 800 && !call.current) fd.append('audio', blob, 'voice.webm')
       fd.append('text', text)
       if (asCommand) fd.append('mode', 'command')
       if (internal) fd.append('internal', '1')

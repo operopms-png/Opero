@@ -22,6 +22,7 @@ export default function VoicePanel() {
   const [entries, setEntries] = useState<E[]>([])
   const [words, setWords] = useState(0)
   const [speechKey, setSpeechKey] = useState(true)
+  const [realistic, setRealistic] = useState(true)
   const [term, setTerm] = useState('')
   const [replacement, setReplacement] = useState('')
   const [err, setErr] = useState('')
@@ -34,7 +35,7 @@ export default function VoicePanel() {
   }
   const [calls, setCalls] = useState<{ id: string; started_at: string; seconds: number; tasks: number; turns: { role: string; text: string }[] }[]>([])
   const [open, setOpen] = useState<string | null>(null)
-  const load = () => call('GET').then(d => { setEntries(d.entries); setWords(d.words); setSpeechKey(d.speechKey) }).catch(() => {})
+  const load = () => call('GET').then(d => { setEntries(d.entries); setWords(d.words); setSpeechKey(d.speechKey); setRealistic(!!d.realisticVoice) }).catch(() => {})
   const loadCalls = () => call('GET', '/api/voice?calls=1').then(d => setCalls(d.calls)).catch(() => {})
   useEffect(() => { load(); loadCalls() }, [])
   async function delCall(id: string) { await call('DELETE', '/api/voice?call=' + id).catch(() => {}); loadCalls() }
@@ -60,7 +61,7 @@ export default function VoicePanel() {
       </div>
       <div style={card}>
         <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 4 }}>Novourq's voice</div>
-        <div style={{ fontSize: 13, color: '#667085', marginBottom: 12 }}>Choose the voice you hear on calls and spoken replies. Tap one to hear it. The exact sound depends on the voices installed on your device.</div>
+        <div style={{ fontSize: 13, color: '#667085', marginBottom: 12 }}>Choose the voice you hear on calls and spoken replies. Tap one to hear it. {realistic ? 'Realistic voice is on.' : 'Realistic voice is not set up yet, so this uses the voices installed on your device.'}</div>
         <div role="radiogroup" aria-label="Novourq's voice" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {(['female', 'male'] as Gender[]).map(g => (
             <button key={g} role="radio" aria-checked={gender === g} onClick={() => chooseVoice(g)}

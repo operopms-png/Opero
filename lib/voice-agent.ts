@@ -8,6 +8,17 @@ import { aiTaskBy } from '@/lib/ai-proposal-utils'
 import { queueAiAction } from '@/lib/ai-approvals'
 import { MONEY_OR_CONTRACT } from '@/lib/ai-authority'
 import { parseBrief, relearn } from '@/lib/deal-finder'
+import { FAST_MODEL } from '@/lib/receptionist'
+
+// The portal snapshot is heavy to build, so it is reused for 45 seconds and dropped when the AI changes something.
+const portalCache = new Map<string, { at: number; text: string | null }>()
+async function cachedPortal(c: Caller) {
+  const hit = portalCache.get(c.businessId)
+  if (hit && Date.now() - hit.at < 45000) return hit.text
+  const text = await portalContext(c).catch(() => null)
+  portalCache.set(c.businessId, { at: Date.now(), text })
+  return text
+}
 
 export type ClientAction = { type: 'navigate'; path: string; label: string } | { type: 'deal_search'; briefId: string }
 export type AgentResult = { reply: string; jobs: number; actions: ClientAction[] }
@@ -68,6 +79,7 @@ async function findProperty(biz: string, name: string) {
 async function runTool(ctx: Ctx, name: string, i: any): Promise<string> {
   const { c } = ctx
   const biz = c.businessId
+  if (name !== 'open_page' && name !== 'deal_feedback') portalCache.delete(biz)
   try {
     if (name === 'create_task') {
       const ok = await aiTaskBy('voice_agent', biz, String(i.title || '').slice(0, 140), String(i.notes || 'Added by voice'), Math.min(60, Math.max(0, Number(i.days) || 1)))
@@ -137,7 +149,7 @@ type Msg = { role: 'user' | 'assistant'; content: any }
 export async function runAgent(c: Caller, text: string, history: { role: 'user' | 'assistant'; content: string }[] = [], call = false): Promise<AgentResult> {
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) return { reply: 'Sorry, the AI is not switched on for this account yet.', jobs: 0, actions: [] }
-  const portal = await portalContext(c).catch(() => null)
+  const portal = await cachedPortal(c)
   const system = systemPrompt({ c, portal, web: false }) + RULES + (call ? '\nThis is a live phone call. Talk like a capable colleague, warm and brief, and use what was said earlier in the call.' : '')
   const messages: Msg[] = [...history.slice(-8), { role: 'user', content: text }]
   const ctx: Ctx = { c, actions: [], jobs: 0 }
@@ -146,7 +158,7 @@ export async function runAgent(c: Caller, text: string, history: { role: 'user' 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 700, system, messages, tools: TOOLS }),
+      body: JSON.stringify({ model: call ? FAST_MODEL : 'claude-sonnet-4-6', max_tokens: 500, system, messages, tools: TOOLS }),
     }).catch(() => null)
     if (!res || !res.ok) return { reply: reply || 'Sorry, I could not do that just now. Try again in a minute.', jobs: ctx.jobs, actions: ctx.actions }
     const data = await res.json()
