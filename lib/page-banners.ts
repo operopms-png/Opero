@@ -12,6 +12,7 @@ const PAGES: Record<string, B> = {
   '/guest-comms': { title: 'Guest Comms', text: 'Messages to and from guests. Novourq Cloud AI drafts replies and you approve them before they send.' },
   '/audit': { title: 'Audit Log', text: 'A record of who changed what and when, for accountability and review.' },
   '/owners': { title: 'Owners', text: 'The property owners you work for, with their contact details, properties and statements.' },
+  '/help': { title: 'Help Centre', text: 'Short video walkthroughs of every part of Novourq, and a step-by-step guide. Ask the AI panel if you cannot find what you need.' },
   '/settings': { title: 'Settings', text: 'Your account, team access, branding, connections and billing.' },
   '/integrations': { title: 'Integrations', text: 'Connect your booking sites, calendars, payments and smart devices.' },
   '/turnovers': { title: 'Turnovers', text: 'Changeovers between stays: cleaning, checks and restocking, with who is doing each one.' },

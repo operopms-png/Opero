@@ -1,5 +1,5 @@
 'use client'
-// Settings -> Guide: plain-English how-to for people using the platform.
+// Help Centre -> Step-by-step guide (app/help/page.tsx): plain-English how-to for people using the platform.
 import { useState } from 'react'
 
 const SECTIONS: { id: string; title: string; steps: string[] }[] = [
@@ -54,6 +54,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'Tenants and landlords ask to download, correct or delete their data from the My Data tab in their portal. Their requests arrive in the Data Hub, where you mark them completed or declined.',
   ] },
   { id: 'help', title: 'Getting help', steps: [
+    'Open the Help Centre in the left menu, just above Settings. Video walkthroughs sit beside this guide, one for each part of Novourq.',
     'Ask the AI panel first. It knows the platform and answers straight away.',
     'Found something broken, or want to leave a review or suggest an idea? Use the Submissions tab in Settings. We read every one and reply there.',
     'News and updates from us appear under System Messages.',
@@ -64,7 +65,7 @@ export default function GuidePanel() {
   const [open, setOpen] = useState<string>('start')
   return (
     <div style={{ maxWidth: 700 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Guide</h2>
+      <h2 style={{ fontSize: 20, fontWeight: 700, color: '#323338', margin: '0 0 4px' }}>Step-by-step guide</h2>
       <div style={{ fontSize: 13, color: '#667085', marginBottom: 20 }}>How to get the most out of Novourq, step by step.</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {SECTIONS.map(s => {

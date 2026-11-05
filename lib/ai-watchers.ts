@@ -227,7 +227,7 @@ const WATCHERS: Watcher[] = [
     if (!set?.logo_url) todo.push('Upload your logo in Invoice settings so your emails carry it')
     if (!String(set?.contact_lines ?? '').trim()) todo.push('Add your contact details in Invoice settings for the email footer')
     if (!team) todo.push('Open Workflows and press "Run all now" to see Novourq Cloud AI work')
-    return todo.length ? { title: `Finish setting up Novourq: ${todo.length} step${todo.length === 1 ? '' : 's'} left`, lines: [...todo, 'The Guide tab in Settings explains each step.'], dueInDays: 3 } : null
+    return todo.length ? { title: `Finish setting up Novourq: ${todo.length} step${todo.length === 1 ? '' : 's'} left`, lines: [...todo, 'The Help Centre in the left menu explains each step.'], dueInDays: 3 } : null
   } },
   // ---------- Intelligence skills: read the records, find patterns, leave one task with figures and a recommendation ----------
   // Operations: slow jobs, voids, rent collection, repeat repairs (first week of the month)

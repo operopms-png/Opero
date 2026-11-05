@@ -8,7 +8,6 @@ import { TEAM_MODULES } from '@/lib/accessRegistry'
 import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
 import TeamBoard from '@/components/settings/TeamBoard'
 import SubmissionsPanel from '@/components/settings/SubmissionsPanel'
-import GuidePanel from '@/components/settings/GuidePanel'
 import PrivacyPanel from '@/components/settings/PrivacyPanel'
 import PhoneAssistantPanel from '@/components/settings/PhoneAssistantPanel'
 import VoicePanel from '@/components/settings/VoicePanel'
@@ -25,7 +24,6 @@ const NAV = [
     {s:'Voice',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>},
     {s:'Phone Assistant',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>},
     {s:'Privacy & Data',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>},
-    {s:'Guide',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>},
   ]}
 ]
 
@@ -35,7 +33,9 @@ function SettingsInner() {
   const searchParams = useSearchParams()
   const sectionParam = searchParams.get('section')
   const { role: myRole, hasSettings, loading: roleLoading } = useRole()
-  const [section, setSection] = useState(sectionParam === 'Billing & Subscriptions' ? 'Payments' : (sectionParam || 'My Account'))
+  const [section, setSection] = useState(sectionParam === 'Billing & Subscriptions' ? 'Payments' : (sectionParam === 'Guide' ? 'My Account' : (sectionParam || 'My Account')))
+  // The Guide moved to the Help Centre; old links to it still land there
+  useEffect(() => { if (sectionParam === 'Guide') window.location.replace('/help') }, [sectionParam])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [team, setTeam] = useState<any[]>([])
@@ -508,7 +508,6 @@ function SettingsInner() {
           </div>)}
 
           {section==='Submissions'&&<SubmissionsPanel />}
-          {section==='Guide'&&<GuidePanel />}
           {section==='AI Authority'&&<AiAuthorityPanel />}
           {section==='Phone Assistant'&&<PhoneAssistantPanel />}
           {section==='Voice'&&<VoicePanel />}
