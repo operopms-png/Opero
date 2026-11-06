@@ -19,6 +19,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
   { id: 'hih', title: 'Human Intelligence Hub', steps: [
     'The Human Intelligence Hub covers your customers, team and finances: inbox, website chats, CRM, invoices, arrears, tasks, people and training.',
     'Use it for the day-to-day running of your company. Novourq Cloud AI works the same areas in the background.',
+    'Under Team, Activity Log records who changed what and when. Admins and co-founders see every change in the company. Everyone else sees only their own. Changes made by Novourq Cloud AI or an automatic job show as "Novourq Cloud AI or system". Bank and ID details are never stored in it.',
   ] },
   { id: 'ai', title: 'Novourq Cloud AI', steps: [
     'Novourq Cloud AI is one assistant with many skills, such as rent reminders, chasing invoices, replying to reviews and watching compliance dates.',

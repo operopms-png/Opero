@@ -23,6 +23,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Legal & Disputes': 'Eviction notices, arrears claims, deposit disputes and complaints, with status and next deadline. A register only, not legal advice.',
   'Referrals': 'Who referred a landlord, tenant or guest to you, how far it got and any reward owed. Nothing is paid from here.',
   'Valuations': 'Each property\'s value over time, with the change since the last valuation.',
+  'Activity Log': 'Who changed what and when. Admins see every change in the company; other team members see only their own.',
   'Furniture': 'Furniture and fittings supplied with each property or unit.',
   'Vacancies': 'Units and rooms available to let, with rent, availability date and description.',
   'Viewings': 'Viewing requests and bookings, including those made through website chat. Confirmations go out once you approve them.',

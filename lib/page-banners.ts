@@ -34,6 +34,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/performance': { title: 'Staff Performance', text: 'How each team member is doing: tasks finished, response times and targets.' },
   '/staff-centre/website-chats': { title: 'Website Chats', text: 'Conversations from your website. Novourq Cloud AI answers visitors, books viewings and saves leads.' },
   '/staff-centre/ask-grok': { title: 'Novourq Cloud AI', text: 'Ask Novourq Cloud AI anything about your business. It answers from your own records.' },
+  '/staff-centre/activity-log': { title: 'Activity Log', text: 'Who changed what, and when, across properties, people, money and operations. Admins see every change in the company. Everyone else sees their own.' },
   '/staff-centre/inbox': { title: 'Inbox', text: 'Every message from guests, tenants and landlords in one place. Replies are drafted for your approval.' },
   '/staff-centre/email': { title: 'Email', text: 'Email templates and sent messages, with your branding applied.' },
   '/staff-centre/ai-command-centre/snapshot': { title: 'Business snapshot', text: 'A one-page picture of your business and what Novourq Cloud AI is doing for it.' },
