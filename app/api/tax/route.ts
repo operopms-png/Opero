@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     entities: (ents.data ?? []).map((e: any) => ({ ...e, obligations: (obs.data ?? []).filter((o: any) => o.entity_id === e.id), banks: (banks.data ?? []).filter((b: any) => b.entity_id === e.id) })),
     transfers: xfers.data ?? [],
     audit: log.data ?? [],
-    agent: { key: AGENT, name: 'Remick Vincent', role: 'Finance and Tax Director', scopes: SCOPES.map(s => ({ ...s, granted: !!(perms.data ?? []).find((p: any) => p.scope === s.key)?.granted })) },
+    agent: { key: AGENT, name: 'Novourq Cloud AI', role: 'Finance and Tax Director', scopes: SCOPES.map(s => ({ ...s, granted: !!(perms.data ?? []).find((p: any) => p.scope === s.key)?.granted })) },
     approvals: appr.data ?? [],
     xeroStatuses: XERO,
   })
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     if (!scope) return bad('That permission is not available to this agent. Banking and payments are never granted here.')
     const granted = !!b.granted
     await db.from('ai_agent_permissions').upsert({ business_id: biz, agent_key: AGENT, scope: scope.key, granted, granted_by: granted ? actor : null, granted_at: granted ? new Date().toISOString() : null }, { onConflict: 'business_id,agent_key,scope' })
-    await audit(biz, actor, (granted ? 'granted ' : 'revoked ') + scope.key, null, { agent: 'Remick Vincent' })
+    await audit(biz, actor, (granted ? 'granted ' : 'revoked ') + scope.key, null, { agent: 'Novourq Cloud AI' })
     return NextResponse.json({ ok: true })
   }
 

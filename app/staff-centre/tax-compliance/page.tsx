@@ -36,7 +36,7 @@ export default function TaxCompliance() {
     try { await staffApi('/api/tax', body); close?.(); await load() } catch (e: any) { setErr(e.message) } finally { setBusy(false) }
   }
 
-  const tabs = [{ k: 'group', l: 'Group overview' }, ...(d?.entities ?? []).map((e: any) => ({ k: e.id, l: e.name })), { k: 'agent', l: 'Remick Vincent' }, { k: 'audit', l: 'Audit trail' }]
+  const tabs = [{ k: 'group', l: 'Group overview' }, ...(d?.entities ?? []).map((e: any) => ({ k: e.id, l: e.name })), { k: 'agent', l: 'Novourq Cloud AI' }, { k: 'audit', l: 'Audit trail' }]
   const ent = (d?.entities ?? []).find((e: any) => e.id === tab)
   const nameOf = (id: string) => (d?.entities ?? []).find((e: any) => e.id === id)?.name ?? ''
 
@@ -120,7 +120,7 @@ export default function TaxCompliance() {
           )}
 
           {tab === 'agent' && (
-            <Panel t="Remick Vincent · Finance and Tax Director (AI agent)">
+            <Panel t="Novourq Cloud AI · Finance and tax skill">
               <div style={{ color: '#667085', fontSize: 13, marginBottom: 10 }}>He can only do what you switch on here. Banking, payments and sensitive financial details are not available to him through this page.</div>
               {d.agent.scopes.map((s: any) => (
                 <div key={s.key} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 0', borderTop: '1px solid #EEF2F7' }}>
