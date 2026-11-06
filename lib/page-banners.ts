@@ -2,7 +2,7 @@
 // the page name and one plain line on what it does. Longest matching address wins.
 type B = { title: string; text: string }
 const PAGES: Record<string, B> = {
-  '/property': { title: 'Real Estate Intelligence', text: 'Estate agency, developments, short stays and property management in one place. Each page appears once; search or pick an area.' },
+  '/property': { title: 'Real Estate Intelligence', text: 'Estate agency, developments, short stays and property management in one place. Each page appears once; search or pick an area. At a glance, below, shows the headline numbers for each area.' },
   '/staff-centre/human-intelligence': { title: 'Human Intelligence Hub', text: 'Every people-run area of the business, grouped under four headings. Open any page from here.' },
   '/property/map': { title: 'Map', text: 'Every property and deal on one street map, coloured by status. Click a pin to see the tenant, rent and what needs doing. Development projects show as In development, with floors, plans and a 3D walk-through to showcase them.' },
   '/staff-centre/oversight': { title: 'Dashboard', text: 'Your whole business at a glance, with Novourq Cloud AI showing what it has done and what is waiting for you.' },

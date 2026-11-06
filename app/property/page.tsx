@@ -3,6 +3,7 @@
 // Every page is listed once under a function heading. The chips show which area holds the
 // records and open that area's version of the page.
 import { useMemo, useState } from 'react'
+import GlanceTiles from '@/components/property/GlanceTiles'
 import Link from 'next/link'
 import { useRole, ROLE_MODULES } from '@/lib/useRole'
 
@@ -171,6 +172,7 @@ export default function PropertyHub() {
             ) : <p style={{ fontSize: 14, color: C.muted }}>No Real Estate Intelligence pages are available for your role.</p>}
           </section>
         </div>
+        <GlanceTiles show={{ str: has('str'), pm: has('pm'), ea: has('ea'), dev: has('dev') }} />
       </div>
       <style>{`@media (max-width: 760px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; overflow-x: auto } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
     </div>
