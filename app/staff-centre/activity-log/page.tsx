@@ -9,13 +9,13 @@ import { supabase } from '../../../lib/supabase'
 
 const AREAS: Record<string, { label: string; tables: string[] }> = {
   all: { label: 'Everything', tables: [] },
-  property: { label: 'Properties and leases', tables: ['pm_properties', 'pm_units', 'pm_leases', 'pm_head_leases', 'pm_keys', 'pm_valuations'] },
+  property: { label: 'Properties and leases', tables: ['pm_properties', 'pm_units', 'pm_leases', 'pm_head_leases', 'pm_keys', 'pm_valuations', 'pm_rent_reviews', 'pm_service_charges'] },
   people: { label: 'Owners and tenants', tables: ['pm_landlords', 'pm_tenants', 'pm_referrals'] },
   money: { label: 'Money', tables: ['pm_rent_payments', 'pm_transactions', 'invoices'] },
   ops: { label: 'Operations and legal', tables: ['pm_maintenance', 'pm_documents', 'pm_insurance_policies', 'pm_legal_cases'] },
 }
 const NAMES: Record<string, string> = {
-  pm_properties: 'Property', pm_units: 'Unit', pm_leases: 'Lease', pm_head_leases: 'Head lease', pm_keys: 'Key set', pm_valuations: 'Valuation',
+  pm_properties: 'Property', pm_units: 'Unit', pm_leases: 'Lease', pm_head_leases: 'Head lease', pm_keys: 'Key set', pm_valuations: 'Valuation', pm_rent_reviews: 'Rent review', pm_service_charges: 'Service charge', pm_planned_maintenance: 'Planned maintenance job', pm_emergency_contacts: 'Emergency contact',
   pm_landlords: 'Owner', pm_tenants: 'Tenant', pm_referrals: 'Referral', pm_rent_payments: 'Rent payment', pm_transactions: 'Bank transaction',
   invoices: 'Invoice', pm_maintenance: 'Maintenance job', pm_documents: 'Document', pm_insurance_policies: 'Insurance policy', pm_legal_cases: 'Legal matter',
 }

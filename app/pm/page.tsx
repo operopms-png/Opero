@@ -1,4 +1,6 @@
 'use client'
+import RecordTab from '@/components/pm/RecordTab'
+import { RENT_REVIEWS, SERVICE_CHARGES, PLANNED_MAINTENANCE, EMERGENCY_CONTACTS } from '@/lib/pm-record-tabs'
 import { Stars } from '@/components/portal/FeedbackForm'
 import { useEffect, useState, Suspense } from 'react'
 import TabBanner from '@/components/TabBanner'
@@ -15,7 +17,7 @@ import { SITE_HOST } from '@/lib/brand'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
 const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
-const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Landlord Feedback','Tenant Feedback','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Rent Reviews','Service Charges','Planned Maintenance','Emergency Contacts','Landlord Feedback','Tenant Feedback','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -85,6 +87,10 @@ const TAB_INTROS: Record<string,string> = {
   'Insurance': 'the insurance policies themselves: buildings, contents and public liability cover, with the insurer, policy number, premium and renewal date. Compliance tracks certificates; this tab tracks the policies that landlords and insurers ask to see. Renewals also appear on the Deadlines tab.',
   'Legal & Disputes': 'a record of legal matters: eviction notices, rent arrears claims, deposit disputes and complaints, with the status and the next deadline. This is a register only. It does not give legal advice or send anything to a court.',
   'Referrals': 'people who have referred a landlord, tenant or guest to you, who they referred, how far it got and any reward owed. Rewards are recorded here only. Nothing is paid from this tab.',
+  'Rent Reviews': 'each lease with its next rent review date, the current and proposed rent and where the notice has got to.',
+  'Service Charges': 'service charge, ground rent and sinking fund you pay or collect on each property, with due dates and what is paid.',
+  'Planned Maintenance': 'recurring jobs such as boiler services, gutters and legionella flushing, with the next due date and who does them.',
+  'Emergency Contacts': 'who to call when something urgent happens at a property: plumber, electrician, gas engineer, key holder and out-of-hours numbers.',
   'Valuations': 'the value of each property over time, from valuations by an agent or surveyor or your own estimate, with the change since the last one.',
   'Landlord Feedback': 'ratings and comments that landlords write in the Feedback tab of their owner portal. Mark each one Seen or Actioned so nothing is missed.',
   'Tenant Feedback': 'ratings and comments that tenants write in the Feedback tab of their tenant portal. Mark each one Seen or Actioned so nothing is missed.',
@@ -117,12 +123,12 @@ const TAB_INTROS: Record<string,string> = {
 type PmNavGroup = { label: string; items?: string[]; sub?: { label: string; items: string[] }[] }
 const PM_NAV_GROUPS: PmNavGroup[] = [
   { label: 'PROPERTY MANAGEMENT', items: ['Property Management'], sub: [
-    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Referrals','Landlord Feedback','Tenant Feedback'] },
+    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Rent Reviews','Referrals','Landlord Feedback','Tenant Feedback'] },
     { label: 'Compliance', items: ['Compliance','Tenant Checks','Deposits','HMO Rooms','Deadlines','Insurance','Legal & Disputes'] },
-    { label: 'Operations', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
+    { label: 'Operations', items: ['Maintenance','Planned Maintenance','Contractors','Emergency Contacts','Cleaning','Inspections','Inventories','Keys','Utilities'] },
     { label: 'Documents', items: ['Documents'] },
     { label: 'Company', items: ['Company SOPs','Contract Templates','Audit Log'] },
-    { label: 'Finance', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Valuations','Exchange Rates'] },
+    { label: 'Finance', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Valuations','Service Charges','Exchange Rates'] },
     { label: 'Reports', items: ['Landlord Reports','Reports','Accounting Export','Unit Profit'] },
     { label: 'Comms', items: ['Messages'] },
   ] },
@@ -359,6 +365,7 @@ function PMPageInner() {
   const [legalCases, setLegalCases] = useState<any[]>([])
   const [referrals, setReferrals] = useState<any[]>([])
   const [valuations, setValuations] = useState<any[]>([])
+  const [acctId, setAcctId] = useState('')
   const [feedback, setFeedback] = useState<any[]>([])
   const [replyFor, setReplyFor] = useState<string|null>(null)
   const [replyText, setReplyText] = useState('')
@@ -485,6 +492,7 @@ function PMPageInner() {
   async function loadAll(uid?: string) {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user ? await getAccountId(user) : undefined }
+    if (userId) setAcctId(userId)
     const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp,comp,bk,tx,rtr,bank,bldg] = await Promise.all([
       supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_units').select('*,pm_properties(name),pm_buildings(name)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -1088,7 +1096,7 @@ function PMPageInner() {
             const renderNavItem = (t:string) => {
               const locked = !!(allowedTab && t !== allowedTab)
               const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? [...complianceRecords,...strCompliance].filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
-              return <button key={t} onClick={()=>{ if(t==='Developments'){ window.location.assign('/dev'); return } if(t==='Vacation Rentals'){ window.location.assign('/str'); return } if(t==='Estate Agency'){ window.location.assign('/estate'); return } if(!locked) setTab(t) }} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+              return <button key={t} onClick={()=>{ if(t==='Developments'){ window.location.assign('/dev'); return } if(t==='Vacation Rentals'){ window.location.assign('/str'); return } if(t==='Estate Agency'){ window.location.assign('/estate'); return } if(t==='Contractors'){ window.location.assign('/pm/vendors'); return } if(!locked) setTab(t) }} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
             }
             return PM_NAV_GROUPS.map(group=>(
               <div key={group.label}>
@@ -2201,6 +2209,11 @@ function PMPageInner() {
             </div>
           </div>
         )}
+
+        {tab==='Rent Reviews'&&<RecordTab cfg={RENT_REVIEWS} userId={acctId} properties={properties}/>}
+        {tab==='Service Charges'&&<RecordTab cfg={SERVICE_CHARGES} userId={acctId} properties={properties}/>}
+        {tab==='Planned Maintenance'&&<RecordTab cfg={PLANNED_MAINTENANCE} userId={acctId} properties={properties}/>}
+        {tab==='Emergency Contacts'&&<RecordTab cfg={EMERGENCY_CONTACTS} userId={acctId} properties={properties}/>}
 
         {tab==='Valuations'&&(
           <div>
