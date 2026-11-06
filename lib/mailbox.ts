@@ -1,4 +1,4 @@
-// Connected mailboxes (Bluehost or any IMAP/SMTP host): encryption of the
+// Connected mailboxes (any IMAP/SMTP provider): encryption of the
 // stored password, access checks, syncing new mail into mailbox_messages,
 // and sending through the mailbox's own SMTP server (then filing a copy in
 // its Sent folder so it shows in the normal mail app too).
@@ -81,7 +81,7 @@ export function friendlyError(e: any): string {
   if (/auth|login|credentials|password|535|AUTHENTICATIONFAILED/i.test(m)) return 'The email or password was not accepted by the mail server.'
   if (/ENOTFOUND|getaddrinfo/i.test(m)) return 'Could not find that mail server. Check the server name.'
   if (/ECONNREFUSED|ETIMEDOUT|timeout/i.test(m)) return 'Could not reach the mail server on that port.'
-  if (/certificate|self.signed|altname/i.test(m)) return 'The mail server’s security certificate does not match that server name. Try the server name shown in Bluehost → Email → Connect devices.'
+  if (/certificate|self.signed|altname/i.test(m)) return 'The mail server’s security certificate does not match that server name. Check the server names with your email provider (for hosting accounts, see Email, then Connect devices, in the control panel).'
   return m.slice(0, 300)
 }
 

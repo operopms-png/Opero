@@ -1,5 +1,5 @@
 'use client'
-// Email: the company's real mailboxes (Bluehost IMAP/SMTP) inside the portal.
+// Email: the company's real mailboxes (any IMAP/SMTP provider) inside the portal.
 // Read the inbox, reply, forward and compose from any connected address;
 // admins connect mailboxes and choose which staff can see each one.
 // All mail goes through /api/mailboxes, which checks access server-side.
@@ -254,11 +254,11 @@ export default function EmailPage() {
               <div style={{ fontSize: 13, color: '#89CFF0', maxWidth: 760, lineHeight: 1.5 }}>The opening line, sign-off and footer that go on every email. Click any words in the preview to change them, then save. You can also change the footer for a single email while writing it.</div>
             </div>
             <div style={{ padding: '20px 28px 40px' }}>
-              <TemplatesEditor templates={templates} onChange={setTemplates} flash={flash} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} isAdmin={isAdmin} />
+              <TemplatesEditor templates={templates} onChange={setTemplates} flash={flash} sampleEmail={connected[0]?.email ?? 'hello@yourcompany.com'} isAdmin={isAdmin} />
             </div>
           </div>
         ) : view === 'settings' ? (
-          <Settings boxes={boxes} team={team} onConnect={setConnectFor} onAccess={setAccessFor} reload={loadBoxes} flash={flash} templates={templates} onTemplates={setTemplates} sampleEmail={connected[0]?.email ?? 'hello@sangstersgroup.com'} />
+          <Settings boxes={boxes} team={team} onConnect={setConnectFor} onAccess={setAccessFor} reload={loadBoxes} flash={flash} templates={templates} onTemplates={setTemplates} sampleEmail={connected[0]?.email ?? 'hello@yourcompany.com'} />
         ) : (
           <>
             {/* Message list */}
@@ -445,7 +445,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
       <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Mailbox settings</h1>
-          <div style={{ fontSize: 13, color: '#89CFF0', maxWidth: 760, lineHeight: 1.5 }}>Connect each address with its email password (from Bluehost → Email). Passwords are stored encrypted and never shown again. Admins see every mailbox; choose which staff can see each one.</div>
+          <div style={{ fontSize: 13, color: '#89CFF0', maxWidth: 760, lineHeight: 1.5 }}>Connect each address with its email password. Gmail, Microsoft 365, website hosting and other providers all work: you pick yours when you press Connect. Passwords are stored encrypted and never shown again. Admins see every mailbox; choose which staff can see each one.</div>
         </div>
         <button onClick={() => setAdding(true)} style={btn('gold')}>+ Add mailbox</button>
       </div>
@@ -453,7 +453,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
         {adding && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center' }}>
             <select value={newKind} onChange={e => setNewKind(e.target.value)} style={{ ...input, width: 170 }}><option value="shared">Department mailbox</option><option value="staff">Staff member</option></select>
-            <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="name@sangstersgroup.com" style={{ ...input, width: 280 }} autoFocus />
+            <input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="name@yourcompany.com" style={{ ...input, width: 280 }} autoFocus />
             {newKind === 'staff' && <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Their name" style={{ ...input, width: 180 }} />}
             <button onClick={async () => { await act({ action: 'add', email: newEmail, kind: newKind, display_name: newName || undefined }, 'Mailbox added'); setAdding(false); setNewEmail(''); setNewName(''); setNewKind('shared') }} style={btn('gold', true)}>Add</button>
             <button onClick={() => setAdding(false)} style={btn('ghost', true)}>Cancel</button>
@@ -499,7 +499,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
                 <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <button onClick={() => onConnect(b)} style={btn(b.status === 'connected' ? 'ghost' : 'gold', true)}>{b.status === 'connected' ? 'Reconnect' : 'Connect'}</button>
                   {b.status === 'connected'
-                    ? <button onClick={() => confirm(`Disconnect ${b.email}? Its emails will be removed from the portal (nothing is deleted from Bluehost).`) && act({ action: 'update', id: b.id, disconnect: true }, 'Disconnected')} style={btn('ghost', true)}>Disconnect</button>
+                    ? <button onClick={() => confirm(`Disconnect ${b.email}? Its emails will be removed from the portal (nothing is deleted from your email provider).`) && act({ action: 'update', id: b.id, disconnect: true }, 'Disconnected')} style={btn('ghost', true)}>Disconnect</button>
                     : <button onClick={() => confirm(`Remove ${b.email} from the portal?`) && act({ action: 'remove', id: b.id }, 'Removed')} title="Remove" style={{ ...btn('danger', true), padding: '5px 8px' }}>×</button>}
                 </div>
               </div>
@@ -511,12 +511,38 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
   )
 }
 
+const PROVIDERS: { id: string; label: string; imap?: [string, number]; smtp?: [string, number]; help: string }[] = [
+  { id: 'host', label: 'Website hosting (Bluehost, cPanel, GoDaddy and similar)', help: 'Use the password for this address in your hosting account (the one you use for webmail). The server names are filled in from your address. If it will not connect, find the exact names in your hosting control panel under Email, then Connect devices, and show the server settings below.' },
+  { id: 'google', label: 'Gmail or Google Workspace', imap: ['imap.gmail.com', 993], smtp: ['smtp.gmail.com', 465], help: 'Google needs an app password, not your normal password. Turn on 2-step verification for the account, then create an app password at myaccount.google.com/apppasswords and paste it below. Workspace admins may need to allow app passwords first.' },
+  { id: 'microsoft', label: 'Microsoft 365 or Outlook', imap: ['outlook.office365.com', 993], smtp: ['smtp.office365.com', 587], help: 'Use the mailbox password, or an app password if the account has extra security. Many Microsoft 365 accounts block this by default. If it will not connect, ask your Microsoft 365 admin to allow IMAP and authenticated SMTP for this mailbox.' },
+  { id: 'other', label: 'Another provider', help: 'Enter the incoming (IMAP) and outgoing (SMTP) server names and ports from your email provider, and use the mailbox password.' },
+]
+function guessProvider(email: string) {
+  const d = (email.split('@')[1] || '').toLowerCase()
+  if (/^(gmail|googlemail)\.com$/.test(d)) return 'google'
+  if (/^(outlook|hotmail|live|msn)\./.test(d) || /onmicrosoft\.com$/.test(d)) return 'microsoft'
+  return 'host'
+}
+
 function ConnectModal({ mb, onClose, onDone }: any) {
   const [password, setPassword] = useState('')
   const [adv, setAdv] = useState(false)
-  const [cfg, setCfg] = useState({ imap_host: mb.imap_host, imap_port: mb.imap_port, smtp_host: mb.smtp_host, smtp_port: mb.smtp_port, username: mb.username ?? '' })
+  const [provider, setProvider] = useState(() => guessProvider(mb.email || ''))
+  const [cfg, setCfg] = useState(() => {
+    const p = PROVIDERS.find(x => x.id === guessProvider(mb.email || ''))!
+    return { imap_host: p.imap?.[0] ?? mb.imap_host, imap_port: p.imap?.[1] ?? mb.imap_port, smtp_host: p.smtp?.[0] ?? mb.smtp_host, smtp_port: p.smtp?.[1] ?? mb.smtp_port, username: mb.username ?? '' }
+  })
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+  const domain = (mb.email || '').split('@')[1] || ''
+  function pick(id: string) {
+    setProvider(id)
+    const p = PROVIDERS.find(x => x.id === id)!
+    if (p.imap && p.smtp) { setCfg(c => ({ ...c, imap_host: p.imap![0], imap_port: p.imap![1], smtp_host: p.smtp![0], smtp_port: p.smtp![1] })); setAdv(false) }
+    else if (id === 'host') { setCfg(c => ({ ...c, imap_host: `mail.${domain}`, imap_port: 993, smtp_host: `mail.${domain}`, smtp_port: 465 })); setAdv(false) }
+    else setAdv(true)
+  }
+  const cur = PROVIDERS.find(x => x.id === provider)!
   async function go() {
     setBusy(true); setErr('')
     try { const d = await api('', { action: 'connect', id: mb.id, password, ...cfg }); onDone(d.synced ?? 0) } catch (e: any) { setErr(e.message) }
@@ -524,8 +550,12 @@ function ConnectModal({ mb, onClose, onDone }: any) {
   }
   return (
     <Modal title={`Connect ${mb.email}`} onClose={onClose}>
-      <div style={{ fontSize: 13, color: C.muted, marginBottom: 14, lineHeight: 1.5 }}>Enter this mailbox’s password — the same one you use to log in to Bluehost webmail for this address. We’ll test it, then load recent emails.</div>
-      <label style={label}>Password</label>
+      <label style={label}>Where is this mailbox hosted?</label>
+      <select value={provider} onChange={e => pick(e.target.value)} style={{ ...input, cursor: 'pointer' }}>
+        {PROVIDERS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+      </select>
+      <div style={{ fontSize: 13, color: C.muted, margin: '10px 0 14px', lineHeight: 1.5 }}>{cur.help} We will test it, then load recent emails. Your password is stored encrypted and never shown again.</div>
+      <label style={label}>{provider === 'google' ? 'App password' : 'Password'}</label>
       <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && password && go()} autoFocus autoComplete="new-password" style={input} />
       <button onClick={() => setAdv(a => !a)} style={{ border: 'none', background: 'none', color: C.goldDark, fontSize: 13, cursor: 'pointer', padding: '10px 0 0', fontFamily: 'inherit' }}>{adv ? 'Hide' : 'Show'} server settings</button>
       {adv && (
