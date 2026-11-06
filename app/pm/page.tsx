@@ -14,7 +14,7 @@ import { SITE_HOST } from '@/lib/brand'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
 const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
-const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -82,6 +82,9 @@ const TAB_INTROS: Record<string,string> = {
   'HMO Rooms': 'the rooms in each house in multiple occupation, with the maximum number of occupants, the licence expiry and the tenant in each room.',
   'Deadlines': 'one list of everything due soon across the portfolio: head lease expiry and break dates, HMO licences, compliance certificates, insurance renewals, tenancy end dates and bill due dates. Items due within 60 days, or already overdue, are shown in red. Dates come from the records in each tab, so update the source record to change a deadline.',
   'Insurance': 'the insurance policies themselves: buildings, contents and public liability cover, with the insurer, policy number, premium and renewal date. Compliance tracks certificates; this tab tracks the policies that landlords and insurers ask to see. Renewals also appear on the Deadlines tab.',
+  'Legal & Disputes': 'a record of legal matters: eviction notices, rent arrears claims, deposit disputes and complaints, with the status and the next deadline. This is a register only. It does not give legal advice or send anything to a court.',
+  'Referrals': 'people who have referred a landlord, tenant or guest to you, who they referred, how far it got and any reward owed. Rewards are recorded here only. Nothing is paid from this tab.',
+  'Valuations': 'the value of each property over time, from valuations by an agent or surveyor or your own estimate, with the change since the last one.',
   'Maintenance': 'repair and maintenance tickets for each property, with the issue, the priority and the status until it is closed.',
   'Cleaning': 'cleaning jobs for short stays and changeovers, with the date, the property and the person assigned.',
   'Inspections': 'property inspections: the date, the inspector and any issues found. Inspections are not the same as inventories.',
@@ -111,12 +114,12 @@ const TAB_INTROS: Record<string,string> = {
 type PmNavGroup = { label: string; items?: string[]; sub?: { label: string; items: string[] }[] }
 const PM_NAV_GROUPS: PmNavGroup[] = [
   { label: 'PROPERTY MANAGEMENT', items: ['Property Management'], sub: [
-    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices'] },
-    { label: 'Compliance', items: ['Compliance','Tenant Checks','Deposits','HMO Rooms','Deadlines','Insurance'] },
+    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Referrals'] },
+    { label: 'Compliance', items: ['Compliance','Tenant Checks','Deposits','HMO Rooms','Deadlines','Insurance','Legal & Disputes'] },
     { label: 'Operations', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
     { label: 'Documents', items: ['Documents'] },
     { label: 'Company', items: ['Company SOPs','Contract Templates','Audit Log'] },
-    { label: 'Finance', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Exchange Rates'] },
+    { label: 'Finance', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Valuations','Exchange Rates'] },
     { label: 'Reports', items: ['Landlord Reports','Reports','Accounting Export','Unit Profit'] },
     { label: 'Comms', items: ['Messages'] },
   ] },
@@ -350,6 +353,9 @@ function PMPageInner() {
   const [auditFilter, setAuditFilter] = useState<string>('All')
   const [utilities, setUtilities] = useState<any[]>([])
   const [insurancePolicies, setInsurancePolicies] = useState<any[]>([])
+  const [legalCases, setLegalCases] = useState<any[]>([])
+  const [referrals, setReferrals] = useState<any[]>([])
+  const [valuations, setValuations] = useState<any[]>([])
   const [fxRates, setFxRates] = useState<any[]>([])
   const [commTemplates, setCommTemplates] = useState<any[]>([])
   const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
@@ -533,6 +539,9 @@ function PMPageInner() {
     supabase.from('pm_audit_log').select('*').eq('user_id',userId).order('created_at',{ascending:false}).limit(200).then(({data})=>setAuditLogs(data??[]))
     supabase.from('pm_utilities').select('*,pm_properties(name)').eq('user_id',userId).order('next_bill_date',{ascending:true}).then(({data})=>setUtilities(data??[]))
     supabase.from('pm_insurance_policies').select('*,pm_properties(name)').eq('user_id',userId).order('renewal_date',{ascending:true}).then(({data})=>setInsurancePolicies(data??[]))
+    supabase.from('pm_legal_cases').select('*,pm_properties(name)').eq('user_id',userId).order('next_deadline',{ascending:true,nullsFirst:false}).then(({data})=>setLegalCases(data??[]))
+    supabase.from('pm_referrals').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setReferrals(data??[]))
+    supabase.from('pm_valuations').select('*,pm_properties(name,currency)').eq('user_id',userId).order('valuation_date',{ascending:false}).then(({data})=>setValuations(data??[]))
     supabase.from('pm_fx_rates').select('*').eq('user_id',userId).order('currency',{ascending:true}).then(({data})=>setFxRates(data??[]))
     supabase.from('guest_comm_templates').select('*').eq('user_id',userId).then(({data})=>setCommTemplates(data??[]))
     supabase.from('str_guest_messages').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setGuestMessages(data??[]))
@@ -1116,6 +1125,9 @@ function PMPageInner() {
             {tab==='Utilities'&&<button onClick={()=>{setModal('utility');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add bill account</button>}
             {tab==='Exchange Rates'&&<button onClick={()=>{setModal('fxRate');setForm({currency:'JMD'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Set rate</button>}
             {tab==='Insurance'&&<button onClick={()=>{setModal('insurance');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add policy</button>}
+            {tab==='Legal & Disputes'&&<button onClick={()=>{setModal('legalCase');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add matter</button>}
+            {tab==='Referrals'&&<button onClick={()=>{setModal('referral');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add referral</button>}
+            {tab==='Valuations'&&<button onClick={()=>{setModal('valuation');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add valuation</button>}
             {tab==='Keys'&&<button onClick={()=>{setModal('keySet');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add key set</button>}
             {tab==='Reviews'&&<button onClick={()=>{setModal('review');setForm({platform:'Airbnb',responded:false});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Log Review</button>}
             {tab==='Bookings'&&<button onClick={()=>{setModal('booking');setForm({status:'confirmed'});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ New Booking</button>}
@@ -2078,6 +2090,7 @@ function PMPageInner() {
             ...complianceRecords.filter((c:any)=>c.expiry_date).map((c:any)=>({date:c.expiry_date,label:c.type,prop:c.pm_properties?.name??'Business'})),
             ...strCompliance.filter((c:any)=>c.expiry_date).map((c:any)=>({date:c.expiry_date,label:c.type,prop:c.properties?.name??'Business'})),
             ...insurancePolicies.filter((p:any)=>p.renewal_date).map((p:any)=>({date:p.renewal_date,label:`${p.policy_type} insurance renewal`,prop:p.pm_properties?.name})),
+            ...legalCases.filter((c:any)=>c.next_deadline&&!['Resolved','Closed'].includes(c.status)).map((c:any)=>({date:c.next_deadline,label:`Legal: ${c.title}`,prop:c.pm_properties?.name})),
             ...leases.filter((l:any)=>l.end_date).map((l:any)=>({date:l.end_date,label:'Tenancy ends',prop:l.pm_properties?.name})),
             ...utilities.filter((u:any)=>u.next_bill_date).map((u:any)=>({date:u.next_bill_date,label:`${u.service} bill due`,prop:u.pm_properties?.name})),
           ].filter((x:any)=>x.date).map((x:any)=>({...x,days:Math.round((new Date(x.date).getTime()-now)/86400000)})).sort((a:any,b:any)=>a.days-b.days)
@@ -2125,6 +2138,85 @@ function PMPageInner() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {tab==='Legal & Disputes'&&(
+          <div>
+            <div style={{fontSize:12,color:'#667085',marginBottom:10}}>A register of legal matters. It does not give legal advice or contact anyone. Take advice from a solicitor before acting.</div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',gridTemplateColumns:'1fr 1.1fr 1.4fr 100px 150px 110px'}}>
+                <span>Property</span><span>Type</span><span>Matter</span><span>Status</span><span>Next deadline</span><span></span>
+              </div>
+              {legalCases.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No legal matters recorded yet</div>:
+              legalCases.map((x:any)=>{
+                const days=x.next_deadline?Math.round((new Date(x.next_deadline).getTime()-Date.now())/86400000):null
+                const live=!['Resolved','Closed'].includes(x.status)
+                return (
+                <div key={x.id} style={{display:'grid',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center',gridTemplateColumns:'1fr 1.1fr 1.4fr 100px 150px 110px'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{x.pm_properties?.name??'—'}</span>
+                  <span>{x.case_type}</span>
+                  <span>{x.title}{x.party?<span style={{color:'#98A2B3'}}> · {x.party}</span>:null}</span>
+                  <span>{x.status}</span>
+                  <span style={{color:live&&days!=null&&days<=14?'#B42318':'#344054',fontWeight:live&&days!=null&&days<=14?600:400}}>{x.next_deadline?`${x.next_deadline}${live&&days!=null?(days<0?` (${-days}d overdue)`:` (${days}d)`):''}`:'—'}</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('legalCase',{...x,amount:x.amount??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_legal_cases',x.id,setLegalCases)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>)})}
+            </div>
+          </div>
+        )}
+
+        {tab==='Referrals'&&(
+          <div>
+            <div style={{fontSize:12,color:'#667085',marginBottom:10}}>Rewards are recorded here only. Nothing is paid from this tab.</div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',gridTemplateColumns:'1.1fr 1.1fr 100px 100px 100px 110px 110px'}}>
+                <span>Referred by</span><span>Referred</span><span>Status</span><span>Reward</span><span>Reward</span><span>Date</span><span></span>
+              </div>
+              {referrals.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No referrals recorded yet</div>:
+              referrals.map((x:any)=>(
+                <div key={x.id} style={{display:'grid',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center',gridTemplateColumns:'1.1fr 1.1fr 100px 100px 100px 110px 110px'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{x.referrer_name}{x.referrer_type?<span style={{color:'#98A2B3'}}> · {x.referrer_type}</span>:null}</span>
+                  <span>{x.referred_name}</span>
+                  <span>{x.status}</span>
+                  <span>{x.reward_amount!=null?`£${Number(x.reward_amount).toLocaleString()}`:'—'}</span>
+                  <span>{x.reward_status}</span>
+                  <span>{x.referral_date??'—'}</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('referral',{...x,reward_amount:x.reward_amount??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_referrals',x.id,setReferrals)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>))}
+            </div>
+          </div>
+        )}
+
+        {tab==='Valuations'&&(
+          <div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              <div style={{display:'grid',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',gridTemplateColumns:'1.3fr 110px 130px 130px 1fr 110px'}}>
+                <span>Property</span><span>Date</span><span>Value</span><span>Change</span><span>Basis</span><span></span>
+              </div>
+              {valuations.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No valuations recorded yet</div>:
+              valuations.map((x:any)=>{
+                const sym=x.pm_properties?.currency==='JMD'?'J$':'£'
+                const prev=valuations.filter((v:any)=>v.property_id===x.property_id&&v.valuation_date<x.valuation_date).sort((a:any,b:any)=>b.valuation_date.localeCompare(a.valuation_date))[0]
+                const diff=prev?Number(x.value)-Number(prev.value):null
+                return (
+                <div key={x.id} style={{display:'grid',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center',gridTemplateColumns:'1.3fr 110px 130px 130px 1fr 110px'}}>
+                  <span style={{fontWeight:500,color:'#323338'}}>{x.pm_properties?.name??'—'}</span>
+                  <span>{x.valuation_date}</span>
+                  <span style={{fontWeight:600}}>{sym}{Number(x.value).toLocaleString()}</span>
+                  <span style={{color:diff==null?'#98A2B3':diff>=0?'#067647':'#B42318'}}>{diff==null?'—':`${diff>=0?'+':'-'}${sym}${Math.abs(diff).toLocaleString()}`}</span>
+                  <span>{x.basis??'—'}{x.valued_by?<span style={{color:'#98A2B3'}}> · {x.valued_by}</span>:null}</span>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>openEdit('valuation',{...x,value:x.value??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>del('pm_valuations',x.id,setValuations)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                  </div>
+                </div>)})}
             </div>
           </div>
         )}
@@ -3900,6 +3992,83 @@ function PMPageInner() {
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
             <button onClick={()=>save('pm_insurance_policies',{property_id:form.property_id||null,policy_type:form.policy_type,insurer:form.insurer||null,policy_number:form.policy_number||null,premium:form.premium===''||form.premium==null||isNaN(Number(form.premium))?null:Number(form.premium),renewal_date:form.renewal_date||null,notes:form.notes||null})} disabled={saving||!form.property_id||!form.policy_type} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.property_id||!form.policy_type?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add policy'}</button>
+          </div>
+        </Modal>
+      )}
+      {modal==='legalCase'&&(
+        <Modal title={editId?'Edit matter':'Add legal matter'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">None</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Type *</label><select style={{...inp,cursor:'pointer'}} value={form.case_type??''} onChange={e=>setForm({...form,case_type:e.target.value})}><option value="">Select…</option><option>Eviction notice</option><option>Rent arrears claim</option><option>Deposit dispute</option><option>Tenant complaint</option><option>Landlord dispute</option><option>Court case</option><option>Other</option></select></div>
+              <div><label style={lbl}>Matter *</label><input type="text" style={inp} value={form.title??''} onChange={e=>setForm({...form,title:e.target.value})}/></div>
+              <div><label style={lbl}>Other party</label><input type="text" style={inp} value={form.party??''} onChange={e=>setForm({...form,party:e.target.value})}/></div>
+              <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??''} onChange={e=>setForm({...form,status:e.target.value})}><option value="">Select…</option><option>Open</option><option>Waiting</option><option>Court</option><option>Resolved</option><option>Closed</option></select></div>
+              <div><label style={lbl}>Opened</label><input type="date" style={inp} value={form.opened_date??''} onChange={e=>setForm({...form,opened_date:e.target.value})}/></div>
+              <div><label style={lbl}>Next deadline</label><input type="date" style={inp} value={form.next_deadline??''} onChange={e=>setForm({...form,next_deadline:e.target.value})}/></div>
+              <div><label style={lbl}>Deadline is for</label><input type="text" style={inp} value={form.deadline_note??''} onChange={e=>setForm({...form,deadline_note:e.target.value})}/></div>
+              <div><label style={lbl}>Amount (£)</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>save('pm_legal_cases',{property_id:form.property_id||null,case_type:form.case_type,title:form.title,party:form.party||null,status:form.status||'Open',opened_date:form.opened_date||null,next_deadline:form.next_deadline||null,deadline_note:form.deadline_note||null,amount:form.amount===''||form.amount==null||isNaN(Number(form.amount))?null:Number(form.amount),notes:form.notes||null})} disabled={saving||!form.case_type||!form.title} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer'}}>{saving?'Saving…':'Save'}</button>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',color:'#344054',fontSize:14,cursor:'pointer'}}>Cancel</button>
+          </div>
+        </Modal>
+      )}
+      {modal==='referral'&&(
+        <Modal title={editId?'Edit referral':'Add referral'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">None</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Referred by *</label><input type="text" style={inp} value={form.referrer_name??''} onChange={e=>setForm({...form,referrer_name:e.target.value})}/></div>
+              <div><label style={lbl}>Referrer is a</label><select style={{...inp,cursor:'pointer'}} value={form.referrer_type??''} onChange={e=>setForm({...form,referrer_type:e.target.value})}><option value="">Select…</option><option>Landlord</option><option>Tenant</option><option>Guest</option><option>Agent</option><option>Contractor</option><option>Other</option></select></div>
+              <div><label style={lbl}>Person referred *</label><input type="text" style={inp} value={form.referred_name??''} onChange={e=>setForm({...form,referred_name:e.target.value})}/></div>
+              <div><label style={lbl}>Their phone or email</label><input type="text" style={inp} value={form.referred_contact??''} onChange={e=>setForm({...form,referred_contact:e.target.value})}/></div>
+              <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??''} onChange={e=>setForm({...form,status:e.target.value})}><option value="">Select…</option><option>New</option><option>In progress</option><option>Converted</option><option>Lost</option></select></div>
+              <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.referral_date??''} onChange={e=>setForm({...form,referral_date:e.target.value})}/></div>
+              <div><label style={lbl}>Reward (£)</label><input type="number" style={inp} value={form.reward_amount??''} onChange={e=>setForm({...form,reward_amount:e.target.value})}/></div>
+              <div><label style={lbl}>Reward status</label><select style={{...inp,cursor:'pointer'}} value={form.reward_status??''} onChange={e=>setForm({...form,reward_status:e.target.value})}><option value="">Select…</option><option>Not due</option><option>Due</option><option>Paid</option></select></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>save('pm_referrals',{property_id:form.property_id||null,referrer_name:form.referrer_name,referrer_type:form.referrer_type||null,referred_name:form.referred_name,referred_contact:form.referred_contact||null,status:form.status||'New',reward_amount:form.reward_amount===''||form.reward_amount==null||isNaN(Number(form.reward_amount))?null:Number(form.reward_amount),reward_status:form.reward_status||'Not due',referral_date:form.referral_date||null,notes:form.notes||null})} disabled={saving||!form.referrer_name||!form.referred_name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer'}}>{saving?'Saving…':'Save'}</button>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',color:'#344054',fontSize:14,cursor:'pointer'}}>Cancel</button>
+          </div>
+        </Modal>
+      )}
+      {modal==='valuation'&&(
+        <Modal title={editId?'Edit valuation':'Add valuation'} onClose={()=>{setModal(null);setEditId(null);setForm({})}}>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div><label style={lbl}>Property *</label>
+              <select style={{...inp,cursor:'pointer'}} value={form.property_id??''} onChange={e=>setForm({...form,property_id:e.target.value})}>
+                <option value="">Select property…</option>
+                {properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+              <div><label style={lbl}>Valuation date *</label><input type="date" style={inp} value={form.valuation_date??''} onChange={e=>setForm({...form,valuation_date:e.target.value})}/></div>
+              <div><label style={lbl}>Value *</label><input type="number" style={inp} value={form.value??''} onChange={e=>setForm({...form,value:e.target.value})}/></div>
+              <div><label style={lbl}>Basis</label><select style={{...inp,cursor:'pointer'}} value={form.basis??''} onChange={e=>setForm({...form,basis:e.target.value})}><option value="">Select…</option><option>Estate agent</option><option>Surveyor</option><option>Bank</option><option>Own estimate</option><option>Sale price</option></select></div>
+              <div><label style={lbl}>Valued by</label><input type="text" style={inp} value={form.valued_by??''} onChange={e=>setForm({...form,valued_by:e.target.value})}/></div>
+            </div>
+            <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:24}}>
+            <button onClick={()=>save('pm_valuations',{property_id:form.property_id||null,valuation_date:form.valuation_date,value:Number(form.value),basis:form.basis||null,valued_by:form.valued_by||null,notes:form.notes||null})} disabled={saving||!form.property_id||!form.valuation_date||form.value===''||form.value==null||isNaN(Number(form.value))} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer'}}>{saving?'Saving…':'Save'}</button>
+            <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',color:'#344054',fontSize:14,cursor:'pointer'}}>Cancel</button>
           </div>
         </Modal>
       )}

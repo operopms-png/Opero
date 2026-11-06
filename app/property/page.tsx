@@ -35,6 +35,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Vacancies', targets: [pm('Vacancies'), ea('Vacancies')] },
     { name: 'Viewings', targets: [pm('Viewings'), ea('Viewings')] },
     { name: 'Renewals and notices', targets: [pm('Renewals & Notices')] },
+    { name: 'Referrals', targets: [pm('Referrals')] },
     { name: 'Furniture', targets: [pm('Furniture')] },
   ] },
   { name: 'Short stays', note: 'Guests and bookings', items: [
@@ -57,6 +58,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Tenant checks', targets: [pm('Tenant Checks'), ea('Tenant Checks')] },
     { name: 'Deposits', targets: [pm('Deposits')] },
     { name: 'Insurance', targets: [pm('Insurance')] },
+    { name: 'Legal and disputes', targets: [pm('Legal & Disputes')] },
     { name: 'Deadlines', targets: [pm('Deadlines')] },
     { name: 'Inventories', targets: [pm('Inventories'), ea('Inventories')] },
   ] },
@@ -74,6 +76,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Expenses', targets: [pm('Expenses'), str('Expenses'), dev('Expenses'), ea('Expenses')] },
     { name: 'Banking', targets: [pm('Banking'), str('Banking'), dev('Banking'), ea('Banking')] },
     { name: 'Loans and mortgages', targets: [pm('Loans & Mortgages'), ea('Loans & Mortgages')] },
+    { name: 'Valuations', targets: [pm('Valuations')] },
     { name: 'Exchange rates', targets: [pm('Exchange Rates')] },
   ] },
   { name: 'Reports', note: 'What the numbers say', items: [

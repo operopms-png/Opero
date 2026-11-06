@@ -14,6 +14,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'Real Estate Intelligence is where your records live: properties, landlords, tenants, leases, rent, maintenance, compliance and more.',
     'Pick a module, then a tab. Each tab opens with a blue banner that says what it does.',
     'Add or edit records with the buttons on each tab. Novourq Cloud AI reads these records to do its work, so the more complete they are, the better it works.',
+    'Legal and disputes (under Compliance) records eviction notices, arrears claims and deposit disputes with their next deadline, and the deadline also shows in Deadlines. It is a register only: it gives no legal advice and contacts no one. Referrals (under Lettings and sales) records who referred whom and any reward owed. Nothing is paid from it. Valuations (under Finance) records each property\'s value over time and the change since the last one.',
   ] },
   { id: 'hih', title: 'Human Intelligence Hub', steps: [
     'The Human Intelligence Hub covers your customers, team and finances: inbox, website chats, CRM, invoices, arrears, tasks, people and training.',
