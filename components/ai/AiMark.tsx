@@ -3,10 +3,22 @@
 // From 44px up (or when `animate` is set) it plays as a short looping animation; smaller it is the still picture.
 // `active` makes the small light (and, when small, the picture) gently pulse (listening, thinking, speaking).
 // Used on the Voice button, the Dashboard AI panel and the AI pages.
-export default function AiMark({ size = 32, active = false, dot = true, radius, ring = '#fff', animate }: { size?: number; active?: boolean; dot?: boolean; radius?: number; ring?: string; animate?: boolean }) {
+export default function AiMark({ size = 32, active = false, dot = true, radius, ring = '#fff', animate, bare }: { size?: number; active?: boolean; dot?: boolean; radius?: number; ring?: string; animate?: boolean; bare?: boolean }) {
   const r = radius ?? Math.round(size * 0.26)
   const d = Math.max(7, Math.round(size * 0.26))
   const animated = animate ?? size >= 44
+  if (bare) {
+    // The logo on its own, with no tile behind it, so it rests on whatever colour it is placed on.
+    return (
+      <span aria-hidden="true" style={{ display: 'inline-flex', width: size, height: size, flex: 'none' }}>
+        <style>{`@keyframes nvq-ai-mark{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}@media (prefers-reduced-motion:reduce){.nvq-bare-anim{display:none!important}.nvq-bare-still{display:block!important}}`}</style>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="nvq-bare-still" src="/novourq-ai-logo-still.png" alt="" style={{ width: size, height: size, display: 'none', objectFit: 'contain' }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="nvq-bare-anim" src="/novourq-ai-logo.webp" alt="" style={{ width: size, height: size, display: 'block', objectFit: 'contain', animation: active ? 'nvq-ai-mark 1.6s ease-in-out infinite' : undefined }} />
+      </span>
+    )
+  }
   const tile: React.CSSProperties = { width: size, height: size, borderRadius: r, overflow: 'hidden', background: '#2F6DB5', boxShadow: size >= 40 ? '0 6px 16px rgba(11,31,58,.3)' : 'none', display: 'block' }
   return (
     <span aria-hidden="true" style={{ position: 'relative', display: 'inline-flex', width: size, height: size, flex: 'none' }}>
