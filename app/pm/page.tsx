@@ -360,6 +360,9 @@ function PMPageInner() {
   const [referrals, setReferrals] = useState<any[]>([])
   const [valuations, setValuations] = useState<any[]>([])
   const [feedback, setFeedback] = useState<any[]>([])
+  const [replyFor, setReplyFor] = useState<string|null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replyBusy, setReplyBusy] = useState(false)
   const [fxRates, setFxRates] = useState<any[]>([])
   const [commTemplates, setCommTemplates] = useState<any[]>([])
   const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
@@ -2236,6 +2239,18 @@ function PMPageInner() {
             if(error){alert(error.message);return}
             setFeedback((prev:any[])=>prev.map(f=>f.id===id?{...f,status}:f))
           }
+          const sendReply = async (id:string) => {
+            if(!replyText.trim()) return
+            setReplyBusy(true)
+            const { data:{ session } } = await supabase.auth.getSession()
+            const res = await fetch('/api/feedback-reply',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify({id,reply:replyText})})
+            const d = await res.json().catch(()=>({}))
+            setReplyBusy(false)
+            if(!res.ok){alert(d.error??'Could not send the reply.');return}
+            setFeedback((prev:any[])=>prev.map(f=>f.id===id?{...f,reply:replyText.trim(),replied_at:new Date().toISOString(),status:f.status==='New'?'Seen':f.status}:f))
+            setReplyFor(null); setReplyText('')
+            alert(d.emailed?'Reply saved and emailed. They can also see it in their portal.':'Reply saved. They can see it in their portal. No email address is held, so no email was sent.')
+          }
           return (
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12,marginBottom:16}}>
@@ -2263,6 +2278,18 @@ function PMPageInner() {
                     </div>
                   </div>
                   {f.comment&&<div style={{fontSize:13.5,color:'#344054',marginTop:8,whiteSpace:'pre-wrap'}}>{f.comment}</div>}
+                  {f.reply&&<div style={{marginTop:10,padding:'10px 12px',background:'#EAF3FC',borderRadius:8,borderLeft:'3px solid #2F6DB5'}}><div style={{fontSize:11.5,fontWeight:700,color:'#1D4E89',marginBottom:3}}>Your reply{f.replied_by?` · ${f.replied_by}`:''}{f.replied_at?` · ${new Date(f.replied_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`:''}</div><div style={{fontSize:13.5,color:'#1B2F4B',whiteSpace:'pre-wrap'}}>{f.reply}</div></div>}
+                  {replyFor===f.id?(
+                    <div style={{marginTop:10}}>
+                      <textarea value={replyText} onChange={e=>setReplyText(e.target.value)} rows={3} placeholder="Write your reply. It is shown in their portal and emailed to them." style={{width:'100%',padding:'9px 11px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:13,fontFamily:'inherit',boxSizing:'border-box',resize:'vertical'}}/>
+                      <div style={{display:'flex',gap:8,marginTop:6}}>
+                        <button onClick={()=>sendReply(f.id)} disabled={replyBusy||!replyText.trim()} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:500,cursor:'pointer',opacity:replyBusy||!replyText.trim()?0.55:1}}>{replyBusy?'Sending…':'Send reply'}</button>
+                        <button onClick={()=>{setReplyFor(null);setReplyText('')}} style={{padding:'7px 16px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',color:'#344054',fontSize:13,cursor:'pointer'}}>Cancel</button>
+                      </div>
+                    </div>
+                  ):(
+                    <button onClick={()=>{setReplyFor(f.id);setReplyText(f.reply??'')}} style={{marginTop:8,fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>{f.reply?'Edit reply':'Reply'}</button>
+                  )}
                 </div>
               ))}
             </div>

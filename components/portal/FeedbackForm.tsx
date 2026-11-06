@@ -96,6 +96,12 @@ export default function FeedbackForm({ source, personTable, personId, personName
               </div>
               <div style={{ fontSize: 12, color: '#667085', marginTop: 6 }}>{f.category}</div>
               {f.comment && <div style={{ fontSize: 13.5, color: '#344054', marginTop: 4, whiteSpace: 'pre-wrap' }}>{f.comment}</div>}
+              {f.reply && (
+                <div style={{ marginTop: 10, padding: '10px 12px', background: '#EAF3FC', borderRadius: 8, borderLeft: '3px solid #2F6DB5' }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1D4E89', marginBottom: 3 }}>Reply from the team{f.replied_at ? ` · ${new Date(f.replied_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</div>
+                  <div style={{ fontSize: 13.5, color: '#1B2F4B', whiteSpace: 'pre-wrap' }}>{f.reply}</div>
+                </div>
+              )}
             </div>
           ))}
         </div>
