@@ -268,6 +268,30 @@ const AGENTS = [
     capabilities: ['Run your deal rules on each new deal','Mark screened deals and list a go, review or no-go for each','Leave the decision to move or reject a deal with you'],
   },
   {
+    key: 'rent_review_watch',
+    module: 'Property management',
+    name: 'AI Rent review watch',
+    icon: ICON,
+    desc: 'Lists rent reviews due within 60 days and any that have passed, as one task.',
+    capabilities: ['Check the records every day','Leave one task for you','Send nothing and change nothing: a person decides'],
+  },
+  {
+    key: 'service_charge_watch',
+    module: 'Property management',
+    name: 'AI Service charge watch',
+    icon: ICON,
+    desc: 'Lists service charge and ground rent due within 2 weeks or overdue, as one task.',
+    capabilities: ['Check the records every day','Leave one task for you','Send nothing and change nothing: a person decides'],
+  },
+  {
+    key: 'planned_maintenance_watch',
+    module: 'Property management',
+    name: 'AI Planned maintenance watch',
+    icon: ICON,
+    desc: 'Lists planned jobs due within 2 weeks or overdue, as one task.',
+    capabilities: ['Check the records every day','Leave one task for you','Send nothing and change nothing: a person decides'],
+  },
+  {
     key: 'keys_check',
     module: 'Property management',
     name: 'AI Key checks',
@@ -475,7 +499,7 @@ export default function PropertyManagerAgents() {
   const [style, setStyle] = useState({ tone: '', country_rules: '', signoff: '' })
   const [styleMsg, setStyleMsg] = useState('')
   const [section, setSection] = useState<'Agents'|'Activity log'|'Settings'>('Agents')
-  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,maint_predict:false,market_forecast:false,accounting_export:false,templates_review:false,meetings_prep:false,onboarding_help:false,ops_intel:false,tenant_insights:false,cashflow_forecast:false,dev_feasibility:false,doc_intel:false,goal_planner:false,deal_finder:false,deal_screening:false,keys_check:false,head_lease_watch:false,risk_alerts:false,hmo_licence:false,utilities_watch:false,mortgage_watch:false,tenant_checks:false,expense_sorter:false,invoice_chase:false,tax_watch:false,partner_payouts:false,smart_watch:false,review_replies:false,dev_milestones:false,dev_budget:false,dev_snags:false,dev_compliance:false,dev_safety:false,hr_watch:false,applications_watch:false,team_weekly:false,weekly_report:false,portfolio:false,chief:false})
+  const [activeAgents, setActiveAgents] = useState<Record<string,boolean>>({guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false,pm_compliance:false,pm_renewals:false,pm_arrears:false,ea_viewings:false,ea_listings:false,dev_investors:false,rent_match:false,doc_reader:false,pm_deposits:false,pm_insurance:false,pm_inspections:false,pm_statements:false,maint_followup:false,maint_predict:false,market_forecast:false,accounting_export:false,templates_review:false,meetings_prep:false,onboarding_help:false,ops_intel:false,tenant_insights:false,cashflow_forecast:false,dev_feasibility:false,doc_intel:false,goal_planner:false,deal_finder:false,deal_screening:false,keys_check:false,rent_review_watch:false,service_charge_watch:false,planned_maintenance_watch:false,head_lease_watch:false,risk_alerts:false,hmo_licence:false,utilities_watch:false,mortgage_watch:false,tenant_checks:false,expense_sorter:false,invoice_chase:false,tax_watch:false,partner_payouts:false,smart_watch:false,review_replies:false,dev_milestones:false,dev_budget:false,dev_snags:false,dev_compliance:false,dev_safety:false,hr_watch:false,applications_watch:false,team_weekly:false,weekly_report:false,portfolio:false,chief:false})
   const [activityLog, setActivityLog] = useState<any[]>([])
   const [showLogForm, setShowLogForm] = useState(false)
   const [logForm, setLogForm] = useState({agent:'guest',action:'',property:'',notes:''})

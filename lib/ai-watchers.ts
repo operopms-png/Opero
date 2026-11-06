@@ -30,6 +30,21 @@ const WATCHERS: Watcher[] = [
     const old = (data ?? []).filter((k: any) => !k.last_checked || k.last_checked < dayStr(-180))
     return old.length ? { title: 'Check key sets not checked in 6 months', lines: cap(old.map((k: any) => `${nm.get(k.property_id) ?? 'Property'}: ${k.key_set || 'key set'}${k.held_by ? `, held by ${k.held_by}` : ''}, ${k.last_checked ? 'last checked ' + k.last_checked : 'never checked'}`)) } : null
   } },
+  { agent: 'rent_review_watch', resultKey: 'rentReviewWatch', async find(db, biz, nm) {
+    const { data } = await db.from('pm_rent_reviews').select('property_id, tenant_name, review_date, status').eq('user_id', biz).lte('review_date', soon(60))
+    const open = (data ?? []).filter((r: any) => !done(r.status) && !/agreed/i.test(String(r.status ?? '')))
+    return open.length ? { title: 'Rent reviews due within 60 days', lines: cap(open.map((r: any) => `${nm.get(r.property_id) ?? 'Property'}${r.tenant_name ? ', ' + r.tenant_name : ''}: review ${r.review_date < today() ? 'was due' : 'due'} ${r.review_date} (${r.status})`)), dueInDays: 3 } : null
+  } },
+  { agent: 'service_charge_watch', resultKey: 'serviceChargeWatch', async find(db, biz, nm) {
+    const { data } = await db.from('pm_service_charges').select('property_id, kind, payable_to, amount, due_date, status').eq('user_id', biz).lte('due_date', soon(14))
+    const open = (data ?? []).filter((c: any) => !done(c.status))
+    return open.length ? { title: 'Service charge and ground rent due or overdue', lines: cap(open.map((c: any) => `${nm.get(c.property_id) ?? 'Property'}: ${c.kind} ${money(c.amount)}${c.payable_to ? ' to ' + c.payable_to : ''}, ${c.due_date < today() ? 'overdue since' : 'due'} ${c.due_date}`)), dueInDays: 2 } : null
+  } },
+  { agent: 'planned_maintenance_watch', resultKey: 'plannedMaintenanceWatch', async find(db, biz, nm) {
+    const { data } = await db.from('pm_planned_maintenance').select('property_id, task, assigned_to, next_due, status').eq('user_id', biz).lte('next_due', soon(14))
+    const open = (data ?? []).filter((m: any) => !/paused/i.test(String(m.status ?? '')))
+    return open.length ? { title: 'Planned maintenance due or overdue', lines: cap(open.map((m: any) => `${nm.get(m.property_id) ?? 'Property'}: ${m.task}${m.assigned_to ? ' (' + m.assigned_to + ')' : ''}, ${m.next_due < today() ? 'overdue since' : 'due'} ${m.next_due}`)), dueInDays: 3 } : null
+  } },
   { agent: 'head_lease_watch', resultKey: 'headLeaseWatch', async find(db, biz, nm) {
     const { data } = await db.from('pm_head_leases').select('property_id, expiry_date, break_date').eq('user_id', biz)
     const lines: string[] = []
