@@ -3,6 +3,7 @@
 // to /api/grok and shows the reply. It cannot change records or send messages.
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import AiMark from './ai/AiMark'
 import { speak as speakShared } from '../lib/speak'
 
 const C = { blue: '#2F6DB5', brown: '#1D4E89', soft: '#EAF3FC', line: '#E4E7EC', muted: '#667085', text: '#323338', bg: '#F9FAFB' }
@@ -108,7 +109,7 @@ export default function GrokPanel() {
   return (
     <div style={{ margin: '0 30px 30px', background: '#fff', border: `2px solid ${C.blue}`, borderRadius: 12, overflow: 'hidden', fontFamily: 'inherit' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '14px 18px', background: C.soft, borderBottom: '1px solid #C9DEF3' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.brown }}>Novourq Cloud AI</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 700, color: C.brown }}><AiMark size={28} ring="#EAF3FC" />Novourq Cloud AI</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: C.brown, cursor: 'pointer' }}>
             <input type="checkbox" checked={speakReplies} onChange={e => { setSpeakReplies(e.target.checked); if (!e.target.checked) stopSpeaking() }} /> Speak replies

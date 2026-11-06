@@ -24,6 +24,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
   { id: 'ai', title: 'Novourq Cloud AI', steps: [
     'Novourq Cloud AI is one assistant with many skills, such as rent reminders, chasing invoices, replying to reviews and watching compliance dates.',
     'Open Workflows to see every skill. Switch a skill on or off, and choose "Send automatically" if you want it to send without waiting for you.',
+    'Novourq Cloud AI has its own picture: the Novourq symbol on a navy tile with a small blue light. It shows on the Voice button, the Dashboard AI panel and the AI pages, and the light and symbol pulse while the AI is working or speaking.',
     'Press "Run all now" to make the AI check everything straight away. It also runs by itself every day.',
     'Anything involving money or a legal contract always waits for your approval. You will find these in the approvals list.',
     'Ask the AI panel anything about the platform, such as "how do I add a tenant?", and it will answer or point you to the right page.',

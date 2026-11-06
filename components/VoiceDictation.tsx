@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import AiMark from '@/components/ai/AiMark'
 import { speak, stopSpeech, unlockSpeech, canSpeak, setGender } from '@/lib/speak'
 
 type Editable = HTMLInputElement | HTMLTextAreaElement | HTMLElement
@@ -341,13 +342,12 @@ export default function VoiceDictation({ portal = false }: { portal?: boolean })
         aria-label={listening ? 'Stop Novourq Voice' : 'Novourq Voice'}
         title={listening ? 'Tap to finish' : 'Tap to talk to Novourq like a phone call. To dictate into a box, hold Ctrl+Shift+Space'}
         style={{ height: 46, borderRadius: 23, border: 0, cursor: 'pointer', color: '#fff', background: '#0B1B45', padding: '0 18px 0 8px', display: 'flex', alignItems: 'center', gap: 10, fontFamily: 'inherit', fontSize: 13, fontWeight: 700, boxShadow: listening ? '0 0 0 5px rgba(229,72,77,.25), 0 6px 18px rgba(11,27,69,.35)' : '0 6px 18px rgba(11,27,69,.35)', opacity: state === 'working' ? 0.6 : 1 }}>
-        <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', background: listening ? '#E5484D' : 'linear-gradient(135deg,#7fe4ff,#3a8bff)' }}>
-          {listening ? (
+        {!listening && <AiMark size={30} ring="#0B1B45" active={state === 'working' || speaking} />}
+        {listening && <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', background: '#E5484D' }}>
+          {listening && (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path className="nvq-bar" d="M4 10v4" /><path className="nvq-bar" d="M8 6v12" /><path className="nvq-bar" d="M12 3v18" /><path className="nvq-bar" d="M16 7v10" /><path className="nvq-bar" d="M20 10v4" /></svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
           )}
-        </span>
+        </span>}
         {speaking ? 'Speaking. Tap to stop' : listening ? 'Listening' : state === 'working' ? 'Working' : 'Novourq Voice'}
       </button>
       </div>
