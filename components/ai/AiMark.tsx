@@ -1,12 +1,12 @@
 'use client'
 // The picture of Novourq Cloud AI: the Novourq symbol as a glossy 3D mark on a blue glow.
-// From 44px up it plays as a short looping animation; smaller it is the still picture.
+// From 44px up (or when `animate` is set) it plays as a short looping animation; smaller it is the still picture.
 // `active` makes the small light (and, when small, the picture) gently pulse (listening, thinking, speaking).
 // Used on the Voice button, the Dashboard AI panel and the AI pages.
-export default function AiMark({ size = 32, active = false, dot = true, radius, ring = '#fff' }: { size?: number; active?: boolean; dot?: boolean; radius?: number; ring?: string }) {
+export default function AiMark({ size = 32, active = false, dot = true, radius, ring = '#fff', animate }: { size?: number; active?: boolean; dot?: boolean; radius?: number; ring?: string; animate?: boolean }) {
   const r = radius ?? Math.round(size * 0.26)
   const d = Math.max(7, Math.round(size * 0.26))
-  const animated = size >= 44
+  const animated = animate ?? size >= 44
   const tile: React.CSSProperties = { width: size, height: size, borderRadius: r, overflow: 'hidden', background: '#2F6DB5', boxShadow: size >= 40 ? '0 6px 16px rgba(11,31,58,.3)' : 'none', display: 'block' }
   return (
     <span aria-hidden="true" style={{ position: 'relative', display: 'inline-flex', width: size, height: size, flex: 'none' }}>
