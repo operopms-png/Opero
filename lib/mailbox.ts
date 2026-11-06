@@ -11,6 +11,7 @@ import MailComposer from 'nodemailer/lib/mail-composer'
 import { simpleParser, ParsedMail } from 'mailparser'
 import { serviceClient } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
+import { accessTokenFromRefresh } from '@/lib/mailbox-oauth'
 
 // ---------- password encryption ----------
 // AES-256-GCM. Key comes from MAILBOX_SECRET if set, otherwise is derived
@@ -58,26 +59,34 @@ export function canAccess(mb: any, c: Caller) {
   return !!c.role && (mb.access_teams ?? []).map((x: string) => x.toLowerCase()).includes(c.role.toLowerCase())
 }
 
-export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,access_teams,use_for_marketing,ai_mode,kind,created_at'
+export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,access_teams,use_for_marketing,ai_mode,kind,auth_type,created_at'
 
 // ---------- connections ----------
+// The second argument is the mailbox password, or for a mailbox signed in with Google or Microsoft a short-lived access token.
+export const isOAuth = (mb: any) => mb?.auth_type === 'google' || mb?.auth_type === 'microsoft'
+export async function credentialFor(mb: any): Promise<string> {
+  if (!mb.password_enc) throw new Error('Not connected')
+  const secret = decrypt(mb.password_enc)
+  return isOAuth(mb) ? accessTokenFromRefresh(mb.auth_type, secret) : secret
+}
 export function imapFor(mb: any, password: string) {
   return new ImapFlow({
     host: mb.imap_host, port: mb.imap_port, secure: Number(mb.imap_port) === 993,
-    auth: { user: mb.username || mb.email, pass: password },
+    auth: isOAuth(mb) ? { user: mb.email, accessToken: password } : { user: mb.username || mb.email, pass: password },
     logger: false, socketTimeout: 60_000, greetingTimeout: 15_000, connectionTimeout: 15_000,
   } as any)
 }
 export function smtpFor(mb: any, password: string) {
   return nodemailer.createTransport({
     host: mb.smtp_host, port: mb.smtp_port, secure: Number(mb.smtp_port) === 465,
-    auth: { user: mb.username || mb.email, pass: password },
+    auth: isOAuth(mb) ? { type: 'OAuth2', user: mb.email, accessToken: password } : { user: mb.username || mb.email, pass: password },
     connectionTimeout: 15_000, greetingTimeout: 15_000,
   })
 }
 
 export function friendlyError(e: any): string {
   const m = String(e?.responseText || e?.response || e?.message || e)
+  if (/invalid_grant/i.test(m)) return 'The sign-in has expired or was withdrawn. Press Reconnect and sign in again.'
   if (/auth|login|credentials|password|535|AUTHENTICATIONFAILED/i.test(m)) return 'The email or password was not accepted by the mail server.'
   if (/ENOTFOUND|getaddrinfo/i.test(m)) return 'Could not find that mail server. Check the server name.'
   if (/ECONNREFUSED|ETIMEDOUT|timeout/i.test(m)) return 'Could not reach the mail server on that port.'
@@ -162,7 +171,12 @@ async function syncFolder(client: ImapFlow, mb: any, folder: 'INBOX' | 'Sent', p
 
 export async function syncMailbox(mb: any): Promise<{ added: number; error?: string }> {
   if (!mb.password_enc) return { added: 0, error: 'Not connected' }
-  const client = imapFor(mb, decrypt(mb.password_enc))
+  let client: ImapFlow
+  try { client = imapFor(mb, await credentialFor(mb)) } catch (e: any) {
+    const msg = friendlyError(e)
+    await serviceClient.from('mailboxes').update({ status: 'error', last_error: msg, last_synced_at: new Date().toISOString() }).eq('id', mb.id)
+    return { added: 0, error: msg }
+  }
   client.on('error', () => {})
   try {
     await client.connect()
@@ -205,7 +219,7 @@ export async function testConnection(mb: any, password: string) {
 export type Outgoing = { to: string; cc?: string; bcc?: string; subject: string; html?: string; text?: string; inReplyTo?: string | null; references?: string | null; attachments?: { filename: string; content: string; contentType?: string }[]; sentBy?: string }
 
 export async function sendFromMailbox(mb: any, m: Outgoing) {
-  const password = decrypt(mb.password_enc)
+  const password = await credentialFor(mb)
   const mail: any = {
     from: mb.display_name ? { name: mb.display_name, address: mb.email } : mb.email,
     to: m.to, cc: m.cc || undefined, bcc: m.bcc || undefined, subject: m.subject,
@@ -242,7 +256,7 @@ export async function sendFromMailbox(mb: any, m: Outgoing) {
 // INBOX mail from a sender domain so it can be grouped (Airbnb Inbox).
 export async function importFromSender(mb: any, fromDomain: string, sinceDays = 365, max = 120) {
   if (!mb.password_enc) return { added: 0 }
-  const client = imapFor(mb, decrypt(mb.password_enc))
+  const client = imapFor(mb, await credentialFor(mb))
   client.on('error', () => {})
   try {
     await client.connect()
@@ -267,7 +281,7 @@ export async function importFromSender(mb: any, fromDomain: string, sinceDays = 
 // Reply-To of an already-synced message (rows synced before reply_to was stored)
 export async function fetchReplyTo(mb: any, uid: number): Promise<string | null> {
   if (!mb.password_enc || !uid) return null
-  const client = imapFor(mb, decrypt(mb.password_enc))
+  const client = imapFor(mb, await credentialFor(mb))
   client.on('error', () => {})
   try {
     await client.connect()
@@ -282,7 +296,7 @@ export async function fetchReplyTo(mb: any, uid: number): Promise<string | null>
 // ---------- server-side message actions ----------
 export async function setSeen(mb: any, uid: number, seen: boolean) {
   if (!mb.password_enc || !uid) return
-  const client = imapFor(mb, decrypt(mb.password_enc))
+  const client = imapFor(mb, await credentialFor(mb))
   client.on('error', () => {})
   try {
     await client.connect()
@@ -292,7 +306,7 @@ export async function setSeen(mb: any, uid: number, seen: boolean) {
 }
 
 export async function fetchAttachment(mb: any, folderPath: string, uid: number, index: number) {
-  const client = imapFor(mb, decrypt(mb.password_enc))
+  const client = imapFor(mb, await credentialFor(mb))
   client.on('error', () => {})
   try {
     await client.connect()

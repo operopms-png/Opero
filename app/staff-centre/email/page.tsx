@@ -12,6 +12,33 @@ import { C, CrmPage, Modal, Pill, Avatar, btn, input, label } from '../../../com
 import { DEFAULT_FORMAT, footerHtml, type EmailTemplate } from '../../../lib/email-format-shared'
 import ScriptPicker from '../../../components/scripts/ScriptPicker'
 
+// Sign in with Google / Microsoft (see lib/mailbox-oauth.ts). The browser is sent to the provider's own sign-in page.
+async function oauthCall(body?: any) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/oauth/mailbox', {
+    method: body ? 'POST' : 'GET',
+    headers: { Authorization: `Bearer ${session?.access_token ?? ''}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const d = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(d.error || 'Something went wrong')
+  return d
+}
+function OAuthButtons({ mailboxId, kind, name, onError }: { mailboxId?: string; kind?: string; name?: string; onError: (m: string) => void }) {
+  const [on, setOn] = useState<{ google: boolean; microsoft: boolean } | null>(null)
+  const [busy, setBusy] = useState('')
+  useEffect(() => { oauthCall().then(setOn).catch(() => setOn({ google: false, microsoft: false })) }, [])
+  async function go(provider: 'google' | 'microsoft') {
+    setBusy(provider)
+    try { const d = await oauthCall({ provider, mailbox_id: mailboxId, kind, name }); window.location.href = d.url } catch (e: any) { onError(e.message); setBusy('') }
+  }
+  const one = (provider: 'google' | 'microsoft', label: string) => (
+    <button key={provider} onClick={() => go(provider)} disabled={!on?.[provider] || !!busy} title={on && !on[provider] ? 'Not available yet. Connect with a password instead.' : `Sign in with your ${label} account`}
+      style={{ ...btn('ghost', true), opacity: !on?.[provider] ? 0.5 : 1, cursor: !on?.[provider] || busy ? 'default' : 'pointer' }}>{busy === provider ? 'Opening…' : `Sign in with ${label}`}</button>
+  )
+  return <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{one('google', 'Google')}{one('microsoft', 'Microsoft')}</div>
+}
+
 async function api(path: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
   const res = await fetch('/api/mailboxes' + path, {
@@ -89,6 +116,15 @@ export default function EmailPage() {
   const byId = (id: string) => boxes.find(b => b.id === id)
   const current = box === 'all' ? null : byId(box)
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(''), 5000) }
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    const r = sp.get('oauth')
+    if (!r) return
+    flash(r === 'ok' ? `${sp.get('email') || 'Mailbox'} is connected. ${sp.get('n') || 0} emails loaded.` : (sp.get('msg') || 'The sign-in was not completed.'))
+    window.history.replaceState(null, '', window.location.pathname)
+    loadBoxes().catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadBoxes() {
     const d = await api('')
@@ -457,6 +493,8 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
             {newKind === 'staff' && <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Their name" style={{ ...input, width: 180 }} />}
             <button onClick={async () => { await act({ action: 'add', email: newEmail, kind: newKind, display_name: newName || undefined }, 'Mailbox added'); setAdding(false); setNewEmail(''); setNewName(''); setNewKind('shared') }} style={btn('gold', true)}>Add</button>
             <button onClick={() => setAdding(false)} style={btn('ghost', true)}>Cancel</button>
+            <span style={{ fontSize: 12.5, color: C.muted }}>or</span>
+            <OAuthButtons kind={newKind} name={newName || undefined} onError={flash} />
           </div>
         )}
         <div style={{ overflowX: 'auto' }}>
@@ -550,6 +588,9 @@ function ConnectModal({ mb, onClose, onDone }: any) {
   }
   return (
     <Modal title={`Connect ${mb.email}`} onClose={onClose}>
+      <div style={{ fontSize: 13, color: C.muted, marginBottom: 8, lineHeight: 1.5 }}>Easiest: sign in with the account that owns this mailbox. You approve access on Google or Microsoft’s own page and we never see your password.</div>
+      <OAuthButtons mailboxId={mb.id} onError={setErr} />
+      <div style={{ fontSize: 12.5, color: C.muted, margin: '14px 0 10px' }}>Or connect with a password:</div>
       <label style={label}>Where is this mailbox hosted?</label>
       <select value={provider} onChange={e => pick(e.target.value)} style={{ ...input, cursor: 'pointer' }}>
         {PROVIDERS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}

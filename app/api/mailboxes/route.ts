@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
       await serviceClient.from('mailboxes').update({ last_error: friendlyError(e) }).eq('id', mb.id)
       return bad(friendlyError(e))
     }
-    const patch = { imap_host: cfg.imap_host, imap_port: cfg.imap_port, smtp_host: cfg.smtp_host, smtp_port: cfg.smtp_port, username: cfg.username, password_enc: encrypt(body.password), status: 'connected', last_error: null, inbox_last_uid: 0, inbox_uidvalidity: null, sent_last_uid: 0, sent_uidvalidity: null, sent_path: null }
+    const patch = { imap_host: cfg.imap_host, imap_port: cfg.imap_port, smtp_host: cfg.smtp_host, smtp_port: cfg.smtp_port, username: cfg.username, password_enc: encrypt(body.password), auth_type: 'password', status: 'connected', last_error: null, inbox_last_uid: 0, inbox_uidvalidity: null, sent_last_uid: 0, sent_uidvalidity: null, sent_path: null }
     await serviceClient.from('mailbox_messages').delete().eq('mailbox_id', mb.id)
     await serviceClient.from('mailboxes').update(patch).eq('id', mb.id)
     const r = await syncMailbox({ ...mb, ...patch })
@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     if (body.use_for_marketing !== undefined) patch.use_for_marketing = !!body.use_for_marketing
     if (body.kind === 'staff' || body.kind === 'shared') patch.kind = body.kind
     if (['off', 'draft', 'auto'].includes(body.ai_mode)) patch.ai_mode = body.ai_mode
-    if (body.disconnect) Object.assign(patch, { password_enc: null, status: 'not_connected', last_error: null })
+    if (body.disconnect) Object.assign(patch, { password_enc: null, auth_type: 'password', status: 'not_connected', last_error: null })
     if (body.email && body.email !== mb.email) {
       if (mb.status === 'connected') return bad('Disconnect the mailbox before changing its address')
       patch.email = String(body.email).trim().toLowerCase()
