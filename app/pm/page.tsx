@@ -1,4 +1,5 @@
 'use client'
+import { Stars } from '@/components/portal/FeedbackForm'
 import { useEffect, useState, Suspense } from 'react'
 import TabBanner from '@/components/TabBanner'
 import { useSearchParams } from 'next/navigation'
@@ -14,7 +15,7 @@ import { SITE_HOST } from '@/lib/brand'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
 const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
-const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Landlord Feedback','Tenant Feedback','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -85,6 +86,8 @@ const TAB_INTROS: Record<string,string> = {
   'Legal & Disputes': 'a record of legal matters: eviction notices, rent arrears claims, deposit disputes and complaints, with the status and the next deadline. This is a register only. It does not give legal advice or send anything to a court.',
   'Referrals': 'people who have referred a landlord, tenant or guest to you, who they referred, how far it got and any reward owed. Rewards are recorded here only. Nothing is paid from this tab.',
   'Valuations': 'the value of each property over time, from valuations by an agent or surveyor or your own estimate, with the change since the last one.',
+  'Landlord Feedback': 'ratings and comments that landlords write in the Feedback tab of their owner portal. Mark each one Seen or Actioned so nothing is missed.',
+  'Tenant Feedback': 'ratings and comments that tenants write in the Feedback tab of their tenant portal. Mark each one Seen or Actioned so nothing is missed.',
   'Maintenance': 'repair and maintenance tickets for each property, with the issue, the priority and the status until it is closed.',
   'Cleaning': 'cleaning jobs for short stays and changeovers, with the date, the property and the person assigned.',
   'Inspections': 'property inspections: the date, the inspector and any issues found. Inspections are not the same as inventories.',
@@ -114,7 +117,7 @@ const TAB_INTROS: Record<string,string> = {
 type PmNavGroup = { label: string; items?: string[]; sub?: { label: string; items: string[] }[] }
 const PM_NAV_GROUPS: PmNavGroup[] = [
   { label: 'PROPERTY MANAGEMENT', items: ['Property Management'], sub: [
-    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Referrals'] },
+    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Referrals','Landlord Feedback','Tenant Feedback'] },
     { label: 'Compliance', items: ['Compliance','Tenant Checks','Deposits','HMO Rooms','Deadlines','Insurance','Legal & Disputes'] },
     { label: 'Operations', items: ['Maintenance','Cleaning','Inspections','Inventories','Keys','Utilities'] },
     { label: 'Documents', items: ['Documents'] },
@@ -356,6 +359,7 @@ function PMPageInner() {
   const [legalCases, setLegalCases] = useState<any[]>([])
   const [referrals, setReferrals] = useState<any[]>([])
   const [valuations, setValuations] = useState<any[]>([])
+  const [feedback, setFeedback] = useState<any[]>([])
   const [fxRates, setFxRates] = useState<any[]>([])
   const [commTemplates, setCommTemplates] = useState<any[]>([])
   const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
@@ -542,6 +546,7 @@ function PMPageInner() {
     supabase.from('pm_legal_cases').select('*,pm_properties(name)').eq('user_id',userId).order('next_deadline',{ascending:true,nullsFirst:false}).then(({data})=>setLegalCases(data??[]))
     supabase.from('pm_referrals').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setReferrals(data??[]))
     supabase.from('pm_valuations').select('*,pm_properties(name,currency)').eq('user_id',userId).order('valuation_date',{ascending:false}).then(({data})=>setValuations(data??[]))
+    supabase.from('portal_feedback').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setFeedback(data??[]))
     supabase.from('pm_fx_rates').select('*').eq('user_id',userId).order('currency',{ascending:true}).then(({data})=>setFxRates(data??[]))
     supabase.from('guest_comm_templates').select('*').eq('user_id',userId).then(({data})=>setCommTemplates(data??[]))
     supabase.from('str_guest_messages').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setGuestMessages(data??[]))
@@ -2220,6 +2225,49 @@ function PMPageInner() {
             </div>
           </div>
         )}
+
+        {(tab==='Landlord Feedback'||tab==='Tenant Feedback')&&(() => {
+          const src = tab==='Landlord Feedback' ? 'landlord' : 'tenant'
+          const list = feedback.filter((f:any)=>f.source===src)
+          const avg = list.length ? list.reduce((a:number,f:any)=>a+f.rating,0)/list.length : 0
+          const fresh = list.filter((f:any)=>f.status==='New').length
+          const setStatus = async (id:string, status:string) => {
+            const { error } = await supabase.from('portal_feedback').update({status}).eq('id',id)
+            if(error){alert(error.message);return}
+            setFeedback((prev:any[])=>prev.map(f=>f.id===id?{...f,status}:f))
+          }
+          return (
+          <div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:12,marginBottom:16}}>
+              <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'16px 20px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Average rating</div><div style={{fontSize:24,fontWeight:700,color:'#10234d',marginTop:4}}>{list.length?avg.toFixed(1):'—'} <span style={{fontSize:13,fontWeight:500,color:'#667085'}}>/ 5</span></div></div>
+              <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'16px 20px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Responses</div><div style={{fontSize:24,fontWeight:700,color:'#10234d',marginTop:4}}>{list.length}</div></div>
+              <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'16px 20px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Not yet seen</div><div style={{fontSize:24,fontWeight:700,color:fresh?'#B42318':'#10234d',marginTop:4}}>{fresh}</div></div>
+            </div>
+            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+              {list.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No feedback yet. {src==='landlord'?'Landlords':'Tenants'} leave it in the Feedback tab of their portal.</div>:
+              list.map((f:any)=>(
+                <div key={f.id} style={{padding:'14px 20px',borderBottom:'1px solid #F2F4F7'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                      <Stars value={f.rating} size={16}/>
+                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{f.person_name??'Unnamed'}</span>
+                      {f.property_name&&<span style={{fontSize:12,color:'#667085'}}>{f.property_name}</span>}
+                      <span style={{fontSize:12,color:'#98A2B3'}}>{f.category}</span>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <span style={{fontSize:12,color:'#667085'}}>{new Date(f.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
+                      <select value={f.status} onChange={e=>setStatus(f.id,e.target.value)} style={{fontSize:12,padding:'4px 8px',borderRadius:6,border:'1px solid #D0D5DD',background:f.status==='New'?'#FEF3F2':'#fff',cursor:'pointer'}}>
+                        <option>New</option><option>Seen</option><option>Actioned</option>
+                      </select>
+                      <button onClick={()=>del('portal_feedback',f.id,setFeedback)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
+                    </div>
+                  </div>
+                  {f.comment&&<div style={{fontSize:13.5,color:'#344054',marginTop:8,whiteSpace:'pre-wrap'}}>{f.comment}</div>}
+                </div>
+              ))}
+            </div>
+          </div>)
+        })()}
 
         {tab==='Short Stays Overview'&&(() => {
           const todayStr = new Date().toISOString().split('T')[0]

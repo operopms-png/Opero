@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
+import FeedbackForm from '@/components/portal/FeedbackForm'
 import MyDataPanel from '@/components/portal/MyDataPanel'
 import VoiceDictation from '@/components/VoiceDictation'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
@@ -156,7 +157,7 @@ function EstateOwnerPortalInner() {
   const monthlyRentTotal = activeTenancies.reduce((s, t) => s + (parseFloat(t.rent) || 0), 0)
   const expiringDocs = documents.filter(d => d.expiry_date && d.expiry_date < today).length
 
-  const TABS = ['Dashboard', 'Reports', 'Properties', 'Tenancies', 'Documents', 'Messages', 'Contact & Payment', 'My Data']
+  const TABS = ['Dashboard', 'Reports', 'Properties', 'Tenancies', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -268,6 +269,7 @@ function EstateOwnerPortalInner() {
         )}
 
         <VoiceDictation portal />
+        {tab === 'Feedback' && <FeedbackForm source="landlord" personTable="estate_landlords" personId={landlord?.id} personName={landlord?.name} businessId={landlord?.user_id} />}
         {tab === 'My Data' && <MyDataPanel />}
         {tab === 'Contact & Payment' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>

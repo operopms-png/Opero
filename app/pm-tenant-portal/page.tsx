@@ -3,6 +3,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
+import FeedbackForm from '@/components/portal/FeedbackForm'
 import MyDataPanel from '@/components/portal/MyDataPanel'
 import VoiceDictation from '@/components/VoiceDictation'
 
@@ -280,7 +281,7 @@ function PMTenantPortalInner() {
       </div>
 
       <div style={{ display: 'flex', gap: 0, padding: '0 28px', background: '#fff', borderBottom: '1px solid #E4E7EC' }}>
-        {['My Lease', 'Payments', 'Maintenance', 'Documents', 'Messages', 'Announcements', 'Renewal', 'Amenities', 'Profile', 'My Data'].map(s => (
+        {['My Lease', 'Payments', 'Maintenance', 'Documents', 'Messages', 'Announcements', 'Renewal', 'Amenities', 'Feedback', 'Profile', 'My Data'].map(s => (
           <button key={s} onClick={() => setTab(s)} style={{ padding: '12px 16px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: tab === s ? 600 : 400, color: tab === s ? ACCENT : '#667085', borderBottom: tab === s ? '2px solid ' + ACCENT : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>
         ))}
       </div>
@@ -514,6 +515,7 @@ function PMTenantPortalInner() {
         )}
 
         <VoiceDictation portal />
+        {tab === 'Feedback' && <FeedbackForm source="tenant" personTable="pm_tenants" personId={tenant?.id} personName={tenant?.name} businessId={tenant?.user_id} propertyName={property?.name} preview={!!viewingTenantId} />}
         {tab === 'My Data' && <MyDataPanel />}
         {tab === 'Profile' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, maxWidth: 460 }}>

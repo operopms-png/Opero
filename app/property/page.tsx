@@ -36,6 +36,8 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Viewings', targets: [pm('Viewings'), ea('Viewings')] },
     { name: 'Renewals and notices', targets: [pm('Renewals & Notices')] },
     { name: 'Referrals', targets: [pm('Referrals')] },
+    { name: 'Landlord feedback', targets: [pm('Landlord Feedback')] },
+    { name: 'Tenant feedback', targets: [pm('Tenant Feedback')] },
     { name: 'Furniture', targets: [pm('Furniture')] },
   ] },
   { name: 'Short stays', note: 'Guests and bookings', items: [
