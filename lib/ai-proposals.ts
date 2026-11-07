@@ -62,7 +62,7 @@ export async function proposeCleaning() {
   const businesses = await enabledBusinesses('cleaning')
   result.businesses = businesses.length
   for (const businessId of businesses) {
-    const { data: props } = await db.from('properties').select('id, name, address, city, max_guests, house_rules').eq('user_id', businessId)
+    const { data: props } = await db.from('properties').select('id, name, address, city, max_guests, house_rules').eq('user_id', businessId).is('ended_at', null)
     const ids = (props ?? []).map((p: any) => p.id)
     if (!ids.length) continue
     const { data: tasks } = await db.from('cleaning_tasks').select('id, property_id, assigned_to, scheduled_date, notes')
@@ -99,7 +99,7 @@ export async function proposeMaintenance() {
   const businesses = await enabledBusinesses('maintenance')
   result.businesses = businesses.length
   for (const businessId of businesses) {
-    const { data: props } = await db.from('properties').select('id, name, address, city').eq('user_id', businessId)
+    const { data: props } = await db.from('properties').select('id, name, address, city').eq('user_id', businessId).is('ended_at', null)
     const ids = (props ?? []).map((p: any) => p.id)
     if (!ids.length) continue
     // Only recent tickets, so switching the agent on doesn't mail out the whole backlog.
@@ -145,7 +145,7 @@ export async function proposeRates() {
   const ninetyAgo = dayStr(-90)
   const marketCache = new Map<string, any>() // one web search per place per run
   for (const businessId of businesses) {
-    const { data: props } = await db.from('properties').select('id, name, nightly_rate, max_guests, city, country').eq('user_id', businessId).gt('nightly_rate', 0).limit(15)
+    const { data: props } = await db.from('properties').select('id, name, nightly_rate, max_guests, city, country').eq('user_id', businessId).is('ended_at', null).gt('nightly_rate', 0).limit(15)
     for (const p of props ?? []) {
       const { data: bookings } = await db.from('bookings').select('check_in, check_out, total_amount, status').eq('property_id', p.id).gte('check_in', ninetyAgo)
       const active = (bookings ?? []).filter((b: any) => b.status !== 'cancelled')
@@ -273,7 +273,7 @@ export async function proposeMaintenanceFollowups() {
   const cutoff = new Date(Date.now() - 3 * 86400000).toISOString()
 
   for (const businessId of businesses) {
-    const { data: props } = await db.from('properties').select('id, name').eq('user_id', businessId)
+    const { data: props } = await db.from('properties').select('id, name').eq('user_id', businessId).is('ended_at', null)
     const ids = (props ?? []).map((p: any) => p.id)
     if (ids.length) {
       const { data: tickets } = await db.from('maintenance_tickets').select('id, property_id, assigned_to, title, created_at, status').in('property_id', ids).eq('status', 'open').lt('created_at', cutoff).limit(30)

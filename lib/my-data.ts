@@ -81,7 +81,7 @@ export async function loadMyData(uid: string, email: string): Promise<MyData> {
 
   const pmL = ids(pl.data), esL = ids(el.data)
   const [pprops, eprops, stm, plp, elp, edocs] = await Promise.all([
-    pmL.length ? db.from('pm_properties').select('id,name,address,status').in('owner_id', pmL) : { data: [] as any[] },
+    pmL.length ? db.from('pm_properties').select('id,name,address,status').in('owner_id', pmL).is('ended_at', null) : { data: [] as any[] },
     esL.length ? db.from('estate_properties').select('id,name,address,status').in('owner_id', esL) : { data: [] as any[] },
     db.from('landlord_statements').select('period_label,balance,sent_at').in('landlord_id', [...pmL, ...esL]).not('sent_at', 'is', null).order('sent_at', { ascending: false }).limit(24),
     pmL.length ? db.from('pm_landlord_payments').select('category,amount,due_date,paid_date').in('landlord_id', pmL).order('due_date', { ascending: false }).limit(24) : { data: [] as any[] },

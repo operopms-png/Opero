@@ -21,6 +21,7 @@ export async function runIcalSync() {
   const { data: properties } = await supabase
     .from('properties')
     .select('id, name, airbnb_ical_url, vrbo_ical_url, booking_ical_url')
+    .is('ended_at', null)
 
   if (!properties?.length) return { synced: [] as any[] }
 

@@ -21,7 +21,7 @@ export async function loadPortfolio(biz: string) {
   const db = svc()
   const q = <T,>(p: PromiseLike<{ data: T[] | null }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [] as T[])
   const [props, units, heads, mort, utils, vals, pays, devs] = await Promise.all([
-    q<any>(db.from('pm_properties').select('id, name, address, city, country, currency, status, monthly_income').eq('user_id', biz)),
+    q<any>(db.from('pm_properties').select('id, name, address, city, country, currency, status, monthly_income').eq('user_id', biz).is('ended_at', null)),
     q<any>(db.from('pm_units').select('property_id, monthly_rent, status').eq('user_id', biz)),
     q<any>(db.from('pm_head_leases').select('property_id, rent_payable, expiry_date').eq('user_id', biz)),
     q<any>(db.from('pm_mortgages').select('property_id, amount, monthly_payment, end_date').eq('user_id', biz)),
@@ -76,7 +76,7 @@ function parseJson(text?: string) {
 export async function refreshValuations(biz: string, max = 5) {
   const db = svc()
   const out = { checked: 0, saved: 0, errors: [] as string[] }
-  const { data: props } = await db.from('pm_properties').select('id, name, address, city, country, currency, bedrooms, bathrooms').eq('user_id', biz)
+  const { data: props } = await db.from('pm_properties').select('id, name, address, city, country, currency, bedrooms, bathrooms').eq('user_id', biz).is('ended_at', null)
   const { data: have } = await db.from('ai_property_values').select('property_id, checked_at').eq('user_id', biz).eq('module', 'pm')
   const fresh = new Set((have ?? []).filter((h: any) => h.checked_at > dayStr(-90)).map((h: any) => h.property_id))
   const todo = (props ?? []).filter((p: any) => !fresh.has(p.id) && (p.address || p.city)).slice(0, max)

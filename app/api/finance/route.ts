@@ -26,9 +26,9 @@ const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data
 
 async function load(biz: string) {
   const [vr, pmProps, eaProps, pmRent, pmTenants, pmLl, eaLl, pmPay, eaPay, eaSched, eaTen, eaTenants, strTx, pmTx, eaTx, devItems, devProjects, approvals, invoices] = await Promise.all([
-    q(db.from('properties').select('id,name').eq('user_id', biz)),
-    q(db.from('pm_properties').select('id,name,country').eq('user_id', biz)),
-    q(db.from('estate_properties').select('id,name,address,currency').eq('user_id', biz)),
+    q(db.from('properties').select('id,name').eq('user_id', biz).is('ended_at', null)),
+    q(db.from('pm_properties').select('id,name,country').eq('user_id', biz).is('ended_at', null)),
+    q(db.from('estate_properties').select('id,name,address,currency').eq('user_id', biz).is('ended_at', null)),
     q(db.from('pm_rent_payments').select('id,tenant_id,property_id,amount,due_date,paid_date,status,category').eq('user_id', biz)),
     q(db.from('pm_tenants').select('id,name,phone,email,property_id').eq('user_id', biz)),
     q(db.from('pm_landlords').select('id,name,phone').eq('user_id', biz)),

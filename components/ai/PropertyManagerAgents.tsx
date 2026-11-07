@@ -532,7 +532,7 @@ export default function PropertyManagerAgents() {
       setUserId(accountId)
       const [agentsRes, propsRes, ownersRes] = await Promise.all([
         supabase.from('ai_agents').select('*').eq('user_id', accountId),
-        supabase.from('properties').select('*').eq('user_id', accountId).order('created_at', { ascending: false }),
+        supabase.from('properties').select('*').eq('user_id', accountId).is('ended_at', null).order('created_at', { ascending: false }),
         supabase.from('owner_profiles').select('*').eq('business_id', accountId).order('created_at', { ascending: false }),
       ])
       if (agentsRes.data?.length) {

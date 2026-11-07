@@ -47,7 +47,7 @@ export async function candidates(biz: string): Promise<Item[]> {
   const [pmRent, pmTenants, pmProps, eaSched, eaTen, eaTenants, eaProps] = await Promise.all([
     q(db.from('pm_rent_payments').select('id,tenant_id,property_id,amount,due_date,status').eq('user_id', biz)),
     q(db.from('pm_tenants').select('id,name,phone,email').eq('user_id', biz)),
-    q(db.from('pm_properties').select('id,name,country').eq('user_id', biz)),
+    q(db.from('pm_properties').select('id,name,country').eq('user_id', biz).is('ended_at', null)),
     q(db.from('estate_rent_schedules').select('id,tenancy_id,tenant_id,amount,due_day,status').eq('user_id', biz)),
     q(db.from('estate_tenancies').select('id,property_id,tenant_id').eq('user_id', biz)),
     q(db.from('estate_tenants').select('id,name,phone,email,property_id').eq('user_id', biz)),

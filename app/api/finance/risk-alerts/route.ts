@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const T = today(), month = T.slice(0, 7)
   const [leases, props, rent, tenants] = await Promise.all([
     q(db.from('pm_head_leases').select('id,property_id,landlord_name,rent_payable,expiry_date,break_date').eq('user_id', c.businessId)),
-    q(db.from('pm_properties').select('id,name,country').eq('user_id', c.businessId)),
+    q(db.from('pm_properties').select('id,name,country').eq('user_id', c.businessId).is('ended_at', null)),
     q(db.from('pm_rent_payments').select('id,tenant_id,property_id,amount,due_date,paid_date,status').eq('user_id', c.businessId)),
     q(db.from('pm_tenants').select('id,name').eq('user_id', c.businessId)),
   ])

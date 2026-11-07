@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const in7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10)
   const in30 = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)
 
-  const { data: props } = await db.from('properties').select('id').eq('user_id', biz)
+  const { data: props } = await db.from('properties').select('id').eq('user_id', biz).is('ended_at', null)
   const propIds = (props ?? []).map((p: any) => p.id)
   const none = { open: 0, urgent: 0, pending: 0, overdue: 0, upcoming: 0, expired: 0, expiring: 0 }
   if (propIds.length === 0) return NextResponse.json(none)

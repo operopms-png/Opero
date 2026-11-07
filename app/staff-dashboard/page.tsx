@@ -96,9 +96,9 @@ function StaffDashboardInner() {
       // own tables. Restrict to property_ids if any are assigned;
       // otherwise show everything the business has in that module.
       const [strProps, pmProps, eaProps] = await Promise.all([
-        supabase.from('properties').select('id,name').eq('user_id', businessId),
-        supabase.from('pm_properties').select('id,name').eq('user_id', businessId),
-        supabase.from('estate_properties').select('id,name').eq('user_id', businessId),
+        supabase.from('properties').select('id,name').eq('user_id', businessId).is('ended_at', null),
+        supabase.from('pm_properties').select('id,name').eq('user_id', businessId).is('ended_at', null),
+        supabase.from('estate_properties').select('id,name').eq('user_id', businessId).is('ended_at', null),
       ])
       const filterIds = (list: any[]) => propertyIds.length > 0 ? list.filter(p => propertyIds.includes(p.id)) : list
       const strIds = filterIds(strProps.data ?? []).map(p => p.id)

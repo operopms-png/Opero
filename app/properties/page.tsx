@@ -68,8 +68,10 @@ export default function PropertiesPage() {
       const { data: sub } = await supabase.from('subscriptions').select('plan').eq('user_id', user.id).single()
       if (sub && (sub as any).plan) setPlan((sub as any).plan)
     }
-    const { data } = await (supabase as any).from('properties').select('*').eq('user_id', user?.id).order('created_at', { ascending: false })
+    const { data } = await (supabase as any).from('properties').select('*').eq('user_id', user?.id).is('ended_at', null).order('created_at', { ascending: false })
     if (data) setProperties(data as Property[])
+    const { data: gone } = await (supabase as any).from('properties').select('*').eq('user_id', user?.id).not('ended_at', 'is', null).order('ended_at', { ascending: false })
+    setFormer(gone ?? [])
     setLoading(false)
   }
 
@@ -133,6 +135,37 @@ export default function PropertiesPage() {
     setShowModal(false)
     await fetchData()
     fetch('/api/sync-ical').then(() => fetchData())
+  }
+
+  // "No longer managed": kept with its history, hidden from active lists, restorable (see /api/property-end)
+  const [former, setFormer] = useState<any[]>([])
+  const [showFormer, setShowFormer] = useState(false)
+  const [endFor, setEndFor] = useState<{ id: string; name: string } | null>(null)
+  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10))
+  const [endReason, setEndReason] = useState('Owner took it back')
+  const [endNote, setEndNote] = useState('')
+  const [endBusy, setEndBusy] = useState(false)
+  async function endCall(body: any) {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/property-end', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ table: 'properties', ...body }) })
+    return { ok: res.ok, data: await res.json().catch(() => ({})) }
+  }
+  async function endProperty() {
+    if (!endFor) return
+    setEndBusy(true)
+    const r = await endCall({ id: endFor.id, action: 'end', ended_at: endDate, reason: endReason, note: endNote })
+    setEndBusy(false)
+    if (!r.ok) { alert(r.data?.error ?? 'Could not update the property.'); return }
+    const row = properties.find(x => x.id === endFor.id)
+    setProperties(prev => prev.filter(x => x.id !== endFor.id))
+    if (row) setFormer(prev => [{ ...row, ended_at: endDate, ended_reason: endReason, ended_note: endNote || null }, ...prev])
+    setEndFor(null); setEndNote(''); setEndReason('Owner took it back')
+  }
+  async function restoreProperty(row: any) {
+    const r = await endCall({ id: row.id, action: 'restore' })
+    if (!r.ok) { alert(r.data?.error ?? 'Could not restore the property.'); return }
+    setFormer(prev => prev.filter(x => x.id !== row.id))
+    setProperties(prev => [{ ...row, ended_at: null, ended_reason: null, ended_note: null }, ...prev])
   }
 
   async function deleteProperty(id: string) {
@@ -259,12 +292,54 @@ export default function PropertiesPage() {
                     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                       <button onClick={() => openEdit(p)} style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
                       {p.slug && <a href={`/book/${p.slug}`} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center', textDecoration: 'none', color: '#374151' }}>Preview</a>}
+                      <button onClick={() => setEndFor({ id: p.id, name: p.name })} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #F5C77E', background: '#FFFAEB', color: '#B54708', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>No longer managed</button>
                       <button onClick={() => deleteProperty(p.id)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #FEE2E2', background: '#FFF5F5', color: '#EF4444', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Delete</button>
                     </div>
                   </div>
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {former.length > 0 && (
+          <div style={{ marginTop: 28 }}>
+            <button onClick={() => setShowFormer(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#475467', padding: 0 }}>{showFormer ? '▾' : '▸'} Former properties ({former.length})</button>
+            {showFormer && (
+              <div style={{ marginTop: 10, background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, overflow: 'hidden' }}>
+                {former.map(p => (
+                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '12px 18px', borderBottom: '1px solid #F3F4F6', flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: '#323338' }}>{p.name}</div>
+                      <div style={{ fontSize: 12, color: '#6B7280' }}>No longer ours since {p.ended_at ? new Date(p.ended_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · {p.ended_reason || '—'}{p.ended_note ? ` · ${p.ended_note}` : ''}</div>
+                    </div>
+                    <button onClick={() => restoreProperty(p)} style={{ fontSize: 12, color: '#2F6DB5', background: 'none', border: '1px solid #2F6DB5', borderRadius: 6, padding: '5px 12px', cursor: 'pointer' }}>Restore</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {endFor && (
+          <div onClick={() => setEndFor(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 14, padding: 24, width: '100%', maxWidth: 460 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#1D4E89' }}>No longer managed</div>
+              <div style={{ fontSize: 14, color: '#344054', margin: '6px 0 14px' }}><b>{endFor.name}</b> moves to Former properties. Its bookings, income and history are kept. It leaves the active lists, counts, the website and the booking page, and you can restore it at any time.</div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Date it stopped being ours</label>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ width: '100%', padding: '9px 11px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }} />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Reason</label>
+              <select value={endReason} onChange={e => setEndReason(e.target.value)} style={{ width: '100%', padding: '9px 11px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, marginBottom: 12, boxSizing: 'border-box', background: '#fff' }}>
+                {['Owner took it back', 'Contract ended', 'Sold', 'Lease not renewed', 'Other'].map(r => <option key={r}>{r}</option>)}
+              </select>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4 }}>Note (optional)</label>
+              <textarea value={endNote} onChange={e => setEndNote(e.target.value)} rows={3} maxLength={1000} placeholder="Anything worth remembering" style={{ width: '100%', padding: '9px 11px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
+              <div style={{ fontSize: 12, color: '#B54708', marginTop: 8 }}>Future bookings and open jobs are not cancelled. Reassign or cancel them yourself.</div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+                <button onClick={() => setEndFor(null)} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={endProperty} disabled={endBusy || !endDate} style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: '#2F6DB5', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: endBusy ? 0.6 : 1 }}>{endBusy ? 'Saving…' : 'Mark as no longer managed'}</button>
+              </div>
+            </div>
           </div>
         )}
       </div>

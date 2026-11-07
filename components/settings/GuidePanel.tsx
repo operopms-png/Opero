@@ -42,6 +42,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'The website chat answers visitors, saves new leads and can book viewings.',
     'If your website has a careers form, each application appears in Human Intelligence Hub, then Team, then Applications. The applicant is also added to the CRM as a contact, with no deal, because they are not a sale.',
     'Landlord and tenant feedback is under Real Estate Intelligence, Landlord Feedback or Tenant Feedback. Reply to any item: the person gets an email and sees your reply in the Feedback tab of their portal, where they can answer back. When feedback or an answer arrives, your owner, Admin, Co Founder and Property Management Team members are emailed with a link, and the item goes back to New.',
+    'When you stop managing a property, open Real Estate Intelligence, then Properties, and press No longer managed (or the same button under Vacation Rentals, Properties). Choose the date and reason. The property leaves your active lists, counts, website and the AI, but its bookings, rent, documents and history are kept. Find it again under the Former filter and press Restore to bring it back. Restoring does not switch its website listing back on. Delete is different: it erases the property for good.',
     'Viewings it books appear in Viewings, and the person receives a confirmation email.',
   ] },
   { id: 'voice', title: 'Novourq Voice', steps: [

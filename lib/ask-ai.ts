@@ -50,11 +50,11 @@ export async function portalContext(c: Caller): Promise<string> {
 
   const since90 = iso(new Date(today.getTime() - 90 * 864e5)), next60 = iso(new Date(today.getTime() + 60 * 864e5))
   const [{ data: pmProps }, { data: leases }, { data: tenants }, { data: maint }, { data: strProps }, { data: bookings }, { data: contacts }, { data: deals }, { data: viewings }, { data: meetings }] = await Promise.all([
-    serviceClient.from('pm_properties').select('id,name,status').eq('user_id', biz),
+    serviceClient.from('pm_properties').select('id,name,status').eq('user_id', biz).is('ended_at', null),
     serviceClient.from('pm_leases').select('property_id,tenant_id,start_date,end_date,monthly_rent,status,renewal_status').eq('user_id', biz).order('end_date'),
     serviceClient.from('pm_tenants').select('id,name,status').eq('user_id', biz),
     serviceClient.from('pm_maintenance').select('property_id,title,priority,status,created_at').eq('user_id', biz).neq('status', 'Completed').order('created_at', { ascending: false }).limit(30),
-    serviceClient.from('properties').select('id,name,nightly_rate,status').eq('user_id', biz),
+    serviceClient.from('properties').select('id,name,nightly_rate,status').eq('user_id', biz).is('ended_at', null),
     serviceClient.from('bookings').select('property_id,guest_name,check_in,check_out,status,total_amount,platform').gte('check_out', since90).lte('check_in', next60).order('check_in').limit(150),
     serviceClient.from('crm_contacts').select('name,type,source,status,module,created_at').eq('user_id', biz).order('created_at', { ascending: false }).limit(40),
     serviceClient.from('crm_deals').select('name,stage,value,module,created_at').eq('user_id', biz).order('created_at', { ascending: false }).limit(40),

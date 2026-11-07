@@ -38,13 +38,13 @@ export async function GET(req: NextRequest) {
   const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
   const [vrProps, pmProps, pmUnits, pmTenants, pmRent, pmMaint, eaProps, eaUnits, eaTenants, eaMaint, viewings, meetings, tasks,
     strComp, pmComp, eaComp, chats, signups, clientProps, eaRentSched, devProjects, devMilestones] = await Promise.all([
-    q(db.from('properties').select('id,name').eq('user_id', biz)),
-    q(db.from('pm_properties').select('id,name,status').eq('user_id', biz)),
+    q(db.from('properties').select('id,name').eq('user_id', biz).is('ended_at', null)),
+    q(db.from('pm_properties').select('id,name,status').eq('user_id', biz).is('ended_at', null)),
     q(db.from('pm_units').select('id,status').eq('user_id', biz)),
     q(db.from('pm_tenants').select('id,name,created_at').eq('user_id', biz)),
     q(db.from('pm_rent_payments').select('id,amount,due_date,paid_date,status,created_at,property_id').eq('user_id', biz)),
     q(db.from('pm_maintenance').select('id,title,status,created_at,property_id').eq('user_id', biz)),
-    q(db.from('estate_properties').select('id,name,address,status').eq('user_id', biz)),
+    q(db.from('estate_properties').select('id,name,address,status').eq('user_id', biz).is('ended_at', null)),
     q(db.from('estate_units').select('id,status').eq('user_id', biz)),
     q(db.from('estate_tenants').select('id,created_at').eq('user_id', biz)),
     q(db.from('estate_maintenance').select('id,title,status,created_at,property_id').eq('user_id', biz)),

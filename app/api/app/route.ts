@@ -113,7 +113,7 @@ async function ownerHome(w: Who) {
   const ll = w.landlord
   if (ll) {
     const [props, pays] = await Promise.all([
-      serviceClient.from('pm_properties').select('id,name,address,city,country,image_urls,monthly_income,status').eq('owner_id', ll.id),
+      serviceClient.from('pm_properties').select('id,name,address,city,country,image_urls,monthly_income,status').eq('owner_id', ll.id).is('ended_at', null),
       serviceClient.from('pm_landlord_payments').select('id,category,amount,due_date,paid_date,notes,property_id').eq('landlord_id', ll.id).order('due_date', { ascending: false }).limit(12),
     ])
     out.pm = { landlordId: ll.id, properties: props.data ?? [], payments: pays.data ?? [] }
@@ -146,7 +146,7 @@ async function partnerHome(w: Who) {
 
 async function staffHome(w: Who) {
   const biz = w.businessId
-  const { data: props } = await serviceClient.from('properties').select('id,name').eq('user_id', biz)
+  const { data: props } = await serviceClient.from('properties').select('id,name').eq('user_id', biz).is('ended_at', null)
   const ids = (props ?? []).map(p => p.id)
   const P = (id: string) => (props ?? []).find(p => p.id === id)?.name ?? 'Property'
   const t = today()

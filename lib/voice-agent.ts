@@ -72,7 +72,7 @@ async function log(c: Caller, action: string, reason: string) {
 }
 
 async function findProperty(biz: string, name: string) {
-  const { data } = await db.from('pm_properties').select('id,name').eq('user_id', biz).limit(300)
+  const { data } = await db.from('pm_properties').select('id,name').eq('user_id', biz).is('ended_at', null).limit(300)
   const q = name.toLowerCase().trim()
   const rows = data ?? []
   const hit = rows.find(r => String(r.name).toLowerCase() === q) ?? rows.filter(r => String(r.name).toLowerCase().includes(q) || q.includes(String(r.name).toLowerCase()))[0]

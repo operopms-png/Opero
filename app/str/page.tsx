@@ -229,7 +229,7 @@ export default function STRPage() {
     // maintenance_tickets don't — they only relate to the
     // business via property_id, so fetch properties first and filter
     // the rest by that (same fix as the owner-portal).
-    const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).is('ended_at', null).order('created_at', { ascending: false })
     const { data: subRow } = await supabase.from('subscriptions').select('str_extra_blocks,plan').eq('user_id', userId).single()
     setExtraBlocks((subRow as any)?.str_extra_blocks ?? 0)
     setIsBundle(true)

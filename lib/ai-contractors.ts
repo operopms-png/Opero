@@ -35,7 +35,7 @@ export async function proposePmContractorRequests() {
     const { data: jobs } = await db.from('pm_maintenance').select('id, property_id, title, description, priority, status, assigned_to')
       .eq('user_id', biz).eq('status', 'open').is('assigned_to', null).gte('created_at', new Date(Date.now() - 3 * 86400000).toISOString()).limit(15)
     if (!jobs?.length) continue
-    const { data: props } = await db.from('pm_properties').select('id, name, address').eq('user_id', biz)
+    const { data: props } = await db.from('pm_properties').select('id, name, address').eq('user_id', biz).is('ended_at', null)
     for (const j of jobs) {
       const prop: any = (props ?? []).find((p: any) => p.id === j.property_id)
       const issue = `${j.title ?? ''}. ${j.description ?? ''}`

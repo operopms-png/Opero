@@ -144,7 +144,7 @@ export async function proposeDeposits() {
   const { aiAlert } = await import('./push')
 
   for (const businessId of businesses) {
-    const { data: props } = await db.from('pm_properties').select('id, name, address, country').eq('user_id', businessId)
+    const { data: props } = await db.from('pm_properties').select('id, name, address, country').eq('user_id', businessId).is('ended_at', null)
     const { data: leases } = await db.from('pm_leases').select('id, tenant_id, property_id, start_date, status, deposit')
       .eq('user_id', businessId).gt('deposit', 0).is('deposit_protected_date', null).gte('start_date', dayStr(-180))
     let overdue = 0, soon = 0
@@ -210,7 +210,7 @@ export async function proposeInspections() {
   result.businesses = businesses.length
 
   for (const businessId of businesses) {
-    const { data: props } = await db.from('pm_properties').select('id, name, address, status').eq('user_id', businessId)
+    const { data: props } = await db.from('pm_properties').select('id, name, address, status').eq('user_id', businessId).is('ended_at', null)
     const { data: insp } = await db.from('pm_inspections').select('property_id, scheduled_date, status').eq('user_id', businessId).gte('scheduled_date', dayStr(-182))
     const covered = new Set((insp ?? []).filter((i: any) => !/cancel/i.test(String(i.status ?? ''))).map((i: any) => i.property_id))
     for (const p of (props ?? []).filter((x: any) => !/sold|clos|inactive|archiv|vacat/i.test(String(x.status ?? '')))) {
@@ -238,7 +238,7 @@ export async function proposeStatementReminders() {
   const { aiAlert } = await import('./push')
 
   for (const businessId of businesses) {
-    const { data: props } = await db.from('pm_properties').select('id, owner_id').eq('user_id', businessId).not('owner_id', 'is', null)
+    const { data: props } = await db.from('pm_properties').select('id, owner_id').eq('user_id', businessId).is('ended_at', null).not('owner_id', 'is', null)
     const owner = new Map((props ?? []).map((p: any) => [p.id, p.owner_id as string]))
     if (!owner.size) continue
     const { data: paid } = await db.from('pm_rent_payments').select('property_id, status, paid_date').eq('user_id', businessId).gte('paid_date', f).lte('paid_date', t)

@@ -87,8 +87,8 @@ export default function Page() {
   async function loadProps(bid = businessId) {
     if (!bid) return
     const [{ data: str }, { data: est }] = await Promise.all([
-      supabase.from('properties').select('id, name, city, location, show_on_website').eq('user_id', bid).order('name'),
-      supabase.from('estate_properties').select('id, name, address, status, show_on_website').eq('user_id', bid).order('name'),
+      supabase.from('properties').select('id, name, city, location, show_on_website').eq('user_id', bid).is('ended_at', null).order('name'),
+      supabase.from('estate_properties').select('id, name, address, status, show_on_website').eq('user_id', bid).is('ended_at', null).order('name'),
     ])
     setProps([
       ...(str ?? []).map(p => ({ ...p, table: 'properties', kind: 'Furnished apartment', where: p.city || p.location })),

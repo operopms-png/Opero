@@ -352,6 +352,13 @@ function PMPageInner() {
   const [strProperties, setStrProperties] = useState<any[]>([])
   const [strReviews, setStrReviews] = useState<any[]>([])
   const [propFilter, setPropFilter] = useState<string>('All')
+  // "No longer managed": properties that have left the portfolio, kept with their history
+  const [formerProps, setFormerProps] = useState<any[]>([])
+  const [endFor, setEndFor] = useState<{table:string,id:string,name:string}|null>(null)
+  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0,10))
+  const [endReason, setEndReason] = useState('Owner took it back')
+  const [endNote, setEndNote] = useState('')
+  const [endBusy, setEndBusy] = useState(false)
   const [strCleaning, setStrCleaning] = useState<any[]>([])
   const [strMaintenance, setStrMaintenance] = useState<any[]>([])
   const [strCompliance, setStrCompliance] = useState<any[]>([])
@@ -495,7 +502,7 @@ function PMPageInner() {
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user ? await getAccountId(user) : undefined }
     if (userId) setAcctId(userId)
     const [p,u,l,t,le,pay,m,ins,docs,ex,cl,lp,comp,bk,tx,rtr,bank,bldg] = await Promise.all([
-      supabase.from('pm_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('pm_properties').select('*').eq('user_id',userId).is('ended_at',null).order('created_at',{ascending:false}),
       supabase.from('pm_units').select('*,pm_properties(name),pm_buildings(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_landlords').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('pm_tenants').select('*,pm_properties(name),pm_units(unit_number)').eq('user_id',userId).order('created_at',{ascending:false}),
@@ -536,7 +543,8 @@ function PMPageInner() {
     setTenants(t.data??[]); setLeases(le.data??[]); setPayments(pay.data??[])
     setMaintenance(maintData); setInspections(ins.data??[]); setDocuments(docs.data??[])
     // Short Stays: bookings live in the existing STR tables (no user_id column on bookings)
-    supabase.from('properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(async({data})=>{
+    Promise.all([supabase.from('pm_properties').select('*').eq('user_id',userId).not('ended_at','is',null),supabase.from('properties').select('*').eq('user_id',userId).not('ended_at','is',null)]).then(([a,b])=>setFormerProps([...(a.data??[]).map((x:any)=>({...x,_t:'pm_properties'})),...(b.data??[]).map((x:any)=>({...x,_t:'properties'}))].sort((x:any,y:any)=>String(y.ended_at).localeCompare(String(x.ended_at)))))
+    supabase.from('properties').select('*').eq('user_id',userId).is('ended_at',null).order('created_at',{ascending:false}).then(async({data})=>{
       const list=(data??[]).filter((x:any)=>propertyIds.length===0||propertyIds.includes(x.id))
       setStrProperties(list)
       const ids=list.map((x:any)=>x.id)
@@ -924,6 +932,31 @@ function PMPageInner() {
     setSaving(false)
   }
 
+  async function propEndCall(body: any) {
+    const { data:{ session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/property-end',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify(body)})
+    return { ok: res.ok, data: await res.json().catch(()=>({})) }
+  }
+  async function endProperty() {
+    if(!endFor) return
+    setEndBusy(true)
+    const r = await propEndCall({ table:endFor.table, id:endFor.id, action:'end', ended_at:endDate, reason:endReason, note:endNote })
+    setEndBusy(false)
+    if(!r.ok){ alert(r.data?.error??'Could not update the property.'); return }
+    const src:any[] = endFor.table==='pm_properties' ? properties : strProperties
+    const row = src.find((x:any)=>x.id===endFor.id)
+    if(endFor.table==='pm_properties') setProperties((prev:any[])=>prev.filter(x=>x.id!==endFor.id)); else setStrProperties((prev:any[])=>prev.filter(x=>x.id!==endFor.id))
+    if(row) setFormerProps(prev=>[{...row,_t:endFor.table,ended_at:endDate,ended_reason:endReason,ended_note:endNote||null},...prev])
+    setEndFor(null); setEndNote(''); setEndReason('Owner took it back')
+  }
+  async function restoreProperty(row:any) {
+    const r = await propEndCall({ table:row._t, id:row.id, action:'restore' })
+    if(!r.ok){ alert(r.data?.error??'Could not restore the property.'); return }
+    setFormerProps(prev=>prev.filter(x=>!(x.id===row.id&&x._t===row._t)))
+    const { _t, ended_at, ended_reason, ended_note, ...rest } = row
+    const back = { ...rest, ended_at:null, ended_reason:null, ended_note:null }
+    if(_t==='pm_properties') setProperties((prev:any[])=>[back,...prev]); else setStrProperties((prev:any[])=>[back,...prev])
+  }
   async function del(table: string, id: string, setter: any) {
     if (!confirm('Delete?')) return
     await supabase.from(table).delete().eq('id', id)
@@ -1387,20 +1420,37 @@ function PMPageInner() {
         )}
 
         {tab==='Properties'&&(() => {
-          const longRows = propFilter!=='Short stay' ? properties : []
-          const shortRows = propFilter!=='Long let' ? strProperties : []
-          const cols = '56px 1.3fr 1.3fr 100px 1.2fr 80px 130px'
+          const longRows = (propFilter==='All'||propFilter==='Long let') ? properties : []
+          const shortRows = (propFilter==='All'||propFilter==='Short stay') ? strProperties : []
+          const cols = '56px 1.3fr 1.3fr 100px 1.2fr 80px 260px'
           const typeBadge = (kind:'long'|'short') => kind==='long'
             ? {label:'Long let', bg:'#EAF3FC', fg:'#1D4E89'}
             : {label:'Short stay', bg:'#ECFDF3', fg:'#067647'}
           return (
           <div>
             <div style={{display:'flex',gap:8,marginBottom:12}}>
-              {['All','Long let','Short stay'].map(f=>(
+              {['All','Long let','Short stay','Former'].map(f=>(
                 <button key={f} onClick={()=>setPropFilter(f)} style={{padding:'6px 14px',borderRadius:14,border:propFilter===f?'1px solid #2F6DB5':'1px solid #D0D5DD',background:propFilter===f?'#EAF3FC':'#fff',color:propFilter===f?'#1D4E89':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{f}</button>
               ))}
             </div>
-            {longRows.length+shortRows.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No properties yet. Click + Add Property to get started.</div>:
+            {propFilter==='Former'?(
+              formerProps.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No former properties. When a property is no longer managed, mark it from the All list and it moves here with its full history.</div>:
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1.3fr 1.3fr 100px 120px 1.2fr 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
+                  <span>Name</span><span>Address</span><span>Type</span><span>No longer ours</span><span>Reason</span><span></span>
+                </div>
+                {formerProps.map((p:any)=>(
+                  <div key={p._t+p.id} style={{display:'grid',gridTemplateColumns:'1.3fr 1.3fr 100px 120px 1.2fr 110px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
+                    <span style={{fontWeight:500,color:'#323338'}}>{p.name}</span>
+                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')||'—'}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p._t==='pm_properties'?'#EAF3FC':'#ECFDF3',color:p._t==='pm_properties'?'#1D4E89':'#067647',justifySelf:'start'}}>{p._t==='pm_properties'?'Long let':'Short stay'}</span>
+                    <span>{p.ended_at?new Date(p.ended_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—'}</span>
+                    <span title={p.ended_note||''}>{p.ended_reason||'—'}{p.ended_note?<span style={{color:'#98A2B3'}}> · {p.ended_note}</span>:null}</span>
+                    <button onClick={()=>restoreProperty(p)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Restore</button>
+                  </div>
+                ))}
+              </div>
+            ):longRows.length+shortRows.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No properties yet. Click + Add Property to get started.</div>:
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:cols,padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
                 <span></span><span>Name</span><span>Address</span><span>Type</span><span>Detail</span><span>Status</span><span></span>
@@ -1423,6 +1473,7 @@ function PMPageInner() {
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p.status==='active'?'#D1FAE5':'#F3F4F6',color:p.status==='active'?'#059669':'#6B7280',display:'inline-block',width:'fit-content'}}>{p.status}</span>
                   <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('property',p)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>setEndFor({table:'pm_properties',id:p.id,name:p.name})} style={{fontSize:12,color:'#B54708',background:'none',border:'1px solid #F5C77E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>No longer managed</button>
                     <button onClick={()=>del('pm_properties',p.id,setProperties)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
                   </div>
                 </div>
@@ -1440,6 +1491,7 @@ function PMPageInner() {
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#F2F4F7',color:'#475467',display:'inline-block',width:'fit-content'}}>—</span>
                   <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('strProperty',{...p,nightly_rate:p.nightly_rate??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
+                    <button onClick={()=>setEndFor({table:'properties',id:p.id,name:p.name})} style={{fontSize:12,color:'#B54708',background:'none',border:'1px solid #F5C77E',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>No longer managed</button>
                     <button onClick={()=>del('properties',p.id,setStrProperties)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
                   </div>
                 </div>
@@ -4507,6 +4559,27 @@ function PMPageInner() {
             }} disabled={creatingTenantPortal||!portalTenant.email||!tenantPortalPassword} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email||!tenantPortalPassword?0.6:1}}>{creatingTenantPortal?'Creating…':'Create Portal Access'}</button>
           </div>
         </Modal>
+      )}
+      {endFor&&(
+        <div onClick={()=>setEndFor(null)} style={{position:'fixed',inset:0,background:'rgba(16,24,40,.45)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:'#fff',borderRadius:14,padding:24,width:'100%',maxWidth:460,fontFamily:'inherit'}}>
+            <div style={{fontSize:18,fontWeight:700,color:'#1D4E89'}}>No longer managed</div>
+            <div style={{fontSize:14,color:'#344054',margin:'6px 0 14px'}}><b>{endFor.name}</b> moves to Former properties. Its bookings, rent, documents and history are kept. It leaves the active lists, counts, the website and the AI, and you can restore it at any time.</div>
+            <label style={{display:'block',fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Date it stopped being ours</label>
+            <input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} style={{width:'100%',padding:'9px 11px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:14,marginBottom:12,boxSizing:'border-box'}}/>
+            <label style={{display:'block',fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Reason</label>
+            <select value={endReason} onChange={e=>setEndReason(e.target.value)} style={{width:'100%',padding:'9px 11px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:14,marginBottom:12,boxSizing:'border-box',background:'#fff'}}>
+              {['Owner took it back','Contract ended','Sold','Lease not renewed','Other'].map(r=><option key={r}>{r}</option>)}
+            </select>
+            <label style={{display:'block',fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Note (optional)</label>
+            <textarea value={endNote} onChange={e=>setEndNote(e.target.value)} rows={3} maxLength={1000} placeholder="Anything worth remembering" style={{width:'100%',padding:'9px 11px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:14,boxSizing:'border-box',resize:'vertical',fontFamily:'inherit'}}/>
+            <div style={{fontSize:12,color:'#B54708',marginTop:8}}>Future bookings and open jobs are not cancelled. Reassign or cancel them yourself.</div>
+            <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:16}}>
+              <button onClick={()=>setEndFor(null)} style={{padding:'9px 18px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:14,cursor:'pointer'}}>Cancel</button>
+              <button onClick={endProperty} disabled={endBusy||!endDate} style={{padding:'9px 18px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',opacity:endBusy?.6:1}}>{endBusy?'Saving…':'Mark as no longer managed'}</button>
+            </div>
+          </div>
+        </div>
       )}
       {viewingPhotos&&<PropertyImageSlideshow urls={viewingPhotos} onClose={()=>setViewingPhotos(null)}/>}
       </div>

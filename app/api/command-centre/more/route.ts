@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     db.from('pm_tenants').select('id,status').eq('user_id', biz),
     db.from('pm_furniture').select('id,condition').eq('user_id', biz),
     db.from('dev_projects').select('id,status,total_budget').eq('user_id', biz),
-    db.from('properties').select('id,is_bookable').eq('user_id', biz),
+    db.from('properties').select('id,is_bookable').eq('user_id', biz).is('ended_at', null),
     db.from('pm_right_to_rent_checks').select('status,recheck_date').eq('user_id', biz),
     db.from('pm_hmo_rooms').select('id,licence_expiry').eq('user_id', biz),
     db.from('pm_inspections').select('status,scheduled_date').eq('user_id', biz),

@@ -37,7 +37,7 @@ function EstateOwnerPortalInner() {
   const [sendingMessage, setSendingMessage] = useState(false)
 
   async function loadAll(ll: any) {
-    const { data: props } = await supabase.from('estate_properties').select('*').eq('owner_id', ll.id)
+    const { data: props } = await supabase.from('estate_properties').select('*').eq('owner_id', ll.id).is('ended_at', null)
     const propIds = (props ?? []).map((p: any) => p.id)
     const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
     const [{ data: tens }, { data: docs }] = await Promise.all([

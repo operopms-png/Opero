@@ -231,7 +231,7 @@ const WATCHERS: Watcher[] = [
     const { data: sub } = await db.from('subscriptions').select('created_at').eq('user_id', biz).order('created_at', { ascending: true }).limit(1).maybeSingle()
     if (!sub || String(sub.created_at).slice(0, 10) < dayStr(-21)) return null
     const [{ data: pm }, { data: est }, { data: set }, { count: team }] = await Promise.all([
-      db.from('pm_properties').select('id').eq('user_id', biz).limit(1),
+      db.from('pm_properties').select('id').eq('user_id', biz).is('ended_at', null).limit(1),
       db.from('estate_properties').select('id').eq('user_id', biz).limit(1),
       db.from('invoice_settings').select('company_name, logo_url, contact_lines').eq('business_id', biz).maybeSingle(),
       db.from('staff_tasks').select('id', { count: 'exact', head: true }).eq('user_id', biz),
@@ -254,7 +254,7 @@ const WATCHERS: Watcher[] = [
     const { data: prev } = await db.from('staff_tasks').select('id').eq('user_id', biz).eq('title', title).limit(1)
     if (prev?.length) return null
     const [{ data: props }, { data: jobs }, { data: pays }] = await Promise.all([
-      db.from('pm_properties').select('id, name, status').eq('user_id', biz),
+      db.from('pm_properties').select('id, name, status').eq('user_id', biz).is('ended_at', null),
       db.from('pm_maintenance').select('property_id, title, status, created_at').eq('user_id', biz).gte('created_at', dayStr(-90)),
       db.from('pm_rent_payments').select('due_date, paid_date, status').eq('user_id', biz).gte('due_date', dayStr(-90)).lte('due_date', today()),
     ])
@@ -320,7 +320,7 @@ const WATCHERS: Watcher[] = [
     if (prev?.length) return null
     const [{ data: leases }, { data: props }, { data: mort }, { data: off }, { data: est }] = await Promise.all([
       db.from('pm_leases').select('property_id, monthly_rent, end_date, status').eq('user_id', biz),
-      db.from('pm_properties').select('id, currency').eq('user_id', biz),
+      db.from('pm_properties').select('id, currency').eq('user_id', biz).is('ended_at', null),
       db.from('pm_mortgages').select('property_id, monthly_payment, start_date, end_date').eq('user_id', biz),
       db.from('office_expenses').select('amount').eq('user_id', biz).gte('date', dayStr(-90)),
       db.from('estate_expenses').select('amount').eq('user_id', biz).gte('date', dayStr(-90)),

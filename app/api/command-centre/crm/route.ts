@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     db.from('crm_boards').select('id', { count: 'exact', head: true }).eq('user_id', biz),
     db.from('crm_board_items').select('id', { count: 'exact', head: true }).eq('user_id', biz),
     db.from('landlord_estimates').select('status').eq('business_id', biz),
-    db.from('estate_properties').select('listed,status').eq('user_id', biz),
+    db.from('estate_properties').select('listed,status').eq('user_id', biz).is('ended_at', null),
     db.from('client_properties').select('stage,signed_at').eq('business_id', biz),
   ])
   const landlords = (ll.data ?? []) as any[]

@@ -82,7 +82,7 @@ export async function syncSmoobuReservation(userId: string, reservationId: strin
   const { data: integ } = await supabase.from('integrations').select('smoobu_api_key, smoobu_api_secret').eq('user_id', userId).maybeSingle()
   if (!integ?.smoobu_api_key) return { error: 'Smoobu not connected' }
   const apiKey: Creds = { apiKey: integ.smoobu_api_key, secret: (integ as any).smoobu_api_secret ?? null }
-  const { data: mappedProps } = await supabase.from('properties').select('id, smoobu_apartment_id').eq('user_id', userId).not('smoobu_apartment_id', 'is', null)
+  const { data: mappedProps } = await supabase.from('properties').select('id, smoobu_apartment_id').eq('user_id', userId).is('ended_at', null).not('smoobu_apartment_id', 'is', null)
   const apartmentToProperty = new Map((mappedProps ?? []).map((p: any) => [String(p.smoobu_apartment_id), p.id]))
 
   const full = await smoobuFetch(apiKey, `/reservations/${reservationId}`)
@@ -118,6 +118,7 @@ export async function runSmoobuSync(onlyUserId?: string) {
         .from('properties')
         .select('id, smoobu_apartment_id')
         .eq('user_id', userId)
+        .is('ended_at', null)
         .not('smoobu_apartment_id', 'is', null)
 
       if (!mappedProps?.length) continue

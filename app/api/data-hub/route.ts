@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     count('pm_documents', biz), count('estate_documents', biz), count('company_documents', biz), count('crm_contacts', biz),
     Promise.all([db.from('pm_tenants').select('id,name,email').eq('user_id', biz).limit(2000), db.from('estate_tenants').select('id,name,email').eq('user_id', biz).limit(2000)]),
     Promise.all([db.from('pm_landlords').select('id,name,email').eq('user_id', biz).limit(2000), db.from('estate_landlords').select('id,name,email').eq('user_id', biz).limit(2000)]),
-    Promise.all([db.from('pm_properties').select('id,name,address').eq('user_id', biz).limit(2000), db.from('estate_properties').select('id,name,address').eq('user_id', biz).limit(2000)]),
+    Promise.all([db.from('pm_properties').select('id,name,address').eq('user_id', biz).is('ended_at', null).limit(2000), db.from('estate_properties').select('id,name,address').eq('user_id', biz).is('ended_at', null).limit(2000)]),
     db.from('pm_compliance').select('type,expiry_date,property_id').eq('user_id', biz).not('expiry_date', 'is', null).lte('expiry_date', soon).order('expiry_date').limit(30),
     db.from('estate_compliance').select('type,expiry_date,property_id').eq('user_id', biz).not('expiry_date', 'is', null).lte('expiry_date', soon).order('expiry_date').limit(30),
     db.from('crm_contacts').select('source').eq('user_id', biz).limit(3000),

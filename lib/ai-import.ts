@@ -36,7 +36,7 @@ export async function runImport(biz: string, p: { properties?: ImportProperty[];
   const db = svc()
   const [ls, ps, ts] = await Promise.all([
     db.from('pm_landlords').select('id, name, email').eq('user_id', biz),
-    db.from('pm_properties').select('id, name').eq('user_id', biz),
+    db.from('pm_properties').select('id, name').eq('user_id', biz).is('ended_at', null),
     db.from('pm_tenants').select('id, name, email').eq('user_id', biz),
   ])
   const landlord = new Map<string, string>(), prop = new Map<string, string>()

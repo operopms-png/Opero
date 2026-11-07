@@ -232,7 +232,7 @@ export default function PartnersPage() {
       supabase.from('owner_statements').select('owner_id, owner_amount, status'),
       supabase.from('partner_agents').select('*').eq('user_id', biz).order('created_at', { ascending: false }),
       supabase.from('agent_referrals').select('*').eq('user_id', biz).order('created_at', { ascending: false }),
-      supabase.from('properties').select('id, name').eq('user_id', biz).order('name'),
+      supabase.from('properties').select('id, name').eq('user_id', biz).is('ended_at', null).order('name'),
     ])
     setAllOwners(o.data ?? [])
     setAllStatements(s.data ?? [])

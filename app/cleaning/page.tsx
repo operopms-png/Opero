@@ -63,7 +63,7 @@ export default function CleaningTasksPage() {
 
   async function fetchProperties() {
     const { data: { user } } = await supabase.auth.getUser()
-    const { data } = await supabase.from('properties').select('id, name').eq('user_id', user?.id)
+    const { data } = await supabase.from('properties').select('id, name').eq('user_id', user?.id).is('ended_at', null)
     if (data) setProperties(data)
   }
 

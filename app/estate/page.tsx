@@ -368,7 +368,7 @@ export default function Page() {
     let userId = uid
     if (!userId) { const {data:{user}} = await supabase.auth.getUser(); userId = user ? await getAccountId(user) : undefined }
     const [p,sub,t,tn,v,m,e,ba,tx,r,mt,cl,cp,bl,un,bk,inv,doc,ll,lp] = await Promise.all([
-      supabase.from('estate_properties').select('*').eq('user_id',userId).order('created_at',{ascending:false}),
+      supabase.from('estate_properties').select('*').eq('user_id',userId).is('ended_at', null).order('created_at',{ascending:false}),
       supabase.from('subscriptions').select('ea_extra_blocks,plan,modules').eq('user_id',userId).single(),
       supabase.from('estate_tenants').select('*,estate_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}),
       supabase.from('estate_tenancies').select('*,estate_properties(name),estate_tenants(name,email)').eq('user_id',userId).order('created_at',{ascending:false}),

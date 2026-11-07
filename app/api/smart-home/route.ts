@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
     const [{ data: conn }, { data: team }, { data: props }] = await Promise.all([
       serviceClient.from('smart_connections').select('provider,region,access_id,status,last_error,last_synced_at').eq('business_id', c.businessId),
       serviceClient.from('team_members').select('name,email,role').eq('user_id', c.businessId).order('name'),
-      serviceClient.from('estate_properties').select('id,name').eq('user_id', c.businessId).order('name'),
+      serviceClient.from('estate_properties').select('id,name').eq('user_id', c.businessId).is('ended_at', null).order('name'),
     ])
     out.connections = (conn ?? []).map(x => ({ ...x, access_id: x.access_id ? x.access_id.slice(0, 4) + '••••' + x.access_id.slice(-3) : null }))
     out.team = team ?? []; out.properties = props ?? []; out.regions = Object.entries(TUYA_REGIONS).map(([k, v]) => ({ k, l: v.label }))

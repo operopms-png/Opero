@@ -31,7 +31,7 @@ export default function ListingsPage() {
     if (!user) { window.location.href = '/login'; return }
     const uid = await getAccountId(user)
     const [p, v] = await Promise.all([
-      supabase.from('estate_properties').select('*').eq('user_id', uid).order('name'),
+      supabase.from('estate_properties').select('*').eq('user_id', uid).is('ended_at', null).order('name'),
       supabase.from('estate_viewings').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(300),
     ])
     setProps(p.data ?? []); setViews(v.data ?? []); setLoading(false)

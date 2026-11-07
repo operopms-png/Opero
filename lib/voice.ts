@@ -15,7 +15,7 @@ export type Dict = { terms: string[]; shortcuts: { term: string; replacement: st
 export async function dictionaryFor(businessId: string): Promise<Dict> {
   const [d, p] = await Promise.all([
     db.from('voice_dictionary').select('term,replacement').eq('business_id', businessId).limit(300),
-    db.from('properties').select('name').eq('user_id', businessId).limit(150),
+    db.from('properties').select('name').eq('user_id', businessId).is('ended_at', null).limit(150),
   ])
   const terms = new Set<string>()
   const shortcuts: Dict['shortcuts'] = []

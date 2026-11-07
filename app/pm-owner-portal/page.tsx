@@ -58,7 +58,7 @@ function PMOwnerPortalInner() {
 
   async function loadAll(ll: any) {
     const [{ data: props }, { data: pays }, { data: msgs }] = await Promise.all([
-      supabase.from('pm_properties').select('*').eq('owner_id', ll.id),
+      supabase.from('pm_properties').select('*').eq('owner_id', ll.id).is('ended_at', null),
       supabase.from('pm_landlord_payments').select('*, pm_properties(name)').eq('landlord_id', ll.id).order('due_date', { ascending: false }),
       supabase.from('pm_landlord_messages').select('*').eq('landlord_id', ll.id).order('created_at', { ascending: true }),
     ])

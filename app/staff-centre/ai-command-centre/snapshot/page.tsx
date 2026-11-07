@@ -89,7 +89,7 @@ export default function AICommandCentre() {
       if (live) setAgents((data ?? []) as Agent[])
       if (user) {
         const uid = await getAccountId(user)
-        const { count } = await supabase.from('properties').select('id', { count: 'exact', head: true }).eq('user_id', uid)
+        const { count } = await supabase.from('properties').select('id', { count: 'exact', head: true }).eq('user_id', uid).is('ended_at', null)
         if (live) setPropCount(count ?? 0)
       }
     })()

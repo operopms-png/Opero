@@ -25,9 +25,9 @@ export async function loadPropertyMap(businessId: string): Promise<{ items: MapI
   const today = new Date().toISOString().slice(0, 10)
   const soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)
   const [pm, ea, st, leases, tenants, rent, comp, tenancies, deals, pmU, eaU, pmB, eaB, devP, devU] = await Promise.all([
-    db.from('pm_properties').select('id,name,address,city,country,status,monthly_income,currency,lat,lng,geocoded_at').eq('user_id', businessId).limit(500),
-    db.from('estate_properties').select('id,name,address,country,status,rent,currency,lat,lng,geocoded_at,pm_property_id').eq('user_id', businessId).limit(500),
-    db.from('properties').select('id,name,address,city,country,status,lat,lng,geocoded_at').eq('user_id', businessId).limit(500),
+    db.from('pm_properties').select('id,name,address,city,country,status,monthly_income,currency,lat,lng,geocoded_at').eq('user_id', businessId).is('ended_at', null).limit(500),
+    db.from('estate_properties').select('id,name,address,country,status,rent,currency,lat,lng,geocoded_at,pm_property_id').eq('user_id', businessId).is('ended_at', null).limit(500),
+    db.from('properties').select('id,name,address,city,country,status,lat,lng,geocoded_at').eq('user_id', businessId).is('ended_at', null).limit(500),
     db.from('pm_leases').select('property_id,status,monthly_rent,end_date').eq('user_id', businessId).ilike('status', 'active').limit(2000),
     db.from('pm_tenants').select('property_id,name,status').eq('user_id', businessId).ilike('status', 'active').limit(2000),
     db.from('pm_rent_payments').select('property_id,amount,due_date,status').eq('user_id', businessId).ilike('status', 'overdue').limit(2000),

@@ -83,7 +83,7 @@ export async function proposeMarketForecast() {
     const to = u?.user?.email
     if (!to) { result.errors.push(`market_forecast ${businessId}: no owner email`); continue }
     const sign = await companyName(businessId)
-    const { data: props } = await db.from('estate_properties').select('id, name, address, type, bedrooms, bathrooms, rent, currency, country').eq('user_id', businessId).gt('rent', 0).limit(6)
+    const { data: props } = await db.from('estate_properties').select('id, name, address, type, bedrooms, bathrooms, rent, currency, country').eq('user_id', businessId).is('ended_at', null).gt('rent', 0).limit(6)
     const cache = new Map<string, any>()
     const lines: string[] = []
     for (const p of props ?? []) {

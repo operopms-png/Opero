@@ -189,7 +189,7 @@ export default function OwnerPortalPage() {
     // properties has a user_id column, but bookings/maintenance_tickets don't —
     // they only relate to the business via property_id, so fetch properties
     // first and filter the rest by that.
-    const { data: props } = await supabase.from('properties').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    const { data: props } = await supabase.from('properties').select('*').eq('user_id', userId).is('ended_at', null).order('created_at', { ascending: false })
     const ids = (props ?? []).map(p => p.id)
     const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
     const [b, t, allStmts] = await Promise.all([

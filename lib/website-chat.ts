@@ -53,10 +53,10 @@ export async function liveListings(businessId: string): Promise<Listing[]> {
   const [{ data: str }, { data: est }] = await Promise.all([
     serviceClient.from('properties')
       .select('id, name, city, location, bedrooms, nightly_rate, image_url, description')
-      .eq('user_id', businessId).eq('show_on_website', true),
+      .eq('user_id', businessId).eq('show_on_website', true).is('ended_at', null),
     serviceClient.from('estate_properties')
       .select('id, name, address, bedrooms, rent, status, image_urls')
-      .eq('user_id', businessId).eq('show_on_website', true),
+      .eq('user_id', businessId).eq('show_on_website', true).is('ended_at', null),
   ])
   const strIds = (str ?? []).map(p => p.id)
   const booked: Record<string, { from: string; to: string }[]> = {}

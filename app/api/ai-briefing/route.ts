@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (!c) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const biz = c.businessId, today = day(), in30 = day(30), in60 = day(60)
 
-  const props = await rows(db.from('properties').select('id').eq('user_id', biz))
+  const props = await rows(db.from('properties').select('id').eq('user_id', biz).is('ended_at', null))
   const propIds = props.map(p => p.id)
 
   const [budgetLines, projects, oldSnags, approvals, rent, pmComp, eaComp, devComp, pmLeases, eaLeases, pmMaint, strMaint, checkins, cleans, viewings, snags] = await Promise.all([

@@ -25,7 +25,7 @@ export type ChiefStep = { title: string; why: string; notes: string; due_in_days
 // Plain counts from the records. The AI only ever sees these, so it cannot invent a figure.
 export async function businessFacts(biz: string) {
   const db = svc(), today = dayStr()
-  const props = await rows(db.from('properties').select('id').eq('user_id', biz))
+  const props = await rows(db.from('properties').select('id').eq('user_id', biz).is('ended_at', null))
   const ids = props.map(p => p.id)
   const [approvals, rent, pmComp, eaComp, devComp, pmLeases, pmMaint, strMaint, checkins, cleans, decided, tasks] = await Promise.all([
     rows(db.from('ai_pending_actions').select('id').eq('user_id', biz).in('status', ['pending', 'failed'])),

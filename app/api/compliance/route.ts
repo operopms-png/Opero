@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
   const [vr, pm, ea, dev, vrP, pmP, eaP, devP] = await Promise.all([
     q(db.from('str_compliance').select('*').eq('user_id', biz)), q(db.from('pm_compliance').select('*').eq('user_id', biz)),
     q(db.from('estate_compliance').select('*').eq('user_id', biz)), q(db.from('dev_compliance').select('*').eq('user_id', biz)),
-    q(db.from('properties').select('id,name').eq('user_id', biz)), q(db.from('pm_properties').select('id,name').eq('user_id', biz)),
+    q(db.from('properties').select('id,name').eq('user_id', biz).is('ended_at', null)), q(db.from('pm_properties').select('id,name').eq('user_id', biz).is('ended_at', null)),
     q(db.from('estate_properties').select('id,name,address').eq('user_id', biz)), q(db.from('dev_projects').select('id,name').eq('user_id', biz)),
   ])
   const props: Record<string, { id: string; name: string }[]> = {

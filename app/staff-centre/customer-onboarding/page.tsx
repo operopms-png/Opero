@@ -165,7 +165,7 @@ export default function CustomerOnboardingPage() {
 
     if (currentMod.key === 'str') {
       const [{ data: ps }, { data: os }] = await Promise.all([
-        supabase.from('properties').select('id, name').eq('user_id', uid).order('name', { ascending: true }),
+        supabase.from('properties').select('id, name').eq('user_id', uid).is('ended_at', null).order('name', { ascending: true }),
         supabase.from('owner_profiles').select('id, name, property_ids').eq('business_id', uid).order('name', { ascending: true }),
       ])
       setVrProps((ps ?? []).map((p: any) => ({ id: p.id, name: String(p.name ?? '').trim() || 'Untitled' })))
@@ -175,7 +175,7 @@ export default function CustomerOnboardingPage() {
     // Property onboarding: one card per property, progress lives on the property itself
     if (currentSeg.key === 'str_property') {
       const [{ data: props }, { data: owners }] = await Promise.all([
-        supabase.from('properties').select('id, name, city, location, staging_stage').eq('user_id', uid).order('name', { ascending: true }),
+        supabase.from('properties').select('id, name, city, location, staging_stage').eq('user_id', uid).is('ended_at', null).order('name', { ascending: true }),
         supabase.from('owner_profiles').select('name, property_ids').eq('business_id', uid),
       ])
       const ownerNames = (pid: string) => (owners ?? []).filter((o: any) => (o.property_ids ?? []).includes(pid)).map((o: any) => String(o.name ?? '').trim()).filter(Boolean)

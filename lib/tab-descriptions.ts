@@ -38,7 +38,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Deposits': 'Tenancy deposits held, which protection scheme each is registered with, and when it must be protected or returned.',
   'Renewals & Notices': 'Tenancies coming to an end, renewal status, and notices sent or due.',
   'Accounting Export': 'Download your income and expenses as a file for your accountant.',
-  'Properties': 'Every property you manage, with address, owner and status. Open one to edit it.',
+  'Properties': 'Every property you manage, with address, owner and status. Open one to edit it. When you stop managing one, use No longer managed: it moves to Former with its history kept.',
   'Buildings': 'Buildings that contain several units, with address and number of units.',
   'Units': 'Individual flats, rooms and units, with rent, status and current tenant.',
   'Landlords': 'The owners you manage for: contact details, bank details and their properties.',

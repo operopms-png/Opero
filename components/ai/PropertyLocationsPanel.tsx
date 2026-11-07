@@ -82,8 +82,8 @@ export default function PropertyLocationsPanel() {
       const uid = await getAccountId(user)
       const [ea, pm, pr] = await Promise.all([
         supabase.from('estate_properties').select('address,country,lat,lng').eq('user_id', uid),
-        supabase.from('pm_properties').select('address,city,country').eq('user_id', uid),
-        supabase.from('properties').select('name,city,country').eq('user_id', uid),
+        supabase.from('pm_properties').select('address,city,country').eq('user_id', uid).is('ended_at', null),
+        supabase.from('properties').select('name,city,country').eq('user_id', uid).is('ended_at', null),
       ])
       setRows([...(ea.data ?? []), ...(pm.data ?? []), ...(pr.data ?? [])] as Row[])
     })()

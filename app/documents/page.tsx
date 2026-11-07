@@ -17,7 +17,7 @@ export default function DocumentsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const [{ data: d }, { data: p }] = await Promise.all([
       supabase.from('documents').select('*, properties(name)').eq('user_id', user?.id).order('created_at', { ascending: false }),
-      supabase.from('properties').select('id, name').eq('user_id', user?.id),
+      supabase.from('properties').select('id, name').eq('user_id', user?.id).is('ended_at', null),
     ])
     setDocs(d ?? [])
     setProperties(p ?? [])

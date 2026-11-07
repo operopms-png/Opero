@@ -42,7 +42,7 @@ export type Progress = {
 export async function progress(userId: string, g: { target: Target }): Promise<Progress> {
   const d = db(); const t = g.target
   const loc = t.location.split(',')[0].trim().replace(/[%,()]/g, '')
-  let pq = d.from('pm_properties').select('id, monthly_income').eq('user_id', userId)
+  let pq = d.from('pm_properties').select('id, monthly_income').eq('user_id', userId).is('ended_at', null)
   if (loc) pq = pq.or(`address.ilike.%${loc}%,city.ilike.%${loc}%,name.ilike.%${loc}%`)
   const { data: props } = await pq
   const ids = (props ?? []).map((p: any) => p.id)
