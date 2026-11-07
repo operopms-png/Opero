@@ -1,4 +1,4 @@
-// The platform owner: the Novourq team's own login. Tabs marked ownerOnly in
+// The platform owner: the Novourq team's own login. Pages listed in OWNER_TABS in
 // lib/staffHubs.ts show only to these emails. Client companies' admins (and
 // everyone on their teams) never see them, and cannot be granted them in Team
 // Management. An email address is not a secret, so it lives here in code.

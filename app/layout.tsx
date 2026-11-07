@@ -94,7 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         window.location.href = '/'
         return
       }
-      // Owner-only pages (lib/staffHubs.ts → ownerOnly): anyone but the platform owner goes home
+      // Owner-only pages (OWNER_TABS in lib/staffHubs.ts): anyone but the platform owner goes home
       if (OWNER_ONLY_PATHS.some(p => pathname === p || pathname?.startsWith(p + '/')) && !isPlatformOwnerEmail(user.email)) {
         window.location.href = '/'
         return

@@ -8,7 +8,7 @@ import { useRole, ROLE_MODULES, getScTabs, resolveAccess } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import { BRAND_NAME } from '@/lib/brand'
-import { STAFF_HUBS, NON_HUMAN_HUBS, HUMAN_HUB_HREF, humanHubTabs, tabMatches } from '@/lib/staffHubs'
+import { STAFF_HUBS, NON_HUMAN_HUBS, HUMAN_HUB_HREF, OWNER_TABS, humanHubTabs, tabMatches } from '@/lib/staffHubs'
 
 const NAV_GROUPS = [
   {
@@ -170,7 +170,7 @@ export default function Sidebar() {
           const scTabs = (group as any).staffCentre ? getScTabs(role, teamModules) : []
           // Partners only see what they've been given — no locked/greyed-out items
           const isPartner = role === 'Partner'
-          const itemAllowed = (it: any) => it.ownerOnly ? (isPlatformOwner && hasModule) : it.requiresModule
+          const itemAllowed = (it: any) => it.requiresModule
             ? (modules.includes(it.requiresModule) && roleModules.includes(it.requiresModule))
             : it.scTab ? (hasModule && scTabs.includes(it.scTab)) : hasModule
           if (isPartner && !group.items.some((it: any) => itemAllowed(it) && !String(it.href).startsWith('/settings'))) return null
@@ -242,6 +242,21 @@ export default function Sidebar() {
             </Link>
           )
         })()}
+        {isPlatformOwner && role !== 'Partner' && (
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #C9DEF3' }}>
+            {!isCollapsed && <div style={{ fontSize: 10, fontWeight: 700, color: '#2F6DB5', textTransform: 'uppercase', letterSpacing: '0.06em', padding: '4px 10px' }}>Platform Owner</div>}
+            {OWNER_TABS.map(t => {
+              const on = pathname === t.href || pathname.startsWith(t.href + '/')
+              return (
+                <Link key={t.href} href={t.href} data-active={on ? '1' : undefined} title={isCollapsed ? t.label : undefined} onClick={() => setOpen(false)}
+                  style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: on ? 600 : 400, background: on ? '#B9D6F2' : 'transparent', color: on ? '#1D4E89' : '#1B2F4B' }}>
+                  <Icon name={t.icon} size={16} color={on ? '#1D4E89' : '#2F6DB5'} />
+                  {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>{t.label}</span>}
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </nav>
 
       {/* Bottom */}
