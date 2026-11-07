@@ -8,7 +8,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/platform/revenue': { title: 'Revenue and Customers', text: 'Novourq\'s own monthly income, subscribers, trials and cancellations across every client. Only the platform owner can see this.' },
   '/staff-centre/platform/ai-usage': { title: 'AI Usage and Costs', text: 'What the AI costs per client, so you can protect your margin. Only the platform owner can see this.' },
   '/staff-centre/platform/audit': { title: 'Audit Log', text: 'Every recorded change across every client, newest first. Only the platform owner can see this.' },
-  '/staff-centre/platform/notes': { title: 'Notes', text: 'Your private notes, saved automatically. Only the platform owner can see this.' },
+  '/staff-centre/platform/notes': { title: 'Notes', text: 'Your private notes in folders, saved automatically. Only the platform owner can see this.' },
   '/staff-centre/oversight': { title: 'Dashboard', text: 'Your whole business at a glance, with Novourq Cloud AI showing what it has done and what is waiting for you.' },
   '/dashboard': { title: 'Dashboard', text: 'Your properties, bookings and jobs at a glance.' },
   '/crm': { title: 'CRM', text: 'Contacts, deals and follow-ups in one place.' },
