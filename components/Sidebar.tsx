@@ -268,7 +268,7 @@ export default function Sidebar() {
           {!isCollapsed && (
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: '#1B2F4B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail.split('@')[0]}</div>
-              <div style={{ fontSize: 11, color: '#2F6DB5' }}>{role}</div>
+              <div style={{ fontSize: 11, color: '#2F6DB5' }}>{isPlatformOwner ? 'Platform Owner' : role}</div>
             </div>
           )}
           {!isCollapsed && (
