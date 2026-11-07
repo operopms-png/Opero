@@ -9,7 +9,7 @@ import { SITE_URL } from '@/lib/brand'
 // POST { key, name, email, phone, role, category, message, website }
 //  - key: the business's website public key (Staff Centre -> Website Chats -> Settings & install)
 //  - website: hidden honeypot field; bots fill it, people don't
-// Saves into Staff Centre -> Applications (stage "Applied"). The bell alert comes from the
+// Saves into Staff Centre -> Applications (stage "Applied") and adds the applicant to the CRM as a contact (type "applicant"). The bell alert comes from the
 // job_applications database trigger; this route also emails the team.
 
 const CATEGORY_TO_MODULE: Record<string, string> = {
@@ -70,6 +70,20 @@ export async function POST(req: NextRequest) {
       console.error('[careers-apply]', error)
       return reply({ error: 'Something went wrong. Please try again.' }, 500)
     }
+
+    // Also list the applicant in the CRM as a contact (no deal: they are a job applicant, not a sale)
+    const { error: crmError } = await serviceClient.from('crm_contacts').insert({
+      user_id: s.business_id,
+      name,
+      email,
+      phone: phone || null,
+      type: 'applicant',
+      source: 'Website careers',
+      module: CATEGORY_TO_MODULE[category.toLowerCase()] || 'pm',
+      status: 'prospect',
+      notes: [`Applied for: ${role}`, category ? `Category: ${category}` : null, message ? `Message: ${message}` : null].filter(Boolean).join('\n'),
+    })
+    if (crmError) console.error('[careers-apply] crm contact', crmError)
 
     // Email the team (the bell alert is added by the database trigger)
     let to = s.alert_email
