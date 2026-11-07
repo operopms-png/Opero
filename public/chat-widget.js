@@ -41,6 +41,10 @@
     '*{box-sizing:border-box;font-family:Poppins,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}',
     '.launcher{position:fixed;right:24px;bottom:24px;z-index:2147483000;height:56px;padding:0 22px 0 14px;border-radius:30px;background:#1A1A1A;color:#fff;display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;box-shadow:0 12px 30px rgba(0,0,0,.25);cursor:pointer;border:none}',
     '.launcher .dot{width:30px;height:30px;border-radius:50%;background:#2F5597;display:flex;align-items:center;justify-content:center}',
+    // Novourq's own website: the launcher matches the Novourq Voice pill (light blue, animated mark)
+    '.launcher.nvq{height:46px;padding:0 18px 0 4px;border-radius:23px;background:#BFDDF7;color:#0B1B45;font-size:13px;font-weight:700;gap:10px;box-shadow:0 6px 18px rgba(11,27,69,.25)}',
+    '.launcher.nvq img{width:40px;height:40px;display:block}',
+    '.launcher.nvq:hover{background:#B3D6F5}',
     '.panel{position:fixed;right:24px;bottom:92px;z-index:2147483000;width:380px;height:600px;max-height:calc(100vh - 120px);background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.22);display:flex;flex-direction:column;overflow:hidden;border:1px solid #D9DEE8;color:#1A1A1A}',
     '.panel[hidden]{display:none}',
     '.head{background:#1A1A1A;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}',
@@ -108,7 +112,11 @@
       '<div class="foot"><textarea rows="1" placeholder="Ask anything…" aria-label="Your message" maxlength="1000"></textarea><button class="send" aria-label="Send">' + ICON_SEND + '</button></div>' +
       '<div class="fine">AI assistant · can make mistakes · the team will confirm anything important</div>'
     var launcher = el('button', 'launcher', '<span class="dot">' + ICON_CHAT + '</span><span>Ask us anything</span>')
-    launcher.setAttribute('aria-label', 'Open chat')
+    if (/novourq/i.test(cfg.company || '')) {
+      launcher.className = 'launcher nvq'
+      launcher.innerHTML = '<img src="' + API + '/novourq-ai-logo.webp" alt="" width="40" height="40"><span>' + esc(cfg.name) + '</span>'
+    }
+    launcher.setAttribute('aria-label', 'Open ' + cfg.name)
     root.appendChild(panel)
     root.appendChild(launcher)
 
