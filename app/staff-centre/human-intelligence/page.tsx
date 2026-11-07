@@ -18,12 +18,12 @@ const C = { ink: '#10234d', text: '#34456b', muted: '#6b7a9f', blue: '#2f5bd6', 
 const shadow = '0 1px 2px rgba(16,35,77,.05), 0 8px 24px rgba(16,35,77,.06)'
 
 export default function HumanIntelligenceHub() {
-  const { role, modules: teamModules } = useRole()
+  const { role, modules: teamModules, isPlatformOwner } = useRole()
   const [cat, setCat] = useState(0)
   const [q, setQ] = useState('')
   const roleModules = teamModules ?? ROLE_MODULES[role] ?? []
   const scTabs = getScTabs(role, roleModules)
-  const allowed = (t: HubTab) => t.requiresModule ? roleModules.includes(t.requiresModule) : t.scTab ? scTabs.includes(t.scTab) : role !== 'Partner'
+  const allowed = (t: HubTab) => t.ownerOnly ? isPlatformOwner : t.requiresModule ? roleModules.includes(t.requiresModule) : t.scTab ? scTabs.includes(t.scTab) : role !== 'Partner'
   const term = q.trim().toLowerCase()
 
   const groups = useMemo(() => {

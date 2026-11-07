@@ -99,7 +99,7 @@ export default function Sidebar() {
     read(); window.addEventListener('popstate', read); window.addEventListener('opero:nav', read)
     return () => { window.removeEventListener('popstate', read); window.removeEventListener('opero:nav', read) }
   }, [pathname])
-  const { role, hasSettings, modules: teamModules } = useRole()
+  const { role, hasSettings, modules: teamModules, isPlatformOwner } = useRole()
 
   // Red counts on menu items: things waiting for attention in each area
   // (one database call, see sidebar_counts() in Supabase). Partners get none.
@@ -170,7 +170,7 @@ export default function Sidebar() {
           const scTabs = (group as any).staffCentre ? getScTabs(role, teamModules) : []
           // Partners only see what they've been given — no locked/greyed-out items
           const isPartner = role === 'Partner'
-          const itemAllowed = (it: any) => it.requiresModule
+          const itemAllowed = (it: any) => it.ownerOnly ? (isPlatformOwner && hasModule) : it.requiresModule
             ? (modules.includes(it.requiresModule) && roleModules.includes(it.requiresModule))
             : it.scTab ? (hasModule && scTabs.includes(it.scTab)) : hasModule
           if (isPartner && !group.items.some((it: any) => itemAllowed(it) && !String(it.href).startsWith('/settings'))) return null

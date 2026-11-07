@@ -7,6 +7,8 @@ import PageBanner from '@/components/PageBanner'
 import Sidebar from '@/components/Sidebar'
 import VoiceDictation from '@/components/VoiceDictation'
 import { supabase } from '@/lib/supabase'
+import { OWNER_ONLY_PATHS } from '@/lib/staffHubs'
+import { isPlatformOwnerEmail } from '@/lib/platform-owner'
 import { resolveAccess, ROLE_SETTINGS, ROLE_MODULES, getScTabs } from '@/lib/useRole'
 import { SidebarCollapseProvider, useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import './globals.css'
@@ -44,7 +46,6 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/partners': 'partners',
   '/partners': 'partners',
   '/staff-centre/investors': 'investors',
-  '/staff-centre/customer-onboarding': 'customeronboarding',
   '/staff-centre/portal-access': 'portalaccess',
   '/staff-centre/inbox': 'inbox',
   '/staff-centre/website-chats': 'inbox',
@@ -90,6 +91,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         return
       }
       if (pathname?.startsWith('/settings') && !ROLE_SETTINGS[role]) {
+        window.location.href = '/'
+        return
+      }
+      // Owner-only pages (lib/staffHubs.ts → ownerOnly): anyone but the platform owner goes home
+      if (OWNER_ONLY_PATHS.some(p => pathname === p || pathname?.startsWith(p + '/')) && !isPlatformOwnerEmail(user.email)) {
         window.location.href = '/'
         return
       }

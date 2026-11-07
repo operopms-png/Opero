@@ -17,7 +17,7 @@ export default function HubTabs() {
   const pathname = usePathname()
   const [search, setSearch] = useState('')
   const [counts, setCounts] = useState<Record<string, number>>({})
-  const { role, modules: teamModules } = useRole()
+  const { role, modules: teamModules, isPlatformOwner } = useRole()
   const [bannerH, setBannerH] = useState(0)
   useEffect(() => {
     const on = () => setBannerH((window as any).__bannerH ?? 0)
@@ -34,7 +34,7 @@ export default function HubTabs() {
   // same rules as the sidebar (components/Sidebar.tsx → itemAllowed)
   const roleModules = teamModules ?? ROLE_MODULES[role] ?? []
   const scTabs = getScTabs(role, roleModules)
-  const allowed = (t: HubTab) => t.requiresModule ? roleModules.includes(t.requiresModule) : t.scTab ? scTabs.includes(t.scTab) : role !== 'Partner'
+  const allowed = (t: HubTab) => t.ownerOnly ? isPlatformOwner : t.requiresModule ? roleModules.includes(t.requiresModule) : t.scTab ? scTabs.includes(t.scTab) : role !== 'Partner'
 
   const hub = hubFor(pathname, search)
   const tabs = hub ? hub.tabs.filter(t => !t.hidden && allowed(t)) : []

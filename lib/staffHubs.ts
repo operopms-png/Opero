@@ -6,7 +6,8 @@
 
 import type { StaffCentreKey, ModuleKey } from './accessRegistry'
 
-export type HubTab = { href: string; label: string; scTab?: StaffCentreKey; requiresModule?: ModuleKey; badge?: string; hidden?: boolean }
+// ownerOnly: shown only to the platform owner (lib/platform-owner.ts), never to client companies.
+export type HubTab = { href: string; label: string; scTab?: StaffCentreKey; requiresModule?: ModuleKey; badge?: string; hidden?: boolean; ownerOnly?: boolean }
 export type Hub = { label: string; icon: string; tabs: HubTab[] }
 
 export const STAFF_HUBS: Hub[] = [
@@ -50,7 +51,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Portals', icon: 'globe', tabs: [
     { href: '/staff-centre/portal-access', label: 'Portal Access', scTab: 'portalaccess' },
     { href: '/staff-centre/portals', label: 'Property Portals', scTab: 'portals' },
-    { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', scTab: 'customeronboarding' },
+    { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', ownerOnly: true },
   ] },
   { label: 'Marketing', icon: 'sparkles', tabs: [
     { href: '/staff-centre/marketing', label: 'Marketing', scTab: 'marketing' },
@@ -106,6 +107,9 @@ export function humanHubTabs(): HubTab[] {
 }
 
 const ALL_TABS = STAFF_HUBS.flatMap(h => h.tabs)
+
+// Page paths that only the platform owner may open (every tab marked ownerOnly)
+export const OWNER_ONLY_PATHS = ALL_TABS.filter(t => t.ownerOnly).map(t => t.href.split('?')[0])
 
 // Is this tab the page being shown? A tab with ?section=… matches only that
 // section; a tab without one matches its path unless another tab claims the

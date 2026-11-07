@@ -12,7 +12,6 @@ export const STAFF_CENTRE_TABS = [
   { k: 'companydocs', l: 'Company Documents' },
   { k: 'partners',   l: 'Partners' },
   { k: 'investors',  l: 'Investors' },
-  { k: 'customeronboarding', l: 'Customer Onboarding' },
   { k: 'meetings',    l: 'Meetings' },
   { k: 'listings',    l: 'Listings' },
   { k: 'smarthome',   l: 'Smart Home' },

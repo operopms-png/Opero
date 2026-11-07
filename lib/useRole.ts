@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { STAFF_CENTRE_TABS, TEAM_MODULES, type StaffCentreKey } from '@/lib/accessRegistry'
+import { isPlatformOwnerEmail } from '@/lib/platform-owner'
 
 export { STAFF_CENTRE_TABS, TEAM_MODULES }
 export type { StaffCentreKey, ModuleKey } from '@/lib/accessRegistry'
@@ -151,10 +152,12 @@ export function useRole() {
   const [propertyIds, setPropertyIds] = useState<string[]>([])
   const [customModules, setCustomModules] = useState<string[] | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isPlatformOwner, setIsPlatformOwner] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setLoading(false); return }
+      setIsPlatformOwner(isPlatformOwnerEmail(user.email))
       const access = await resolveAccess(user)
       setRole(access.role)
       setPropertyIds(access.propertyIds)
@@ -163,5 +166,5 @@ export function useRole() {
     })
   }, [])
 
-  return { role, propertyIds, loading, modules: customModules ?? (ROLE_MODULES[role] ?? []), hasSettings: ROLE_SETTINGS[role] ?? false, readOnly: ROLE_READONLY[role] ?? false }
+  return { role, propertyIds, loading, isPlatformOwner, modules: customModules ?? (ROLE_MODULES[role] ?? []), hasSettings: ROLE_SETTINGS[role] ?? false, readOnly: ROLE_READONLY[role] ?? false }
 }

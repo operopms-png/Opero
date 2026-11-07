@@ -12,7 +12,7 @@ import { requireStaffWithBusiness, serviceClient } from '@/lib/admin-auth'
 
 const GRANTABLE_MODULES = ['str', 'pm', 'ea', 'dev']
 const GRANTABLE_SC_TABS = [
-  'oversight', 'partners', 'investors', 'customeronboarding', 'meetings', 'inbox', 'portalaccess',
+  'oversight', 'partners', 'investors', 'meetings', 'inbox', 'portalaccess',
   'portals', 'maintenance', 'crm', 'marketing', 'applications', 'performance', 'hr',
   'training', 'calendar', 'tasks', 'finance', 'compliance', 'smarthome', 'listings',
 ]
