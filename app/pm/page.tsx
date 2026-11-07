@@ -368,6 +368,7 @@ function PMPageInner() {
   const [acctId, setAcctId] = useState('')
   const [feedback, setFeedback] = useState<any[]>([])
   const [replyFor, setReplyFor] = useState<string|null>(null)
+  const [fbThread, setFbThread] = useState<Record<string, any[]>>({})
   const [replyText, setReplyText] = useState('')
   const [replyBusy, setReplyBusy] = useState(false)
   const [fxRates, setFxRates] = useState<any[]>([])
@@ -557,7 +558,16 @@ function PMPageInner() {
     supabase.from('pm_legal_cases').select('*,pm_properties(name)').eq('user_id',userId).order('next_deadline',{ascending:true,nullsFirst:false}).then(({data})=>setLegalCases(data??[]))
     supabase.from('pm_referrals').select('*,pm_properties(name)').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setReferrals(data??[]))
     supabase.from('pm_valuations').select('*,pm_properties(name,currency)').eq('user_id',userId).order('valuation_date',{ascending:false}).then(({data})=>setValuations(data??[]))
-    supabase.from('portal_feedback').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setFeedback(data??[]))
+    supabase.from('portal_feedback').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(async({data})=>{
+      setFeedback(data??[])
+      if(!data?.length) return
+      const { data:{ session } } = await supabase.auth.getSession()
+      const r = await fetch('/api/feedback-thread?ids='+data.map((x:any)=>x.id).join(','),{headers:{Authorization:`Bearer ${session?.access_token??''}`}})
+      const j = await r.json().catch(()=>({}))
+      const m:Record<string,any[]> = {}
+      ;(j.messages??[]).forEach((x:any)=>{(m[x.feedback_id]=m[x.feedback_id]||[]).push(x)})
+      setFbThread(m)
+    })
     supabase.from('pm_fx_rates').select('*').eq('user_id',userId).order('currency',{ascending:true}).then(({data})=>setFxRates(data??[]))
     supabase.from('guest_comm_templates').select('*').eq('user_id',userId).then(({data})=>setCommTemplates(data??[]))
     supabase.from('str_guest_messages').select('*').eq('user_id',userId).order('created_at',{ascending:false}).then(({data})=>setGuestMessages(data??[]))
@@ -2261,6 +2271,7 @@ function PMPageInner() {
             setReplyBusy(false)
             if(!res.ok){alert(d.error??'Could not send the reply.');return}
             setFeedback((prev:any[])=>prev.map(f=>f.id===id?{...f,reply:replyText.trim(),replied_at:new Date().toISOString(),status:f.status==='New'?'Seen':f.status}:f))
+            setFbThread(prev=>({...prev,[id]:[...(prev[id]??[]),{id:'local-'+Date.now(),feedback_id:id,sender:'team',sender_name:'You',body:replyText.trim(),created_at:new Date().toISOString()}]}))
             setReplyFor(null); setReplyText('')
             alert(d.emailed?'Reply saved and emailed. They can also see it in their portal.':'Reply saved. They can see it in their portal. No email address is held, so no email was sent.')
           }
@@ -2291,7 +2302,16 @@ function PMPageInner() {
                     </div>
                   </div>
                   {f.comment&&<div style={{fontSize:13.5,color:'#344054',marginTop:8,whiteSpace:'pre-wrap'}}>{f.comment}</div>}
-                  {f.reply&&<div style={{marginTop:10,padding:'10px 12px',background:'#EAF3FC',borderRadius:8,borderLeft:'3px solid #2F6DB5'}}><div style={{fontSize:11.5,fontWeight:700,color:'#1D4E89',marginBottom:3}}>Your reply{f.replied_by?` · ${f.replied_by}`:''}{f.replied_at?` · ${new Date(f.replied_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`:''}</div><div style={{fontSize:13.5,color:'#1B2F4B',whiteSpace:'pre-wrap'}}>{f.reply}</div></div>}
+                  {(fbThread[f.id]?.length)?(
+                    <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
+                      {fbThread[f.id].map((m:any)=>(
+                        <div key={m.id} style={m.sender==='team'?{padding:'10px 12px',background:'#EAF3FC',borderRadius:8,borderLeft:'3px solid #2F6DB5'}:{padding:'10px 12px',background:'#F2F4F7',borderRadius:8,borderLeft:'3px solid #98A2B3'}}>
+                          <div style={{fontSize:11.5,fontWeight:700,color:m.sender==='team'?'#1D4E89':'#475467',marginBottom:3}}>{m.sender==='team'?`Your reply${m.sender_name?` · ${m.sender_name}`:''}`:(m.sender_name||f.person_name||'Their reply')} · {new Date(m.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div>
+                          <div style={{fontSize:13.5,color:'#1B2F4B',whiteSpace:'pre-wrap'}}>{m.body}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ):(f.reply&&<div style={{marginTop:10,padding:'10px 12px',background:'#EAF3FC',borderRadius:8,borderLeft:'3px solid #2F6DB5'}}><div style={{fontSize:11.5,fontWeight:700,color:'#1D4E89',marginBottom:3}}>Your reply{f.replied_by?` · ${f.replied_by}`:''}{f.replied_at?` · ${new Date(f.replied_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`:''}</div><div style={{fontSize:13.5,color:'#1B2F4B',whiteSpace:'pre-wrap'}}>{f.reply}</div></div>)}
                   {replyFor===f.id?(
                     <div style={{marginTop:10}}>
                       <textarea value={replyText} onChange={e=>setReplyText(e.target.value)} rows={3} placeholder="Write your reply. It is shown in their portal and emailed to them." style={{width:'100%',padding:'9px 11px',borderRadius:8,border:'1px solid #D0D5DD',fontSize:13,fontFamily:'inherit',boxSizing:'border-box',resize:'vertical'}}/>
@@ -2301,7 +2321,7 @@ function PMPageInner() {
                       </div>
                     </div>
                   ):(
-                    <button onClick={()=>{setReplyFor(f.id);setReplyText(f.reply??'')}} style={{marginTop:8,fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>{f.reply?'Edit reply':'Reply'}</button>
+                    <button onClick={()=>{setReplyFor(f.id);setReplyText('')}} style={{marginTop:8,fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>{(fbThread[f.id]?.length||f.reply)?'Reply again':'Reply'}</button>
                   )}
                 </div>
               ))}

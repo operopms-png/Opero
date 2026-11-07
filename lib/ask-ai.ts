@@ -4,6 +4,7 @@
 // Admins see everything; other staff only get properties, scripts and the
 // Airbnb chats from mailboxes they can already open. Server-only.
 import { portalGuide } from './portal-guide'
+import { logAiUsage } from '@/lib/ai-usage'
 import { serviceClient } from '@/lib/admin-auth'
 import type { Caller } from '@/lib/mailbox'
 import { buildThreads } from '@/lib/airbnb-inbox'
@@ -100,7 +101,7 @@ How to answer:
   return s
 }
 
-export async function askClaude(system: string, messages: ChatMsg[], web: boolean): Promise<{ text?: string; error?: string }> {
+export async function askClaude(system: string, messages: ChatMsg[], web: boolean, businessId?: string | null): Promise<{ text?: string; error?: string }> {
   if (!process.env.ANTHROPIC_API_KEY) return { error: 'The AI isn’t configured on the server' }
   const body: any = {
     model: 'claude-sonnet-4-6', max_tokens: 2000, system,
@@ -114,6 +115,7 @@ export async function askClaude(system: string, messages: ChatMsg[], web: boolea
   })
   if (!res.ok) return { error: `The AI is unavailable right now (${res.status})` }
   const data = await res.json()
+  logAiUsage(businessId, web ? 'Ask AI (web search)' : 'Ask AI', 'claude-sonnet-4-6', data)
   const text = (data.content ?? []).filter((x: any) => x.type === 'text').map((x: any) => x.text).join('').trim()
   return text ? { text } : { error: 'The AI didn’t return an answer — try again.' }
 }

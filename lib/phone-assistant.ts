@@ -54,7 +54,7 @@ export async function handleAssistantMessage(row: { business_id: string; user_em
   const { data: hist } = await db.from('assistant_messages').select('role,content').eq('phone', row.phone).order('created_at', { ascending: false }).limit(10)
   const messages: ChatMsg[] = [...(hist ?? []).reverse().map(h => ({ role: h.role as 'user' | 'assistant', content: h.content })), { role: 'user', content: text }]
   const portal = await portalContext(c).catch(() => null)
-  const out = await askClaude(systemPrompt({ c, portal, web: false }) + FORMAT, messages, false)
+  const out = await askClaude(systemPrompt({ c, portal, web: false }) + FORMAT, messages, false, c.businessId)
   if (out.error || !out.text) return 'Sorry, I could not answer that just now. Please try again in a minute.'
   const { reply, tasks } = parse(out.text)
 

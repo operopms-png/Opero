@@ -111,6 +111,10 @@ const ALL_TABS = STAFF_HUBS.flatMap(h => h.tabs)
 // To add an owner-only page, add a line here.
 export const OWNER_TABS: { href: string; label: string; icon: string }[] = [
   { href: '/staff-centre/customer-onboarding', label: 'Customer Onboarding', icon: 'shield' },
+  { href: '/staff-centre/platform/revenue', label: 'Revenue and Customers', icon: 'revenue' },
+  { href: '/staff-centre/platform/ai-usage', label: 'AI Usage and Costs', icon: 'sparkles' },
+  { href: '/staff-centre/platform/audit', label: 'Audit Log', icon: 'file' },
+  { href: '/staff-centre/platform/notes', label: 'Notes', icon: 'file' },
 ]
 // Page paths that only the platform owner may open
 export const OWNER_ONLY_PATHS = OWNER_TABS.map(t => t.href.split('?')[0])

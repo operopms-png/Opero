@@ -1,4 +1,5 @@
 import { serviceClient } from '@/lib/admin-auth'
+import { logAiUsage } from '@/lib/ai-usage'
 import { sendEmail } from '@/lib/send-email'
 import { SITE_URL } from '@/lib/brand'
 
@@ -160,7 +161,7 @@ export const TOOLS = [
   },
 ]
 
-export async function callClaudeChat(system: string, messages: any[]) {
+export async function callClaudeChat(system: string, messages: any[], businessId?: string | null) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -171,7 +172,9 @@ export async function callClaudeChat(system: string, messages: any[]) {
     body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 700, system, tools: TOOLS, messages }),
   })
   if (!res.ok) throw new Error(`Claude API error ${res.status}: ${await res.text()}`)
-  return res.json()
+  const data = await res.json()
+  logAiUsage(businessId, 'Website chat', 'claude-sonnet-4-6', data)
+  return data
 }
 
 const INTEREST_TO_CRM: Record<string, { module: string; type: string }> = {

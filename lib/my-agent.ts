@@ -1,6 +1,7 @@
 // Personal assistant for tenants and landlords (server only). It sees ONLY the signed-in person's own records
 // (from loadMyData) and can only pass requests to the property manager as tasks or repair jobs.
 // No money, no tenancy changes, nothing about anyone else.
+import { logAiUsage } from '@/lib/ai-usage'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { loadMyData } from '@/lib/my-data'
 import { aiTaskBy } from '@/lib/ai-proposal-utils'
@@ -84,6 +85,7 @@ ${context}`
     }).catch(() => null)
     if (!res || !res.ok) return { reply: reply || 'Sorry, I could not do that just now. Please try again in a minute.', jobs }
     const data = await res.json()
+    logAiUsage(biz, 'Portal assistant', FAST_MODEL, data)
     const blocks: any[] = data.content ?? []
     reply = blocks.filter(b => b.type === 'text').map(b => b.text).join(' ').trim() || reply
     const uses = blocks.filter(b => b.type === 'tool_use')

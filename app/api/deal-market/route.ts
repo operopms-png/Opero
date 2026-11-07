@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { requireUser } from '@/lib/admin-auth'
+import { logAiUsage } from '@/lib/ai-usage'
 
 // Local market check for the Deal Analyser.
 // Claude searches the web for real comparable listings near the deal and
@@ -40,7 +41,7 @@ const OVERVIEW_SHAPE = `JSON shape:
  "confidence_reason": "one sentence on how solid the local data is"
 }`
 
-async function run(b: any) {
+async function run(b: any, uid: string) {
   if (!process.env.ANTHROPIC_API_KEY) return { error: 'The AI isn’t configured on the server' }
   const location = String(b.location || '').trim().slice(0, 200)
   if (!location) return { error: 'Add the property’s location first' }
@@ -77,6 +78,7 @@ ${b.letting ? `Letting type: ${b.letting}\n` : ''}
   clearTimeout(stop)
   if (!res.ok) return { error: `The market search is unavailable right now (${res.status})` }
   const data = await res.json()
+  logAiUsage(uid, 'Deal market search', 'claude-sonnet-4-6', data)
 
   // URLs that genuinely came back from the searches
   const found = new Map<string, { url: string; title: string }>()
@@ -136,7 +138,7 @@ export async function POST(req: NextRequest) {
     async start(ctl) {
       const tick = setInterval(() => { try { ctl.enqueue(enc.encode(' ')) } catch {} }, 4000)
       let out: any
-      try { out = await run(b) } catch (e: any) { out = { error: e?.message || 'Something went wrong' } }
+      try { out = await run(b, uid) } catch (e: any) { out = { error: e?.message || 'Something went wrong' } }
       clearInterval(tick)
       ctl.enqueue(enc.encode(JSON.stringify(out)))
       ctl.close()

@@ -9,6 +9,7 @@ import { queueAiAction } from '@/lib/ai-approvals'
 import { MONEY_OR_CONTRACT } from '@/lib/ai-authority'
 import { parseBrief, relearn } from '@/lib/deal-finder'
 import { FAST_MODEL } from '@/lib/receptionist'
+import { logAiUsage } from '@/lib/ai-usage'
 
 // The portal snapshot is heavy to build, so it is reused for 45 seconds and dropped when the AI changes something.
 const portalCache = new Map<string, { at: number; text: string | null }>()
@@ -164,6 +165,7 @@ export async function runAgent(c: Caller, text: string, history: { role: 'user' 
     }).catch(() => null)
     if (!res || !res.ok) return { reply: reply || 'Sorry, I could not do that just now. Try again in a minute.', jobs: ctx.jobs, actions: ctx.actions }
     const data = await res.json()
+    logAiUsage(c.businessId, call ? 'Phone assistant' : 'Novourq Voice', call ? FAST_MODEL : 'claude-sonnet-4-6', data)
     const blocks: any[] = data.content ?? []
     reply = blocks.filter(b => b.type === 'text').map(b => b.text).join(' ').trim() || reply
     const uses = blocks.filter(b => b.type === 'tool_use')

@@ -6,6 +6,7 @@
 // whole thing stays inside the 60-second server limit. Listing links are only
 // kept if they actually came back from the search, so the AI can't invent one.
 
+import { logAiUsage } from '@/lib/ai-usage'
 export type EstimateInput = {
   location: string; country?: string | null; propertyType?: string | null
   bedrooms?: number | null; bathrooms?: number | null; furnished?: string | null; currency: 'USD' | 'JMD' | 'GBP'
@@ -67,6 +68,7 @@ async function ask(system: string, user: string): Promise<{ out: any; found: Map
     })
     if (!res.ok) return null
     const data = await res.json()
+    logAiUsage(null, 'Earnings estimate', 'claude-sonnet-4-6', data)
     const found = new Map<string, string>()
     for (const blk of data.content ?? []) if (blk.type === 'web_search_tool_result' && Array.isArray(blk.content)) for (const r of blk.content) if (r?.url) found.set(clean(r.url), r.url)
     const text = (data.content ?? []).filter((x: any) => x.type === 'text').map((x: any) => x.text).join('\n')

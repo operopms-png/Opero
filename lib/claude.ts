@@ -1,3 +1,5 @@
+import { logAiUsage } from '@/lib/ai-usage'
+
 export async function callClaude(system: string, userMessage: string, maxTokens = 500, model = 'claude-sonnet-4-6'): Promise<{ text?: string; error?: string }> {
   if (!process.env.ANTHROPIC_API_KEY) return { error: 'ANTHROPIC_API_KEY is not configured on the server' }
 
@@ -22,6 +24,7 @@ export async function callClaude(system: string, userMessage: string, maxTokens 
   }
 
   const data = await res.json()
+  logAiUsage(null, 'General AI', model, data)
   const text = data.content?.find((c: any) => c.type === 'text')?.text ?? ''
   return { text }
 }
@@ -69,6 +72,7 @@ export async function callClaudeWithDocument(
   }
 
   const data = await res.json()
+  logAiUsage(null, 'Document AI (bank statement)', 'claude-sonnet-4-6', data)
   const text = data.content?.find((c: any) => c.type === 'text')?.text ?? ''
   return { text }
 }
@@ -103,6 +107,7 @@ export async function callClaudeWithSearch(system: string, userMessage: string, 
   }
 
   const data = await res.json()
+  logAiUsage(null, 'General AI', 'claude-sonnet-4-6', data)
   // Response can interleave text blocks with tool_use/tool_result blocks —
   // concatenate every text block in order to get the full final answer.
   const text = (data.content ?? [])

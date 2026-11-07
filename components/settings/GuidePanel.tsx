@@ -41,6 +41,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'To connect your own website chat: open Human Intelligence Hub, then Inbox, then Website Chats. Your own chat is set up automatically. Copy the one line of code under Add it to your website and paste it into your website footer or custom code area (WordPress, Elementor, Wix and Squarespace all have one). Chats then appear in the same tab and the AI answers using your settings.',
     'The website chat answers visitors, saves new leads and can book viewings.',
     'If your website has a careers form, each application appears in Human Intelligence Hub, then Team, then Applications. The applicant is also added to the CRM as a contact, with no deal, because they are not a sale.',
+    'Landlord and tenant feedback is under Real Estate Intelligence, Landlord Feedback or Tenant Feedback. Reply to any item: the person gets an email and sees your reply in the Feedback tab of their portal, where they can answer back. When feedback or an answer arrives, your owner, Admin, Co Founder and Property Management Team members are emailed with a link, and the item goes back to New.',
     'Viewings it books appear in Viewings, and the person receives a confirmation email.',
   ] },
   { id: 'voice', title: 'Novourq Voice', steps: [

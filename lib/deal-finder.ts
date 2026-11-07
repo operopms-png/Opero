@@ -1,6 +1,7 @@
 // Deal finder. A client describes what they want in plain words; the AI turns it into a brief, searches the web for
 // REAL current listings (links are kept only if they came back from the search), and learns from likes and passes.
 import { createClient } from '@supabase/supabase-js'
+import { logAiUsage } from '@/lib/ai-usage'
 import { callClaude } from './claude'
 
 const db = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -69,6 +70,7 @@ export async function searchBrief(userId: string, brief: { id: string; text: str
   clearTimeout(stop)
   if (!res.ok) return { error: `The search is unavailable right now (${res.status})`, added: 0 }
   const data = await res.json()
+  logAiUsage(userId, 'Deal finder', 'claude-sonnet-4-6', data)
   const found = new Set<string>()
   for (const blk of data.content ?? []) {
     if (blk.type === 'web_search_tool_result' && Array.isArray(blk.content)) for (const r of blk.content) if (r?.url) found.add(clean(r.url))

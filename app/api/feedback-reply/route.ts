@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
     reply, replied_at: new Date().toISOString(), replied_by: c.name || c.email, status: f.status === 'New' ? 'Seen' : f.status,
   }).eq('id', id)
   if (error) return bad(error.message, 500)
+  // Keep the thread: the reply is also stored as a message so the person can answer it
+  await db.from('portal_feedback_messages').insert({ feedback_id: id, user_id: f.user_id, sender: 'team', sender_name: c.name || c.email, body: reply }).then(() => {}, () => {})
 
   // Email the person (if we hold an address for them).
   let emailed = false

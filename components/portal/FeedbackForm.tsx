@@ -42,25 +42,51 @@ export default function FeedbackForm({ source, personTable, personId, personName
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
   const [mine, setMine] = useState<any[]>([])
+  const [thread, setThread] = useState<Record<string, any[]>>({})
+  const [replyOpen, setReplyOpen] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replyBusy, setReplyBusy] = useState(false)
 
   async function load() {
     if (!personId) return
     const { data } = await supabase.from('portal_feedback').select('*').eq('person_id', personId).order('created_at', { ascending: false })
     setMine(data ?? [])
+    if (data?.length) {
+      const r = await api('/api/feedback-thread?ids=' + data.map((x: any) => x.id).join(','))
+      const m: Record<string, any[]> = {}
+      ;(r.data.messages ?? []).forEach((x: any) => { (m[x.feedback_id] = m[x.feedback_id] || []).push(x) })
+      setThread(m)
+    }
+  }
+  // Feedback follow-ups go through the server, which checks this person owns the feedback.
+  async function api(url: string, body?: any) {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(url, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: body ? JSON.stringify(body) : undefined })
+    return { ok: res.ok, data: await res.json().catch(() => ({})) }
+  }
+  async function sendReplyBack(id: string) {
+    if (!replyText.trim() || replyBusy) return
+    setReplyBusy(true)
+    const r = await api('/api/feedback-thread', { feedback_id: id, body: replyText })
+    setReplyBusy(false)
+    if (!r.ok) { setMsg(r.data?.error || 'Sorry, your message could not be sent.'); return }
+    setThread(prev => ({ ...prev, [id]: [...(prev[id] ?? []), r.data.message] }))
+    setReplyOpen(null); setReplyText('')
   }
   useEffect(() => { load() }, [personId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function send() {
     if (!personId || !businessId || rating < 1) return
     setSending(true); setMsg('')
-    const { error } = await supabase.from('portal_feedback').insert({
+    const { data: created, error } = await supabase.from('portal_feedback').insert({
       user_id: businessId, source, person_table: personTable, person_id: personId,
       person_name: personName ?? null, property_name: propertyName ?? null,
       rating, category, comment: comment.trim() || null,
-    })
+    }).select('id').single()
     setSending(false)
     if (error) { setMsg('Sorry, your feedback could not be sent. Please try again.'); return }
     setRating(0); setComment(''); setMsg('Thank you. Your feedback has been sent to the team.')
+    if (created?.id) api('/api/feedback-thread', { feedback_id: created.id, action: 'notify_new' }) // emails the team
     load()
   }
 
@@ -96,11 +122,38 @@ export default function FeedbackForm({ source, personTable, personId, personName
               </div>
               <div style={{ fontSize: 12, color: '#667085', marginTop: 6 }}>{f.category}</div>
               {f.comment && <div style={{ fontSize: 13.5, color: '#344054', marginTop: 4, whiteSpace: 'pre-wrap' }}>{f.comment}</div>}
-              {f.reply && (
+              {(thread[f.id]?.length ?? 0) > 0 ? (
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {thread[f.id].map((m: any) => m.sender === 'team' ? (
+                    <div key={m.id} style={{ padding: '10px 12px', background: '#EAF3FC', borderRadius: 8, borderLeft: '3px solid #2F6DB5' }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1D4E89', marginBottom: 3 }}>Reply from the team · {new Date(m.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      <div style={{ fontSize: 13.5, color: '#1B2F4B', whiteSpace: 'pre-wrap' }}>{m.body}</div>
+                    </div>
+                  ) : (
+                    <div key={m.id} style={{ padding: '10px 12px', background: '#F2F4F7', borderRadius: 8, borderLeft: '3px solid #98A2B3' }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#475467', marginBottom: 3 }}>You · {new Date(m.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      <div style={{ fontSize: 13.5, color: '#344054', whiteSpace: 'pre-wrap' }}>{m.body}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : f.reply ? (
                 <div style={{ marginTop: 10, padding: '10px 12px', background: '#EAF3FC', borderRadius: 8, borderLeft: '3px solid #2F6DB5' }}>
                   <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1D4E89', marginBottom: 3 }}>Reply from the team{f.replied_at ? ` · ${new Date(f.replied_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</div>
                   <div style={{ fontSize: 13.5, color: '#1B2F4B', whiteSpace: 'pre-wrap' }}>{f.reply}</div>
                 </div>
+              ) : null}
+              {((thread[f.id]?.length ?? 0) > 0 || f.reply) && !preview && (
+                replyOpen === f.id ? (
+                  <div style={{ marginTop: 10 }}>
+                    <textarea value={replyText} onChange={e => setReplyText(e.target.value)} rows={3} maxLength={3000} placeholder="Write your reply to the team" style={{ ...field, resize: 'vertical' }} />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                      <button onClick={() => sendReplyBack(f.id)} disabled={replyBusy || !replyText.trim()} style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: BLUE, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: replyBusy || !replyText.trim() ? 0.6 : 1 }}>{replyBusy ? 'Sending…' : 'Send reply'}</button>
+                      <button onClick={() => { setReplyOpen(null); setReplyText('') }} style={{ padding: '7px 16px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', color: '#344054', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => { setReplyOpen(f.id); setReplyText('') }} style={{ marginTop: 8, fontSize: 12, color: BLUE, background: 'none', border: '1px solid ' + BLUE, borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>Reply</button>
+                )
               )}
             </div>
           ))}

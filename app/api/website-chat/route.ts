@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     let cards: any[] = []
     let showForm: string | null = null
     for (let round = 0; round < 3; round++) {
-      const res = await callClaudeChat(system, messages)
+      const res = await callClaudeChat(system, messages, s.business_id)
       const textParts = (res.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text)
       // Keep the latest round's text only (earlier rounds are usually "let me pull those up…")
       const roundText = textParts.join('\n').trim()

@@ -72,7 +72,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     const web = !!b.use_web
     const messages: ChatMsg[] = [...history, { role: 'user', content: message, at: new Date().toISOString() }]
     const portal = b.use_portal === false ? null : await portalContext(c).catch(() => null)
-    const r = await askClaude(systemPrompt({ c, portal, web, deal: kind === 'deal' ? b.deal : undefined }), messages, web)
+    const r = await askClaude(systemPrompt({ c, portal, web, deal: kind === 'deal' ? b.deal : undefined }), messages, web, c.businessId)
     if (!r.text) return { error: r.error || 'The AI couldn’t answer' }
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
