@@ -33,7 +33,14 @@ const PATH_MODULE: Record<string, string> = {
 
 const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/oversight': 'oversight',
-  '/staff-centre/data-hub': 'oversight',
+  '/staff-centre/data-hub': 'datahub',
+  '/staff-centre/company-documents': 'companydocs',
+  '/staff-centre/ai-command-centre': 'ai',
+  '/staff-centre/ai-approvals': 'ai',
+  '/staff-centre/invoices': 'invoices',
+  '/staff-centre/approvals': 'approvals',
+  '/staff-centre/announcements': 'announcements',
+  '/staff-centre/activity-log': 'activitylog',
   '/staff-centre/partners': 'partners',
   '/partners': 'partners',
   '/staff-centre/investors': 'investors',
@@ -55,8 +62,8 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/listings': 'listings',
   '/staff-centre/smart-home': 'smarthome',
   '/staff-centre/airbnb': 'inbox',
-  '/staff-centre/landlord-leads': 'crm',
-  '/staff-centre/client-properties': 'crm',
+  '/staff-centre/landlord-leads': 'landlordleads',
+  '/staff-centre/client-properties': 'clientproperties',
   '/staff-centre/finance': 'finance',
   '/staff-centre/compliance': 'compliance',
 }

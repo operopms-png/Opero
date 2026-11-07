@@ -13,14 +13,14 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Dashboard', icon: 'trendingup', tabs: [
     { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
   ] },
-  { label: 'Data Hub', icon: 'folder', tabs: [{ href: '/staff-centre/data-hub', label: 'Data Hub', scTab: 'oversight' }] },
-  { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'oversight' }] },
+  { label: 'Data Hub', icon: 'folder', tabs: [{ href: '/staff-centre/data-hub', label: 'Data Hub', scTab: 'datahub' }] },
+  { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'companydocs' }] },
   { label: 'Novourq Cloud AI', icon: 'sparkles', tabs: [
-    { href: '/staff-centre/ai-command-centre', label: 'Novourq Cloud AI', scTab: 'oversight', hidden: true },
-    { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'oversight', hidden: true },
-    { href: '/staff-centre/ai-approvals', label: 'AI Approvals', scTab: 'oversight', hidden: true },
-    { href: '/staff-centre/ai-command-centre/results', label: 'AI Results', scTab: 'oversight', hidden: true },
-    { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Novourq Cloud AI', scTab: 'oversight', hidden: true },
+    { href: '/staff-centre/ai-command-centre', label: 'Novourq Cloud AI', scTab: 'ai', hidden: true },
+    { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'ai', hidden: true },
+    { href: '/staff-centre/ai-approvals', label: 'AI Approvals', scTab: 'ai', hidden: true },
+    { href: '/staff-centre/ai-command-centre/results', label: 'AI Results', scTab: 'ai', hidden: true },
+    { href: '/staff-centre/ai-command-centre/ask-grok', label: 'Novourq Cloud AI', scTab: 'ai', hidden: true },
     { href: '/staff-centre/ai-command-centre/deal-analyser', label: 'Deal Analyser', requiresModule: 'invest', hidden: true },
   ] },
   { label: 'Inbox', icon: 'message', tabs: [
@@ -32,10 +32,10 @@ export const STAFF_HUBS: Hub[] = [
   ] },
   { label: 'CRM', icon: 'contacts', tabs: [
     { href: '/staff-centre/crm', label: 'CRM', scTab: 'crm', badge: 'crm' },
-    { href: '/staff-centre/landlord-leads', label: 'Landlord Leads', scTab: 'crm' },
+    { href: '/staff-centre/landlord-leads', label: 'Landlord Leads', scTab: 'landlordleads' },
   ] },
   { label: 'Client Properties', icon: 'home', tabs: [
-    { href: '/staff-centre/client-properties', label: 'Client Properties', scTab: 'crm' },
+    { href: '/staff-centre/client-properties', label: 'Client Properties', scTab: 'clientproperties' },
     { href: '/invest', label: 'Deal Analyser', requiresModule: 'invest' },
     { href: '/invest?section=Watchlist', label: 'Watchlist', requiresModule: 'invest' },
   ] },
@@ -68,8 +68,8 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/finance/reminders', label: 'Reminders', scTab: 'finance' },
     { href: '/staff-centre/finance/risk-alerts', label: 'Risk alerts', scTab: 'finance' },
     { href: '/staff-centre/finance/partner-payouts', label: 'Partner Payouts', scTab: 'finance' },
-    { href: '/staff-centre/invoices', label: 'Invoices' },
-    { href: '/staff-centre/approvals', label: 'Approvals', badge: 'approvals' },
+    { href: '/staff-centre/invoices', label: 'Invoices', scTab: 'invoices' },
+    { href: '/staff-centre/approvals', label: 'Approvals', scTab: 'approvals', badge: 'approvals' },
   ] },
   { label: 'Tax Compliance', icon: 'taxshield', tabs: [{ href: '/staff-centre/tax-compliance', label: 'Tax Compliance', scTab: 'finance' }] },
   { label: 'Reports', icon: 'revenue', tabs: [
@@ -87,8 +87,8 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Smart Home', icon: 'shield', tabs: [{ href: '/staff-centre/smart-home', label: 'Smart Home', scTab: 'smarthome' }] },
   { label: 'Team', icon: 'team', tabs: [
     { href: '/settings?section=Team+Management', label: 'Team Management' },
-    { href: '/staff-centre/announcements', label: 'Announcements', badge: 'announcements' },
-    { href: '/staff-centre/activity-log', label: 'Activity Log' },
+    { href: '/staff-centre/announcements', label: 'Announcements', scTab: 'announcements', badge: 'announcements' },
+    { href: '/staff-centre/activity-log', label: 'Activity Log', scTab: 'activitylog' },
     { href: '/staff-centre/hr', label: 'People & HR', scTab: 'hr', badge: 'hr' },
     { href: '/staff-centre/performance', label: 'Staff Performance', scTab: 'performance' },
     { href: '/staff-centre/training', label: 'Staff Training', scTab: 'training' },

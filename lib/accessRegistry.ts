@@ -7,6 +7,9 @@
 
 export const STAFF_CENTRE_TABS = [
   { k: 'oversight',  l: 'Dashboard' },
+  { k: 'ai',          l: 'Novourq Cloud AI' },
+  { k: 'datahub',     l: 'Data Hub' },
+  { k: 'companydocs', l: 'Company Documents' },
   { k: 'partners',   l: 'Partners' },
   { k: 'investors',  l: 'Investors' },
   { k: 'customeronboarding', l: 'Customer Onboarding' },
@@ -20,8 +23,14 @@ export const STAFF_CENTRE_TABS = [
   { k: 'compliance',  l: 'Compliance' },
   { k: 'finance',     l: 'Finance (money, payouts, arrears)' },
   { k: 'crm',         l: 'CRM' },
+  { k: 'landlordleads', l: 'Landlord Leads' },
+  { k: 'clientproperties', l: 'Client Properties' },
+  { k: 'invoices',    l: 'Invoices' },
+  { k: 'approvals',   l: 'Approvals' },
   { k: 'marketing',   l: 'Marketing' },
   { k: 'applications', l: 'Applications' },
+  { k: 'announcements', l: 'Announcements' },
+  { k: 'activitylog', l: 'Activity Log' },
   { k: 'performance', l: 'Staff Performance' },
   { k: 'hr',          l: 'People & HR' },
   { k: 'training',    l: 'Staff Training' },
@@ -34,7 +43,7 @@ export type StaffCentreKey = typeof STAFF_CENTRE_TABS[number]['k']
 // Module chips shown in Team Management's "Custom module access".
 export const TEAM_MODULES = [
   { k: 'str',    l: 'Vacation Rentals' },
-  { k: 'pm',     l: 'Property Operations' },
+  { k: 'pm',     l: 'Property Operations & Real Estate Intelligence' },
   { k: 'ea',     l: 'Estate Agency' },
   { k: 'dev',    l: 'Developments' },
   { k: 'sc',     l: 'Staff Centre' },
