@@ -25,6 +25,12 @@ const PLAN_MAP: Record<string, string> = {
   'price_1UICnBGa2COshwfZYzSdr6V3': 'bundle',
 }
 
+// Novourq's current two prices (monthly and one-time lifetime) are set in Netlify env vars and both grant every module.
+for (const k of ['STRIPE_PRICE_NOVOURQ_MONTHLY', 'STRIPE_PRICE_NOVOURQ_ONETIME']) {
+  const id = process.env[k]
+  if (id) PLAN_MAP[id] = 'bundle'
+}
+
 const YEARLY_IDS = [
   'price_1Tfl0kGVqeDYuzWElsWlZLyf',
   'price_1Tfl1qGVqeDYuzWEb1htih5S',
