@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
     const currentlyLet = clip(body.currentlyLet, 40), mortgage = clip(body.mortgage, 40)
     const service = clip(body.service, 100), strategy = clip(body.strategy, 100)
     const calc = clip(body.calculator, 600)
-    const module = MODULES.includes(body.module) ? body.module : 'str'
+    // The Estate Agency CRM board stores its rows under 'estate', so the website's 'ea' is saved as 'estate'
+    const module = MODULES.includes(body.module) ? (body.module === 'ea' ? 'estate' : body.module) : 'str'
     const type = clip(body.type, 50) ?? 'guest'
     const source = clip(body.source, 100) ?? 'Website'
 
