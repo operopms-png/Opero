@@ -46,7 +46,6 @@ export default function ClientLinkPage() {
     <div style={wrap}>
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '14px 16px' }}>
         <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: BLUE }}>{d.company}</div>
           <div style={{ fontSize: 20, fontWeight: 700 }}>Your documents</div>
           <div style={{ fontSize: 12.5, color: '#667085' }}>{d.person.name} · {tenant ? 'Tenant' : 'Owner'}</div>
         </div>

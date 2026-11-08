@@ -21,7 +21,7 @@ export const PERSON_KINDS: Record<string, string> = {
 
 export async function docSettings(biz: string) {
   let s = await one(db.from('invoice_settings').select('company_name,logo_url,contact_lines,reply_to').eq('business_id', biz).maybeSingle())
-  if (!s) s = { company_name: 'NOVOURQ Group', logo_url: '/novouq-logo.jpg', contact_lines: '', reply_to: null }
+  if (!s) s = { company_name: 'Sangsters Group', logo_url: '/sangsters-logo.jpg', contact_lines: '', reply_to: null }
   return s as { company_name: string; logo_url: string | null; contact_lines: string | null; reply_to: string | null }
 }
 
