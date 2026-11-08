@@ -623,7 +623,7 @@ export default function OwnerPortalPage() {
       <div style={{ width: 220, background: '#fff', borderRight: '1px solid #EAECF0', display: 'flex', flexDirection: 'column', flexShrink: 0, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
         {/* Logo */}
         <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #EAECF0', textAlign: 'center' }}>
-          <img src="/logo.PNG" alt={BRAND_NAME} width={44} height={44} style={{ borderRadius: 8, marginBottom: 8 }} />
+          <img src="/logo-192.png" alt={BRAND_NAME} width={44} height={44} style={{ borderRadius: 8, marginBottom: 8 }} />
           <div style={{ fontSize: 13, fontWeight: 700, color: '#323338' }}>{BRAND_NAME}</div>
           <div style={{ fontSize: 11, color: '#667085' }}>Owner Portal</div>
         </div>
