@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { serviceClient } from '@/lib/admin-auth'
 import { maybeAutoReplyToGuest } from '@/lib/ai-guest-receptionist'
+import { BILL_ALIAS, handleBillEmail } from '@/lib/utility-inbox'
 
 // Handles Resend webhooks -- both inbound replies (email.received) and
 // delivery/engagement tracking (email.delivered/opened/clicked/bounced/
@@ -101,6 +102,13 @@ export async function POST(req: NextRequest) {
   // migrations/fix-crm-reply-token-length.sql). No-contact sends never
   // set a Reply-To at all now (see app/api/crm-send), so there's no
   // fallback "crm+<user_id> only" form to match anymore.
+  // Supplier bills (JPS, Flow…) emailed to a bill account's own address: read and logged automatically.
+  const billMatch = toAddresses.map((addr) => addr.match(BILL_ALIAS)).find((m) => m)
+  if (billMatch && emailId) {
+    const result = await handleBillEmail(emailId, billMatch[1], fromAddress, subject).catch((e) => { console.error('[email-inbound] bill failed:', e); return 'error' })
+    return NextResponse.json({ received: true, matched: result === 'added', type: 'utility-bill', result })
+  }
+
   const aliasMatch = toAddresses
     .map((addr) => addr.match(/crm\+([a-zA-Z0-9]+)@/i))
     .find((m) => m)

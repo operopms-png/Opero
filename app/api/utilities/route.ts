@@ -24,7 +24,7 @@ async function guard(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const g = await guard(req); if (g.err) return g.err
-  return NextResponse.json({ properties: await loadUtilities(g.c!.businessId) })
+  return NextResponse.json({ properties: await loadUtilities(g.c!.businessId, { inbox: true }) })
 }
 
 export async function POST(req: NextRequest) {

@@ -122,13 +122,17 @@ export default function UtilityTracker({ staff = false, kind, id, link, hideEmpt
                     </div>}
                     {open === key && a.bills.length > 0 && <div style={{ marginTop: 8, maxHeight: 220, overflow: 'auto' }}>
                       {a.bills.map((b: any) => <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 6, padding: '6px 0', borderTop: '1px solid #F0F1F4', fontSize: 12.5, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span>{day(b.period_end)}</span><b>{money(b.amount, p.currency)}</b>
+                        <span>{day(b.period_end)}{b.source === 'email' && <span style={{ ...pill('#EAF1FB', '#2F5DA0'), marginLeft: 6 }}>From email</span>}</span><b>{money(b.amount, p.currency)}</b>
                         <span style={pill(b.paid ? '#E7F6EC' : '#FEF0C7', b.paid ? '#067647' : '#B54708')}>{b.paid ? 'Paid' : 'Unpaid'}</span>
                         <span style={{ display: 'flex', gap: 8 }}>
                           {b.url && <a href={b.url} target="_blank" rel="noreferrer" style={{ color: BLUE, fontWeight: 600 }}>View bill</a>}
                           {staff && <button style={{ background: 'none', border: 'none', color: BLUE, cursor: 'pointer', fontSize: 12.5, padding: 0 }} onClick={() => send('PATCH', '/api/utilities', { bill_id: b.id, paid: !b.paid })}>{b.paid ? 'Mark unpaid' : 'Mark paid'}</button>}
                           {staff && <button style={{ background: 'none', border: 'none', color: '#B42318', cursor: 'pointer', fontSize: 12.5, padding: 0 }} onClick={() => { if (window.confirm('Delete this bill?')) send('DELETE', '/api/utilities?bill_id=' + b.id) }}>Delete</button>}
                         </span></div>)}
+                    </div>}
+                    {staff && a.inbox && <div style={{ marginTop: 8, background: '#F2F7FD', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475467' }}>
+                      <div><b>Automatic bills.</b> Set this as the e-bill email on the {a.supplier || 'supplier'} account, or forward each bill to it. The amount, due date and usage are read and added by themselves.</div>
+                      <div style={{ marginTop: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}><span style={{ fontWeight: 600, wordBreak: 'break-all' }}>{a.inbox}</span><button style={ghost} onClick={() => { try { navigator.clipboard.writeText(a.inbox); setMsg('Address copied.') } catch { setMsg('Select the address and copy it.') } }}>Copy</button></div>
                     </div>}
                     {staff && <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 12, color: '#475467', flexWrap: 'wrap' }}>
                       <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}><input type="checkbox" checked={a.visible_to_owner} onChange={e => send('PATCH', '/api/utilities', { utility_id: a.id, visible_to_owner: e.target.checked })} />Owner sees</label>
