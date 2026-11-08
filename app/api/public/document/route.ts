@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     const s = await docSettings(d.business_id), company = s.company_name || 'NOVOURQ Group'
     const bytes = await documentPdf(signed, s, SITE_URL)
     await saveSignedCopy(signed, bytes)
+    await db.from('onboarding_links').update({ status: 'done', completed_at: now }).eq('doc_send_id', d.id).neq('status', 'done')
     const att = [{ filename: `${String(d.title).replace(/[^\w\- ]+/g, '').trim() || 'document'} - signed.pdf`, content: Buffer.from(bytes).toString('base64') }]
     const link = `${SITE_URL}/sign/${d.token}`
     const from = `${company} <notifications@${EMAIL_DOMAIN}>`
