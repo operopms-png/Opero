@@ -81,7 +81,7 @@ function Editor({ id, back, onSaved }: { id: string | null; back: () => void; on
     try {
       const b64 = await new Promise<string>((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.onerror = rej; fr.readAsDataURL(file) })
       const r = await staffApi('/api/documents', { action: 'template-import', filename: file.name, content: b64 })
-      if (!t.name) set('name', file.name.replace(/\.docx$/i, ''))
+      if (!t.name) set('name', file.name.replace(/\.(docx|pdf)$/i, ''))
       setBody(r.body); setK(x => x + 1); setMsg('Imported. Replace the gaps (________) with blanks: put the cursor there and press “Insert blank”.')
     } catch (e: any) { setErr(e.message) } finally { setImporting(false) }
   }
@@ -94,7 +94,7 @@ function Editor({ id, back, onSaved }: { id: string | null; back: () => void; on
           {isAdmin ? <input value={t.name} onChange={e => set('name', e.target.value)} placeholder="Template name" style={{ ...input, fontSize: 18, fontWeight: 700, maxWidth: 440 }} /> : <b style={{ fontSize: 20 }}>{t.name}</b>}
           <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11.5, fontWeight: 700, background: t.active ? '#E6F7EF' : '#F2F2F2', color: t.active ? '#0E7C55' : '#8A877F' }}>{t.active ? 'Live' : 'Hidden'}</span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            {isAdmin && <label style={{ ...btn('ghost'), cursor: 'pointer' }}>{importing ? 'Reading…' : 'Upload Word file'}<input type="file" accept=".docx" hidden onChange={e => importWord(e.target.files?.[0])} /></label>}
+            {isAdmin && <label style={{ ...btn('ghost'), cursor: 'pointer' }}>{importing ? 'Reading…' : 'Upload Word or PDF'}<input type="file" accept=".docx,.pdf" hidden onChange={e => importWord(e.target.files?.[0])} /></label>}
             {isAdmin && <button style={btn('gold')} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save template'}</button>}
           </div>
         </div>

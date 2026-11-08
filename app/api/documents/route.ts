@@ -114,7 +114,30 @@ export async function POST(req: NextRequest) {
   if (b.action === 'template-import') {
     const no = adminOnly(); if (no) return no
     const name = String(b.filename || '')
-    if (!/\.docx$/i.test(name)) return bad('Upload a Word file (.docx). For a PDF, copy the text and paste it into the template.')
+    if (/\.pdf$/i.test(name)) {
+      // PDF: read the text and turn it into headings and paragraphs the team can edit. Scanned PDFs (pictures of pages) have no text to read.
+      try {
+        const buf = Buffer.from(String(b.content || ''), 'base64')
+        if (buf.length > 4_000_000) return bad('That PDF is over 4 MB. Please use a smaller file.')
+        const { extractText, getDocumentProxy } = await import('unpdf')
+        const pdf = await getDocumentProxy(new Uint8Array(buf))
+        const { text } = await extractText(pdf, { mergePages: false })
+        const lines = (Array.isArray(text) ? text : [text]).join('\n').split('\n').map((l: string) => l.replace(/\s+/g, ' ').trim())
+        const heading = (l: string) => l.length < 70 && (/^(\d+(\.\d+)*[.)]?|[A-Z]\.|clause|schedule|part)\s+\S/i.test(l) && !/[,;]$/.test(l) && l.length < 60 || (l === l.toUpperCase() && /[A-Z]{3}/.test(l)))
+        const paras: string[] = []; let cur = ''
+        const flush = () => { if (cur) paras.push(cur); cur = '' }
+        for (const l of lines) {
+          if (!l) { flush(); continue }
+          if (heading(l)) { flush(); paras.push('\u0000' + l); continue }
+          cur = cur ? (/[.:;!?]$/.test(cur) && /^[A-Z0-9(]/.test(l) && cur.length > 60 ? (flush(), l) : cur + ' ' + l) : l
+        }
+        flush()
+        if (paras.join('').replace(/\u0000/g, '').length < 40) return bad('That PDF has no readable text (it looks like a scan). Please use the Word version, or paste the text in.')
+        const html = paras.map(p => p.startsWith('\u0000') ? `<h3>${esc(p.slice(1))}</h3>` : `<p>${esc(p)}</p>`).join('')
+        return NextResponse.json({ body: sanitizeHtml(html).replace(/_{4,}/g, '__________') })
+      } catch (e: any) { return bad('That PDF couldn’t be read: ' + (e.message || 'unknown error')) }
+    }
+    if (!/\.docx$/i.test(name)) return bad('Upload a Word file (.docx) or a PDF.')
     try {
       const mammoth: any = await import('mammoth')
       const r = await (mammoth.default || mammoth).convertToHtml({ buffer: Buffer.from(String(b.content || ''), 'base64') })
