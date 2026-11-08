@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { staffApi } from '../../lib/staff-api'
-import AiBrainIcon from './AiBrainIcon'
+import AiMark from './AiMark'
 
 const K = { ink: '#0f2150', mid: '#34508a', muted: '#5470a8', soft: '#7a8fbd', line: '#e3ecfa', blue: '#2f5bd6', chip: '#eef4ff', chipLine: '#cfe0f7' }
 const box: React.CSSProperties = { background: 'rgba(255,255,255,.85)', border: '1px solid rgba(47,91,214,.14)', borderRadius: 16, boxShadow: '0 6px 20px rgba(47,91,214,.08)' }
@@ -65,7 +65,7 @@ export default function DashboardAiPanel() {
 
       <h2 style={{ ...head, marginTop: 18 }}>Novourq Cloud AI</h2>
       <div style={{ ...box, padding: 18, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-        <AiBrainIcon size={68} />
+        <AiMark size={68} bare />
         <span style={{ flex: '1 1 260px', minWidth: 0 }}>
           <b style={{ display: 'block', fontSize: 15, color: K.ink }}>One AI running your whole business</b>
           <small style={{ display: 'block', fontSize: 12.5, color: K.muted, marginTop: 2 }}>{ov ? `${on} skills switched on` : 'Loading…'}{act && act[0] ? ` · last action ${ago(act[0].at)}` : ''}. Ask it anything about your portfolio, or message it from your phone.</small>
