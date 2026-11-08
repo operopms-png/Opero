@@ -7,14 +7,14 @@ type Kind = 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant'
 const pill = (bg: string, fg: string): React.CSSProperties => ({ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: bg, color: fg, whiteSpace: 'nowrap' })
 const STATE: Record<string, [string, string, string]> = { todo: ['Required', '#FFF4E0', '#B54708'], pending: ['Being reviewed', '#E3EDFA', '#2F6DB5'], approved: ['Approved', '#E7F6EC', '#067647'], rejected: ['Replace', '#FEF3F2', '#B42318'], optional: ['Optional', '#F2F4F7', '#667085'] }
 
-export default function PortalDocuments({ kind, id, accent = '#2F6DB5' }: { kind: Kind; id?: string; accent?: string }) {
+export default function PortalDocuments({ kind, id, accent = '#2F6DB5', link }: { kind: Kind; id?: string; accent?: string; link?: string }) {
   const [d, setD] = useState<{ files: any[]; items: any[]; canUpload: boolean } | null>(null)
   const [busy, setBusy] = useState('')
   const [msg, setMsg] = useState('')
   const [exp, setExp] = useState<Record<string, string>>({})
   const pick = useRef<HTMLInputElement>(null)
   const target = useRef('')
-  const auth = async () => { const { data: { session } } = await supabase.auth.getSession(); return { Authorization: `Bearer ${session?.access_token ?? ''}` } }
+  const auth = async () => { if (link) return { 'x-client-link': link } as Record<string, string>; const { data: { session } } = await supabase.auth.getSession(); return { Authorization: `Bearer ${session?.access_token ?? ''}` } }
   const load = useCallback(async () => {
     const res = await fetch(`/api/portal-docs?kind=${kind}${id ? '&id=' + id : ''}`, { headers: await auth() })
     if (res.ok) setD(await res.json())

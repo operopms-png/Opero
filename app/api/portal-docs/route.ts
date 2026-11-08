@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
 import { DOC_SETS, DOC_SUBJECT_TABLE, LEASE_DOC_BUCKET } from '@/lib/lease-doc-types'
+import { resolveLink } from '@/lib/client-link'
 import { PORTAL_SUBJECTS, WHO, type PortalSubject } from '@/lib/doc-hub'
 
 // What an owner or tenant sees and does in their portal Documents tab.
@@ -17,6 +18,8 @@ const TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png',
 const MAX = 15 * 1024 * 1024
 
 async function who(req: NextRequest, kind: PortalSubject, id: string) {
+  const lk = req.headers.get('x-client-link')
+  if (lk) { const r = await resolveLink(lk); if (!r || r.subject !== kind) return { err: bad('This link has expired. Ask us for a new one.', 401) }; return { rec: r.rec, self: true } }
   const token = (req.headers.get('authorization') ?? '').replace('Bearer ', '')
   if (!token) return { err: bad('Not signed in', 401) }
   const asUser = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)

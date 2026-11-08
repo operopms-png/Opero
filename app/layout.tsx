@@ -15,7 +15,7 @@ import './globals.css'
 
 // Full-screen pages with no staff sidebar: sign-in pages, public pages, and the
 // portals used by owners, landlords, tenants and investors (they do their own sign-in)
-const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/estate-owner-portal', '/estate-tenant-portal', '/dev-investor-portal', '/staff-dashboard', '/meet', '/join', '/book', '/checkin', '/sign/', '/homes', '/earnings', '/invoice/', '/submit-deal/', '/terms', '/privacy']
+const PUBLIC_ROUTES = ['/login', '/staff-login', '/reset-password', '/owner-portal', '/pm-owner-portal', '/pm-tenant-portal', '/estate-owner-portal', '/estate-tenant-portal', '/dev-investor-portal', '/staff-dashboard', '/meet', '/join', '/book', '/checkin', '/sign/', '/homes', '/earnings', '/invoice/', '/d/', '/submit-deal/', '/terms', '/privacy']
 
 // Statuses where Stripe has stopped billing successfully — trial expired
 // with no working payment method, a renewal failed, or it was cancelled.

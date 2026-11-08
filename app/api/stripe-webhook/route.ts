@@ -73,6 +73,15 @@ export async function POST(request: NextRequest) {
       // the module-subscription flow below. A tenant's checkout email is
       // their tenant-portal login, not a business account, and must
       // never touch the subscriptions table.
+      // A client paying an invoice from their secure link (/d/[token]).
+      if (session.metadata?.type === 'invoice_payment') {
+        const invId = session.metadata.invoice_id
+        if (invId && session.payment_status === 'paid') {
+          await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString(), paid_by: 'Stripe (card)' }).eq('id', invId).neq('status', 'paid')
+        }
+        return NextResponse.json({ received: true })
+      }
+
       if (session.metadata?.type === 'tenant_rent_payment') {
         const paymentId = session.metadata.payment_id
         if (paymentId) {

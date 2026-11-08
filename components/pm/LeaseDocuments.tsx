@@ -46,6 +46,14 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
     const r = await ownerFetch('/api/doc-hub', { method: 'POST', body: JSON.stringify({ action: 'chase', items: [{ subject, id: lease.id }] }) })
     setMsg(r.ok ? (r.data.sent ? 'Asked them for what is missing. Reminders go out automatically every 3 days.' : 'Nothing sent. They may have everything, or have no email address.') : (r.data?.error || 'Could not send.'))
   }
+  const [lk, setLk] = useState<{ url: string; whatsapp: string; emailed?: boolean; reason?: string } | null>(null)
+  async function sendLink(email: boolean) {
+    const r = await ownerFetch('/api/client-links', { method: 'POST', body: JSON.stringify({ items: [{ subject, id: lease.id }], email }) })
+    const x = r.ok ? r.data.results?.[0] : null
+    if (!x?.url) { setMsg(r.data?.error || 'Could not create the link.'); return }
+    setLk(x); setMsg(email ? (x.emailed ? 'Link emailed.' : `Link not emailed: ${x.reason || 'email is not set up'}. Copy it instead.`) : '')
+  }
+  const copy = (t: string) => { try { navigator.clipboard.writeText(t); setMsg('Copied.') } catch { setMsg('Select the text and copy it.') } }
   async function remove(id: string) {
     if (!window.confirm('Delete this file? This cannot be undone.')) return
     const r = await ownerFetch('/api/lease-docs?id=' + id, { method: 'DELETE' })
@@ -60,7 +68,13 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
           <button onClick={onClose} style={{ fontSize: 12, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}>Close</button>
         </div>
         <div style={{ fontSize: 12, color: '#475467', background: '#F2F7FD', borderRadius: 8, padding: '8px 10px', margin: '12px 0 2px' }}>Private. Only your team{subject !== 'head_lease' ? (subject === 'landlord' ? ' and this owner' : ' and this tenant') : ''} can open these files. Links expire after 5 minutes.{subject !== 'head_lease' ? ' Files marked In portal show in their portal automatically. Files they upload wait here for you to approve or reject.' : ''}</div>
-        {subject !== 'head_lease' && <div style={{ marginTop: 10 }}><button onClick={chase} style={{ fontSize: 12.5, fontWeight: 700, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Ask them for missing documents</button></div>}
+        {subject !== 'head_lease' && <div style={{ marginTop: 10 }}><button onClick={chase} style={{ fontSize: 12.5, fontWeight: 700, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Ask them for missing documents</button><button onClick={() => sendLink(true)} style={{ marginLeft: 8, fontSize: 12.5, fontWeight: 700, color: '#fff', background: '#2F6DB5', border: 'none', borderRadius: 8, padding: '7px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Email secure link</button><button onClick={() => sendLink(false)} style={{ marginLeft: 8, fontSize: 12.5, fontWeight: 700, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Get link and WhatsApp text</button>
+          {lk && <div style={{ marginTop: 10, background: '#F2F7FD', border: '1px solid #C9D6E6', borderRadius: 10, padding: 10, fontSize: 12.5 }}>
+            <div style={{ color: '#475467', marginBottom: 4 }}>Private link. Opens their documents, contracts to sign and invoices to pay, with no login. Valid 14 days.</div>
+            <div style={{ wordBreak: 'break-all', fontWeight: 600 }}>{lk.url}</div>
+            <div style={{ marginTop: 6, color: '#475467' }}>{lk.whatsapp}</div>
+            <div style={{ marginTop: 8 }}><button onClick={() => copy(lk.url)} style={{ fontSize: 12, fontWeight: 600, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', marginRight: 6, fontFamily: 'inherit' }}>Copy link</button><button onClick={() => copy(lk.whatsapp)} style={{ fontSize: 12, fontWeight: 600, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Copy WhatsApp message</button></div>
+          </div>}</div>}
         {msg && <div style={{ background: '#FEF3F2', color: '#B42318', border: '1px solid #FDA29B', borderRadius: 8, padding: '8px 10px', fontSize: 13, marginTop: 8 }}>{msg}</div>}
         <input ref={pick} type="file" accept="application/pdf,image/*,.doc,.docx" style={{ display: 'none' }} onChange={e => upload(e.target.files?.[0])} />
         {DOC_SETS[subject].map(t => {

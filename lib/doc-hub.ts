@@ -3,6 +3,7 @@ import { serviceClient as db } from '@/lib/admin-auth'
 import { SITE_URL, EMAIL_DOMAIN } from '@/lib/brand'
 import { sendEmail } from '@/lib/send-email'
 import { docSettings, docEmailHtml } from '@/lib/documents'
+import { ensureLink, linkUrl } from '@/lib/client-link'
 import { DOC_SETS, DOC_SUBJECT_TABLE, keyDocs, type DocSubject } from '@/lib/lease-doc-types'
 
 export type PortalSubject = Exclude<DocSubject, 'head_lease'>
@@ -17,11 +18,11 @@ export function missingKeys(subject: PortalSubject, rows: { category: string; st
   return keyDocs(subject).filter(t => !have.has(t.key))
 }
 
-export async function emailPerson(biz: string, subject: PortalSubject, person: { name: string; email: string }, headline: string, lines: string[], button = 'Open your documents') {
+export async function emailPerson(biz: string, subject: PortalSubject, person: { name: string; email: string }, headline: string, lines: string[], button = 'Open your documents', url = '') {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(person.email || '')) return false
   const s = await docSettings(biz), company = s.company_name || 'NOVOURQ Group'
   const first = String(person.name || '').trim().split(/\s+/)[0] || 'there'
-  const html = docEmailHtml(company, s.contact_lines, first, `${headline}\n\n${lines.map(l => '• ' + l).join('\n')}`, `${SITE_URL}${PORTAL_PATH[subject]}`, button, 'Sign in to your portal, open Documents, and take a photo or upload the file. It only takes a minute.')
+  const html = docEmailHtml(company, s.contact_lines, first, `${headline}\n\n${lines.map(l => '• ' + l).join('\n')}`, url || `${SITE_URL}${PORTAL_PATH[subject]}`, button, url ? 'This link is private to you. Open it on your phone, take a photo or upload each file. It only takes a minute.' : 'Sign in to your portal, open Documents, and take a photo or upload the file. It only takes a minute.')
   const r: any = await sendEmail(person.email, headline, html, s.reply_to || undefined, `${company} <notifications@${EMAIL_DOMAIN}>`)
   return !r?.skipped && !r?.error
 }
@@ -33,7 +34,8 @@ export async function chasePerson(biz: string, subject: PortalSubject, id: strin
   const { data: rows } = await db.from('lease_documents').select('category, status').eq('subject', subject).eq('head_lease_id', id).eq('user_id', biz)
   const miss = missingKeys(subject, rows ?? [])
   if (!miss.length) return { ok: false, reason: 'complete' }
-  const sent = await emailPerson(biz, subject, p, kind === 'reminder' ? 'Reminder: documents we still need from you' : 'Documents we need from you', miss.map(m => `${m.label} (${m.hint})`))
+  let url = ''; try { url = linkUrl((await ensureLink(biz, subject, id)).token) } catch { /* falls back to the portal sign-in */ }
+  const sent = await emailPerson(biz, subject, p, kind === 'reminder' ? 'Reminder: documents we still need from you' : 'Documents we need from you', miss.map(m => `${m.label} (${m.hint})`), 'Open your documents', url)
   if (sent) await db.from('doc_chases').insert({ user_id: biz, subject, subject_id: id, kind })
   return { ok: sent, reason: sent ? '' : 'no email address or email is not set up' }
 }
