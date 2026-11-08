@@ -6,11 +6,12 @@ import WeatherWidget from '@/components/WeatherWidget'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
+import GuestCheckins from '@/components/pm/GuestCheckins'
 
-const TABS = ['Home','Bookings','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms']
+const TABS = ['Home','Bookings','Guest Check-ins','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms']
 const STR_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Home'] },
-  { label: 'PORTFOLIO', items: ['Properties','Bookings'] },
+  { label: 'PORTFOLIO', items: ['Properties','Bookings','Guest Check-ins'] },
   { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms'] },
   { label: 'COMPLIANCE', items: ['Compliance'] },
   { label: 'REPUTATION', items: ['Reviews'] },
@@ -664,6 +665,8 @@ export default function STRPage() {
             </div>
           </div>
         )}
+
+        {tab==='Guest Check-ins' && <GuestCheckins />}
 
         {tab==='Bookings' && (
           <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
@@ -1694,6 +1697,10 @@ export default function STRPage() {
             <div><label style={lbl}>Check-in Instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkin_instructions??''} onChange={e=>setForm({...form,checkin_instructions:e.target.value})} placeholder="e.g. Self check-in via lockbox, code sent 24h before arrival"/></div>
             <div><label style={lbl}>Check-out Instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkout_instructions??''} onChange={e=>setForm({...form,checkout_instructions:e.target.value})} placeholder="e.g. Check-out by 11am, leave keys in lockbox"/></div>
             <div><label style={lbl}>House Rules</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.house_rules??''} onChange={e=>setForm({...form,house_rules:e.target.value})} placeholder="e.g. No smoking, no parties, quiet hours 10pm-8am"/></div>
+            <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:8}}>Online check-in</div>
+            <label style={{display:'flex',gap:8,alignItems:'center',fontSize:14}}><input type="checkbox" checked={!!form.online_checkin} onChange={e=>setForm({...form,online_checkin:e.target.checked})}/> Email guests a check-in link 3 days before arrival</label>
+            <div><label style={lbl}>Security deposit (leave empty for none)</label><input type="number" style={inp} value={form.security_deposit??''} onChange={e=>setForm({...form,security_deposit:e.target.value})}/></div>
+            <div><label style={lbl}>Check-in terms (if empty, the house rules are used)</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.checkin_terms??''} onChange={e=>setForm({...form,checkin_terms:e.target.value})}/></div>
             <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:8 }}>Channel Sync (iCal)</div>
             <div style={{ fontSize:11, color:'#98A2B3', marginTop:-8 }}>Pulls booking dates in from each platform's iCal export link so this property doesn't get double-booked. One-way only — doesn't push your price or availability out.</div>
             <div><label style={lbl}>Airbnb iCal URL</label><input style={inp} value={form.airbnb_ical_url??''} onChange={e=>setForm({...form,airbnb_ical_url:e.target.value})} placeholder="https://www.airbnb.com/calendar/ical/..."/></div>
@@ -1705,7 +1712,7 @@ export default function STRPage() {
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={()=>save('properties',form)} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#2F6DB5', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
+            <button onClick={()=>save('properties',{...form,security_deposit:form.security_deposit===''||form.security_deposit==null||isNaN(Number(form.security_deposit))?null:Number(form.security_deposit),online_checkin:!!form.online_checkin})} disabled={saving||!form.name} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#2F6DB5', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:saving||!form.name?0.6:1 }}>{saving?'Saving…':editId?'Save Changes':'Add Property'}</button>
           </div>
         </Modal>
       )}

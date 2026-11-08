@@ -6,6 +6,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Home': 'Your day at a glance: bookings, check-ins, cleaning and anything waiting for your approval.',
   'Short Stays Overview': 'Occupancy, income and upcoming stays across all your short-stay properties.',
   'Bookings': 'Every guest booking, with dates, guest details and payment status. Open one to edit or message the guest.',
+  'Guest Check-ins': 'Online check-in for short lets: guest details, ID photo, security deposit card and signed terms, with buttons to send, remind, charge damage or release the deposit.',
   'Reviews': 'Guest reviews from every platform, with a place to log and track your replies.',
   'Guest Comms': 'Messages to and from guests. Novourq Cloud AI drafts replies and you approve them before they send.',
   'Analytics': 'Occupancy, average nightly rate and revenue trends, so you can see which properties earn the most.',

@@ -13,11 +13,12 @@ import LandlordStatements from '@/components/reports/LandlordStatements'
 import { downloadCsv } from '@/lib/export-csv'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
+import GuestCheckins from '@/components/pm/GuestCheckins'
 import { SITE_HOST } from '@/lib/brand'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
 const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
-const TABS = ['Dashboard','Short Stays Overview','Bookings','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Rent Reviews','Service Charges','Planned Maintenance','Emergency Contacts','Landlord Feedback','Tenant Feedback','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Short Stays Overview','Bookings','Guest Check-ins','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Rent Reviews','Service Charges','Planned Maintenance','Emergency Contacts','Landlord Feedback','Tenant Feedback','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -73,6 +74,7 @@ const TAB_INTROS: Record<string,string> = {
   'Viewings': 'prospective tenant viewings booked for vacant units, with the date and status of each.',
   'Renewals & Notices': 'lease renewals and notices to end a tenancy, with the dates they fall due.',
   'Short Stays Overview': 'the short stays overview: properties, cleaning and maintenance, this month\'s revenue, upcoming check-ins and recent bookings, with six-month revenue and occupancy trends. Figures come from the Bookings, Cleaning and Maintenance records.',
+  'Guest Check-ins': 'online check-in for short lets: which guests have sent their details, ID photo, security deposit card and signed terms, with buttons to send or remind and to charge or release a deposit.',
   'Bookings': 'short stay bookings for each property: guest, dates, status and total amount. Channels such as Airbnb, VRBO and Booking.com are connected on the Channels tab.',
   'Reviews': 'guest reviews from each platform, with the rating, the review text and whether we have responded.',
   'Guest Comms': 'message templates for guests, such as welcome, check-in, check-out and review requests, and the messages sent to guests.',
@@ -2453,6 +2455,8 @@ function PMPageInner() {
           )
         })()}
 
+        {tab==='Guest Check-ins'&&<GuestCheckins />}
+
         {tab==='Bookings'&&(
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
@@ -3637,6 +3641,10 @@ function PMPageInner() {
             <div><label style={lbl}>Check-in instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkin_instructions??''} onChange={e=>setForm({...form,checkin_instructions:e.target.value})}/></div>
             <div><label style={lbl}>Check-out instructions</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.checkout_instructions??''} onChange={e=>setForm({...form,checkout_instructions:e.target.value})}/></div>
             <div><label style={lbl}>House rules</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.house_rules??''} onChange={e=>setForm({...form,house_rules:e.target.value})}/></div>
+            <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:8}}>Online check-in</div>
+            <label style={{display:'flex',gap:8,alignItems:'center',fontSize:14}}><input type="checkbox" checked={!!form.online_checkin} onChange={e=>setForm({...form,online_checkin:e.target.checked})}/> Email guests a check-in link 3 days before arrival</label>
+            <div><label style={lbl}>Security deposit (leave empty for none)</label><input type="number" style={inp} value={form.security_deposit??''} onChange={e=>setForm({...form,security_deposit:e.target.value})}/></div>
+            <div><label style={lbl}>Check-in terms (if empty, the house rules are used)</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.checkin_terms??''} onChange={e=>setForm({...form,checkin_terms:e.target.value})}/></div>
             <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:8}}>Channel sync (iCal)</div>
             <div><label style={lbl}>Airbnb iCal URL</label><input style={inp} value={form.airbnb_ical_url??''} onChange={e=>setForm({...form,airbnb_ical_url:e.target.value})}/></div>
             <div><label style={lbl}>VRBO iCal URL</label><input style={inp} value={form.vrbo_ical_url??''} onChange={e=>setForm({...form,vrbo_ical_url:e.target.value})}/></div>
@@ -3646,7 +3654,7 @@ function PMPageInner() {
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={()=>save('properties',{...form,nightly_rate:form.nightly_rate===''||form.nightly_rate==null||isNaN(Number(form.nightly_rate))?null:Number(form.nightly_rate),max_guests:form.max_guests===''||form.max_guests==null||isNaN(Number(form.max_guests))?null:parseInt(form.max_guests)})} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add property'}</button>
+            <button onClick={()=>save('properties',{...form,security_deposit:form.security_deposit===''||form.security_deposit==null||isNaN(Number(form.security_deposit))?null:Number(form.security_deposit),online_checkin:!!form.online_checkin,nightly_rate:form.nightly_rate===''||form.nightly_rate==null||isNaN(Number(form.nightly_rate))?null:Number(form.nightly_rate),max_guests:form.max_guests===''||form.max_guests==null||isNaN(Number(form.max_guests))?null:parseInt(form.max_guests)})} disabled={saving||!form.name} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:saving||!form.name?0.6:1}}>{saving?'Saving…':editId?'Save changes':'Add property'}</button>
           </div>
         </Modal>
       )}
