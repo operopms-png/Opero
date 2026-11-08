@@ -11,7 +11,7 @@ export const LEASE_DOC_KEYS = LEASE_DOC_TYPES.map(t => t.key)
 export const LEASE_DOC_BUCKET = 'lease-docs'
 
 // Document checklists by what they belong to. The 'other' type is never counted as one of the key documents.
-export type DocSubject = 'head_lease' | 'landlord'
+export type DocSubject = 'head_lease' | 'landlord' | 'tenant'
 export const DOC_SETS: Record<DocSubject, typeof LEASE_DOC_TYPES> = {
   head_lease: LEASE_DOC_TYPES,
   landlord: [
@@ -22,6 +22,14 @@ export const DOC_SETS: Record<DocSubject, typeof LEASE_DOC_TYPES> = {
     { key: 'bank', label: 'Bank details', hint: 'Letter or statement for rent payouts' },
     { key: 'other', label: 'Other documents', hint: 'Anything else for this owner' },
   ],
+  tenant: [
+    { key: 'tenancy', label: 'Tenancy agreement', hint: 'Signed copy of the tenancy' },
+    { key: 'tenant_id', label: 'Tenant ID', hint: 'Passport or driving licence', expiry: true },
+    { key: 'right_to_rent', label: 'Right to rent', hint: 'Share code check or visa, with its expiry date', expiry: true },
+    { key: 'income', label: 'Proof of income', hint: 'Payslips, contract or bank statements' },
+    { key: 'references', label: 'References', hint: 'Employer and previous landlord references' },
+    { key: 'other', label: 'Other documents', hint: 'Anything else for this tenant' },
+  ],
 }
-export const DOC_SUBJECT_TABLE: Record<DocSubject, string> = { head_lease: 'pm_head_leases', landlord: 'pm_landlords' }
-export const isSubject = (x: string): x is DocSubject => x === 'head_lease' || x === 'landlord'
+export const DOC_SUBJECT_TABLE: Record<DocSubject, string> = { head_lease: 'pm_head_leases', landlord: 'pm_landlords', tenant: 'pm_tenants' }
+export const isSubject = (x: string): x is DocSubject => x === 'head_lease' || x === 'landlord' || x === 'tenant'

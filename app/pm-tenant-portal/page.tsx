@@ -1,4 +1,5 @@
 'use client'
+import PortalDocuments from '@/components/portal/PortalDocuments'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
@@ -415,6 +416,7 @@ function PMTenantPortalInner() {
 
         {tab === 'Documents' && (
           <div>
+            <PortalDocuments kind="tenant" id={isStaffView ? tenant.id : undefined} />
             {documents.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>No documents shared yet</div> :
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {documents.map(d => (

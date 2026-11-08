@@ -7,7 +7,7 @@ import { DOC_SETS, DOC_SUBJECT_TABLE, LEASE_DOC_BUCKET, isSubject } from '@/lib/
 
 // Documents on a head lease (master lease, landlord ID, proof of ownership…). Private bucket, scoped to the caller's company.
 // Admins, Co Founders and the property teams only. Files open through links that expire after 5 minutes.
-//   subject = 'head_lease' (default) or 'landlord'; head_lease_id holds the id of that lease or landlord
+//   subject = 'head_lease' (default), 'landlord' or 'tenant'; PATCH {id, visible} shows or hides a file in the owner's or tenant's portal; head_lease_id holds the id of that lease or landlord
 //   GET ?subject&head_lease_id=…    → files with signed links     GET ?subject&counts=1 → {id: number of key documents filled}
 //   POST multipart {subject, head_lease_id, category, expires_on?, file}   DELETE ?id=…
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
@@ -16,7 +16,7 @@ const TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png',
 const MAX = 15 * 1024 * 1024
 
 const subjectOf = (v: any) => { const s = String(v || 'head_lease'); return isSubject(s) ? s : null }
-async function ownLease(id: string, biz: string, subject: 'head_lease' | 'landlord' = 'head_lease') {
+async function ownLease(id: string, biz: string, subject: 'head_lease' | 'landlord' | 'tenant' = 'head_lease') {
   const { data } = await db.from(DOC_SUBJECT_TABLE[subject]).select('id').eq('id', id).eq('user_id', biz).maybeSingle()
   return !!data
 }
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   const { data } = await db.from('lease_documents').select('*').eq('head_lease_id', lid).eq('subject', subject).eq('user_id', c.businessId).order('created_at', { ascending: false })
   const files = await Promise.all((data ?? []).map(async (f: any) => {
     const { data: s } = await db.storage.from(LEASE_DOC_BUCKET).createSignedUrl(f.path, 300)
-    return { id: f.id, category: f.category, name: f.name, size: f.size, expires_on: f.expires_on, created_at: f.created_at, url: s?.signedUrl ?? null }
+    return { id: f.id, category: f.category, name: f.name, size: f.size, expires_on: f.expires_on, visible: f.visible_to_portal !== false, created_at: f.created_at, url: s?.signedUrl ?? null }
   }))
   return NextResponse.json({ files })
 }
@@ -58,6 +58,13 @@ export async function POST(req: NextRequest) {
   const { error } = await db.from('lease_documents').insert({ user_id: c.businessId, subject, head_lease_id: lid, category: cat, name: String(file.name || 'Document').slice(0, 120), path, mime: file.type, size: file.size, expires_on, uploaded_by: c.email })
   if (error) { await db.storage.from(LEASE_DOC_BUCKET).remove([path]).catch(() => null); return bad('Could not save the file.', 500) }
   return NextResponse.json({ ok: true })
+}
+
+export async function PATCH(req: NextRequest) {
+  const c = await getCaller(req); if (!c) return bad('Not signed in', 401); if (!allowed(c)) return bad('Not allowed.', 403)
+  const b = await req.json().catch(() => ({}))
+  const { error } = await db.from('lease_documents').update({ visible_to_portal: !!b.visible }).eq('id', String(b.id || '')).eq('user_id', c.businessId).neq('subject', 'head_lease')
+  return error ? bad('Could not update.', 500) : NextResponse.json({ ok: true })
 }
 
 export async function DELETE(req: NextRequest) {

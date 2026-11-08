@@ -369,6 +369,10 @@ function PMPageInner() {
   const [headLeases, setHeadLeases] = useState<any[]>([])
   const [leaseDocsFor, setLeaseDocsFor] = useState<any|null>(null)
   const [leaseDocCounts, setLeaseDocCounts] = useState<Record<string,number>>({})
+  const [tenantChecklistFor, setTenantChecklistFor] = useState<any|null>(null)
+  const [tenantDocCounts, setTenantDocCounts] = useState<Record<string,number>>({})
+  const loadTenantDocCounts = () => { ownerFetch('/api/lease-docs?subject=tenant&counts=1').then(r => { if (r.ok) setTenantDocCounts(r.data.counts ?? {}) }) }
+  useEffect(() => { if (tab==='Tenants') loadTenantDocCounts() }, [tab])
   const [ownerDocsFor, setOwnerDocsFor] = useState<any|null>(null)
   const [ownerDocCounts, setOwnerDocCounts] = useState<Record<string,number>>({})
   const loadOwnerDocCounts = () => { ownerFetch('/api/lease-docs?subject=landlord&counts=1').then(r => { if (r.ok) setOwnerDocCounts(r.data.counts ?? {}) }) }
@@ -1621,7 +1625,8 @@ function PMPageInner() {
                 {t.portal_user_id
                   ? <a href={`/pm-tenant-portal?tenant_id=${t.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
                   : <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>}
-                <button onClick={()=>setDocsTenant(t)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>📁 Documents ({documents.filter((d:any)=>d.tenant_id===t.id).length})</button>
+                <button onClick={()=>setTenantChecklistFor(t)} style={{fontSize:12,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>Documents {tenantDocCounts[t.id]??0}/5</button>
+                <button onClick={()=>setDocsTenant(t)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>All files ({documents.filter((d:any)=>d.tenant_id===t.id).length})</button>
                 <button onClick={()=>openEdit('tenant',t)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_tenants',t.id,setTenants)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
@@ -1629,6 +1634,7 @@ function PMPageInner() {
           </div>
         )}
 
+        {tenantChecklistFor&&<LeaseDocuments lease={tenantChecklistFor} subject="tenant" onClose={()=>setTenantChecklistFor(null)} onChanged={loadTenantDocCounts} />}
         {docsTenant&&<TenantDocuments kind="pm" tenant={docsTenant} onClose={()=>setDocsTenant(null)} onChanged={async()=>{const {data}=await supabase.from('pm_documents').select('*,pm_properties(name)').eq('user_id',docsTenant.user_id).order('created_at',{ascending:false});setDocuments(data??[])}} />}
 
         {tab==='Reviews'&&(() => {

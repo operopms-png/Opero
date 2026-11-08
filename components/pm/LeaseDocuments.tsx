@@ -32,6 +32,10 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
     setBusy(''); if (pick.current) pick.current.value = ''
     if (!res.ok) setMsg(j.error || 'Upload failed.'); else { setExp(e => ({ ...e, [cat]: '' })); await load(); onChanged?.() }
   }
+  async function toggle(f: any) {
+    const r = await ownerFetch('/api/lease-docs', { method: 'PATCH', body: JSON.stringify({ id: f.id, visible: !f.visible }) })
+    if (!r.ok) setMsg(r.data?.error || 'Could not update.'); else load()
+  }
   async function remove(id: string) {
     if (!window.confirm('Delete this file? This cannot be undone.')) return
     const r = await ownerFetch('/api/lease-docs?id=' + id, { method: 'DELETE' })
@@ -42,10 +46,10 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', borderRadius: '18px 18px 0 0', padding: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div><div style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A' }}>Documents</div><div style={{ fontSize: 12.5, color: '#667085' }}>{subject === 'landlord' ? (lease.name ?? 'Owner') : <>{lease.pm_properties?.name ?? 'Head lease'}{lease.landlord_name ? ' · ' + lease.landlord_name : ''}</>}</div></div>
+          <div><div style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A' }}>Documents</div><div style={{ fontSize: 12.5, color: '#667085' }}>{subject !== 'head_lease' ? (lease.name ?? 'Owner') : <>{lease.pm_properties?.name ?? 'Head lease'}{lease.landlord_name ? ' · ' + lease.landlord_name : ''}</>}</div></div>
           <button onClick={onClose} style={{ fontSize: 12, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}>Close</button>
         </div>
-        <div style={{ fontSize: 12, color: '#475467', background: '#F2F7FD', borderRadius: 8, padding: '8px 10px', margin: '12px 0 2px' }}>Private. Only your team can open these files. Links expire after 5 minutes.</div>
+        <div style={{ fontSize: 12, color: '#475467', background: '#F2F7FD', borderRadius: 8, padding: '8px 10px', margin: '12px 0 2px' }}>Private. Only your team{subject !== 'head_lease' ? (subject === 'landlord' ? ' and this owner' : ' and this tenant') : ''} can open these files. Links expire after 5 minutes.{subject !== 'head_lease' ? ' Files marked In portal show in their portal automatically.' : ''}</div>
         {msg && <div style={{ background: '#FEF3F2', color: '#B42318', border: '1px solid #FDA29B', borderRadius: 8, padding: '8px 10px', fontSize: 13, marginTop: 8 }}>{msg}</div>}
         <input ref={pick} type="file" accept="application/pdf,image/*,.doc,.docx" style={{ display: 'none' }} onChange={e => upload(e.target.files?.[0])} />
         {DOC_SETS[subject].map(t => {
@@ -62,7 +66,7 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
               {list.map(f => (
                 <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12.5, background: '#F2F7FD', borderRadius: 8, padding: '7px 9px', marginTop: 7 }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}{f.expires_on ? ` · expires ${f.expires_on}` : ''}</span>
-                  <span style={{ whiteSpace: 'nowrap' }}>{f.url && <a href={f.url} target="_blank" rel="noreferrer" style={{ color: '#2F6DB5', marginRight: 10 }}>View</a>}<button onClick={() => remove(f.id)} style={{ border: 'none', background: 'none', color: '#B42318', cursor: 'pointer', fontSize: 12.5, padding: 0 }}>Delete</button></span>
+                  <span style={{ whiteSpace: 'nowrap' }}>{subject !== 'head_lease' && <button onClick={() => toggle(f)} title="Choose whether they see this file in their portal" style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, border: 'none', cursor: 'pointer', marginRight: 10, background: f.visible ? '#E7F6EC' : '#F2F4F7', color: f.visible ? '#067647' : '#667085' }}>{f.visible ? 'In portal' : 'Staff only'}</button>}{f.url && <a href={f.url} target="_blank" rel="noreferrer" style={{ color: '#2F6DB5', marginRight: 10 }}>View</a>}<button onClick={() => remove(f.id)} style={{ border: 'none', background: 'none', color: '#B42318', cursor: 'pointer', fontSize: 12.5, padding: 0 }}>Delete</button></span>
                 </div>
               ))}
               <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>

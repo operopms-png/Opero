@@ -5,6 +5,7 @@ import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
 import FeedbackForm from '@/components/portal/FeedbackForm'
 import MyDataPanel from '@/components/portal/MyDataPanel'
+import PortalDocuments from '@/components/portal/PortalDocuments'
 import VoiceDictation from '@/components/VoiceDictation'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
@@ -197,7 +198,7 @@ function PMOwnerPortalInner() {
     await loadAll(landlord)
   }
 
-  const TABS = ['Dashboard', 'Reports', 'Properties', 'Payments', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
+  const TABS = ['Dashboard', 'Reports', 'Properties', 'Payments', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -378,6 +379,7 @@ function PMOwnerPortalInner() {
 
         <VoiceDictation portal />
         {tab === 'Feedback' && <FeedbackForm source="landlord" personTable="pm_landlords" personId={landlord?.id} personName={landlord?.name} businessId={landlord?.user_id} />}
+        {tab === 'Documents' && (<div>{<PortalDocuments kind="landlord" id={isStaffView ? landlord.id : undefined} />}<div style={{ fontSize: 12.5, color: '#98A2B3' }}>Your ID, proof of ownership, management agreement and other papers your property manager keeps for you.</div></div>)}
         {tab === 'My Data' && <MyDataPanel />}
         {tab === 'Contact & Payment' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>
