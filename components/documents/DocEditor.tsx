@@ -63,6 +63,7 @@ export default function DocEditor({ html, resetKey, mode, lock = 'editable', onC
     document.execCommand('insertHTML', false, `<span class="blank" contenteditable="false" data-token="${escAttr(token)}">${escAttr(blankLabel(key))}${opts ? ' ▾' : ''}</span>&nbsp;`)
     setBlankMenu(false); emit()
   }
+  const nextN = (prefix: string) => { const used = Array.from((ref.current?.innerHTML || '').matchAll(new RegExp(prefix + '(\\d+)', 'g'))).map(m => +m[1]); return (used.length ? Math.max(...used) : 0) + 1 }
   const groups = [...new Set(BLANKS.map(b => b.group))]
   const tb: React.CSSProperties = { border: '1px solid #E3E1DB', background: '#fff', borderRadius: 5, padding: '4px 9px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'Figtree,Arial,sans-serif', color: '#323338' }
   const showToolbar = !readOnly && !lockedDoc
@@ -82,6 +83,8 @@ export default function DocEditor({ html, resetKey, mode, lock = 'editable', onC
         <button type="button" style={tb} onClick={() => cmd('justifyCenter')}>Centre</button>
         <button type="button" style={tb} onClick={() => cmd('insertHorizontalRule')}>Line</button>
         {mode === 'template' && <button type="button" style={{ ...tb, background: '#FBF1D3', borderColor: '#89CFF0', color: '#89CFF0' }} onClick={() => setBlankMenu(v => !v)}>+ Insert blank ▾</button>}
+        {mode === 'template' && <button type="button" style={{ ...tb, background: '#EAF3FF', borderColor: '#2F6DB5', color: '#2F6DB5' }} title="The signer types their initials here" onClick={() => insertBlank(`{initials_${nextN('initials_')}}`)}>+ Initials box</button>}
+        {mode === 'template' && <button type="button" style={{ ...tb, background: '#EAF3FF', borderColor: '#2F6DB5', color: '#2F6DB5' }} title="The signer picks a date here" onClick={() => insertBlank(`{signdate_${nextN('signdate_')}}`)}>+ Date box</button>}
         {blankMenu && <div style={{ position: 'absolute', top: '100%', left: 12, zIndex: 40, width: 340, maxHeight: 420, overflowY: 'auto', background: '#fff', border: '1px solid #E3E1DB', borderRadius: 8, boxShadow: '0 12px 30px rgba(0,0,0,.14)', padding: 8, fontFamily: 'Figtree,Arial,sans-serif' }}>
           {groups.map(g => <div key={g} style={{ marginBottom: 6 }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', color: '#89CFF0', textTransform: 'uppercase', padding: '4px 6px' }}>{g}</div>

@@ -19,7 +19,7 @@ async function loadImage(pdf: PDFDocument, url?: string | null, base?: string) {
 
 export type DocForPdf = {
   title: string; body: string; recipient_name: string; needs_signature: boolean
-  signed_at?: string | null; signed_name?: string | null; signed_ip?: string | null; sent_at?: string | null; token?: string
+  signed_at?: string | null; signed_name?: string | null; signed_ip?: string | null; sent_at?: string | null; token?: string; signature_data?: string | null
 }
 
 export async function documentPdf(doc: DocForPdf, s: { company_name?: string | null; logo_url?: string | null; contact_lines?: string | null }, siteUrl: string): Promise<Uint8Array> {
@@ -105,7 +105,11 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     ensure(110); y += 14
     page.drawRectangle({ x: M, y: H - y - 88, width: CW, height: 88, color: hex('#FAF6EC'), borderColor: hex('#89CFF0'), borderWidth: 0.6 })
     page.drawText('SIGNED ELECTRONICALLY', { x: M + 14, y: H - y - 18, size: 8, font: F.sansBold, color: gold })
-    page.drawText(safe(doc.signed_name), { x: M + 14, y: H - y - 48, size: 24, font: F.ital, color: ink })
+    let drew = false
+    if (doc.signature_data?.startsWith('data:image/png;base64,')) {
+      try { const img = await pdf.embedPng(Buffer.from(doc.signature_data.split(',')[1], 'base64')); const sc = Math.min(200 / img.width, 40 / img.height); page.drawImage(img, { x: M + 14, y: H - y - 56, width: img.width * sc, height: img.height * sc }); drew = true } catch { /* fall back to the typed name */ }
+    }
+    if (!drew) page.drawText(safe(doc.signed_name), { x: M + 14, y: H - y - 48, size: 24, font: F.ital, color: ink })
     const when = new Date(doc.signed_at).toUTCString().replace('GMT', 'UTC')
     page.drawText(safe(`${doc.signed_name} · ${when}${doc.signed_ip ? ` · IP ${doc.signed_ip}` : ''}`), { x: M + 14, y: H - y - 66, size: 8.5, font: F.sans, color: grey })
     page.drawText(safe(`Document reference ${String(doc.token || '').slice(0, 12).toUpperCase()}`), { x: M + 14, y: H - y - 78, size: 8, font: F.sans, color: grey })

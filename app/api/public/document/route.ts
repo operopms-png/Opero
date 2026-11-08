@@ -3,8 +3,9 @@ import { serviceClient as db } from '@/lib/admin-auth'
 import { SITE_URL, EMAIL_DOMAIN } from '@/lib/brand'
 import { sendEmail } from '@/lib/send-email'
 import { documentPdf } from '@/lib/document-pdf'
-import { emptyBlanks, applyClientFields, blankLabel } from '@/lib/doc-text'
-import { docSettings, docEmailHtml } from '@/lib/documents'
+import { randomUUID } from 'crypto'
+import { emptyBlanks, applyClientFields, blankLabel, fieldKind } from '@/lib/doc-text'
+import { docSettings, docEmailHtml, longDate } from '@/lib/documents'
 
 // The page a client opens from their email to read and sign a document (/sign/[token]).
 //   GET ?t=<token>          -> { doc, company }     (records the first open)
@@ -51,13 +52,18 @@ export async function POST(req: NextRequest) {
   for (const bl of emptyBlanks(d.body)) {
     const v = String((b.fields || {})[bl.key] ?? '').trim().slice(0, 300)
     if (!v) return bad(`Please fill in: ${blankLabel(bl.key)}`)
+    const fk = fieldKind(bl.key)
+    if (fk === 'initials' && !/^[A-Za-z][A-Za-z.\-' ]{0,7}$/.test(v)) return bad('Initials can only be letters, up to 8 characters.')
+    if (fk === 'date') { if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return bad('Choose a valid date.'); vals[bl.key] = longDate(v); continue }
     if (bl.options && !bl.options.includes(v)) return bad(`Choose one option for: ${blankLabel(bl.key)}`)
     vals[bl.key] = v
   }
+  const sig = b.method === 'drawn' && typeof b.signature_data === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(b.signature_data) && b.signature_data.length < 300000 ? b.signature_data : null
+  if (b.method === 'drawn' && !sig) return bad('Draw your signature, or choose Type.')
   const now = new Date().toISOString()
   const ip = (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || '').split(',')[0].trim().slice(0, 60) || null
   const body = applyClientFields(d.body, vals)
-  const { data: signed, error } = await db.from('doc_sends').update({ body, client_fields: vals, status: 'signed', signed_at: now, signed_name: name, signed_ip: ip, signed_ua: (req.headers.get('user-agent') || '').slice(0, 300), updated_at: now }).eq('id', d.id).eq('status', d.status).select('*').single()
+  const { data: signed, error } = await db.from('doc_sends').update({ body, client_fields: vals, status: 'signed', signed_at: now, signed_name: name, signed_ip: ip, signature_data: sig, signed_ua: (req.headers.get('user-agent') || '').slice(0, 300), updated_at: now }).eq('id', d.id).eq('status', d.status).select('*').single()
   if (error || !signed) return bad('That didn’t go through — refresh the page and try again.', 409)
 
   // tell the team, and email signed copies to the client and to whoever sent it
@@ -65,6 +71,7 @@ export async function POST(req: NextRequest) {
   try {
     const s = await docSettings(d.business_id), company = s.company_name || 'NOVOURQ Group'
     const bytes = await documentPdf(signed, s, SITE_URL)
+    await saveSignedCopy(signed, bytes)
     const att = [{ filename: `${String(d.title).replace(/[^\w\- ]+/g, '').trim() || 'document'} - signed.pdf`, content: Buffer.from(bytes).toString('base64') }]
     const link = `${SITE_URL}/sign/${d.token}`
     const from = `${company} <notifications@${EMAIL_DOMAIN}>`
@@ -73,4 +80,22 @@ export async function POST(req: NextRequest) {
     if (staffTo) await sendEmail(staffTo, `Signed: ${d.title} — ${name}`, docEmailHtml(company, s.contact_lines, String(d.created_by || 'there').split(' ')[0], `${name} has signed ${d.title}${d.property_label ? ` for ${d.property_label}` : ''}. The signed copy is attached and saved in Documents.`, `${SITE_URL}/staff-centre/documents?id=${d.id}`, 'Open in Documents', ''), undefined, from, att)
   } catch { /* the signature is saved either way */ }
   return NextResponse.json({ doc: pub(signed) })
+}
+
+// A signed document for an owner or tenant is filed in their Documents checklist (shown in their portal) automatically.
+async function saveSignedCopy(d: any, bytes: Uint8Array) {
+  try {
+    const map: Record<string, { subject: 'landlord' | 'tenant'; table: string; category: string }> = {
+      pm_owner: { subject: 'landlord', table: 'pm_landlords', category: 'mgmt_agreement' },
+      pm_tenant: { subject: 'tenant', table: 'pm_tenants', category: 'tenancy' },
+    }
+    const m = map[String(d.person_kind || '')]
+    if (!m || !d.person_id) return
+    const { data: own } = await db.from(m.table).select('id').eq('id', d.person_id).eq('user_id', d.business_id).maybeSingle()
+    if (!own) return
+    const path = `${d.business_id}/${m.subject}/${d.person_id}/${randomUUID()}.pdf`
+    const up = await db.storage.from('lease-docs').upload(path, Buffer.from(bytes), { contentType: 'application/pdf', upsert: false })
+    if (up.error) return
+    await db.from('lease_documents').insert({ user_id: d.business_id, subject: m.subject, head_lease_id: d.person_id, category: m.category, name: `${String(d.title).slice(0, 90)} - signed.pdf`, path, mime: 'application/pdf', size: bytes.length, uploaded_by: 'e-signature' })
+  } catch { /* the signature is saved either way */ }
 }

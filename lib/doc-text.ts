@@ -50,7 +50,9 @@ export const BLANKS: Blank[] = [
   { key: 'staff_name', label: 'Staff member sending', group: 'NOVOURQ' },
   { key: 'staff_email', label: 'Staff member’s email', group: 'NOVOURQ' },
 ]
-export const blankLabel = (key: string) => BLANKS.find(b => b.key === key)?.label || key.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase())
+export const blankLabel = (key: string) => BLANKS.find(b => b.key === key)?.label || (/^initials_/.test(key) ? 'Initials' : /^signdate_/.test(key) ? 'Date' : key.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase()))
+/** Blanks the signer fills in one by one: {initials_1} for a section, {signdate_1} for a date. Everything else is plain text or a choice. */
+export const fieldKind = (key: string): 'initials' | 'date' | 'text' => /^initials_/.test(key) ? 'initials' : /^signdate_/.test(key) ? 'date' : 'text'
 
 export const TOKEN_RE = /\{([a-z][a-z0-9_]*)(?::([^{}<>]*))?\}/g
 export const esc = (t: any) => String(t ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))

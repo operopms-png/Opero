@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useEffect, useRef, useState } from 'react'
 import { BRAND_NAME } from '@/lib/brand'
+import SignDocument from '@/components/documents/SignDocument'
 
 // Handles both PM leases and Estate Agency tenancies through the same
 // public signing page -- the API tells us which "kind" it is and we
@@ -28,7 +29,7 @@ type RawRecord = {
   estate_properties?: { name: string } | null
 }
 
-export default function SignLeasePage({ params }: { params: { token: string } }) {
+function SignLeasePage({ params }: { params: { token: string } }) {
   const [kind, setKind] = useState<Kind | null>(null)
   const [record, setRecord] = useState<RawRecord | null>(null)
   const [loading, setLoading] = useState(true)
@@ -244,3 +245,14 @@ const toggleBtn = (active: boolean): React.CSSProperties => ({
   fontFamily: 'inherit', fontSize: 12, fontWeight: 600, color: active ? '#fff' : '#667085',
   background: active ? '#89CFF0' : '#fff', border: '1px solid ' + (active ? '#323338' : '#E4E7EC'), borderRadius: 6, padding: '6px 12px', cursor: 'pointer',
 })
+
+// One link, two kinds of thing to sign: a document sent from Documents (initials, dates, signature) or a tenancy lease.
+export default function SignPage({ params }: { params: { token: string } }) {
+  const [state, setState] = useState<'loading' | 'lease' | { doc: any; company: any }>('loading')
+  useEffect(() => {
+    fetch(`/api/public/document?t=${params.token}`).then(async r => { const j = await r.json().catch(() => ({})); setState(r.ok && j.doc ? j : 'lease') }).catch(() => setState('lease'))
+  }, [params.token])
+  if (state === 'loading') return <div style={{ padding: 60, textAlign: 'center', color: '#98A2B3', fontFamily: 'Manrope, Arial, sans-serif' }}>Loading…</div>
+  if (state === 'lease') return <SignLeasePage params={params} />
+  return <SignDocument token={params.token} first={state} />
+}
