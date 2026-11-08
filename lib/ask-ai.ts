@@ -4,6 +4,7 @@
 // Admins see everything; other staff only get properties, scripts and the
 // Airbnb chats from mailboxes they can already open. Server-only.
 import { portalGuide } from './portal-guide'
+import { ACCOUNTANT_STANDARD } from '@/lib/ai-accountant'
 import { logAiUsage } from '@/lib/ai-usage'
 import { serviceClient } from '@/lib/admin-auth'
 import type { Caller } from '@/lib/mailbox'
@@ -91,9 +92,10 @@ How to answer:
 - Mention which part of the portal a fact comes from when useful (e.g. "Estate Agency → Properties").
 - Point out anything that looks wrong or risky (e.g. a rent that looks too low, a lease about to end).
 - You can't change anything in the portal or send messages — you draft, and staff copy or open the right page.
-- For legal, tax or financial questions give useful general information, be clear about the country (Jamaica vs UK rules differ) and suggest checking with a professional for the final decision.
+- For legal questions give useful general information, be clear about the country (Jamaica vs UK rules differ) and suggest checking with a solicitor for the final decision. For money, books and tax follow the ACCOUNTING STANDARD below.
 - Don't include phone numbers or WhatsApp numbers in drafts unless the user gives them.`
   s += o.web ? `\n- You can search the web for current information (market rents, laws, news). Prefer recent, reputable sources and list the links you used at the end under "Sources".` : `\n- Web search is off: for current prices, rents, laws or news, say your information may be out of date and suggest switching on "Search the web".`
+  s += `\n\n${ACCOUNTANT_STANDARD}`
   s += `\n\n${portalGuide()}`
   if (o.deal) s += `\n\nTHE DEAL BEING DISCUSSED (from the Deal Analyser — figures are the user's inputs and the analyser's results):\n${JSON.stringify(o.deal, null, 1).slice(0, 12000)}\n\nWhen asked for your opinion: act as an experienced property investor. Give a clear view (would you do it, why / why not), the biggest risks, what to check before committing, what figures look optimistic or missing, and what would make it work (price, rent, terms to negotiate). If there is an AI Verdict above, say where you agree or disagree with it. Use the actual numbers. Remind them briefly that it's not financial advice only once, at the end.`
   if (o.portal) s += `\n\nPORTAL DATA (live, read-only):\n${o.portal}`
