@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { ownerFetch } from '@/lib/platform-fetch'
-import { LEASE_DOC_TYPES } from '@/lib/lease-doc-types'
+import { DOC_SETS, type DocSubject } from '@/lib/lease-doc-types'
 
 const pill = (bg: string, fg: string): React.CSSProperties => ({ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: bg, color: fg })
 const daysTo = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) / 864e5)
 
-export default function LeaseDocuments({ lease, onClose, onChanged }: { lease: any; onClose: () => void; onChanged?: () => void }) {
+export default function LeaseDocuments({ lease, subject = 'head_lease', onClose, onChanged }: { lease: any; subject?: DocSubject; onClose: () => void; onChanged?: () => void }) {
   const [files, setFiles] = useState<any[]>([])
   const [busy, setBusy] = useState('')
   const [msg, setMsg] = useState('')
@@ -17,16 +17,16 @@ export default function LeaseDocuments({ lease, onClose, onChanged }: { lease: a
   const target = useRef('')
 
   const load = useCallback(async () => {
-    const r = await ownerFetch('/api/lease-docs?head_lease_id=' + lease.id)
+    const r = await ownerFetch(`/api/lease-docs?subject=${subject}&head_lease_id=${lease.id}`)
     if (r.ok) setFiles(r.data.files ?? []); else setMsg(r.data?.error || 'Could not load documents.')
-  }, [lease.id])
+  }, [lease.id, subject])
   useEffect(() => { load() }, [load])
 
   async function upload(f: File | undefined) {
     const cat = target.current; if (!f || !cat) return
     setBusy(cat); setMsg('')
     const { data: { session } } = await supabase.auth.getSession()
-    const fd = new FormData(); fd.append('head_lease_id', lease.id); fd.append('category', cat); fd.append('file', f); if (exp[cat]) fd.append('expires_on', exp[cat])
+    const fd = new FormData(); fd.append('subject', subject); fd.append('head_lease_id', lease.id); fd.append('category', cat); fd.append('file', f); if (exp[cat]) fd.append('expires_on', exp[cat])
     const res = await fetch('/api/lease-docs', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token ?? ''}` }, body: fd })
     const j = await res.json().catch(() => ({}))
     setBusy(''); if (pick.current) pick.current.value = ''
@@ -42,13 +42,13 @@ export default function LeaseDocuments({ lease, onClose, onChanged }: { lease: a
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(16,24,40,.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ background: '#fff', width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', borderRadius: '18px 18px 0 0', padding: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div><div style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A' }}>Documents</div><div style={{ fontSize: 12.5, color: '#667085' }}>{lease.pm_properties?.name ?? 'Head lease'}{lease.landlord_name ? ' · ' + lease.landlord_name : ''}</div></div>
+          <div><div style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A' }}>Documents</div><div style={{ fontSize: 12.5, color: '#667085' }}>{subject === 'landlord' ? (lease.name ?? 'Owner') : <>{lease.pm_properties?.name ?? 'Head lease'}{lease.landlord_name ? ' · ' + lease.landlord_name : ''}</>}</div></div>
           <button onClick={onClose} style={{ fontSize: 12, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}>Close</button>
         </div>
         <div style={{ fontSize: 12, color: '#475467', background: '#F2F7FD', borderRadius: 8, padding: '8px 10px', margin: '12px 0 2px' }}>Private. Only your team can open these files. Links expire after 5 minutes.</div>
         {msg && <div style={{ background: '#FEF3F2', color: '#B42318', border: '1px solid #FDA29B', borderRadius: 8, padding: '8px 10px', fontSize: 13, marginTop: 8 }}>{msg}</div>}
         <input ref={pick} type="file" accept="application/pdf,image/*,.doc,.docx" style={{ display: 'none' }} onChange={e => upload(e.target.files?.[0])} />
-        {LEASE_DOC_TYPES.map(t => {
+        {DOC_SETS[subject].map(t => {
           const list = files.filter(f => f.category === t.key)
           const soon = list.map(f => f.expires_on).filter(Boolean).sort()[0] as string | undefined
           const d = soon ? daysTo(soon) : null

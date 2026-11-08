@@ -369,7 +369,11 @@ function PMPageInner() {
   const [headLeases, setHeadLeases] = useState<any[]>([])
   const [leaseDocsFor, setLeaseDocsFor] = useState<any|null>(null)
   const [leaseDocCounts, setLeaseDocCounts] = useState<Record<string,number>>({})
-  const loadLeaseDocCounts = () => { ownerFetch('/api/lease-docs?counts=1').then(r => { if (r.ok) setLeaseDocCounts(r.data.counts ?? {}) }) }
+  const [ownerDocsFor, setOwnerDocsFor] = useState<any|null>(null)
+  const [ownerDocCounts, setOwnerDocCounts] = useState<Record<string,number>>({})
+  const loadOwnerDocCounts = () => { ownerFetch('/api/lease-docs?subject=landlord&counts=1').then(r => { if (r.ok) setOwnerDocCounts(r.data.counts ?? {}) }) }
+  useEffect(() => { if (tab==='Landlords') loadOwnerDocCounts() }, [tab])
+  const loadLeaseDocCounts = () => { ownerFetch('/api/lease-docs?subject=head_lease&counts=1').then(r => { if (r.ok) setLeaseDocCounts(r.data.counts ?? {}) }) }
   useEffect(() => { if (tab==='Head Leases') loadLeaseDocCounts() }, [tab])
   const [hmoRooms, setHmoRooms] = useState<any[]>([])
   const [keySets, setKeySets] = useState<any[]>([])
@@ -1574,6 +1578,7 @@ function PMPageInner() {
           </div>
         )}
 
+        {ownerDocsFor&&<LeaseDocuments lease={ownerDocsFor} subject="landlord" onClose={()=>setOwnerDocsFor(null)} onChanged={loadOwnerDocCounts} />}
         {tab==='Landlords'&&(
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             {landlords.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No landlords yet</div>:
@@ -1593,6 +1598,7 @@ function PMPageInner() {
                 ):(
                   <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
                 )}
+                <button onClick={()=>setOwnerDocsFor(l)} style={{fontSize:12,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Documents {ownerDocCounts[l.id]??0}/5</button>
                 <button onClick={()=>openEdit('landlord',l)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_landlords',l.id,setLandlords)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
               </div>
