@@ -12,7 +12,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Analytics': 'Occupancy, average nightly rate and revenue trends, so you can see which properties earn the most.',
   'Channels': 'Booking sites connected to your properties and whether each one is syncing.',
   'Integrations': 'Connect your booking sites, calendars, payments and smart devices.',
-  'Head Leases': 'Properties you rent from a landlord and sublet: rent payable, expiry, break dates and sublet consent.',
+  'Head Leases': 'Properties you rent from a landlord and sublet: rent payable, expiry, break dates and sublet consent. Press Documents on a lease to store the master lease, landlord ID, proof of ownership and electricity change papers.',
   'HMO Rooms': 'Rooms in shared houses: maximum occupants, who lives in each room and when the licence expires.',
   'Keys': 'Every key set: who holds it, where it is kept and when it was last checked.',
   'Audit Log': 'A record of who changed what and when, for accountability and review.',

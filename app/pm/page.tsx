@@ -14,6 +14,8 @@ import { downloadCsv } from '@/lib/export-csv'
 import { useRole, getAllowedTab } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import GuestCheckins from '@/components/pm/GuestCheckins'
+import LeaseDocuments from '@/components/pm/LeaseDocuments'
+import { ownerFetch } from '@/lib/platform-fetch'
 import { SITE_HOST } from '@/lib/brand'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
@@ -365,6 +367,10 @@ function PMPageInner() {
   const [strMaintenance, setStrMaintenance] = useState<any[]>([])
   const [strCompliance, setStrCompliance] = useState<any[]>([])
   const [headLeases, setHeadLeases] = useState<any[]>([])
+  const [leaseDocsFor, setLeaseDocsFor] = useState<any|null>(null)
+  const [leaseDocCounts, setLeaseDocCounts] = useState<Record<string,number>>({})
+  const loadLeaseDocCounts = () => { ownerFetch('/api/lease-docs?counts=1').then(r => { if (r.ok) setLeaseDocCounts(r.data.counts ?? {}) }) }
+  useEffect(() => { if (tab==='Head Leases') loadLeaseDocCounts() }, [tab])
   const [hmoRooms, setHmoRooms] = useState<any[]>([])
   const [keySets, setKeySets] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
@@ -1951,9 +1957,10 @@ function PMPageInner() {
           </div>
         )}
 
+        {leaseDocsFor&&<LeaseDocuments lease={leaseDocsFor} onClose={()=>setLeaseDocsFor(null)} onChanged={loadLeaseDocCounts} />}
         {tab==='Head Leases'&&(() => {
           const daysLeft = (d?: string) => d ? Math.round((new Date(d).getTime()-Date.now())/86400000) : null
-          const cols = '1.2fr 1fr 110px 110px 110px 1fr 110px'
+          const cols = '1.2fr 1fr 110px 110px 110px 1fr 250px'
           return (
           <div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
@@ -1972,6 +1979,7 @@ function PMPageInner() {
                   <span>{h.break_date??'—'}</span>
                   <span>{h.sublet_consent??'—'}</span>
                   <div style={{display:'flex',gap:8}}>
+                    <button onClick={()=>setLeaseDocsFor(h)} style={{fontSize:12,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Documents {leaseDocCounts[h.id]??0}/5</button>
                     <button onClick={()=>openEdit('headLease',{...h,rent_payable:h.rent_payable??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                     <button onClick={()=>del('pm_head_leases',h.id,setHeadLeases)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',padding:0}}>Delete</button>
                   </div>
