@@ -1,4 +1,5 @@
 'use client'
+import UtilityTracker from '../../components/pm/UtilityTracker'
 import RecordTab from '@/components/pm/RecordTab'
 import { RENT_REVIEWS, SERVICE_CHARGES, PLANNED_MAINTENANCE, EMERGENCY_CONTACTS } from '@/lib/pm-record-tabs'
 import { Stars } from '@/components/portal/FeedbackForm'
@@ -384,6 +385,7 @@ function PMPageInner() {
   const [auditLogs, setAuditLogs] = useState<any[]>([])
   const [auditFilter, setAuditFilter] = useState<string>('All')
   const [utilities, setUtilities] = useState<any[]>([])
+  const [utilView, setUtilView] = useState<'tracker'|'accounts'>('tracker')
   const [insurancePolicies, setInsurancePolicies] = useState<any[]>([])
   const [legalCases, setLegalCases] = useState<any[]>([])
   const [referrals, setReferrals] = useState<any[]>([])
@@ -2138,7 +2140,9 @@ function PMPageInner() {
 
         {tab==='Utilities'&&(
           <div>
-            <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
+            <div style={{display:'flex',gap:8,marginBottom:14}}>{(['tracker','accounts'] as const).map(v=><button key={v} onClick={()=>setUtilView(v)} style={{padding:'7px 16px',borderRadius:20,border:'1px solid '+(utilView===v?'#2F6DB5':'#D0D5DD'),background:utilView===v?'#2F6DB5':'#fff',color:utilView===v?'#fff':'#344054',fontSize:13,fontWeight:600,cursor:'pointer'}}>{v==='tracker'?'Tracker':'Accounts'}</button>)}</div>
+            {utilView==='tracker'&&<UtilityTracker staff />}
+            {utilView==='accounts'&&<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr 1fr 1fr 110px 120px 110px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
                 <span>Property</span><span>Service</span><span>Account holder</span><span>Supplier</span><span>Monthly</span><span>Next bill</span><span></span>
               </div>
@@ -2157,7 +2161,7 @@ function PMPageInner() {
                   </div>
                 </div>
               ))}
-            </div>
+            </div>}
           </div>
         )}
 
@@ -4126,7 +4130,7 @@ function PMPageInner() {
               </div>
               <div><label style={lbl}>Monthly amount (in the property's currency)</label><input type="number" style={inp} value={form.monthly_amount??''} onChange={e=>setForm({...form,monthly_amount:e.target.value})}/></div>
               <div><label style={lbl}>Account holder</label><input style={inp} value={form.account_holder??''} onChange={e=>setForm({...form,account_holder:e.target.value})} placeholder="e.g. Landlord, or us"/></div>
-              <div><label style={lbl}>Supplier</label><input style={inp} value={form.supplier??''} onChange={e=>setForm({...form,supplier:e.target.value})}/></div>
+              <div><label style={lbl}>Supplier</label><datalist id="util-suppliers"><option value="JPS"/><option value="Flow"/><option value="NWC"/><option value="Digicel"/></datalist><input style={inp} list="util-suppliers" value={form.supplier??''} onChange={e=>setForm({...form,supplier:e.target.value})}/></div>
               <div><label style={lbl}>Account reference</label><input style={inp} value={form.account_reference??''} onChange={e=>setForm({...form,account_reference:e.target.value})}/></div>
               <div><label style={lbl}>Next bill date</label><input type="date" style={inp} value={form.next_bill_date??''} onChange={e=>setForm({...form,next_bill_date:e.target.value})}/></div>
             </div>

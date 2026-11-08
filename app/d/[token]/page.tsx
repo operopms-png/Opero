@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import PortalDocuments from '@/components/portal/PortalDocuments'
+import UtilityTracker from '@/components/pm/UtilityTracker'
 
 const BLUE = '#2F6DB5'
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '12px 14px', marginBottom: 10 }
@@ -73,6 +74,8 @@ export default function ClientLinkPage() {
             <button style={{ ...btn, opacity: busy === i.id ? .6 : 1 }} disabled={!!busy} onClick={() => pay(i.id)}>{busy === i.id ? 'Opening payment…' : 'Pay now by card'}</button>
           </div>)}
         </>}
+
+        {(d.subject === 'landlord' || d.subject === 'tenant') && <div style={{ marginTop: 18 }}><UtilityTracker kind={d.subject} link={token} hideEmpty /></div>}
 
         <div style={lab}>Documents</div>
         <PortalDocuments kind={d.subject} link={token} />
