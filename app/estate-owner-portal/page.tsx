@@ -1,4 +1,5 @@
 'use client'
+import PortalDocuments from '@/components/portal/PortalDocuments'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
@@ -236,8 +237,9 @@ function EstateOwnerPortalInner() {
           </div>
         )}
 
+        {tab === 'Documents' && <PortalDocuments kind="ea_landlord" id={isStaffView ? landlord.id : undefined} />}
         {tab === 'Documents' && (
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
+          <div style={{ marginTop: 16, background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', padding: '10px 20px', background: '#F9FAFB', borderBottom: '1px solid #E4E7EC', fontSize: 11, fontWeight: 600, color: '#667085', textTransform: 'uppercase', gap: 8 }}>
               <span>Name</span><span>Category</span><span>Expiry</span>
             </div>

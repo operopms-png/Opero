@@ -36,6 +36,16 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
     const r = await ownerFetch('/api/lease-docs', { method: 'PATCH', body: JSON.stringify({ id: f.id, visible: !f.visible }) })
     if (!r.ok) setMsg(r.data?.error || 'Could not update.'); else load()
   }
+  async function decide(f: any, status: 'approved' | 'rejected') {
+    let reason = ''
+    if (status === 'rejected') { reason = window.prompt('Why is it being rejected? They will be emailed this.') || ''; if (reason.trim().length < 3) return }
+    const r = await ownerFetch('/api/lease-docs', { method: 'PATCH', body: JSON.stringify({ id: f.id, status, reason }) })
+    if (!r.ok) setMsg(r.data?.error || 'Could not update.'); else { await load(); onChanged?.() }
+  }
+  async function chase() {
+    const r = await ownerFetch('/api/doc-hub', { method: 'POST', body: JSON.stringify({ action: 'chase', items: [{ subject, id: lease.id }] }) })
+    setMsg(r.ok ? (r.data.sent ? 'Asked them for what is missing. Reminders go out automatically every 3 days.' : 'Nothing sent. They may have everything, or have no email address.') : (r.data?.error || 'Could not send.'))
+  }
   async function remove(id: string) {
     if (!window.confirm('Delete this file? This cannot be undone.')) return
     const r = await ownerFetch('/api/lease-docs?id=' + id, { method: 'DELETE' })
@@ -49,7 +59,8 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
           <div><div style={{ fontSize: 18, fontWeight: 700, color: '#1B2A4A' }}>Documents</div><div style={{ fontSize: 12.5, color: '#667085' }}>{subject !== 'head_lease' ? (lease.name ?? 'Owner') : <>{lease.pm_properties?.name ?? 'Head lease'}{lease.landlord_name ? ' · ' + lease.landlord_name : ''}</>}</div></div>
           <button onClick={onClose} style={{ fontSize: 12, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}>Close</button>
         </div>
-        <div style={{ fontSize: 12, color: '#475467', background: '#F2F7FD', borderRadius: 8, padding: '8px 10px', margin: '12px 0 2px' }}>Private. Only your team{subject !== 'head_lease' ? (subject === 'landlord' ? ' and this owner' : ' and this tenant') : ''} can open these files. Links expire after 5 minutes.{subject !== 'head_lease' ? ' Files marked In portal show in their portal automatically.' : ''}</div>
+        <div style={{ fontSize: 12, color: '#475467', background: '#F2F7FD', borderRadius: 8, padding: '8px 10px', margin: '12px 0 2px' }}>Private. Only your team{subject !== 'head_lease' ? (subject === 'landlord' ? ' and this owner' : ' and this tenant') : ''} can open these files. Links expire after 5 minutes.{subject !== 'head_lease' ? ' Files marked In portal show in their portal automatically. Files they upload wait here for you to approve or reject.' : ''}</div>
+        {subject !== 'head_lease' && <div style={{ marginTop: 10 }}><button onClick={chase} style={{ fontSize: 12.5, fontWeight: 700, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Ask them for missing documents</button></div>}
         {msg && <div style={{ background: '#FEF3F2', color: '#B42318', border: '1px solid #FDA29B', borderRadius: 8, padding: '8px 10px', fontSize: 13, marginTop: 8 }}>{msg}</div>}
         <input ref={pick} type="file" accept="application/pdf,image/*,.doc,.docx" style={{ display: 'none' }} onChange={e => upload(e.target.files?.[0])} />
         {DOC_SETS[subject].map(t => {
@@ -66,7 +77,7 @@ export default function LeaseDocuments({ lease, subject = 'head_lease', onClose,
               {list.map(f => (
                 <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12.5, background: '#F2F7FD', borderRadius: 8, padding: '7px 9px', marginTop: 7 }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}{f.expires_on ? ` · expires ${f.expires_on}` : ''}</span>
-                  <span style={{ whiteSpace: 'nowrap' }}>{subject !== 'head_lease' && <button onClick={() => toggle(f)} title="Choose whether they see this file in their portal" style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, border: 'none', cursor: 'pointer', marginRight: 10, background: f.visible ? '#E7F6EC' : '#F2F4F7', color: f.visible ? '#067647' : '#667085' }}>{f.visible ? 'In portal' : 'Staff only'}</button>}{f.url && <a href={f.url} target="_blank" rel="noreferrer" style={{ color: '#2F6DB5', marginRight: 10 }}>View</a>}<button onClick={() => remove(f.id)} style={{ border: 'none', background: 'none', color: '#B42318', cursor: 'pointer', fontSize: 12.5, padding: 0 }}>Delete</button></span>
+                  <span style={{ whiteSpace: 'nowrap' }}>{f.status === 'pending' && <><button onClick={() => decide(f, 'approved')} style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, border: 'none', cursor: 'pointer', marginRight: 6, background: '#2F6DB5', color: '#fff' }}>Approve</button><button onClick={() => decide(f, 'rejected')} style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, border: '1px solid #B42318', cursor: 'pointer', marginRight: 10, background: '#fff', color: '#B42318' }}>Reject</button></>}{f.status === 'rejected' && <span style={{ fontSize: 11, fontWeight: 700, color: '#B42318', marginRight: 10 }}>Rejected</span>}{subject !== 'head_lease' && <button onClick={() => toggle(f)} title="Choose whether they see this file in their portal" style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, border: 'none', cursor: 'pointer', marginRight: 10, background: f.visible ? '#E7F6EC' : '#F2F4F7', color: f.visible ? '#067647' : '#667085' }}>{f.visible ? 'In portal' : 'Staff only'}</button>}{f.url && <a href={f.url} target="_blank" rel="noreferrer" style={{ color: '#2F6DB5', marginRight: 10 }}>View</a>}<button onClick={() => remove(f.id)} style={{ border: 'none', background: 'none', color: '#B42318', cursor: 'pointer', fontSize: 12.5, padding: 0 }}>Delete</button></span>
                 </div>
               ))}
               <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>

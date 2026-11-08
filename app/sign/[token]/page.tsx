@@ -40,6 +40,7 @@ function SignLeasePage({ params }: { params: { token: string } }) {
   const [typedSig, setTypedSig] = useState('')
   const [hasDrawn, setHasDrawn] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [ini, setIni] = useState<Record<string, string>>({})
   const [signedResult, setSignedResult] = useState<{ signed_at: string; document_hash: string } | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -112,7 +113,7 @@ function SignLeasePage({ params }: { params: { token: string } }) {
     const res = await fetch('/api/lease-sign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: params.token, role, method: mode, signature_data, signer_name: signerName.trim() }),
+      body: JSON.stringify({ token: params.token, role, method: mode, signature_data, signer_name: signerName.trim(), initials: ini }),
     })
     const data = await res.json()
     setSubmitting(false)
@@ -120,7 +121,9 @@ function SignLeasePage({ params }: { params: { token: string } }) {
     setSignedResult({ signed_at: data.signed_at, document_hash: data.document_hash })
   }
 
-  const canSign = mode === 'typed' ? typedSig.trim().length > 1 : hasDrawn
+  const iniKeys = record ? ['term', 'rent', 'deposit', ...((record.contract_text || record.document_url) ? ['contract'] : [])] : []
+  const iniOk = iniKeys.every(k => (ini[k] || '').trim().length > 0)
+  const canSign = iniOk && (mode === 'typed' ? typedSig.trim().length > 1 : hasDrawn)
   const alreadySignedByRole = record && (role === 'tenant' ? record.tenant_signed_at : record.landlord_signed_at)
 
   const tenantName = kind === 'pm_lease' ? record?.pm_tenants?.name : record?.estate_tenants?.name
@@ -192,6 +195,18 @@ function SignLeasePage({ params }: { params: { token: string } }) {
                 </div>
               ) : (
                 <>
+                  <div style={{ border: '1px solid #D5E4F5', background: '#F4F9FF', borderRadius: 10, padding: 14, marginBottom: 18 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#323338' }}>Initial each term *</div>
+                      <button type="button" onClick={() => { const i = signerName.trim().split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase()).join('').slice(0, 4); if (i) setIni(Object.fromEntries(iniKeys.map(k => [k, i]))) }} style={{ fontSize: 12, fontWeight: 600, color: '#2F6DB5', background: '#fff', border: '1px solid #2F6DB5', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Fill my initials</button>
+                    </div>
+                    {iniKeys.map(k => (
+                      <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', fontSize: 13, color: '#344054' }}>
+                        <span>{{ term: 'I agree the term', rent: 'I agree the monthly rent', deposit: 'I agree the deposit', contract: 'I have read the full agreement' }[k]}</span>
+                        <input value={ini[k] || ''} maxLength={8} placeholder="Initial" onChange={e => setIni({ ...ini, [k]: e.target.value.toUpperCase() })} style={{ width: 84, textAlign: 'center', fontWeight: 700, padding: '7px 8px', borderRadius: 8, border: '1.5px ' + (ini[k] ? 'solid #067647' : 'dashed #2F6DB5'), background: ini[k] ? '#F0FAF4' : '#fff', fontFamily: 'inherit', fontSize: 14 }} />
+                      </div>
+                    ))}
+                  </div>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 6 }}>Full Name *</label>
                   <input value={signerName} onChange={e => setSignerName(e.target.value)} placeholder="Your full legal name" style={inp} />
 

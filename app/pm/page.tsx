@@ -1612,6 +1612,7 @@ function PMPageInner() {
 
         {tab==='Tenants'&&(
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {documents.some((d:any)=>d.tenant_id)&&<div style={{background:'#F2F7FD',border:'1px solid #C9D6E6',borderRadius:10,padding:'10px 14px',fontSize:13,color:'#344054',display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,flexWrap:'wrap'}}><span>{documents.filter((d:any)=>d.tenant_id).length} older tenant files are in the open "All files" list. Move them into each tenant's private Documents.</span><button onClick={async()=>{const r=await ownerFetch('/api/migrate-tenant-files',{method:'POST',body:'{}'});if(r.ok){alert(`Moved ${r.data.moved}. ${r.data.failed?r.data.failed+' could not be moved. ':''}${r.data.left?'Press again to move the rest.':''}`);const {data}=await supabase.from('pm_documents').select('*,pm_properties(name)').order('created_at',{ascending:false});setDocuments(data??[]);loadTenantDocCounts()}else alert(r.data?.error||'Could not move files.')}} style={{fontSize:12.5,fontWeight:600,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'6px 12px',cursor:'pointer'}}>Move to private</button></div>}
             {tenants.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No tenants yet</div>:
             tenants.map(t=>(
               <div key={t.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>

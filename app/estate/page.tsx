@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import TabBanner from '@/components/TabBanner'
-import TenantDocuments from '@/components/TenantDocuments'
+import LeaseDocuments from '@/components/pm/LeaseDocuments'
 import { supabase, getAccountId } from '../../lib/supabase'
 import LandlordStatements from '@/components/reports/LandlordStatements'
 import { useRole, getAllowedTab } from '@/lib/useRole'
@@ -338,6 +338,7 @@ export default function Page() {
   const [inventoryForm, setInventoryForm] = useState({property_id:'',tenancy_id:'',type:INVENTORY_TYPES[0],inspection_date:'',condition_summary:'',document_url:'',status:'Draft'})
   const [documents, setDocuments] = useState<any[]>([])
   const [docsTenant, setDocsTenant] = useState<any>(null)
+  const [docsLandlord, setDocsLandlord] = useState<any>(null)
   const [showAddDocument, setShowAddDocument] = useState(false)
   const [documentForm, setDocumentForm] = useState({property_id:'',landlord_id:'',tenant_id:'',name:'',category:DOCUMENT_CATEGORIES[0].value,file_url:''})
   const [documentLinkType, setDocumentLinkType] = useState('property')
@@ -1067,7 +1068,7 @@ export default function Page() {
                   ):(
                     <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
                   )}
-                  <button onClick={()=>setDocsTenant(t)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>📁 Documents ({documents.filter((d:any)=>d.tenant_id===t.id).length})</button>
+                  <button onClick={()=>setDocsTenant(t)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>📁 Documents</button>
                   <button onClick={()=>{setEditItem(t);setTen({name:t.name,email:t.email||'',phone:t.phone||'',property_id:t.property_id||'',unit_id:t.unit_id||'',id_type:t.id_type||'',id_url:t.id_url||'',status:t.status||'active'});setShowAddTenant(true)}} style={{fontSize:12,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
                   <button onClick={()=>delRecord('estate_tenants',t.id)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>Delete</button>
                 </div>
@@ -1075,7 +1076,8 @@ export default function Page() {
             </div>
           </div>)}
 
-          {docsTenant&&<TenantDocuments kind="estate" tenant={docsTenant} onClose={()=>setDocsTenant(null)} onChanged={async()=>{const {data}=await supabase.from('estate_documents').select('*,estate_properties(name),estate_tenants(name),estate_landlords(name)').eq('user_id',docsTenant.user_id).order('created_at',{ascending:false});setDocuments(data??[])}} />}
+          {docsTenant&&<LeaseDocuments lease={docsTenant} subject="ea_tenant" onClose={()=>setDocsTenant(null)} />}
+          {docsLandlord&&<LeaseDocuments lease={docsLandlord} subject="ea_landlord" onClose={()=>setDocsLandlord(null)} />}
 
           {section==='Compliance'&&(<div>
             <div style={{display:'flex',gap:8,marginBottom:20}}>
@@ -1466,6 +1468,7 @@ export default function Page() {
                     <div style={{fontSize:12,color:'#667085',marginTop:2}}>{[l.email,l.phone].filter(Boolean).join(' · ')}</div>
                   </div>
                   <div style={{fontSize:13,color:'#667085'}}>{properties.filter((p:any)=>p.owner_id===l.id).length} properties</div>
+                  <button onClick={()=>setDocsLandlord(l)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>📁 Documents</button>
                   {l.portal_user_id?(
                     <>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669'}}>Portal Active</span>

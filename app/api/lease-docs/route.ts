@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
-import { DOC_SETS, DOC_SUBJECT_TABLE, LEASE_DOC_BUCKET, isSubject } from '@/lib/lease-doc-types'
+import { DOC_SETS, DOC_SUBJECT_TABLE, LEASE_DOC_BUCKET, isSubject, keyDocs, type DocSubject } from '@/lib/lease-doc-types'
+import { PORTAL_SUBJECTS, emailPerson, type PortalSubject } from '@/lib/doc-hub'
 
 // Documents on a head lease (master lease, landlord ID, proof of ownership…). Private bucket, scoped to the caller's company.
 // Admins, Co Founders and the property teams only. Files open through links that expire after 5 minutes.
@@ -16,7 +17,7 @@ const TYPES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png',
 const MAX = 15 * 1024 * 1024
 
 const subjectOf = (v: any) => { const s = String(v || 'head_lease'); return isSubject(s) ? s : null }
-async function ownLease(id: string, biz: string, subject: 'head_lease' | 'landlord' | 'tenant' = 'head_lease') {
+async function ownLease(id: string, biz: string, subject: DocSubject = 'head_lease') {
   const { data } = await db.from(DOC_SUBJECT_TABLE[subject]).select('id').eq('id', id).eq('user_id', biz).maybeSingle()
   return !!data
 }
@@ -26,9 +27,9 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams
   const subject = subjectOf(sp.get('subject')); if (!subject) return bad('Unknown document type.')
   if (sp.get('counts')) {
-    const { data } = await db.from('lease_documents').select('head_lease_id, category').eq('user_id', c.businessId).eq('subject', subject)
+    const { data } = await db.from('lease_documents').select('head_lease_id, category, status').eq('user_id', c.businessId).eq('subject', subject)
     const m: Record<string, Set<string>> = {}
-    for (const r of data ?? []) if (r.category !== 'other') (m[r.head_lease_id] ||= new Set()).add(r.category)
+    for (const r of data ?? []) if (r.status !== 'rejected' && keyDocs(subject).some(t => t.key === r.category)) (m[r.head_lease_id] ||= new Set()).add(r.category)
     return NextResponse.json({ counts: Object.fromEntries(Object.entries(m).map(([k, v]) => [k, v.size])) })
   }
   const lid = sp.get('head_lease_id') || ''
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
   const { data } = await db.from('lease_documents').select('*').eq('head_lease_id', lid).eq('subject', subject).eq('user_id', c.businessId).order('created_at', { ascending: false })
   const files = await Promise.all((data ?? []).map(async (f: any) => {
     const { data: s } = await db.storage.from(LEASE_DOC_BUCKET).createSignedUrl(f.path, 300)
-    return { id: f.id, category: f.category, name: f.name, size: f.size, expires_on: f.expires_on, visible: f.visible_to_portal !== false, created_at: f.created_at, url: s?.signedUrl ?? null }
+    return { id: f.id, category: f.category, name: f.name, size: f.size, expires_on: f.expires_on, visible: f.visible_to_portal !== false, status: f.status ?? 'approved', reason: f.reject_reason ?? null, mine: !!f.uploaded_by_portal, created_at: f.created_at, url: s?.signedUrl ?? null }
   }))
   return NextResponse.json({ files })
 }
@@ -63,8 +64,25 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const c = await getCaller(req); if (!c) return bad('Not signed in', 401); if (!allowed(c)) return bad('Not allowed.', 403)
   const b = await req.json().catch(() => ({}))
-  const { error } = await db.from('lease_documents').update({ visible_to_portal: !!b.visible }).eq('id', String(b.id || '')).eq('user_id', c.businessId).neq('subject', 'head_lease')
-  return error ? bad('Could not update.', 500) : NextResponse.json({ ok: true })
+  const id = String(b.id || '')
+  const { data: f } = await db.from('lease_documents').select('*').eq('id', id).eq('user_id', c.businessId).maybeSingle()
+  if (!f || f.subject === 'head_lease') return bad('File not found.', 404)
+  const upd: any = {}
+  if (typeof b.visible === 'boolean') upd.visible_to_portal = b.visible
+  if (b.status === 'approved' || b.status === 'rejected') {
+    const reason = String(b.reason || '').trim().slice(0, 300)
+    if (b.status === 'rejected' && reason.length < 3) return bad('Say why it is being rejected, so they know what to send instead.')
+    Object.assign(upd, { status: b.status, reject_reason: b.status === 'rejected' ? reason : null, reviewed_by: c.email, reviewed_at: new Date().toISOString() })
+  }
+  const { error } = await db.from('lease_documents').update(upd).eq('id', id)
+  if (error) return bad('Could not update.', 500)
+  if (b.status === 'rejected' && (PORTAL_SUBJECTS as string[]).includes(f.subject)) {
+    const sub = f.subject as PortalSubject
+    const { data: p } = await db.from(DOC_SUBJECT_TABLE[sub]).select('name, email').eq('id', f.head_lease_id).maybeSingle()
+    const label = DOC_SETS[sub].find(t => t.key === f.category)?.label ?? 'a document'
+    if (p) await emailPerson(c.businessId, sub, p, `Please send a new ${label}`, [`${f.name}: ${upd.reject_reason}`], 'Upload a replacement').catch(() => false)
+  }
+  return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(req: NextRequest) {

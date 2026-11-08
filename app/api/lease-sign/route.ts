@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { token, role, method, signature_data, signer_name } = body
+  const { token, role, method, signature_data, signer_name, initials } = body
 
   if (!token || !role || !method || !signature_data || !signer_name) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -82,6 +82,14 @@ export async function POST(req: NextRequest) {
   if (!found) return NextResponse.json({ error: 'Signing link not found or expired' }, { status: 404 })
   const { kind, record } = found
 
+  // initials at each key term (and the full agreement when there is text to read)
+  const need = ['term', 'rent', 'deposit', ...((record.contract_text || record.document_url) ? ['contract'] : [])]
+  const ini: Record<string, string> = {}
+  for (const k of need) {
+    const v = String((initials || {})[k] ?? '').trim().slice(0, 8)
+    if (!/^[A-Za-z][A-Za-z.\-' ]{0,7}$/.test(v)) return NextResponse.json({ error: 'Add your initials at every term before signing.' }, { status: 400 })
+    ini[k] = v.toUpperCase()
+  }
   const alreadySigned = role === 'tenant' ? record.tenant_signed_at : record.landlord_signed_at
   if (alreadySigned) return NextResponse.json({ error: 'This document has already been signed by the ' + role }, { status: 400 })
 
@@ -104,6 +112,7 @@ export async function POST(req: NextRequest) {
     user_agent: userAgent,
     document_hash: documentHash,
     signed_at: signedAt,
+    initials: ini,
   })
   if (sigError) return NextResponse.json({ error: sigError.message }, { status: 500 })
 

@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Stat, Loading, Empty, Modal, btn, input, label } from '../../../components/crm/Page'
 import { staffApi } from '../../../lib/staff-api'
+import DocReviewQueue from '../../../components/documents/DocReviewQueue'
 import DocEditor, { DOC_CSS } from '../../../components/documents/DocEditor'
 import { DOC_STATUS, KIND_LABEL, downloadDocPdf, PersonSearch } from '../../../components/documents/shared'
 import { wordingText, changeSummary, emptyBlanks, blankLabel, settleBlanks } from '../../../lib/doc-text'
@@ -42,6 +43,7 @@ function List({ open, startNew }: { open: (id: string) => void; startNew: boolea
         tabs={[{ k: 'all', l: 'All', count: all.length }, { k: 'waiting', l: 'Waiting', count: count('waiting') }, { k: 'signed', l: 'Signed', count: count('signed') }, { k: 'approval', l: 'Awaiting approval', count: count('approval') }, { k: 'drafts', l: 'Drafts', count: count('drafts') }]} tab={tab} onTab={setTab} />
       <Body>
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
+        {tab === 'all' && <DocReviewQueue />}
         {!d ? (!err && <Loading />) : <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 12, marginBottom: 16 }}>
             <Stat label="Waiting for signature" value={d.stats.waiting} />
