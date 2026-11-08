@@ -53,6 +53,7 @@ export default function StartPage() {
     <div style={wrap}>
       <div style={{ background: '#fff', borderBottom: '1px solid #E4E7EC', padding: '14px 16px' }}>
         <div style={{ maxWidth: 520, margin: '0 auto' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: BLUE }}>{d?.company || 'NOVOURQ'}</div>
           <div style={{ fontSize: 20, fontWeight: 700 }}>{shown === 3 ? 'All done' : 'Welcome'}</div>
           {d && !err && <><div style={{ display: 'flex', gap: 6, marginTop: 10 }}>{names.map((_, i) => <i key={i} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= shown ? BLUE : '#E4E7EC' }} />)}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 6 }}>Step {shown + 1} of 4 · {names[shown]}</div></>}
         </div>
