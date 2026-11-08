@@ -40,7 +40,7 @@ function List({ open, startNew }: { open: (id: string) => void; startNew: boolea
   return (
     <CrmPage>
       <CrmHeader title="Documents" subtitle="Everything sent to tenants, guests, owners and partners — and where it’s up to."
-        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => setNewClient(true)}>New client link</button><button style={btn('gold')} onClick={() => setNewDoc(true)}>Send a document</button></div>}
+        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents/templates' }}>Templates</button><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents/rules' }}>Automatic rules</button><button style={btn('ghost')} onClick={() => setNewClient(true)}>New client link</button><button style={btn('gold')} onClick={() => setNewDoc(true)}>Send a document</button></div>}
         tabs={[{ k: 'all', l: 'All', count: all.length }, { k: 'waiting', l: 'Waiting', count: count('waiting') }, { k: 'signed', l: 'Signed', count: count('signed') }, { k: 'approval', l: 'Awaiting approval', count: count('approval') }, { k: 'drafts', l: 'Drafts', count: count('drafts') }]} tab={tab} onTab={setTab} />
       <Body>
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
