@@ -87,6 +87,16 @@ export default function EmailPage() {
   const [toast, setToast] = useState('')
   const [templates, setTemplates] = useState<EmailTemplate[]>([{ ...DEFAULT_FORMAT, id: '', name: 'Standard', is_default: true }])
   const [me, setMe] = useState<{ name: string }>({ name: '' })
+  // Phones: one pane at a time (list, then the open email) with the folders in a slide-out menu
+  const [isMobile, setIsMobile] = useState(false)
+  const [navOpen, setNavOpen] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 820px)')
+    const on = () => { setIsMobile(mq.matches); if (!mq.matches) setNavOpen(false) }
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
   const reqId = useRef(0)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const caret = useRef<number | null>(null)
@@ -236,7 +246,7 @@ export default function EmailPage() {
   const frameDoc = useMemo(() => {
     if (!msg) return ''
     const body = msg.body_html || `<pre style="white-space:pre-wrap;font-family:inherit;margin:0">${esc(msg.body_text || '')}</pre>`
-    return `<!doctype html><html><head><base target="_blank"><meta charset="utf-8"><style>body{font-family:Figtree,Arial,sans-serif;font-size:14px;line-height:1.55;color:#323338;margin:0;padding:4px 2px;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%}a{color:#2F6DB5}blockquote{border-left:2px solid #D0D4E4;margin:8px 0;padding-left:10px;color:#676879}</style></head><body>${body}</body></html>`
+    return `<!doctype html><html><head><base target="_blank"><meta charset="utf-8"><style>body{font-family:Figtree,Arial,sans-serif;font-size:14px;line-height:1.55;color:#323338;margin:0;padding:4px 2px;word-wrap:break-word}img{max-width:100%;height:auto}table{max-width:100%!important;width:auto}td,th{word-break:break-word}a{color:#2F6DB5}blockquote{border-left:2px solid #D0D4E4;margin:8px 0;padding-left:10px;color:#676879}</style></head><body>${body}</body></html>`
   }, [msg])
 
   if (loading) return <CrmPage><div style={{ padding: 60, color: C.faint }}>Loading email…</div></CrmPage>
@@ -251,9 +261,27 @@ export default function EmailPage() {
 
   return (
     <CrmPage fill>
-      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', flex: 1, minHeight: 0, minWidth: 0 }}>
+        {/* Phone top bar: folders menu + new email */}
+        {isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid ' + C.row, background: '#fff', flexShrink: 0 }}>
+            <button onClick={() => setNavOpen(true)} aria-label="Folders and mailboxes" style={{ ...btn('ghost', true), padding: '6px 10px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
+              Folders
+            </button>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 14, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {view === 'templates' ? 'Email templates' : view === 'settings' ? 'Mailbox settings' : (folder === 'Sent' ? 'Sent' : 'Inbox') + ' · ' + (current ? current.email.split('@')[0] : 'all')}
+            </span>
+            <button onClick={() => compose('new')} style={btn('gold', true)}>+ New</button>
+          </div>
+        )}
+        {isMobile && navOpen && <div onClick={() => setNavOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)', zIndex: 69 }} />}
         {/* Workspace nav */}
-        <div style={{ width: 240, flexShrink: 0, borderRight: '1px solid ' + C.row, padding: '16px 10px', display: 'flex', flexDirection: 'column', overflowY: 'auto', background: '#fff' }}>
+        <div
+          onClick={e => { if (isMobile && (e.target as HTMLElement).closest('button')) setNavOpen(false) }}
+          style={isMobile
+            ? { display: navOpen ? 'flex' : 'none', position: 'fixed', top: 0, left: 0, bottom: 0, width: 280, maxWidth: '85vw', zIndex: 70, boxShadow: '0 8px 30px rgba(0,0,0,.25)', padding: '16px 10px', flexDirection: 'column', overflowY: 'auto', background: '#fff' }
+            : { width: 240, flexShrink: 0, borderRight: '1px solid ' + C.row, padding: '16px 10px', display: 'flex', flexDirection: 'column', overflowY: 'auto', background: '#fff' }}>
           <div style={{ fontSize: 13, color: C.muted, padding: '0 6px 6px' }}>Workspace</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid ' + C.border, borderRadius: 4, padding: '7px 10px', marginBottom: 12 }}>
             <span style={{ width: 20, height: 20, borderRadius: 4, background: C.gold, color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>E</span>
@@ -298,7 +326,7 @@ export default function EmailPage() {
         ) : (
           <>
             {/* Message list */}
-            <div style={{ width: 380, flexShrink: 0, borderRight: '1px solid ' + C.row, display: 'flex', flexDirection: 'column', minHeight: 0, background: '#fff' }}>
+            <div style={{ width: isMobile ? '100%' : 380, flex: isMobile ? 1 : undefined, flexShrink: 0, borderRight: isMobile ? 'none' : '1px solid ' + C.row, display: isMobile && openId ? 'none' : 'flex', flexDirection: 'column', minHeight: 0, background: '#fff' }}>
               <div style={{ padding: '16px 16px 10px', borderBottom: '1px solid ' + C.row }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder === 'Sent' ? 'Sent' : 'Inbox'} <span style={{ fontSize: 14, color: C.faint }}>{current ? current.email.split('@')[0] : 'all'}</span></h1>
@@ -346,7 +374,7 @@ export default function EmailPage() {
             </div>
 
             {/* Reading pane */}
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#fff' }}>
+            <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: isMobile && !openId ? 'none' : 'flex', flexDirection: 'column', background: '#fff', overflowY: isMobile ? 'auto' : undefined }}>
               {!openId ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.muted, gap: 10 }}>
                   <div style={{ width: 56, height: 56, borderRadius: 12, background: C.cream, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -356,24 +384,30 @@ export default function EmailPage() {
                 </div>
               ) : !msg ? <div style={{ padding: 40, color: C.faint }}>Opening…</div> : (
                 <>
-                  <div style={{ padding: '18px 24px 14px', borderBottom: '1px solid ' + C.row }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      <h2 style={{ fontSize: 20, fontWeight: 500, margin: 0, flex: 1 }}>{msg.subject || '(no subject)'}</h2>
-                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <div style={{ padding: isMobile ? '12px 16px' : '18px 24px 14px', borderBottom: '1px solid ' + C.row }}>
+                    {isMobile && (
+                      <button onClick={() => { setOpenId(null); setMsg(null) }} style={{ border: 'none', background: 'none', padding: '0 0 10px', color: C.goldDark, fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+                        Back to {folder === 'Sent' ? 'Sent' : 'Inbox'}
+                      </button>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', gap: 10 }}>
+                      <h2 style={{ fontSize: isMobile ? 18 : 20, fontWeight: 500, margin: 0, flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>{msg.subject || '(no subject)'}</h2>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, flexShrink: 0 }}>
                         <button onClick={() => compose('reply')} style={btn('gold', true)}>Reply</button>
                         <button onClick={() => compose('replyAll')} style={btn('ghost', true)}>Reply all</button>
                         <button onClick={() => compose('forward')} style={btn('ghost', true)}>Forward</button>
                         {msg.folder === 'INBOX' && <button onClick={markUnread} title="Mark as unread" style={btn('ghost', true)}>Unread</button>}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
+                    <div style={{ display: 'flex', flexWrap: isMobile ? 'wrap' : 'nowrap', alignItems: 'center', gap: 10, marginTop: 12 }}>
                       <Avatar name={msg.from_name || msg.from_email || '?'} color={colorFor(msg.from_email || '')} size={34} />
                       <div style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
-                        <div><b style={{ fontWeight: 600 }}>{msg.from_name || msg.from_email}</b> {msg.from_name && <span style={{ color: C.faint }}>&lt;{msg.from_email}&gt;</span>}</div>
+                        <div style={{ overflowWrap: 'anywhere' }}><b style={{ fontWeight: 600 }}>{msg.from_name || msg.from_email}</b> {msg.from_name && <span style={{ color: C.faint }}>&lt;{msg.from_email}&gt;</span>}</div>
                         <div style={{ color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>To: {msg.to_list || '—'}{msg.cc_list ? ` · Cc: ${msg.cc_list}` : ''}</div>
                         {msg.sent_by && <div style={{ color: C.brown }}>Sent by {msg.sent_by} from the portal</div>}
                       </div>
-                      <div style={{ textAlign: 'right', fontSize: 12.5, color: C.muted }}>
+                      <div style={{ textAlign: isMobile ? 'left' : 'right', fontSize: 12.5, color: C.muted, flexBasis: isMobile ? '100%' : undefined, paddingLeft: isMobile ? 44 : 0 }}>
                         <div>{new Date(msg.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                         {byId(msg.mailbox_id) && <span style={{ display: 'inline-block', marginTop: 3, fontSize: 11, color: '#fff', background: colorFor(byId(msg.mailbox_id).email), borderRadius: 3, padding: '1px 6px' }}>{byId(msg.mailbox_id).email}</span>}
                       </div>
@@ -389,7 +423,7 @@ export default function EmailPage() {
                     )}
                   </div>
                   {msg.ai_draft && (
-                    <div style={{ margin: '12px 24px 0', border: '1px solid ' + (msg.ai_status === 'replied' ? '#A6E9C9' : C.creamLine), background: msg.ai_status === 'replied' ? '#E6F9F0' : C.cream, borderRadius: 6, padding: '10px 14px' }}>
+                    <div style={{ margin: isMobile ? '12px 16px 0' : '12px 24px 0', border: '1px solid ' + (msg.ai_status === 'replied' ? '#A6E9C9' : C.creamLine), background: msg.ai_status === 'replied' ? '#E6F9F0' : C.cream, borderRadius: 6, padding: '10px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: msg.ai_status === 'replied' ? '#00854D' : C.brown }}>{msg.ai_status === 'replied' ? 'The AI receptionist already replied' : 'AI receptionist drafted a reply'}</span>
                         <div style={{ flex: 1 }} />
@@ -398,7 +432,7 @@ export default function EmailPage() {
                       <div style={{ fontSize: 13, whiteSpace: 'pre-wrap', color: C.ink, maxHeight: 160, overflowY: 'auto' }}>{msg.ai_draft}</div>
                     </div>
                   )}
-                  <iframe title="Email" sandbox="allow-popups allow-popups-to-escape-sandbox" srcDoc={frameDoc} style={{ flex: 1, border: 'none', width: '100%', padding: '8px 18px', boxSizing: 'border-box' }} />
+                  <iframe title="Email" sandbox="allow-popups allow-popups-to-escape-sandbox" srcDoc={frameDoc} style={{ flex: isMobile ? 'none' : 1, height: isMobile ? '70vh' : undefined, minHeight: 300, border: 'none', width: '100%', padding: isMobile ? '8px 10px' : '8px 18px', boxSizing: 'border-box' }} />
                 </>
               )}
             </div>
