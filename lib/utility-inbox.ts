@@ -6,7 +6,8 @@ import { EMAIL_DOMAIN } from '@/lib/brand'
 import { LEASE_DOC_BUCKET } from '@/lib/lease-doc-types'
 import { logAiUsage } from '@/lib/ai-usage'
 
-export const billAddress = (token: string) => `bills+${token}@${EMAIL_DOMAIN}`
+// BILL_INBOX_DOMAIN is the domain that receives inbound mail (for example reply.helloopero.com); it falls back to EMAIL_DOMAIN. Sending stays on EMAIL_DOMAIN.
+export const billAddress = (token: string) => `bills+${token}@${process.env.BILL_INBOX_DOMAIN || EMAIL_DOMAIN}`
 export const BILL_ALIAS = /bills\+([a-f0-9]{12})@/i
 const MODEL = 'claude-sonnet-4-6'
 const SYSTEM = `You read a utility or internet bill that arrived by email (JPS electricity, Flow internet, water, etc.). Reply with ONLY a JSON object:
