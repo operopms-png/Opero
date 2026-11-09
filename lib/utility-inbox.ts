@@ -28,7 +28,7 @@ export async function handleBillEmail(emailId: string, token: string, from: stri
   if (!acct) return 'no account'
   const { data: prop } = await db.from('pm_properties').select('name, currency').eq('id', acct.property_id).maybeSingle()
   const label = `${acct.supplier || acct.service} ${/broad/i.test(acct.service) ? 'internet' : acct.service.toLowerCase()} · ${prop?.name || 'property'}`
-  if (!process.env.RESEND_API_KEY || !process.env.ANTHROPIC_API_KEY) { await notify(acct.user_id, 'Bill arrived but could not be read', `A bill emailed for ${label} could not be read because email or AI is not set up.`); return 'not configured' }
+  if (!process.env.RESEND_API_KEY) { await notify(acct.user_id, 'Bill arrived but could not be read', `A bill emailed for ${label} could not be read because email is not set up.`); return 'not configured' }
 
   // The email body and any PDF or photo attached
   const rr = await fetch(`https://api.resend.com/emails/receiving/${emailId}`, { headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` } })
@@ -50,6 +50,11 @@ export async function handleBillEmail(emailId: string, token: string, from: stri
     } catch { /* try the next one */ }
   }
   if (!text && !blocks.length) { await notify(acct.user_id, 'Bill arrived but was empty', `An email for ${label} had no readable bill.`); return 'empty' }
+
+  // A supplier's confirmation code (sent when you set this address as the bill email): show it in a notification so it can be typed into the supplier's app.
+  const codeLike = !blocks.length && text.length < 1500 && /(code|otp|verif|confirm)/i.test(`${subject} ${text}`) ? text.match(/(?<!\d)\d{4,8}(?!\d)/) : null
+  if (codeLike) { await notify(acct.user_id, `Confirmation code: ${label}`, `${acct.supplier || 'Your supplier'} sent the code ${codeLike[0]}. Type it into their app to finish setting up bill emails.`); return 'verification' }
+  if (!process.env.ANTHROPIC_API_KEY) { await notify(acct.user_id, 'Bill arrived but could not be read', `A bill emailed for ${label} could not be read because AI is not set up.`); return 'not configured' }
 
   let data: any
   try {
