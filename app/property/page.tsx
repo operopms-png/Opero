@@ -143,6 +143,7 @@ export default function PropertyHub() {
           <input value={q} onChange={e => setQ(e.target.value)} type="search" placeholder="Search any page, such as maintenance or viewings" aria-label="Search pages"
             style={{ flex: 1, minWidth: 0, fontFamily: 'inherit', fontSize: 15, color: C.ink, background: 'none', border: 0, padding: '15px 0', outline: 0 }} />
         </label>
+        <p className="prop-hint" style={{ display: 'none', margin: '0 2px 8px', fontSize: 12.5, color: C.muted }}>Swipe sideways for all {groups.length} areas, including Operations and Finance</p>
         <div className="prop-grid" style={{ display: 'grid', gridTemplateColumns: '240px minmax(0,1fr)', gap: 18, alignItems: 'start' }}>
           <nav aria-label="Real Estate Intelligence areas" className="prop-cats" style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: 8, display: 'flex', flexDirection: 'column', gap: 2, boxShadow: shadow }}>
             {groups.map((g, i) => {
@@ -174,7 +175,7 @@ export default function PropertyHub() {
         </div>
         <GlanceTiles show={{ str: has('str'), pm: has('pm'), ea: has('ea'), dev: has('dev') }} />
       </div>
-      <style>{`@media (max-width: 760px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; overflow-x: auto } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
+      <style>{`@media (max-width: 760px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; overflow-x: auto; -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); padding-right: 36px !important } .prop-hint{ display: block !important } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
     </div>
   )
 }
