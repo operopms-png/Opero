@@ -2,6 +2,7 @@
 // Electricity and internet (and other bills) per property, shown visually in one place.
 // Staff mode lets the team add bills, mark them paid and choose what owners and tenants see. Portal mode is read only.
 import { useCallback, useEffect, useState } from 'react'
+import { limitSplit } from '@/lib/utility-limit'
 import { supabase } from '@/lib/supabase'
 import { providerFor, defaultUnit } from '@/lib/utility-providers'
 
@@ -103,6 +104,12 @@ export default function UtilityTracker({ staff = false, kind, id, link, hideEmpt
                       {change != null && <span style={{ fontSize: 12, fontWeight: 600, color: spike ? '#B42318' : change > 0 ? '#B54708' : '#067647' }}>{change > 0 ? '+' : ''}{change}% on last bill{spike ? ' · high' : ''}</span>}
                     </div>
                     {l?.usage != null && <div style={{ fontSize: 12, color: '#667085' }}>{l.usage.toLocaleString()} {l.usage_unit || ''} used</div>}
+                    {(() => { const sp = l ? limitSplit(l.amount, a.covered_limit) : null; if (!sp) return null; const pc = l.amount ? (sp.covered / l.amount) * 100 : 100; const mine = kind === 'tenant'
+                      return <div style={{ marginTop: 8 }}>
+                        <div role="img" aria-label={`Covered ${money(sp.covered, p.currency)}, ${mine ? 'your share' : 'tenant pays'} ${money(sp.over, p.currency)}`} style={{ display: 'flex', height: 16, borderRadius: 5, overflow: 'hidden', background: '#E4E7EC' }}><i style={{ width: pc + '%', background: BLUE }} /><i style={{ width: (100 - pc) + '%', background: '#E8A33D' }} /></div>
+                        <div style={{ fontSize: 12, color: '#475467', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}><span>Covered <b>{money(sp.covered, p.currency)}</b></span><span>{mine ? 'Your share' : 'Tenant pays'} <b>{money(sp.over, p.currency)}</b></span></div>
+                        {mine && <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>Your stay includes electricity up to {money(a.covered_limit, p.currency)} per bill. Anything above is invoiced to you and appears in your documents link.</div>}
+                      </div> })()}
                     <Bars bills={a.bills} cur={p.currency} />
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                       {pr && <a href={pr.site} target="_blank" rel="noreferrer" style={{ ...ghost, textDecoration: 'none' }}>Open {pr.name}</a>}
@@ -122,10 +129,11 @@ export default function UtilityTracker({ staff = false, kind, id, link, hideEmpt
                     </div>}
                     {open === key && a.bills.length > 0 && <div style={{ marginTop: 8, maxHeight: 220, overflow: 'auto' }}>
                       {a.bills.map((b: any) => <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 6, padding: '6px 0', borderTop: '1px solid #F0F1F4', fontSize: 12.5, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span>{day(b.period_end)}{b.source === 'email' && <span style={{ ...pill('#EAF1FB', '#2F5DA0'), marginLeft: 6 }}>From email</span>}</span><b>{money(b.amount, p.currency)}</b>
+                        <span>{day(b.period_end)}{b.source === 'email' && <span style={{ ...pill('#EAF1FB', '#2F5DA0'), marginLeft: 6 }}>From email</span>}</span><b>{money(b.amount, p.currency)}{(() => { const sp = limitSplit(b.amount, a.covered_limit); return sp && sp.over > 0 ? <span style={{ fontWeight: 400, fontSize: 11.5, color: '#B54708' }}> · {kind === 'tenant' ? 'your share' : 'tenant'} {money(sp.over, p.currency)}</span> : null })()}</b>
                         <span style={pill(b.paid ? '#E7F6EC' : '#FEF0C7', b.paid ? '#067647' : '#B54708')}>{b.paid ? 'Paid' : 'Unpaid'}</span>
                         <span style={{ display: 'flex', gap: 8 }}>
                           {b.url && <a href={b.url} target="_blank" rel="noreferrer" style={{ color: BLUE, fontWeight: 600 }}>View bill</a>}
+                          {staff && (limitSplit(b.amount, a.covered_limit)?.over ?? 0) > 0 && (b.tenant_invoice_id ? <span style={{ fontSize: 12.5, color: '#067647' }}>Tenant invoiced</span> : <button style={{ background: 'none', border: 'none', color: BLUE, cursor: 'pointer', fontSize: 12.5, padding: 0, fontWeight: 600 }} disabled={busy} onClick={async () => { const r = await send('PATCH', '/api/utilities', { bill_id: b.id, invoice_tenant: true }); if (r) setMsg('Draft invoice created for the tenant. Review and send it from Invoices.') }}>Invoice tenant</button>)}
                           {staff && <button style={{ background: 'none', border: 'none', color: BLUE, cursor: 'pointer', fontSize: 12.5, padding: 0 }} onClick={() => send('PATCH', '/api/utilities', { bill_id: b.id, paid: !b.paid })}>{b.paid ? 'Mark unpaid' : 'Mark paid'}</button>}
                           {staff && <button style={{ background: 'none', border: 'none', color: '#B42318', cursor: 'pointer', fontSize: 12.5, padding: 0 }} onClick={() => { if (window.confirm('Delete this bill?')) send('DELETE', '/api/utilities?bill_id=' + b.id) }}>Delete</button>}
                         </span></div>)}
@@ -137,6 +145,14 @@ export default function UtilityTracker({ staff = false, kind, id, link, hideEmpt
                     {staff && <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 12, color: '#475467', flexWrap: 'wrap' }}>
                       <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}><input type="checkbox" checked={a.visible_to_owner} onChange={e => send('PATCH', '/api/utilities', { utility_id: a.id, visible_to_owner: e.target.checked })} />Owner sees</label>
                       <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}><input type="checkbox" checked={a.visible_to_tenant} onChange={e => send('PATCH', '/api/utilities', { utility_id: a.id, visible_to_tenant: e.target.checked })} />Tenant sees</label>
+                    </div>}
+                    {staff && /electric/i.test(a.service) && <div style={{ marginTop: 8, background: '#F9FAFB', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#475467' }}>
+                      <label htmlFor={`lim-${key}`}><b>Covered limit per bill</b> ({sym(p.currency)}). Anything above is the tenant's. Leave blank for no limit.</label>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                        <input id={`lim-${key}`} style={{ ...inp, maxWidth: 130 }} inputMode="decimal" value={f['lim' + key] ?? (a.covered_limit ?? '')} onChange={e => setF({ ...f, ['lim' + key]: e.target.value })} />
+                        <button style={ghost} disabled={busy} onClick={async () => { if (await send('PATCH', '/api/utilities', { utility_id: a.id, covered_limit: String(f['lim' + key] ?? a.covered_limit ?? '') })) setMsg('Limit saved.') }}>Save limit</button>
+                        <button style={ghost} disabled={busy} onClick={async () => { const v = String(f['lim' + key] ?? a.covered_limit ?? ''); if (v === '') return setMsg('Type the limit first.'); if (window.confirm(`Set ${sym(p.currency)}${Number(v).toLocaleString()} as the covered limit on every electricity account?`) && await send('PATCH', '/api/utilities', { apply_limit_all: Number(v) })) setMsg('Limit applied to all electricity accounts.') }}>Apply to all electricity</button>
+                      </div>
                     </div>}
                   </div>)
               })}

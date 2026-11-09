@@ -17,7 +17,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Keys': 'Every key set: who holds it, where it is kept and when it was last checked.',
   'Audit Log': 'A record of who changed what and when, for accountability and review.',
   'Unit Profit': 'What each unit earns after head rent and running costs, so you can see the margin.',
-  'Utilities': 'Electricity, internet, water and other bills for each property, with a chart of each bill, paid or overdue status, and links to the supplier (JPS, Flow and others). Add bills with a PDF or photo; choose what owners and tenants see.',
+  'Utilities': 'Electricity, internet, water and other bills for each property, with a chart of each bill, paid or overdue status, and links to the supplier (JPS, Flow and others). Add bills with a PDF or photo; choose what owners and tenants see. On electricity you can set a covered limit per bill so the tenant sees and is invoiced for anything above it.',
   'Exchange Rates': 'Currency rates used when properties or payments are in different currencies.',
   'Deadlines': 'Everything due soon across compliance, tenancies and insurance, sorted by days left.',
   'Insurance': 'Policies on each property: insurer, policy number, premium and renewal date.',
