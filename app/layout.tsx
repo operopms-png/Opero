@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import HubTabs from '@/components/HubTabs'
 import PageBanner from '@/components/PageBanner'
+import ViewOnlyBanner from '@/components/ViewOnlyBanner'
 import Sidebar from '@/components/Sidebar'
 import VoiceDictation from '@/components/VoiceDictation'
 import { supabase } from '@/lib/supabase'
@@ -167,6 +168,7 @@ function LayoutBody({ children }: { children: React.ReactNode }) {
     <>
       <Sidebar />
       <main className="app-main" style={{ marginLeft: width, flex: 1, minHeight: '100vh', transition: 'margin-left 0.15s ease' }}>
+        <ViewOnlyBanner />
         <HubTabs />
         <PageBanner />
         {children}

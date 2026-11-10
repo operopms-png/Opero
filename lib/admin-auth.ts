@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
+import { blockedForViewOnly } from '@/lib/view-only'
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -17,6 +18,7 @@ export async function requireUser(req: NextRequest): Promise<string | null> {
   })
   const { data: { user }, error } = await asUser.auth.getUser(token)
   if (error || !user) return null
+  if (await blockedForViewOnly(req, user.email)) return null
   return user.id
 }
 
@@ -30,6 +32,7 @@ export async function requireStaff(req: NextRequest): Promise<string | null> {
   })
   const { data: { user }, error } = await asUser.auth.getUser(token)
   if (error || !user) return null
+  if (await blockedForViewOnly(req, user.email)) return null
 
   const { data: profile } = await serviceClient
     .from('owner_profiles')
@@ -70,6 +73,7 @@ export async function requireStaffWithBusiness(req: NextRequest): Promise<{ staf
   })
   const { data: { user }, error } = await asUser.auth.getUser(token)
   if (error || !user) return null
+  if (await blockedForViewOnly(req, user.email)) return null
 
   const { data: profile } = await serviceClient
     .from('owner_profiles')

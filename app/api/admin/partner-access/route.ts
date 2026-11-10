@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const staff = await requireStaffWithBusiness(req)
   if (!staff) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
 
-  const { owner_id, custom_modules } = await req.json()
+  const { owner_id, custom_modules, view_only } = await req.json()
   if (!owner_id || !Array.isArray(custom_modules)) {
     return NextResponse.json({ error: 'owner_id and custom_modules are required' }, { status: 400 })
   }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   const { error: saveError } = await serviceClient
     .from('owner_profiles')
-    .update({ custom_modules: saved, business_id: owner.business_id ?? staff.businessId })
+    .update({ custom_modules: saved, view_only: view_only === true, business_id: owner.business_id ?? staff.businessId })
     .eq('id', owner.id)
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 })
 
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   const partnerRow = (existing ?? []).find(r => r.role === 'Partner' && r.user_id === staff.businessId)
 
   if (hasExtras) {
-    const row = { user_id: staff.businessId, name: owner.name, email, role: 'Partner', custom_modules: saved, property_ids: [], status: 'Active' }
+    const row = { user_id: staff.businessId, name: owner.name, email, role: 'Partner', custom_modules: saved, view_only: view_only === true, property_ids: [], status: 'Active' }
     const { error } = partnerRow
       ? await serviceClient.from('team_members').update(row).eq('id', partnerRow.id)
       : await serviceClient.from('team_members').insert(row)

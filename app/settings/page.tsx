@@ -42,6 +42,7 @@ function SettingsInner() {
   const [allProperties, setAllProperties] = useState<any[]>([])
   const [assignedPropertyIds, setAssignedPropertyIds] = useState<string[]>([])
   const [customModules, setCustomModules] = useState<string[]>([])
+  const [viewOnly, setViewOnly] = useState(false)
   const [showPropertyPicker, setShowPropertyPicker] = useState(false)
   const [editingMemberId, setEditingMemberId] = useState<string|null>(null)
   const [showInvite, setShowInvite] = useState(false)
@@ -314,10 +315,10 @@ function SettingsInner() {
               team={team}
               roles={ROLES}
               propertyCount={allProperties.length}
-              onInvite={()=>{setEditingMemberId(null);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setCustomModules([]);setAddMode('invite');setShowInvite(true)}}
+              onInvite={()=>{setEditingMemberId(null);setViewOnly(false);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setCustomModules([]);setAddMode('invite');setShowInvite(true)}}
               onEdit={(m:any)=>{
                 setEditingMemberId(m.id);setInviteName(m.name??'');setInviteEmail(m.email??'');setInvitePhone(m.phone??'')
-                setInviteRole(m.role??ROLES[0]);setAssignedPropertyIds(m.property_ids??[]);setCustomModules(m.custom_modules??[]);setAddMode('invite');setShowInvite(true)
+                setInviteRole(m.role??ROLES[0]);setAssignedPropertyIds(m.property_ids??[]);setCustomModules(m.custom_modules??[]);setViewOnly(m.view_only===true);setAddMode('invite');setShowInvite(true)
               }}
               onDelete={async (m:any)=>{
                 if(!confirm(`Remove ${m.name||m.email} from the team? They won't be able to sign in to the staff side any more.`))return
@@ -369,6 +370,10 @@ function SettingsInner() {
                     {ROLES.map(r=><option key={r}>{r}</option>)}
                   </select>
                 </div>
+              </div>
+              <div style={{marginBottom:16,padding:'12px 14px',border:'1px solid #EAECF0',borderRadius:8,background:'#F9FAFB'}}>
+                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,fontWeight:600,color:'#344054',cursor:'pointer'}}><input type="checkbox" checked={viewOnly} onChange={e=>setViewOnly(e.target.checked)} />View only</label>
+                <div style={{fontSize:11,color:'#667085',marginTop:4}}>They can open every tab you give them but cannot add, edit, delete, upload or mark anything. Messages and replies still work.</div>
               </div>
               <div style={{marginBottom:16}}>
                 <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Custom module access (optional)</div>
@@ -453,7 +458,7 @@ function SettingsInner() {
                   <button onClick={async ()=>{
                     if(!inviteName)return
                     setInviting(true)
-                    const {error} = await supabase.from('team_members').update({name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null}).eq('id',editingMemberId)
+                    const {error} = await supabase.from('team_members').update({name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null,view_only:viewOnly}).eq('id',editingMemberId)
                     setInviting(false)
                     if(error){alert(error.message);return}
                     setTeam(team.map(t=>t.id===editingMemberId?{...t,name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null}:t))
@@ -463,7 +468,7 @@ function SettingsInner() {
                   <button onClick={async ()=>{
                     if(!inviteName||!inviteEmail)return
                     setInviting(true)
-                    const res = await fetch('/api/invite',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,property_ids:assignedPropertyIds,custom_modules:customModules})})
+                    const res = await fetch('/api/invite',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,property_ids:assignedPropertyIds,custom_modules:customModules,view_only:viewOnly})})
                     const result = await res.json()
                     setInviting(false)
                     if(!res.ok){alert(result.error||'Could not send invite');return}
@@ -473,7 +478,7 @@ function SettingsInner() {
                   <button onClick={async ()=>{
                     if(!inviteName||!inviteEmail||!staffPassword)return
                     setCreating(true)
-                    const res = await fetch('/api/create-staff-account',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,password:staffPassword,property_ids:assignedPropertyIds,custom_modules:customModules})})
+                    const res = await fetch('/api/create-staff-account',{method:'POST',headers:await authHeaders(),body:JSON.stringify({name:inviteName,email:inviteEmail,role:inviteRole,phone:invitePhone,password:staffPassword,property_ids:assignedPropertyIds,custom_modules:customModules,view_only:viewOnly})})
                     const result = await res.json()
                     setCreating(false)
                     if(!res.ok){alert(result.error||'Could not create account');return}

@@ -1,3 +1,4 @@
+import { blockedForViewOnly } from '@/lib/view-only'
 // Connected mailboxes (any IMAP/SMTP provider): encryption of the
 // stored password, access checks, syncing new mail into mailbox_messages,
 // and sending through the mailbox's own SMTP server (then filing a copy in
@@ -45,6 +46,7 @@ export async function getCaller(req: NextRequest): Promise<Caller | null> {
   const asUser = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { global: { headers: { Authorization: `Bearer ${token}` } } })
   const { data: { user } } = await asUser.auth.getUser(token)
   if (!user) return null
+  if (await blockedForViewOnly(req, user.email)) return null
   const email = (user.email ?? '').toLowerCase()
   const { data: tm } = await serviceClient.from('team_members').select('user_id,role,name').eq('email', user.email ?? '').order('created_at', { ascending: false }).limit(1)
   const businessId = tm?.[0]?.user_id ?? user.id

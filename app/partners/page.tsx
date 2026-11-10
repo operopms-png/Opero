@@ -162,6 +162,7 @@ export default function PartnersPage() {
   const [repayOwnerId, setRepayOwnerId] = useState<string | null>(null)
   const [docsOwnerId, setDocsOwnerId] = useState<string | null>(null)
   const [accessForm, setAccessForm] = useState<string[]>([])
+  const [accessViewOnly, setAccessViewOnly] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -420,6 +421,7 @@ export default function PartnersPage() {
   function openAccess(o: any) {
     setAccessOwnerId(accessOwnerId === o.id ? null : o.id)
     setAccessForm(o.custom_modules ?? [])
+    setAccessViewOnly(o.view_only === true)
   }
 
   function toggleAccess(key: string) {
@@ -433,7 +435,7 @@ export default function PartnersPage() {
     const res = await fetch('/api/admin/partner-access', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ owner_id: o.id, custom_modules: accessForm }),
+      body: JSON.stringify({ owner_id: o.id, custom_modules: accessForm, view_only: accessViewOnly }),
     })
     const result = await res.json()
     setSaving(false)
@@ -1140,6 +1142,8 @@ export default function PartnersPage() {
                         <div style={{ background: '#F9FAFB', border: '1px solid #EAECF0', borderRadius: 10, padding: 14, marginBottom: 12 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>What can {o.name?.split(' ')[0] ?? 'this partner'} see?</div>
                           <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Partners is always on. Tick anything else they should have.</div>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 2 }}><input type="checkbox" checked={accessViewOnly} onChange={e => setAccessViewOnly(e.target.checked)} />View only</label>
+                          <div style={{ fontSize: 11, color: '#667085', marginBottom: 12 }}>They can open everything ticked below but cannot change anything. Messages and replies still work. Only applies when you tick something extra.</div>
                           <div style={{ fontSize: 11, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Modules</div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 6, marginBottom: 12 }}>
                             {PARTNER_GRANTABLE_MODULES.map(m => (
