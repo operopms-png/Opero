@@ -16,6 +16,8 @@ type Ticket = {
   status: 'open' | 'in_progress' | 'resolved' | 'closed' | null
   assigned_to: string | null
   created_at: string
+  source?: string | null
+  photos?: string[] | null
   properties?: { name: string }
 }
 
@@ -142,11 +144,13 @@ export default function MaintenancePage() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       <span style={{ fontWeight: 600, fontSize: 15, color: '#323338' }}>{t.title}</span>
+                      {t.source === 'cleaner' && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: '#1D4E89', background: '#EAF3FC' }}>Reported by cleaner</span>}
                       <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: pri.color, background: pri.bg, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{pri.label}</span>
                     </div>
                     <div style={{ fontSize: 13, color: '#6B7280' }}>
                       {t.properties?.name ?? '—'}{t.assigned_to ? ` · ${teamMembers.find(m=>m.id===t.assigned_to)?.name ?? t.assigned_to}` : ''}{t.description ? ` · ${t.description}` : ''}
                     </div>
+                    {Array.isArray(t.photos) && t.photos.length > 0 && <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>{t.photos.slice(0, 5).map((u: string, k: number) => <a key={k} href={u} target="_blank" rel="noreferrer"><img src={u} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6 }} /></a>)}</div>}
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 20, color: sta.color, background: sta.bg, whiteSpace: 'nowrap' }}>{sta.label}</span>
                   <select value={t.status ?? 'open'} onChange={e => updateStatus(t.id, e.target.value)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer' }}>

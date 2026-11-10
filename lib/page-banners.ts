@@ -24,7 +24,7 @@ const PAGES: Record<string, B> = {
   '/turnovers': { title: 'Turnovers', text: 'Changeovers between stays: cleaning, checks and restocking, with who is doing each one.' },
   '/maintenance': { title: 'Maintenance', text: 'Repair jobs across your properties, with priority, who is handling each and progress.' },
   '/properties': { title: 'Properties', text: 'Every property you manage, with address, owner and status. Open one to edit it.' },
-  '/staff-dashboard': { title: 'My Dashboard', text: 'Your own tasks, messages and what needs your attention today.' },
+  '/staff-dashboard': { title: 'My Dashboard', text: 'Your jobs, shifts and messages. Cleaners: press Open job for the checklist, before and after photos, and to report anything the maintenance team must fix.' },
   '/cleaning': { title: 'Cleaning', text: 'Cleaning jobs: what is scheduled, who is doing it and when it is done.' },
   '/reports': { title: 'Reports', text: 'Summary reports across your properties, ready to review or export.' },
   '/documents': { title: 'Documents', text: 'Contracts, certificates and other files, filed against the right property or person. Owner and tenant uploads wait here to approve, reject or chase. New client link sets up someone who is not in the system yet.' },
