@@ -525,31 +525,42 @@ export default function PropertyManagerAgents() {
     setActivityLog((data ?? []).map((l:any) => ({ id: l.id, agent: l.agent_key, action: l.action, property: l.property_name, notes: l.notes, createdAt: new Date(l.created_at).toLocaleString() })))
   }
 
+  const [loadErr, setLoadErr] = useState('')
   useEffect(()=>{
-    supabase.auth.getUser().then(async ({data:{user}})=>{
-      if(!user){window.location.href='/login';return}
-      const accountId = await getAccountId(user)
-      setUserId(accountId)
-      const [agentsRes, propsRes, ownersRes] = await Promise.all([
-        supabase.from('ai_agents').select('*').eq('user_id', accountId),
-        supabase.from('properties').select('*').eq('user_id', accountId).is('ended_at', null).order('created_at', { ascending: false }),
-        supabase.from('owner_profiles').select('*').eq('business_id', accountId).order('created_at', { ascending: false }),
-      ])
-      if (agentsRes.data?.length) {
-        const loaded: Record<string,boolean> = {guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false}
-        const autos: Record<string,boolean> = {}
-        agentsRes.data.forEach((a:any) => { loaded[a.agent_key] = a.enabled; autos[a.agent_key] = a.auto_send !== false })
-        setActiveAgents(loaded)
-        setAutoSend(autos)
+    let dead = false
+    const guard = setTimeout(() => { if (!dead) { setLoadErr('This is taking too long. Check your connection and refresh.'); setLoading(false) } }, 15000)
+    ;(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { window.location.href = '/login'; return }
+        const accountId = await getAccountId(user)
+        setUserId(accountId)
+        const [agentsRes, propsRes, ownersRes] = await Promise.all([
+          supabase.from('ai_agents').select('*').eq('user_id', accountId),
+          supabase.from('properties').select('*').eq('user_id', accountId).is('ended_at', null).order('created_at', { ascending: false }),
+          supabase.from('owner_profiles').select('*').eq('business_id', accountId).order('created_at', { ascending: false }),
+        ])
+        if (agentsRes.data?.length) {
+          const loaded: Record<string,boolean> = {guest:false,maintenance:false,cleaning:false,revenue:false,owner:false,leads:false}
+          const autos: Record<string,boolean> = {}
+          agentsRes.data.forEach((a:any) => { loaded[a.agent_key] = a.enabled; autos[a.agent_key] = a.auto_send !== false })
+          setActiveAgents(loaded)
+          setAutoSend(autos)
+        }
+        setProperties(propsRes.data ?? [])
+        setOwners(ownersRes.data ?? [])
+        try { await loadActivityLog(accountId) } catch {}
+      } catch (e: any) {
+        setLoadErr(e?.message || 'Could not load the agents.')
+      } finally {
+        dead = true; clearTimeout(guard); setLoading(false)
       }
-      setProperties(propsRes.data ?? [])
-      setOwners(ownersRes.data ?? [])
-      await loadActivityLog(accountId)
-      setLoading(false)
-    })
+    })()
+    return () => { dead = true; clearTimeout(guard) }
   },[])
   useEffect(() => { staffApi('/api/ai-client-settings').then((d: any) => setStyle({ tone: d.tone, country_rules: d.country_rules, signoff: d.signoff })).catch(() => {}) }, [])
   if(loading) return <div style={{padding:40,color:C.faint,fontSize:14}}>Loading…</div>
+  if(loadErr && !userId) return <div style={{padding:40,color:'#B42318',fontSize:14}}>{loadErr}</div>
 
   const [autoSend, setAutoSend] = useState<Record<string,boolean>>({})
   const toggleAuto = async (key:string) => {
