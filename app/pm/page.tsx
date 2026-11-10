@@ -1,4 +1,5 @@
 'use client'
+import LandlordOnboarding from '../../components/landlords/LandlordOnboarding'
 import UtilityTracker from '../../components/pm/UtilityTracker'
 import RecordTab from '@/components/pm/RecordTab'
 import { RENT_REVIEWS, SERVICE_CHARGES, PLANNED_MAINTENANCE, EMERGENCY_CONTACTS } from '@/lib/pm-record-tabs'
@@ -351,6 +352,7 @@ function PMPageInner() {
   const [buildingForm, setBuildingForm] = useState({name:'',address:'',total_units:'',notes:''})
   const [editingBuildingId, setEditingBuildingId] = useState<string|null>(null)
   const [landlords, setLandlords] = useState<any[]>([])
+  const [onbLandlordId, setOnbLandlordId] = useState<string|null>(null)
   const [tenants, setTenants] = useState<any[]>([])
   const [leases, setLeases] = useState<any[]>([])
   const [bookings, setBookings] = useState<any[]>([])
@@ -1589,7 +1591,7 @@ function PMPageInner() {
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             {landlords.length===0?<div style={{textAlign:'center',padding:80,color:'#98A2B3',fontSize:14}}>No landlords yet</div>:
             landlords.map(l=>(
-              <div key={l.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
+              <div key={l.id}><div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'16px 20px',display:'flex',alignItems:'center',gap:16}}>
                 <div style={{width:40,height:40,borderRadius:'50%',background:'#EAF3FC',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:'#2F6DB5',flexShrink:0}}>{l.name.charAt(0)}</div>
                 <div style={{flex:1}}>
                   <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{l.name}</div>
@@ -1604,9 +1606,12 @@ function PMPageInner() {
                 ):(
                   <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
                 )}
+                <button onClick={()=>setOnbLandlordId(onbLandlordId===l.id?null:l.id)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>{onbLandlordId===l.id?'Close':'Onboarding'}</button>
                 <button onClick={()=>setOwnerDocsFor(l)} style={{fontSize:12,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Documents {ownerDocCounts[l.id]??0}/5</button>
                 <button onClick={()=>openEdit('landlord',l)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
                 <button onClick={()=>del('pm_landlords',l.id,setLandlords)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button>
+              </div>
+              {onbLandlordId===l.id&&<div style={{marginTop:8}}><LandlordOnboarding landlordId={l.id}/></div>}
               </div>
             ))}
           </div>

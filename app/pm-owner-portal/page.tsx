@@ -1,4 +1,5 @@
 'use client'
+import LandlordOnboarding from '../../components/landlords/LandlordOnboarding'
 import UtilityTracker from '@/components/pm/UtilityTracker'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -199,7 +200,7 @@ function PMOwnerPortalInner() {
     await loadAll(landlord)
   }
 
-  const TABS = ['Dashboard', 'Reports', 'Properties', 'Payments', 'Utilities', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
+  const TABS = ['Dashboard', 'My Manager', 'Agreement', 'Reports', 'Properties', 'Payments', 'Utilities', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -231,6 +232,10 @@ function PMOwnerPortalInner() {
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#D97706' }}>{pendingCount}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Pending Payments</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #FEE2E2', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#EF4444' }}>{overdueCount}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Overdue</div></div>
         </div>
+
+        {tab === 'Dashboard' && landlord && <LandlordOnboarding landlordId={isStaffView ? landlord.id : undefined} view="progress" />}
+        {tab === 'My Manager' && landlord && <LandlordOnboarding landlordId={isStaffView ? landlord.id : undefined} view="manager" />}
+        {tab === 'Agreement' && landlord && <LandlordOnboarding landlordId={isStaffView ? landlord.id : undefined} view="agreement" />}
 
         {tab === 'Dashboard' && (
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 24 }}>

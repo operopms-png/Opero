@@ -15,3 +15,11 @@ alter table partner_repayments enable row level security;
 
 -- Long-term (property management) properties linked to a partner, shown in their Long term dashboard.
 alter table owner_profiles add column if not exists pm_property_ids uuid[] default '{}';
+
+-- Landlord onboarding: named manager, agreement terms and sign-off.
+alter table pm_landlords add column if not exists manager_id uuid;
+alter table pm_landlords add column if not exists agreement_type text;
+alter table pm_landlords add column if not exists agreement_start date;
+alter table pm_landlords add column if not exists agreement_end date;
+alter table pm_landlords add column if not exists agreement_terms text;
+alter table pm_landlords add column if not exists onboarded_at timestamptz;
