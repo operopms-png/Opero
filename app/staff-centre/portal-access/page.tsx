@@ -7,6 +7,7 @@ const MODULES: { k: string; l: string; color: string }[] = [
   { k: 'str', l: 'Vacation Rentals', color: MODULE_COLOR.str },
   { k: 'pm', l: 'Property Management', color: MODULE_COLOR.pm },
   { k: 'ea', l: 'Estate Agency', color: MODULE_COLOR.ea },
+  { k: 'partners', l: 'Partners', color: MODULE_COLOR.ea },
   { k: 'dev', l: 'Developments', color: MODULE_COLOR.dev },
   { k: 'staff', l: 'Staff', color: MODULE_COLOR.staff },
   { k: 'other', l: 'Other', color: MODULE_COLOR.other },
@@ -24,7 +25,8 @@ const SEED_PORTALS = [
   { module: 'pm', name: 'Property Management — Tenant Portal', url: '/pm-tenant-portal', live: true, sort_order: 2 },
   { module: 'ea', name: 'Estate Agency — Landlord Portal', url: '/estate-owner-portal', live: true, sort_order: 3 },
   { module: 'ea', name: 'Estate Agency — Tenant Portal', url: '/estate-tenant-portal', live: true, sort_order: 4 },
-  { module: 'dev', name: 'Developments — Investors Portal', url: '/dev-investor-portal', live: false, sort_order: 5 },
+  { module: 'partners', name: 'Partners Portal', url: '/partners', live: true, sort_order: 5 },
+  { module: 'dev', name: 'Developments — Partners Portal', url: '/dev-investor-portal', live: false, sort_order: 7 },
   { module: 'staff', name: 'Cleaners Portal', url: '/staff-dashboard?team=cleaning', live: true, sort_order: 6 },
 ]
 
@@ -53,6 +55,12 @@ export default function PortalAccessPage() {
         const { data: seeded } = await supabase.from('client_portals').select('*').eq('user_id', uid).order('sort_order', { ascending: true })
         rows = seeded
       }
+    }
+    // accounts seeded before the Partners group existed get its portal added once
+    if (rows && rows.length && !rows.some((r: any) => r.url === '/partners')) {
+      const add = { module: 'partners', name: 'Partners Portal', url: '/partners', live: true, sort_order: 5, user_id: uid }
+      const { error } = await supabase.from('client_portals').insert(add)
+      if (!error) { const { data: again } = await supabase.from('client_portals').select('*').eq('user_id', uid).order('sort_order', { ascending: true }); rows = again }
     }
     setPortals(rows ?? [])
     setLoading(false)

@@ -9,6 +9,8 @@ import InvestPage from '../invest/page'
 import { SITE_HOST } from '@/lib/brand'
 import { money } from '../../lib/partner-schedule'
 import RepaymentPanel from '../../components/partners/RepaymentPanel'
+import LongTermDashboard, { type LongTerm } from '../../components/partners/LongTermDashboard'
+import LongTermLink from '../../components/partners/LongTermLink'
 import PartnerDocuments from '../../components/partners/PartnerDocuments'
 import { buckets, bucketSum, Kpi, Panel, StackedBars, TrendLine, Funnel, Legend, Seg, Badge, Avatar, agentTier, ST_COL, LT_COL, PERIOD_LABEL, type Period, type Bucket } from '../../components/partners/PartnerCharts'
 
@@ -119,6 +121,9 @@ export default function PartnersPage() {
   // Investor (owner) data
   const [profile, setProfile] = useState<any>(null)
   const [tickets, setTickets] = useState<any[]>([])
+  const [lt, setLt] = useState<LongTerm | null>(null)
+  const [term, setTerm] = useState<'short' | 'long'>('short')
+  const [linkOwnerId, setLinkOwnerId] = useState<string | null>(null)
   const pgbp = (n: number) => money(n, profile?.currency)
   const [properties, setProperties] = useState<any[]>([])
   const [bookings, setBookings] = useState<any[]>([])
@@ -178,6 +183,8 @@ export default function PartnersPage() {
           supabase.from('maintenance_tickets').select('*').in('property_id', safeIds).order('created_at', { ascending: false }),
         ])
         setTickets(mt.data ?? [])
+        const { data: { session } } = await supabase.auth.getSession()
+        fetch('/api/partner-longterm', { headers: { Authorization: `Bearer ${session?.access_token}` } }).then(r => r.json()).then(j => { if (j && j.properties) { setLt(j); if (j.properties.length && !(p.data ?? []).length) setTerm('long') } }).catch(() => {})
         setProperties(p.data ?? [])
         setBookings(b.data ?? [])
         setStatements(s.data ?? [])
@@ -1113,12 +1120,16 @@ export default function PartnersPage() {
                           )}
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => setLinkOwnerId(linkOwnerId === o.id ? null : o.id)} style={btnGhost}>{linkOwnerId === o.id ? 'Close' : 'Long-term'}</button>
                           <button onClick={() => setDocsOwnerId(docsOwnerId === o.id ? null : o.id)} style={btnGhost}>{docsOwnerId === o.id ? 'Close' : 'Documents'}</button>
                           <button onClick={() => setRepayOwnerId(repayOwnerId === o.id ? null : o.id)} style={btnGhost}>{repayOwnerId === o.id ? 'Close' : 'Investment'}</button>
                           <button onClick={() => openAccess(o)} style={btnGhost}>{accessOwnerId === o.id ? 'Close' : 'Access'}</button>
                           <a href="/owner-portal" style={{ ...btnGold, padding: '7px 12px', fontSize: 12 }}>Manage in Owner Portal</a>
                         </div>
                       </div>
+                      {linkOwnerId === o.id && (
+                        <div style={{ marginBottom: 12 }}><LongTermLink ownerId={o.id} /></div>
+                      )}
                       {docsOwnerId === o.id && (
                         <div style={{ marginBottom: 12 }}><PartnerDocuments ownerId={o.id} /></div>
                       )}
@@ -1184,6 +1195,14 @@ export default function PartnersPage() {
         )}
 
         {inv && investorTab === 'Dashboard' && (
+          <div style={{ display: 'inline-flex', gap: 4, background: '#fff', border: '1px solid #E6E9EF', borderRadius: 20, padding: 3, marginBottom: 14 }}>
+            {(['short', 'long'] as const).map(k => <button key={k} onClick={() => setTerm(k)} style={{ border: 0, background: term === k ? '#2F6DB5' : 'transparent', color: term === k ? '#fff' : '#667085', font: 'inherit', fontWeight: 600, fontSize: 13, padding: '6px 14px', borderRadius: 16, cursor: 'pointer' }}>{k === 'short' ? 'Short term' : 'Long term'}</button>)}
+          </div>
+        )}
+
+        {inv && investorTab === 'Dashboard' && term === 'long' && <LongTermDashboard data={lt} />}
+
+        {inv && investorTab === 'Dashboard' && term === 'short' && (
           <>
             <div style={{ ...grid, marginBottom: 16 }}>
               <Stat label="Capital Invested" value={pgbp(invested)} />
@@ -1258,8 +1277,9 @@ export default function PartnersPage() {
         {inv && investorTab === 'Maintenance' && (() => {
           const done = (t: any) => ['resolved', 'completed', 'closed', 'done'].includes(String(t.status).toLowerCase())
           const started = (t: any) => !done(t) && ['in_progress', 'in progress', 'assigned', 'scheduled', 'ongoing'].includes(String(t.status).toLowerCase())
-          const open = tickets.filter(t => !done(t)), solved = tickets.filter(done)
-          const pname = (id: string) => properties.find(x => x.id === id)?.name ?? 'Property'
+          const all = [...tickets, ...(lt?.maintenance ?? [])].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+          const open = all.filter(t => !done(t)), solved = all.filter(done)
+          const pname = (id: string) => properties.find(x => x.id === id)?.name ?? lt?.properties.find(x => x.id === id)?.name ?? 'Property'
           const when = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
           const step = (on: boolean, label: string, last = false) => (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: on ? '#067647' : '#98A2B3', fontWeight: on ? 700 : 500 }}>
@@ -1275,8 +1295,8 @@ export default function PartnersPage() {
               <div style={card}>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Maintenance across your properties</div>
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Each issue appears here as soon as it is reported by a guest, tenant or our team, and updates as we work on it.</div>
-                {tickets.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No issues reported on your properties.</div>}
-                {tickets.map(t => (
+                {all.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No issues reported on your properties.</div>}
+                {all.map(t => (
                   <div key={t.id} style={{ borderTop: '1px solid #F2F4F7', padding: '12px 0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                       <div style={{ minWidth: 0 }}>

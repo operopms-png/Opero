@@ -12,3 +12,6 @@ create table if not exists partner_repayments (
 );
 create index if not exists partner_repayments_owner_idx on partner_repayments (owner_id, due_on);
 alter table partner_repayments enable row level security;
+
+-- Long-term (property management) properties linked to a partner, shown in their Long term dashboard.
+alter table owner_profiles add column if not exists pm_property_ids uuid[] default '{}';

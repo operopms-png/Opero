@@ -671,12 +671,12 @@ export default function OwnerPortalPage() {
         {/* DASHBOARD */}
         {tab === 'Dashboard' && (
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 20 }}>Command Centre 👋 <span style={{ float: 'right', fontSize: 12, color: '#98A2B3', fontWeight: 400 }}>Last 6 months</span></div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 20 }}>Command Centre <span style={{ float: 'right', fontSize: 12, color: '#98A2B3', fontWeight: 400 }}>Last 6 months</span></div>
 
             {/* Sparkline stat cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
               <div style={card}>
-                <div style={{ fontSize: 13, color: '#323338', marginBottom: 8 }}>💰 Revenue</div>
+                <div style={{ fontSize: 13, color: '#323338', marginBottom: 8 }}>Revenue</div>
                 <div style={{ fontSize: 28, fontWeight: 800 }}>£{totalRevenue.toLocaleString()}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>{bookedNights} Nights</div>
                 <ResponsiveContainer width="100%" height={70}>
@@ -1211,7 +1211,7 @@ export default function OwnerPortalPage() {
               <StatCard label="Net This Month" value={`£${monthRevenue.toLocaleString()}`} dark />
             </div>
             <div style={{ ...card, marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>💰 Profit Split — After All Expenses</div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Profit Split — After All Expenses</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>
                 <div style={{ background: '#F9FAFB', borderRadius: 8, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>GROSS REVENUE</div>

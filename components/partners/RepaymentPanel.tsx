@@ -3,7 +3,7 @@
 // Staff (ownerId given): edit the amount invested, build the schedule, mark each month paid. Partner: the same schedule, read only.
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { buildSchedule, money, addMonths } from '../../lib/partner-schedule'
+import { buildSchedule, money, addMonths, CURRENCIES } from '../../lib/partner-schedule'
 
 const ACCENT = '#89CFF0', INK = '#323338', MUTE = '#667085', LINE = '#E6E9EF'
 const input: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #D0D4E4', borderRadius: 4, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', background: '#fff' }
@@ -18,6 +18,8 @@ export default function RepaymentPanel({ ownerId }: { ownerId?: string }) {
   const [owner, setOwner] = useState<{ id: string; name: string; invested: number; currency: string } | null>(null)
   const [rows, setRows] = useState<Row[]>([])
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false), [loaded, setLoaded] = useState(false)
+  const [edit, setEdit] = useState<{ id: string; due_on: string; amount: string } | null>(null)
+  const [add, setAdd] = useState<{ due_on: string; amount: string } | null>(null)
   const [f, setF] = useState({ invested: '', currency: 'JMD', start: '', mode: 'fixed', monthly: '', pct: '40', net: '' })
 
   const headers = useCallback(async () => {
@@ -41,6 +43,16 @@ export default function RepaymentPanel({ ownerId }: { ownerId?: string }) {
     const j = await r.json().catch(() => ({})); setBusy(false)
     if (!r.ok) { setErr(j.error || 'Could not save'); return }
     load()
+  }
+  async function change(body: any) {
+    setBusy(true); setErr('')
+    const r = await fetch('/api/partner-repayments', { method: body.add ? 'POST' : 'PATCH', headers: await headers(), body: JSON.stringify(body.add ? { owner_id: ownerId, ...body.add } : body) })
+    const j = await r.json().catch(() => ({})); setBusy(false)
+    if (!r.ok) { setErr(j.error || 'Could not save'); return false }
+    setEdit(null); setAdd(null); load(); return true
+  }
+  async function del(id: string) {
+    setBusy(true); await fetch('/api/partner-repayments?id=' + id, { method: 'DELETE', headers: await headers() }); setBusy(false); load()
   }
   async function mark(row: Row) {
     setBusy(true)
@@ -74,7 +86,7 @@ export default function RepaymentPanel({ ownerId }: { ownerId?: string }) {
           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Investment and repayment plan</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10 }}>
             <div>{lbl('Initial investment')}<input type="number" min={0} style={input} value={f.invested} onChange={e => setF({ ...f, invested: e.target.value })} /></div>
-            <div>{lbl('Currency')}<select style={input} value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}><option value="JMD">J$ Jamaican dollar</option><option value="GBP">£ Pound sterling</option></select></div>
+            <div>{lbl('Currency')}<select style={input} value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}>{Object.entries(CURRENCIES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></div>
             <div>{lbl('First repayment')}<input type="date" style={input} value={f.start} onChange={e => setF({ ...f, start: e.target.value })} /></div>
             <div>{lbl('Repay by')}<select style={input} value={f.mode} onChange={e => setF({ ...f, mode: e.target.value })}><option value="fixed">Fixed amount each month</option><option value="pct">Share of monthly net income</option></select></div>
             {f.mode === 'fixed'
@@ -97,6 +109,15 @@ export default function RepaymentPanel({ ownerId }: { ownerId?: string }) {
           const late = !r.paid_on && r.due_on < today()
           const label = r.paid_on ? `Paid ${day(r.paid_on)}` : late ? 'Late' : r === next ? 'Next' : 'Upcoming'
           const col = r.paid_on ? ['#E7F6EC', '#067647'] : late ? ['#FEE4E2', '#B42318'] : ['#F2F4F7', '#475467']
+          if (edit?.id === r.id) return (
+            <div key={r.id} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 14px', borderTop: i ? `1px solid ${LINE}` : 'none', flexWrap: 'wrap', background: '#F9FAFB' }}>
+              <input type="date" style={{ ...input, width: 160 }} value={edit.due_on} onChange={e => setEdit({ ...edit, due_on: e.target.value })} />
+              <input type="number" min={0} style={{ ...input, width: 130 }} value={edit.amount} onChange={e => setEdit({ ...edit, amount: e.target.value })} />
+              <button style={btn} disabled={busy} onClick={() => change({ id: r.id, due_on: edit.due_on, amount: Number(edit.amount) })}>Save</button>
+              <button style={ghost} onClick={() => setEdit(null)}>Cancel</button>
+              <button style={{ ...ghost, color: '#B42318' }} disabled={busy} onClick={() => del(r.id)}>Remove</button>
+            </div>
+          )
           return (
             <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '10px 14px', borderTop: i ? `1px solid ${LINE}` : 'none', flexWrap: 'wrap' }}>
               <div><div style={{ fontWeight: 600, fontSize: 13 }}>{day(r.due_on)}</div><div style={{ fontSize: 12, color: MUTE }}>Month {i + 1}</div></div>
@@ -104,11 +125,20 @@ export default function RepaymentPanel({ ownerId }: { ownerId?: string }) {
                 <b style={{ fontSize: 14 }}>{money(r.amount, cur)}</b>
                 <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: col[0], color: col[1], whiteSpace: 'nowrap' }}>{label}</span>
                 {ownerId && <button style={ghost} disabled={busy} onClick={() => mark(r)}>{r.paid_on ? 'Undo' : 'Mark paid'}</button>}
+                {ownerId && <button style={ghost} disabled={busy} onClick={() => setEdit({ id: r.id, due_on: r.due_on, amount: String(r.amount) })}>Edit</button>}
               </div>
             </div>
           )
         })}
       </div>
+      {ownerId && (add
+        ? <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input type="date" style={{ ...input, width: 160 }} value={add.due_on} onChange={e => setAdd({ ...add, due_on: e.target.value })} />
+            <input type="number" min={0} placeholder="Amount" style={{ ...input, width: 130 }} value={add.amount} onChange={e => setAdd({ ...add, amount: e.target.value })} />
+            <button style={btn} disabled={busy} onClick={() => change({ add: { due_on: add.due_on, amount: Number(add.amount) } })}>Add</button>
+            <button style={ghost} onClick={() => setAdd(null)}>Cancel</button>
+          </div>
+        : <div><button style={ghost} onClick={() => setAdd({ due_on: rows.length ? addMonths(rows[rows.length - 1].due_on, 1) : addMonths(today(), 1), amount: String(rows[rows.length - 1]?.amount ?? '') })}>Add a month</button></div>)}
     </div>
   )
 }

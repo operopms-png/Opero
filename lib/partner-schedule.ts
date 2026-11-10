@@ -21,5 +21,9 @@ export function buildSchedule(p: Plan): Row[] {
   return rows
 }
 
-export const SYMBOL: Record<string, string> = { JMD: 'J$', GBP: '£' }
+export const CURRENCIES: Record<string, { symbol: string; label: string }> = {
+  JMD: { symbol: 'J$', label: 'J$ Jamaican dollar' }, GBP: { symbol: '£', label: '£ Pound sterling' }, USD: { symbol: 'US$', label: 'US$ US dollar' },
+  EUR: { symbol: '€', label: '€ Euro' }, CAD: { symbol: 'CA$', label: 'CA$ Canadian dollar' }, AED: { symbol: 'AED ', label: 'AED Emirati dirham' },
+}
+export const SYMBOL: Record<string, string> = Object.fromEntries(Object.entries(CURRENCIES).map(([k, v]) => [k, v.symbol]))
 export const money = (n: number, cur?: string | null) => `${SYMBOL[cur ?? 'JMD'] ?? 'J$'}${Math.round(n).toLocaleString('en-GB')}`
