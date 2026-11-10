@@ -51,6 +51,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Portals', icon: 'globe', tabs: [
     { href: '/staff-centre/portal-access', label: 'Portal Access', scTab: 'portalaccess' },
     { href: '/staff-centre/portals', label: 'Property Portals', scTab: 'portals' },
+    { href: '/staff-centre/crew', label: 'Cleaners & Maintenance', scTab: 'portalaccess' },
   ] },
   { label: 'Marketing', icon: 'sparkles', tabs: [
     { href: '/staff-centre/marketing', label: 'Marketing', scTab: 'marketing' },
