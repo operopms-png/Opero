@@ -35,12 +35,12 @@ function List({ open }: { open: (v: string) => void }) {
   return (
     <CrmPage>
       <CrmHeader title="Templates" subtitle="Write a document once with blanks — staff pick a person and the blanks fill themselves in."
-        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents' }}>← Documents</button>{d?.isAdmin && <button style={btn('gold')} onClick={() => open('new')}>+ New template</button>}</div>} />
+        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents' }}>← Documents</button><button style={btn('gold')} onClick={() => open('new')}>+ New template</button></div>} />
       <Body>
         {err && <div style={{ color: C.red }}>{err}</div>}
         {!d ? (!err && <Loading />) : <>
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search templates" style={{ ...input, maxWidth: 320, marginBottom: 14 }} />
-          {list.length === 0 ? <Empty>No templates yet.{d.isAdmin ? <> Press <b>New template</b> — paste your wording or upload a Word file.</> : ' An admin adds them.'}</Empty> :
+          {list.length === 0 ? <Empty>No templates yet.<> Press <b>New template</b> — paste your wording or upload a Word file.</></Empty> :
             cats.map(cat => <div key={cat} style={{ marginBottom: 18 }}>
               <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', color: C.goldDark, textTransform: 'uppercase', marginBottom: 8 }}>{cat}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 12 }}>
@@ -63,6 +63,7 @@ function List({ open }: { open: (v: string) => void }) {
 const BLANK_TPL = { name: '', category: 'Agreements', audience: 'any', body: '<h1>Title of the document</h1><p>This agreement is between {recipient_name} and {company_name} for the property at {property_address}.</p>', defaults: {}, lock_mode: 'approval', needs_signature: true, remind_days: 3, email_subject: '', email_message: '', active: true }
 
 function Editor({ id, back, onSaved }: { id: string | null; back: () => void; onSaved: (id: string) => void }) {
+  const canEdit = true
   const [t, setT] = useState<any>(null), [isAdmin, setIsAdmin] = useState(false), [body, setBody] = useState(''), [k, setK] = useState(0), [err, setErr] = useState(''), [msg, setMsg] = useState(''), [busy, setBusy] = useState(false), [importing, setImporting] = useState(false)
   useEffect(() => {
     if (!id) { staffApi('/api/documents?templates=1').then(r => setIsAdmin(r.isAdmin)).catch(() => {}); setT({ ...BLANK_TPL }); setBody(BLANK_TPL.body); setK(1); return }
@@ -91,19 +92,19 @@ function Editor({ id, back, onSaved }: { id: string | null; back: () => void; on
         <style>{`@media(max-width:1100px){.tpl-grid{grid-template-columns:1fr!important}}`}</style>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <button style={btn('ghost', true)} onClick={back}>← Templates</button>
-          {isAdmin ? <input value={t.name} onChange={e => set('name', e.target.value)} placeholder="Template name" style={{ ...input, fontSize: 18, fontWeight: 700, maxWidth: 440 }} /> : <b style={{ fontSize: 20 }}>{t.name}</b>}
+          {canEdit ? <input value={t.name} onChange={e => set('name', e.target.value)} placeholder="Template name" style={{ ...input, fontSize: 18, fontWeight: 700, maxWidth: 440 }} /> : <b style={{ fontSize: 20 }}>{t.name}</b>}
           <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11.5, fontWeight: 700, background: t.active ? '#E6F7EF' : '#F2F2F2', color: t.active ? '#0E7C55' : '#8A877F' }}>{t.active ? 'Live' : 'Hidden'}</span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            {isAdmin && <label style={{ ...btn('ghost'), cursor: 'pointer' }}>{importing ? 'Reading…' : 'Upload Word or PDF'}<input type="file" accept=".docx,.pdf" hidden onChange={e => importWord(e.target.files?.[0])} /></label>}
-            {isAdmin && <button style={btn('gold')} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save template'}</button>}
+            {canEdit && <label style={{ ...btn('ghost'), cursor: 'pointer' }}>{importing ? 'Reading…' : 'Upload Word or PDF'}<input type="file" accept=".docx,.pdf" hidden onChange={e => importWord(e.target.files?.[0])} /></label>}
+            {canEdit && <button style={btn('gold')} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save template'}</button>}
           </div>
         </div>
         {err && <div style={{ color: C.red, margin: '10px 0' }}>{err}</div>}
         {msg && <div style={{ background: '#E6F7EF', color: '#0E7C55', padding: '9px 14px', borderRadius: 6, margin: '10px 0', fontSize: 13.5, fontWeight: 600 }}>{msg}</div>}
-        {!isAdmin && <div style={{ fontSize: 13, color: C.muted, margin: '10px 0' }}>Only admins can change templates. To send this one, go to Documents → Send a document.</div>}
+        {!isAdmin && <div style={{ fontSize: 13, color: C.muted, margin: '10px 0' }}>Your changes are saved as a draft. An admin approves a template before it goes live.</div>}
         <div className="tpl-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 20, marginTop: 14, alignItems: 'start' }}>
-          <div style={{ minWidth: 0 }}><DocEditor html={body} resetKey={k} mode="template" readOnly={!isAdmin} onChange={setBody} /></div>
-          <fieldset disabled={!isAdmin} style={{ border: 'none', padding: 0, margin: 0, display: 'grid', gap: 14, minWidth: 0 }}>
+          <div style={{ minWidth: 0 }}><DocEditor html={body} resetKey={k} mode="template" readOnly={!canEdit} onChange={setBody} /></div>
+          <fieldset disabled={!canEdit} style={{ border: 'none', padding: 0, margin: 0, display: 'grid', gap: 14, minWidth: 0 }}>
             <div style={card}>
               <b style={{ fontSize: 14 }}>Who can change what</b>
               <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>{LOCKS.map(l => <label key={l.k} style={{ display: 'flex', gap: 10, padding: '9px 11px', border: '1px solid ' + (t.lock_mode === l.k ? C.goldDark : C.border), background: t.lock_mode === l.k ? '#FBF6EA' : '#fff', borderRadius: 6, cursor: 'pointer' }}>
@@ -130,7 +131,7 @@ function Editor({ id, back, onSaved }: { id: string | null; back: () => void; on
                 {t.needs_signature && <div><label style={label}>Remind if not signed after</label><select style={input} value={t.remind_days} onChange={e => set('remind_days', Number(e.target.value))}>{[[0, 'Never'], [2, '2 days'], [3, '3 days'], [5, '5 days'], [7, '7 days']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>}
                 <div><label style={label}>Email subject</label><input style={input} value={t.email_subject || ''} onChange={e => set('email_subject', e.target.value)} placeholder={t.name || 'Uses the template name'} /></div>
                 <div><label style={label}>Email message</label><textarea style={{ ...input, resize: 'vertical' }} rows={3} value={t.email_message || ''} onChange={e => set('email_message', e.target.value)} placeholder="Leave empty for a standard message" /></div>
-                <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}><input type="checkbox" checked={t.active} onChange={e => set('active', e.target.checked)} /> Live — staff can send it</label>
+                <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}><input type="checkbox" checked={t.active} disabled={!isAdmin} onChange={e => set('active', e.target.checked)} /> Live — staff can send it</label>
                 {t.source_url && <a href={t.source_url} target="_blank" rel="noreferrer" style={{ fontSize: 12.5, color: C.goldDark, fontWeight: 600 }}>Open the original file</a>}
                 {id && isAdmin && <button type="button" style={btn('danger', true)} onClick={async () => { if (confirm('Delete this template? Documents already sent are kept.')) { await staffApi('/api/documents', { action: 'template-delete', id }); back() } }}>Delete template</button>}
               </div>

@@ -20,7 +20,7 @@ import { searchPeople, createFromTemplate, deliverDocument, docSettings, docEmai
 //   POST {action:'save'|'send', id, body, recipient_name, recipient_email, email_subject, email_message, needs_signature}
 //        Wording changes on an "Editable with approval" template go to Finance → Approvals first (admins send straight away).
 //   POST {action:'remind'|'void'|'delete', id}
-//   POST {action:'template-save'|'template-delete'|'template-import', …}   (admins)
+//   POST {action:'template-save'|'template-delete'|'template-import', …}   (any staff; a non-admin's template is saved as a draft until an admin makes it live; delete is admin only)
 //   POST {action:'file-add'|'file-delete'|'file-send', …}
 //   POST {action:'rule-save'|'rule-delete'|'run-rules', …}                  (admins)
 
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
   // ---------- templates ----------
   if (b.action === 'template-save') {
-    const no = adminOnly(); if (no) return no
+    // any staff member can add or edit a template; theirs is saved as a draft until an admin makes it live
     const name = String(b.name || '').trim().slice(0, 150)
     if (!name) return bad('Give the template a name.')
     const body = sanitizeHtml(String(b.body || '')).slice(0, 300_000)
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       name, category: String(b.category || 'Other').slice(0, 60), audience: AUDIENCES.includes(b.audience) ? b.audience : 'any', body, defaults,
       lock_mode: ['locked', 'approval', 'editable'].includes(b.lock_mode) ? b.lock_mode : 'approval', needs_signature: b.needs_signature !== false,
       remind_days: Math.max(0, Math.min(30, Number(b.remind_days) || 0)), email_subject: String(b.email_subject || '').slice(0, 200) || null,
-      email_message: String(b.email_message || '').slice(0, 2000) || null, active: b.active !== false, updated_at: now,
+      email_message: String(b.email_message || '').slice(0, 2000) || null, active: c.isAdmin ? b.active !== false : false, updated_at: now,
     }
     const res = b.id
       ? await db.from('doc_templates').update(row).eq('id', b.id).eq('business_id', biz).select('*').single()
@@ -112,7 +112,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
   if (b.action === 'template-import') {
-    const no = adminOnly(); if (no) return no
     const name = String(b.filename || '')
     if (/\.pdf$/i.test(name)) {
       // PDF: read the text and turn it into headings and paragraphs the team can edit. Scanned PDFs (pictures of pages) have no text to read.

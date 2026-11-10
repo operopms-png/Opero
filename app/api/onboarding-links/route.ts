@@ -10,7 +10,7 @@ import { SITE_URL } from '@/lib/brand'
 //   GET  → { links: recent links with their status, url }
 //   POST {kind:'owner'|'tenant', module:'pm'|'ea', template_id?, name?, email?, property_label?, ask_docs?} → { url, whatsapp }
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
-const allowed = (c: any) => c.isAdmin || /co founder|property management|vacation rental|estate/i.test(c.role || '')
+const allowed = (_c: any) => true // any staff member can send a client link
 const DAYS = 14
 
 export async function GET(req: NextRequest) {
