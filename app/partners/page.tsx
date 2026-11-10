@@ -7,6 +7,9 @@ import PartnerBroadcast from '../../components/PartnerBroadcast'
 import { STAFF_CENTRE_TABS, PARTNER_GRANTABLE_MODULES } from '../../lib/useRole'
 import InvestPage from '../invest/page'
 import { SITE_HOST } from '@/lib/brand'
+import { money } from '../../lib/partner-schedule'
+import RepaymentPanel from '../../components/partners/RepaymentPanel'
+import PartnerDocuments from '../../components/partners/PartnerDocuments'
 import { buckets, bucketSum, Kpi, Panel, StackedBars, TrendLine, Funnel, Legend, Seg, Badge, Avatar, agentTier, ST_COL, LT_COL, PERIOD_LABEL, type Period, type Bucket } from '../../components/partners/PartnerCharts'
 
 // Partners
@@ -30,9 +33,9 @@ const PAGE_BG = '#F7F8FA'
 const TOTAL_STAGES = 10
 
 type StaffTab = 'Dashboard' | 'Agent Programme' | 'Investors' | 'Broadcast'
-type InvestorTab = 'Dashboard' | 'Investments' | 'Payouts' | 'Deal Analyser' | 'Broadcast'
+type InvestorTab = 'Dashboard' | 'Investments' | 'Payouts' | 'Maintenance' | 'Documents' | 'Deal Analyser' | 'Broadcast'
 const STAFF_TABS: StaffTab[] = ['Dashboard', 'Agent Programme', 'Investors', 'Broadcast']
-const INVESTOR_TABS: InvestorTab[] = ['Dashboard', 'Investments', 'Payouts', 'Deal Analyser', 'Broadcast']
+const INVESTOR_TABS: InvestorTab[] = ['Dashboard', 'Investments', 'Payouts', 'Maintenance', 'Documents', 'Deal Analyser', 'Broadcast']
 const PARTNER_FEE = '£75'
 
 const REFERRAL_STATUSES = ['logged', 'screening', 'approved', 'rejected', 'completed', 'cancelled']
@@ -115,6 +118,8 @@ export default function PartnersPage() {
 
   // Investor (owner) data
   const [profile, setProfile] = useState<any>(null)
+  const [tickets, setTickets] = useState<any[]>([])
+  const pgbp = (n: number) => money(n, profile?.currency)
   const [properties, setProperties] = useState<any[]>([])
   const [bookings, setBookings] = useState<any[]>([])
   const [statements, setStatements] = useState<any[]>([])
@@ -149,6 +154,8 @@ export default function PartnersPage() {
 
   // Investor access (what a partner can see beyond Partners)
   const [accessOwnerId, setAccessOwnerId] = useState<string | null>(null)
+  const [repayOwnerId, setRepayOwnerId] = useState<string | null>(null)
+  const [docsOwnerId, setDocsOwnerId] = useState<string | null>(null)
   const [accessForm, setAccessForm] = useState<string[]>([])
 
   useEffect(() => {
@@ -163,12 +170,14 @@ export default function PartnersPage() {
         setAuthorName(owner.name || user.email || 'Partner')
         const ids: string[] = owner.property_ids ?? []
         const safeIds = ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
-        const [p, b, s, f] = await Promise.all([
+        const [p, b, s, f, mt] = await Promise.all([
           supabase.from('properties').select('*').in('id', safeIds),
           supabase.from('bookings').select('*').in('property_id', safeIds),
           supabase.from('owner_statements').select('*').eq('owner_id', owner.id).order('period_start', { ascending: false }),
           supabase.from('owner_finance').select('*').eq('owner_id', owner.id),
+          supabase.from('maintenance_tickets').select('*').in('property_id', safeIds).order('created_at', { ascending: false }),
         ])
+        setTickets(mt.data ?? [])
         setProperties(p.data ?? [])
         setBookings(b.data ?? [])
         setStatements(s.data ?? [])
@@ -472,6 +481,8 @@ export default function PartnersPage() {
     const ret = allStatements.filter(s => s.owner_id === o.id && s.status === 'paid').reduce((sum, s) => sum + (Number(s.owner_amount) || 0), 0)
     return { inv, ret, out: Math.max(0, inv - ret), pct: inv > 0 ? (ret / inv) * 100 : 0 }
   }
+  // totals only carry a symbol when every partner is in the same currency
+  const agg = (n: number) => allOwners.every(o => (o.currency || 'JMD') === (allOwners[0].currency || 'JMD')) ? money(n, allOwners[0]?.currency) : Math.round(n).toLocaleString('en-GB')
   const staffInvested = allOwners.reduce((s, o) => s + ownerTotals(o).inv, 0)
   const staffReturned = allOwners.reduce((s, o) => s + ownerTotals(o).ret, 0)
   const activeAgents = agents.filter(a => a.status === 'active').length
@@ -718,7 +729,7 @@ export default function PartnersPage() {
                 const n = t === 'Investors' ? pendingSignups.filter(s => s.marked_sent_at).length : 0
                 return (
                   <button key={t} onClick={() => setStaffTab(t)} style={{ ...chip(staffTab === t), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    {t}
+                    {t === 'Investors' ? 'Partners' : t}
                     {n > 0 && <span style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9, background: '#EF4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{n}</span>}
                   </button>
                 )
@@ -742,7 +753,7 @@ export default function PartnersPage() {
               <Kpi label="Open referrals" value={String(openReferrals)} {...vsPrev(pRefs.length, prevRefs.length)} data={loggedSeries} />
               <Kpi label="Conversion rate" value={`${convNow}%`} {...vsPrev(convNow, convPrev, n => `${n} pts`)} data={convSeries} />
               <Kpi label="Commission payable" value={gbp(commissionPayable)} deltaText={`${gbp(commissionPending)} pending`} data={payableSeries} highlight />
-              <Kpi label="Investor capital" value={gbp(staffInvested)} deltaText={`${allOwners.length} investor${allOwners.length === 1 ? '' : 's'} · ${gbp(staffReturned)} returned`} data={capitalSeries} />
+              <Kpi label="Investor capital" value={agg(staffInvested)} deltaText={`${allOwners.length} investor${allOwners.length === 1 ? '' : 's'} · ${agg(staffReturned)} returned`} data={capitalSeries} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 14, marginBottom: 14 }}>
@@ -971,10 +982,10 @@ export default function PartnersPage() {
         {isStaff && staffTab === 'Investors' && (
           <>
             <div style={{ ...grid, marginBottom: 20 }}>
-              <Stat label="Investors" value={String(allOwners.length)} sub="All Vacation Rentals owners" />
-              <Stat label="Capital In" value={gbp(staffInvested)} />
-              <Stat label="Capital Returned" value={gbp(staffReturned)} />
-              <Stat label="Outstanding" value={gbp(Math.max(0, staffInvested - staffReturned))} dark />
+              <Stat label="Partners" value={String(allOwners.length)} sub="All Vacation Rentals owners" />
+              <Stat label="Capital In" value={agg(staffInvested)} />
+              <Stat label="Capital Returned" value={agg(staffReturned)} />
+              <Stat label="Outstanding" value={agg(Math.max(0, staffInvested - staffReturned))} dark />
             </div>
 
             {/* Public sign-up link: new partners pay the one-time membership and get their own login */}
@@ -1075,8 +1086,8 @@ export default function PartnersPage() {
             )}
 
             <div style={card}>
-              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Investor accounts</div>
-              {allOwners.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No owners yet. Owners created in Vacation Rentals appear here automatically.</div>}
+              <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Partner accounts</div>
+              {allOwners.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No partners yet. Owners created in Vacation Rentals appear here automatically.</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {allOwners.map(o => {
                   const t = ownerTotals(o)
@@ -1102,10 +1113,18 @@ export default function PartnersPage() {
                           )}
                         </div>
                         <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => setDocsOwnerId(docsOwnerId === o.id ? null : o.id)} style={btnGhost}>{docsOwnerId === o.id ? 'Close' : 'Documents'}</button>
+                          <button onClick={() => setRepayOwnerId(repayOwnerId === o.id ? null : o.id)} style={btnGhost}>{repayOwnerId === o.id ? 'Close' : 'Investment'}</button>
                           <button onClick={() => openAccess(o)} style={btnGhost}>{accessOwnerId === o.id ? 'Close' : 'Access'}</button>
                           <a href="/owner-portal" style={{ ...btnGold, padding: '7px 12px', fontSize: 12 }}>Manage in Owner Portal</a>
                         </div>
                       </div>
+                      {docsOwnerId === o.id && (
+                        <div style={{ marginBottom: 12 }}><PartnerDocuments ownerId={o.id} /></div>
+                      )}
+                      {repayOwnerId === o.id && (
+                        <div style={{ marginBottom: 12 }}><RepaymentPanel ownerId={o.id} /></div>
+                      )}
                       {accessOwnerId === o.id && (
                         <div style={{ background: '#F9FAFB', border: '1px solid #EAECF0', borderRadius: 10, padding: 14, marginBottom: 12 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>What can {o.name?.split(' ')[0] ?? 'this partner'} see?</div>
@@ -1134,9 +1153,9 @@ export default function PartnersPage() {
                         </div>
                       )}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, fontSize: 12, marginBottom: 8 }}>
-                        <div><div style={{ color: '#667085' }}>Invested</div><div style={{ fontWeight: 700 }}>{gbp(t.inv)}</div></div>
-                        <div><div style={{ color: '#667085' }}>Returned</div><div style={{ fontWeight: 700 }}>{gbp(t.ret)}</div></div>
-                        <div><div style={{ color: '#667085' }}>Outstanding</div><div style={{ fontWeight: 700 }}>{gbp(t.out)}</div></div>
+                        <div><div style={{ color: '#667085' }}>Invested</div><div style={{ fontWeight: 700 }}>{money(t.inv, o.currency)}</div></div>
+                        <div><div style={{ color: '#667085' }}>Returned</div><div style={{ fontWeight: 700 }}>{money(t.ret, o.currency)}</div></div>
+                        <div><div style={{ color: '#667085' }}>Outstanding</div><div style={{ fontWeight: 700 }}>{money(t.out, o.currency)}</div></div>
                       </div>
                       <Bar pct={t.pct} />
                       <div style={{ fontSize: 11, color: '#667085', marginTop: 4 }}>{t.inv > 0 ? `${t.pct.toFixed(0)}% paid back` : 'Set capital invested in Owner Portal → ROI Per Owner'}</div>
@@ -1167,23 +1186,23 @@ export default function PartnersPage() {
         {inv && investorTab === 'Dashboard' && (
           <>
             <div style={{ ...grid, marginBottom: 16 }}>
-              <Stat label="Capital Invested" value={gbp(invested)} />
-              <Stat label="Capital Returned" value={gbp(returned)} sub={`${paybackPct.toFixed(0)}% paid back`} />
-              <Stat label="Outstanding" value={gbp(outstanding)} />
+              <Stat label="Capital Invested" value={pgbp(invested)} />
+              <Stat label="Capital Returned" value={pgbp(returned)} sub={`${paybackPct.toFixed(0)}% paid back`} />
+              <Stat label="Outstanding" value={pgbp(outstanding)} />
               <Stat label="ROI to date" value={`${roi.toFixed(1)}%`} sub="Net profit ÷ capital" dark />
             </div>
             <div style={{ ...card, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-                <span>Payback progress</span><span>{gbp(returned)} of {gbp(invested)}</span>
+                <span>Payback progress</span><span>{pgbp(returned)} of {pgbp(invested)}</span>
               </div>
               <Bar pct={paybackPct} />
-              {upcoming > 0 && <div style={{ fontSize: 12, color: '#D97706', marginTop: 8 }}>{gbp(upcoming)} in statements sent and awaiting payment</div>}
+              {upcoming > 0 && <div style={{ fontSize: 12, color: '#D97706', marginTop: 8 }}>{pgbp(upcoming)} in statements sent and awaiting payment</div>}
             </div>
             <div style={{ ...grid, marginBottom: 16 }}>
-              <Stat label="Guest Revenue" value={gbp(revenue)} />
-              <Stat label="Your Share (60%)" value={gbp(ownerShare)} />
-              <Stat label="Expenses" value={gbp(expenses)} />
-              <Stat label="Net Profit" value={gbp(netProfit)} />
+              <Stat label="Guest Revenue" value={pgbp(revenue)} />
+              <Stat label="Your Share (60%)" value={pgbp(ownerShare)} />
+              <Stat label="Expenses" value={pgbp(expenses)} />
+              <Stat label="Net Profit" value={pgbp(netProfit)} />
             </div>
             <div style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div>
@@ -1197,6 +1216,12 @@ export default function PartnersPage() {
 
         {inv && investorTab === 'Investments' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {Number(profile?.invested) > 0 && (
+              <div style={card}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Your investment and repayments</div>
+                <RepaymentPanel />
+              </div>
+            )}
             {properties.length === 0 && <div style={{ ...card, fontSize: 13, color: '#98A2B3' }}>No properties linked to your account yet.</div>}
             {properties.map(p => {
               const s = propertyStats(p)
@@ -1211,8 +1236,8 @@ export default function PartnersPage() {
                     <Pill status={onboarding ? 'onboarding' : 'live'} label={onboarding ? 'Onboarding' : 'Live'} />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, fontSize: 12, marginBottom: 12 }}>
-                    <div><div style={{ color: '#667085' }}>Guest revenue</div><div style={{ fontWeight: 700, fontSize: 14 }}>{gbp(s.rev)}</div></div>
-                    <div><div style={{ color: '#667085' }}>Your share</div><div style={{ fontWeight: 700, fontSize: 14 }}>{gbp(s.share)}</div></div>
+                    <div><div style={{ color: '#667085' }}>Guest revenue</div><div style={{ fontWeight: 700, fontSize: 14 }}>{pgbp(s.rev)}</div></div>
+                    <div><div style={{ color: '#667085' }}>Your share</div><div style={{ fontWeight: 700, fontSize: 14 }}>{pgbp(s.share)}</div></div>
                     <div><div style={{ color: '#667085' }}>Bookings</div><div style={{ fontWeight: 700, fontSize: 14 }}>{s.count}</div></div>
                     <div><div style={{ color: '#667085' }}>Occupancy (90d)</div><div style={{ fontWeight: 700, fontSize: 14 }}>{s.occ}%</div></div>
                   </div>
@@ -1230,11 +1255,57 @@ export default function PartnersPage() {
           </div>
         )}
 
+        {inv && investorTab === 'Maintenance' && (() => {
+          const done = (t: any) => ['resolved', 'completed', 'closed', 'done'].includes(String(t.status).toLowerCase())
+          const started = (t: any) => !done(t) && ['in_progress', 'in progress', 'assigned', 'scheduled', 'ongoing'].includes(String(t.status).toLowerCase())
+          const open = tickets.filter(t => !done(t)), solved = tickets.filter(done)
+          const pname = (id: string) => properties.find(x => x.id === id)?.name ?? 'Property'
+          const when = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+          const step = (on: boolean, label: string, last = false) => (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: on ? '#067647' : '#98A2B3', fontWeight: on ? 700 : 500 }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: on ? '#067647' : '#D0D5DD', display: 'inline-block' }} />{label}{!last && <span style={{ color: '#D0D5DD', margin: '0 4px' }}>—</span>}
+            </span>
+          )
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={grid}>
+                <Stat label="Open issues" value={String(open.length)} sub="Reported, not yet solved" />
+                <Stat label="Solved" value={String(solved.length)} sub="Completed by our team" dark />
+              </div>
+              <div style={card}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Maintenance across your properties</div>
+                <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Each issue appears here as soon as it is reported by a guest, tenant or our team, and updates as we work on it.</div>
+                {tickets.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No issues reported on your properties.</div>}
+                {tickets.map(t => (
+                  <div key={t.id} style={{ borderTop: '1px solid #F2F4F7', padding: '12px 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{t.title || t.issue_type || 'Issue'}</div>
+                        <div style={{ fontSize: 12, color: '#667085' }}>{pname(t.property_id)} · Reported {when(t.created_at)}{t.priority ? ` · ${t.priority} priority` : ''}</div>
+                        {t.description && <div style={{ fontSize: 12, color: '#475467', marginTop: 4 }}>{t.description}</div>}
+                      </div>
+                      <Pill status={done(t) ? 'paid' : 'pending'} label={done(t) ? 'Solved' : started(t) ? 'In progress' : 'Reported'} />
+                    </div>
+                    <div style={{ marginTop: 8 }}>{step(true, 'Reported')}{step(done(t) || started(t), 'In progress')}{step(done(t), 'Solved', true)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
+        {inv && investorTab === 'Documents' && (
+          <div style={card}>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>Your documents</div>
+            <PartnerDocuments />
+          </div>
+        )}
+
         {inv && investorTab === 'Payouts' && (
           <div style={card}>
             <div style={{ ...grid, marginBottom: 16 }}>
-              <Stat label="Paid to you" value={gbp(returned)} />
-              <Stat label="Awaiting payment" value={gbp(upcoming)} />
+              <Stat label="Paid to you" value={pgbp(returned)} />
+              <Stat label="Awaiting payment" value={pgbp(upcoming)} />
             </div>
             {statements.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No statements yet.</div>}
             {statements.map(s => (
@@ -1243,11 +1314,11 @@ export default function PartnersPage() {
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{s.property_name ?? 'Statement'}</div>
                   <div style={{ fontSize: 12, color: '#667085' }}>
                     {new Date(s.period_start).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {new Date(s.period_end).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    {' · '}Gross {gbp(Number(s.gross_revenue) || 0)} · Fee {gbp(Number(s.management_fee) || 0)} · Expenses {gbp(Number(s.expenses) || 0)}
+                    {' · '}Gross {pgbp(Number(s.gross_revenue) || 0)} · Fee {pgbp(Number(s.management_fee) || 0)} · Expenses {pgbp(Number(s.expenses) || 0)}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontWeight: 800 }}>{gbp(Number(s.owner_amount) || 0)}</div>
+                  <div style={{ fontWeight: 800 }}>{pgbp(Number(s.owner_amount) || 0)}</div>
                   <Pill status={s.status} />
                 </div>
               </div>

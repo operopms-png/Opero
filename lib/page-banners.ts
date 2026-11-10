@@ -2,6 +2,8 @@
 // the page name and one plain line on what it does. Longest matching address wins.
 type B = { title: string; text: string }
 const PAGES: Record<string, B> = {
+  '/partners': { title: 'Partners', text: 'Your investment, repayments, documents and maintenance in one place. Switch tabs along the top; amounts show in your own currency.' },
+  '/staff-centre/partners': { title: 'Partners', text: 'Every partner: set their investment and monthly repayments, tick each month paid, store signed agreements and control what they see.' },
   '/property': { title: 'Real Estate Intelligence', text: 'Estate agency, developments, short stays and property management in one place. Each page appears once; search or pick an area. At a glance, below, shows the headline numbers for each area.' },
   '/staff-centre/human-intelligence': { title: 'Human Intelligence Hub', text: 'Every people-run area of the business, grouped under four headings. Open any page from here.' },
   '/property/map': { title: 'Map', text: 'Every property and deal on one street map, coloured by status. Click a pin to see the tenant, rent and what needs doing. Development projects show as In development, with floors, plans and a 3D walk-through to showcase them.' },
