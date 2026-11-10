@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { normalizeRole, resolveAccess } from '../../lib/useRole'
 import CleanJob from '../../components/crew/CleanJob'
+import MaintJob from '../../components/crew/MaintJob'
 
 const ACCENT = '#2F6DB5'
 
@@ -300,7 +301,7 @@ function StaffDashboardInner() {
                 <div style={{ fontSize: 14, fontWeight: 500, color: '#323338' }}>{item.title}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{item.property ?? '—'}{item.priority ? ` · ${item.priority} priority` : ''}</div>
               </div>
-              {member.role === 'Cleaning Team' && <button onClick={() => setJob(item)} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{item.status === 'completed' ? 'View' : 'Open job'}</button>}
+              {(member.role === 'Cleaning Team' || member.role === 'Maintenance Team') && <button onClick={() => setJob(item)} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{['completed', 'resolved', 'closed'].includes(item.status) ? 'View' : 'Open job'}</button>}
               <select value={item.status} onChange={e => updateStatus(item, e.target.value)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E4E7EC', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer' }}>
                 {member.role === 'Cleaning Team' ? (
                   <><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option></>
@@ -312,7 +313,8 @@ function StaffDashboardInner() {
           ))}
         </div>
       </div>
-      {job && <CleanJob item={job} onClose={() => setJob(null)} onChanged={st => setItems(prev => prev.map(i => i.id === job.id && i.table === job.table ? { ...i, status: st } : i))} />}
+      {job && member.role === 'Maintenance Team' && <MaintJob item={job} onClose={() => setJob(null)} onChanged={st => setItems(prev => prev.map(i => i.id === job.id && i.table === job.table ? { ...i, status: st } : i))} />}
+      {job && member.role !== 'Maintenance Team' && <CleanJob item={job} onClose={() => setJob(null)} onChanged={st => setItems(prev => prev.map(i => i.id === job.id && i.table === job.table ? { ...i, status: st } : i))} />}
     </div>
   )
 }

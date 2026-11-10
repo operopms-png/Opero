@@ -1,0 +1,4 @@
+alter table maintenance_tickets add column if not exists before_media text, add column if not exists after_media text, add column if not exists resolution_notes text, add column if not exists cost numeric, add column if not exists resolved_at timestamptz, add column if not exists resolved_by text;
+alter table pm_maintenance add column if not exists before_media text, add column if not exists after_media text, add column if not exists resolution_notes text, add column if not exists cost numeric, add column if not exists resolved_at timestamptz, add column if not exists resolved_by text;
+alter table estate_maintenance add column if not exists before_media text, add column if not exists after_media text, add column if not exists resolution_notes text, add column if not exists cost numeric, add column if not exists resolved_at timestamptz, add column if not exists resolved_by text;
+notify pgrst, 'reload schema';
