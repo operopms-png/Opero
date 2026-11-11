@@ -100,6 +100,12 @@ export default function DashboardAiPanel({ mapSlot, children }: { mapSlot?: Reac
 
       <div className="ai-two">
         {mapSlot ?? automationBox}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
+        <div style={{ ...box, padding: 18, minWidth: 0 }}>
+          <h3 style={{ ...head, marginBottom: 2 }}>NOVOURQ Walk</h3>
+          <div style={{ fontSize: 12.5, color: K.muted, marginBottom: 10 }}>Showcasing our new AI technology</div>
+          <video src="/novourq-walk.mp4" poster="/novourq-walk-poster.jpg" controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 520, borderRadius: 12, background: '#0b1630', objectFit: 'contain', display: 'block' }} />
+        </div>
         <div style={{ ...box, padding: 18, minWidth: 0 }}>
           <h3 style={head}>What Novourq Cloud AI did</h3>
           {act === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : act.length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No activity yet. Switch on a skill and its work will show here.</div> : act.map((x, i) => (
@@ -109,6 +115,7 @@ export default function DashboardAiPanel({ mapSlot, children }: { mapSlot?: Reac
             </div>
           ))}
           <Link href="/staff-centre/ai-command-centre/activity" style={{ display: 'inline-block', marginTop: 10, fontSize: 12.5, color: K.blue, fontWeight: 600, textDecoration: 'none' }}>Open the activity log →</Link>
+        </div>
         </div>
       </div>
     </div>
