@@ -1,5 +1,6 @@
 'use client'
 import UtilityTracker from '@/components/pm/UtilityTracker'
+import TenancyPack from '@/components/portal/TenancyPack'
 import PortalDocuments from '@/components/portal/PortalDocuments'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -283,7 +284,7 @@ function PMTenantPortalInner() {
       </div>
 
       <div style={{ display: 'flex', gap: 0, padding: '0 28px', background: '#fff', borderBottom: '1px solid #E4E7EC' }}>
-        {['My Lease', 'Payments', 'Maintenance', 'Utilities', 'Documents', 'Messages', 'Announcements', 'Renewal', 'Amenities', 'Feedback', 'Profile', 'My Data'].map(s => (
+        {['My Lease', 'Onboarding', 'Payments', 'Maintenance', 'Utilities', 'Documents', 'Messages', 'Announcements', 'Renewal', 'Amenities', 'Feedback', 'Profile', 'My Data'].map(s => (
           <button key={s} onClick={() => setTab(s)} style={{ padding: '12px 16px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: tab === s ? 600 : 400, color: tab === s ? ACCENT : '#667085', borderBottom: tab === s ? '2px solid ' + ACCENT : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit' }}>{s}</button>
         ))}
       </div>
@@ -416,6 +417,7 @@ function PMTenantPortalInner() {
         )}
 
         {tab === 'Utilities' && <UtilityTracker kind="tenant" id={isStaffView ? tenant?.id : undefined} />}
+        {tab === 'Onboarding' && <TenancyPack kind="pm_tenant" id={isStaffView ? tenant?.id : undefined} />}
         {tab === 'Documents' && (
           <div>
             <PortalDocuments kind="tenant" id={isStaffView ? tenant.id : undefined} />

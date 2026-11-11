@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 // The page a client opens from their secure link: contracts to sign, documents to upload, invoices to pay. No login.
+import TenancyPack from '@/components/portal/TenancyPack'
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import PortalDocuments from '@/components/portal/PortalDocuments'
@@ -76,6 +77,8 @@ export default function ClientLinkPage() {
         </>}
 
         {(d.subject === 'landlord' || d.subject === 'tenant') && <div style={{ marginTop: 18 }}><UtilityTracker kind={d.subject} link={token} hideEmpty /></div>}
+
+        {(d.subject === 'tenant' || d.subject === 'ea_tenant') && <><div style={lab}>Tenant onboarding</div><TenancyPack link={token} /></>}
 
         <div style={lab}>Documents</div>
         <PortalDocuments kind={d.subject} link={token} />
