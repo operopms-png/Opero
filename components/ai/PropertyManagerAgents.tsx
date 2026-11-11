@@ -526,6 +526,7 @@ export default function PropertyManagerAgents() {
   }
 
   const [loadErr, setLoadErr] = useState('')
+  const [autoSend, setAutoSend] = useState<Record<string,boolean>>({})
   useEffect(()=>{
     let dead = false
     const guard = setTimeout(() => { if (!dead) { setLoadErr('This is taking too long. Check your connection and refresh.'); setLoading(false) } }, 15000)
@@ -562,7 +563,6 @@ export default function PropertyManagerAgents() {
   if(loading) return <div style={{padding:40,color:C.faint,fontSize:14}}>Loading…</div>
   if(loadErr && !userId) return <div style={{padding:40,color:'#B42318',fontSize:14}}>{loadErr}</div>
 
-  const [autoSend, setAutoSend] = useState<Record<string,boolean>>({})
   const toggleAuto = async (key:string) => {
     const next = !(autoSend[key] ?? true)
     setAutoSend({...autoSend,[key]:next})
