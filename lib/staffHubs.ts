@@ -57,6 +57,7 @@ export const STAFF_HUBS: Hub[] = [
   ] },
   { label: 'Marketing', icon: 'sparkles', tabs: [
     { href: '/staff-centre/marketing', label: 'Marketing', scTab: 'marketing' },
+    { href: '/staff-centre/services-pack', label: 'Services Pack', scTab: 'marketing' },
     { href: '/staff-centre/listings', label: 'Listings', scTab: 'listings', badge: 'listings' },
   ] },
   { label: 'Schedule', icon: 'calendar', tabs: [

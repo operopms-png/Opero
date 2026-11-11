@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Services Pack', text: 'Marketing, Services Pack: send the brochure, landlord pack and flyers by one link. Recipients choose each document to view, and you see opens and views.' },
   { date: '2026-11-11', title: 'HR templates in Documents', text: 'Documents, Templates, Add HR templates: a Payslip and a Proof of employment letter that use your own logo, name and contact lines. Admins only.' },
   { date: '2026-11-11', title: 'HR Documents', text: 'Team, HR Documents: store payslips and HR forms, add the NOVOURQ fillable payslip and proof of employment letter, edit or replace any file and email it to a person. Company Documents can now edit and send files too.' },
   { date: '2026-11-11', title: 'Virtual viewings for tenants', text: 'Listings: upload walk-through videos or paste a YouTube or Vimeo link on a property. Tenants watch them on its public page and can ask for a video call instead of an in-person viewing.' },
