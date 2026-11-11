@@ -50,10 +50,13 @@ export default function NewClientLink({ onClose }: { onClose: () => void }) {
         </div>}
         {links.length > 0 && <div style={{ marginTop: 18 }}>
           <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: C.muted, marginBottom: 6 }}>Recent links</div>
-          {links.slice(0, 8).map(l => { const s = l.expired ? ['Expired', '#FEE4E2', '#B42318'] : STATUS[l.status] || STATUS.open; return (
+          {links.slice(0, 20).map(l => { const s = l.expired ? ['Expired', '#FEE4E2', '#B42318'] : STATUS[l.status] || STATUS.open; return (
             <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '7px 0', borderTop: '1px solid #F0F1F4', fontSize: 13 }}>
               <span>{l.name || 'No name yet'} · {l.kind === 'owner' ? 'Owner' : 'Tenant'} · {l.module === 'pm' ? 'PM' : 'Estate'}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: s[1], color: s[2], whiteSpace: 'nowrap' }}>{s[0]}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {l.status !== 'done' && !l.expired && <button style={btn('ghost', true)} onClick={() => copy(l.url)}>Copy link</button>}
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: s[1], color: s[2], whiteSpace: 'nowrap' }}>{s[0]}</span>
+              </span>
             </div>) })}
         </div>}
       </div>
