@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Fill in and submit on the link', text: 'Marketing, Services Pack: landlords now fill in the agreements and onboarding form right on their link and press Submit, and you open the completed copy under Submitted documents.' },
   { date: '2026-11-11', title: 'Agreements in the Landlord pack', text: 'Marketing, Services Pack: choose the Master Lease, Shortlet landlord or Estate agency Agreement before you send, and Landlord pack now also adds the Welcome letter and Shortlet landlord onboarding form.' },
   { date: '2026-11-11', title: 'NOVOURQ Walk video', text: 'Dashboard: Property map, NOVOURQ Walk video, Portfolio Performance and What Novourq Cloud AI did now sit in four equal boxes, with Automation by area full width underneath.' },
   { date: '2026-11-11', title: 'Dashboard layout', text: 'Dashboard: the Property map now sits beside What Novourq Cloud AI did, and Automation by area moved down next to Portfolio Performance.' },

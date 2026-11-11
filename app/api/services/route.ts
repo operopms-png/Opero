@@ -5,7 +5,7 @@ import { getCaller } from '@/lib/mailbox'
 
 // Staff Centre → Marketing → Services Pack: the documents a company sends to show its services,
 // and the share links that open them. Links stay live until paused or deleted.
-//   GET                                   -> { docs, links, isAdmin }   (links carry opens, last opened and views per document)
+//   GET                                   -> { docs, links, submissions, isAdmin }   (links carry opens, last opened and views per document)
 //   POST {action:'doc-add', title, description, url}
 //   POST {action:'doc-update', id, title?, description?, url?, active?}
 //   POST {action:'doc-delete', id}         admin only
@@ -26,7 +26,13 @@ export async function GET(req: NextRequest) {
   const { data: views } = ids.length ? await db.from('service_views').select('link_id,doc_id').in('link_id', ids).not('doc_id', 'is', null).limit(20000) : { data: [] as any[] }
   const per: Record<string, Record<string, number>> = {}
   for (const v of views ?? []) { per[v.link_id] = per[v.link_id] || {}; per[v.link_id][v.doc_id] = (per[v.link_id][v.doc_id] || 0) + 1 }
-  return NextResponse.json({ docs: docs ?? [], links: (links ?? []).map((l: any) => ({ ...l, doc_views: per[l.id] || {} })), isAdmin: c.isAdmin })
+  const { data: subs } = await db.from('service_submissions').select('id,link_id,doc_title,submitter_name,submitter_email,path,created_at').eq('business_id', biz).order('created_at', { ascending: false }).limit(100)
+  const submissions = await Promise.all((subs ?? []).map(async (s: any) => {
+    const { data: u } = await db.storage.from('service-submissions').createSignedUrl(s.path, 3600)
+    const { path, ...rest } = s
+    return { ...rest, url: u?.signedUrl || null, link_name: (links ?? []).find((l: any) => l.id === s.link_id)?.name || '' }
+  }))
+  return NextResponse.json({ docs: docs ?? [], submissions, links: (links ?? []).map((l: any) => ({ ...l, doc_views: per[l.id] || {} })), isAdmin: c.isAdmin })
 }
 
 export async function POST(req: NextRequest) {
@@ -48,6 +54,7 @@ export async function POST(req: NextRequest) {
     if (b.title !== undefined) { const t = String(b.title).trim().slice(0, 150); if (!t) return bad('Give the document a name.'); patch.title = t }
     if (b.description !== undefined) patch.description = String(b.description || '').trim().slice(0, 400) || null
     if (b.active !== undefined) patch.active = !!b.active
+    if (b.fillable !== undefined) patch.fillable = !!b.fillable
     if (b.url) { if (!/^https:\/\//.test(String(b.url))) return bad('Upload failed — try again.'); patch.url = String(b.url) }
     const { data, error } = await db.from('service_docs').update(patch).eq('id', String(b.id || '')).eq('business_id', biz).select('*').single()
     return error ? bad(error.message, 500) : NextResponse.json({ doc: data })

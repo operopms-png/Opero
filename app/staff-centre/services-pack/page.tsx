@@ -67,16 +67,17 @@ export default function ServicesPack() {
                       <div style={{ display: 'grid', gap: 6 }}>
                         <input style={input} value={edit.title} onChange={e => setEdit({ ...edit, title: e.target.value })} />
                         <input style={input} value={edit.description} onChange={e => setEdit({ ...edit, description: e.target.value })} />
+                        <label style={{ fontSize: 13, display: 'flex', gap: 6, alignItems: 'center' }}><input type="checkbox" checked={!!edit.fillable} onChange={e => setEdit({ ...edit, fillable: e.target.checked })} />Recipients fill this in online and submit it back (needs a fillable PDF)</label>
                         <div><span style={label}>Replace the PDF (optional). Links already sent show the new version.</span><input type="file" accept="application/pdf" onChange={e => setEdit({ ...edit, file: e.target.files?.[0] ?? null })} /></div>
-                        <div style={{ display: 'flex', gap: 8 }}><button style={btn('gold', true)} disabled={busy} onClick={async () => { try { const body: any = { action: 'doc-update', id: x.id, title: edit.title, description: edit.description }; if (edit.file) body.url = await up(edit.file); await act(body); setEdit(null) } catch (e: any) { setErr(e.message) } }}>Save</button><button style={btn('ghost', true)} onClick={() => setEdit(null)}>Cancel</button></div>
+                        <div style={{ display: 'flex', gap: 8 }}><button style={btn('gold', true)} disabled={busy} onClick={async () => { try { const body: any = { action: 'doc-update', id: x.id, title: edit.title, description: edit.description, fillable: !!edit.fillable }; if (edit.file) body.url = await up(edit.file); await act(body); setEdit(null) } catch (e: any) { setErr(e.message) } }}>Save</button><button style={btn('ghost', true)} onClick={() => setEdit(null)}>Cancel</button></div>
                       </div>
                     ) : <>
                       <a href={x.url} target="_blank" rel="noreferrer" style={{ fontWeight: 700, color: '#1B2F6E', textDecoration: 'none' }}>{x.title}</a>
-                      <div style={{ fontSize: 12, color: '#667085', marginTop: 3 }}>{x.description || 'No description'}{x.active ? '' : ' · Hidden from links'}</div>
+                      <div style={{ fontSize: 12, color: '#667085', marginTop: 3 }}>{x.description || 'No description'}{x.fillable ? ' · Fillable online' : ''}{x.active ? '' : ' · Hidden from links'}</div>
                     </>}
                   </div>
                   {edit?.id !== x.id && <>
-                    <button style={btn('ghost', true)} onClick={() => setEdit({ id: x.id, title: x.title, description: x.description || '', file: null })}>Edit</button>
+                    <button style={btn('ghost', true)} onClick={() => setEdit({ id: x.id, title: x.title, description: x.description || '', fillable: !!x.fillable, file: null })}>Edit</button>
                     <button style={btn('ghost', true)} onClick={() => act({ action: 'doc-update', id: x.id, active: !x.active })}>{x.active ? 'Hide' : 'Show'}</button>
                     {d.isAdmin && <button style={btn('ghost', true)} onClick={() => { if (confirm('Delete this document? Links that include it stop showing it.')) act({ action: 'doc-delete', id: x.id }) }}>Delete</button>}
                   </>}
@@ -117,6 +118,17 @@ export default function ServicesPack() {
                   </div>
                 )
               })}
+            </div>
+          )}
+          <div style={{ ...head, marginTop: 24 }}>3. Submitted documents</div>
+          {(d?.submissions || []).length === 0 ? <Empty>Nothing submitted yet. When a recipient fills in a document on their link and presses Submit, it appears here.</Empty> : (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {(d?.submissions || []).map((s: any) => (
+                <div key={s.id} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 8, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                  <div><b>{s.doc_title}</b><div style={{ fontSize: 12.5, color: '#667085', marginTop: 3 }}>{s.submitter_name || 'No name'}{s.submitter_email ? ` · ${s.submitter_email}` : ''} · link {s.link_name || ''} · {when(s.created_at)}</div></div>
+                  {s.url && <a href={s.url} target="_blank" rel="noreferrer" style={btn('gold', true)}>Open completed PDF</a>}
+                </div>
+              ))}
             </div>
           )}
         </>}

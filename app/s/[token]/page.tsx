@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 // The page a recipient opens from a services link: pick each document and view it. No login.
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import FillablePdf from '../../../components/FillablePdf'
 
 const NAVY = '#182D5E'
 export default function ServicesPage() {
@@ -40,8 +41,10 @@ export default function ServicesPage() {
                 <div style={{ fontWeight: 700, fontSize: 17, color: NAVY }}>{doc.title}</div>
                 <a href={doc.url} target="_blank" rel="noreferrer" style={{ background: NAVY, color: '#fff', textDecoration: 'none', borderRadius: 5, padding: '9px 14px', fontSize: 13, fontWeight: 600 }}>Open / download PDF</a>
               </div>
-              <iframe key={doc.id} src={doc.url} title={doc.title} style={{ width: '100%', height: '78vh', minHeight: 420, border: '1px solid #D5DCEA', borderRadius: 4 }} />
-              <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 8 }}>If the document doesn’t show on your phone, press Open / download PDF.</div>
+              {doc.fillable ? <FillablePdf key={doc.id} url={doc.url} token={token} docId={doc.id} title={doc.title} /> : (<>
+                <iframe key={doc.id} src={doc.url} title={doc.title} style={{ width: '100%', height: '78vh', minHeight: 420, border: '1px solid #D5DCEA', borderRadius: 4 }} />
+                <div style={{ fontSize: 12, color: '#98A2B3', marginTop: 8 }}>If the document doesn’t show on your phone, press Open / download PDF.</div>
+              </>)}
             </div>
           )}
         </div>
