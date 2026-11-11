@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { serviceClient, requireUser } from '@/lib/admin-auth'
+import { serviceClient, requireStaffWithBusiness } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 import { sendSms } from '@/lib/send-sms'
 import { sendWhatsapp } from '@/lib/send-whatsapp'
@@ -9,8 +9,9 @@ import { EMAIL_DOMAIN } from '@/lib/brand'
 // it to crm_activities so it shows up in that contact's activity feed
 // regardless of which channel was used.
 export async function POST(req: NextRequest) {
-  const userId = await requireUser(req)
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const who = await requireStaffWithBusiness(req)
+  if (!who) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = who.businessId
 
   const { channel, contact_id, to, subject, body, module } = await req.json()
   if (!channel || !to || !body) {

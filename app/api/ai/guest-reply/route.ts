@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from '@/lib/claude'
-import { requireUser } from '@/lib/admin-auth'
+import { requireStaffWithBusiness } from '@/lib/admin-auth'
+import { companyName } from '@/lib/ai-proposal-utils'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,9 +10,10 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const user_id = await requireUser(req)
-  if (!user_id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const who = await requireStaffWithBusiness(req)
+  if (!who) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const user_id = who.businessId
   const { property_id, guest_name, message } = await req.json()
   if (!property_id || !message?.trim()) {
     return NextResponse.json({ error: 'property_id and message are required' }, { status: 400 })
@@ -36,7 +38,7 @@ Check-out instructions: ${property.checkout_instructions ?? 'Not provided'}
 House rules: ${property.house_rules ?? 'Not provided'}
 `.trim()
 
-  const systemPrompt = `You are a friendly, professional short-term rental guest support assistant for NOVOURQ Group. Answer the guest's message using ONLY the property information provided below. If the answer isn't covered by this information, politely say you'll check with the host and follow up — never invent details (like WiFi passwords, exact addresses, or rules) that aren't in the provided info. Keep replies warm, concise, and ready to send as-is.
+  const systemPrompt = `You are a friendly, professional short-term rental guest support assistant for ${await companyName(user_id)}. Answer the guest's message using ONLY the property information provided below. If the answer isn't covered by this information, politely say you'll check with the host and follow up — never invent details (like WiFi passwords, exact addresses, or rules) that aren't in the provided info. Keep replies warm, concise, and ready to send as-is.
 
 ${knowledge}`
 

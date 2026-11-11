@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from '@/lib/claude'
-import { requireUser } from '@/lib/admin-auth'
+import { requireStaffWithBusiness } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,8 +9,9 @@ const supabase = createClient(
 )
 
 export async function POST(req: NextRequest) {
-  const user_id = await requireUser(req)
-  if (!user_id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const who = await requireStaffWithBusiness(req)
+  if (!who) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user_id = who.businessId
 
   const { property_id, title, description, priority } = await req.json()
   if (!property_id || !title?.trim()) {

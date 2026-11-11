@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { serviceClient, requireUser } from '@/lib/admin-auth'
+import { serviceClient, requireStaffWithBusiness } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 
 // Sends the real e-signature link (the same one 'Copy Link' copies)
 // directly to the tenant's email, instead of requiring staff to
 // paste it into their own email client manually.
 export async function POST(req: NextRequest) {
-  const userId = await requireUser(req)
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const who = await requireStaffWithBusiness(req)
+  if (!who) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = who.businessId
 
   const { tenancy_id, from_email, from_name } = await req.json()
   if (!tenancy_id) return NextResponse.json({ error: 'tenancy_id is required' }, { status: 400 })

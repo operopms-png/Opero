@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 import { cur } from '../../../lib/company-currency'
 const ACCENT = '#2F6DB5'
 const MODULE = 'str'
@@ -21,7 +21,7 @@ export default function Page() {
   const [sendingEmailId, setSendingEmailId] = useState<string|null>(null)
   const [emailReplies, setEmailReplies] = useState<Record<string,any[]>>({})
   const [showSendSettings, setShowSendSettings] = useState(false)
-  const [sendSettings, setSendSettings] = useState({marketing_from_email:'',marketing_from_name:'NOVOURQ Group'})
+  const [sendSettings, setSendSettings] = useState({marketing_from_email:'',marketing_from_name:''})
   const [savingSendSettings, setSavingSendSettings] = useState(false)
   const [emailSubTab, setEmailSubTab] = useState('Manage')
   const [emailFilter, setEmailFilter] = useState('All emails')
@@ -44,9 +44,10 @@ export default function Page() {
   useEffect(()=>{
     supabase.auth.getUser().then(async ({data:{user}})=>{
       if(!user){window.location.href='/login';return}
-      await loadAll(user.id)
-      const { data: settings } = await supabase.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id',user.id).single()
-      if (settings) setSendSettings({marketing_from_email:settings.marketing_from_email||'',marketing_from_name:settings.marketing_from_name||'NOVOURQ Group'})
+      const acct = await getAccountId(user)
+      await loadAll(acct)
+      const { data: settings } = await supabase.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id',acct).single()
+      if (settings) setSendSettings({marketing_from_email:settings.marketing_from_email||'',marketing_from_name:settings.marketing_from_name||''})
       setLoading(false)
     })
   },[])
@@ -54,7 +55,7 @@ export default function Page() {
   async function saveSendSettings() {
     setSavingSendSettings(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from('integrations').upsert({user_id:user?.id, ...sendSettings}, {onConflict:'user_id'})
+    const {error} = await supabase.from('integrations').upsert({user_id:user?await getAccountId(user):undefined, ...sendSettings}, {onConflict:'user_id'})
     setSavingSendSettings(false)
     if(error){alert(error.message);return}
     setShowSendSettings(false)
@@ -120,7 +121,7 @@ export default function Page() {
       setSavingTemplate(false)
       if (error) { alert(error.message); return }
     } else {
-      const { error } = await supabase.from('marketing_email_templates').insert([{...templateForm, user_id:user?.id, module:MODULE}])
+      const { error } = await supabase.from('marketing_email_templates').insert([{...templateForm, user_id:user?await getAccountId(user):undefined, module:MODULE}])
       setSavingTemplate(false)
       if (error) { alert(error.message); return }
     }
@@ -169,7 +170,7 @@ export default function Page() {
   async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+    const {error} = await supabase.from(table).insert([{...data,user_id:user?await getAccountId(user):undefined,module:MODULE}])
     setSaving(false)
     if(error){alert(error.message);return}
     clearForm(); closeForm(); await loadAll(user!.id)

@@ -39,7 +39,7 @@ const MGMT_FEE = 0.40 // NOVOURQ takes 40%, owner gets 60%
 const STAGING_STEPS = [
   'Property virtually viewed and confirmed',
   'Management agreement signed',
-  'Fees, rent and deposit sent to NOVOURQ Group',
+  'Fees, rent and deposit sent to the property manager',
   'Offer accepted or rejected by landlord',
   'Contract viewed and signed',
   'Rent and deposit sent to broker',
@@ -1344,7 +1344,7 @@ export default function OwnerPortalPage() {
                   return (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     <div style={{ maxWidth: '70%', background: isMine ? '#89CFF0' : '#F3F4F6', color: isMine ? '#fff' : '#323338', borderRadius: 10, padding: '10px 14px', fontSize: 13 }}>
-                      <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'NOVOURQ Group' : (chatOwner?.name ?? 'Owner')}</div>
+                      <div style={{ fontSize: 10, opacity: 0.7, marginBottom: 3, textTransform: 'uppercase' }}>{m.sender === 'staff' ? 'Property manager' : (chatOwner?.name ?? 'Owner')}</div>
                       {parseAttachments(m.attachment_url).length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: m.message ? 8 : 4 }}>
                           {parseAttachments(m.attachment_url).map((url, ai) => (

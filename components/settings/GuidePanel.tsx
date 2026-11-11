@@ -5,7 +5,7 @@ import { useState } from 'react'
 const SECTIONS: { id: string; title: string; steps: string[] }[] = [
   { id: 'start', title: 'Getting started', steps: [
     'Open Settings, then My Account, and check your name and email are right.',
-    'Under Payments, check your plan. Under Team Management, invite the people who will use Novourq with you and choose what each of them can see. Edit a team member to give them modules, then untick any Human Intelligence Hub tab you want locked for them: Novourq Cloud AI, Data Hub, Company Documents, CRM, Landlord Leads, Client Properties, Invoices, Approvals, Announcements, Activity Log and more. Only admins can unlock a tab again.',
+    'Under Payments, check your plan. Under Team Management, invite the people who will use Novourq with you and choose what each of them can see. Edit a team member to give them modules, then untick any Human Intelligence Hub tab you want locked for them: Novourq Cloud AI, Data Hub, Company Documents, CRM, Landlord Leads, Client Properties, Invoices, Approvals, Announcements, Activity Log and more. Only admins can unlock a tab again. Team members work on the company\'s own records everywhere, including Marketing and Company Documents.',
     'Team Management also shows Novourq Cloud AI, the one AI that works for your whole business. It is the same for every account. You see its skills and when it hands over to a person, but you do not add or edit AI staff.',
     'Set up your email branding in Invoice settings: add your company name, logo and contact details. Every email Novourq sends for you uses them, so it looks like it came from your company.',
     'Add your first properties in Real Estate Intelligence. Everything else builds on them.',

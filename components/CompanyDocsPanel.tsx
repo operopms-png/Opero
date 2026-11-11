@@ -53,7 +53,7 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
     const { data } = await supabase
       .from('company_documents')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', await getAccountId(user))
       .eq('category', category)
       .order('created_at', { ascending: false })
     setDocs(data ?? [])
@@ -82,8 +82,8 @@ export default function CompanyDocsPanel({ category }: { category: Category }) {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     const payload = mode === 'text'
-      ? { user_id: user?.id, category, name, url: null, body, notes: notes || null }
-      : { user_id: user?.id, category, name, url, body: null, notes: notes || null }
+      ? { user_id: user ? await getAccountId(user) : undefined, category, name, url: null, body, notes: notes || null }
+      : { user_id: user ? await getAccountId(user) : undefined, category, name, url, body: null, notes: notes || null }
     const { error } = editId
       ? await supabase.from('company_documents').update(payload).eq('id', editId)
       : await supabase.from('company_documents').insert([payload])
