@@ -1,4 +1,6 @@
 'use client'
+import { cur } from '@/lib/company-currency'
+import { usePortalCurrency } from '@/lib/use-portal-currency'
 import LandlordOnboarding from '../../components/landlords/LandlordOnboarding'
 import UtilityTracker from '@/components/pm/UtilityTracker'
 import { useEffect, useState, Suspense } from 'react'
@@ -228,7 +230,7 @@ function PMOwnerPortalInner() {
       <div style={{ padding: 28, maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>{properties.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Your Properties</div></div>
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#059669' }}>£{totalPaid.toLocaleString()}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Total Paid to You</div></div>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#059669' }}>{cur()}{totalPaid.toLocaleString()}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Total Paid to You</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#D97706' }}>{pendingCount}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Pending Payments</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #FEE2E2', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#EF4444' }}>{overdueCount}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Overdue</div></div>
         </div>
@@ -246,7 +248,7 @@ function PMOwnerPortalInner() {
                 <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F2F4F7' }}>
                   <div><div style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{p.pm_properties?.name ?? '—'} · {p.category}</div><div style={{ fontSize: 11, color: '#98A2B3' }}>Due {p.due_date ?? '—'}</div></div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>£{parseFloat(p.amount).toLocaleString()}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{cur()}{parseFloat(p.amount).toLocaleString()}</span>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: s.bg, color: s.color }}>{s.label}</span>
                   </div>
                 </div>
@@ -280,7 +282,7 @@ function PMOwnerPortalInner() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                   <div><label style={lbl}>Property</label><select style={inp} value={payForm.property_id} onChange={e=>setPayForm({...payForm,property_id:e.target.value})}><option value="">Select…</option>{properties.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                   <div><label style={lbl}>Category</label><select style={inp} value={payForm.category} onChange={e=>setPayForm({...payForm,category:e.target.value})}>{['Rent Share','Utility Bill','Maintenance Reimbursement','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div><label style={lbl}>Amount (£)</label><input type="number" style={inp} value={payForm.amount} onChange={e=>setPayForm({...payForm,amount:e.target.value})}/></div>
+                  <div><label style={lbl}>Amount ({cur()})</label><input type="number" style={inp} value={payForm.amount} onChange={e=>setPayForm({...payForm,amount:e.target.value})}/></div>
                   <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={payForm.due_date} onChange={e=>setPayForm({...payForm,due_date:e.target.value})}/></div>
                   <div><label style={lbl}>Paid Date</label><input type="date" style={inp} value={payForm.paid_date} onChange={e=>setPayForm({...payForm,paid_date:e.target.value})}/></div>
                   <div><label style={lbl}>Notes</label><input style={inp} value={payForm.notes} onChange={e=>setPayForm({...payForm,notes:e.target.value})}/></div>
@@ -301,7 +303,7 @@ function PMOwnerPortalInner() {
                   <div key={p.id} style={{ display: 'grid', gridTemplateColumns: isStaffView ? '1fr 120px 100px 100px 100px 130px 80px 30px' : '1fr 120px 100px 100px 100px 130px 80px', padding: '13px 20px', borderBottom: '1px solid #F2F4F7', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 13, color: '#323338' }}>{p.pm_properties?.name ?? '—'}</span>
                     <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: '#F2F4F7', color: '#344054' }}>{p.category}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>£{parseFloat(p.amount).toLocaleString()}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{cur()}{parseFloat(p.amount).toLocaleString()}</span>
                     <span style={{ fontSize: 12, color: '#667085' }}>{p.due_date ?? '—'}</span>
                     {isStaffView ? (
                       <input type="date" defaultValue={p.paid_date ?? ''} onBlur={e => { if (e.target.value !== (p.paid_date ?? '')) updatePaymentStatus(p.id, e.target.value) }} style={{ fontSize: 12, padding: '4px 6px', border: '1px solid #E4E7EC', borderRadius: 6, fontFamily: 'inherit' }} />
@@ -415,6 +417,7 @@ function PMOwnerPortalInner() {
 }
 
 export default function PMOwnerPortal() {
+  usePortalCurrency()
   return (
     <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>}>
       <PMOwnerPortalInner />

@@ -1,4 +1,6 @@
 'use client'
+import { cur } from '@/lib/company-currency'
+import { usePortalCurrency } from '@/lib/use-portal-currency'
 import TenancyPack from '@/components/portal/TenancyPack'
 import PortalDocuments from '@/components/portal/PortalDocuments'
 import { useEffect, useState, Suspense } from 'react'
@@ -293,7 +295,7 @@ function EstateTenantPortalInner() {
               </div>
               <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: 16 }}>
                 <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase' }}>Monthly Rent</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#323338', marginTop: 4 }}>£{(tenancy?.rent ?? 0).toLocaleString()}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: '#323338', marginTop: 4 }}>{cur()}{(tenancy?.rent ?? 0).toLocaleString()}</div>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
@@ -326,7 +328,7 @@ function EstateTenantPortalInner() {
                       <option value="Rent">Rent</option><option value="Utilities">Utilities</option><option value="Other">Other</option>
                     </select>
                   </div>
-                  <div><label style={lbl}>Amount (£) *</label><input type="number" style={inp} value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="e.g. 950" /></div>
+                  <div><label style={lbl}>Amount ({cur()}) *</label><input type="number" style={inp} value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="e.g. 950" /></div>
                 </div>
                 <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                   <button onClick={() => setShowMakePayment(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
@@ -343,7 +345,7 @@ function EstateTenantPortalInner() {
             schedules.map(s => (
               <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 100px', padding: '14px 20px', borderBottom: '1px solid #F2F4F7', fontSize: 13, color: '#344054', alignItems: 'center' }}>
                 <span>{s.frequency ?? 'Monthly'}</span>
-                <span>£{(s.amount ?? 0).toLocaleString()}</span>
+                <span>{cur()}{(s.amount ?? 0).toLocaleString()}</span>
                 <span>{s.due_day ? `Day ${s.due_day}` : '—'}</span>
                 <span style={{ textTransform: 'capitalize' }}>{(s.method ?? '').replace('_', ' ')}</span>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: s.status === 'Paid' ? '#D1FAE5' : s.status === 'Overdue' ? '#FEE2E2' : '#FEF3C7', color: s.status === 'Paid' ? '#059669' : s.status === 'Overdue' ? '#DC2626' : '#D97706', width: 'fit-content' }}>{s.status}</span>
@@ -539,6 +541,7 @@ function EstateTenantPortalInner() {
 }
 
 export default function EstateTenantPortal() {
+  usePortalCurrency()
   return (
     <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#98A2B3' }}>Loading...</div>}>
       <EstateTenantPortalInner />

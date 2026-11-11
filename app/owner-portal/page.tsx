@@ -1,6 +1,8 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
+import { cur } from '@/lib/company-currency'
+import { usePortalCurrency } from '@/lib/use-portal-currency'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, RadialBarChart, RadialBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts'
@@ -79,6 +81,7 @@ function Badge({ status }: { status: string }) {
 }
 
 export default function OwnerPortalPage() {
+  usePortalCurrency()
   const [tab, setTab] = useState('Dashboard')
   const [user, setUser] = useState<any>(null)
   const [ownerProfile, setOwnerProfile] = useState<any>(null)
@@ -505,7 +508,7 @@ export default function OwnerPortalPage() {
   async function editStatementField(id: string, field: string, value: any) {
     if (field === 'owner_amount') {
       const numericAmount = Number(value)
-      if (isNaN(numericAmount) || numericAmount <= 0) { alert('Enter a valid amount greater than £0'); return }
+      if (isNaN(numericAmount) || numericAmount <= 0) { alert('Enter a valid amount greater than ' + cur() + '0'); return }
       value = numericAmount
     }
     const { error } = await supabase.from('owner_statements').update({ [field]: value }).eq('id', id)
@@ -523,7 +526,7 @@ export default function OwnerPortalPage() {
   async function addPayment() {
     if (!addPaymentOwner) return
     if (!paymentForm.amount || isNaN(Number(paymentForm.amount)) || Number(paymentForm.amount) <= 0) {
-      alert('Enter a valid amount greater than £0'); return
+      alert('Enter a valid amount greater than ' + cur() + '0'); return
     }
     setSaving(true)
     const res = await fetch('/api/admin/add-payment', {
@@ -677,7 +680,7 @@ export default function OwnerPortalPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
               <div style={card}>
                 <div style={{ fontSize: 13, color: '#323338', marginBottom: 8 }}>Revenue</div>
-                <div style={{ fontSize: 28, fontWeight: 800 }}>£{totalRevenue.toLocaleString()}</div>
+                <div style={{ fontSize: 28, fontWeight: 800 }}>{cur()}{totalRevenue.toLocaleString()}</div>
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 4 }}>{bookedNights} Nights</div>
                 <ResponsiveContainer width="100%" height={70}>
                   <AreaChart data={chartData}>
@@ -724,7 +727,7 @@ export default function OwnerPortalPage() {
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F7" />
                     <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={v => `£${v}`} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={v => `${cur()}${v}`} />
                     <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} domain={[0, 100]} />
                     <Tooltip />
                     <Legend />
@@ -779,7 +782,7 @@ export default function OwnerPortalPage() {
                   : recentFinance.map((f, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F2F4F7', fontSize: 13 }}>
                       <span>{f.label}</span>
-                      <span style={{ fontWeight: 700, color: (f.amount ?? 0) < 0 ? '#DC2626' : '#10B981' }}>{(f.amount ?? 0) < 0 ? '−' : '+'}£{Math.abs(Number(f.amount) || 0).toLocaleString()}</span>
+                      <span style={{ fontWeight: 700, color: (f.amount ?? 0) < 0 ? '#DC2626' : '#10B981' }}>{(f.amount ?? 0) < 0 ? '−' : '+'}{cur()}{Math.abs(Number(f.amount) || 0).toLocaleString()}</span>
                     </div>
                   ))}
               </div>
@@ -799,7 +802,7 @@ export default function OwnerPortalPage() {
               <StatCard label="This Month" value={monthBookings.length} />
               <StatCard label="Confirmed" value={activeBookings.filter(b => b.status === 'confirmed').length} />
               <StatCard label="Pending" value={bookings.filter(b => b.status === 'pending').length} />
-              <StatCard label="Revenue" value={`£${totalRevenue.toLocaleString()}`} dark />
+              <StatCard label="Revenue" value={`${cur()}${totalRevenue.toLocaleString()}`} dark />
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead><tr>{['Guest', 'Property', ...(isStaff && !viewingOwner ? ['Owner'] : []), 'Check-in', 'Check-out', 'Nights', 'Revenue', 'Platform', 'Status'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
@@ -846,7 +849,7 @@ export default function OwnerPortalPage() {
                                 onBlur={e => { if (Number(e.target.value || 0) !== (Number(b.total_amount) || 0)) updateBookingRevenue(b.id, e.target.value) }}
                                 style={{ width: 80, padding: '4px 6px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13, color: '#10B981', fontWeight: 600 }}
                               />
-                            : `£${(Number(b.total_amount) || 0).toLocaleString()}`
+                            : `${cur()}${(Number(b.total_amount) || 0).toLocaleString()}`
                           }
                         </td>
                         <td style={{ ...td, color: '#667085' }}>{b.platform ?? 'Direct'}</td>
@@ -910,7 +913,7 @@ export default function OwnerPortalPage() {
               <StatCard label="Open" value={tickets.filter(t => t.status === 'open').length} />
               <StatCard label="In Progress" value={tickets.filter(t => t.status === 'in_progress').length} />
               <StatCard label="Resolved" value={tickets.filter(t => t.status === 'resolved').length} />
-              <StatCard label="Total Cost" value={`£${tickets.reduce((s, t) => s + (Number(t.cost) || 0), 0).toLocaleString()}`} dark />
+              <StatCard label="Total Cost" value={`${cur()}${tickets.reduce((s, t) => s + (Number(t.cost) || 0), 0).toLocaleString()}`} dark />
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead><tr>{['Property', 'Issue', 'Category', 'Priority', 'Status', 'Cost', 'Date', 'Media'].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
@@ -930,7 +933,7 @@ export default function OwnerPortalPage() {
                           </select>
                         : <Badge status={t.status ?? 'open'} />
                       }</td>
-                      <td style={td}>{t.cost ? `£${t.cost}` : '—'}</td>
+                      <td style={td}>{t.cost ? `${cur()}${t.cost}` : '—'}</td>
                       <td style={{ ...td, color: '#667085' }}>{t.created_at?.slice(0, 10) ?? '—'}</td>
                       <td style={td}>
                         {parseAttachments(t.attachment_url).length > 0 ? (
@@ -994,7 +997,7 @@ export default function OwnerPortalPage() {
                 <div key={period} style={{ marginBottom: 24 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 700, color: '#323338', marginBottom: 8, padding: '8px 0', borderBottom: '1px solid #EAECF0' }}>
                     <span>{new Date(period + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span>
-                    <span style={{ color: '#10B981' }}>£{stmts.reduce((s: number, r: any) => s + (Number(r.owner_amount) || 0), 0).toLocaleString()}</span>
+                    <span style={{ color: '#10B981' }}>{cur()}{stmts.reduce((s: number, r: any) => s + (Number(r.owner_amount) || 0), 0).toLocaleString()}</span>
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                     <thead><tr>{['Owner', 'Date', 'Description', 'Property', 'Amount', 'Status', ...(isStaff ? [''] : [])].map(h => <th key={h} style={th}>{h}</th>)}</tr></thead>
@@ -1023,7 +1026,7 @@ export default function OwnerPortalPage() {
                           <td style={{ ...td, fontWeight: 600 }}>
                             {isStaff
                               ? <input type="number" step="0.01" min="0" defaultValue={s.owner_amount ?? 0} onBlur={e => { if (Number(e.target.value) !== Number(s.owner_amount)) editStatementField(s.id, 'owner_amount', e.target.value) }} style={{ width: 90, padding: '4px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13, fontWeight: 600 }} />
-                              : `£${(Number(s.owner_amount) || 0).toLocaleString()}`
+                              : `${cur()}${(Number(s.owner_amount) || 0).toLocaleString()}`
                             }
                           </td>
                           <td style={td}>
@@ -1093,8 +1096,8 @@ export default function OwnerPortalPage() {
                           style={{ width: 90, padding: '5px 8px', border: '1px solid #EAECF0', borderRadius: 6, fontSize: 13 }}
                         />
                       </div>
-                      <div style={{ padding: '12px 16px' }}>£{ownerRevenue.toLocaleString()}</div>
-                      <div style={{ padding: '12px 16px' }}>£{ownerShareAmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                      <div style={{ padding: '12px 16px' }}>{cur()}{ownerRevenue.toLocaleString()}</div>
+                      <div style={{ padding: '12px 16px' }}>{cur()}{ownerShareAmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                       <div style={{ padding: '12px 16px', fontWeight: 700, color: '#89CFF0' }}>{ownerRoi}%</div>
                       <div style={{ padding: '12px 16px' }}>{ownerOccupancy}%</div>
                     </div>
@@ -1114,9 +1117,9 @@ export default function OwnerPortalPage() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
                   {[
-                    { label: 'Invested', value: `£${Number(invested).toLocaleString()}` },
-                    { label: 'Total Revenue', value: `£${totalRevenue.toLocaleString()}` },
-                    { label: 'Net Profit', value: `£${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
+                    { label: 'Invested', value: `${cur()}${Number(invested).toLocaleString()}` },
+                    { label: 'Total Revenue', value: `${cur()}${totalRevenue.toLocaleString()}` },
+                    { label: 'Net Profit', value: `${cur()}${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
                     { label: 'ROI', value: `${roi}%` },
                   ].map(s => (
                     <div key={s.label} style={{ padding: '16px 20px', borderRight: '1px solid #EAECF0' }}>
@@ -1155,8 +1158,8 @@ export default function OwnerPortalPage() {
                     </div>
                     <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>{p.address ?? p.location ?? 'Jamaica'}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Purchase:</span><span style={{ fontWeight: 600 }}>£{(Number(p.purchase_price) || 0).toLocaleString()}</span></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Down payment:</span><span style={{ fontWeight: 600 }}>£{(Number(p.down_payment) || 0).toLocaleString()}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Purchase:</span><span style={{ fontWeight: 600 }}>{cur()}{(Number(p.purchase_price) || 0).toLocaleString()}</span></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Down payment:</span><span style={{ fontWeight: 600 }}>{cur()}{(Number(p.down_payment) || 0).toLocaleString()}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Platform:</span><span style={{ fontWeight: 600 }}>{p.platform ?? 'Wire Transfer'}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Status:</span><Badge status={p.status ?? 'active'} /></div>
                       {isStaff && (
@@ -1205,36 +1208,36 @@ export default function OwnerPortalPage() {
               {isStaff && viewingOwner && <button onClick={() => setAddFinanceOwner(viewingOwner)} style={{ padding: '6px 14px', border: 'none', borderRadius: 6, background: '#89CFF0', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>+ Add Record</button>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-              <StatCard label="Paid Out" value={`£${paidOut.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
-              <StatCard label="Guest Revenue" value={`£${totalRevenue.toLocaleString()}`} />
-              <StatCard label="Expenses" value={`£${expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
-              <StatCard label="Net This Month" value={`£${monthRevenue.toLocaleString()}`} dark />
+              <StatCard label="Paid Out" value={`${cur()}${paidOut.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+              <StatCard label="Guest Revenue" value={`${cur()}${totalRevenue.toLocaleString()}`} />
+              <StatCard label="Expenses" value={`${cur()}${expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+              <StatCard label="Net This Month" value={`${cur()}${monthRevenue.toLocaleString()}`} dark />
             </div>
             <div style={{ ...card, marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Profit Split — After All Expenses</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>
                 <div style={{ background: '#F9FAFB', borderRadius: 8, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>GROSS REVENUE</div>
-                  <div style={{ fontSize: 20, fontWeight: 700 }}>£{totalRevenue.toLocaleString()}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>{cur()}{totalRevenue.toLocaleString()}</div>
                 </div>
                 <div style={{ background: '#F9FAFB', borderRadius: 8, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>TOTAL EXPENSES</div>
-                  <div style={{ fontSize: 20, fontWeight: 700 }}>£{expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>{cur()}{expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                 </div>
                 <div style={{ background: '#F9FAFB', borderRadius: 8, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>NET PROFIT</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: netProfit >= 0 ? '#10B981' : '#EF4444' }}>£{netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: netProfit >= 0 ? '#10B981' : '#EF4444' }}>{cur()}{netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={{ border: '1px solid #E4E7EC', borderRadius: 8, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>OWNER SHARE (60%)</div>
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>£{ownerShare.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700 }}>{cur()}{ownerShare.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                   <div style={{ fontSize: 12, color: '#667085' }}>{ownerProfile?.name ?? 'Owner'}</div>
                 </div>
                 <div style={{ border: '1px solid #E4E7EC', borderRadius: 8, padding: 16, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>MANAGEMENT FEE (40%)</div>
-                  <div style={{ fontSize: 22, fontWeight: 700 }}>£{(totalRevenue * MGMT_FEE).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700 }}>{cur()}{(totalRevenue * MGMT_FEE).toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                   <div style={{ fontSize: 12, color: '#667085' }}>Management Fee</div>
                 </div>
               </div>
@@ -1246,7 +1249,7 @@ export default function OwnerPortalPage() {
                 <div key={month} style={{ marginBottom: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, color: '#323338', padding: '10px 0', borderBottom: '1px solid #EAECF0', marginBottom: 8 }}>
                     <span>{new Date(month + '-01').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</span>
-                    <span style={{ fontSize: 12, color: '#667085' }}>+£{mRev.toLocaleString()} -£{mExp.toLocaleString()} Net: £{(mRev - mExp).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    <span style={{ fontSize: 12, color: '#667085' }}>+{cur()}{mRev.toLocaleString()} -{cur()}{mExp.toLocaleString()} Net: {cur()}{(mRev - mExp).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                   </div>
                   {records.map((r: any, i: number) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F9FAFB', fontSize: 13 }}>
@@ -1255,7 +1258,7 @@ export default function OwnerPortalPage() {
                         <div style={{ fontSize: 11, color: '#667085' }}>{r.property} · {(r.created_at ?? r.check_in ?? '').slice(0, 10)}</div>
                       </div>
                       <span style={{ fontWeight: 700, color: r.amount > 0 ? '#10B981' : '#EF4444' }}>
-                        {r.amount > 0 ? '+' : '-'}£{Math.abs(r.amount).toLocaleString()}
+                        {r.amount > 0 ? '+' : '-'}{cur()}{Math.abs(r.amount).toLocaleString()}
                       </span>
                     </div>
                   ))}
@@ -1456,7 +1459,7 @@ export default function OwnerPortalPage() {
                         <td style={td}>{s.period_start}</td>
                         <td style={td}>{s.notes ?? 'Monthly payout'}</td>
                         <td style={td}>{s.property_name ?? '—'}</td>
-                        <td style={{ ...td, fontWeight: 600, color: '#10B981' }}>£{(Number(s.owner_amount) || 0).toLocaleString()}</td>
+                        <td style={{ ...td, fontWeight: 600, color: '#10B981' }}>{cur()}{(Number(s.owner_amount) || 0).toLocaleString()}</td>
                         <td style={td}><Badge status="paid" /></td>
                       </tr>
                     ))
@@ -1475,10 +1478,10 @@ export default function OwnerPortalPage() {
               {[
                 { label: 'ACTIVE OWNERS', value: allOwners.length },
                 { label: 'TOTAL PROPERTIES', value: properties.length },
-                { label: 'TOTAL REVENUE', value: `£${totalRevenue.toLocaleString()}` },
+                { label: 'TOTAL REVENUE', value: `${cur()}${totalRevenue.toLocaleString()}` },
                 { label: 'OPEN MAINTENANCE', value: tickets.filter(t => t.status === 'open').length },
                 { label: 'TOTAL BOOKINGS', value: activeBookings.length },
-                { label: 'TOTAL PAID OUT', value: `£${allStatements.filter((s: any) => s.status === 'paid').reduce((sum: number, s: any) => sum + (Number(s.owner_amount) || 0), 0).toLocaleString()}` },
+                { label: 'TOTAL PAID OUT', value: `${cur()}${allStatements.filter((s: any) => s.status === 'paid').reduce((sum: number, s: any) => sum + (Number(s.owner_amount) || 0), 0).toLocaleString()}` },
               ].map(s => (
                 <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 8, padding: '12px 14px', textAlign: 'center' }}>
                   <div style={{ fontSize: 10, color: '#667085', textTransform: 'uppercase', fontWeight: 600, marginBottom: 6 }}>{s.label}</div>
@@ -1509,8 +1512,8 @@ export default function OwnerPortalPage() {
                   </div>
                 </div>
                 <div style={{ padding: '12px 20px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Revenue</div><div style={{ fontWeight: 600 }}>£{ownerRevenue.toLocaleString()}</div></div>
-                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Paid Out</div><div style={{ fontWeight: 600 }}>£{ownerPaidOut.toLocaleString()}</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Revenue</div><div style={{ fontWeight: 600 }}>{cur()}{ownerRevenue.toLocaleString()}</div></div>
+                  <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Paid Out</div><div style={{ fontWeight: 600 }}>{cur()}{ownerPaidOut.toLocaleString()}</div></div>
                   <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>ROI</div><div style={{ fontWeight: 600 }}>{ownerRoi}%</div></div>
                   <div><div style={{ fontSize: 11, color: '#667085', marginBottom: 4 }}>Properties</div><div style={{ fontWeight: 600 }}>{(owner.property_ids ?? []).length}</div></div>
                 </div>
@@ -1582,7 +1585,7 @@ export default function OwnerPortalPage() {
               {[
                 { label: 'First Name', key: 'first_name' }, { label: 'Last Name', key: 'last_name' },
                 { label: 'Email', key: 'email' }, { label: 'Phone', key: 'phone' },
-                { label: 'Amount Invested (£)', key: 'invested' }, { label: 'Owner Split %', key: 'split_percentage' },
+                { label: 'Amount Invested ({cur()})', key: 'invested' }, { label: 'Owner Split %', key: 'split_percentage' },
               ].map(f => (
                 <div key={f.key}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>{f.label}</div>
@@ -1634,11 +1637,11 @@ export default function OwnerPortalPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Purchase Price (£)</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Purchase Price ({cur()})</div>
                   <input value={editPropertyForm.purchase_price ?? ''} onChange={e => setEditPropertyForm((p: any) => ({ ...p, purchase_price: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Down Payment (£)</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Down Payment ({cur()})</div>
                   <input value={editPropertyForm.down_payment ?? ''} onChange={e => setEditPropertyForm((p: any) => ({ ...p, down_payment: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
               </div>
@@ -1700,7 +1703,7 @@ export default function OwnerPortalPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Revenue (£)</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Revenue ({cur()})</div>
                   <input value={newBookingForm.total_amount} onChange={e => setNewBookingForm((p: any) => ({ ...p, total_amount: e.target.value }))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
                 </div>
                 <div>
@@ -1828,7 +1831,7 @@ export default function OwnerPortalPage() {
                 </div>
               ))}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Amount (£)</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#667085', marginBottom: 5, textTransform: 'uppercase' }}>Amount ({cur()})</div>
                 <input type="number" step="0.01" min="0" value={paymentForm.amount} onChange={e => setPaymentForm(p => ({ ...p, amount: e.target.value }))} placeholder="0.00" style={{ width: '100%', padding: '9px 12px', border: '1px solid #EAECF0', borderRadius: 8, fontSize: 13, boxSizing: 'border-box' }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1869,7 +1872,7 @@ export default function OwnerPortalPage() {
                 </select>
               </div>
               {[
-                { label: 'Amount (£)', key: 'amount', placeholder: '0.00' },
+                { label: 'Amount ({cur()})', key: 'amount', placeholder: '0.00' },
                 { label: 'Description', key: 'description', placeholder: 'Utility bill payment' },
                 { label: 'Category', key: 'category', placeholder: 'Utilities / Maintenance / Rent' },
               ].map(f => (

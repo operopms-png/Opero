@@ -1,4 +1,6 @@
 'use client'
+import { cur } from '@/lib/company-currency'
+import { usePortalCurrency } from '@/lib/use-portal-currency'
 import PortalDocuments from '@/components/portal/PortalDocuments'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -187,7 +189,7 @@ function EstateOwnerPortalInner() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>{properties.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Your Properties</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#059669' }}>{activeTenancies.length}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Active Tenancies</div></div>
-          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>£{monthlyRentTotal.toLocaleString()}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Monthly Rent (active)</div></div>
+          <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: '#323338' }}>{cur()}{monthlyRentTotal.toLocaleString()}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Monthly Rent (active)</div></div>
           <div style={{ background: '#fff', borderRadius: 12, border: expiringDocs ? '1px solid #FEE2E2' : '1px solid #E4E7EC', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 24, fontWeight: 700, color: expiringDocs ? '#EF4444' : '#323338' }}>{expiringDocs}</div><div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Documents Expired</div></div>
         </div>
 
@@ -198,7 +200,7 @@ function EstateOwnerPortalInner() {
               <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F2F4F7' }}>
                 <div><div style={{ fontSize: 13, fontWeight: 500, color: '#323338' }}>{t.estate_properties?.name ?? '—'} · {t.estate_tenants?.name ?? '—'}</div><div style={{ fontSize: 11, color: '#98A2B3' }}>{t.start_date ?? '—'} → {t.end_date ?? '—'}</div></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>£{parseFloat(t.rent||0).toLocaleString()}/mo</span>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{cur()}{parseFloat(t.rent||0).toLocaleString()}/mo</span>
                   <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: t.status==='Active'?'#D1FAE5':'#F3F4F6', color: t.status==='Active'?'#059669':'#6B7280' }}>{t.status}</span>
                 </div>
               </div>
@@ -230,7 +232,7 @@ function EstateOwnerPortalInner() {
                 <span style={{ fontSize: 13, color: '#344054' }}>{t.estate_tenants?.name ?? '—'}</span>
                 <span style={{ fontSize: 12, color: '#667085' }}>{t.start_date ?? '—'}</span>
                 <span style={{ fontSize: 12, color: '#667085' }}>{t.end_date ?? '—'}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: ACCENT }}>{t.rent ? '£'+t.rent : '—'}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: ACCENT }}>{t.rent ? cur()+t.rent : '—'}</span>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 4, background: t.status==='Active'?'#ECFDF5':'#FEE2E2', color: t.status==='Active'?'#10B981':'#EF4444', display: 'inline-block' }}>{t.status}</span>
               </div>
             ))}
@@ -299,6 +301,7 @@ function EstateOwnerPortalInner() {
 }
 
 export default function EstateOwnerPortal() {
+  usePortalCurrency()
   return (
     <Suspense fallback={<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:'#98A2B3'}}>Loading...</div>}>
       <EstateOwnerPortalInner />
