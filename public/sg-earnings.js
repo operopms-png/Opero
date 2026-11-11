@@ -13,7 +13,9 @@
   var SRC = (document.currentScript && document.currentScript.src) || 'https://app.sangstersgroup.com/sg-earnings.js'
   var APP = SRC.replace(/\/sg-earnings\.js.*$/, '')
   var API = APP + '/api/public/earnings-estimate'
-  var MEET = 'https://app.sangstersgroup.com/meeting'
+  // Each company has its own code: <script data-code="..."> on a website, or ?code=... on the /earnings page
+  var CODE = (document.currentScript && document.currentScript.getAttribute('data-code')) || (function () { try { return new URLSearchParams(location.search).get('code') || '' } catch (e) { return '' } })()
+  var MEET = APP + '/meeting' + (CODE ? '?code=' + encodeURIComponent(CODE) : '')
   var INK = '#191815', GOLD = '#89CFF0', GOLD2 = '#89CFF0', MUTED = '#6b675e', LINE = '#e3ded2', SOFT = '#f7f4ee'
   var SYM = { USD: '$', JMD: 'J$', GBP: '£' }
   var CUR = { 'Jamaica': 'USD', 'United Kingdom': 'GBP', 'UAE': 'USD' }
@@ -195,7 +197,7 @@
     var body = {
       name: d.name, email: d.email, phone: d.phone, location: d.location, country: d.country === 'UAE' ? 'United Arab Emirates' : d.country,
       bedrooms: d.bedrooms, property_type: d.rent_type === 'Private room' ? 'Private room' : '', goal: d.goal, rent_type: d.rent_type, start_when: d.start_when,
-      marketing_opt_in: d.marketing === 'yes', consent: true, currency: cur, website: hp || '',
+      code: CODE, marketing_opt_in: d.marketing === 'yes', consent: true, currency: cur, website: hp || '',
       source: ((document.title || location.hostname).slice(0, 60) + (location.search ? ' ' + location.search.slice(0, 120) : '')),
     }
     fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })

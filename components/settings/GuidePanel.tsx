@@ -35,6 +35,11 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'Meetings: open Staff Centre, Schedule, Meetings. The Client booking link at the top is your own company\'s link. Share it by email, website or WhatsApp. When someone sends a request it appears under New request, you get a bell notification and an email, they are added to your CRM, and they receive a confirmation with your company name. Each company\'s link only reaches that company.',
     'Tax Compliance (admins only): open Staff Centre, Tax Compliance, then your company\'s tab and press Edit details to change the company name, currency, registration status, company number and tax note. You can also add bank accounts, tax headings and transfers. Nothing is filed or paid from here.',
   ] },
+  { id: 'earnings-checker', title: 'Landlord earnings checker', steps: [
+    'Open Staff Centre, Landlord Leads, then Link & embed code. The link is your own company\'s earnings checker. Use it in ads, letters and with realtors, or paste the embed code into your website.',
+    'A landlord enters their property details and gets an estimate by email, signed with your company name. The lead appears in Landlord Leads and your CRM and you get an alert. Their book-a-call button opens your own meeting link.',
+    'Add ?src=facebook (or similar) to the link to see where each lead came from.',
+  ] },
   { id: 'company-name', title: 'Your company name', steps: [
     'Set your company name in Invoice settings first. Text templates, marketing emails, signing links and documents all use it. If it is empty they say Property Management Team.',
   ] },

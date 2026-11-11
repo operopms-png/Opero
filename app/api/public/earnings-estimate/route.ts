@@ -21,14 +21,24 @@ export const maxDuration = 60
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }
 const clean = (v: any, n = 200) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n)
 const esc = (t: string) => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
-const MEET = 'https://app.sangstersgroup.com/meeting'
+import { SITE_URL } from '@/lib/brand'
 
 export async function OPTIONS() { return new NextResponse(null, { status: 204, headers: CORS }) }
 
 export async function POST(req: NextRequest) {
   const b = await req.json().catch(() => ({}))
   if (b.website) return NextResponse.json({ ok: true, estimate: null }, { headers: CORS })
-  const biz = LISTINGS_BUSINESS_ID
+  // Each company's checker sends its code; no code keeps the original Sangsters link working
+  let biz = LISTINGS_BUSINESS_ID
+  const code = clean(b.code, 40)
+  if (code) {
+    const { data: pg } = await serviceClient.from('meeting_booking_pages').select('business_id').eq('code', code).eq('enabled', true).maybeSingle()
+    if (!pg) return NextResponse.json({ error: 'This link is not available.' }, { status: 404, headers: CORS })
+    biz = pg.business_id as string
+  }
+  const MEET = `${SITE_URL}/meeting${code ? `?code=${encodeURIComponent(code)}` : ''}`
+  const { data: cs } = await serviceClient.from('invoice_settings').select('company_name').eq('business_id', biz).maybeSingle()
+  const company = (cs?.company_name as string | undefined)?.trim() || 'our team'
   const name = clean(b.name, 120), email = clean(b.email, 200).toLowerCase(), phone = clean(b.phone, 40)
   const location = clean(b.location, 160), country = clean(b.country, 60) || 'Jamaica'
   const currency = (['USD', 'JMD', 'GBP'].includes(b.currency) ? b.currency : 'USD') as 'USD' | 'JMD' | 'GBP'
@@ -84,7 +94,7 @@ export async function POST(req: NextRequest) {
       try { estimate = await runEstimate({ location, country, propertyType: row.property_type, bedrooms, bathrooms, furnished: row.furnished, currency }) } catch {}
       const okEst = estimate && (estimate.short_let?.monthly_typical || estimate.long_let?.monthly_typical)
       await serviceClient.from('landlord_estimates').update(okEst ? { estimate, updated_at: new Date().toISOString() } : { estimate_error: 'No market data came back', updated_at: new Date().toISOString() }).eq('id', saved.id)
-      if (okEst) await sendEmail(email, 'Your property earnings estimate', estimateEmail(name, propLine, estimate!), alertTo).catch(() => {})
+      if (okEst) await sendEmail(email, 'Your property earnings estimate', estimateEmail(name, propLine, estimate!, MEET, company), alertTo).catch(() => {})
       clearInterval(tick)
       ctl.enqueue(enc.encode(JSON.stringify({ ok: true, estimate: okEst ? estimate : null, meetUrl: MEET })))
       ctl.close()
@@ -93,7 +103,7 @@ export async function POST(req: NextRequest) {
   return new Response(stream, { headers: { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' } })
 }
 
-function estimateEmail(name: string, propLine: string, e: Estimate) {
+function estimateEmail(name: string, propLine: string, e: Estimate, MEET: string, company: string) {
   const c = e.currency
   const row = (label: string, main: string, sub: string) => `<tr><td style="padding:14px 16px;border-bottom:1px solid #ece8df"><div style="font-size:12px;color:#6b675e;text-transform:uppercase;letter-spacing:.06em">${label}</div><div style="font-size:24px;font-weight:700;color:#191815;margin-top:2px">${main}</div><div style="font-size:12.5px;color:#6b675e">${sub}</div></td></tr>`
   const s = e.short_let, l = e.long_let
@@ -106,5 +116,5 @@ ${l?.monthly_typical ? row('As a long-term let (per month)', money(l.monthly_typ
 </table>
 <p style="font-size:12px;color:#8a857a">These are estimates from current listings, before management fees and running costs. A free valuation gives you a firm figure.</p>
 <p><a href="${MEET}" style="display:inline-block;background:#191815;color:#fff;text-decoration:none;padding:12px 20px;border-radius:4px;font-weight:700">Book a free valuation call</a></p>
-<p>Kind regards,<br>The NOVOURQ team</p></div>`
+<p>Kind regards,<br>${esc(company)}</p></div>`
 }

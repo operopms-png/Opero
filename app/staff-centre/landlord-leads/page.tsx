@@ -14,8 +14,6 @@ const STATUS: Record<string, { l: string; c: string }> = {
 const ORDER = ['new', 'contacted', 'valuation', 'meeting', 'signed', 'lost']
 const SYM: Record<string, string> = { USD: '$', JMD: 'J$', GBP: '£' }
 const money = (n: any, c: string) => n == null ? '—' : (SYM[c] || '') + Math.round(Number(n)).toLocaleString('en-GB')
-const LINK = 'https://app.sangstersgroup.com/earnings'
-const EMBED = '<div data-sg-earnings></div>\n<script src="https://app.sangstersgroup.com/sg-earnings.js" defer></script>'
 
 async function api(body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -26,6 +24,12 @@ async function api(body?: any) {
 }
 
 export default function LandlordLeads() {
+  // Your own company's checker: link and website code carry your company code, so leads reach you
+  const [code, setCode] = useState('')
+  useEffect(() => { (async () => { const { data: { session } } = await supabase.auth.getSession(); const r = await fetch('/api/meeting-link', { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } }); const d = await r.json().catch(() => ({})); if (d.code) setCode(d.code) })() }, [])
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const LINK = `${origin}/earnings${code ? `?code=${code}` : ''}`
+  const EMBED = `<div data-sg-earnings></div>\n<script src="${origin}/sg-earnings.js"${code ? ` data-code="${code}"` : ''} defer></script>`
   const [leads, setLeads] = useState<any[] | null>(null)
   const [tab, setTab] = useState('all')
   const [q, setQ] = useState('')

@@ -13,6 +13,7 @@ const HUB = 'Human Intelligence Hub'
 const RE = 'Real Estate Intelligence'
 
 export const STEPS: Record<string, string[]> = {
+  '/staff-centre/landlord-leads': ['Open Landlord Leads and press Link & embed code.', 'Copy your own checker link for ads and letters, or the embed code for your website.', 'New landlords appear here and in your CRM. Move each one along as you contact them and book a valuation.'],
   '/staff-centre/meetings': ['Open Schedule, then Meetings.', 'Copy the Client booking link at the top. It is your own company\'s link, so share it by email, website or WhatsApp.', 'Requests appear under New request. Open one, contact the person and move it along as you book a time.', 'You get a bell notification and an email for each request, and the person is added to your CRM.'],
   '/staff-centre/tax-compliance': ['Open Tax Compliance (admins only) and choose your company\'s tab.', 'Press Edit details to set the company name, currency, registration status, company number and tax note.', 'Add bank accounts, and record transfers between companies if you have more than one.', 'Nothing is filed or paid from here. It keeps your obligations and an audit trail.'],
   're:str:Bookings': ['Open Real Estate Intelligence, choose Short Stays, then the Bookings tab.', 'Use the search box or the date filter to find a stay.', 'Press a booking to see the guest, dates and payments.', 'Press Message to write to the guest. Novourq Cloud AI drafts the reply and you approve it before it sends.'],
