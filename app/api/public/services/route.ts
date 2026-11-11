@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const [s, { data: docs }] = await Promise.all([docSettings(l.business_id), db.from('service_docs').select('id,title,description,url,sort,fillable').eq('business_id', l.business_id).eq('active', true).in('id', l.doc_ids).order('sort')])
   await db.from('service_links').update({ opens: (l.opens || 0) + 1, last_opened_at: new Date().toISOString() }).eq('id', l.id)
   await db.from('service_views').insert({ link_id: l.id })
-  return NextResponse.json({ name: l.name, company: s.company_name, logo: s.logo_url, docs: (docs ?? []).map(({ sort, ...d }: any) => d) })
+  return NextResponse.json({ name: l.name, property: l.property_label || null, company: s.company_name, logo: s.logo_url, docs: (docs ?? []).map(({ sort, ...d }: any) => d) })
 }
 
 export async function POST(req: NextRequest) {

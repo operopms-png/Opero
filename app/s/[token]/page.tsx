@@ -23,7 +23,7 @@ export default function ServicesPage() {
     <div style={{ minHeight: '100vh', background: '#F3F6FB', fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif', color: '#18223a' }}>
       <div style={{ background: NAVY, color: '#fff', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 14 }}>
         {d.logo && /* eslint-disable-next-line @next/next/no-img-element */ <img src={d.logo} alt="" style={{ height: 40, maxWidth: 120, objectFit: 'contain' }} />}
-        <div><div style={{ fontSize: 11, letterSpacing: '.18em', color: '#9FB3DD' }}>{String(d.company || '').toUpperCase()}</div><div style={{ fontSize: 21, fontWeight: 600 }}>{d.name}</div></div>
+        <div><div style={{ fontSize: 11, letterSpacing: '.18em', color: '#9FB3DD' }}>{String(d.company || '').toUpperCase()}</div><div style={{ fontSize: 21, fontWeight: 600 }}>{d.name}</div>{d.property && <div style={{ fontSize: 14, color: '#C9D6F2', marginTop: 3 }}>Property: {d.property}</div>}</div>
       </div>
       {d.docs.length === 0 ? <div style={{ padding: 40, textAlign: 'center', color: '#667085' }}>There are no documents to show right now.</div> : (
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: 20, display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'flex-start' }}>

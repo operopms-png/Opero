@@ -10,7 +10,7 @@ import { DOC_SUBJECT_TABLE, isSubject } from '@/lib/lease-doc-types'
 //   POST {action:'doc-add', title, description, url}
 //   POST {action:'doc-update', id, title?, description?, url?, active?}
 //   POST {action:'doc-delete', id}         admin only
-//   POST {action:'link-create', name, doc_ids[], subject?, subject_id?, register?: 'landlord'|'cohost'}     -> { link }   (subject: landlord | ea_landlord | cohost files submissions on their record)
+//   POST {action:'link-create', name, doc_ids[], subject?, subject_id?, register?: 'landlord'|'cohost', property_label?}     -> { link }   (subject: landlord | ea_landlord | cohost files submissions on their record)
 //   POST {action:'link-update', id, name?, doc_ids?, active?}
 //   POST {action:'link-delete', id}
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       if (!who) return bad('That person was not found.')
       subj = { subject: sj, subject_id: who.id, subject_name: who.name }
     }
-    const { data, error } = await db.from('service_links').insert({ business_id: biz, token: randomBytes(12).toString('hex'), name, doc_ids: ids, created_by: by, ...subj }).select('*').single()
+    const { data, error } = await db.from('service_links').insert({ business_id: biz, token: randomBytes(12).toString('hex'), name, doc_ids: ids, created_by: by, property_label: String(b.property_label || '').trim().slice(0, 200) || null, ...subj }).select('*').single()
     return error ? bad(error.message, 500) : NextResponse.json({ link: data })
   }
   if (b.action === 'link-update') {

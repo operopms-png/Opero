@@ -26,6 +26,7 @@ export default function ServicesPack() {
   const [d, setD] = useState<any>(null)
   const [err, setErr] = useState(''), [note, setNote] = useState(''), [busy, setBusy] = useState(false)
   const [sel, setSel] = useState<string[]>([]), [name, setName] = useState('')
+  const [prop, setProp] = useState('')
   const [tab, setTab] = useState<'landlord' | 'cohost' | 'tenant' | 'all'>('landlord'), [ready, setReady] = useState(false)
   const [reg, setReg] = useState<'' | 'landlord' | 'cohost' | 'existing'>(''), [who, setWho] = useState<any>(null), [q, setQ] = useState(''), [found, setFound] = useState<any[]>([])
   useEffect(() => { if (q.trim().length < 2) { setFound([]); return }; const t = setTimeout(() => staffApi('/api/documents?people=' + encodeURIComponent(q)).then((r: any) => setFound((r.people || []).filter((x: any) => ['pm_owner', 'ea_owner', 'cohost'].includes(x.kind)))).catch(() => {}), 250); return () => clearTimeout(t) }, [q])
@@ -103,6 +104,7 @@ export default function ServicesPack() {
           <div style={head}>2. Make the link</div>
           <div style={{ ...card, maxWidth: 560, display: 'grid', gap: 10 }}>
             <div><span style={label}>Link name (only you see this, e.g. the person or campaign)</span><input style={input} value={name} placeholder="Spring landlord campaign" onChange={e => setName(e.target.value)} /></div>
+            <div><span style={label}>Property (optional). Shown at the top of their page, e.g. the address.</span><input style={input} value={prop} placeholder="12 Hope Road, Mandeville" onChange={e => setProp(e.target.value)} /></div>
             <div>
               <span style={label}>Who is this link for? Anything they submit is filed on their record in Documents.</span>
               <select style={input} value={reg} onChange={e => { setReg(e.target.value as any); setWho(null) }}>
@@ -118,7 +120,7 @@ export default function ServicesPack() {
               {(reg === 'landlord' || reg === 'cohost') && <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>When they press Submit, a {reg === 'landlord' ? 'landlord' : 'co-host'} record is created from the name and email they enter (or matched by email if they already exist) and the completed document is filed on it.</div>}
             </div>
             <div style={{ fontSize: 13, color: '#475467' }}>{sel.length === 0 ? 'Tick the documents above.' : sel.length === 1 ? 'This link opens one document.' : `This link lets them choose from ${sel.length} documents.`}</div>
-            <div><button style={btn('gold')} disabled={busy || !sel.length} onClick={async () => { const r = await act({ action: 'link-create', name, doc_ids: sel, ...(reg === 'existing' && who ? { subject: who.kind === 'pm_owner' ? 'landlord' : who.kind === 'ea_owner' ? 'ea_landlord' : 'cohost', subject_id: who.id } : reg === 'landlord' || reg === 'cohost' ? { register: reg } : {}) }); if (r?.link) { copy(url(r.link.token), `Link copied: ${url(r.link.token)}`); setName(''); setWho(null); setReg('') } }}>Create link</button></div>
+            <div><button style={btn('gold')} disabled={busy || !sel.length} onClick={async () => { const r = await act({ action: 'link-create', name, property_label: prop, doc_ids: sel, ...(reg === 'existing' && who ? { subject: who.kind === 'pm_owner' ? 'landlord' : who.kind === 'ea_owner' ? 'ea_landlord' : 'cohost', subject_id: who.id } : reg === 'landlord' || reg === 'cohost' ? { register: reg } : {}) }); if (r?.link) { copy(url(r.link.token), `Link copied: ${url(r.link.token)}`); setName(''); setProp(''); setWho(null); setReg('') } }}>Create link</button></div>
           </div>
 
           <div style={head}>3. Your links</div>
@@ -129,7 +131,7 @@ export default function ServicesPack() {
                 return (
                   <div key={l.id} style={{ ...card, marginBottom: 0, opacity: l.active ? 1 : .6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                      <div><b>{l.name}</b>{l.subject && <span style={{ marginLeft: 8, fontSize: 12, color: '#182D5E' }}>{l.subject_name ? `for ${l.subject_name}` : `new ${l.subject === 'cohost' ? 'co-host' : 'landlord'}, registers on submit`}</span>}{!l.active && <span style={{ marginLeft: 8, fontSize: 11, color: '#B42318', fontWeight: 700 }}>PAUSED</span>}
+                      <div><b>{l.name}</b>{l.property_label && <span style={{ marginLeft: 8, fontSize: 12, color: '#667085' }}>{l.property_label}</span>}{l.subject && <span style={{ marginLeft: 8, fontSize: 12, color: '#182D5E' }}>{l.subject_name ? `for ${l.subject_name}` : `new ${l.subject === 'cohost' ? 'co-host' : 'landlord'}, registers on submit`}</span>}{!l.active && <span style={{ marginLeft: 8, fontSize: 11, color: '#B42318', fontWeight: 700 }}>PAUSED</span>}
                         <div style={{ fontSize: 12, color: '#667085', marginTop: 3, wordBreak: 'break-all' }}>{u}</div></div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                         <button style={btn('ghost', true)} onClick={() => copy(u, `Link copied: ${u}`)}>Copy link</button>
