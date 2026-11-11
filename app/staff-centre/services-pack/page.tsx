@@ -10,16 +10,23 @@ const card: React.CSSProperties = { background: '#fff', border: '1px solid #D9E2
 const head: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#667085', margin: '22px 0 10px' }
 const when = (d: string | null) => d ? new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Not opened yet'
 
-const PACKS: { name: string; titles: string[] }[] = [
-  { name: 'Landlord pack', titles: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Lease your property to us', 'Landlord portal guide', 'Shortlet landlord onboarding form'] },
-  { name: 'Co-host pack', titles: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Vacation rental landlord pack', 'Co-host portal guide', 'Cohost detail sheet', 'Agreement: Shortlet co-host'] },
-  { name: 'Tenant pack', titles: ['Welcome to NOVOURQ', 'Furnished apartments', 'Tenants portal guide', 'Tenant deposit guide'] },
+// Each tab shows only the documents for that audience. "pick" are ticked for you when you open the tab; the rest are there to tick if needed.
+// Documents with no audience here (ones staff add) show on every tab.
+const TABS: { key: 'landlord' | 'cohost' | 'tenant' | 'all'; label: string; pick: string[]; more: string[]; reg: '' | 'landlord' | 'cohost'; hint: string }[] = [
+  { key: 'landlord', label: 'Landlord', reg: 'landlord', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Lease your property to us', 'Landlord portal guide', 'Shortlet landlord onboarding form'], more: ['Agreement: Master Lease (sublease)', 'Agreement: Estate agency'],
+    hint: 'The welcome documents and onboarding form are ticked. Tick the one Agreement that fits this landlord (Master Lease or Estate agency) before you send.' },
+  { key: 'cohost', label: 'Co-host', reg: 'cohost', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Vacation rental landlord pack', 'Co-host portal guide', 'Cohost detail sheet', 'Agreement: Shortlet co-host'], more: [],
+    hint: 'Everything a co-host needs is ticked, including the Shortlet co-host agreement and the Cohost detail sheet.' },
+  { key: 'tenant', label: 'Tenant', reg: '', pick: ['Welcome to NOVOURQ', 'Furnished apartments', 'Tenants portal guide', 'Tenant deposit guide'], more: [], hint: 'The tenant documents are ticked.' },
+  { key: 'all', label: 'All documents', reg: '', pick: [], more: [], hint: 'Every document, for managing or building your own mix.' },
 ]
+const AUDIENCE_TITLES = new Set(TABS.flatMap(t => [...t.pick, ...t.more]))
 
 export default function ServicesPack() {
   const [d, setD] = useState<any>(null)
   const [err, setErr] = useState(''), [note, setNote] = useState(''), [busy, setBusy] = useState(false)
   const [sel, setSel] = useState<string[]>([]), [name, setName] = useState('')
+  const [tab, setTab] = useState<'landlord' | 'cohost' | 'tenant' | 'all'>('landlord'), [ready, setReady] = useState(false)
   const [reg, setReg] = useState<'' | 'landlord' | 'cohost' | 'existing'>(''), [who, setWho] = useState<any>(null), [q, setQ] = useState(''), [found, setFound] = useState<any[]>([])
   useEffect(() => { if (q.trim().length < 2) { setFound([]); return }; const t = setTimeout(() => staffApi('/api/documents?people=' + encodeURIComponent(q)).then((r: any) => setFound((r.people || []).filter((x: any) => ['pm_owner', 'ea_owner', 'cohost'].includes(x.kind)))).catch(() => {}), 250); return () => clearTimeout(t) }, [q])
   const [add, setAdd] = useState<any>(null), [edit, setEdit] = useState<any>(null)
@@ -35,6 +42,10 @@ export default function ServicesPack() {
   const url = (t: string) => `${window.location.origin}/s/${t}`
   const copy = async (text: string, msg: string) => { try { await navigator.clipboard.writeText(text); setNote(msg) } catch { setNote(text) } }
   const docs: any[] = d?.docs || [], links: any[] = d?.links || []
+  const T = TABS.find(t => t.key === tab)!
+  const shown = tab === 'all' ? docs : docs.filter(x => T.pick.includes(x.title) || T.more.includes(x.title) || !AUDIENCE_TITLES.has(x.title))
+  const openTab = (k: typeof tab) => { const t = TABS.find(z => z.key === k)!; setTab(k); setSel(docs.filter(x => x.active && t.pick.includes(x.title)).map(x => x.id)); setReg(t.reg); setWho(null); setName(t.key === 'all' ? '' : `${t.label} pack`) }
+  useEffect(() => { if (docs.length && !ready) { setReady(true); openTab('landlord') } })   // eslint-disable-line react-hooks/exhaustive-deps
   const title = (id: string) => docs.find(x => x.id === id)?.title || 'Removed document'
 
   return (
@@ -54,14 +65,13 @@ export default function ServicesPack() {
           )}
 
           <div style={{ ...head, marginTop: 4 }}>1. Choose what to send</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
-            <span style={{ fontSize: 13, color: '#475467' }}>Quick pick:</span>
-            {PACKS.map(k => <button key={k.name} style={btn('ghost', true)} onClick={() => { setSel(docs.filter(x => x.active && k.titles.includes(x.title)).map(x => x.id)); setName(n => n || k.name); if (k.name === 'Landlord pack') setReg('landlord'); if (k.name === 'Co-host pack') setReg('cohost') }}>{k.name}</button>)}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+            {TABS.map(t => <button key={t.key} onClick={() => openTab(t.key)} style={{ padding: '9px 16px', borderRadius: 8, border: `1px solid ${tab === t.key ? '#182D5E' : '#D0D5DD'}`, background: tab === t.key ? '#182D5E' : '#fff', color: tab === t.key ? '#fff' : '#344054', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>{t.label}</button>)}
           </div>
-          <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 8 }}>Landlord pack ticks the welcome documents and onboarding form. Then tick the one Agreement that fits this landlord (Master Lease or Estate agency) before you send. Co-host pack ticks the Shortlet co-host agreement and the Cohost detail sheet.</div>
+          <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 8 }}>{T.hint}</div>
           {docs.length === 0 ? <Empty>No documents yet. Press Add document and upload a PDF.</Empty> : (
             <div style={{ display: 'grid', gap: 8 }}>
-              {docs.map(x => (
+              {shown.map(x => (
                 <div key={x.id} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 8, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', opacity: x.active ? 1 : .55 }}>
                   <input type="checkbox" disabled={!x.active} checked={sel.includes(x.id)} onChange={e => setSel(e.target.checked ? [...sel, x.id] : sel.filter(i => i !== x.id))} />
                   <div style={{ flex: 1, minWidth: 220 }}>
