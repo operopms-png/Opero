@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Cleaning and Turnovers for your whole team', text: 'Team members you invite now see your company\'s cleaning tasks and turnovers, instead of an empty list.' },
   { date: '2026-11-11', title: 'Edit your company details in Tax Compliance', text: 'Tax Compliance → your company → Edit details now lets an admin change the company name and currency as well as the registration status, company number and tax note.' },
   { date: '2026-11-11', title: 'Tax Compliance uses your own company', text: 'Tax Compliance now sets up your own company with general tax headings, instead of the NOVOURQ Holdings, UK and Jamaica companies.' },
   { date: '2026-11-11', title: 'Business snapshot uses your currency', text: 'The Business snapshot in Novourq Cloud AI now shows amounts in your company currency and no longer says Jamaica and UK in the header.' },
