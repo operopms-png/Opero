@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Your currency on Staff Performance and Marketing', text: 'Staff Performance totals and Marketing values now show your company currency symbol instead of always showing pounds.' },
   { date: '2026-11-11', title: 'Your own earnings checker', text: 'Landlord Leads → Link & embed code now gives your company its own earnings checker link and website code, so every landlord lead and estimate email goes to and comes from your company.' },
   { date: '2026-11-11', title: 'Your company name on texts and emails', text: 'Text templates, marketing emails, signing links and documents now use your own company name (set it in Invoice settings), instead of NOVOURQ Group.' },
   { date: '2026-11-11', title: 'Whole team sees company records', text: 'Team members you invite now see the company\'s properties, bookings, maintenance, documents, reports and team on every page, not just their own empty list.' },

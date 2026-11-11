@@ -2,6 +2,8 @@
 // Each board maps onto one of the existing marketing_* tables, so sending,
 // reply tracking and open/click tracking keep working exactly as before.
 
+import { cur as companyCur } from './company-currency'
+
 export type MkOption = { value: string; color: string; label?: string }
 export type MkColType = 'status' | 'text' | 'longtext' | 'date' | 'datetime' | 'number' | 'person' | 'module' | 'computed' | 'send' | 'url' | 'email' | 'phone' | 'ref'
 export type MkCol = {
@@ -167,7 +169,7 @@ export function fmtDate(d: any, withTime = false) {
   const s = x.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   return withTime ? `${s}, ${x.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : s
 }
-export function money(n: any, cur = '£') {
+export function money(n: any, cur = companyCur()) {
   if (n === null || n === undefined || n === '' || Number.isNaN(Number(n))) return ''
   return cur + Number(n).toLocaleString('en-GB', { maximumFractionDigits: 2 })
 }

@@ -1,5 +1,6 @@
 'use client'
 import { useMemo, useState } from 'react'
+import { cur } from '@/lib/company-currency'
 import { BRAND, initials, avatarColor } from '@/lib/crm-board'
 import { WINS_BOARD, money, fmtDate } from '@/lib/marketing-boards'
 import { useTableBoard } from '@/components/applications/useApplications'
@@ -46,7 +47,7 @@ export default function PerformancePage() {
   const total = inPeriod.reduce((s, w) => s + (Number(w.value) || 0), 0)
   const tiles = [
     { l: 'Total wins', v: inPeriod.length, hl: true },
-    { l: 'Total value', v: money(total) || '£0' },
+    { l: 'Total value', v: money(total) || `${cur()}0` },
     { l: 'Deals closed', v: inPeriod.filter(w => w.category === 'Deal Closed').length },
     { l: 'Staff on the board', v: board.filter(b => b.name !== 'Unassigned').length },
   ]
@@ -107,7 +108,7 @@ export default function PerformancePage() {
                       <div style={{ background: '#F1F2F6', borderRadius: 4, height: 8, overflow: 'hidden' }}><div style={{ width: `${(b.count / board[0].count) * 100}%`, height: '100%', background: BRAND.gold }} /></div>
                     </div>
                     <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                      <div style={{ fontSize: 17, fontWeight: 700, color: BRAND.brown }}>{money(b.value) || '£0'}</div>
+                      <div style={{ fontSize: 17, fontWeight: 700, color: BRAND.brown }}>{money(b.value) || `${cur()}0`}</div>
                       <div style={{ fontSize: 12, color: BRAND.muted }}>{b.count} {b.count === 1 ? 'win' : 'wins'}{b.last ? ` · latest ${fmtDate(b.last)}` : ''}</div>
                     </div>
                   </div>
