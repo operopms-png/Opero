@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PDFDocument, PDFTextField, PDFCheckBox, PDFRadioGroup, PDFDropdown, PDFOptionList } from 'pdf-lib'
 import { randomBytes } from 'crypto'
+import { sendEmail } from '@/lib/send-email'
+import { teamEmails } from '@/lib/feedback-notify'
+import { SITE_URL } from '@/lib/brand'
 import { serviceClient as db } from '@/lib/admin-auth'
 
 // A recipient fills in a fillable document on their services link (/s/[token]) and presses Submit.
@@ -41,5 +44,19 @@ export async function POST(req: NextRequest) {
   const up = await db.storage.from('service-submissions').upload(path, out, { contentType: 'application/pdf' })
   if (up.error) return bad('Could not save your document. Try again.', 500)
   await db.from('service_submissions').insert({ business_id: l.business_id, link_id: l.id, doc_id: doc.id, doc_title: doc.title, submitter_name: String(b.name || '').trim().slice(0, 120) || null, submitter_email: String(b.email || '').trim().slice(0, 160) || null, path })
+  // Tell the team, with the completed PDF attached. A failed email never blocks the submission.
+  try {
+    const esc = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const who = String(b.name || '').trim().slice(0, 120) || 'Someone'
+    const subject = `${who} submitted ${doc.title}`
+    const link = `${SITE_URL}/staff-centre/services-pack`
+    const html = `<div style="font-family:Arial,sans-serif;max-width:540px;margin:0 auto;color:#1D2433">
+      <h2 style="margin:0 0 6px;font-size:18px;color:#182D5E">${esc(subject)}</h2>
+      <p style="margin:0 0 14px;color:#667085;font-size:13px">From the link "${esc(l.name || '')}"${b.email ? ` · ${esc(String(b.email).slice(0, 160))}` : ''}. The completed PDF is attached.</p>
+      <p style="margin:18px 0 0"><a href="${link}" style="background:#182D5E;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;font-size:14px;font-weight:600">Open Submitted documents</a></p></div>`
+    const att = [{ filename: `${doc.title.replace(/[^A-Za-z0-9 _-]+/g, '').trim() || 'Completed document'}.pdf`, content: Buffer.from(out).toString('base64') }]
+    const replyTo = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(b.email || '').trim()) ? String(b.email).trim() : undefined
+    for (const addr of await teamEmails(l.business_id)) await sendEmail(addr, subject, html, replyTo, undefined, att).catch(() => null)
+  } catch { /* ignore */ }
   return NextResponse.json({ ok: true })
 }
