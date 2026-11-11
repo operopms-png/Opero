@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Correct prices on sign-up', text: 'The sign-up page and terms now show Monthly at £49 a month and the one-time plan at £470.40 (£588 less 20%).' },
   { date: '2026-11-11', title: 'Sign-up is open again', text: 'The sign-in page now has a Start your free trial link, and /login?signup=1 opens the sign-up page directly.' },
   { date: '2026-11-11', title: 'Choose your currency first', text: 'The Get started checklist now begins with Choose your currency, and ticks off once an admin saves a currency in Settings → Currency.' },
   { date: '2026-11-11', title: 'Portals in your currency', text: 'Landlord and tenant portals now show the currency symbol of the company they belong to instead of always showing pounds.' },

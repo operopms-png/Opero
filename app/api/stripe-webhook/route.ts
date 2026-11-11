@@ -20,7 +20,7 @@ const PLAN_MAP: Record<string, string> = {
   'price_1TnhM2Ga2COshwfZSViH7HsG': 'dev',
   'price_1TnhMYGa2COshwfZVkT5DQGt': 'ea',
   'price_1TnhN2Ga2COshwfZPkq6XNA7': 'bundle',
-  // Current all-modules pricing (monthly £79 / one-time £175.50) -- both
+  // Current all-modules pricing (monthly £49 / one-time £470.40) -- both
   // grant the same full module set, so both map to 'bundle'.
   'price_1UICnBGa2COshwfZYzSdr6V3': 'bundle',
 }

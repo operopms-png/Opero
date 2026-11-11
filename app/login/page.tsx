@@ -17,7 +17,7 @@ const PLANS = [
   {
     id: 'monthly',
     label: 'Monthly',
-    price: '£79',
+    price: '£49',
     period: '/mo',
     color: BABY_BLUE,
     popular: true,
@@ -32,7 +32,7 @@ const PLANS = [
   {
     id: 'onetime',
     label: 'One-time (lifetime access)',
-    price: '£175.50',
+    price: '£470.40',
     period: ' one-time',
     color: BABY_BLUE,
     features: [
@@ -247,7 +247,7 @@ function LoginForm() {
           </div>
 
           <div style={{ marginTop: 'auto', paddingTop: 24, fontSize: 12, color: '#98A2B3', textAlign: 'center' }}>
-            The monthly plan includes a 14-day free trial, cancel anytime. The one-time plan is a single lifetime-access purchase.
+            The monthly plan includes a 14-day free trial, cancel anytime. The one-time plan is £470.40 (£588 less 20%), a single lifetime-access purchase.
           </div>
         </div>
       )}
