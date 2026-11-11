@@ -138,8 +138,8 @@ export default function Dashboard() {
         <DashboardAiPanel />
 
         <div className="dash-two">
-          <PortfolioPerformancePanel />
           <PropertyMap compact />
+          <PortfolioPerformancePanel />
         </div>
 
         {/* Business cards */}
