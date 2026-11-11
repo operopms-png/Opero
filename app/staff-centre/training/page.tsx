@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { useRole } from '../../../lib/useRole'
+import PortalGuides from '../../../components/training/PortalGuides'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
 
 const TYPES = [
@@ -37,6 +38,8 @@ export default function TrainingPage() {
 
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState('')
+  const [accountId, setAccountId] = useState('')
+  const [view, setView] = useState<'guides' | 'materials'>('guides')
   const [materials, setMaterials] = useState<any[]>([])
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
   const [showAdd, setShowAdd] = useState(false)
@@ -52,6 +55,7 @@ export default function TrainingPage() {
     if (!user) { window.location.href = '/login'; return }
     setUserEmail(user.email ?? '')
     const accountId = await getAccountId(user)
+    setAccountId(accountId)
 
     const { data: mats } = await supabase.from('training_materials').select('*').eq('user_id', accountId).order('category').order('created_at', { ascending: false })
     setMaterials(mats ?? [])
@@ -133,10 +137,15 @@ export default function TrainingPage() {
     <CrmPage>
       <CrmHeader
         title="Staff Training"
-        subtitle="PDFs, files and videos for the team to work through and tick off."
+        subtitle="How to use every tab in the portal, what is new, and your company training material."
         actions={isAdmin ? <button onClick={() => setShowAdd(true)} style={btn('gold')}>+ Add material</button> : undefined}
       />
       <Body>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+          {([['guides', 'Portal guides'], ['materials', 'Company training']] as const).map(([k, l]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} style={{ border: '1px solid #D0D5DD', background: view === k ? '#2F6DB5' : '#fff', color: view === k ? '#fff' : '#475467', borderRadius: 6, padding: '7px 16px', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>)}
+        </div>
+        {view === 'guides' && accountId && <PortalGuides accountId={accountId} isAdmin={isAdmin} userEmail={userEmail} />}
+        {view === 'materials' && <>
         {materials.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 24 }}>
             <Stat label="Materials" value={materials.length} />
@@ -181,6 +190,7 @@ export default function TrainingPage() {
             })}
           </Group>
         ))}
+        </>}
       </Body>
 
       {isAdmin && showAdd && (

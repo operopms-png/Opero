@@ -3,6 +3,7 @@
 type B = { title: string; text: string }
 const PAGES: Record<string, B> = {
   '/partners': { title: 'Partners', text: 'Your investment, repayments, documents and maintenance in one place. Switch tabs along the top; amounts show in your own currency.' },
+  '/staff-centre/training': { title: 'Staff Training', text: 'How to use every tab in the portal, with steps, pictures and video, plus what is new and your company training material. Search for a tab to find its guide.' },
   '/staff-centre/crew': { title: 'Cleaners and Maintenance', text: 'Each team\'s headcount, who is on shift, open and finished jobs, and a link to open any person\'s portal as they see it.' },
   '/staff-centre/tenant-onboarding': { title: 'Tenant onboarding', text: 'The documents every new tenant gets in one tab: information sheet, lease with deposit scheme, guides, payment instructions and welcome letter. Send the pack and track who has signed.' },
   '/staff-centre/cohosts': { title: 'Co-hosts', text: 'People who host properties they do not own and have us manage them: their properties, how we are paid, documents, agreement and portal login.' },
