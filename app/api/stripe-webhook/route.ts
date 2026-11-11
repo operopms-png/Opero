@@ -51,19 +51,32 @@ export async function POST(request: NextRequest) {
   // account, so their checkout.session.completed events come from a separate
   // "Connected accounts" webhook endpoint with its own signing secret
   // (STRIPE_CONNECT_WEBHOOK_SECRET). Accept either secret.
+  // Novourq's own sign-up billing can live in a separate Stripe account (STRIPE_NOVOURQ_SECRET_KEY and
+  // STRIPE_NOVOURQ_WEBHOOK_SECRET); everything else keeps using the main account above.
+  const novourqKey = process.env.STRIPE_NOVOURQ_SECRET_KEY
+  const novourqStripe = novourqKey ? new Stripe(novourqKey, { apiVersion: '2026-05-27.dahlia' }) : null
+  let fromNovourq = false
   let event
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err: unknown) {
     const connectSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET
+    const novourqSecret = process.env.STRIPE_NOVOURQ_WEBHOOK_SECRET
     try {
       if (!connectSecret) throw err
       event = stripe.webhooks.constructEvent(body, sig, connectSecret)
     } catch {
-      const message = err instanceof Error ? err.message : 'Unknown error'
-      return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 })
+      try {
+        if (!novourqSecret) throw err
+        event = stripe.webhooks.constructEvent(body, sig, novourqSecret)
+        fromNovourq = true
+      } catch {
+        const message = err instanceof Error ? err.message : 'Unknown error'
+        return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 })
+      }
     }
   }
+  const billingStripe = fromNovourq && novourqStripe ? novourqStripe : stripe
 
   if (event.type === 'checkout.session.completed') {
     try {
@@ -161,7 +174,7 @@ export async function POST(request: NextRequest) {
       // own sale, never an Opero subscription.
       if ((event as any).account) return NextResponse.json({ received: true })
 
-      const fullSession = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
+      const fullSession = await billingStripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] })
       const email = fullSession.customer_details?.email ?? fullSession.customer_email
       const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
       const plan = PLAN_MAP[priceId] ?? 'starter'
@@ -217,7 +230,7 @@ export async function POST(request: NextRequest) {
           } else {
             let trialEnd: string | null = null
             if (fullSession.subscription) {
-              const stripeSub = await stripe.subscriptions.retrieve(fullSession.subscription as string)
+              const stripeSub = await billingStripe.subscriptions.retrieve(fullSession.subscription as string)
               trialEnd = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null
             }
             const { error: upsertError } = await supabase.from('subscriptions').upsert({

@@ -7,7 +7,8 @@ import { SITE_URL } from '@/lib/brand'
 //   STRIPE_PRICE_NOVOURQ_MONTHLY   (recurring, £49 / month)
 //   STRIPE_PRICE_NOVOURQ_LIFETIME  (one-off, £175.50, limited to the first 10 clients)
 //   STRIPE_PRICE_NOVOURQ_ONETIME   (£470.40 = £588 less 20%, billed annually)
-// The webhook (app/api/stripe-webhook/route.ts) reads the same two vars.
+// The webhook (app/api/stripe-webhook/route.ts) reads the same price vars.
+// Sign-up billing uses STRIPE_NOVOURQ_SECRET_KEY when set (Novourq's own Stripe account), otherwise STRIPE_SECRET_KEY.
 const PRICE_IDS: Record<string, string | undefined> = {
   monthly: process.env.STRIPE_PRICE_NOVOURQ_MONTHLY,
   onetime: process.env.STRIPE_PRICE_NOVOURQ_ONETIME,
@@ -30,7 +31,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const Stripe = (await import('stripe')).default
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' })
+    const stripe = new Stripe((process.env.STRIPE_NOVOURQ_SECRET_KEY || process.env.STRIPE_SECRET_KEY)!, { apiVersion: '2026-05-27.dahlia' })
     const body = await request.json()
     const { plan, priceId, email, returnTo, cancelUrl } = body
     const finalPriceId = priceId || PRICE_IDS[plan]
