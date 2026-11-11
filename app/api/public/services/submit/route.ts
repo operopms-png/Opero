@@ -48,14 +48,40 @@ export async function POST(req: NextRequest) {
   if (up.error) return bad('Could not save your document. Try again.', 500)
   // If the link was made for a named landlord or co-host, file the completed copy on their record (Documents), awaiting review.
   let leaseDocId: string | null = null
-  // A link made for "a new landlord / co-host" registers them now, from the name and email they entered.
+  // A link made for "a new landlord / co-host" registers them now. Which section they go in depends on the document:
+  // Estate agency agreement -> Estate Agency, Master Lease and Shortlet agreement -> Property Management, co-host links -> Co-hosts.
+  // The property is created too when the form has an address. Field names below are the ones in our own PDFs.
+  let propertyMade = ''
   if (l.subject && !l.subject_id) {
     try {
-      const tbl = l.subject === 'cohost' ? 'cohosts' : 'pm_landlords'
-      const nm = String(b.name || '').trim().slice(0, 120)
-      let { data: ex } = await db.from(tbl).select('id,name').eq('user_id', l.business_id).ilike('email', email).limit(1).maybeSingle()
-      if (!ex) { const ins = await db.from(tbl).insert({ user_id: l.business_id, name: nm, email, ...(tbl === 'pm_landlords' ? { notes: `Registered from the Services Pack link "${l.name}"` } : {}) }).select('id,name').single(); ex = ins.data }
-      if (ex) { l.subject_id = ex.id; l.subject_name = ex.name; await db.from('service_links').update({ subject_id: ex.id, subject_name: ex.name }).eq('id', l.id) }
+      const file = String(doc.url).split('/').pop()?.replace(/\.pdf$/i, '') || ''
+      const FM: Record<string, Record<string, string>> = {
+        Agreement_Estate_Agency: { name: 'f0_4', phone: 'f0_7', address: 'f0_16' },
+        Agreement_Master_Lease: { name: 'f0_1', phone: 'f0_5', address: 'f0_13', area: 'f0_14', beds: 'f0_17', baths: 'f0_18' },
+        Agreement_Shortlet_Landlord: { name: 'f3_16', phone: 'f3_19', address: 'f4_23', area: 'f4_24', beds: 'f4_33', baths: 'f4_34' },
+      }
+      const m = FM[file] || {}
+      const val = (k: string) => { const v = m[k] ? values[m[k]] : ''; return typeof v === 'string' ? v.trim().slice(0, 300) : '' }
+      const kind = l.subject === 'cohost' ? 'cohost' : file === 'Agreement_Estate_Agency' ? 'ea_landlord' : 'landlord'
+      const tbl = kind === 'cohost' ? 'cohosts' : kind === 'ea_landlord' ? 'estate_landlords' : 'pm_landlords'
+      const nm = (val('name') || String(b.name || '').trim()).slice(0, 120)
+      let ex: any = (await db.from(tbl).select('id,name').eq('user_id', l.business_id).ilike('email', email).limit(1).maybeSingle()).data
+      if (!ex) ex = (await db.from(tbl).insert({ user_id: l.business_id, name: nm, email, phone: val('phone') || null, ...(tbl !== 'cohosts' ? { notes: `Registered from the Services Pack link "${l.name}"` } : {}) }).select('id,name').single()).data
+      if (ex) {
+        l.subject = kind; l.subject_id = ex.id; l.subject_name = ex.name
+        const addr = val('address')
+        if (addr && kind !== 'cohost') {
+          const ptbl = kind === 'ea_landlord' ? 'estate_properties' : 'pm_properties'
+          const { data: dup } = await db.from(ptbl).select('id').eq('user_id', l.business_id).eq('owner_id', ex.id).ilike('address', `%${addr.replace(/[%_]/g, '')}%`).limit(1)
+          if (!dup?.length) {
+            const full = [addr, val('area')].filter(Boolean).join(', ')
+            const row: any = { user_id: l.business_id, name: addr, address: full, owner_id: ex.id, status: 'Available', bedrooms: val('beds') || null, bathrooms: val('baths') || null }
+            if (ptbl === 'pm_properties') { row.city = val('area') || null; row.country = 'Jamaica' }
+            const pr = await db.from(ptbl).insert(row).select('id').single()
+            if (!pr.error) propertyMade = `${addr} (${kind === 'ea_landlord' ? 'Estate Agency' : 'Property Management'})`
+          }
+        }
+      }
     } catch { /* the submission is still kept in Services Pack */ }
   }
   if (l.subject && l.subject_id) {
@@ -66,7 +92,7 @@ export async function POST(req: NextRequest) {
         const cat = /^agreement/i.test(doc.title) ? (l.subject === 'cohost' ? 'cohost_agreement' : 'mgmt_agreement') : 'other'
         const { data: ld } = await db.from('lease_documents').insert({ user_id: l.business_id, subject: l.subject, head_lease_id: l.subject_id, category: cat, name: `${doc.title} (completed).pdf`.slice(0, 120), path: lp, mime: 'application/pdf', size: out.length, uploaded_by: String(b.email || '').trim() || String(b.name || '').trim() || l.subject_name, uploaded_by_portal: true, status: 'pending', visible_to_portal: true }).select('id').single()
         leaseDocId = ld?.id ?? null
-        await db.from('notifications').insert({ user_id: l.business_id, title: `Document to review: ${doc.title}`, message: `${l.subject_name || 'A landlord'} completed ${doc.title} on their link. Approve or reject it in Documents.`, type: 'document', module: 'staffcentre', link: '/staff-centre/documents' }).then(() => {}, () => {})
+        await db.from('notifications').insert({ user_id: l.business_id, title: `Document to review: ${doc.title}`, message: `${l.subject_name || 'A landlord'} completed ${doc.title} on their link.${propertyMade ? ` Property created: ${propertyMade}.` : ''} Approve or reject it in Documents.`, type: 'document', module: 'staffcentre', link: '/staff-centre/documents' }).then(() => {}, () => {})
       }
     } catch { /* the submission is still kept in Services Pack */ }
   }
