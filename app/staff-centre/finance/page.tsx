@@ -23,7 +23,7 @@ export default function FinanceOverview() {
   const cur = d?.month || month
   return (
     <CrmPage>
-      <CrmHeader title="Finance" subtitle="Money in and out across every business, worked out from bookings, rent, payouts and approved expenses. Totals in £ at today’s rate."
+      <CrmHeader title="Finance" subtitle="Money in and out across every business, worked out from bookings, rent, payouts and approved expenses. Totals in your company currency at today’s rate."
         actions={cur && <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setMonth(shift(cur, -1))} style={navBtn} aria-label="Previous month">‹</button>
           <div style={{ minWidth: 130, textAlign: 'center', fontWeight: 700, color: C.brown }}>{mLabel(cur, true)}</div>
@@ -33,25 +33,25 @@ export default function FinanceOverview() {
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
         {!d ? (!err && <Loading />) : <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 12 }}>
-            <Stat label="Money in" value={money(d.moneyIn)} sub={delta(d.moneyIn, d.prevIn, true)} />
-            <Stat label="Money out" value={money(d.moneyOut)} sub={delta(d.moneyOut, d.prevOut, false)} />
-            <Stat label="Profit" value={<span style={{ color: d.profit >= 0 ? '#0E7C55' : C.red }}>{money(d.profit)}</span>} sub={d.moneyIn ? `${Math.round(d.profit / d.moneyIn * 100)}% margin` : '—'} highlight />
-            <Stat label="Owner payouts still to pay" value={money(d.payoutsDue)} sub={<Link href="/staff-centre/finance/payouts" style={{ color: C.goldDark }}>See payouts →</Link>} />
-            <Stat label="Estate Agency rent roll" value={money(d.rentRoll)} sub="Monthly rent on active tenancies" />
+            <Stat label="Money in" value={money(d.moneyIn, d.base)} sub={delta(d.moneyIn, d.prevIn, true)} />
+            <Stat label="Money out" value={money(d.moneyOut, d.base)} sub={delta(d.moneyOut, d.prevOut, false)} />
+            <Stat label="Profit" value={<span style={{ color: d.profit >= 0 ? '#0E7C55' : C.red }}>{money(d.profit, d.base)}</span>} sub={d.moneyIn ? `${Math.round(d.profit / d.moneyIn * 100)}% margin` : '—'} highlight />
+            <Stat label="Owner payouts still to pay" value={money(d.payoutsDue, d.base)} sub={<Link href="/staff-centre/finance/payouts" style={{ color: C.goldDark }}>See payouts →</Link>} />
+            <Stat label="Estate Agency rent roll" value={money(d.rentRoll, d.base)} sub="Monthly rent on active tenancies" />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.5fr) minmax(0,1fr)', gap: 16, marginTop: 16 }} className="fin-grid">
             <style>{`@media(max-width:1000px){.fin-grid{grid-template-columns:1fr !important}}`}</style>
             <div style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div><div style={h}>Last 6 months</div><div style={sub}>Money in and out, £</div></div>
+                <div><div style={h}>Last 6 months</div><div style={sub}>Money in and out, {d.base || 'GBP'}</div></div>
                 <div style={{ display: 'flex', gap: 14, fontSize: 12, color: C.muted }}><Key c={IN} l="Money in" /><Key c={OUT} l="Money out" /></div>
               </div>
-              <Trend trend={d.trend} sel={d.month} onPick={setMonth} />
+              <Trend base={d.base || 'GBP'} trend={d.trend} sel={d.month} onPick={setMonth} />
             </div>
             <div style={card}>
-              <div style={h}>Exchange rates used</div><div style={sub}>Today, per £1</div>
-              <div style={{ marginTop: 10, fontSize: 13.5, lineHeight: 2 }}>{Object.entries(d.rates).filter(([k]) => k !== 'GBP').map(([k, v]: any) => <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>£1 =</span><b>{SYM[k]}{Number(v).toFixed(k === 'JMD' ? 0 : 2)}</b></div>)}</div>
+              <div style={h}>Exchange rates used</div><div style={sub}>Today, per 1 {d.base || 'GBP'}</div>
+              <div style={{ marginTop: 10, fontSize: 13.5, lineHeight: 2 }}>{Object.entries(d.rates).filter(([k]) => k !== (d.base || 'GBP')).map(([k, v]: any) => <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.muted }}>{SYM[d.base || 'GBP']}1 =</span><b>{SYM[k]}{(Number(v) / Number(d.rates[d.base || 'GBP'] || 1)).toFixed(k === 'JMD' ? 0 : 2)}</b></div>)}</div>
               <div style={{ fontSize: 12, color: C.muted, marginTop: 10, lineHeight: 1.5 }}>Airbnb bookings are counted in US$ when the guest checks in. Estate Agency rent counts when a tenant’s rent is marked Paid. Development spend counts when a budget line’s actual cost is added.</div>
             </div>
           </div>
@@ -67,7 +67,7 @@ export default function FinanceOverview() {
                       <button onClick={() => setOpen(open === k ? null : k)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 0', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
                         <span style={{ width: 9, height: 9, borderRadius: 2, background: MODULE_COL[r.module] || col, flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13.5, fontWeight: 600, color: C.ink }}>{r.source}</div><div style={{ fontSize: 11.5, color: C.muted }}>{MODULE_LABEL[r.module]} · {r.count} item{r.count === 1 ? '' : 's'} · {Object.entries(r.byCurrency).map(([c, v]: any) => money(v, c)).join(' + ')}</div></div>
-                        <b style={{ fontSize: 14, color: C.ink }}>{money(r.gbp)}</b><span style={{ color: C.muted, fontSize: 12 }}>{open === k ? '▴' : '▾'}</span>
+                        <b style={{ fontSize: 14, color: C.ink }}>{money(r.gbp, d.base)}</b><span style={{ color: C.muted, fontSize: 12 }}>{open === k ? '▴' : '▾'}</span>
                       </button>
                       {open === k && <div style={{ padding: '0 0 10px 19px' }}>{r.items.map((it: any, i: number) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12.5, padding: '4px 0', color: C.ink }}><span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.label}</span><span>{money(it.amount, it.currency)}</span></div>)}{r.count > r.items.length && <div style={{ fontSize: 12, color: C.muted }}>…and {r.count - r.items.length} more</div>}</div>}
                     </div>
@@ -88,7 +88,7 @@ function delta(now: number, before: number, upIsGood: boolean) {
   return <span style={{ color: good ? '#0E7C55' : C.red, fontWeight: 600 }}>{p >= 0 ? '▲' : '▼'} {Math.abs(p)}% <span style={{ color: C.muted, fontWeight: 400 }}>on last month</span></span>
 }
 const Key = ({ c, l }: { c: string; l: string }) => <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><i style={{ width: 10, height: 10, borderRadius: 2, background: c, display: 'inline-block' }} />{l}</span>
-function Trend({ trend, sel, onPick }: { trend: any[]; sel: string; onPick: (m: string) => void }) {
+function Trend({ base, trend, sel, onPick }: { base: string; trend: any[]; sel: string; onPick: (m: string) => void }) {
   const W = 640, H = 230, pl = 52, pb = 26, pt = 18, ch = H - pb - pt
   const mx = Math.max(1, ...trend.flatMap(t => [t.in, t.out]))
   const step = Math.pow(10, Math.floor(Math.log10(mx))), top = Math.ceil(mx / step) * step
@@ -96,7 +96,7 @@ function Trend({ trend, sel, onPick }: { trend: any[]; sel: string; onPick: (m: 
   const [hover, setHover] = useState<number | null>(null)
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ marginTop: 10, display: 'block' }} role="img" aria-label="Money in and out for the last six months">
-      {ticks.map(t => { const y = pt + ch - t / top * ch; return <g key={t}><line x1={pl} x2={W} y1={y} y2={y} stroke="#EEEBE3" /><text x={pl - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#8A877F">{money(t, 'GBP', true)}</text></g> })}
+      {ticks.map(t => { const y = pt + ch - t / top * ch; return <g key={t}><line x1={pl} x2={W} y1={y} y2={y} stroke="#EEEBE3" /><text x={pl - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#8A877F">{money(t, base, true)}</text></g> })}
       {trend.map((t, i) => {
         const x = pl + i * gw + gw / 2, hi = pt + ch - t.in / top * ch, ho = pt + ch - t.out / top * ch, on = t.month === sel
         return (

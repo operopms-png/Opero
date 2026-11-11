@@ -6,7 +6,7 @@ import AskChat from '../../components/ai/AskChat'
 import MarketCheck from '../../components/invest/MarketCheck'
 import LandlordOffer, { landlordOffer } from '../../components/invest/LandlordOffer'
 import { ListingImportBox, ListingCard, propertyTypeFor, type Listing } from '../../components/invest/ListingImport'
-import { CURRENCIES, curOf, symOf, type Cur } from '../../lib/currency'
+import { CURRENCIES, FALLBACK_PER_GBP, curOf, symOf, type Cur } from '../../lib/currency'
 
 const STRATEGY_ICONS: Record<string,React.ReactElement> = {
   btl:       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -177,7 +177,7 @@ export default function InvestPage() {
   function switchCurrency(to: Cur) {
     const from = curOf(form)
     if (to === from) return
-    const rates = fx || { GBP: 1, USD: 1.34, JMD: 210 }
+    const rates = fx || FALLBACK_PER_GBP
     const k = rates[to] / rates[from]
     const f: any = { ...form, currency: to }
     for (const m of MONEY_FIELDS) { const v = parseFloat(form[m]); if (form[m] !== undefined && form[m] !== '' && Number.isFinite(v)) f[m] = String(Math.round(v * k * 100) / 100) }
@@ -190,7 +190,7 @@ export default function InvestPage() {
   function applyListing(l: Listing) {
     const from = curOf(form)
     const to = (l.currency && l.currency in CURRENCIES ? l.currency : from) as Cur
-    const rates = fx || { GBP: 1, USD: 1.34, JMD: 210 }
+    const rates = fx || FALLBACK_PER_GBP
     const k = rates[to] / rates[from]
     const f: any = { ...form, currency: to, listing: l }
     if (to !== from) for (const m of MONEY_FIELDS) { const v = parseFloat(form[m]); if (form[m] !== undefined && form[m] !== '' && Number.isFinite(v)) f[m] = String(Math.round(v * k * 100) / 100) }

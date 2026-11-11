@@ -40,6 +40,9 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'A landlord enters their property details and gets an estimate by email, signed with your company name. The lead appears in Landlord Leads and your CRM and you get an alert. Their book-a-call button opens your own meeting link.',
     'Add ?src=facebook (or similar) to the link to see where each lead came from.',
   ] },
+  { id: 'finance-currency', title: 'Finance currency', steps: [
+    'Set your company currency in Settings, Currency. Finance then shows all totals, charts and owner payouts in it. Amounts in other currencies are converted at today\'s rate, listed under Exchange rates used on the Finance overview.',
+  ] },
   { id: 'company-name', title: 'Your company name', steps: [
     'Set your company name in Invoice settings first. Text templates, marketing emails, signing links and documents all use it. If it is empty they say Property Management Team.',
   ] },
