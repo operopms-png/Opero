@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Landlord, Co-host and Tenant packs', text: 'Marketing, Services Pack: press Landlord pack, Co-host pack or Tenant pack to tick the right documents in one click, including the new portal guides and Welcome page.' },
   { date: '2026-11-11', title: 'Welcome page in Services Pack', text: 'Marketing, Services Pack: a branded Welcome to NOVOURQ page for any landlord, co-host or tenant. Tick it with the other documents when you create a link.' },
   { date: '2026-11-11', title: 'Services Pack', text: 'Marketing, Services Pack: send the brochure, landlord pack and flyers by one link. Recipients choose each document to view, and you see opens and views.' },
   { date: '2026-11-11', title: 'HR templates in Documents', text: 'Documents, Templates, Add HR templates: a Payslip and a Proof of employment letter that use your own logo, name and contact lines. Admins only.' },

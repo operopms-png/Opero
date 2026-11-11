@@ -10,6 +10,12 @@ const card: React.CSSProperties = { background: '#fff', border: '1px solid #D9E2
 const head: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#667085', margin: '22px 0 10px' }
 const when = (d: string | null) => d ? new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Not opened yet'
 
+const PACKS: { name: string; titles: string[] }[] = [
+  { name: 'Landlord pack', titles: ['Welcome to NOVOURQ', 'Company brochure', 'Lease your property to us', 'Landlord portal guide'] },
+  { name: 'Co-host pack', titles: ['Welcome to NOVOURQ', 'Company brochure', 'Vacation rental landlord pack', 'Co-host portal guide'] },
+  { name: 'Tenant pack', titles: ['Welcome to NOVOURQ', 'Furnished apartments', 'Tenants portal guide', 'Tenant deposit guide'] },
+]
+
 export default function ServicesPack() {
   const [d, setD] = useState<any>(null)
   const [err, setErr] = useState(''), [note, setNote] = useState(''), [busy, setBusy] = useState(false)
@@ -46,6 +52,10 @@ export default function ServicesPack() {
           )}
 
           <div style={{ ...head, marginTop: 4 }}>1. Choose what to send</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
+            <span style={{ fontSize: 13, color: '#475467' }}>Quick pick:</span>
+            {PACKS.map(k => <button key={k.name} style={btn('ghost', true)} onClick={() => { setSel(docs.filter(x => x.active && k.titles.includes(x.title)).map(x => x.id)); setName(n => n || k.name) }}>{k.name}</button>)}
+          </div>
           {docs.length === 0 ? <Empty>No documents yet. Press Add document and upload a PDF.</Empty> : (
             <div style={{ display: 'grid', gap: 8 }}>
               {docs.map(x => (
