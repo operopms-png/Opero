@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Your company name on texts and emails', text: 'Text templates, marketing emails, signing links and documents now use your own company name (set it in Invoice settings), instead of NOVOURQ Group.' },
   { date: '2026-11-11', title: 'Whole team sees company records', text: 'Team members you invite now see the company\'s properties, bookings, maintenance, documents, reports and team on every page, not just their own empty list.' },
   { date: '2026-11-11', title: 'Cleaning and Turnovers for your whole team', text: 'Team members you invite now see your company\'s cleaning tasks and turnovers, instead of an empty list.' },
   { date: '2026-11-11', title: 'Edit your company details in Tax Compliance', text: 'Tax Compliance → your company → Edit details now lets an admin change the company name and currency as well as the registration status, company number and tax note.' },

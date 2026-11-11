@@ -33,7 +33,7 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   }
   const ink = hex('#1F1F1F'), grey = hex('#6B6B6B'), gold = hex('#89CFF0'), goldBg = hex('#89CFF0')
   const logo = await loadImage(pdf, s.logo_url, siteUrl)
-  const company = s.company_name || 'NOVOURQ Group'
+  const company = s.company_name || 'Property Management Team'
   const pages: PDFPage[] = []
   let page!: PDFPage, y = 0
 

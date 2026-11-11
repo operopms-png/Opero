@@ -20,7 +20,7 @@ export function missingKeys(subject: PortalSubject, rows: { category: string; st
 
 export async function emailPerson(biz: string, subject: PortalSubject, person: { name: string; email: string }, headline: string, lines: string[], button = 'Open your documents', url = '') {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(person.email || '')) return false
-  const s = await docSettings(biz), company = s.company_name || 'NOVOURQ Group'
+  const s = await docSettings(biz), company = s.company_name || 'Property Management Team'
   const first = String(person.name || '').trim().split(/\s+/)[0] || 'there'
   const html = docEmailHtml(company, s.contact_lines, first, `${headline}\n\n${lines.map(l => '• ' + l).join('\n')}`, url || `${SITE_URL}${PORTAL_PATH[subject]}`, button, url ? 'This link is private to you. Open it on your phone, take a photo or upload each file. It only takes a minute.' : 'Sign in to your portal, open Documents, and take a photo or upload the file. It only takes a minute.')
   const r: any = await sendEmail(person.email, headline, html, s.reply_to || undefined, `${company} <notifications@${EMAIL_DOMAIN}>`)

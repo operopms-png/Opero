@@ -184,7 +184,7 @@ export default function ReceptionistPage() {
               <ModePicker disabled={!admin} value={s.phone_mode} onChange={v => quick({ phone_mode: v })} options={[{ v: 'off', l: 'Off', c: C.grey }, { v: 'no_answer', l: 'When nobody answers', c: C.gold }, { v: 'out_of_hours', l: 'Out of hours', c: C.purple }, { v: 'always', l: 'Every call', c: C.green }]} />
               {d.phones.length === 0 ? (
                 <div style={{ marginTop: 14, background: '#FFF4E0', border: '1px solid #89CFF0', borderRadius: 4, padding: '10px 14px', fontSize: 13, lineHeight: 1.55 }}>
-                  <b>No phone number connected yet.</b> Add a Twilio number to the portal, then either forward <b>020 7164 0329</b> to it from your virtual landline provider, or move the number to Twilio. Until then the phone receptionist can’t take calls — you can still test it in “Try it”.
+                  <b>No phone number connected yet.</b> Add a Twilio number to the portal, then either forward your business number to it from your phone provider, or move the number to Twilio. Until then the phone receptionist can’t take calls — you can still test it in “Try it”.
                 </div>
               ) : <div style={{ marginTop: 12, fontSize: 13, color: C.muted }}>Answering: {d.phones.map((p: any) => p.phone_number).join(', ')}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
@@ -229,7 +229,7 @@ export default function ReceptionistPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               <div><label style={label}>Receptionist name</label><input disabled={!admin} value={s.assistant_name} onChange={e => set('assistant_name', e.target.value)} style={input} /></div>
               <div><label style={label}>Company name (as said to callers)</label><input disabled={!admin} value={s.company_name ?? ''} onChange={e => set('company_name', e.target.value)} style={input} /></div>
-              <div><label style={label}>Email alerts go to</label><input disabled={!admin} value={s.alert_email ?? ''} onChange={e => set('alert_email', e.target.value)} placeholder="admin@sangstersgroup.com" style={input} /></div>
+              <div><label style={label}>Email alerts go to</label><input disabled={!admin} value={s.alert_email ?? ''} onChange={e => set('alert_email', e.target.value)} placeholder="you@yourcompany.com" style={input} /></div>
             </div>
             <div style={{ marginTop: 16 }}>
               <label style={label}>What the receptionist knows — services, areas, fees, how viewings work, office address, FAQs</label>

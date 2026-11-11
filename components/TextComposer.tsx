@@ -4,18 +4,18 @@
 //   <TextButton phone="+1876…" name="Mr. Campbell" />
 //   <TextModal phone? name? onClose onSent />
 // Sends through /api/sms/send; replies land in Inbox → Texts.
-import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useState } from 'react'
+import { supabase, getAccountId } from '@/lib/supabase'
 
 const INK = '#191815', GOLD = '#89CFF0', MUTED = '#676879', LINE = '#E6E9EF', BORDER = '#D0D4E4'
 // "Mr. Campbell" stays formal; "Andrea Brown" → "Andrea"
 const first = (n?: string | null) => { const t = (n || '').trim(); if (!t) return ''; const m = t.match(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+(.+)$/i); return m ? `${m[1]}. ${m[2].split(/\s+/).pop()}` : t.split(/\s+/)[0] }
-export const TEXT_TEMPLATES: { k: string; l: string; t: (name: string) => string }[] = [
-  { k: 'hello', l: 'Introduction', t: n => `Hi${n ? ' ' + n : ''}, this is NOVOURQ Group. Thanks for getting in touch — when is a good time to talk?` },
-  { k: 'viewing', l: 'Viewing reminder', t: n => `Hi${n ? ' ' + n : ''}, a reminder of your viewing with NOVOURQ Group. Reply YES to confirm or let us know if you need to change the time.` },
-  { k: 'rent', l: 'Rent reminder', t: n => `Hi${n ? ' ' + n : ''}, a friendly reminder that your rent is due soon. Reply here if you have any questions. — NOVOURQ Group` },
-  { k: 'checkin', l: 'Check-in details', t: n => `Hi${n ? ' ' + n : ''}, we're looking forward to welcoming you. Your check-in details will follow shortly — reply here if you need anything. — NOVOURQ` },
-  { k: 'callback', l: 'Missed you', t: n => `Hi${n ? ' ' + n : ''}, we tried to reach you. Please call or text us back when you're free. — NOVOURQ Group` },
+export const TEXT_TEMPLATES: { k: string; l: string; t: (name: string, co: string) => string }[] = [
+  { k: 'hello', l: 'Introduction', t: (n, co) => `Hi${n ? ' ' + n : ''}, this is ${co}. Thanks for getting in touch — when is a good time to talk?` },
+  { k: 'viewing', l: 'Viewing reminder', t: (n, co) => `Hi${n ? ' ' + n : ''}, a reminder of your viewing with ${co}. Reply YES to confirm or let us know if you need to change the time.` },
+  { k: 'rent', l: 'Rent reminder', t: (n, co) => `Hi${n ? ' ' + n : ''}, a friendly reminder that your rent is due soon. Reply here if you have any questions. — ${co}` },
+  { k: 'checkin', l: 'Check-in details', t: (n, co) => `Hi${n ? ' ' + n : ''}, we're looking forward to welcoming you. Your check-in details will follow shortly — reply here if you need anything. — NOVOURQ` },
+  { k: 'callback', l: 'Missed you', t: (n, co) => `Hi${n ? ' ' + n : ''}, we tried to reach you. Please call or text us back when you're free. — ${co}` },
 ]
 
 async function auth() {
@@ -24,6 +24,8 @@ async function auth() {
 }
 
 export function TextModal({ phone, name, onClose, onSent }: { phone?: string | null; name?: string | null; onClose: () => void; onSent?: (contactPhone: string) => void }) {
+  const [company, setCompany] = useState('our team')
+  useEffect(() => { (async () => { const { data: { user } } = await supabase.auth.getUser(); if (!user) return; const acc = await getAccountId(user); const { data } = await supabase.from('invoice_settings').select('company_name').eq('business_id', acc).maybeSingle(); if (data?.company_name?.trim()) setCompany(data.company_name.trim()) })() }, [])
   const [to, setTo] = useState(phone || '')
   const [who, setWho] = useState(name || '')
   const [body, setBody] = useState('')
@@ -64,7 +66,7 @@ export function TextModal({ phone, name, onClose, onSent }: { phone?: string | n
             <div>
               <label style={{ fontSize: 12.5, color: MUTED, display: 'block', marginBottom: 6 }}>Start from</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {TEXT_TEMPLATES.map(t => <button key={t.k} type="button" onClick={() => setBody(t.t(first(who)))} style={{ padding: '5px 11px', borderRadius: 20, border: `1px solid ${BORDER}`, background: '#fff', fontSize: 12.5, fontWeight: 600, color: '#344054', cursor: 'pointer', fontFamily: 'inherit' }}>{t.l}</button>)}
+                {TEXT_TEMPLATES.map(t => <button key={t.k} type="button" onClick={() => setBody(t.t(first(who), company))} style={{ padding: '5px 11px', borderRadius: 20, border: `1px solid ${BORDER}`, background: '#fff', fontSize: 12.5, fontWeight: 600, color: '#344054', cursor: 'pointer', fontFamily: 'inherit' }}>{t.l}</button>)}
               </div>
             </div>
             <div>

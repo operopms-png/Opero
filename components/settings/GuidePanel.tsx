@@ -35,6 +35,9 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'Meetings: open Staff Centre, Schedule, Meetings. The Client booking link at the top is your own company\'s link. Share it by email, website or WhatsApp. When someone sends a request it appears under New request, you get a bell notification and an email, they are added to your CRM, and they receive a confirmation with your company name. Each company\'s link only reaches that company.',
     'Tax Compliance (admins only): open Staff Centre, Tax Compliance, then your company\'s tab and press Edit details to change the company name, currency, registration status, company number and tax note. You can also add bank accounts, tax headings and transfers. Nothing is filed or paid from here.',
   ] },
+  { id: 'company-name', title: 'Your company name', steps: [
+    'Set your company name in Invoice settings first. Text templates, marketing emails, signing links and documents all use it. If it is empty they say Property Management Team.',
+  ] },
   { id: 'ai', title: 'Novourq Cloud AI', steps: [
     'Novourq Cloud AI is one assistant with many skills, such as rent reminders, chasing invoices, replying to reviews and watching compliance dates.',
     'Open Workflows to see every skill. Switch a skill on or off, and choose "Send automatically" if you want it to send without waiting for you.',
