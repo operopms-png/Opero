@@ -11,4 +11,4 @@ export const SITE_URL = (ENV_SITE && !/helloopero/i.test(ENV_SITE) ? ENV_SITE : 
 export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '')
 export const EMAIL_DOMAIN = process.env.EMAIL_DOMAIN || 'helloopero.com'
 export const EMAIL_FROM = `${BRAND_NAME} <notifications@${EMAIL_DOMAIN}>`
-export const CONTACT_EMAIL = 'contact.us@sangstersgroup.com'
+export const CONTACT_EMAIL = 'admin@thenovourq.com'
