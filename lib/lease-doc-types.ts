@@ -12,7 +12,7 @@ export const LEASE_DOC_KEYS = LEASE_DOC_TYPES.map(t => t.key)
 export const LEASE_DOC_BUCKET = 'lease-docs'
 
 // Document checklists by what they belong to. The 'other' type is never counted as one of the key documents.
-export type DocSubject = 'head_lease' | 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant'
+export type DocSubject = 'head_lease' | 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant' | 'cohost'
 export const DOC_SETS: Record<DocSubject, typeof LEASE_DOC_TYPES> = {
   head_lease: LEASE_DOC_TYPES,
   landlord: [
@@ -36,10 +36,18 @@ export const DOC_SETS: Record<DocSubject, typeof LEASE_DOC_TYPES> = {
   ],
   ea_landlord: [],
   ea_tenant: [],
+  cohost: [
+    { key: 'host_id', label: 'ID', hint: 'Passport or driving licence', expiry: true },
+    { key: 'authority', label: "Owner's consent to host", hint: 'Letter or message from the property owner allowing you to host and us to manage it' },
+    { key: 'cohost_agreement', label: 'Co-hosting agreement', hint: 'The agreement between you and us', byUs: true },
+    { key: 'address', label: 'Proof of address', hint: 'Utility bill or bank statement, under 3 months old' },
+    { key: 'bank', label: 'Bank details', hint: 'Letter or statement for payouts' },
+    { key: 'other', label: 'Other documents', hint: 'Anything else for this co-host', optional: true },
+  ],
 }
 DOC_SETS.ea_landlord = DOC_SETS.landlord
 DOC_SETS.ea_tenant = DOC_SETS.tenant
 // the key documents: everything not marked optional
 export const keyDocs = (subject: DocSubject) => DOC_SETS[subject].filter(t => !t.optional)
-export const DOC_SUBJECT_TABLE: Record<DocSubject, string> = { head_lease: 'pm_head_leases', landlord: 'pm_landlords', tenant: 'pm_tenants', ea_landlord: 'estate_landlords', ea_tenant: 'estate_tenants' }
-export const isSubject = (x: string): x is DocSubject => x === 'head_lease' || x === 'landlord' || x === 'tenant' || x === 'ea_landlord' || x === 'ea_tenant'
+export const DOC_SUBJECT_TABLE: Record<DocSubject, string> = { head_lease: 'pm_head_leases', landlord: 'pm_landlords', tenant: 'pm_tenants', ea_landlord: 'estate_landlords', ea_tenant: 'estate_tenants', cohost: 'cohosts' }
+export const isSubject = (x: string): x is DocSubject => x === 'head_lease' || x === 'landlord' || x === 'tenant' || x === 'ea_landlord' || x === 'ea_tenant' || x === 'cohost'

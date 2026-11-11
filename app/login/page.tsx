@@ -81,6 +81,7 @@ function LoginForm() {
         if (landlordProfile) { window.location.href = '/pm-owner-portal'; return }
         const { data: estateLandlordProfile } = await supabase.from('estate_landlords').select('id').eq('portal_user_id', session.user.id).maybeSingle()
         if (estateLandlordProfile) { window.location.href = '/estate-owner-portal'; return }
+        { const { data: cohostProfile } = await supabase.from('cohosts').select('id').eq('portal_user_id', session.user.id).maybeSingle(); if (cohostProfile) { window.location.href = '/cohost-portal'; return } }
         const { data: tenantProfile } = await supabase.from('pm_tenants').select('id').eq('portal_user_id', session.user.id).maybeSingle()
         if (tenantProfile) { window.location.href = '/pm-tenant-portal'; return }
         const { data: estateTenantProfile } = await supabase.from('estate_tenants').select('id').eq('portal_user_id', session.user.id).maybeSingle()
@@ -126,6 +127,7 @@ function LoginForm() {
           .eq('portal_user_id', data.user?.id)
           .single()
         if (estateLandlordProfile) { window.location.href = '/estate-owner-portal'; return }
+        { const { data: cohostProfile } = await supabase.from('cohosts').select('id').eq('portal_user_id', data.user?.id).maybeSingle(); if (cohostProfile) { window.location.href = '/cohost-portal'; return } }
         // Check if this user is a tenant with portal access — if so, send
         // to the tenant portal
         const { data: tenantProfile } = await supabase

@@ -10,9 +10,9 @@ import type { PortalSubject } from '@/lib/doc-hub'
 //   POST {t, name, email, phone, property?}   → creates (or updates) their owner / tenant record, prepares the contract, returns { link_token, doc_token }
 //   POST {t, action:'finish'}          → marks it done (when there is no contract to sign)
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
-const TABLE = { owner: { pm: 'pm_landlords', ea: 'estate_landlords' }, tenant: { pm: 'pm_tenants', ea: 'estate_tenants' } } as const
-const SUBJECT = { owner: { pm: 'landlord', ea: 'ea_landlord' }, tenant: { pm: 'tenant', ea: 'ea_tenant' } } as const
-const PERSON = { owner: { pm: 'pm_owner', ea: 'ea_owner' }, tenant: { pm: 'pm_tenant', ea: 'ea_tenant' } } as const
+const TABLE = { owner: { pm: 'pm_landlords', ea: 'estate_landlords' }, tenant: { pm: 'pm_tenants', ea: 'estate_tenants' }, cohost: { pm: 'cohosts', ea: 'cohosts', str: 'cohosts' } } as const
+const SUBJECT = { owner: { pm: 'landlord', ea: 'ea_landlord' }, tenant: { pm: 'tenant', ea: 'ea_tenant' }, cohost: { pm: 'cohost', ea: 'cohost', str: 'cohost' } } as const
+const PERSON = { owner: { pm: 'pm_owner', ea: 'ea_owner' }, tenant: { pm: 'pm_tenant', ea: 'ea_tenant' }, cohost: { pm: 'cohost', ea: 'cohost', str: 'cohost' } } as const
 
 async function load(t: string) {
   if (!TOKEN_RE.test(t || '')) return null
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   const l = await load(String(b.t || ''))
   if (!l) return bad('This link is not valid. Please ask us to send you a new one.', 404)
   if (new Date(l.expires_at).getTime() < Date.now() && l.status !== 'done') return bad('This link has expired. Please ask us to send you a new one.', 410)
-  const kind = l.kind as 'owner' | 'tenant', mod = l.module as 'pm' | 'ea'
+  const kind = l.kind as 'owner' | 'tenant' | 'cohost', mod = l.module as 'pm' | 'ea'
 
   if (b.action === 'finish') {
     if (!l.subject_id) return bad('Please add your details first.')

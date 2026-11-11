@@ -7,9 +7,9 @@ import { ensureLink, linkUrl } from '@/lib/client-link'
 import { DOC_SETS, DOC_SUBJECT_TABLE, keyDocs, type DocSubject } from '@/lib/lease-doc-types'
 
 export type PortalSubject = Exclude<DocSubject, 'head_lease'>
-export const PORTAL_SUBJECTS: PortalSubject[] = ['landlord', 'tenant', 'ea_landlord', 'ea_tenant']
-export const PORTAL_PATH: Record<PortalSubject, string> = { landlord: '/pm-owner-portal', tenant: '/pm-tenant-portal', ea_landlord: '/estate-owner-portal', ea_tenant: '/estate-tenant-portal' }
-export const WHO: Record<PortalSubject, string> = { landlord: 'Owner', tenant: 'Tenant', ea_landlord: 'Owner (Estate Agency)', ea_tenant: 'Tenant (Estate Agency)' }
+export const PORTAL_SUBJECTS: PortalSubject[] = ['landlord', 'tenant', 'ea_landlord', 'ea_tenant', 'cohost']
+export const PORTAL_PATH: Record<PortalSubject, string> = { landlord: '/pm-owner-portal', tenant: '/pm-tenant-portal', ea_landlord: '/estate-owner-portal', ea_tenant: '/estate-tenant-portal', cohost: '/cohost-portal' }
+export const WHO: Record<PortalSubject, string> = { landlord: 'Owner', tenant: 'Tenant', ea_landlord: 'Owner (Estate Agency)', ea_tenant: 'Tenant (Estate Agency)', cohost: 'Co-host' }
 export const REMIND_EVERY_DAYS = 3, MAX_REMINDERS = 5
 
 /** Key documents with no pending or approved file yet (rejected files do not count as received). */

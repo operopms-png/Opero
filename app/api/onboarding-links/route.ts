@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const c = await getCaller(req); if (!c) return bad('Not signed in', 401); if (!allowed(c)) return bad('Not allowed.', 403)
   const b = await req.json().catch(() => ({}))
-  if (!['owner', 'tenant'].includes(b.kind) || !['pm', 'ea'].includes(b.module)) return bad('Choose owner or tenant, and Property Management or Estate Agency.')
+  if (b.kind === 'cohost') b.module = 'str'
+  if (!['owner', 'tenant', 'cohost'].includes(b.kind) || !['pm', 'ea', 'str'].includes(b.module)) return bad('Choose owner, tenant or co-host, and Property Management or Estate Agency.')
   let template_id: string | null = null
   if (b.template_id) {
     const { data: t } = await db.from('doc_templates').select('id, needs_signature').eq('id', String(b.template_id)).eq('business_id', c.businessId).maybeSingle()

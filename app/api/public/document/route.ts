@@ -86,10 +86,11 @@ export async function POST(req: NextRequest) {
 // A signed document for an owner or tenant is filed in their Documents checklist (shown in their portal) automatically.
 async function saveSignedCopy(d: any, bytes: Uint8Array) {
   try {
-    const map: Record<string, { subject: 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant'; table: string; category: string }> = {
+    const map: Record<string, { subject: 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant' | 'cohost'; table: string; category: string }> = {
       pm_owner: { subject: 'landlord', table: 'pm_landlords', category: 'mgmt_agreement' },
       pm_tenant: { subject: 'tenant', table: 'pm_tenants', category: 'tenancy' },
       ea_owner: { subject: 'ea_landlord', table: 'estate_landlords', category: 'mgmt_agreement' },
+      cohost: { subject: 'cohost', table: 'cohosts', category: 'cohost_agreement' },
       ea_tenant: { subject: 'ea_tenant', table: 'estate_tenants', category: 'tenancy' },
     }
     const m = map[String(d.person_kind || '')]

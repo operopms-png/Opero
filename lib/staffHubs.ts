@@ -42,6 +42,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Owners & Tenants', icon: 'users', tabs: [
     { href: '/pm?tab=Landlords', label: 'Owners', requiresModule: 'pm' },
     { href: '/pm?tab=Tenants', label: 'Tenants', requiresModule: 'pm' },
+    { href: '/staff-centre/cohosts', label: 'Co-hosts', scTab: 'companydocs' },
     { href: '/staff-centre/documents', label: 'Documents', scTab: 'companydocs' },
   ] },
   { label: 'Partners & Investors', icon: 'users', tabs: [

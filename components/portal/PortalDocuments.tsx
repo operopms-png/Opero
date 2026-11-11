@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-type Kind = 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant'
+type Kind = 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant' | 'cohost'
 const pill = (bg: string, fg: string): React.CSSProperties => ({ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: bg, color: fg, whiteSpace: 'nowrap' })
 const STATE: Record<string, [string, string, string]> = { todo: ['Required', '#FFF4E0', '#B54708'], pending: ['Being reviewed', '#E3EDFA', '#2F6DB5'], approved: ['Approved', '#E7F6EC', '#067647'], rejected: ['Replace', '#FEF3F2', '#B42318'], optional: ['Optional', '#F2F4F7', '#667085'], byus: ["We'll add this", '#F2F4F7', '#667085'] }
 

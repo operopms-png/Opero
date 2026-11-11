@@ -7,9 +7,9 @@ import type { PortalSubject } from '@/lib/doc-hub'
 
 export const LINK_DAYS = 14
 /** person_kind used on invoices and signing documents */
-export const PERSON_KIND: Record<PortalSubject, string> = { landlord: 'pm_owner', tenant: 'pm_tenant', ea_landlord: 'ea_owner', ea_tenant: 'ea_tenant' }
+export const PERSON_KIND: Record<PortalSubject, string> = { landlord: 'pm_owner', tenant: 'pm_tenant', ea_landlord: 'ea_owner', ea_tenant: 'ea_tenant', cohost: 'cohost' }
 /** every person_kind an invoice or document may carry for this kind of person (invoices use 'owner' for owners) */
-export const PERSON_KINDS: Record<PortalSubject, string[]> = { landlord: ['pm_owner', 'owner'], tenant: ['pm_tenant'], ea_landlord: ['ea_owner', 'owner'], ea_tenant: ['ea_tenant'] }
+export const PERSON_KINDS: Record<PortalSubject, string[]> = { landlord: ['pm_owner', 'owner'], tenant: ['pm_tenant'], ea_landlord: ['ea_owner', 'owner'], ea_tenant: ['ea_tenant'], cohost: ['cohost'] }
 export const TOKEN_RE = /^[0-9a-f]{48}$/
 export const linkUrl = (token: string) => `${SITE_URL}/d/${token}`
 

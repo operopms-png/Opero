@@ -16,7 +16,7 @@ const months = (a?: string | null, b?: string | null) => { if (!a || !b) return 
 
 export const PERSON_KINDS: Record<string, string> = {
   pm_tenant: 'Tenant · Property Management', ea_tenant: 'Tenant · Estate Agency', pm_owner: 'Owner · Property Management', ea_owner: 'Owner · Estate Agency',
-  client: 'Client property owner', partner: 'Partner', guest: 'Guest', crm: 'CRM contact',
+  cohost: 'Co-host', client: 'Client property owner', partner: 'Partner', guest: 'Guest', crm: 'CRM contact',
 }
 
 export async function docSettings(biz: string) {
@@ -34,7 +34,7 @@ export async function searchPeople(biz: string, text: string) {
   const t = text.trim(); if (t.length < 2) return []
   const like = `%${t}%`
   const props = await bizPropertyIds(biz)
-  const [crm, pmT, eaT, pmL, eaL, partners, clients, guests] = await Promise.all([
+  const [crm, pmT, eaT, pmL, eaL, partners, clients, guests, cohosts] = await Promise.all([
     q(db.from('crm_contacts').select('id,name,email,phone').eq('user_id', biz).ilike('name', like).limit(6)),
     q(db.from('pm_tenants').select('id,name,email,phone,property_id').eq('user_id', biz).ilike('name', like).limit(8)),
     q(db.from('estate_tenants').select('id,name,email,phone,property_id').eq('user_id', biz).ilike('name', like).limit(8)),
@@ -43,6 +43,7 @@ export async function searchPeople(biz: string, text: string) {
     q(db.from('partner_signups').select('id,name,email,phone').eq('business_id', biz).ilike('name', like).limit(6)),
     q(db.from('client_properties').select('id,owner_name,owner_email,owner_phone,address').eq('business_id', biz).or(`owner_name.ilike.${like},address.ilike.${like}`).limit(6)),
     props.length ? q(db.from('bookings').select('id,guest_name,guest_email,guest_phone,property_id,check_in').in('property_id', props.map(p => p.id)).ilike('guest_name', like).order('check_in', { ascending: false }).limit(6)) : [],
+    q(db.from('cohosts').select('id,name,email,phone').eq('user_id', biz).ilike('name', like).limit(6)),
   ])
   const pmIds = pmT.map((x: any) => x.property_id).filter(Boolean), eaIds = eaT.map((x: any) => x.property_id).filter(Boolean)
   const [pmP, eaP] = await Promise.all([
@@ -57,6 +58,7 @@ export async function searchPeople(biz: string, text: string) {
     ...eaL.map((x: any) => ({ kind: 'ea_owner', id: x.id, name: x.name, email: x.email, phone: x.phone, sub: null })),
     ...clients.map((x: any) => ({ kind: 'client', id: x.id, name: x.owner_name, email: x.owner_email, phone: x.owner_phone, sub: x.address })),
     ...guests.map((x: any) => ({ kind: 'guest', id: x.id, name: x.guest_name, email: x.guest_email, phone: x.guest_phone, sub: [nm(props, x.property_id), longDate(x.check_in)].filter(Boolean).join(' · ') })),
+    ...cohosts.map((x: any) => ({ kind: 'cohost', id: x.id, name: x.name, email: x.email, phone: x.phone, sub: null })),
     ...partners.map((x: any) => ({ kind: 'partner', id: x.id, name: x.name, email: x.email, phone: x.phone, sub: null })),
     ...crm.map((x: any) => ({ kind: 'crm', id: x.id, name: x.name, email: x.email, phone: x.phone, sub: null })),
   ].map(p => ({ ...p, label: PERSON_KINDS[p.kind] })).slice(0, 30)
@@ -93,6 +95,12 @@ export async function fieldsFor(biz: string, kind: string | null, id: string | n
       if (o) v.landlord_name = o.name
       const p = await one(db.from(pm ? 'pm_properties' : 'estate_properties').select('name,address').eq('owner_id', id).limit(1).maybeSingle())
       if (p) { v.property_address = p.address || p.name; property_label = p.name || p.address }
+    } else if (kind === 'cohost') {
+      const o = await one(db.from('cohosts').select('*').eq('id', id).eq('user_id', biz).maybeSingle()); person(o)
+      if (o) v.landlord_name = o.name
+      const pid = o?.property_ids?.[0]
+      const p = pid ? await one(db.from('properties').select('name,address,city').eq('id', pid).maybeSingle()) : null
+      if (p) { v.property_address = [p.address || p.name, p.city].filter(Boolean).join(', '); property_label = p.name || p.address }
     } else if (kind === 'client') {
       const c = await one(db.from('client_properties').select('*').eq('id', id).eq('business_id', biz).maybeSingle())
       if (c) { person({ email: c.owner_email, phone: c.owner_phone }, c.owner_name); v.landlord_name = c.owner_name; v.property_address = [c.address, c.subarea, c.area].filter(Boolean).join(', '); property_label = c.address }

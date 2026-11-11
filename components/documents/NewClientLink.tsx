@@ -27,10 +27,10 @@ export default function NewClientLink({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="New client link" onClose={onClose} width={560}>
       <div style={{ padding: 22 }}>
-        <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>For someone who is not in the system yet. They open the link, add their details, upload documents and sign. Their owner or tenant record is created for you.</div>
+        <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>For someone who is not in the system yet. They open the link, add their details, upload documents and sign. Their owner, tenant or co-host record is created for you.</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div><label style={label} htmlFor="ncl-kind">They are</label><select id="ncl-kind" style={input} value={f.kind} onChange={e => set('kind', e.target.value)}><option value="owner">An owner</option><option value="tenant">A tenant</option></select></div>
-          <div><label style={label} htmlFor="ncl-mod">Added to</label><select id="ncl-mod" style={input} value={f.module} onChange={e => set('module', e.target.value)}><option value="pm">Property Management</option><option value="ea">Estate Agency</option></select></div>
+          <div><label style={label} htmlFor="ncl-kind">They are</label><select id="ncl-kind" style={input} value={f.kind} onChange={e => set('kind', e.target.value)}><option value="owner">An owner</option><option value="tenant">A tenant</option><option value="cohost">A co-host</option></select></div>
+          <div><label style={label} htmlFor="ncl-mod">Added to</label><select id="ncl-mod" style={input} value={f.kind === 'cohost' ? 'pm' : f.module} disabled={f.kind === 'cohost'} onChange={e => set('module', e.target.value)}><option value="pm">Property Management</option><option value="ea">Estate Agency</option></select></div>
         </div>
         <label style={{ ...label, marginTop: 10 }} htmlFor="ncl-tpl">Agreement we add for them to sign</label>
         <select id="ncl-tpl" style={input} value={f.template_id} onChange={e => set('template_id', e.target.value)}><option value="">None (details and documents only, add the agreement later)</option>{templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
@@ -52,7 +52,7 @@ export default function NewClientLink({ onClose }: { onClose: () => void }) {
           <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: C.muted, marginBottom: 6 }}>Recent links</div>
           {links.slice(0, 20).map(l => { const s = l.expired ? ['Expired', '#FEE4E2', '#B42318'] : STATUS[l.status] || STATUS.open; return (
             <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '7px 0', borderTop: '1px solid #F0F1F4', fontSize: 13 }}>
-              <span>{l.name || 'No name yet'} · {l.kind === 'owner' ? 'Owner' : 'Tenant'} · {l.module === 'pm' ? 'PM' : 'Estate'}</span>
+              <span>{l.name || 'No name yet'} · {l.kind === 'owner' ? 'Owner' : l.kind === 'cohost' ? 'Co-host' : 'Tenant'}{l.kind === 'cohost' ? '' : ` · ${l.module === 'pm' ? 'PM' : 'Estate'}`}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {l.status !== 'done' && !l.expired && <button style={btn('ghost', true)} onClick={() => copy(l.url)}>Copy link</button>}
                 <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: s[1], color: s[2], whiteSpace: 'nowrap' }}>{s[0]}</span>
