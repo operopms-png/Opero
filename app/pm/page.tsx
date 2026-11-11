@@ -1226,7 +1226,7 @@ function PMPageInner() {
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
-            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{properties.length+strProperties.length} properties</span>}
+            {tab==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{isBundle?`${properties.length+strProperties.length} properties`:`${allowance.used} / ${propertyLimit} properties`}{!isBundle&&<span title="3 properties are included. Each extra property is £12 a month."> · 3 included, then £12/mo each</span>}</span>}
             {tab!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{tab}</span></>}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:12}}>

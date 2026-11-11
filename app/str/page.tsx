@@ -602,7 +602,7 @@ export default function STRPage() {
             {tab!=='Home'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#323338' }}>{tab}</span></>}
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{allowance.used} / {isBundle?'Unlimited':propertyLimit} properties</span>}
+            {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{allowance.used} / {isBundle?'Unlimited':propertyLimit} properties{!isBundle&&<span title="3 properties are included. Each extra property is £12 a month."> · 3 included, then £12/mo each</span>}</span>}
             {tab==='Bookings' && <button onClick={()=>{setModal('booking');setForm({});setEditId(null)}} style={{ background:'#2F6DB5', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Booking</button>}
             {tab==='Properties' && (!isBundle && allowance.used >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{ background:'#2F6DB5', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>Add more properties</button>
