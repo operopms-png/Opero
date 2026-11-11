@@ -43,6 +43,10 @@ export default function ServicesPack() {
   const copy = async (text: string, msg: string) => { try { await navigator.clipboard.writeText(text); setNote(msg) } catch { setNote(text) } }
   const docs: any[] = d?.docs || [], links: any[] = d?.links || []
   const T = TABS.find(t => t.key === tab)!
+  // The wording that goes with a link: onboarding wording when it carries a document to fill in, otherwise a viewing message. The link sits under it.
+  const msg = (l: any, u: string) => (l.doc_ids as string[]).some(i => docs.find(x => x.id === i)?.fillable)
+    ? `Welcome to NOVOURQ. To get you set up, please use your private onboarding link to add your details and sign your agreement. It only takes a few minutes. This link is personal to you. If you need a hand or a new link, just reply to this message.\n\n${u}`
+    : `Welcome to NOVOURQ. Please use your private link to view your welcome information and documents. If you need a hand, just reply to this message.\n\n${u}`
   const shown = tab === 'all' ? docs : docs.filter(x => T.pick.includes(x.title) || T.more.includes(x.title) || !AUDIENCE_TITLES.has(x.title))
   const openTab = (k: typeof tab) => { const t = TABS.find(z => z.key === k)!; setTab(k); setSel(docs.filter(x => x.active && t.pick.includes(x.title)).map(x => x.id)); setReg(t.reg); setWho(null); setName(t.key === 'all' ? '' : `${t.label} pack`) }
   useEffect(() => { if (docs.length && !ready) { setReady(true); openTab('landlord') } })   // eslint-disable-line react-hooks/exhaustive-deps
@@ -131,12 +135,13 @@ export default function ServicesPack() {
                         <div style={{ fontSize: 12, color: '#667085', marginTop: 3, wordBreak: 'break-all' }}>{u}</div></div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                         <button style={btn('ghost', true)} onClick={() => copy(u, `Link copied: ${u}`)}>Copy link</button>
-                        <button style={btn('ghost', true)} onClick={() => copy(l.subject ? `Welcome to NOVOURQ. To get you set up, please use your private onboarding link to add your details and sign your agreement. It only takes a few minutes. This link is personal to you. If you need a hand or a new link, just reply to this message.\n\n${u}` : `Welcome to NOVOURQ. Please use your private link to view our services and documents. If you need a hand, just reply to this message.\n\n${u}`, 'Email wording copied. Paste it into your email.')}>Copy for email</button>
+                        <button style={btn('ghost', true)} onClick={() => copy(msg(l, u), 'Message and link copied. Paste it into your email or WhatsApp.')}>Copy message</button>
                         <a href={u} target="_blank" rel="noreferrer" style={btn('ghost', true)}>Preview</a>
                         <button style={btn('ghost', true)} onClick={() => act({ action: 'link-update', id: l.id, active: !l.active })}>{l.active ? 'Pause' : 'Turn on'}</button>
                         <button style={btn('ghost', true)} onClick={() => { if (confirm('Delete this link? Anyone who has it will no longer be able to open it.')) act({ action: 'link-delete', id: l.id }) }}>Delete</button>
                       </div>
                     </div>
+                    <div style={{ marginTop: 10, background: '#F3F6FB', border: '1px solid #D5DCEA', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#344054', whiteSpace: 'pre-wrap', lineHeight: 1.5, wordBreak: 'break-word' }}>{msg(l, u)}</div>
                     <div style={{ fontSize: 13, color: '#344054', marginTop: 10 }}><b>{l.opens}</b> {l.opens === 1 ? 'open' : 'opens'} · last opened {when(l.last_opened_at)}</div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                       {(l.doc_ids as string[]).map(i => <span key={i} style={{ fontSize: 12, background: '#EEF2F9', border: '1px solid #D5DCEA', borderRadius: 12, padding: '3px 10px', color: '#182D5E' }}>{title(i)} · {l.doc_views[i] || 0} {(l.doc_views[i] || 0) === 1 ? 'view' : 'views'}</span>)}
