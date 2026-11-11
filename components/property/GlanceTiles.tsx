@@ -108,7 +108,7 @@ async function load(): Promise<Area[]> {
       { label: 'Budget spent', value: budget ? `${Math.round(spent / budget * 100)}%` : '—', note: budget ? `${money(spent)} of ${money(budget)}` : 'No budget set', tone: budget && spent / budget > 1 ? 'bad' : 'plain', href: '/dev?tab=Budget', progress: budget ? Math.min(100, spent / budget * 100) : undefined },
       { label: 'Milestones due, 14 days', value: String(dueMs.length), note: overdueMs ? `${overdueMs} overdue` : 'None overdue', tone: overdueMs ? 'bad' : 'plain', href: '/dev?tab=Milestones' },
       { label: 'Snags open', value: String(snagsOpen), note: 'Not yet resolved', tone: snagsOpen ? 'warn' : 'good', href: '/dev?tab=Projects' },
-      { label: 'Units sold', value: du.length ? `${sold} of ${du.length}` : '—', note: reserved ? `${reserved} reserved` : 'None reserved', tone: 'plain', href: '/dev?tab=Units', progress: du.length ? sold / du.length * 100 : undefined },
+      { label: 'Units sold', value: du.length ? `${sold} of ${du.length}` : '—', note: reserved ? `${reserved} reserved` : 'None reserved', tone: 'plain', href: '/dev?tab=Projects', progress: du.length ? sold / du.length * 100 : undefined },
     ] },
   ]
   return areas

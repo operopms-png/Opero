@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Page links fixed', text: 'Buildings, Inventories and Tenant Checks in Property Management, and the Units sold tile in At a glance, now open their own page instead of the dashboard.' },
   { date: '2026-11-11', title: 'Where do I go?', text: 'Real Estate Intelligence now opens with a Where do I go? box that takes you to the right page for a task, and the areas are named Property Management, Estate Agency and Vacation Rentals.' },
   { date: '2026-11-11', title: 'Tenant checks read by AI', text: 'Tenants now upload ID, right to rent, income and bank statements on their link, and Novourq Cloud AI reads them into Compliance, Tenant Checks for you to review and confirm.' },
   { date: '2026-11-11', title: 'Property on Services Pack links', text: 'Services Pack and New client link: choose the property from a drop-down of your portfolio (or type one that is not listed) and it shows at the top of their page.' },
