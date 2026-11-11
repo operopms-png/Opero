@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       const email = fullSession.customer_details?.email ?? fullSession.customer_email
       const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
       const plan = PLAN_MAP[priceId] ?? 'starter'
-      const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
+      const billingPeriod = (YEARLY_IDS.includes(priceId) || (fullSession.line_items?.data?.[0]?.price as any)?.recurring?.interval === 'year') ? 'yearly' : 'monthly'
       const isOneTime = fullSession.mode === 'payment'
       await supabase.from('webhook_debug_log').insert({ step: 'session_parsed', detail: { email, priceId, plan, isOneTime, sessionId: fullSession.id } })
       if (email) {
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
     const sub = event.data.object as any
     const priceId = sub.items.data[0]?.price?.id ?? ''
     const plan = PLAN_MAP[priceId] ?? 'starter'
-    const billingPeriod = YEARLY_IDS.includes(priceId) ? 'yearly' : 'monthly'
+    const billingPeriod = (YEARLY_IDS.includes(priceId) || sub.items.data[0]?.price?.recurring?.interval === 'year') ? 'yearly' : 'monthly'
     await supabase.from('subscriptions').update({
       plan, billing_period: billingPeriod, status: sub.status,
       trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,

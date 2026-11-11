@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Annual customers in Revenue', text: 'Platform Owner → Revenue and Customers now lists annual subscribers separately and counts them in monthly income at one twelfth of £470.40.' },
   { date: '2026-11-11', title: 'Monthly or annual on sign-up', text: 'The sign-up page now has one plan card with a Monthly (£49) or Annually (£470.40, £588 less 20%) switch instead of two separate plans.' },
   { date: '2026-11-11', title: 'Correct prices on sign-up', text: 'The sign-up page and terms now show Monthly at £49 a month and the one-time plan at £470.40 (£588 less 20%).' },
   { date: '2026-11-11', title: 'Sign-up is open again', text: 'The sign-in page now has a Start your free trial link, and /login?signup=1 opens the sign-up page directly.' },

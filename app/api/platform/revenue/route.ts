@@ -8,7 +8,7 @@ import { requireOwner, clientLabels } from '@/lib/platform-owner-auth'
 const MONTHLY_PRICE = 49        // £ per month, recurring plan
 const ONETIME_PRICE = 470.4     // £ one-off lifetime plan (£588 less 20%)
 
-type Kind = 'monthly' | 'trial' | 'onetime' | 'complimentary' | 'cancelled' | 'failing'
+type Kind = 'monthly' | 'yearly' | 'trial' | 'onetime' | 'complimentary' | 'cancelled' | 'failing'
 
 export async function GET(req: NextRequest) {
   if (!(await requireOwner(req))) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
     else if (oneTime && r.stripe_customer_id) kind = 'onetime'
     else if (st === 'trialing' || (r.trial_end && new Date(r.trial_end).getTime() > now)) kind = 'trial'
     else if (!r.stripe_customer_id && !r.stripe_subscription_id) kind = 'complimentary'
+    else if (period === 'yearly') kind = 'yearly'
     else kind = 'monthly'
     return {
       id: r.user_id, name: labels[r.user_id]?.name, email: labels[r.user_id]?.email, kind, plan: r.plan, period: r.billing_period,
@@ -38,7 +39,8 @@ export async function GET(req: NextRequest) {
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
   const d30 = now - 30 * 864e5
   const summary = {
-    mrr: count('monthly') * MONTHLY_PRICE,
+    mrr: count('monthly') * MONTHLY_PRICE + count('yearly') * ONETIME_PRICE / 12,
+    yearly: count('yearly'),
     monthly: count('monthly'), trial: count('trial'), onetime: count('onetime'), complimentary: count('complimentary'),
     failing: count('failing'), cancelled: count('cancelled'),
     oneTimeRevenue: count('onetime') * ONETIME_PRICE,

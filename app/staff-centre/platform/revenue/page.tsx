@@ -7,6 +7,7 @@ import { ownerFetch } from '../../../../lib/platform-fetch'
 
 const KIND: Record<string, { label: string; color: string }> = {
   monthly: { label: 'Paying monthly', color: '#00C875' },
+  yearly: { label: 'Paying annually', color: '#00B5A5' },
   trial: { label: 'Free trial', color: '#579BFC' },
   onetime: { label: 'One-time purchase', color: '#9D50DD' },
   complimentary: { label: 'Complimentary (no Stripe)', color: '#9699A6' },
@@ -30,8 +31,8 @@ export default function RevenuePage() {
       <CrmHeader theme="blue" title="Revenue and Customers" subtitle="Novourq's own income and customers across every client. Only your login can see this." />
       <Body>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12, marginBottom: 18 }}>
-          <Stat theme="blue" label="Monthly income" value={gbp(s.mrr)} sub={`${s.monthly} paying × ${gbp(s.prices.monthly)}`} highlight />
-          <Stat theme="blue" label="Active subscribers" value={s.monthly + s.trial + s.failing} sub={`${s.trial} on a free trial`} />
+          <Stat theme="blue" label="Monthly income" value={gbp(s.mrr)} sub={`${s.monthly} monthly × ${gbp(s.prices.monthly)}, ${s.yearly ?? 0} annual`} highlight />
+          <Stat theme="blue" label="Active subscribers" value={s.monthly + (s.yearly ?? 0) + s.trial + s.failing} sub={`${s.trial} on a free trial`} />
           <Stat theme="blue" label="New this month" value={s.newThisMonth} />
           <Stat theme="blue" label="Cancelled, last 30 days" value={s.cancelledLast30} sub={`${s.cancelled} in total`} />
           <Stat theme="blue" label="One-time purchases" value={gbp(s.oneTimeRevenue)} sub={`${s.onetime} × ${gbp(s.prices.onetime)}`} />
