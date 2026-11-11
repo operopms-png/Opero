@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Get started checklist', text: 'New accounts see a Get started box at the top of Real Estate Intelligence that walks through adding a property, a landlord and a tenant, and ticks each step off automatically.' },
   { date: '2026-11-11', title: 'Smoother sign-up', text: 'New clients are greeted by their own first name, the sign-up now passes their email to checkout so payment matches the account, and an unpaid account sees a clear message with a Refresh button instead of a dead end.' },
   { date: '2026-11-11', title: 'Page links fixed', text: 'Buildings, Inventories and Tenant Checks in Property Management, and the Units sold tile in At a glance, now open their own page instead of the dashboard.' },
   { date: '2026-11-11', title: 'Where do I go?', text: 'Real Estate Intelligence now opens with a Where do I go? box that takes you to the right page for a task, and the areas are named Property Management, Estate Agency and Vacation Rentals.' },

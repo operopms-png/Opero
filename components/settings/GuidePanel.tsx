@@ -12,6 +12,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
   ] },
   { id: 'rei', title: 'Real Estate Intelligence', steps: [
     'Where do I go? sits at the top of Real Estate Intelligence: pick a task such as Add a tenant, Check a tenant’s ID and income, Add a guest booking or Chase rent and press the area that fits. Property Management means we manage the property for the landlord, Estate Agency means we let or sell it for the landlord, Vacation Rentals means guest bookings. Hover an area name anywhere on the page to see what it means. Limits: it opens the page, it does not add the record for you, and it only shows the areas your role can open.',
+    'Get started checklist: a new account sees it at the top of Real Estate Intelligence with three steps, add your first property, add the landlord who owns it, add a tenant. Press Open on a step to go to the right page. Steps tick off by themselves once a record exists, and the box disappears when all three are done. Press Hide to hide it on this device. Limits: it counts records across Property Management, Estate Agency and Vacation Rentals and only shows steps your role can open.',
     'Real Estate Intelligence is where your records live: properties, landlords, tenants, leases, rent, maintenance, compliance and more.',
     'Pick a module, then a tab. Each tab opens with a blue banner that says what it does.',
     'Add or edit records with the buttons on each tab. Novourq Cloud AI reads these records to do its work, so the more complete they are, the better it works.',

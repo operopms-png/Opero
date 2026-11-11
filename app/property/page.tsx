@@ -2,7 +2,8 @@
 // Property: estate agency, developments, vacation rentals and property management in one place.
 // Every page is listed once under a function heading. The chips show which area holds the
 // records and open that area's version of the page.
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { supabase, getAccountId } from '@/lib/supabase'
 import GlanceTiles from '@/components/property/GlanceTiles'
 import Link from 'next/link'
 import { useRole, ROLE_MODULES } from '@/lib/useRole'
@@ -125,6 +126,20 @@ export default function PropertyHub() {
   const roleModules = teamModules ?? ROLE_MODULES[role] ?? []
   const [cat, setCat] = useState(0)
   const [q, setQ] = useState('')
+  // First-login checklist: shown until the client has a property, a landlord and a tenant, or they hide it.
+  const [counts, setCounts] = useState<{ props: number; landlords: number; tenants: number } | null>(null)
+  const [hideList, setHideList] = useState(true)
+  useEffect(() => {
+    try { setHideList(localStorage.getItem('rei-checklist-hidden') === '1') } catch { setHideList(false) }
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const id = await getAccountId(user)
+      const n = async (t: string, ended = false) => { let q = supabase.from(t).select('id', { count: 'exact', head: true }).eq('user_id', id); if (ended) q = q.is('ended_at', null); const { count } = await q; return count ?? 0 }
+      const [a, b, c, d, e, f] = await Promise.all([n('pm_properties', true), n('estate_properties', true), n('properties', true), n('pm_landlords'), n('estate_landlords'), n('pm_tenants')])
+      const g = await n('estate_tenants')
+      setCounts({ props: a + b + c, landlords: d + e, tenants: f + g })
+    })
+  }, [])
   const term = q.trim().toLowerCase()
   const has = (m: Mod) => roleModules.includes(m)
 
@@ -153,6 +168,32 @@ export default function PropertyHub() {
   return (
     <div style={{ background: '#f6f8fc', minHeight: '100vh', padding: '28px 32px 56px', fontFamily: "'Figtree', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {counts && !hideList && !(counts.props && counts.landlords && counts.tenants) && (() => {
+          const first = (ts: Target[]) => ts.find(t => has(t.mod))
+          const steps = [
+            { done: counts.props > 0, label: 'Add your first property', sub: 'Every record builds on a property.', t: first([pm('Properties'), ea('Properties'), str('Properties')]) },
+            { done: counts.landlords > 0, label: 'Add the landlord who owns it', sub: 'Or send them a link and they add themselves.', t: first([pm('Landlords'), ea('Landlords')]) },
+            { done: counts.tenants > 0, label: 'Add a tenant', sub: 'Or send them a link to fill in their details and upload their ID.', t: first([pm('Tenants'), ea('Tenants')]) },
+          ].filter(x => x.t)
+          const done = steps.filter(x => x.done).length
+          return (
+            <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '16px 20px', marginBottom: 18, boxShadow: shadow }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                <b style={{ color: C.ink, fontSize: 16, fontWeight: 700 }}>Get started: {done} of {steps.length} done</b>
+                <button type="button" onClick={() => { setHideList(true); try { localStorage.setItem('rei-checklist-hidden', '1') } catch { /* hidden for this visit */ } }} style={{ font: 'inherit', fontSize: 13, color: C.muted, background: 'none', border: 0, cursor: 'pointer' }}>Hide</button>
+              </div>
+              <div style={{ height: 6, background: C.soft, borderRadius: 3, margin: '10px 0 8px' }}><div style={{ height: 6, width: `${steps.length ? done / steps.length * 100 : 0}%`, background: C.blue, borderRadius: 3 }} /></div>
+              {steps.map(x => (
+                <div key={x.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: `1px solid ${C.line}` }}>
+                  <span aria-hidden style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, background: x.done ? C.blue : '#fff', color: '#fff', border: `1.5px solid ${x.done ? C.blue : C.line}` }}>{x.done ? '✓' : ''}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ color: C.ink, fontSize: 14.5, fontWeight: 600, textDecoration: x.done ? 'line-through' : 'none' }}>{x.label}</div><div style={{ fontSize: 12.5, color: C.muted }}>{x.sub}</div></div>
+                  {!x.done && x.t && <Link href={HREF(x.t)} style={chip}>Open</Link>}
+                </div>
+              ))}
+              <div style={{ fontSize: 12.5, color: C.muted, paddingTop: 10, borderTop: `1px solid ${C.line}` }}>Need a hand? Settings → Guide has a step-by-step for every page.</div>
+            </div>
+          )
+        })()}
         <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '16px 20px', marginBottom: 18, boxShadow: shadow }}>
           <b style={{ display: 'block', color: C.ink, fontSize: 16, fontWeight: 700 }}>Where do I go?</b>
           <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick what you want to do and we open the right page. {(['pm', 'ea', 'str'] as Mod[]).filter(has).map(m => `${AREA[m]}: ${MEANS[m].toLowerCase()}`).join('. ')}.</p>
