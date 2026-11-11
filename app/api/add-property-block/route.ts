@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getCaller } from '@/lib/mailbox'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +17,11 @@ const BLOCK_COLUMN: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
+    // Only the business's own admin can add paid blocks to its subscription.
+    const caller = await getCaller(req)
+    if (!caller) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
     const { user_id, module } = await req.json()
+    if (!caller.isAdmin || user_id !== caller.businessId) return NextResponse.json({ error: 'Only an admin of this business can add more properties.' }, { status: 403 })
     if (!user_id || !module || !BLOCK_COLUMN[module]) {
       return NextResponse.json({ error: 'Invalid user_id or module' }, { status: 400 })
     }

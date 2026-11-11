@@ -484,9 +484,9 @@ export default function STRPage() {
     }
     const cfg = configs[table]
     if (!cfg) return
-    fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+    supabase.auth.getSession().then(({ data: { session } }) => fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({
       user_id: userId, module: 'str', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/str',
-    }) }).catch(()=>{})
+    }) }).catch(()=>{}))
   }
 
   async function purchaseBlock() {
@@ -494,7 +494,7 @@ export default function STRPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const accountId = user ? await getAccountId(user) : undefined
     const res = await fetch('/api/add-property-block', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ''}` },
       body: JSON.stringify({ user_id: accountId, module: 'str' }),
     })
     const json = await res.json()

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
+import { getCaller } from '@/lib/mailbox'
 import { sendEmail } from '@/lib/send-email'
 import { BRAND_NAME, SITE_URL } from '@/lib/brand'
 
@@ -11,10 +12,14 @@ const TYPE_TO_ROLE: Record<string, string> = {
 }
 
 export async function POST(req: NextRequest) {
+  // Signed-in team members only, and only for their own business, so nobody can fill another business's notifications or email its staff.
+  const caller = await getCaller(req)
+  if (!caller) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   const { user_id, module, type, title, property_name, property_id, link } = await req.json()
   if (!user_id || !type || !title) {
     return NextResponse.json({ error: 'user_id, type, and title are required' }, { status: 400 })
   }
+  if (user_id !== caller.businessId) return NextResponse.json({ error: 'Not allowed.' }, { status: 403 })
 
   const { error: insertError } = await serviceClient.from('notifications').insert({
     user_id, module: module || 'str', type, title, property_name: property_name || null, link: link || null,

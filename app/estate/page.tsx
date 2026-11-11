@@ -657,9 +657,9 @@ export default function Page() {
     }
     const cfg = configs[table]
     if (!cfg) return
-    fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+    supabase.auth.getSession().then(({ data: { session } }) => fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({
       user_id: userId, module: 'estate', type: cfg.type, title: cfg.title, property_name: propertyName, property_id: data.property_id, link: '/estate',
-    }) }).catch(()=>{})
+    }) }).catch(()=>{}))
   }
 
   async function duplicateExpenseToNextMonth(e: any) {
@@ -687,7 +687,7 @@ export default function Page() {
     const { data: { user } } = await supabase.auth.getUser()
     const accountId = user ? await getAccountId(user) : undefined
     const res = await fetch('/api/add-property-block', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ''}` },
       body: JSON.stringify({ user_id: accountId, module: 'ea' }),
     })
     const json = await res.json()
@@ -2570,7 +2570,7 @@ export default function Page() {
               ) : (
                 <div style={{display:'flex',gap:8,marginTop:8,alignItems:'flex-end'}}>
                   <div style={{flex:1}}><label style={{...labelStyle,fontSize:11}}>Name</label><input style={inputStyle} placeholder="e.g. Lettings Team" value={newSendAddress.name} onChange={e=>setNewSendAddress({...newSendAddress,name:e.target.value})}/></div>
-                  <div style={{flex:1}}><label style={{...labelStyle,fontSize:11}}>Email</label><input style={inputStyle} placeholder="lettings@sangstersgroup.com" value={newSendAddress.email} onChange={e=>setNewSendAddress({...newSendAddress,email:e.target.value})}/></div>
+                  <div style={{flex:1}}><label style={{...labelStyle,fontSize:11}}>Email</label><input style={inputStyle} placeholder="lettings@yourcompany.com" value={newSendAddress.email} onChange={e=>setNewSendAddress({...newSendAddress,email:e.target.value})}/></div>
                   <button onClick={saveSendAddress} style={{padding:'9px 14px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap' as const}}>Save</button>
                   <button onClick={()=>{setShowAddSendAddress(false);setNewSendAddress({name:'',email:''})}} style={{padding:'9px 12px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>×</button>
                 </div>

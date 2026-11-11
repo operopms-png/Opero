@@ -150,7 +150,7 @@ export function WebsiteEditor({ value, onChange }: { value: WebsiteFields; onCha
     <div style={{ border: `1px solid ${LINE}`, borderRadius: 10, padding: 16, marginBottom: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: CREAM, border: '1px solid #F0E3C4', borderRadius: 8, padding: '10px 12px', marginBottom: value.show_on_website ? 14 : 0 }}>
         <div>
-          <div style={{ fontSize: 13.5, fontWeight: 600, color: BROWN }}>Show on sangstersgroup.com</div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: BROWN }}>Show on your website</div>
           <div style={{ fontSize: 12, color: '#89CFF0' }}>Appears on the website’s property search and home page. Rented properties show as “Currently let”.</div>
         </div>
         <button type="button" role="switch" aria-checked={value.show_on_website} onClick={() => onChange({ show_on_website: !value.show_on_website })} style={{ width: 46, height: 26, borderRadius: 13, border: 'none', background: value.show_on_website ? '#00C875' : '#C4C4C4', position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
