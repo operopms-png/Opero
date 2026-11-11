@@ -206,7 +206,7 @@ function LoginForm() {
             <span style={{ fontSize: 16, fontWeight: 700, color: '#323338' }}>NOVOURQ</span>
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Choose your plan</div>
-          <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>14-day free trial · No credit card required</div>
+          <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>14-day free trial · Card required, you are not charged until the trial ends, cancel anytime</div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {PLANS.map(plan => (
