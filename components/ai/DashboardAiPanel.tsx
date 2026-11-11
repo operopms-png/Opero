@@ -18,7 +18,7 @@ function ago(iso?: string | null) {
   const d = Math.round(m / 1440); return d === 1 ? 'yesterday' : d < 7 ? `${d} days ago` : new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-export default function DashboardAiPanel() {
+export default function DashboardAiPanel({ mapSlot, children }: { mapSlot?: React.ReactNode; children?: (automation: React.ReactNode) => React.ReactNode }) {
   const [ov, setOv] = useState<any>(null)
   const [wf, setWf] = useState<any[] | null>(null)
   const [act, setAct] = useState<any[] | null>(null)
@@ -42,7 +42,28 @@ export default function DashboardAiPanel() {
     return href ? <Link href={href} style={{ ...box, padding: 16, textDecoration: 'none', display: 'block' }}>{inner}</Link> : <div style={{ ...box, padding: 16 }}>{inner}</div>
   }
 
+  const automationBox = (
+        <div style={{ ...box, padding: 18, minWidth: 0 }}>
+          <h3 style={head}>Automation by area</h3>
+          {wf === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : Object.keys(areas).length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No automations yet.</div> : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {Object.entries(areas).map(([name, a]) => (
+                <div key={name}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: K.ink, marginBottom: 6, fontWeight: 600 }}><span>{name}</span><span style={{ color: K.blue, fontWeight: 700 }}>{a.on} of {a.n} on</span></div>
+                  <div style={{ height: 7, borderRadius: 7, background: '#dbe8fa', overflow: 'hidden' }}><div style={{ width: `${(a.on / a.n) * 100}%`, height: '100%', background: 'linear-gradient(90deg,#2f5bd6,#6c9bff)', borderRadius: 7 }} /></div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                    {a.items.map(w => <span key={w.agent} style={{ fontSize: 11.5, color: w.on ? K.mid : '#8a9bc0', background: w.on ? K.chip : '#f5f7fb', border: `1px ${w.on ? 'solid' : 'dashed'} ${K.chipLine}`, borderRadius: 999, padding: '3px 9px' }}>{w.label.replace(/ \(.*\)$/, '')}</span>)}
+                  </div>
+                </div>
+              ))}
+              <Link href="/staff-centre/ai-command-centre/agents" style={{ fontSize: 12.5, color: K.blue, fontWeight: 600, textDecoration: 'none' }}>Manage skills →</Link>
+            </div>
+          )}
+        </div>
+  )
+
   return (
+    <>
     <div style={{ marginBottom: 18 }}>
       <style>{`.ai-strip{display:grid;grid-template-columns:1.1fr repeat(4,minmax(0,1fr));gap:12px}
         .ai-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
@@ -78,23 +99,7 @@ export default function DashboardAiPanel() {
       </div>
 
       <div className="ai-two">
-        <div style={{ ...box, padding: 18, minWidth: 0 }}>
-          <h3 style={head}>Automation by area</h3>
-          {wf === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : Object.keys(areas).length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No automations yet.</div> : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {Object.entries(areas).map(([name, a]) => (
-                <div key={name}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: K.ink, marginBottom: 6, fontWeight: 600 }}><span>{name}</span><span style={{ color: K.blue, fontWeight: 700 }}>{a.on} of {a.n} on</span></div>
-                  <div style={{ height: 7, borderRadius: 7, background: '#dbe8fa', overflow: 'hidden' }}><div style={{ width: `${(a.on / a.n) * 100}%`, height: '100%', background: 'linear-gradient(90deg,#2f5bd6,#6c9bff)', borderRadius: 7 }} /></div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                    {a.items.map(w => <span key={w.agent} style={{ fontSize: 11.5, color: w.on ? K.mid : '#8a9bc0', background: w.on ? K.chip : '#f5f7fb', border: `1px ${w.on ? 'solid' : 'dashed'} ${K.chipLine}`, borderRadius: 999, padding: '3px 9px' }}>{w.label.replace(/ \(.*\)$/, '')}</span>)}
-                  </div>
-                </div>
-              ))}
-              <Link href="/staff-centre/ai-command-centre/agents" style={{ fontSize: 12.5, color: K.blue, fontWeight: 600, textDecoration: 'none' }}>Manage skills →</Link>
-            </div>
-          )}
-        </div>
+        {mapSlot ?? automationBox}
         <div style={{ ...box, padding: 18, minWidth: 0 }}>
           <h3 style={head}>What Novourq Cloud AI did</h3>
           {act === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : act.length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No activity yet. Switch on a skill and its work will show here.</div> : act.map((x, i) => (
@@ -107,5 +112,7 @@ export default function DashboardAiPanel() {
         </div>
       </div>
     </div>
+    {mapSlot && children ? children(automationBox) : null}
+    </>
   )
 }

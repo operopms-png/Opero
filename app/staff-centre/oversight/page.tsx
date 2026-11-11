@@ -135,12 +135,14 @@ export default function Dashboard() {
         )}
         {err && <div style={{ ...card, padding: 14, color: '#B42318', marginBottom: 16 }}>{err} <button onClick={() => load()} style={{ marginLeft: 8, border: 'none', background: 'none', color: C.goldT, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Try again</button></div>}
 
-        <DashboardAiPanel />
-
-        <div className="dash-two">
-          <PropertyMap compact />
-          <PortfolioPerformancePanel />
-        </div>
+        <DashboardAiPanel mapSlot={<PropertyMap compact />}>
+          {automation => (
+            <div className="dash-two" style={{ marginTop: 0, marginBottom: 16 }}>
+              <PortfolioPerformancePanel />
+              {automation}
+            </div>
+          )}
+        </DashboardAiPanel>
 
         {/* Business cards */}
         <div className="dash-grid3">

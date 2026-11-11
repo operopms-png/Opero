@@ -4,7 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
-  { date: '2026-11-11', title: 'Dashboard layout', text: 'Dashboard: the Property map now sits on the left and Portfolio Performance (money in, money out, net) on the right.' },
+  { date: '2026-11-11', title: 'Dashboard layout', text: 'Dashboard: the Property map now sits beside What Novourq Cloud AI did, and Automation by area moved down next to Portfolio Performance.' },
   { date: '2026-11-11', title: 'Landlord, Co-host and Tenant packs', text: 'Marketing, Services Pack: press Landlord pack, Co-host pack or Tenant pack to tick the right documents in one click, including the new portal guides and Welcome page.' },
   { date: '2026-11-11', title: 'Welcome page in Services Pack', text: 'Marketing, Services Pack: a branded Welcome to NOVOURQ page for any landlord, co-host or tenant. Tick it with the other documents when you create a link.' },
   { date: '2026-11-11', title: 'Services Pack', text: 'Marketing, Services Pack: send the brochure, landlord pack and flyers by one link. Recipients choose each document to view, and you see opens and views.' },
