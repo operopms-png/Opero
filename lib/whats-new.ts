@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Your plan in Settings', text: 'Settings → Payments now shows your NOVOURQ plan, status and trial days left, with a Manage billing button for your card, invoices and cancelling.' },
   { date: '2026-11-11', title: 'Your currency in more places', text: 'Marketing budgets, Vendors invoices, CRM deal values and the Rent and Finance totals now use your company currency symbol instead of always showing pounds.' },
   { date: '2026-11-11', title: 'Free trial countdown', text: 'During the 14-day free trial, the bottom of the left menu now shows how many days are left, turning amber in the last 3 days.' },
   { date: '2026-11-11', title: 'Clearer step after paying', text: 'After paying on sign-up, the page now says to confirm your email and then sign in, and opens the sign-in form instead of the sign-up form.' },

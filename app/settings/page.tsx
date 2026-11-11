@@ -40,6 +40,8 @@ function SettingsInner() {
   useEffect(() => { if (sectionParam === 'Guide') window.location.replace('/help') }, [sectionParam])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [mySub, setMySub] = useState<any>(null)
+  const [openingBilling, setOpeningBilling] = useState(false)
   const [team, setTeam] = useState<any[]>([])
   const [allProperties, setAllProperties] = useState<any[]>([])
   const [assignedPropertyIds, setAssignedPropertyIds] = useState<string[]>([])
@@ -86,6 +88,7 @@ function SettingsInner() {
       setUser(user)
       const {data:sub} = await supabase.from('subscriptions').select('*').eq('user_id',user.id).single()
       if(sub){
+        setMySub(sub)
         setApiKey((sub as any).api_key??'')
         setConnectAccountId((sub as any).stripe_connect_account_id??null)
         setConnectOnboarded(!!(sub as any).stripe_connect_onboarded)
@@ -176,6 +179,17 @@ function SettingsInner() {
     return { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
   }
 
+  async function openBilling() {
+    setOpeningBilling(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const r = await fetch('/api/billing-portal', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } })
+      const j = await r.json()
+      if (j.url) { window.location.href = j.url; return }
+      alert(j.error || 'Could not open billing.')
+    } catch { alert('Could not open billing.') }
+    setOpeningBilling(false)
+  }
   async function connectStripe() {
     setConnectingStripe(true)
     try {
@@ -494,6 +508,33 @@ function SettingsInner() {
           </div>)}
 
           {section==='Payments'&&(<div style={{maxWidth:700}}>
+            {mySub && (mySub.stripe_customer_id || mySub.billing_period === 'lifetime') && (() => {
+              const lifetime = mySub.billing_period === 'lifetime'
+              const yearly = mySub.billing_period === 'yearly'
+              const planName = lifetime ? 'Lifetime access' : yearly ? 'NOVOURQ Annual' : 'NOVOURQ Monthly'
+              const price = lifetime ? '£175.50 one-time' : yearly ? '£470.40 a year' : '£49 a month'
+              const trialing = mySub.status === 'trialing' && mySub.trial_end
+              const daysLeft = trialing ? Math.max(0, Math.ceil((new Date(mySub.trial_end).getTime() - Date.now()) / 86400000)) : 0
+              const when = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+              const status = lifetime ? 'Paid in full, no further payments' : trialing ? `Free trial, ${daysLeft} day${daysLeft === 1 ? '' : 's'} left. First payment on ${when(mySub.trial_end)}` : mySub.status === 'active' ? 'Active' : mySub.status === 'canceled' ? 'Cancelled' : mySub.status === 'past_due' ? 'Payment overdue, please update your card' : (mySub.status || 'Active')
+              return (
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
+                  <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>Your NOVOURQ plan</h3>
+                  <div style={{fontSize:13,color:'#667085',marginBottom:14}}>All modules included: Real Estate Intelligence, Novourq Cloud AI and the Human Intelligence Hub.</div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap',padding:'12px 14px',borderRadius:8,background:'#F4F8FD',border:'1px solid #C9DEF3'}}>
+                    <div>
+                      <div style={{fontSize:15,fontWeight:700,color:'#1D4E89'}}>{planName}</div>
+                      <div style={{fontSize:13,color:'#344054',marginTop:2}}>{price}</div>
+                      <div style={{fontSize:12,color:'#667085',marginTop:4}}>{status}</div>
+                    </div>
+                    {!lifetime && mySub.stripe_customer_id && (
+                      <button onClick={openBilling} disabled={openingBilling} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:openingBilling?0.6:1}}>{openingBilling?'Opening…':'Manage billing'}</button>
+                    )}
+                  </div>
+                  {!lifetime && <div style={{fontSize:12,color:'#98A2B3',marginTop:10}}>Manage billing opens a secure Stripe page where you can update your card, see invoices, change plan or cancel.</div>}
+                </div>
+              )
+            })()}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                 <div>
