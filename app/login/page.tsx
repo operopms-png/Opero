@@ -51,7 +51,8 @@ function LoginForm() {
   const success = searchParams.get('success') === 'true'
   const explicitRedirect = searchParams.get('redirect')
   const redirect = explicitRedirect ?? '/dashboard'
-  const fromPricing = false // invite-only: public sign-up removed
+  // Sign-up is open: /login?signup=1 (or any link carrying a plan) opens it, and the sign-in form offers a free trial.
+  const fromPricing = searchParams.get('signup') === '1' || searchParams.get('plan') !== null
 
   // Anyone with Staff Centre access lands on the Staff Centre Dashboard
   // (renamed from "Oversight") first, not the generic account dashboard --
@@ -69,7 +70,7 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(fromPricing ? 'signup' : 'login')
-  const [selectedPlan, setSelectedPlan] = useState('')
+  const [selectedPlan, setSelectedPlan] = useState(fromPricing ? initialPlan : '')
   const [checkingSession, setCheckingSession] = useState(true)
 
   useEffect(() => {
@@ -305,7 +306,7 @@ function LoginForm() {
           <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#667085', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mode === 'login' && (
               <>
-                <div>No account? Ask your manager for an invite.</div>
+                <div>New to NOVOURQ? <button onClick={() => { setError(''); setSelectedPlan(initialPlan); setMode('signup') }} style={{ background: 'none', border: 'none', color: '#1B2F6E', cursor: 'pointer', fontWeight: 600, fontSize: 13, fontFamily: 'inherit' }}>Start your free trial</button>. Joining a team? Ask your manager for an invite.</div>
                 <div><button onClick={() => setMode('reset')} style={{ background: 'none', border: 'none', color: '#98A2B3', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Forgot password?</button></div>
               </>
             )}

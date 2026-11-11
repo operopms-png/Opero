@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Sign-up is open again', text: 'The sign-in page now has a Start your free trial link, and /login?signup=1 opens the sign-up page directly.' },
   { date: '2026-11-11', title: 'Choose your currency first', text: 'The Get started checklist now begins with Choose your currency, and ticks off once an admin saves a currency in Settings → Currency.' },
   { date: '2026-11-11', title: 'Portals in your currency', text: 'Landlord and tenant portals now show the currency symbol of the company they belong to instead of always showing pounds.' },
   { date: '2026-11-11', title: 'Invoices in your currency', text: 'New invoices start in your company currency and can be switched to pound, US dollar, Jamaican dollar, euro, UAE dirham or Canadian dollar; overdue rent emails and landlord statements show your symbol.' },
