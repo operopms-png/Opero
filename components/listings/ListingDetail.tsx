@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import PhotoSlider, { Lightbox, BRAND } from './PhotoSlider'
 import { TopBar, pageCss, areaOf, inp, lbl } from './ListingsBrowser'
-import { money, bedLabel, titleCase, type Listing } from '@/lib/listings-shared'
+import { money, bedLabel, titleCase, videoEmbed, type Listing } from '@/lib/listings-shared'
 
 export default function ListingDetail({ home }: { home: Listing }) {
   const [i, setI] = useState(0)
@@ -65,6 +65,13 @@ export default function ListingDetail({ home }: { home: Listing }) {
               <h3 style={{ color: BRAND.brown, fontSize: 16, margin: '22px 0 10px' }}>Features</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{home.features.map(f => <span key={f} style={{ border: `1px solid ${BRAND.line}`, borderRadius: 20, padding: '6px 12px', fontSize: 13.5 }}>✓ {f}</span>)}</div>
             </>}
+            {home.videos.length > 0 && <>
+              <h3 style={{ color: BRAND.brown, fontSize: 16, margin: '22px 0 4px' }}>Virtual viewing</h3>
+              <div style={{ color: BRAND.muted, fontSize: 14, marginBottom: 10 }}>Cannot visit in person? Watch the walk-through, then request a viewing or a video call.</div>
+              <div style={{ display: 'grid', gap: 14 }}>{home.videos.map(v => { const e = videoEmbed(v.url); return (
+                <div key={v.url}>{e ? <iframe src={e} title={v.title || 'Virtual viewing'} style={{ width: '100%', aspectRatio: '16 / 9', border: 'none', borderRadius: 10 }} allowFullScreen /> : <video src={v.url} controls playsInline preload="metadata" style={{ width: '100%', borderRadius: 10, background: '#000' }} />}
+                {v.title && <div style={{ fontSize: 13.5, color: BRAND.muted, marginTop: 4 }}>{v.title}</div>}</div>) })}</div>
+            </>}
           </div>
           <ViewingForm home={home} />
         </div>
@@ -76,6 +83,7 @@ export default function ListingDetail({ home }: { home: Listing }) {
 
 function ViewingForm({ home }: { home: Listing }) {
   const [f, setF] = useState({ name: '', email: '', phone: '', day: '', part: 'Any time', message: '', website: '' })
+  const [remote, setRemote] = useState(false)
   const [busy, setBusy] = useState(false), [err, setErr] = useState(''), [done, setDone] = useState(false)
   const set = (k: string, v: string) => setF(p => ({ ...p, [k]: v }))
   const today = new Date().toISOString().slice(0, 10)
@@ -84,7 +92,7 @@ function ViewingForm({ home }: { home: Listing }) {
     const day = f.day ? new Date(f.day + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) : ''
     const t = [day, f.part.toLowerCase()].filter(Boolean).join(', ')
     try {
-      const r = await fetch('/api/listings/enquiry', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'viewing', property_id: home.id, name: f.name, email: f.email, phone: f.phone, preferred_time: t.charAt(0).toUpperCase() + t.slice(1), message: f.message, website: f.website }) })
+      const r = await fetch('/api/listings/enquiry', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind: 'viewing', property_id: home.id, name: f.name, email: f.email, phone: f.phone, preferred_time: t.charAt(0).toUpperCase() + t.slice(1), message: (remote ? '[Video call viewing requested: the tenant cannot visit in person] ' : '') + f.message, website: f.website }) })
       const d = await r.json().catch(() => ({}))
       if (!r.ok || d.error) setErr(d.error || 'Something went wrong — please try again.'); else setDone(true)
     } catch { setErr('Something went wrong — please try again.') }
@@ -111,6 +119,7 @@ function ViewingForm({ home }: { home: Listing }) {
               <select className="lst-in" style={{ ...inp, cursor: 'pointer' }} value={f.part} onChange={e => set('part', e.target.value)} aria-label="Time of day">{['Any time', 'Morning', 'Afternoon', 'Evening'].map(p => <option key={p}>{p}</option>)}</select>
             </div>
           </div>
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, cursor: 'pointer' }}><input type="checkbox" checked={remote} onChange={e => setRemote(e.target.checked)} /> I cannot visit in person. Please arrange a video call.</label>
           <div><label style={lbl}>Message</label><textarea className="lst-in" style={{ ...inp, minHeight: 70, resize: 'vertical' }} value={f.message} onChange={e => set('message', e.target.value)} placeholder="Questions, move-in date, who’ll be living there…" /></div>
           <input tabIndex={-1} autoComplete="off" value={f.website} onChange={e => set('website', e.target.value)} aria-hidden="true" style={{ position: 'absolute', left: -9999, width: 1, height: 1, opacity: 0 }} />
           {err && <div style={{ color: '#C62828', fontSize: 14 }}>{err}</div>}

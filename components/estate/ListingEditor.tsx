@@ -5,7 +5,7 @@
 // (many per property — drag to reorder, first is the cover, add captions).
 import { useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { CURRENCIES } from '@/lib/listings-shared'
+import { CURRENCIES, parseVideos, videoEmbed } from '@/lib/listings-shared'
 
 const GD = '#89CFF0', BROWN = '#89CFF0', CREAM = '#FBF4E6', LINE = '#E4E7EC', MUTED = '#667085'
 export type ListingFields = { listed: boolean; currency: string; available_from: string; description: string; features: string[]; image_urls: string; photo_captions: Record<string, string> }
@@ -170,6 +170,49 @@ export function WebsiteEditor({ value, onChange }: { value: WebsiteFields; onCha
           {f('web_sort', 'Order on website', '0', 'Lower numbers show first', 'number')}
         </div>
       )}
+    </div>
+  )
+}
+
+// ---------- Virtual viewing: videos tenants can watch when they cannot visit ----------
+export function VideoEditor({ value, onChange }: { value: string | null | undefined; onChange: (v: string) => void }) {
+  const vids = parseVideos(value)
+  const [busy, setBusy] = useState(false)
+  const [link, setLink] = useState('')
+  const [err, setErr] = useState('')
+  const save = (next: { url: string; title: string }[]) => onChange(JSON.stringify(next))
+  async function addFile(f: File) {
+    setBusy(true); setErr('')
+    const ext = (f.name.split('.').pop() || 'mp4').toLowerCase()
+    const path = `estate-properties/videos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('pm-files').upload(path, f, { contentType: f.type || 'video/mp4', cacheControl: '31536000' })
+    setBusy(false)
+    if (error) { setErr(/size|large|exceed/i.test(error.message) ? 'That video is too large to upload. Trim it, or upload it to YouTube (unlisted) and paste the link.' : error.message); return }
+    save([...vids, { url: supabase.storage.from('pm-files').getPublicUrl(path).data.publicUrl, title: f.name.replace(/\.[^.]+$/, '') }])
+  }
+  return (
+    <div style={{ border: `1px solid ${LINE}`, borderRadius: 10, padding: 16, marginBottom: 12 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>Virtual viewing videos</div>
+      <div style={{ fontSize: 12.5, color: MUTED, margin: '2px 0 10px' }}>For tenants who cannot visit in person. They watch these on the property page before asking for a viewing.</div>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {vids.map((v, i) => { const e = videoEmbed(v.url); return (
+          <div key={v.url} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,200px) minmax(0,1fr)', gap: 10, alignItems: 'start' }}>
+            {e ? <iframe src={e} style={{ width: '100%', aspectRatio: '16 / 9', border: 'none', borderRadius: 8 }} allowFullScreen /> : <video src={v.url} controls preload="metadata" style={{ width: '100%', borderRadius: 8, background: '#000' }} />}
+            <div style={{ display: 'grid', gap: 6 }}>
+              <input value={v.title} onChange={ev => save(vids.map((x, k) => k === i ? { ...x, title: ev.target.value } : x))} placeholder="Title, for example Living room and kitchen" style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              <div style={{ display: 'flex', gap: 6 }}>
+                {i > 0 && <button type="button" onClick={() => { const n = [...vids]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; save(n) }} style={{ border: '1px solid #D0D5DD', background: '#fff', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5 }}>Move earlier</button>}
+                <button type="button" onClick={() => save(vids.filter((_, k) => k !== i))} style={{ border: '1px solid #D0D5DD', background: '#fff', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: '#B42318' }}>Remove</button>
+              </div>
+            </div>
+          </div>) })}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <label style={{ border: `2px dashed ${GD}`, borderRadius: 8, padding: '8px 14px', color: '#2F6DB5', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>{busy ? 'Uploading, please wait…' : '+ Upload video'}<input type="file" accept="video/*" hidden disabled={busy} onChange={e => { const f = e.target.files?.[0]; if (f) addFile(f); e.target.value = '' }} /></label>
+          <input value={link} onChange={e => setLink(e.target.value)} placeholder="Or paste a YouTube or Vimeo link" style={{ flex: 1, minWidth: 180, padding: '8px 10px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 13, fontFamily: 'inherit' }} />
+          <button type="button" disabled={!link.trim()} onClick={() => { if (!/^https?:\/\//.test(link.trim())) { setErr('Paste a full link starting with https://'); return } setErr(''); save([...vids, { url: link.trim(), title: '' }]); setLink('') }} style={{ border: '1px solid #2F6DB5', background: '#fff', color: '#2F6DB5', borderRadius: 8, padding: '8px 14px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 }}>Add link</button>
+        </div>
+        {err && <div style={{ fontSize: 12.5, color: '#B42318' }}>{err}</div>}
+      </div>
     </div>
   )
 }

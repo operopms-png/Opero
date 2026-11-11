@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
-import ListingEditor, { parseUrls, type ListingFields } from '../../../components/estate/ListingEditor'
+import ListingEditor, { VideoEditor, parseUrls, type ListingFields } from '../../../components/estate/ListingEditor'
 import { CURRENCIES } from '../../../lib/listings-shared'
 
 const HIDDEN = ['rented', 'archived', 'let agreed']
@@ -61,7 +61,7 @@ export default function ListingsPage() {
   async function save() {
     if (!edit) return
     setSaving(true)
-    const patch = { listed: edit.listed, currency: edit.currency || 'JMD', available_from: edit.available_from || null, description: edit.description || null, features: edit.features ?? [], image_urls: edit.image_urls || null, photo_captions: edit.photo_captions ?? {}, rent: edit.rent === '' || edit.rent == null ? null : edit.rent }
+    const patch = { listed: edit.listed, currency: edit.currency || 'JMD', available_from: edit.available_from || null, description: edit.description || null, features: edit.features ?? [], image_urls: edit.image_urls || null, video_urls: edit.video_urls || null, photo_captions: edit.photo_captions ?? {}, rent: edit.rent === '' || edit.rent == null ? null : edit.rent }
     const { error } = await supabase.from('estate_properties').update(patch).eq('id', edit.id)
     setSaving(false)
     if (error) { flash(error.message); return }
@@ -147,6 +147,7 @@ export default function ListingsPage() {
             <input type="number" value={edit.rent ?? ''} onChange={e => setEdit((x: any) => ({ ...x, rent: e.target.value }))} style={inp} />
           </div>
           <ListingEditor value={edit as ListingFields} onChange={patch => setEdit((x: any) => ({ ...x, ...patch }))} rentLabel="the rent" propertyId={edit.id} />
+          <VideoEditor value={edit.video_urls} onChange={v => setEdit((x: any) => ({ ...x, video_urls: v }))} />
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 6 }}>
             <button onClick={() => setEdit(null)} style={btn('ghost')}>Cancel</button>
             <button onClick={save} disabled={saving} style={{ ...btn('gold'), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>

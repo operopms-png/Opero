@@ -21,6 +21,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
   { id: 'hih', title: 'Human Intelligence Hub', steps: [
     'The Human Intelligence Hub covers your customers, team and finances: inbox, website chats, CRM, invoices, arrears, tasks, people and training.',
     'Use it for the day-to-day running of your company. Novourq Cloud AI works the same areas in the background.',
+    'Virtual viewings: for tenants who cannot visit, open Marketing, then Listings, press a property and add walk-through videos under Virtual viewing videos (upload, or paste a YouTube or Vimeo link). Tenants watch them on the property\'s public page and can tick that they want a video call instead. Use an unlisted YouTube link for very large videos.',
     'Staff Training (Team) opens on Portal guides: a how-to for every tab with steps, pictures and video, a What\'s new box that lists recent changes, and search. Every new tab appears there on its own. Admins add pictures and videos to a tab (upload or paste a YouTube or Vimeo link); a tab without one shows the matching area video. Company training, the PDFs and videos you add for the team, is the second button.',
     'Under Team, Activity Log records who changed what and when. Admins and co-founders see every change in the company. Everyone else sees only their own. Changes made by Novourq Cloud AI or an automatic job show as "Novourq Cloud AI or system". Bank and ID details are never stored in it.',
   ] },
