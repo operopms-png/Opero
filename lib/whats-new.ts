@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Team members add to the company records', text: 'CRM contacts and deals, vendors, work orders, service, reporting, documents and properties added by a team member now save to the company, so the owner and the rest of the team see them straight away.' },
   { date: '2026-11-11', title: 'Team members see company marketing and documents', text: 'Team members now see and add the company\'s Marketing campaigns, emails and Company Documents, and the AI lead, guest, maintenance, cleaning and revenue helpers use your company name and your company\'s records.' },
   { date: '2026-11-11', title: 'No Jamaica defaults', text: 'New client properties and website listings no longer start with Jamaica and Jamaican dollars filled in; they start with your company currency and an empty country.' },
   { date: '2026-11-11', title: 'Your currency in AI drafts, statements and alerts', text: 'Landlord statement emails, the AI owner report, revenue suggestions, approval alerts, bill alerts, the Developments card and the salary and budget columns now use your company currency instead of always pounds.' },

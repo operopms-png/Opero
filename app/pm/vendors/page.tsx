@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 import { cur } from '../../../lib/company-currency'
 const ACCENT = '#2F6DB5'
 const MODULE = 'pm'
@@ -46,7 +46,7 @@ export default function Page() {
     if(!wo.title) return
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from('vendor_work_orders').insert([{...wo,contractor_id:wo.contractor_id||null,user_id:user?.id,module:MODULE,status:'Open'}])
+    const {error} = await supabase.from('vendor_work_orders').insert([{...wo,contractor_id:wo.contractor_id||null,user_id:user ? await getAccountId(user) : undefined,module:MODULE,status:'Open'}])
     setSaving(false)
     if(error){alert(error.message);return}
     setWo({title:'',description:'',contractor_id:'',priority:'Medium',property:''})
@@ -58,7 +58,7 @@ export default function Page() {
     if(!con.name) return
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from('vendor_contractors').insert([{...con,user_id:user?.id,module:MODULE,status:'Active'}])
+    const {error} = await supabase.from('vendor_contractors').insert([{...con,user_id:user ? await getAccountId(user) : undefined,module:MODULE,status:'Active'}])
     setSaving(false)
     if(error){alert(error.message);return}
     setCon({name:'',email:'',phone:'',type:'Cleaner',company:''})

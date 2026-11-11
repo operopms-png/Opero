@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 import { cur } from '../../../lib/company-currency'
 const ACCENT = '#2F6DB5'
 const MODULE = 'estate'
@@ -46,7 +46,7 @@ export default function Page() {
       const {error}=await supabase.from('crm_contacts').update(contactForm).eq('id',editId)
       if(error){alert(error.message);setSaving(false);return}
     } else {
-      const {error}=await supabase.from('crm_contacts').insert([{...contactForm,user_id:user?.id,module:MODULE}])
+      const {error}=await supabase.from('crm_contacts').insert([{...contactForm,user_id:user ? await getAccountId(user) : undefined,module:MODULE}])
       if(error){alert(error.message);setSaving(false);return}
     }
     setSaving(false); setContactForm({name:'',email:'',phone:'',type:'Landlord',notes:''}); setShowContactForm(false); setEditId(null)
@@ -62,7 +62,7 @@ export default function Page() {
       const {error}=await supabase.from('crm_deals').update(payload).eq('id',editId)
       if(error){alert(error.message);setSaving(false);return}
     } else {
-      const {error}=await supabase.from('crm_deals').insert([{...payload,user_id:user?.id,module:MODULE}])
+      const {error}=await supabase.from('crm_deals').insert([{...payload,user_id:user ? await getAccountId(user) : undefined,module:MODULE}])
       if(error){alert(error.message);setSaving(false);return}
     }
     setSaving(false); setDealForm({name:'',contact_id:'',value:'',stage:'Enquiry'}); setShowDealForm(false); setEditId(null)

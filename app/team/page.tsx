@@ -40,7 +40,7 @@ export default function TeamPage() {
       const { error } = await supabase.from('team_members').update({ ...form }).eq('id', editId)
       if (error) { alert(error.message); setSaving(false); return }
     } else {
-      const { error } = await supabase.from('team_members').insert([{ ...form, user_id: user?.id }])
+      const { error } = await supabase.from('team_members').insert([{ ...form, user_id: user ? await getAccountId(user) : undefined }])
       if (error) { alert(error.message); setSaving(false); return }
     }
     setSaving(false)

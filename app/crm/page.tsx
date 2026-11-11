@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 const DEAL_STAGES = ['Lead','Qualified','Proposal','Negotiation','Closed Won','Closed Lost']
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
@@ -111,7 +111,7 @@ export default function CRMPage() {
       const { error } = await supabase.from(table).update({...data}).eq('id',editId)
       if (error) { alert(error.message); setSaving(false); return }
     } else {
-      const { error } = await supabase.from(table).insert([{...data,user_id:user?.id}])
+      const { error } = await supabase.from(table).insert([{...data,user_id:user ? await getAccountId(user) : undefined}])
       if (error) { alert(error.message); setSaving(false); return }
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)

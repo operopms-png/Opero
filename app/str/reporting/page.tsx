@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getAccountId } from '../../../lib/supabase'
 const ACCENT = '#2F6DB5'
 const MODULE = 'str'
 const LABEL = 'VACATION RENTALS'
@@ -38,7 +38,7 @@ export default function Page() {
   async function save(table: string, data: any, clearForm: () => void, closeForm: () => void) {
     setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const {error} = await supabase.from(table).insert([{...data,user_id:user?.id,module:MODULE}])
+    const {error} = await supabase.from(table).insert([{...data,user_id:user ? await getAccountId(user) : undefined,module:MODULE}])
     setSaving(false)
     if(error){alert(error.message);return}
     clearForm(); closeForm(); await loadAll(user!.id)

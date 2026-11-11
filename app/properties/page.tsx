@@ -110,7 +110,7 @@ export default function PropertiesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const slug = form.slug || generateSlug(form.name)
     const payload = {
-      name: form.name, slug, user_id: user?.id,
+      name: form.name, slug, user_id: user ? await getAccountId(user) : undefined,
       address: form.address || null, city: form.city || null,
       country: form.country || null, location: form.location || null,
       bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
