@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Where do I go?', text: 'Real Estate Intelligence now opens with a Where do I go? box that takes you to the right page for a task, and the areas are named Property Management, Estate Agency and Vacation Rentals.' },
   { date: '2026-11-11', title: 'Tenant checks read by AI', text: 'Tenants now upload ID, right to rent, income and bank statements on their link, and Novourq Cloud AI reads them into Compliance, Tenant Checks for you to review and confirm.' },
   { date: '2026-11-11', title: 'Property on Services Pack links', text: 'Services Pack and New client link: choose the property from a drop-down of your portfolio (or type one that is not listed) and it shows at the top of their page.' },
   { date: '2026-11-11', title: 'Landlords upload ID on their link', text: 'Services Pack: after a landlord or co-host submits their form they upload their ID, proof of ownership, proof of address and bank details on the same link, filed on their Documents record for you to approve.' },

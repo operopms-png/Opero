@@ -10,12 +10,27 @@ import { useRole, ROLE_MODULES } from '@/lib/useRole'
 type Mod = 'pm' | 'ea' | 'str' | 'dev'
 type Target = { mod: Mod; tab: string }
 type Item = { name: string; targets: Target[]; shared?: boolean; href?: string }
-const AREA: Record<Mod, string> = { pm: 'Lettings', ea: 'Estate agency', str: 'Short stays', dev: 'Developments' }
+const AREA: Record<Mod, string> = { pm: 'Property Management', ea: 'Estate Agency', str: 'Vacation Rentals', dev: 'Developments' }
+// What each area means, shown on the chips so nobody has to guess which one to open.
+const MEANS: Record<Mod, string> = { pm: 'We manage the property for the landlord', ea: 'We let or sell the property for the landlord', str: 'Guest bookings and short stays', dev: 'Building and selling new projects' }
 const HREF = (t: Target) => t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
 const pm = (tab: string): Target => ({ mod: 'pm', tab })
 const ea = (tab: string): Target => ({ mod: 'ea', tab })
 const str = (tab: string): Target => ({ mod: 'str', tab })
 const dev = (tab: string): Target => ({ mod: 'dev', tab })
+
+// Where do I go? Plain tasks that open the right page. Where the answer depends on the type of property, each area is offered.
+const TASKS: { task: string; targets: Target[]; href?: string }[] = [
+  { task: 'Add a tenant', targets: [pm('Tenants'), ea('Tenants')] },
+  { task: 'Check a tenant’s ID and income', targets: [pm('Tenant Checks'), ea('Tenant Checks')] },
+  { task: 'Add a landlord', targets: [pm('Landlords'), ea('Landlords')] },
+  { task: 'Add a property', targets: [pm('Properties'), ea('Properties'), str('Properties')] },
+  { task: 'Add a guest booking', targets: [str('Bookings')] },
+  { task: 'Chase rent', targets: [pm('Rent'), ea('Rent Collection')] },
+  { task: 'Log a repair', targets: [pm('Maintenance'), ea('Maintenance'), str('Maintenance')] },
+  { task: 'Book a viewing', targets: [pm('Viewings'), ea('Viewings')] },
+  { task: 'Send a landlord or tenant their link', targets: [], href: '/staff-centre/documents' },
+]
 
 const GROUPS: { name: string; note: string; items: Item[] }[] = [
   { name: 'Overview', note: 'Dashboards for each area', items: [
@@ -42,7 +57,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Tenant feedback', targets: [pm('Tenant Feedback')] },
     { name: 'Furniture', targets: [pm('Furniture')] },
   ] },
-  { name: 'Short stays', note: 'Guests and bookings', items: [
+  { name: 'Vacation Rentals', note: 'Guests and bookings', items: [
     { name: 'Bookings', targets: [str('Bookings')] },
     { name: 'Reviews', targets: [pm('Reviews')] },
     { name: 'Guest comms', targets: [str('Guest Comms')] },
@@ -130,7 +145,7 @@ export default function PropertyHub() {
           ? <Link href={i.href} style={link}>Open map</Link>
           : i.shared
           ? <Link href={HREF(i.targets[0])} style={link}>All areas</Link>
-          : i.targets.map(t => <Link key={t.mod} href={HREF(t)} style={link}>{AREA[t.mod]}</Link>)}
+          : i.targets.map(t => <Link key={t.mod} href={HREF(t)} title={MEANS[t.mod]} style={link}>{AREA[t.mod]}</Link>)}
       </div>
     </div>
   )
@@ -138,6 +153,24 @@ export default function PropertyHub() {
   return (
     <div style={{ background: '#f6f8fc', minHeight: '100vh', padding: '28px 32px 56px', fontFamily: "'Figtree', system-ui, sans-serif" }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '16px 20px', marginBottom: 18, boxShadow: shadow }}>
+          <b style={{ display: 'block', color: C.ink, fontSize: 16, fontWeight: 700 }}>Where do I go?</b>
+          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick what you want to do and we open the right page. {(['pm', 'ea', 'str'] as Mod[]).filter(has).map(m => `${AREA[m]}: ${MEANS[m].toLowerCase()}`).join('. ')}.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 10 }}>
+            {TASKS.map(t => {
+              const ts = t.targets.filter(x => has(x.mod))
+              if (!t.href && !ts.length) return null
+              return (
+                <div key={t.task} style={{ border: `1px solid ${C.line}`, borderRadius: 10, padding: '10px 12px' }}>
+                  <b style={{ display: 'block', color: C.ink, fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{t.task}</b>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {t.href ? <Link href={t.href} style={chip}>Open</Link> : ts.map(x => <Link key={x.mod + x.tab} href={HREF(x)} title={MEANS[x.mod]} style={chip}>{ts.length > 1 ? AREA[x.mod] : 'Open'}</Link>)}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '0 16px', marginBottom: 18, boxShadow: shadow }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <input value={q} onChange={e => setQ(e.target.value)} type="search" placeholder="Search any page, such as maintenance or viewings" aria-label="Search pages"
@@ -180,4 +213,5 @@ export default function PropertyHub() {
   )
 }
 
+const chip: React.CSSProperties = { background: '#eaf0fd', color: '#2f5bd6', fontSize: 13, fontWeight: 600, padding: '4px 10px', borderRadius: 8, textDecoration: 'none' }
 const link: React.CSSProperties = { color: '#34456b', fontSize: 14.5, textDecoration: 'none' }
