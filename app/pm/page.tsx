@@ -421,6 +421,7 @@ function PMPageInner() {
   const [rtrChecks, setRtrChecks] = useState<any[]>([])
   const [bankChecks, setBankChecks] = useState<any[]>([])
   const [editingChecksLeaseId, setEditingChecksLeaseId] = useState<string|null>(null)
+  const [aiReads, setAiReads] = useState<any[]>([])
   const [rtrForm, setRtrForm] = useState({full_name:'',date_of_birth:'',current_address:'',check_type:'Online',document_type:'',share_code:'',ni_number:'',status:'Unlimited',check_date:'',checked_by:'',recheck_date:'',document_url:'',notes:''})
   const [bankCheckForm, setBankCheckForm] = useState({statement_start:'',statement_end:'',declared_income:'',income_regular:false,no_overdraft:false,no_bounced_payments:false,no_gambling_flags:false,status:'Passed',document_url:'',notes:'',checked_by:'',check_date:'',ai_assessment:'',ai_assessment_generated_at:''})
   const [savingChecks, setSavingChecks] = useState(false)
@@ -983,7 +984,33 @@ function PMPageInner() {
     setter((prev: any[]) => prev.filter(x => x.id !== id))
   }
 
+  function useAiReads() {
+    const by: Record<string, any> = {}; aiReads.forEach(r => { by[r.category] = r.extracted || {} })
+    const id = by.tenant_id, rtr = by.right_to_rent, inc = by.income, bank = by.bank_statement
+    setRtrForm(f => ({ ...f,
+      full_name: id?.full_name || rtr?.full_name || f.full_name, date_of_birth: id?.date_of_birth || rtr?.date_of_birth || f.date_of_birth,
+      current_address: id?.address || f.current_address,
+      document_type: rtr?.document_type || id?.document_type || f.document_type,
+      ...(rtr?.share_code ? { check_type: 'Online', share_code: rtr.share_code } : {}),
+      ...(rtr?.status ? { status: rtr.status } : {}), ...(rtr?.status === 'Time-limited' && rtr?.expiry ? { recheck_date: rtr.expiry } : {}),
+    }))
+    const income = bank?.monthly_income ?? inc?.monthly_income
+    setBankCheckForm(f => ({ ...f,
+      statement_start: bank?.statement_start || f.statement_start, statement_end: bank?.statement_end || f.statement_end,
+      declared_income: income != null ? String(income) : f.declared_income,
+      income_regular: bank?.income_regular === true ? true : f.income_regular,
+      no_overdraft: bank?.overdraft_seen === false ? true : f.no_overdraft,
+      no_bounced_payments: bank?.bounced_payments_seen === false ? true : f.no_bounced_payments,
+      no_gambling_flags: bank?.gambling_seen === false ? true : f.no_gambling_flags,
+    }))
+    aiReads.forEach(r => ownerFetch('/api/tenant-check-reads', { method: 'POST', body: JSON.stringify({ id: r.id, status: 'used' }) }))
+    setAiReads(prev => prev.map(r => ({ ...r, status: 'used' })))
+  }
+
   function openEditChecks(leaseId: string) {
+    setAiReads([])
+    const tid = leases.find((l:any)=>l.id===leaseId)?.tenant_id
+    if (tid) ownerFetch('/api/tenant-check-reads?tenant_id='+tid).then(r=>{ if (r.ok) setAiReads(r.data.reads ?? []) })
     const existingRtr = rtrChecks.find((r:any)=>r.lease_id===leaseId)
     const existingBank = bankChecks.find((b:any)=>b.lease_id===leaseId)
     const lease = leases.find((l:any)=>l.id===leaseId)
@@ -3551,6 +3578,21 @@ function PMPageInner() {
               <button onClick={()=>setEditingChecksLeaseId(null)} style={{fontSize:12,color:'#667085',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',marginBottom:14}}>&larr; Back to list</button>
               <div style={{fontSize:15,fontWeight:700,color:'#323338',marginBottom:2}}>Tenant Checks — {editingLease?.pm_tenants?.name}</div>
               <div style={{fontSize:12,color:'#98A2B3',marginBottom:20}}>{editingLease?.pm_properties?.name}</div>
+
+              {aiReads.length>0&&(
+                <div style={{background:'#EAF3FC',border:'1px solid #DCE0FF',borderRadius:12,padding:18,marginBottom:16}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:10}}>
+                    <div style={{fontSize:13,fontWeight:700,color:'#344054'}}>🤖 AI read from the tenant's uploads <span style={{fontWeight:400,color:'#98A2B3'}}>— check it against the documents, you confirm the result</span></div>
+                    <button onClick={useAiReads} style={{fontSize:12,fontWeight:600,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'6px 12px',cursor:'pointer',fontFamily:'inherit'}}>{aiReads.every(r=>r.status==='used')?'Fill the form again':'Fill the form from these'}</button>
+                  </div>
+                  {aiReads.map((r:any)=>{
+                    const e = r.extracted || {}
+                    const L: Record<string,string> = {tenant_id:'Photo ID',right_to_rent:'Right to rent',income:'Proof of income',bank_statement:'Bank statements'}
+                    const bits = [e.full_name&&`Name: ${e.full_name}`, e.document_type&&e.document_type, e.date_of_birth&&`DOB ${e.date_of_birth}`, e.expiry&&`Expires ${e.expiry}`, e.status&&e.status, e.share_code&&`Share code ${e.share_code}`, e.employer&&`Employer: ${e.employer}`, e.monthly_income!=null&&`Income £${e.monthly_income}/month`, e.statement_start&&`Statements ${e.statement_start} to ${e.statement_end??'?'}`, e.overdraft_seen===true&&'Overdraft seen', e.bounced_payments_seen===true&&'Bounced payments seen', e.gambling_seen===true&&'Gambling seen', e.income_regular===false&&'Income not regular'].filter(Boolean)
+                    return <div key={r.id} style={{fontSize:12,color:'#344054',padding:'5px 0',borderTop:'1px solid #DCE0FF'}}><b>{L[r.category]??r.category}</b> · {bits.length?bits.join(' · '):'Nothing could be read, check the file by hand'}</div>
+                  })}
+                </div>
+              )}
 
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:22,marginBottom:16}}>
                 <div style={{fontSize:14,fontWeight:700,color:'#323338',marginBottom:16}}>🛂 Right to Rent</div>

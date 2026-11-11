@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+import { readTenantCheckDoc } from '@/lib/tenant-check-read'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'crypto'
@@ -67,12 +68,14 @@ export async function POST(req: NextRequest) {
   const { count } = await db.from('lease_documents').select('id', { count: 'exact', head: true }).eq('subject', kind).eq('head_lease_id', rec.id).eq('category', cat).eq('uploaded_by_portal', true)
   if ((count ?? 0) >= 6) return bad('That is enough files for this one. Ask your property manager to remove some.')
   const exp = String(form.get('expires_on') || ''); const expires_on = type.expiry && /^\d{4}-\d{2}-\d{2}$/.test(exp) ? exp : null
+  const bytes = Buffer.from(await file.arrayBuffer())
   const path = `${rec.user_id}/${kind}/${rec.id}/${randomUUID()}.${ext}`
-  const up = await db.storage.from(LEASE_DOC_BUCKET).upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false })
+  const up = await db.storage.from(LEASE_DOC_BUCKET).upload(path, bytes, { contentType: file.type, upsert: false })
   if (up.error) return bad('Upload failed. Please try again.', 500)
-  const { error } = await db.from('lease_documents').insert({ user_id: rec.user_id, subject: kind, head_lease_id: rec.id, category: cat, name: String(file.name || 'Document').slice(0, 120), path, mime: file.type, size: file.size, expires_on, uploaded_by: rec.email || rec.name, uploaded_by_portal: true, status: 'pending', visible_to_portal: true })
+  const { data: ins, error } = await db.from('lease_documents').insert({ user_id: rec.user_id, subject: kind, head_lease_id: rec.id, category: cat, name: String(file.name || 'Document').slice(0, 120), path, mime: file.type, size: file.size, expires_on, uploaded_by: rec.email || rec.name, uploaded_by_portal: true, status: 'pending', visible_to_portal: true }).select('id').single()
   if (error) { await db.storage.from(LEASE_DOC_BUCKET).remove([path]).catch(() => null); return bad('Could not save the file.', 500) }
   await db.from('notifications').insert({ user_id: rec.user_id, title: `Document to review: ${type.label}`, message: `${rec.name} (${WHO[kind]}) uploaded ${type.label}. Approve or reject it in Documents.`, type: 'document', module: 'staffcentre', link: '/staff-centre/documents' }).then(() => {}, () => {})
+  if (kind === 'tenant') await Promise.race([readTenantCheckDoc({ businessId: rec.user_id, tenantId: rec.id, leaseDocId: ins?.id, category: cat, fileName: String(file.name || 'Document'), mime: file.type, bytes }), new Promise(r => setTimeout(r, 18000))])
   return NextResponse.json({ ok: true })
 }
 

@@ -16,3 +16,19 @@ insert into storage.buckets (id,name,public) values ('service-submissions','serv
 alter table service_links add column if not exists subject text, add column if not exists subject_id uuid, add column if not exists subject_name text;
 alter table service_submissions add column if not exists lease_doc_id uuid;
 alter table service_links add column if not exists property_label text;
+
+create table if not exists tenant_check_reads (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null,
+  tenant_id uuid not null,
+  subject text not null default 'tenant',
+  lease_doc_id uuid,
+  category text not null,
+  file_name text,
+  extracted jsonb not null default '{}'::jsonb,
+  summary text,
+  status text not null default 'review',
+  created_at timestamptz not null default now()
+);
+alter table tenant_check_reads enable row level security;
+create index if not exists tenant_check_reads_tenant on tenant_check_reads(business_id, tenant_id, created_at desc);

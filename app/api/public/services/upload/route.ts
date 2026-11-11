@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { serviceClient as db } from '@/lib/admin-auth'
+import { readTenantCheckDoc } from '@/lib/tenant-check-read'
 import { DOC_SETS, isSubject, LEASE_DOC_BUCKET } from '@/lib/lease-doc-types'
 
 // After a recipient submits a form on their link, they upload their ID and other documents here.
@@ -29,10 +30,12 @@ export async function POST(req: NextRequest) {
   const type = DOC_SETS[base.subject as keyof typeof DOC_SETS].find(x => x.key === cat && !x.byUs)
   if (!type) return bad('Choose which document this is.')
   const path = `${l.business_id}/${base.subject}/${base.head_lease_id}/${randomUUID()}.${ext}`
-  const up = await db.storage.from(LEASE_DOC_BUCKET).upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false })
+  const bytes = Buffer.from(await file.arrayBuffer())
+  const up = await db.storage.from(LEASE_DOC_BUCKET).upload(path, bytes, { contentType: file.type, upsert: false })
   if (up.error) return bad('Upload failed. Please try again.', 500)
-  const { error } = await db.from('lease_documents').insert({ user_id: l.business_id, subject: base.subject, head_lease_id: base.head_lease_id, category: cat, name: String(file.name || type.label).slice(0, 120), path, mime: file.type, size: file.size, uploaded_by: email, uploaded_by_portal: true, status: 'pending', visible_to_portal: true })
+  const { data: ins, error } = await db.from('lease_documents').insert({ user_id: l.business_id, subject: base.subject, head_lease_id: base.head_lease_id, category: cat, name: String(file.name || type.label).slice(0, 120), path, mime: file.type, size: file.size, uploaded_by: email, uploaded_by_portal: true, status: 'pending', visible_to_portal: true }).select('id').single()
   if (error) { await db.storage.from(LEASE_DOC_BUCKET).remove([path]).catch(() => null); return bad('Could not save the file.', 500) }
   await db.from('notifications').insert({ user_id: l.business_id, title: `Document to review: ${type.label}`, message: `${email} uploaded ${type.label} from their link. Approve or reject it in Documents.`, type: 'document', module: 'staffcentre', link: '/staff-centre/documents' }).then(() => {}, () => {})
+  if (base.subject === 'tenant') await Promise.race([readTenantCheckDoc({ businessId: l.business_id, tenantId: base.head_lease_id, leaseDocId: ins?.id, category: cat, fileName: String(file.name || type.label), mime: file.type, bytes }), new Promise(r => setTimeout(r, 18000))])
   return NextResponse.json({ ok: true })
 }
