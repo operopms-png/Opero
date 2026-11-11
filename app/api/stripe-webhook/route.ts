@@ -265,11 +265,17 @@ export async function POST(request: NextRequest) {
 
   if (event.type === 'customer.subscription.updated') {
     const sub = event.data.object as any
-    const priceId = sub.items.data[0]?.price?.id ?? ''
+    // The subscription can carry an "extra property" item (£12 a month each) next to the plan, so find the plan item by elimination.
+    const extraPriceId = process.env.STRIPE_PRICE_NOVOURQ_EXTRA_PROPERTY
+    const subItems = (sub.items.data ?? []) as any[]
+    const baseItem = subItems.find(i => !extraPriceId || i.price?.id !== extraPriceId) ?? subItems[0]
+    const extraItem = extraPriceId ? subItems.find(i => i.price?.id === extraPriceId) : undefined
+    const priceId = baseItem?.price?.id ?? ''
     const plan = PLAN_MAP[priceId] ?? 'starter'
-    const billingPeriod = (YEARLY_IDS.includes(priceId) || sub.items.data[0]?.price?.recurring?.interval === 'year') ? 'yearly' : 'monthly'
+    const billingPeriod = (YEARLY_IDS.includes(priceId) || baseItem?.price?.recurring?.interval === 'year') ? 'yearly' : 'monthly'
     await supabase.from('subscriptions').update({
       plan, billing_period: billingPeriod, status: sub.status,
+      ...(extraPriceId ? { extra_properties: extraItem?.quantity ?? 0 } : {}),
       trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
       updated_at: new Date().toISOString(),
     }).eq('stripe_subscription_id', sub.id)

@@ -22,6 +22,7 @@ const LIFETIME = {
   features: [
     'Everything in the monthly and annual plans, for life',
     'One payment of £175.50, no monthly or yearly bill, ever',
+    '3 properties included, then £12 a month for each extra property',
     'Limited to the first 10 clients',
   ],
 }
@@ -38,7 +39,7 @@ const PLANS = [
       'All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager',
       '6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification',
       'Staff Centre included free — conversations, property portals, CRM & more',
-      'Unlimited properties',
+      '3 properties included, then £12 a month for each extra property',
       'One login, one bill',
     ],
   },
@@ -52,7 +53,7 @@ const PLANS = [
       'All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager',
       '6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification',
       'Staff Centre included free — conversations, property portals, CRM & more',
-      'Unlimited properties',
+      '3 properties included, then £12 a month for each extra property',
       'One login, one bill, 20% off the monthly price',
     ],
   },

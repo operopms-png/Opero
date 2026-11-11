@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: '3 properties included', text: 'Every plan includes 3 properties, and each extra property is £12 a month added to your plan; Properties shows how many you have used, and adding a 4th asks you to confirm the £12.' },
   { date: '2026-11-11', title: 'Your plan in Settings', text: 'Settings → Payments now shows your NOVOURQ plan, status and trial days left, with a Manage billing button for your card, invoices and cancelling.' },
   { date: '2026-11-11', title: 'Your currency in more places', text: 'Marketing budgets, Vendors invoices, CRM deal values and the Rent and Finance totals now use your company currency symbol instead of always showing pounds.' },
   { date: '2026-11-11', title: 'Free trial countdown', text: 'During the 14-day free trial, the bottom of the left menu now shows how many days are left, turning amber in the last 3 days.' },

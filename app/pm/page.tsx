@@ -1,5 +1,6 @@
 'use client'
 import { cur } from '@/lib/company-currency'
+import { usePropertyAllowance, isPropertyLimitError } from '@/lib/property-allowance'
 import LandlordOnboarding from '../../components/landlords/LandlordOnboarding'
 import UtilityTracker from '../../components/pm/UtilityTracker'
 import RecordTab from '@/components/pm/RecordTab'
@@ -449,11 +450,13 @@ function PMPageInner() {
   const [complianceForm, setComplianceForm] = useState<any>({scope:'property',property_id:'',type:PROPERTY_COMPLIANCE_TYPES[0],reference:'',issued_date:'',expiry_date:'',notes:''})
   const [loading, setLoading] = useState(true)
   const [extraBlocks, setExtraBlocks] = useState(0)
-  const [isBundle, setIsBundle] = useState(true) // internal portal: unlimited properties
+  const { allowance, refreshAllowance } = usePropertyAllowance()
+  const isBundle = allowance.unlimited
+  const [pendingSave, setPendingSave] = useState<{ table: string; data: any } | null>(null)
   const [viewingPhotos, setViewingPhotos] = useState<string[]|null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
-  const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
+  const propertyLimit = allowance.limit
   const [expenses, setExpenses] = useState<any[]>([])
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [expForm, setExpForm] = useState({description:'',vendor:'',category:'Overhead',amount:'',date:'',status:'Unpaid',is_recurring:false,notes:''})
@@ -512,7 +515,6 @@ function PMPageInner() {
       const mods = (sub as any)?.modules ?? []
       setHasModule(mods.includes('pm') || mods.includes('dev'))
       setExtraBlocks((sub as any)?.pm_extra_blocks ?? 0)
-      setIsBundle(true)
       await loadAll(accountId)
       setLoading(false)
     }
@@ -739,12 +741,15 @@ function PMPageInner() {
     setUpgrading(false)
     if (!res.ok) { alert(json.error || 'Could not add more properties'); return }
     setShowUpgrade(false)
-    await loadAll()
+    await refreshAllowance()
+    const queued = pendingSave
+    setPendingSave(null)
+    if (queued) { await save(queued.table, queued.data, true) } else { await loadAll() }
   }
 
-  async function save(table: string, data: any) {
-    if (table === 'pm_properties' && !editId && !isBundle && properties.length >= propertyLimit) {
-      setModal(null); setShowUpgrade(true); return
+  async function save(table: string, data: any, skipLimit = false) {
+    if (!skipLimit && (table === 'pm_properties' || table === 'properties') && !editId && !isBundle && allowance.used >= propertyLimit) {
+      setPendingSave({ table, data }); setModal(null); setShowUpgrade(true); return
     }
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -761,10 +766,14 @@ function PMPageInner() {
       if (error) { alert(error.message); setSaving(false); return }
     } else {
       const { error } = await supabase.from(table).insert([{ ...data, user_id: accountId }])
-      if (error) { alert(error.message); setSaving(false); return }
+      if (error) {
+        if (isPropertyLimitError(error)) { setSaving(false); setPendingSave({ table, data }); setModal(null); setShowUpgrade(true); return }
+        alert(error.message); setSaving(false); return
+      }
       notifyIfRelevant(table, data, accountId)
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
+    refreshAllowance()
     await loadAll()
   }
 
@@ -1221,7 +1230,7 @@ function PMPageInner() {
             {tab!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{tab}</span></>}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
-            {tab==='Properties'&&(!isBundle&&properties.length >= propertyLimit
+            {tab==='Properties'&&(!isBundle&&allowance.used >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>Add more properties</button>
               : <button onClick={()=>{setModal('propertyType');setForm({});setEditId(null)}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Property</button>)}
             {tab==='Landlords'&&<button onClick={()=>{setModal('landlord');setForm({})}} style={{background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'9px 18px',fontSize:14,fontWeight:500,cursor:'pointer'}}>+ Add Landlord</button>}
@@ -3772,11 +3781,11 @@ function PMPageInner() {
       {showUpgrade && (
         <Modal title="Add more properties" onClose={()=>setShowUpgrade(false)}>
           <div style={{fontSize:14,color:'#344054',lineHeight:1.6,marginBottom:20}}>
-            Your Property Management plan includes {propertyLimit} properties. Adding 2 more properties is <strong>£12/mo</strong>, billed on your existing subscription with proration for the rest of this cycle.
+            Your plan includes {allowance.limit} properties ({allowance.used} in use). Adding 1 more property is <strong>£12 a month</strong>, added to your NOVOURQ plan and charged pro rata for the rest of this billing period (or from the end of your free trial).
           </div>
           <div style={{display:'flex',gap:10}}>
             <button onClick={()=>setShowUpgrade(false)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
-            <button onClick={purchaseBlock} disabled={upgrading} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+            <button onClick={purchaseBlock} disabled={upgrading} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 1 property — £12/mo'}</button>
           </div>
         </Modal>
       )}

@@ -1,5 +1,6 @@
 'use client'
 import { cur } from '@/lib/company-currency'
+import { usePropertyAllowance, isPropertyLimitError } from '@/lib/property-allowance'
 import { useEffect, useState } from 'react'
 import TabBanner from '@/components/TabBanner'
 import LeaseDocuments from '@/components/pm/LeaseDocuments'
@@ -252,10 +253,12 @@ export default function Page() {
   useEffect(() => { if (allowedTab) setSection(allowedTab) }, [allowedTab])
   const [loading, setLoading] = useState(true)
   const [extraBlocks, setExtraBlocks] = useState(0)
-  const [isBundle, setIsBundle] = useState(true) // internal portal: unlimited properties
+  const { allowance, refreshAllowance } = usePropertyAllowance()
+  const isBundle = allowance.unlimited
+  const [pendingSave, setPendingSave] = useState<{ table: string; data: any } | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
-  const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
+  const propertyLimit = allowance.limit
   const [properties, setProperties] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])
   const [tenancies, setTenancies] = useState<any[]>([])
@@ -411,7 +414,6 @@ export default function Page() {
     const inventoryData = propertyIds.length > 0 ? (inv.data ?? []).filter((x: any) => restrictedIds.includes(x.property_id)) : (inv.data ?? [])
     const documentData = propertyIds.length > 0 ? (doc.data ?? []).filter((x: any) => !x.property_id || restrictedIds.includes(x.property_id)) : (doc.data ?? [])
     setExtraBlocks((sub.data as any)?.ea_extra_blocks ?? 0)
-    setIsBundle(true)
     setProperties(restrictedProps); setTenants(t.data??[]); setTenancies(tn.data??[])
     setVacancies(v.data??[]); setMortgages(m.data??[]); setExpenses(e.data??[])
     setBankAccounts(ba.data??[]); setTransactions(tx.data??[]); setRentSchedules(r.data??[])
@@ -457,9 +459,13 @@ export default function Page() {
       if (error) { alert(error.message); return }
     } else {
       const { error } = await supabase.from(table).insert([{ ...sanitized, user_id: accountId }])
-      if (error) { alert(error.message); return }
+      if (error) {
+        if (isPropertyLimitError(error)) { setPendingSave({ table, data }); setShowAddProperty(false); setShowUpgrade(true); return }
+        alert(error.message); return
+      }
       notifyIfRelevant(table, sanitized, accountId)
     }
+    refreshAllowance()
     await loadAll()
   }
 
@@ -686,7 +692,7 @@ export default function Page() {
 
   const addProperty = async () => {
     if(!prop.name) return
-    if(!editItem && !isBundle && properties.length >= propertyLimit) { setShowAddProperty(false); setShowUpgrade(true); return }
+    if(!editItem && !isBundle && allowance.used >= propertyLimit) { setPendingSave({ table: 'estate_properties', data: prop }); setShowAddProperty(false); setShowUpgrade(true); return }
     await saveRecord('estate_properties', prop, editItem?.id)
     setEditItem(null)
     setProp(EMPTY_PROP)
@@ -704,7 +710,10 @@ export default function Page() {
     setUpgrading(false)
     if (!res.ok) { alert(json.error || 'Could not add more properties'); return }
     setShowUpgrade(false)
-    await loadAll()
+    await refreshAllowance()
+    const queued = pendingSave
+    setPendingSave(null)
+    if (queued) { await saveRecord(queued.table, queued.data); setProp(EMPTY_PROP) } else { await loadAll() }
   }
   const addTenant = async () => {
     if(!ten.name) return
@@ -800,11 +809,11 @@ export default function Page() {
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
-            {section==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
+            {section==='Properties'&&<span style={{fontSize:12,color:'#98A2B3',marginLeft:8}}>{allowance.used} / {isBundle?'Unlimited':propertyLimit} properties</span>}
             {section!=='Dashboard'&&<><span style={{color:'#D0D5DD'}}>/</span><span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{section}</span></>}
           </div>
           <div style={{display:'flex',gap:8}}>
-            {section==='Properties'&&(!isBundle&&properties.length >= propertyLimit
+            {section==='Properties'&&(!isBundle&&allowance.used >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Add more properties</button>
               : <button onClick={()=>{setEditItem(null);setShowAddProperty(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add property</button>)}
             {section==='Tenants'&&<button onClick={()=>{setEditItem(null);setShowAddTenant(true)}} style={{padding:'7px 16px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add tenant</button>}
@@ -981,9 +990,9 @@ export default function Page() {
             </div>)}
             {showUpgrade&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid #2F6DB5',padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 10px'}}>Add more properties</h3>
-              <p style={{fontSize:14,color:'#344054',lineHeight:1.6,marginBottom:16}}>Your Estate Agency plan includes {propertyLimit} properties. Adding 2 more properties is <strong>£12/mo</strong>, billed on your existing subscription with proration for the rest of this cycle.</p>
+              <p style={{fontSize:14,color:'#344054',lineHeight:1.6,marginBottom:16}}>Your plan includes {allowance.limit} properties ({allowance.used} in use). Adding 1 more property is <strong>£12 a month</strong>, added to your NOVOURQ plan and charged pro rata for the rest of this billing period (or from the end of your free trial).</p>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={purchaseBlock} disabled={upgrading} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+                <button onClick={purchaseBlock} disabled={upgrading} style={{padding:'9px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:upgrading?0.6:1}}>{upgrading?'Adding…':'Add 1 property — £12/mo'}</button>
                 <button onClick={()=>setShowUpgrade(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button>
               </div>
             </div>)}

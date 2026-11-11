@@ -1,5 +1,6 @@
 'use client'
 import { cur } from '@/lib/company-currency'
+import { usePropertyAllowance, isPropertyLimitError } from '@/lib/property-allowance'
 import { useEffect, useState } from 'react'
 import TabBanner from '@/components/TabBanner'
 import { supabase, getAccountId } from '../../lib/supabase'
@@ -113,10 +114,12 @@ export default function STRPage() {
   const [saving, setSaving] = useState(false)
   const [stats, setStats] = useState({ properties:0, cleaning:0, maintenance:0, revenue:0 })
   const [extraBlocks, setExtraBlocks] = useState(0)
-  const [isBundle, setIsBundle] = useState(true) // internal portal: unlimited properties
+  const { allowance, refreshAllowance } = usePropertyAllowance()
+  const isBundle = allowance.unlimited
+  const [pendingSave, setPendingSave] = useState<{ table: string; data: any } | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
-  const propertyLimit = isBundle ? Infinity : 2 + extraBlocks * 2
+  const propertyLimit = allowance.limit
   const [commTemplates, setCommTemplates] = useState<any[]>([])
   const [activeTemplateKey, setActiveTemplateKey] = useState('welcome')
   const [templateDraft, setTemplateDraft] = useState('')
@@ -234,7 +237,6 @@ export default function STRPage() {
     const { data: propsData } = await supabase.from('properties').select('*').eq('user_id', userId).is('ended_at', null).order('created_at', { ascending: false })
     const { data: subRow } = await supabase.from('subscriptions').select('str_extra_blocks,plan').eq('user_id', userId).single()
     setExtraBlocks((subRow as any)?.str_extra_blocks ?? 0)
-    setIsBundle(true)
     let restrictedProps = propsData ?? []
     if (propertyIds.length > 0) restrictedProps = restrictedProps.filter((p: any) => propertyIds.includes(p.id))
     const ids = restrictedProps.map((p: any) => p.id)
@@ -456,9 +458,9 @@ export default function STRPage() {
     await loadAll()
   }
 
-  async function save(table: string, data: any) {
-    if (table === 'properties' && !editId && !isBundle && properties.length >= propertyLimit) {
-      setModal(null); setShowUpgrade(true); return
+  async function save(table: string, data: any, skipLimit = false) {
+    if (!skipLimit && table === 'properties' && !editId && !isBundle && allowance.used >= propertyLimit) {
+      setPendingSave({ table, data }); setModal(null); setShowUpgrade(true); return
     }
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -468,10 +470,14 @@ export default function STRPage() {
     } else {
       const payload = NO_USER_ID_TABLES.includes(table) ? { ...data } : { ...data, user_id: accountId }
       const { error } = await supabase.from(table).insert([payload])
-      if (error) { alert(error.message); setSaving(false); return }
+      if (error) {
+        if (isPropertyLimitError(error)) { setSaving(false); setPendingSave({ table, data }); setModal(null); setShowUpgrade(true); return }
+        alert(error.message); setSaving(false); return
+      }
       notifyIfRelevant(table, data, accountId)
     }
     setSaving(false); setModal(null); setForm({}); setEditId(null)
+    refreshAllowance()
     await loadAll()
   }
 
@@ -502,7 +508,10 @@ export default function STRPage() {
     setUpgrading(false)
     if (!res.ok) { alert(json.error || 'Could not add more properties'); return }
     setShowUpgrade(false)
-    await loadAll()
+    await refreshAllowance()
+    const queued = pendingSave
+    setPendingSave(null)
+    if (queued) { await save(queued.table, queued.data, true) } else { await loadAll() }
   }
 
   async function del(table: string, id: string) {
@@ -593,9 +602,9 @@ export default function STRPage() {
             {tab!=='Home'&&<><span style={{ color:'#D0D5DD' }}>/</span><span style={{ fontSize:13, fontWeight:600, color:'#323338' }}>{tab}</span></>}
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{properties.length} / {isBundle?'Unlimited':propertyLimit} properties</span>}
+            {tab==='Properties' && <span style={{ fontSize:12, color:'#98A2B3' }}>{allowance.used} / {isBundle?'Unlimited':propertyLimit} properties</span>}
             {tab==='Bookings' && <button onClick={()=>{setModal('booking');setForm({});setEditId(null)}} style={{ background:'#2F6DB5', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Booking</button>}
-            {tab==='Properties' && (!isBundle && properties.length >= propertyLimit
+            {tab==='Properties' && (!isBundle && allowance.used >= propertyLimit
               ? <button onClick={()=>setShowUpgrade(true)} style={{ background:'#2F6DB5', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>Add more properties</button>
               : <button onClick={()=>{setModal('property');setForm({});setEditId(null)}} style={{ background:'#2F6DB5', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ Add Property</button>)}
             {tab==='Cleaning' && <button onClick={()=>{setModal('cleaning');setForm({});setEditId(null)}} style={{ background:'#2F6DB5', color:'#fff', border:'none', borderRadius:8, padding:'9px 18px', fontSize:14, fontWeight:500, cursor:'pointer' }}>+ New Task</button>}
@@ -1721,11 +1730,11 @@ export default function STRPage() {
       {showUpgrade && (
         <Modal title="Add more properties" onClose={()=>setShowUpgrade(false)}>
           <div style={{ fontSize:14, color:'#344054', lineHeight:1.6, marginBottom:20 }}>
-            Your Vacation Rentals plan includes {propertyLimit} properties. Adding 2 more properties is <strong>£12/mo</strong>, billed on your existing subscription with proration for the rest of this cycle.
+            Your plan includes {allowance.limit} properties ({allowance.used} in use). Adding 1 more property is <strong>£12 a month</strong>, added to your NOVOURQ plan and charged pro rata for the rest of this billing period (or from the end of your free trial).
           </div>
           <div style={{ display:'flex', gap:10 }}>
             <button onClick={()=>setShowUpgrade(false)} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>
-            <button onClick={purchaseBlock} disabled={upgrading} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#2F6DB5', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:upgrading?0.6:1 }}>{upgrading?'Adding…':'Add 2 properties — £12/mo'}</button>
+            <button onClick={purchaseBlock} disabled={upgrading} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'#2F6DB5', color:'#fff', fontSize:14, fontWeight:500, cursor:'pointer', fontFamily:'inherit', opacity:upgrading?0.6:1 }}>{upgrading?'Adding…':'Add 1 property — £12/mo'}</button>
           </div>
         </Modal>
       )}
