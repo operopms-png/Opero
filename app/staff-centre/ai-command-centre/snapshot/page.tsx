@@ -8,6 +8,7 @@ import { supabase, getAccountId } from '../../../../lib/supabase'
 import GrokPanel from '../../../../components/GrokPanel'
 import PropertyMap from '../../../../components/PropertyMap'
 import PortfolioPerformancePanel from '../../../../components/ai/PortfolioPerformancePanel'
+import { cur } from '../../../../lib/company-currency'
 import { staffApi, money } from '../../../../lib/staff-api'
 
 const BG = '#F5F7FB', PANEL = '#FFFFFF', LINE = '#D9E2F0', CYAN = '#1B2F6E', BLUE = '#2F6DB5'
@@ -105,7 +106,7 @@ export default function AICommandCentre() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '10px 18px', borderBottom: `1px solid ${LINE}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 210 }}>
           <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: .5, color: TXT }}>NOVOURQ</div>
-          <div style={{ fontSize: 9, color: MUTED, letterSpacing: 1 }}>REAL ESTATE · JAMAICA & UK</div>
+          <div style={{ fontSize: 9, color: MUTED, letterSpacing: 1 }}>REAL ESTATE INTELLIGENCE</div>
         </div>
         <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search properties, landlords, tenants, deals, or ask the AI..."
           onKeyDown={e => { if (e.key === 'Enter' && q.trim()) window.location.href = `/staff-centre/ask-grok` }}
@@ -174,7 +175,7 @@ export default function AICommandCentre() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10, marginBottom: 10 }}>
             {([
-              ['Investors', '/staff-centre/investors', ppl ? `${ppl.investors.active} active` : (pplErr ? 'Could not load' : 'Loading…'), ppl ? `£${ppl.investors.invested.toLocaleString('en-GB')} invested · £${ppl.investors.paidBack.toLocaleString('en-GB')} paid back` : ''],
+              ['Investors', '/staff-centre/investors', ppl ? `${ppl.investors.active} active` : (pplErr ? 'Could not load' : 'Loading…'), ppl ? `${cur()}${ppl.investors.invested.toLocaleString('en-GB')} invested · ${cur()}${ppl.investors.paidBack.toLocaleString('en-GB')} paid back` : ''],
               ['Partners', '/staff-centre/partners', ppl ? `${ppl.partners.active} active` : (pplErr ? 'Could not load' : 'Loading…'), ppl ? `${ppl.partners.referrals} referrals · ${ppl.partners.awaitingPayment} awaiting payment` : ''],
               ['Owners', '/pm?tab=Landlords', ppl ? `${ppl.owners.count} owners` : (pplErr ? 'Could not load' : 'Loading…'), ''],
             ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
@@ -217,8 +218,8 @@ export default function AICommandCentre() {
               ['Owner Payouts', '/staff-centre/finance/payouts', fin2.owner ? `${fin2.owner.due.length} still to pay` : 'Loading…', fin2.owner ? `${fin2.owner.due.filter((r: any) => r.overdue).length} overdue` : ''],
               ['Partner Payouts', '/staff-centre/finance/partner-payouts', fin2.partner ? `${fin2.partner.due.length} still to pay` : 'Loading…', fin2.partner ? `${fin2.partner.due.filter((r: any) => r.overdue).length} overdue` : ''],
               ['Arrears', '/staff-centre/finance/arrears', fin2.arrears ? `${fin2.arrears.rows.length} overdue rent` : 'Loading…', fin2.arrears ? `${fin2.arrears.rows.length ? 'Oldest ' + Math.max(...fin2.arrears.rows.map((r: any) => r.days || 0)) + ' days' : 'None'}` : ''],
-              ['Invoices', '/staff-centre/invoices', moneyData ? `${moneyData.invoices.unpaid} unpaid` : (moneyErr ? 'Could not load' : 'Loading…'), moneyData ? `${moneyData.invoices.overdue} overdue · £${moneyData.invoices.unpaidGBP.toLocaleString('en-GB')}` : ''],
-              ['Approvals', '/staff-centre/approvals', moneyData ? `${moneyData.approvals.pending} waiting for you` : (moneyErr ? 'Could not load' : 'Loading…'), moneyData ? `£${moneyData.approvals.pendingGBP.toLocaleString('en-GB')} requested` : ''],
+              ['Invoices', '/staff-centre/invoices', moneyData ? `${moneyData.invoices.unpaid} unpaid` : (moneyErr ? 'Could not load' : 'Loading…'), moneyData ? `${moneyData.invoices.overdue} overdue · ${cur()}${moneyData.invoices.unpaidGBP.toLocaleString('en-GB')}` : ''],
+              ['Approvals', '/staff-centre/approvals', moneyData ? `${moneyData.approvals.pending} waiting for you` : (moneyErr ? 'Could not load' : 'Loading…'), moneyData ? `${cur()}${moneyData.approvals.pendingGBP.toLocaleString('en-GB')} requested` : ''],
             ] as [string, string, string, string][]).map(([label, href, big, sub]) => (
               <Link key={label} href={href} style={{ ...panel, textDecoration: 'none', color: TXT, display: 'block' }}>
                 <div style={{ color: MUTED, fontSize: 12 }}>{label} →</div>
@@ -234,20 +235,20 @@ export default function AICommandCentre() {
               ['Tenants', '/pm?tab=Tenants', `${more.tenants.active} active`, `${more.tenants.total} in total`],
               ['Furniture', '/pm?tab=Furniture', `${more.furniture.items} items`, `${more.furniture.poor} in poor condition`],
               ['Renewals & Notices', '/pm?tab=Renewals%20%26%20Notices', `${more.renewals.ending60} due in 90 days`, ''],
-              ['Developments', '/dev', `${more.developments.active} active projects`, `£${more.developments.budget.toLocaleString('en-GB')} budget`],
+              ['Developments', '/dev', `${more.developments.active} active projects`, `${cur()}${more.developments.budget.toLocaleString('en-GB')} budget`],
               ['Vacation Rentals', '/str', `${more.vacationRentals.bookable} bookable`, `${more.vacationRentals.total} properties`],
               ['Tenant Checks', '/pm?tab=Tenant%20Checks', `${more.rightToRent.due} rechecks due`, `${more.rightToRent.pending} pending`],
               ['HMO Rooms', '/pm?tab=HMO%20Rooms', `${more.hmo.rooms} rooms`, `${more.hmo.licence90} licences ending in 90 days`],
               ['Deadlines', '/pm?tab=Deadlines', `${more.deadlines.in30} due in 30 days`, `${more.deadlines.expired} expired`],
               ['Inspections', '/pm?tab=Inspections', `${more.inspections.next7} in next 7 days`, ''],
               ['Keys', '/pm?tab=Keys', `${more.keys.sets} key sets`, ''],
-              ['Utilities', '/pm?tab=Utilities', `${more.utilities.billsNext7} bills in next 7 days`, `£${more.utilities.monthly.toLocaleString('en-GB')} a month`],
+              ['Utilities', '/pm?tab=Utilities', `${more.utilities.billsNext7} bills in next 7 days`, `${cur()}${more.utilities.monthly.toLocaleString('en-GB')} a month`],
               ['Documents', '/pm?tab=Documents', `${more.documents.property + more.documents.company} documents`, `${more.documents.company} company`],
               ['Company SOPs', '/pm?tab=Company%20SOPs', `${more.sops.count} SOPs`, ''],
               ['Contract Templates', '/pm?tab=Contract%20Templates', `${more.templates.count} templates`, ''],
               ['Audit Log', '/pm?tab=Audit%20Log', `${more.audit.last7} changes`, 'Last 7 days'],
-              ['Expenses', '/pm?tab=Expenses', `£${more.expenses.month.toLocaleString('en-GB')} this month`, `${more.expenses.count} recorded`],
-              ['Banking', '/pm?tab=Banking', `${more.banking.accounts} accounts`, `£${more.banking.balance.toLocaleString('en-GB')} (GBP)`],
+              ['Expenses', '/pm?tab=Expenses', `${cur()}${more.expenses.month.toLocaleString('en-GB')} this month`, `${more.expenses.count} recorded`],
+              ['Banking', '/pm?tab=Banking', `${more.banking.accounts} accounts`, `${cur()}${more.banking.balance.toLocaleString('en-GB')}`],
               ['Loans & Mortgages', '/pm?tab=Loans%20%26%20Mortgages', `${more.loans.count} loans`, ''],
               ['Exchange Rates', '/pm?tab=Exchange%20Rates', fx?.USD ? `1 GBP = ${Number(fx.USD).toFixed(2)} USD` : 'Loading…', fx?.JMD ? `${Math.round(Number(fx.JMD)).toLocaleString('en-GB')} JMD · ${fx?.AED ? Number(fx.AED).toFixed(2) : '—'} AED` : ''],
               ['Landlord Reports', '/pm?tab=Landlord%20Reports', `${more.reports.landlords} landlords`, ''],
@@ -266,8 +267,8 @@ export default function AICommandCentre() {
             {((pf ? [
               ['Leases', '/pm?tab=Leases', `${pf.leases.ending60} ending in 60 days`, `${pf.leases.expired} expired`],
               ['Vacancies', '/pm?tab=Vacancies', `${pf.vacancies.vacant} vacant`, `${pf.vacancies.occupied} of ${pf.vacancies.total} occupied`],
-              ['Rent this month', '/pm?tab=Rent', `£${pf.rent.collected.toLocaleString('en-GB')} collected`, `${pf.rent.overdue} overdue · £${pf.rent.due.toLocaleString('en-GB')} due`],
-              ['Deposits held', '/pm?tab=Deposits', `£${pf.deposits.held.toLocaleString('en-GB')}`, 'Across occupied units'],
+              ['Rent this month', '/pm?tab=Rent', `${cur()}${pf.rent.collected.toLocaleString('en-GB')} collected`, `${pf.rent.overdue} overdue · ${cur()}${pf.rent.due.toLocaleString('en-GB')} due`],
+              ['Deposits held', '/pm?tab=Deposits', `${cur()}${pf.deposits.held.toLocaleString('en-GB')}`, 'Across occupied units'],
               ['Insurance', '/pm?tab=Insurance', `${pf.insurance.renewing30} renewing in 30 days`, `${pf.insurance.expired} expired`],
               ['Head Leases', '/pm?tab=Head%20Leases', `${pf.headLeases.ending90} ending in 90 days`, ''],
               ['Viewings', '/pm?tab=Viewings', `${pf.viewings.next7} in next 7 days`, ''],
@@ -375,7 +376,7 @@ export default function AICommandCentre() {
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10 }}>Novourq Cloud AI</div>
             <GrokPanel />
           </div>
-          <div style={{ textAlign: 'center', color: MUTED, fontSize: 11, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>NOVOURQ · Smart Properties. Stronger Returns. · Jamaica · UK</div>
+          <div style={{ textAlign: 'center', color: MUTED, fontSize: 11, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>NOVOURQ · Smart Properties. Stronger Returns.</div>
         </div>
       </div>
     </div>
