@@ -45,6 +45,7 @@ export default function ServicesPack() {
   const T = TABS.find(t => t.key === tab)!
   // The wording that goes with every link, with the link under it.
   const msg = (_l: any, u: string) => `Welcome to NOVOURQ. To get you set up, please use your private onboarding link to add your details, upload your documents and sign your agreement. It only takes a few minutes. This link is personal to you. If you need a hand or a new link, just reply to this message.\n\n${u}`
+  const shown = tab === 'all' ? docs : docs.filter(x => T.pick.includes(x.title) || T.more.includes(x.title) || !AUDIENCE_TITLES.has(x.title))
   const openTab = (k: typeof tab) => { const t = TABS.find(z => z.key === k)!; setTab(k); setSel(docs.filter(x => x.active && t.pick.includes(x.title)).map(x => x.id)); setReg(t.reg); setWho(null); setName(t.key === 'all' ? '' : `${t.label} pack`) }
   useEffect(() => { if (docs.length && !ready) { setReady(true); openTab('landlord') } })   // eslint-disable-line react-hooks/exhaustive-deps
   const title = (id: string) => docs.find(x => x.id === id)?.title || 'Removed document'
