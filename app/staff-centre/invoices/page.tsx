@@ -17,7 +17,7 @@ const STATUS: Record<string, { l: string; bg: string; c: string }> = {
 }
 const QUICK = [['Monthly rent', 'Monthly rent'], ['Rent upfront', '3 months rent upfront'], ['Deposit', 'Security deposit'], ['Admin fee', 'Admin fee'], ['Cleaning fee', 'Cleaning fee'], ['Partner membership', 'Partner Programme membership']]
 const fmt = (d?: string | null) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
-const todayStr = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
+const todayStr = () => new Intl.DateTimeFormat('en-CA').format(new Date())
 
 async function downloadPdf(id: string, name: string) {
   const { data: { session } } = await supabase.auth.getSession()

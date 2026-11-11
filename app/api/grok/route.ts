@@ -17,7 +17,7 @@ Use only the records given to you. If the answer is not in them, say so. Keep an
 const ROLES: Record<string, { label: string; instructions: string }> = {
   general: {
     label: 'Novourq Cloud AI',
-    instructions: `You are the operations assistant for The NOVOURQ Portal, the staff portal of NOVOURQ Group.\n${RULES}`,
+    instructions: `You are the operations assistant for The NOVOURQ Portal, the staff portal that a property management company uses to run its business.\n${RULES}`,
   },
   property_manager: {
     label: 'Property Manager',

@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
         if (!ownerId) { const { data: l, error } = await serviceClient.from('pm_landlords').insert({ user_id: c.businessId, name: p.owner_name, email: p.owner_email || null, phone: p.owner_phone || null, notes: p.referred_by ? `Came via ${p.referred_by}` : null }).select('id').single(); if (error) return bad(error.message, 500); ownerId = l.id }
         const { data: pm, error } = await serviceClient.from('pm_properties').insert({
           user_id: c.businessId, name: p.address, address: [p.address, p.subarea, p.area].filter(Boolean).join(', '), city: p.subarea || p.area || null,
-          country: p.country || 'Jamaica', owner_id: ownerId, status: 'Available', monthly_income: p.price_is_rent ? p.price : null,
+          country: p.country || '', owner_id: ownerId, status: 'Available', monthly_income: p.price_is_rent ? p.price : null,
           bedrooms: p.bedrooms != null ? String(p.bedrooms) : null, bathrooms: p.bathrooms != null ? String(p.bathrooms) : null,
           image_urls: photos.length ? JSON.stringify(photos.slice(0, 40)) : null,
         }).select('id').single()
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
         const slug = (p.address + '-' + (p.subarea || '')).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + p.id.slice(0, 4)
         const { data: vr, error } = await serviceClient.from('properties').insert({
           user_id: c.businessId, name: p.address, slug, address: [p.address, p.subarea, p.area].filter(Boolean).join(', '), city: p.subarea || null,
-          country: p.country || 'Jamaica', location: p.area || null, status: 'inactive', show_on_website: false,
+          country: p.country || '', location: p.area || null, status: 'inactive', show_on_website: false,
           bedrooms: p.bedrooms != null ? Math.round(p.bedrooms) : null, bathrooms: p.bathrooms != null ? Math.round(p.bathrooms) : null,
           image_url: photos[0] || null, description: p.description || null,
         }).select('id').single()

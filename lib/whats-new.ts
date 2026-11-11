@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Invoice dates use your local date', text: 'Invoices now work out today and overdue from the date on your own device, and imported client properties no longer default to Jamaica.' },
   { date: '2026-11-11', title: 'Euro, dirham and Canadian dollar symbols everywhere', text: 'Invoices, Landlord Leads, Client Properties, Portfolio, Find Deals and the Utility Tracker now show the right symbol for euro, dirham and Canadian dollar amounts.' },
   { date: '2026-11-11', title: 'Team members add to the company records', text: 'CRM contacts and deals, vendors, work orders, service, reporting, documents and properties added by a team member now save to the company, so the owner and the rest of the team see them straight away.' },
   { date: '2026-11-11', title: 'Team members see company marketing and documents', text: 'Team members now see and add the company\'s Marketing campaigns, emails and Company Documents, and the AI lead, guest, maintenance, cleaning and revenue helpers use your company name and your company\'s records.' },
