@@ -236,6 +236,15 @@ export default function Page() {
   // Deep links like /estate?section=Viewings (used by alerts)
   useEffect(() => { const q = new URLSearchParams(window.location.search).get('section'); if (q) setSection(q) }, [])
   const { role, propertyIds, loading: roleLoading } = useRole()
+  const [myName, setMyName] = useState('')
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data: tm } = await supabase.from('team_members').select('name').eq('email', user.email ?? '').order('created_at', { ascending: false }).limit(1)
+      const full = String(tm?.[0]?.name || (user.user_metadata as any)?.name || (user.email ?? '').split('@')[0] || '').trim()
+      setMyName(full.split(/\s+/)[0].replace(/^./, c => c.toUpperCase()))
+    })
+  }, [])
   const allowedTab = getAllowedTab(role, 'estate')
 
   useEffect(() => { window.scrollTo(0, 0) }, [section])
@@ -824,7 +833,7 @@ export default function Page() {
           {section==='Dashboard'&&(<div>
             <div style={{marginBottom:20}}>
               <div style={{fontSize:13,color:'#667085'}}>Sunday, {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long'})}</div>
-              <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>Hello NOVOURQ !</div>
+              <div style={{fontSize:24,fontWeight:700,color:'#323338'}}>{myName?`Hello ${myName}`:'Hello'}</div>
             </div>
             {(complianceExpired>0||complianceExpiringSoon>0||tenanciesEndingSoon>0||lateRentCount>0)&&(
               <div style={{background:'#FFFBEB',border:'1px solid #89CFF0',borderRadius:10,padding:'16px 20px',marginBottom:20}}>

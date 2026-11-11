@@ -18,7 +18,7 @@ import { BedDouble, Bath } from 'lucide-react'
 import GuestCheckins from '@/components/pm/GuestCheckins'
 import LeaseDocuments from '@/components/pm/LeaseDocuments'
 import { ownerFetch } from '@/lib/platform-fetch'
-import { SITE_HOST } from '@/lib/brand'
+import { SITE_HOST, CONTACT_EMAIL } from '@/lib/brand'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
 const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
@@ -1167,8 +1167,9 @@ function PMPageInner() {
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
         </div>
         <h2 style={{fontSize:22,fontWeight:700,color:'#323338',marginBottom:8}}>Property Management</h2>
-        <p style={{fontSize:14,color:'#667085',lineHeight:1.6,marginBottom:24}}>This module requires the Property Management add-on at £99/month.</p>
-        <a href="/modules" style={{display:'inline-block',background:'#2F6DB5',color:'#fff',borderRadius:8,padding:'11px 24px',fontSize:14,fontWeight:600,textDecoration:'none'}}>Unlock Module →</a>
+        <p style={{fontSize:14,color:'#667085',lineHeight:1.6,marginBottom:24}}>Your NOVOURQ subscription is not active yet. If you have just subscribed, it can take a minute to switch on.</p>
+        <button onClick={()=>window.location.reload()} style={{display:'inline-block',background:'#2F6DB5',color:'#fff',border:'none',borderRadius:8,padding:'11px 24px',fontSize:14,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Refresh</button>
+        <p style={{fontSize:13,color:'#98A2B3',marginTop:16}}>Still blocked? Email <a href={`mailto:${CONTACT_EMAIL}`} style={{color:'#2F6DB5'}}>{CONTACT_EMAIL}</a> and we will sort it.</p>
       </div>
     </div>
   )

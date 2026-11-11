@@ -161,7 +161,7 @@ function LoginForm() {
       else {
         // Go to Stripe checkout
         const priceId = searchParams.get('priceId')
-        const body = priceId && selectedPlan === initialPlan ? { plan: selectedPlan, priceId } : { plan: selectedPlan }
+        const body = priceId && selectedPlan === initialPlan ? { plan: selectedPlan, priceId, email } : { plan: selectedPlan, email }
         try {
           const res = await fetch('/api/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
           const data = await res.json()
