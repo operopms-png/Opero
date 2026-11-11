@@ -104,7 +104,7 @@ export default function DashboardAiPanel({ mapSlot, children }: { mapSlot?: Reac
         <div style={{ ...box, padding: 18, minWidth: 0 }}>
           <h3 style={{ ...head, marginBottom: 2 }}>NOVOURQ Walk</h3>
           <div style={{ fontSize: 12.5, color: K.muted, marginBottom: 10 }}>Showcasing our new AI technology</div>
-          <video src="/novourq-walk.mp4" poster="/novourq-walk-poster.jpg" controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 520, borderRadius: 12, background: '#0b1630', objectFit: 'contain', display: 'block' }} />
+          <video src="/novourq-walk.mp4" poster="/novourq-walk-poster.jpg" controls playsInline preload="metadata" style={{ width: '100%', height: 'auto', borderRadius: 12, display: 'block' }} />
         </div>
         <div style={{ ...box, padding: 18, minWidth: 0 }}>
           <h3 style={head}>What Novourq Cloud AI did</h3>
