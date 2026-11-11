@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Unit Profit and Exchange Rates in your currency', text: 'Real Estate Intelligence → Exchange Rates and Unit Profit now convert into your company currency, and properties can be set to pounds, dollars, Jamaican dollars, euros, dirhams or Canadian dollars.' },
   { date: '2026-11-11', title: 'Finance in your own currency', text: 'Finance totals, charts and exchange rates now show in your company currency, and euros, dirhams and Canadian dollars are converted properly alongside pounds, dollars and Jamaican dollars.' },
   { date: '2026-11-11', title: 'Your currency on Staff Performance and Marketing', text: 'Staff Performance totals and Marketing values now show your company currency symbol instead of always showing pounds.' },
   { date: '2026-11-11', title: 'Your own earnings checker', text: 'Landlord Leads → Link & embed code now gives your company its own earnings checker link and website code, so every landlord lead and estimate email goes to and comes from your company.' },

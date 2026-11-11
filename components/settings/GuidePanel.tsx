@@ -40,6 +40,11 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'A landlord enters their property details and gets an estimate by email, signed with your company name. The lead appears in Landlord Leads and your CRM and you get an alert. Their book-a-call button opens your own meeting link.',
     'Add ?src=facebook (or similar) to the link to see where each lead came from.',
   ] },
+  { id: 'exchange-rates', title: 'Exchange rates and Unit Profit', steps: [
+    'Set each property\'s currency when you add it (pound, US dollar, Jamaican dollar, euro, dirham or Canadian dollar).',
+    'Open Real Estate Intelligence, Property Management, Exchange Rates and add how many of your company currency one unit of each other currency is worth. Update it when the rate changes.',
+    'Unit Profit then shows each unit\'s income, head rent and running costs in your company currency. Head rent is taken as your company currency.',
+  ] },
   { id: 'finance-currency', title: 'Finance currency', steps: [
     'Set your company currency in Settings, Currency. Finance then shows all totals, charts and owner payouts in it. Amounts in other currencies are converted at today\'s rate, listed under Exchange rates used on the Finance overview.',
   ] },

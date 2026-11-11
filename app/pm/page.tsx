@@ -1,5 +1,5 @@
 'use client'
-import { cur } from '@/lib/company-currency'
+import { cur, codeOf } from '@/lib/company-currency'
 import { usePropertyAllowance, isPropertyLimitError } from '@/lib/property-allowance'
 import LandlordOnboarding from '../../components/landlords/LandlordOnboarding'
 import UtilityTracker from '../../components/pm/UtilityTracker'
@@ -117,8 +117,8 @@ const TAB_INTROS: Record<string,string> = {
   'Expenses': 'costs paid by the business, such as repairs and supplies, with the date, amount and property each relates to.',
   'Banking': 'the bank accounts used for the business and the transactions recorded against them.',
   'Loans & Mortgages': 'loans and mortgages secured on properties, with the lender, the balance and the monthly payment.',
-  'Exchange Rates': 'each property has a currency (GBP or JMD). Rent and costs are kept in that currency. The rate below converts them to pounds for totals and for Unit Profit. Enter how many pounds one unit of the currency is worth, and update it when the rate changes.',
-  'Unit Profit': 'shows whether each unit makes money every month. Rent from the current lease is shown against the head rent paid to the landlord and the running costs (utility bills). Head rent and bills for a property are split evenly across its units. A negative margin means the unit should be reviewed. Head rent is taken as GBP; property bills are converted using the rates on the Exchange Rates tab.',
+  'Exchange Rates': 'each property has a currency. Rent and costs are kept in that currency. The rate below converts them into your company currency (Settings → Currency) for totals and for Unit Profit. Enter how many of your company currency one unit of the currency is worth, and update it when the rate changes.',
+  'Unit Profit': 'shows whether each unit makes money every month. Rent from the current lease is shown against the head rent paid to the landlord and the running costs (utility bills). Head rent and bills for a property are split evenly across its units. A negative margin means the unit should be reviewed. Head rent is taken as your company currency; property bills are converted using the rates on the Exchange Rates tab.',
   'Landlord Reports': 'statements for each landlord showing the rent collected, the costs and the amount due to them.',
   'Reports': 'portfolio-wide reports on income, costs and occupancy for a chosen period.',
   'Accounting Export': 'export of income and expense records in a format the accountant can use.',
@@ -2141,7 +2141,8 @@ function PMPageInner() {
 
         {tab==='Unit Profit'&&(() => {
           const today = new Date().toISOString().slice(0,10)
-          const rateFor = (ccy?: string) => (!ccy || ccy==='GBP') ? 1 : (fxRates.find((r:any)=>r.currency===ccy)?.rate_to_gbp ?? null)
+          const baseCode = codeOf(cur())
+          const rateFor = (ccy?: string) => (!ccy || ccy===baseCode) ? 1 : (fxRates.find((r:any)=>r.currency===ccy)?.rate_to_gbp ?? null)
           const rows = units.map((u:any)=>{
             const prop = properties.find((p:any)=>p.id===u.property_id)
             const rate = rateFor(prop?.currency)
@@ -2212,10 +2213,10 @@ function PMPageInner() {
           <div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 120px',padding:'12px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>
-                <span>Currency</span><span>1 unit is worth (GBP)</span><span>Last updated</span><span></span>
+                <span>Currency</span><span>1 unit is worth ({codeOf(cur())})</span><span>Last updated</span><span></span>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 120px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
-                <span style={{fontWeight:500,color:'#323338'}}>GBP</span><span>1.0000 (base currency)</span><span>—</span><span></span>
+                <span style={{fontWeight:500,color:'#323338'}}>{codeOf(cur())}</span><span>1.0000 (base currency)</span><span>—</span><span></span>
               </div>
               {fxRates.length===0?<div style={{textAlign:'center',padding:40,color:'#98A2B3',fontSize:14}}>No rates set yet. JMD properties will show as having no exchange rate until one is added.</div>:
               fxRates.map((r:any)=>(
@@ -3754,7 +3755,7 @@ function PMPageInner() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 140px',gap:14}}>
               <div><label style={lbl}>Monthly income (in the property's currency)</label><input type="number" style={inp} value={form.monthly_income??''} onChange={e=>setForm({...form,monthly_income:parseFloat(e.target.value)})} placeholder="0"/></div>
-              <div><label style={lbl}>Currency</label><select style={{...inp,cursor:'pointer'}} value={form.currency??'GBP'} onChange={e=>setForm({...form,currency:e.target.value})}><option value="GBP">GBP</option><option value="JMD">JMD</option></select></div>
+              <div><label style={lbl}>Currency</label><select style={{...inp,cursor:'pointer'}} value={form.currency??'GBP'} onChange={e=>setForm({...form,currency:e.target.value})}>{['GBP','JMD','USD','EUR','AED','CAD'].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={{...lbl,display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>Bedrooms</label><input style={inp} value={form.bedrooms??''} onChange={e=>setForm({...form,bedrooms:e.target.value})} placeholder="e.g. 2"/></div>
@@ -4206,10 +4207,10 @@ function PMPageInner() {
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
             <div><label style={lbl}>Currency</label>
               <select style={{...inp,cursor:'pointer'}} value={form.currency??'JMD'} onChange={e=>setForm({...form,currency:e.target.value})}>
-                <option>JMD</option><option>USD</option><option>EUR</option>
+                {['GBP','JMD','USD','EUR','AED','CAD'].filter(c=>c!==codeOf(cur())).map(c=><option key={c}>{c}</option>)}
               </select>
             </div>
-            <div><label style={lbl}>1 unit of this currency is worth (GBP) *</label><input type="number" step="0.0001" style={inp} value={form.rate_to_gbp??''} onChange={e=>setForm({...form,rate_to_gbp:e.target.value})} placeholder="e.g. 0.0048 for JMD"/></div>
+            <div><label style={lbl}>1 unit of this currency is worth ({codeOf(cur())}) *</label><input type="number" step="0.0001" style={inp} value={form.rate_to_gbp??''} onChange={e=>setForm({...form,rate_to_gbp:e.target.value})} placeholder="e.g. 0.0048 for JMD"/></div>
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
