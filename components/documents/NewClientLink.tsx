@@ -32,8 +32,8 @@ export default function NewClientLink({ onClose }: { onClose: () => void }) {
           <div><label style={label} htmlFor="ncl-kind">They are</label><select id="ncl-kind" style={input} value={f.kind} onChange={e => set('kind', e.target.value)}><option value="owner">An owner</option><option value="tenant">A tenant</option></select></div>
           <div><label style={label} htmlFor="ncl-mod">Added to</label><select id="ncl-mod" style={input} value={f.module} onChange={e => set('module', e.target.value)}><option value="pm">Property Management</option><option value="ea">Estate Agency</option></select></div>
         </div>
-        <label style={{ ...label, marginTop: 10 }} htmlFor="ncl-tpl">Contract they sign</label>
-        <select id="ncl-tpl" style={input} value={f.template_id} onChange={e => set('template_id', e.target.value)}><option value="">None (details and documents only)</option>{templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
+        <label style={{ ...label, marginTop: 10 }} htmlFor="ncl-tpl">Agreement we add for them to sign</label>
+        <select id="ncl-tpl" style={input} value={f.template_id} onChange={e => set('template_id', e.target.value)}><option value="">None (details and documents only, add the agreement later)</option>{templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
           <div><label style={label} htmlFor="ncl-name">Name (optional)</label><input id="ncl-name" style={input} value={f.name} onChange={e => set('name', e.target.value)} /></div>
           <div><label style={label} htmlFor="ncl-email">Email (optional)</label><input id="ncl-email" style={input} value={f.email} onChange={e => set('email', e.target.value)} /></div>

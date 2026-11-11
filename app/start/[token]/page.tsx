@@ -72,7 +72,7 @@ export default function StartPage() {
         {d && !d.expired && !done && step === 1 && lk && <div>
           <div style={{ fontSize: 17, fontWeight: 700 }}>Upload your documents</div>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 8 }}>Take a photo with your phone or choose a file. You can add more later from your private link.</div>
-          <PortalDocuments kind={d.subject} link={lk} />
+          <PortalDocuments kind={d.subject} link={lk} contractReady={!!d.has_contract} />
           <button style={btn} onClick={afterDocs}>{docTok ? 'Continue to sign' : 'Finish'}</button>
         </div>}
         {(done || step === 3) && !err && <div style={{ background: '#E7F6EC', border: '1px solid #B7E4C7', color: '#067647', borderRadius: 12, padding: 18, textAlign: 'center', fontWeight: 600 }}>

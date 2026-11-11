@@ -7,7 +7,7 @@ type Kind = 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant'
 const pill = (bg: string, fg: string): React.CSSProperties => ({ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: bg, color: fg, whiteSpace: 'nowrap' })
 const STATE: Record<string, [string, string, string]> = { todo: ['Required', '#FFF4E0', '#B54708'], pending: ['Being reviewed', '#E3EDFA', '#2F6DB5'], approved: ['Approved', '#E7F6EC', '#067647'], rejected: ['Replace', '#FEF3F2', '#B42318'], optional: ['Optional', '#F2F4F7', '#667085'], byus: ["We'll add this", '#F2F4F7', '#667085'] }
 
-export default function PortalDocuments({ kind, id, accent = '#2F6DB5', link }: { kind: Kind; id?: string; accent?: string; link?: string }) {
+export default function PortalDocuments({ kind, id, accent = '#2F6DB5', link, contractReady }: { kind: Kind; id?: string; accent?: string; link?: string; contractReady?: boolean }) {
   const [d, setD] = useState<{ files: any[]; items: any[]; canUpload: boolean } | null>(null)
   const [busy, setBusy] = useState('')
   const [msg, setMsg] = useState('')
@@ -39,11 +39,12 @@ export default function PortalDocuments({ kind, id, accent = '#2F6DB5', link }: 
   const soon = (x?: string) => x && Math.ceil((new Date(x).getTime() - Date.now()) / 864e5) < 90
   const row = (it: any) => {
     const files = d.files.filter(f => f.category === it.key)
-    const st = STATE[it.state] || STATE.todo
+    const ready = it.state === 'byus' && !!contractReady
+    const st = ready ? ['Ready to sign', '#E3EDFA', '#2F6DB5'] : (STATE[it.state] || STATE.todo)
     return (
       <div key={it.key} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}><div style={{ fontSize: 14, fontWeight: 700, color: '#323338' }}>{it.label}</div><span style={pill(st[1], st[2])}>{st[0]}</span></div>
-        <div style={{ fontSize: 12, color: it.state === 'rejected' ? '#B42318' : '#667085', marginTop: 2 }}>{it.state === 'rejected' && it.reason ? it.reason : it.hint}</div>
+        <div style={{ fontSize: 12, color: it.state === 'rejected' ? '#B42318' : '#667085', marginTop: 2 }}>{it.state === 'rejected' && it.reason ? it.reason : ready ? 'Your agreement is prepared. You will read and sign it in the next step.' : it.hint}</div>
         {files.map(f => (
           <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12.5, background: '#F2F7FD', borderRadius: 8, padding: '7px 10px', marginTop: 7 }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: soon(f.expires_on) ? '#B54708' : undefined }}>{f.name}{f.expires_on ? ` · expires ${new Date(f.expires_on).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}</span>
