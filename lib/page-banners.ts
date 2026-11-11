@@ -38,7 +38,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/meetings': { title: 'Meetings', text: 'Your booking links and scheduled meetings. Share a link and people pick a time that suits you.' },
   '/staff-centre/maintenance': { title: 'Maintenance', text: 'Repair jobs across all properties, with who is handling each one and its progress.' },
   '/staff-centre/applications': { title: 'Applications', text: 'Rental applications received, and where each one is in referencing and approval.' },
-  '/staff-centre/services-pack': { title: 'Services Pack', text: 'Send our brochure, landlord pack and flyers by link. Tick one document or several, create the link, and paste it into any email. You see who opened it and which documents they viewed.' },
+  '/staff-centre/services-pack': { title: 'Services Pack', text: 'Send our brochure, landlord pack and flyers by link. Tick one document or several, create the link, and paste it into any email. You see who opened it and which documents they viewed. For landlords, tick the one Agreement that fits before you send.' },
   '/staff-centre/hr-documents': { title: 'HR Documents', text: 'Payslips, HR forms and contracts in one place. Open a form to fill it in, edit or replace it, and send it to the person by email. Only Admin and HR Team can see this.' },
   '/staff-centre/hr': { title: 'People & HR', text: 'Your team records in one place: staff details, leave, contracts and reviews.' },
   '/staff-centre/crm': { title: 'CRM', text: 'Contacts, deals and follow-ups for landlords, tenants and buyers.' },
