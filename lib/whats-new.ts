@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Invoices in your currency', text: 'New invoices start in your company currency and can be switched to pound, US dollar, Jamaican dollar, euro, UAE dirham or Canadian dollar; overdue rent emails and landlord statements show your symbol.' },
   { date: '2026-11-11', title: 'Your own currency', text: 'Settings → Currency lets an admin choose the symbol shown on money across Real Estate Intelligence, so non-UK clients no longer see pounds.' },
   { date: '2026-11-11', title: 'Get started checklist', text: 'New accounts see a Get started box at the top of Real Estate Intelligence that walks through adding a property, a landlord and a tenant, and ticks each step off automatically.' },
   { date: '2026-11-11', title: 'Smoother sign-up', text: 'New clients are greeted by their own first name, the sign-up now passes their email to checkout so payment matches the account, and an unpaid account sees a clear message with a Refresh button instead of a dead end.' },

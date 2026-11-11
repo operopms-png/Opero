@@ -4,6 +4,7 @@
 // automatic run) and app/api/cron/daily-reminders/route.ts (a
 // secret-protected route for manual testing, since Netlify blocks direct
 // external invocation of scheduled functions).
+import { companySymbol } from '@/lib/company-currency-server'
 import { createClient } from '@supabase/supabase-js'
 import { SITE_URL, EMAIL_FROM } from '@/lib/brand'
 
@@ -73,11 +74,12 @@ async function scanEstateAgency(supabase: any, userId: string) {
   const email = ownerData?.user?.email
   if (!email) return { userId, totalIssues, notified: true, emailed: false }
 
+  const sym = await companySymbol(userId)
   const rows = [
     ...expiredCompliance.map((c: any) => `<li><strong>Expired:</strong> ${c.type} — ${c.estate_properties?.name ?? 'unknown property'} (expired ${c.expiry_date})</li>`),
     ...expiringCompliance.map((c: any) => `<li><strong>Expiring soon:</strong> ${c.type} — ${c.estate_properties?.name ?? 'unknown property'} (expires ${c.expiry_date})</li>`),
     ...expiringTenancies.map((t: any) => `<li><strong>Tenancy ending:</strong> ${t.estate_tenants?.name ?? 'tenant'} at ${t.estate_properties?.name ?? 'unknown property'} (ends ${t.end_date})</li>`),
-    ...overdueRent.map((r: any) => `<li><strong>Overdue rent:</strong> £${r.amount} — ${r.estate_tenancies?.estate_tenants?.name ?? 'tenant'} at ${r.estate_tenancies?.estate_properties?.name ?? 'unknown property'}</li>`),
+    ...overdueRent.map((r: any) => `<li><strong>Overdue rent:</strong> ${sym}${r.amount} — ${r.estate_tenancies?.estate_tenants?.name ?? 'tenant'} at ${r.estate_tenancies?.estate_properties?.name ?? 'unknown property'}</li>`),
   ]
   const html = `<p>Your Estate Agency account has ${totalIssues} item${totalIssues > 1 ? 's' : ''} needing attention:</p><ul>${rows.join('')}</ul><p><a href="${SITE_URL}/estate">Review in NOVOURQ</a></p>`
 

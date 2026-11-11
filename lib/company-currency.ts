@@ -13,3 +13,4 @@ let sym = '£'
 if (typeof window !== 'undefined') { try { sym = localStorage.getItem(KEY) || '£' } catch { /* default */ } }
 export const cur = () => sym
 export function setCur(s: string) { sym = s; try { localStorage.setItem(KEY, s) } catch { /* not kept */ } }
+export const codeOf = (symbol: string) => CURRENCIES.find(c => c.symbol === symbol)?.code ?? 'GBP'

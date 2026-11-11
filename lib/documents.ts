@@ -9,7 +9,7 @@ import { esc, fillBody, emptyBlanks, BLANKS, blankLabel } from '@/lib/doc-text'
 
 const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
 const one = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? null).catch(() => null)
-const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
+const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 const money = (n: any, cur: string) => n == null || n === '' ? '' : (SYM[cur] ?? '') + Number(n).toLocaleString('en-GB', { minimumFractionDigits: Number(n) % 1 ? 2 : 0, maximumFractionDigits: 2 })
 export const longDate = (d?: string | null) => d ? new Date(String(d).slice(0, 10) + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : ''
 export const todayJm = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())

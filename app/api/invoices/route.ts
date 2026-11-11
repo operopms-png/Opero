@@ -19,7 +19,7 @@ import { invoicePdf, fmtMoney, fmtDate } from '@/lib/invoice-pdf'
 
 export const maxDuration = 30
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
-const CURS = ['GBP', 'JMD', 'USD']
+const CURS = ['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD']
 const SETTING_FIELDS = ['prefix', 'company_name', 'logo_url', 'logo_line1', 'logo_line2', 'contact_lines', 'payment_instructions', 'signature_name', 'signature_url', 'terms_note', 'reply_to']
 
 async function settingsFor(biz: string) {

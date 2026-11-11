@@ -4,7 +4,7 @@ import { serviceClient as db } from '@/lib/admin-auth'
 import { companyName } from '@/lib/ai-proposal-utils'
 
 export const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
-export const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
+export const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 export const money = (n: any, cur: string) => (SYM[cur] ?? '') + Math.round(Number(n) || 0).toLocaleString('en-GB')
 export const dayMs = 864e5
 export const first = (n?: string | null) => { const t = (n || '').trim(); if (!t) return ''; const m = t.match(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+(.+)$/i); return m ? `${m[1]}. ${m[2].split(/\s+/).pop()}` : t.split(/\s+/)[0] }

@@ -4,6 +4,7 @@
 // who to bill, add lines, choose currency and due date — the invoice on the
 // right updates as you type. The fixed parts (logo, contact details, bank
 // details, signature, terms) come from Invoice settings, which only admins edit.
+import { codeOf } from '@/lib/company-currency'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { C, CrmPage, CrmHeader, Body, Stat, Loading, Empty, Modal, btn, input, label } from '../../../components/crm/Page'
@@ -97,7 +98,7 @@ function Editor({ id, back, onCreated }: { id?: string; back: () => void; onCrea
     (async () => {
       try {
         if (id) { const r = await staffApi('/api/invoices?id=' + id); setInv(r.invoice); setS(r.settings) }
-        else { const r = await staffApi('/api/invoices'); setS(r.settings); setInv({ bill_to_name: '', currency: 'GBP', issue_date: todayStr(), due_date: null, items: [{ description: '', qty: 1, amount: '' }], status: 'draft', shown_status: 'draft' }) }
+        else { const r = await staffApi('/api/invoices'); setS(r.settings); setInv({ bill_to_name: '', currency: codeOf(r.settings?.currency_symbol || '£'), issue_date: todayStr(), due_date: null, items: [{ description: '', qty: 1, amount: '' }], status: 'draft', shown_status: 'draft' }) }
         const r2 = await staffApi('/api/approvals'); setIsAdmin(!!r2.isAdmin)
       } catch (e: any) { setErr(e.message) }
     })()
@@ -160,7 +161,7 @@ function Editor({ id, back, onCreated }: { id?: string; back: () => void; onCrea
             </div>{inv.due_date && <input style={{ ...input, marginTop: 8 }} type="date" value={inv.due_date} onChange={e => set('due_date', e.target.value)} />}</div>
             <div style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><b style={{ fontSize: 14 }}>Items</b>
-                <div style={{ display: 'inline-flex', border: '1px solid ' + C.border, borderRadius: 6, overflow: 'hidden' }}>{['GBP', 'JMD', 'USD'].map(cu => <button key={cu} type="button" onClick={() => set('currency', cu)} style={{ padding: '5px 10px', border: 'none', background: inv.currency === cu ? C.goldDark : '#fff', color: inv.currency === cu ? '#fff' : C.ink, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{{ GBP: '£', JMD: 'J$', USD: '$' }[cu]}</button>)}</div></div>
+                <div style={{ display: 'inline-flex', border: '1px solid ' + C.border, borderRadius: 6, overflow: 'hidden' }}>{['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD'].map(cu => <button key={cu} type="button" onClick={() => set('currency', cu)} style={{ padding: '5px 10px', border: 'none', background: inv.currency === cu ? C.goldDark : '#fff', color: inv.currency === cu ? '#fff' : C.ink, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{{ GBP: '£', JMD: 'J$', USD: '$' }[cu]}</button>)}</div></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 54px 100px 22px', gap: 6, marginTop: 10, fontSize: 11.5, color: C.muted }}><span>Description</span><span style={{ textAlign: 'center' }}>Qty</span><span style={{ textAlign: 'right' }}>Amount</span><span /></div>
               {inv.items.map((it: any, i: number) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 54px 100px 22px', gap: 6, marginTop: 6 }}>

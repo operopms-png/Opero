@@ -11,7 +11,7 @@ export async function staffApi<T = any>(path: string, body?: any): Promise<T> {
   return d as T
 }
 
-export const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
+export const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 export const money = (n: any, cur = 'GBP', short = false) => {
   if (n == null || n === '' || !Number.isFinite(Number(n))) return '—'
   const v = Number(n), s = SYM[cur] ?? ''

@@ -4,6 +4,7 @@
 // compliance). Used by Property Management (mode 'pm') and Estate Agency
 // (mode 'ea'). "Send to landlord" saves a locked snapshot the landlord sees
 // in their portal and emails them a summary. The statement prints to PDF.
+import { cur } from '@/lib/company-currency'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { C, Pill, Modal, btn, input, label } from '../crm/Page'
@@ -19,7 +20,7 @@ const PAYOUT_CATEGORIES = ['Rent Share', 'Utility Bill', 'Maintenance Reimbursem
 const COST_CATEGORIES = ['Repair', 'Maintenance', 'Cleaning', 'Certificate / compliance', 'Utility bill', 'Furnishing', 'Letting fee', 'Other']
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-export const money = (n: number) => (n < 0 ? '-£' : '£') + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+export const money = (n: number) => (n < 0 ? '-' : '') + cur() + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 export const nice = (d?: string | null) => d ? new Date(d + (d.length === 10 ? 'T00:00:00' : '')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
 const inRange = (d: string | null | undefined, p: { from: string; to: string }) => !!d && d.slice(0, 10) >= p.from && d.slice(0, 10) <= p.to
 const isDoneJob = (s?: string) => /complete|closed|done|resolved/i.test(s ?? '')
@@ -638,7 +639,7 @@ export default function LandlordStatements({ mode }: { mode: Mode }) {
               <select style={{ ...input, cursor: 'pointer' }} value={form.category ?? ''} onChange={e => setForm({ ...form, category: e.target.value })}>
                 {(modal === 'cost' ? COST_CATEGORIES : PAYOUT_CATEGORIES).map(c => <option key={c}>{c}</option>)}
               </select></div>
-            <div><label style={label}>Amount (£) *</label><input type="number" style={input} value={form.amount ?? ''} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder="0.00" /></div>
+            <div><label style={label}>Amount ({cur()}) *</label><input type="number" style={input} value={form.amount ?? ''} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder="0.00" /></div>
             <div><label style={label}>Property</label>
               <select style={{ ...input, cursor: 'pointer' }} value={form.property_id ?? ''} onChange={e => setForm({ ...form, property_id: e.target.value })}>
                 <option value="">{modal === 'cost' ? 'All properties' : '—'}</option>

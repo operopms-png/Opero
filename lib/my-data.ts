@@ -1,5 +1,6 @@
 // Data Hub for tenants and landlords (server only): everything held about ONE signed-in portal person.
 // The person is found by their sign-in (portal_user_id), never by anything sent from the browser.
+import { companySymbol } from '@/lib/company-currency-server'
 import { createClient } from '@supabase/supabase-js'
 import type { NextRequest } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
@@ -18,7 +19,7 @@ const pick = (o: any, keys: string[]) => Object.fromEntries(keys.map(k => [k, o?
 
 export type MyData = { role: 'tenant' | 'landlord' | null; business: string | null; businessId: string | null; sections: { title: string; rows: { label: string; detail?: string; tag?: string; tone?: 'ok' | 'warn' | 'bad' | 'info'; href?: string }[] }[]; summary: { label: string; value: string }[]; raw: Record<string, unknown> }
 
-const money = (n: any) => (n == null || n === '' ? '-' : '£' + Number(n).toLocaleString('en-GB'))
+const moneyIn = (sym: string) => (n: any) => (n == null || n === '' ? '-' : sym + Number(n).toLocaleString('en-GB'))
 const day = (d?: string | null) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-')
 
 export async function loadMyData(uid: string, email: string): Promise<MyData> {
@@ -35,6 +36,7 @@ export async function loadMyData(uid: string, email: string): Promise<MyData> {
   if (!role || !first) return { role: null, business: null, businessId: null, sections: [], summary: [], raw: {} }
   const businessId = first.user_id as string
   const business = (await companyName(businessId).catch(() => '')) || 'your property manager'
+  const money = moneyIn(await companySymbol(businessId).catch(() => '£'))
 
   const profileRows = (rows: any[]) => rows.flatMap(r => [
     { label: 'Name', detail: r.name },
