@@ -1,3 +1,4 @@
+import { companySymbol } from '@/lib/company-currency-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   const biz = c.businessId
+  const sy = await companySymbol(biz)
   const range = ['week', 'month'].includes(req.nextUrl.searchParams.get('range') || '') ? req.nextUrl.searchParams.get('range')! : 'today'
 
   const today = day(new Date())
@@ -121,7 +123,7 @@ export async function GET(req: NextRequest) {
       const openMs = devMilestones.filter((m: any) => open(m.status))
       const late = openMs.filter((m: any) => m.due_date && m.due_date < today).length
       const next = openMs.filter((m: any) => m.due_date && m.due_date >= today).sort((a: any, b: any) => a.due_date.localeCompare(b.due_date))[0]
-      const short = (n: number) => n >= 1e6 ? '£' + (n / 1e6).toFixed(1) + 'm' : n >= 1e3 ? '£' + Math.round(n / 1e3) + 'k' : '£' + Math.round(n)
+      const short = (n: number) => n >= 1e6 ? sy + (n / 1e6).toFixed(1) + 'm' : n >= 1e3 ? sy + Math.round(n / 1e3) + 'k' : sy + Math.round(n)
       return { key: 'dev', name: 'Developments', href: '/dev', occ: budget ? Math.min(100, Math.round(spent / budget * 100)) : 0, ringLabel: 'of budget spent',
         note: next ? `Next: ${next.name} · ${new Date(next.due_date + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : `${devProjects.length} project${devProjects.length === 1 ? '' : 's'}`,
         stats: [{ l: 'Spent', v: budget ? `${short(spent)} of ${short(budget)}` : short(spent) }, { l: 'Projects', v: devProjects.filter((p: any) => !/complete|done|closed/i.test(p.status || '')).length }, { l: 'Late', v: late }] }

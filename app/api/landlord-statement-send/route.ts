@@ -4,10 +4,12 @@ import { sendEmail } from '@/lib/send-email'
 import { BRAND_NAME, SITE_URL } from '@/lib/brand'
 import { replyToFor } from '@/lib/branded-email'
 import { companyName } from '@/lib/ai-proposal-utils'
+import { companySymbol } from '@/lib/company-currency-server'
 
 // Emails a landlord the summary of a statement that staff just saved in
 // landlord_statements, with a link to the full copy in their portal.
-const gbp = (n: number) => (n < 0 ? '-£' : '£') + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+let SYMB = '£'
+const gbp = (n: number) => (n < 0 ? '-' : '') + SYMB + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const esc = (s: string) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 
 export async function POST(req: NextRequest) {
@@ -18,6 +20,7 @@ export async function POST(req: NextRequest) {
 
   const { data: st } = await serviceClient.from('landlord_statements').select('*').eq('id', id).maybeSingle()
   if (!st) return NextResponse.json({ error: 'Statement not found' }, { status: 404 })
+  SYMB = await companySymbol(st.user_id)
 
   // Only the business owner or one of its team can send its statements
   let allowed = st.user_id === uid

@@ -1,3 +1,4 @@
+import { cur as companyCur } from './company-currency'
 import type { MkBoard } from './marketing-boards'
 
 // Staff Centre → People & HR boards (one per hr_* table), shown with the
@@ -21,7 +22,7 @@ export const HR_BOARDS: MkBoard[] = [
       { key: 'service', title: 'Length of service', type: 'computed', width: 150 },
       { key: 'email', title: 'Email', type: 'email', width: 210 },
       { key: 'phone', title: 'Phone', type: 'phone', width: 140 },
-      { key: 'salary', title: 'Salary', type: 'number', width: 120, currency: '£' },
+      { key: 'salary', title: 'Salary', type: 'number', width: 120, get currency() { return companyCur() } },
       { key: 'notes', title: 'Notes', type: 'longtext', width: 220, hideInTable: true },
     ],
   },

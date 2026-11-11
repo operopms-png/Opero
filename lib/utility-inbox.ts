@@ -83,7 +83,7 @@ export async function handleBillEmail(emailId: string, token: string, from: stri
   const { error } = await db.from('pm_utility_bills').insert({ user_id: acct.user_id, utility_id: acct.id, property_id: acct.property_id, period_end: billDate, amount, usage: num(out.usage), usage_unit: out.usage_unit ? String(out.usage_unit).slice(0, 12) : null, due_date: due, paid: false, bill_path, bill_name, source: 'email', source_from: from.slice(0, 200) })
   if (error) { if (bill_path) await db.storage.from(LEASE_DOC_BUCKET).remove([bill_path]); await notify(acct.user_id, 'Bill could not be saved', `A bill for ${label} was read but could not be saved. Please add it by hand.`); return 'save failed' }
   if (due) await db.from('pm_utilities').update({ next_bill_date: due }).eq('id', acct.id)
-  const sym = pcur === 'JMD' ? 'J$' : '£'
+  const sym = ({ JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' } as Record<string, string>)[pcur] ?? '£'
   await notify(acct.user_id, `New bill: ${label}`, `${sym}${amount.toLocaleString('en-GB')}${due ? ` due ${due}` : ''} was added automatically from an emailed bill.`)
   return 'added'
 }

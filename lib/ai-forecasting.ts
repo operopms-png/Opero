@@ -69,7 +69,7 @@ export async function proposeMaintenancePredictions() {
 }
 
 // ---------- market forecast ----------
-const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
+const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 
 export async function proposeMarketForecast() {
   const db = svc()

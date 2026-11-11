@@ -65,10 +65,10 @@ async function invoiceTenant(c: any, billId: string) {
     db.from('pm_tenants').select('id, name, email, phone').eq('user_id', c.businessId).eq('property_id', bill.property_id).order('created_at', { ascending: false }).limit(1),
   ])
   const t = tenants?.[0]; if (!t) return bad('No tenant is linked to this property yet.')
-  const cur = ['GBP', 'JMD', 'USD'].includes(prop?.currency) ? prop!.currency : 'JMD'
+  const cur = ['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD'].includes(prop?.currency) ? prop!.currency : 'JMD'
   const { data: num, error: nErr } = await db.rpc('next_invoice_number', { biz: c.businessId })
   if (nErr) return bad('Could not number the invoice.', 500)
-  const sym = cur === 'JMD' ? 'J$' : cur === 'USD' ? 'US$' : '£', fmt = (n: number) => sym + Math.round(n).toLocaleString('en-GB')
+  const sym = ({ JMD: 'J$', USD: 'US$', GBP: '£', EUR: '€', AED: 'AED ', CAD: 'C$' } as Record<string, string>)[cur] ?? '£', fmt = (n: number) => sym + Math.round(n).toLocaleString('en-GB')
   const desc = `${acct?.supplier || 'Electricity'} bill ${bill.period_end}: ${fmt(Number(bill.amount))}, less ${fmt(Number(acct!.covered_limit))} covered. Your share above the limit`
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
   const { data: inv, error } = await db.from('invoices').insert({

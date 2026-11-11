@@ -6,7 +6,7 @@
 import { queueAiAction } from './ai-approvals'
 import { svc, aiTask, aiTaskBy, freshCounts, enabledBusinesses, companyName, dayStr, daysBetween, niceDate, firstName } from './ai-proposal-utils'
 
-const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
+const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 const money = (n: number, cur: string) => (SYM[cur] ?? '') + Math.round(n).toLocaleString('en-GB')
 
 // ---------- compliance chaser ----------

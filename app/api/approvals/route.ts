@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
     const { data, error } = await db.from('approvals').insert(row).select('*').single()
     if (error) return bad(error.message, 500)
-    const amt = row.amount != null ? ` · ${({ GBP: '£', JMD: 'J$', USD: '$' } as any)[row.currency]}${Number(row.amount).toLocaleString('en-GB')}` : ''
+    const amt = row.amount != null ? ` · ${({ GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' } as any)[row.currency] ?? ''}${Number(row.amount).toLocaleString('en-GB')}` : ''
     await db.from('notifications').insert({ user_id: c.businessId, title: `Approval needed: ${title}${amt}`.slice(0, 300), message: `${row.requested_by} asked for sign-off.`, type: 'approval', module: 'staffcentre', link: '/staff-centre/approvals', read: false })
     return NextResponse.json({ request: data })
   }

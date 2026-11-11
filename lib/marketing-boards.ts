@@ -58,7 +58,7 @@ export const BOARDS: MkBoard[] = [
       { key: 'status', title: 'Status', type: 'status', width: 130, options: [
         { value: 'Draft', color: DRAFT }, { value: 'Active', color: LIVE }, { value: 'Paused', color: AMBER }, { value: 'Completed', color: DONE }] },
       { key: 'audience', title: 'Audience', type: 'text', width: 170 },
-      { key: 'budget', title: 'Budget', type: 'number', width: 110, currency: '£' },
+      { key: 'budget', title: 'Budget', type: 'number', width: 110, get currency() { return companyCur() } },
       { key: 'start_date', title: 'Start', type: 'date', width: 120 },
       { key: 'end_date', title: 'End', type: 'date', width: 120 },
       { key: 'notes', title: 'Notes', type: 'longtext', width: 200 },
@@ -112,7 +112,7 @@ export const BOARDS: MkBoard[] = [
       { key: 'module', title: 'Module', type: 'module', width: 170 },
       { key: 'status', title: 'Status', type: 'status', width: 130, options: [
         { value: 'Draft', color: DRAFT }, { value: 'Active', color: LIVE }, { value: 'Paused', color: AMBER }, { value: 'Ended', color: DONE }] },
-      { key: 'budget', title: 'Budget', type: 'number', width: 110, currency: '£' },
+      { key: 'budget', title: 'Budget', type: 'number', width: 110, get currency() { return companyCur() } },
       { key: 'clicks', title: 'Clicks', type: 'number', width: 90 },
       { key: 'impressions', title: 'Impressions', type: 'number', width: 110 },
       { key: 'ctr', title: 'CTR', type: 'computed', width: 80 },
@@ -215,7 +215,7 @@ export const WINS_BOARD: MkBoard = {
       { value: 'Joint Venture Secured', color: '#9D50DD' },
       { value: 'Investor Secured', color: '#FDAB3D' },
       { value: 'Tenant Secured', label: 'Tenant Secured (Vacancy Filled)', color: '#579BFC' }] },
-    { key: 'value', title: 'Value', type: 'number', width: 120, currency: '£' },
+    { key: 'value', title: 'Value', type: 'number', width: 120, get currency() { return companyCur() } },
     { key: 'module', title: 'Department', type: 'status', width: 170, options: [
       { value: 'str', label: 'Vacation Rentals', color: '#89CFF0' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
       { value: 'estate', label: 'Estate Agency', color: '#00C875' }, { value: 'dev', label: 'Developments', color: '#9D50DD' }] },
