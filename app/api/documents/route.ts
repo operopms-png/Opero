@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/send-email'
 import { documentPdf } from '@/lib/document-pdf'
 import { sanitizeHtml, settleBlanks, wordingText, changeSummary, esc } from '@/lib/doc-text'
 import { isHrFolder } from '@/lib/hr-docs'
+import { HR_LETTER_TEMPLATES } from '@/lib/hr-letter-templates'
 import { searchPeople, createFromTemplate, deliverDocument, docSettings, docEmailHtml, runDocAutomation, TRIGGERS } from '@/lib/documents'
 
 // Staff Centre → Documents.
@@ -110,6 +111,15 @@ export async function POST(req: NextRequest) {
       ? await db.from('doc_templates').update(row).eq('id', b.id).eq('business_id', biz).select('*').single()
       : await db.from('doc_templates').insert({ ...row, business_id: biz, created_by: by }).select('*').single()
     return res.error ? bad(res.error.message, 500) : NextResponse.json({ template: res.data })
+  }
+  if (b.action === 'template-seed-hr') {
+    // adds the HR templates this company doesn't have yet; never changes one that exists
+    const no = adminOnly(); if (no) return no
+    const { data: have } = await db.from('doc_templates').select('name').eq('business_id', biz)
+    const names = new Set((have ?? []).map((t: any) => t.name))
+    const rows = HR_LETTER_TEMPLATES.filter(t => !names.has(t.name)).map(t => ({ ...t, audience: 'any', defaults: {}, remind_days: 0, email_message: null, active: true, business_id: biz, created_by: by, updated_at: now }))
+    if (rows.length) { const { error } = await db.from('doc_templates').insert(rows); if (error) return bad(error.message, 500) }
+    return NextResponse.json({ added: rows.length })
   }
   if (b.action === 'template-delete') {
     const no = adminOnly(); if (no) return no

@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'HR templates in Documents', text: 'Documents, Templates, Add HR templates: a Payslip and a Proof of employment letter that use your own logo, name and contact lines. Admins only.' },
   { date: '2026-11-11', title: 'HR Documents', text: 'Team, HR Documents: store payslips and HR forms, add the NOVOURQ fillable payslip and proof of employment letter, edit or replace any file and email it to a person. Company Documents can now edit and send files too.' },
   { date: '2026-11-11', title: 'Virtual viewings for tenants', text: 'Listings: upload walk-through videos or paste a YouTube or Vimeo link on a property. Tenants watch them on its public page and can ask for a video call instead of an in-person viewing.' },
   { date: '2026-11-11', title: 'Portal guides in Staff Training', text: 'Every tab now has a how-to guide with steps, pictures and video. New tabs appear here automatically.' },

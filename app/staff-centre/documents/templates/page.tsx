@@ -35,7 +35,7 @@ function List({ open }: { open: (v: string) => void }) {
   return (
     <CrmPage>
       <CrmHeader title="Templates" subtitle="Write a document once with blanks — staff pick a person and the blanks fill themselves in."
-        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents' }}>← Documents</button><button style={btn('gold')} onClick={() => open('new')}>+ New template</button></div>} />
+        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents' }}>← Documents</button>{d?.isAdmin && <button style={btn('ghost')} onClick={async () => { try { const r: any = await staffApi('/api/documents', { action: 'template-seed-hr' }); setErr(''); setD(await staffApi('/api/documents?templates=1')); if (!r.added) alert('The HR templates are already here.') } catch (e: any) { setErr(e.message) } }}>Add HR templates</button>}<button style={btn('gold')} onClick={() => open('new')}>+ New template</button></div>} />
       <Body>
         {err && <div style={{ color: C.red }}>{err}</div>}
         {!d ? (!err && <Loading />) : <>
