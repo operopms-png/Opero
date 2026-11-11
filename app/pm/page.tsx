@@ -2355,7 +2355,7 @@ function PMPageInner() {
               </div>
               {valuations.length===0?<div style={{textAlign:'center',padding:60,color:'#98A2B3',fontSize:14}}>No valuations recorded yet</div>:
               valuations.map((x:any)=>{
-                const sym=x.pm_properties?.currency==='JMD'?'J$':'£'
+                const sym=x.pm_properties?.currency==='JMD'?'J$':cur()
                 const prev=valuations.filter((v:any)=>v.property_id===x.property_id&&v.valuation_date<x.valuation_date).sort((a:any,b:any)=>b.valuation_date.localeCompare(a.valuation_date))[0]
                 const diff=prev?Number(x.value)-Number(prev.value):null
                 return (
