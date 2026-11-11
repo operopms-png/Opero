@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { C, Modal, btn, input, label } from '../crm/Page'
 import { ownerFetch } from '@/lib/platform-fetch'
+import PropertyPicker from '../PropertyPicker'
 
 const STATUS: Record<string, [string, string, string]> = { open: ['Not opened', '#F2F4F7', '#667085'], started: ['In progress', '#FFF4E0', '#B54708'], done: ['Finished', '#E7F6EC', '#067647'] }
 
@@ -38,7 +39,7 @@ export default function NewClientLink({ onClose }: { onClose: () => void }) {
           <div><label style={label} htmlFor="ncl-name">Name (optional)</label><input id="ncl-name" style={input} value={f.name} onChange={e => set('name', e.target.value)} /></div>
           <div><label style={label} htmlFor="ncl-email">Email (optional)</label><input id="ncl-email" style={input} value={f.email} onChange={e => set('email', e.target.value)} /></div>
         </div>
-        <label style={{ ...label, marginTop: 10 }} htmlFor="ncl-prop">Property (optional)</label><input id="ncl-prop" style={input} value={f.property_label} onChange={e => set('property_label', e.target.value)} />
+        <div style={{ marginTop: 10 }}><PropertyPicker id="ncl-prop" value={f.property_label} onChange={v => set('property_label', v)} input={input} label={label} /></div>
         <label style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '12px 0', fontSize: 13.5 }}><input type="checkbox" checked={f.ask_docs} onChange={e => set('ask_docs', e.target.checked)} />Ask them to upload their ID and documents</label>
         <button style={btn('gold')} disabled={busy} onClick={create}>{busy ? 'Creating…' : 'Create link'}</button>
         {msg && <div style={{ marginTop: 10, fontSize: 13, color: C.muted }}>{msg}</div>}

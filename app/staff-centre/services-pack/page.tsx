@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { staffApi } from '@/lib/staff-api'
+import PropertyPicker from '../../../components/PropertyPicker'
 import { CrmPage, CrmHeader, Body, Empty, Loading, btn, input, label } from '@/components/crm/Page'
 
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #D9E2F0', borderRadius: 8, padding: 16, marginBottom: 16 }
@@ -104,7 +105,7 @@ export default function ServicesPack() {
           <div style={head}>2. Make the link</div>
           <div style={{ ...card, maxWidth: 560, display: 'grid', gap: 10 }}>
             <div><span style={label}>Link name (only you see this, e.g. the person or campaign)</span><input style={input} value={name} placeholder="Spring landlord campaign" onChange={e => setName(e.target.value)} /></div>
-            <div><span style={label}>Property (optional). Shown at the top of their page, e.g. the address.</span><input style={input} value={prop} placeholder="12 Hope Road, Mandeville" onChange={e => setProp(e.target.value)} /></div>
+            <PropertyPicker value={prop} onChange={setProp} input={input} label={label} />
             <div>
               <span style={label}>Who is this link for? Anything they submit is filed on their record in Documents.</span>
               <select style={input} value={reg} onChange={e => { setReg(e.target.value as any); setWho(null) }}>

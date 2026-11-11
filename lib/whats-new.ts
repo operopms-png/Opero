@@ -4,7 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
-  { date: '2026-11-11', title: 'Property on Services Pack links', text: 'Services Pack: add the property (for example the tenant\'s address) when you create a link and it shows at the top of their page, like the New client link.' },
+  { date: '2026-11-11', title: 'Property on Services Pack links', text: 'Services Pack and New client link: choose the property from a drop-down of your portfolio (or type one that is not listed) and it shows at the top of their page.' },
   { date: '2026-11-11', title: 'Landlords upload ID on their link', text: 'Services Pack: after a landlord or co-host submits their form they upload their ID, proof of ownership, proof of address and bank details on the same link, filed on their Documents record for you to approve.' },
   { date: '2026-11-11', title: 'New link wording', text: 'Services Pack now shows a professional NOVOURQ welcome message with the link under it on every link, with a Copy message button, and the New client link message uses the same wording.' },
   { date: '2026-11-11', title: 'Services Pack tabs', text: 'Marketing, Services Pack: choose the Landlord, Co-host or Tenant tab and only that audience\'s documents show, already ticked, with no duplicates. All documents shows everything.' },
