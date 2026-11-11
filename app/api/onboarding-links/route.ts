@@ -35,5 +35,7 @@ export async function POST(req: NextRequest) {
   const { error } = await db.from('onboarding_links').insert({ token, business_id: c.businessId, kind: b.kind, module: b.module, template_id, name: String(b.name || '').trim().slice(0, 150) || null, email: email || null, property_label: String(b.property_label || '').trim().slice(0, 200) || null, ask_docs: b.ask_docs !== false, expires_at, created_by: c.email || c.name || '' })
   if (error) return bad('Could not create the link.', 500)
   const url = `${SITE_URL}/start/${token}`, first = String(b.name || '').trim().split(/\s+/)[0] || 'there'
-  return NextResponse.json({ url, whatsapp: `Hi ${first}, to get you set up please open this private link, add your details${b.ask_docs !== false ? ', upload your documents' : ''}${template_id ? ' and sign your agreement' : ''}: ${url} (valid ${DAYS} days).` })
+  const steps = ['add your details', ...(b.ask_docs !== false ? ['upload your documents'] : []), ...(template_id ? ['sign your agreement'] : [])]
+  const todo = steps.length > 1 ? `${steps.slice(0, -1).join(', ')} and ${steps[steps.length - 1]}` : steps[0]
+  return NextResponse.json({ url, whatsapp: `Welcome to NOVOURQ. To get you set up, please use your private onboarding link to ${todo}. It only takes a few minutes. This link is personal to you and is valid for ${DAYS} days. If you need a hand or a new link, just reply to this message.\n\n${url}` })
 }

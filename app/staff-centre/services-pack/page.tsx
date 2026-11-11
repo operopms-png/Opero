@@ -131,7 +131,7 @@ export default function ServicesPack() {
                         <div style={{ fontSize: 12, color: '#667085', marginTop: 3, wordBreak: 'break-all' }}>{u}</div></div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                         <button style={btn('ghost', true)} onClick={() => copy(u, `Link copied: ${u}`)}>Copy link</button>
-                        <button style={btn('ghost', true)} onClick={() => copy(`See our services and choose what you’d like to view:\n${u}`, 'Email wording copied. Paste it into your email.')}>Copy for email</button>
+                        <button style={btn('ghost', true)} onClick={() => copy(l.subject ? `Welcome to NOVOURQ. To get you set up, please use your private onboarding link to add your details and sign your agreement. It only takes a few minutes. This link is personal to you. If you need a hand or a new link, just reply to this message.\n\n${u}` : `Welcome to NOVOURQ. Please use your private link to view our services and documents. If you need a hand, just reply to this message.\n\n${u}`, 'Email wording copied. Paste it into your email.')}>Copy for email</button>
                         <a href={u} target="_blank" rel="noreferrer" style={btn('ghost', true)}>Preview</a>
                         <button style={btn('ghost', true)} onClick={() => act({ action: 'link-update', id: l.id, active: !l.active })}>{l.active ? 'Pause' : 'Turn on'}</button>
                         <button style={btn('ghost', true)} onClick={() => { if (confirm('Delete this link? Anyone who has it will no longer be able to open it.')) act({ action: 'link-delete', id: l.id }) }}>Delete</button>
