@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Free trial countdown', text: 'During the 14-day free trial, the bottom of the left menu now shows how many days are left, turning amber in the last 3 days.' },
   { date: '2026-11-11', title: 'Clearer step after paying', text: 'After paying on sign-up, the page now says to confirm your email and then sign in, and opens the sign-in form instead of the sign-up form.' },
   { date: '2026-11-11', title: 'Lifetime offer for the first 10', text: 'The sign-up page has a Lifetime access box at £175.50 one-time for the first 10 clients, showing how many places are left and closing when they are gone.' },
   { date: '2026-11-11', title: 'Annual customers in Revenue', text: 'Platform Owner → Revenue and Customers now lists annual subscribers separately and counts them in monthly income at one twelfth of £470.40.' },

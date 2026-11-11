@@ -92,6 +92,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'Ask the AI panel first. It knows the platform and answers straight away.',
     'Found something broken, or want to leave a review or suggest an idea? Use the Submissions tab in Settings. We read every one and reply there.',
     'News and updates from us appear under System Messages.',
+    'On the free trial? The bottom of the left menu shows how many days are left. It turns amber in the last 3 days and disappears once you are on a paid plan.',
   ] },
 ]
 

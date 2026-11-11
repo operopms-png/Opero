@@ -86,6 +86,8 @@ export default function Sidebar() {
   const [plan, setPlan] = useState('bundle')
   const [modules, setModules] = useState<string[]>(['aipm','invest','str','pm','dev','ea'])
   const [userEmail, setUserEmail] = useState('')
+  // Free-trial end date (only while the company's subscription is trialing), for the countdown in the footer.
+  const [trialEnd, setTrialEnd] = useState<string | null>(null)
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [search, setSearch] = useState('')
   // The company's currency symbol. Pages read it when they draw, so if it differs from what this browser has kept, keep the new one and reload once.
@@ -130,9 +132,10 @@ export default function Sidebar() {
         setUserEmail(user.email ?? '')
         // Staff and partners use their business's subscription
         const ownerId = (await resolveAccess(user)).businessId
-        const { data: sub } = await supabase.from('subscriptions').select('plan, modules').eq('user_id', ownerId).single()
+        const { data: sub } = await supabase.from('subscriptions').select('plan, modules, status, trial_end').eq('user_id', ownerId).single()
         // Internal portal: every module is always on, whatever the subscription row says.
         void sub
+        setTrialEnd(sub?.status === 'trialing' && sub?.trial_end ? sub.trial_end : null)
       }
     }
     loadPlan()
@@ -269,6 +272,17 @@ export default function Sidebar() {
 
       {/* Bottom */}
       <div style={{ padding: '10px', borderTop: '1px solid #C9DEF3' }}>
+        {trialEnd && (() => {
+          const daysLeft = Math.max(0, Math.ceil((new Date(trialEnd).getTime() - Date.now()) / 86400000))
+          const urgent = daysLeft <= 3
+          const label = daysLeft === 0 ? 'Trial ends today' : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in trial`
+          return (
+            <div title={`Free trial ends ${new Date(trialEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+              style={{ margin: '0 0 8px', padding: isCollapsed ? '6px 0' : '8px 10px', borderRadius: 8, textAlign: 'center', fontSize: isCollapsed ? 11 : 12, fontWeight: 700, background: urgent ? '#FEF3C7' : '#fff', border: `1px solid ${urgent ? '#F5D78A' : '#C9DEF3'}`, color: urgent ? '#B45309' : '#2F6DB5' }}>
+              {isCollapsed ? `${daysLeft}d` : label}
+            </div>
+          )
+        })()}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#C9DEF3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#2F6DB5', flexShrink: 0 }} title={isCollapsed ? userEmail : undefined}>
             {userEmail.charAt(0).toUpperCase()}
