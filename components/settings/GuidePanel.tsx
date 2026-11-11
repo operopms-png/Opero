@@ -116,7 +116,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
     'On the free trial? The bottom of the left menu shows how many days are left. It turns amber in the last 3 days and disappears once you are on a paid plan.',
     'Beside Properties you will see how many you have used, for example "2 / 3 properties · 3 included, then £12/mo each".',
     'Your plan includes 3 properties. When you add a 4th, you are asked to add one more for £12 a month, and it is added to your plan straight away. Each further property is another £12 a month.',
-    'Want to see your plan or change your card? Open Settings, then Payments. The Your NOVOURQ plan box shows your plan and status, and Manage billing opens a secure page to update your card, see invoices, change plan or cancel.',
+    'Want to see your plan or change your card? Open Settings, then Payments. If you cancel through Manage billing, the plan box says when it ends and that you keep full access until then. The Your NOVOURQ plan box shows your plan and status, and Manage billing opens a secure page to update your card, see invoices, change plan or cancel.',
   ] },
 ]
 

@@ -516,7 +516,7 @@ function SettingsInner() {
               const trialing = mySub.status === 'trialing' && mySub.trial_end
               const daysLeft = trialing ? Math.max(0, Math.ceil((new Date(mySub.trial_end).getTime() - Date.now()) / 86400000)) : 0
               const when = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-              const status = lifetime ? 'Paid in full, no further payments' : trialing ? `Free trial, ${daysLeft} day${daysLeft === 1 ? '' : 's'} left. First payment on ${when(mySub.trial_end)}` : mySub.status === 'active' ? 'Active' : mySub.status === 'canceled' ? 'Cancelled' : mySub.status === 'past_due' ? 'Payment overdue, please update your card' : (mySub.status || 'Active')
+              const status = lifetime ? 'Paid in full, no further payments' : (mySub.cancel_at && mySub.status !== 'canceled') ? `Cancels on ${when(mySub.cancel_at)}. You keep full access until then.` : trialing ? `Free trial, ${daysLeft} day${daysLeft === 1 ? '' : 's'} left. First payment on ${when(mySub.trial_end)}` : mySub.status === 'active' ? 'Active' : mySub.status === 'canceled' ? 'Cancelled' : mySub.status === 'past_due' ? 'Payment overdue, please update your card' : (mySub.status || 'Active')
               return (
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>
                   <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 4px'}}>Your NOVOURQ plan</h3>

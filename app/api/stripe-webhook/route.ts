@@ -277,6 +277,7 @@ export async function POST(request: NextRequest) {
       plan, billing_period: billingPeriod, status: sub.status,
       ...(extraPriceId ? { extra_properties: extraItem?.quantity ?? 0 } : {}),
       trial_end: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+      cancel_at: sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
       updated_at: new Date().toISOString(),
     }).eq('stripe_subscription_id', sub.id)
   }
