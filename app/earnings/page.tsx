@@ -15,7 +15,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ c
   // A company's own link (?code=...) shows that company's name; the plain link stays NOVOURQ
   const { code } = await searchParams
   let company = 'NOVOURQ', own = false
-  if (code && code !== 'sangsters') {
+  if (code && code !== 'sangsters' && code !== 'novourq') {
     const { data: pg } = await serviceClient.from('meeting_booking_pages').select('business_id').eq('code', String(code).slice(0, 40)).eq('enabled', true).maybeSingle()
     if (pg) { const { data: cs } = await serviceClient.from('invoice_settings').select('company_name').eq('business_id', pg.business_id).maybeSingle(); own = true; company = (cs?.company_name as string | undefined)?.trim() || 'Your property team' }
   }

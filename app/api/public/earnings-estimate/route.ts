@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   let biz = LISTINGS_BUSINESS_ID
   const code = clean(b.code, 40)
   if (code) {
-    const { data: pg } = await serviceClient.from('meeting_booking_pages').select('business_id').eq('code', code).eq('enabled', true).maybeSingle()
+    const { data: pg } = await serviceClient.from('meeting_booking_pages').select('business_id').eq('code', code === 'sangsters' ? 'novourq' : code).eq('enabled', true).maybeSingle()
     if (!pg) return NextResponse.json({ error: 'This link is not available.' }, { status: 404, headers: CORS })
     biz = pg.business_id as string
   }
