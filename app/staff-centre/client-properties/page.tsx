@@ -8,6 +8,7 @@
 // List at /staff-centre/client-properties, one property at ?id=…
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { cur, codeOf } from '../../../lib/company-currency'
 import { TextButton } from '../../../components/TextComposer'
 import { C, CrmPage, CrmHeader, Body, Stat, Empty, Modal, Loading, btn, input, label } from '../../../components/crm/Page'
 
@@ -112,7 +113,7 @@ function List({ open }: { open: (id: string) => void }) {
   const month = new Date(); month.setDate(1); month.setHours(0, 0, 0, 0)
   const signedMonth = (rows || []).filter(r => r.stage === 'signed' && r.signed_at && new Date(r.signed_at) >= month).length
   const pipeline = (rows || []).filter(r => !['signed', 'passed'].includes(r.stage) && r.price && !r.price_is_rent)
-  const pipeCur = pipeline[0]?.currency || 'JMD'
+  const pipeCur = pipeline[0]?.currency || codeOf(cur())
   const pipeVal = pipeline.filter(r => r.currency === pipeCur).reduce((a, r) => a + Number(r.price), 0)
   const shown = (rows || []).filter(r => (stage === 'all' || r.stage === stage) && (!service || r.service === service) && (!parish || r.area === parish)
     && (!q || [r.address, r.subarea, r.area, r.owner_name, r.referred_by, r.mls, r.owner_phone, r.owner_email].join(' ').toLowerCase().includes(q.toLowerCase())))
@@ -193,7 +194,7 @@ function PropCard({ p, onClick }: { p: P; onClick: () => void }) {
 
 // ── Add / edit form ──────────────────────────────────────────────────────
 function PropertyForm({ existing, onClose, onSaved }: { existing?: P; onClose: () => void; onSaved: (p: P) => void }) {
-  const [f, setF] = useState<any>(() => existing ? { ...existing } : { currency: 'JMD', country: 'Jamaica', photos: [] })
+  const [f, setF] = useState<any>(() => existing ? { ...existing } : { currency: codeOf(cur()), country: '', photos: [] })
   const [link, setLink] = useState('')
   const [importing, setImporting] = useState(false)
   const [imported, setImported] = useState<string | null>(null)

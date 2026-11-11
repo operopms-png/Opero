@@ -161,7 +161,7 @@ export function WebsiteEditor({ value, onChange }: { value: WebsiteFields; onCha
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           {f('web_title', 'Website name', 'e.g. Seawind on the Bay', 'Leave blank to use the property name')}
           {f('web_area', 'Area', 'e.g. Rose Hall, Montego Bay')}
-          {f('country', 'Country', 'Jamaica')}
+          {f('country', 'Country', 'e.g. your country')}
           {f('guests', 'Guests', 'e.g. 4', undefined, 'number')}
           {f('airbnb_url', 'Airbnb link', 'https://www.airbnb.com/h/…', 'Adds a “Book on Airbnb” button')}
           {f('web_badge', 'Badge', 'e.g. Featured, Flagship, UK', 'Small label on the photo (optional)')}

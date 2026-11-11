@@ -1156,7 +1156,7 @@ export default function OwnerPortalPage() {
                       <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{p.name}</div>
                       {isStaff && <button onClick={() => { setEditingProperty(p); setEditPropertyForm({ purchase_price: p.purchase_price ?? 0, down_payment: p.down_payment ?? 0, platform: p.platform ?? '', status: p.status ?? 'active', address: p.address ?? '' }) }} style={{ padding: '3px 10px', border: '1px solid #EAECF0', borderRadius: 6, background: '#fff', cursor: 'pointer', fontSize: 11 }}>Edit</button>}
                     </div>
-                    <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>{p.address ?? p.location ?? 'Jamaica'}</div>
+                    <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>{p.address ?? p.location ?? ''}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Purchase:</span><span style={{ fontWeight: 600 }}>{cur()}{(Number(p.purchase_price) || 0).toLocaleString()}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#667085' }}>Down payment:</span><span style={{ fontWeight: 600 }}>{cur()}{(Number(p.down_payment) || 0).toLocaleString()}</span></div>

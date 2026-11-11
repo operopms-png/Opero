@@ -233,7 +233,7 @@ export default function ReceptionistPage() {
             </div>
             <div style={{ marginTop: 16 }}>
               <label style={label}>What the receptionist knows — services, areas, fees, how viewings work, office address, FAQs</label>
-              <textarea disabled={!admin} value={s.knowledge ?? ''} onChange={e => set('knowledge', e.target.value)} style={{ ...input, minHeight: 320, resize: 'vertical', fontSize: 13.5, lineHeight: 1.55 }} placeholder="e.g. We manage properties in Kingston, Montego Bay and London. Viewings are arranged Monday–Saturday. Our management fee is…" />
+              <textarea disabled={!admin} value={s.knowledge ?? ''} onChange={e => set('knowledge', e.target.value)} style={{ ...input, minHeight: 320, resize: 'vertical', fontSize: 13.5, lineHeight: 1.55 }} placeholder="e.g. We manage properties in these areas: … Viewings are arranged Monday–Saturday. Our management fee is…" />
               <div style={{ fontSize: 12, color: C.faint, marginTop: 4 }}>It will only state facts written here (plus the caller’s own property details for tenants and landlords). Anything else, it says the team will get back to them.</div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 14 }}>
                 <input type="checkbox" disabled={!admin} checked={!!s.sync_website_chat} onChange={e => set('sync_website_chat', e.target.checked)} style={{ accentColor: C.goldDark }} />
