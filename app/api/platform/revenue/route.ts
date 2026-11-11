@@ -6,7 +6,8 @@ import { requireOwner, clientLabels } from '@/lib/platform-owner-auth'
 // Owner login only. Money figures are worked out from the subscriptions table and the plan prices below;
 // they are an estimate of Stripe, not a replacement for it.
 const MONTHLY_PRICE = 49        // £ per month, recurring plan
-const ONETIME_PRICE = 470.4     // £ one-off lifetime plan (£588 less 20%)
+const ONETIME_PRICE = 470.4     // £ per year, annual plan (£588 less 20%)
+const LIFETIME_PRICE = 175.5    // £ one-off lifetime plan, first 10 clients
 
 type Kind = 'monthly' | 'yearly' | 'trial' | 'onetime' | 'complimentary' | 'cancelled' | 'failing'
 
@@ -43,10 +44,10 @@ export async function GET(req: NextRequest) {
     yearly: count('yearly'),
     monthly: count('monthly'), trial: count('trial'), onetime: count('onetime'), complimentary: count('complimentary'),
     failing: count('failing'), cancelled: count('cancelled'),
-    oneTimeRevenue: count('onetime') * ONETIME_PRICE,
+    oneTimeRevenue: count('onetime') * LIFETIME_PRICE,
     newThisMonth: customers.filter(c => new Date(c.since).getTime() >= monthStart.getTime() && c.kind !== 'complimentary').length,
     cancelledLast30: customers.filter(c => c.kind === 'cancelled' && new Date(c.changed).getTime() >= d30).length,
-    prices: { monthly: MONTHLY_PRICE, onetime: ONETIME_PRICE },
+    prices: { monthly: MONTHLY_PRICE, onetime: LIFETIME_PRICE },
   }
   return NextResponse.json({ summary, customers })
 }

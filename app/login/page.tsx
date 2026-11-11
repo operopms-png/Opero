@@ -13,6 +13,19 @@ import { BRAND_NAME } from '@/lib/brand'
 // tiers of the same one-plan-every-module offer).
 const BABY_BLUE = '#89CFF0'
 
+const LIFETIME = {
+  id: 'lifetime',
+  label: 'Lifetime access',
+  price: '£175.50',
+  period: ' one-time',
+  color: BABY_BLUE,
+  features: [
+    'Everything in the monthly and annual plans, for life',
+    'One payment of £175.50, no monthly or yearly bill, ever',
+    'Limited to the first 10 clients',
+  ],
+}
+
 const PLANS = [
   {
     id: 'monthly',
@@ -70,6 +83,8 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(fromPricing ? 'signup' : 'login')
+  const [lifetimeLeft, setLifetimeLeft] = useState<number | null>(null)
+  useEffect(() => { fetch('/api/lifetime-spots').then(r => r.json()).then(d => { if (typeof d.left === 'number') setLifetimeLeft(d.left) }).catch(() => {}) }, [])
   const [selectedPlan, setSelectedPlan] = useState(fromPricing ? initialPlan : '')
   const [checkingSession, setCheckingSession] = useState(true)
 
@@ -222,7 +237,7 @@ function LoginForm() {
           </div>
 
           {(() => {
-            const plan = PLANS.find(p => p.id === selectedPlan) || PLANS[0]
+            const plan = selectedPlan === 'lifetime' ? LIFETIME : (PLANS.find(p => p.id === selectedPlan) || PLANS[0])
             return (
               <div style={{ padding: '16px 18px', borderRadius: 12, border: `2px solid ${plan.color}`, background: plan.color + '08' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -245,6 +260,19 @@ function LoginForm() {
             )
           })()}
 
+          {lifetimeLeft !== 0 && (
+            <div
+              onClick={() => setSelectedPlan('lifetime')}
+              style={{ marginTop: 14, padding: '14px 16px', borderRadius: 12, cursor: 'pointer', border: `2px ${selectedPlan === 'lifetime' ? 'solid' : 'dashed'} ${BABY_BLUE}`, background: selectedPlan === 'lifetime' ? BABY_BLUE + '14' : '#fff' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#323338' }}>Lifetime access</span>
+                <span><span style={{ fontSize: 18, fontWeight: 700, color: '#323338' }}>£175.50</span><span style={{ fontSize: 12, color: '#98A2B3' }}> one-time</span></span>
+              </div>
+              <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Pay once, use it for life. First 10 clients only{lifetimeLeft !== null ? `, ${lifetimeLeft} left` : ''}.</div>
+            </div>
+          )}
+
           <div style={{ marginTop: 'auto', paddingTop: 24, fontSize: 12, color: '#98A2B3', textAlign: 'center' }}>
             Switch between monthly (£49) and annual (£470.40, £588 less 20%) at any time before you pay. Cancel anytime.</div>
         </div>
@@ -257,7 +285,7 @@ function LoginForm() {
           {/* Success plan banner */}
           {success && (
             <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 16px', marginBottom: 24 }}>
-              {initialPlan === 'onetime' ? (
+              {initialPlan === 'lifetime' ? (
                 <>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>✅ Payment successful!</div>
                   <div style={{ fontSize: 12, color: '#6B7280' }}>Full access to every module is now unlocked</div>
@@ -278,7 +306,7 @@ function LoginForm() {
             </div>
             {mode === 'signup' && selectedPlan && (
               <div style={{ fontSize: 13, color: '#667085', marginTop: 4 }}>
-                {PLANS.find(p => p.id === selectedPlan)?.label} plan · {PLANS.find(p => p.id === selectedPlan)?.price}{PLANS.find(p => p.id === selectedPlan)?.period}
+                {(selectedPlan === 'lifetime' ? LIFETIME : PLANS.find(p => p.id === selectedPlan))?.label} plan · {(selectedPlan === 'lifetime' ? LIFETIME : PLANS.find(p => p.id === selectedPlan))?.price}{(selectedPlan === 'lifetime' ? LIFETIME : PLANS.find(p => p.id === selectedPlan))?.period}
               </div>
             )}
           </div>
@@ -297,7 +325,7 @@ function LoginForm() {
             {error && <div style={{ fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
             {successMsg && <div style={{ fontSize: 13, color: '#12B76A', background: '#F6FEF9', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}
             <button onClick={handleSubmit} disabled={loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan)} style={{ width: '100%', padding: '11px', borderRadius: 8, border: 'none', background: '#1B2F6E', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: loading || !email || (mode !== 'reset' && !password) || (mode === 'signup' && !selectedPlan) ? 0.6 : 1, marginTop: 4 }}>
-              {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? (selectedPlan === 'onetime' ? 'Get lifetime access →' : 'Start free trial →') : 'Send Reset Email'}
+              {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : mode === 'signup' ? (selectedPlan === 'lifetime' ? 'Get lifetime access →' : 'Start free trial →') : 'Send Reset Email'}
             </button>
           </div>
 

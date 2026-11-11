@@ -26,7 +26,7 @@ const PLAN_MAP: Record<string, string> = {
 }
 
 // Novourq's current two prices (monthly and one-time lifetime) are set in Netlify env vars and both grant every module.
-for (const k of ['STRIPE_PRICE_NOVOURQ_MONTHLY', 'STRIPE_PRICE_NOVOURQ_ONETIME']) {
+for (const k of ['STRIPE_PRICE_NOVOURQ_MONTHLY', 'STRIPE_PRICE_NOVOURQ_ONETIME', 'STRIPE_PRICE_NOVOURQ_LIFETIME']) {
   const id = process.env[k]
   if (id) PLAN_MAP[id] = 'bundle'
 }
@@ -165,8 +165,9 @@ export async function POST(request: NextRequest) {
       const email = fullSession.customer_details?.email ?? fullSession.customer_email
       const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? ''
       const plan = PLAN_MAP[priceId] ?? 'starter'
-      const billingPeriod = (YEARLY_IDS.includes(priceId) || (fullSession.line_items?.data?.[0]?.price as any)?.recurring?.interval === 'year') ? 'yearly' : 'monthly'
+      const periodFromPrice = (YEARLY_IDS.includes(priceId) || (fullSession.line_items?.data?.[0]?.price as any)?.recurring?.interval === 'year') ? 'yearly' : 'monthly'
       const isOneTime = fullSession.mode === 'payment'
+      const billingPeriod = isOneTime ? 'lifetime' : periodFromPrice
       await supabase.from('webhook_debug_log').insert({ step: 'session_parsed', detail: { email, priceId, plan, isOneTime, sessionId: fullSession.id } })
       if (email) {
         // Look through every page of users (the default page is only 50), matching email case-insensitively

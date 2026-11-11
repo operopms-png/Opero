@@ -5,11 +5,13 @@ import { SITE_URL } from '@/lib/brand'
 // Novourq sells one thing: all-modules access, billed monthly or annually. The two Stripe price IDs live in Netlify env vars so the
 // price can change in Stripe without a code change:
 //   STRIPE_PRICE_NOVOURQ_MONTHLY   (recurring, £49 / month)
+//   STRIPE_PRICE_NOVOURQ_LIFETIME  (one-off, £175.50, limited to the first 10 clients)
 //   STRIPE_PRICE_NOVOURQ_ONETIME   (£470.40 = £588 less 20%, billed annually)
 // The webhook (app/api/stripe-webhook/route.ts) reads the same two vars.
 const PRICE_IDS: Record<string, string | undefined> = {
   monthly: process.env.STRIPE_PRICE_NOVOURQ_MONTHLY,
   onetime: process.env.STRIPE_PRICE_NOVOURQ_ONETIME,
+  lifetime: process.env.STRIPE_PRICE_NOVOURQ_LIFETIME,   // one-off £175.50, first 10 clients only
 }
 
 // The marketing site calls this from the browser, so it needs CORS. Only the
@@ -33,8 +35,13 @@ export async function POST(request: NextRequest) {
     const { plan, priceId, email, returnTo, cancelUrl } = body
     const finalPriceId = priceId || PRICE_IDS[plan]
     if (!finalPriceId) {
-      const known = plan === 'monthly' || plan === 'onetime'
+      const known = plan === 'monthly' || plan === 'onetime' || plan === 'lifetime'
       return NextResponse.json({ error: known ? 'This plan is not set up yet' : 'Invalid plan' }, { status: 400, headers: CORS })
+    }
+    if (plan === 'lifetime') {
+      const { GET: spots } = await import('../lifetime-spots/route')
+      const left = (await (await spots()).json()).left as number
+      if (left <= 0) return NextResponse.json({ error: 'All 10 lifetime places have been taken. Please choose the monthly or annual plan.' }, { status: 400, headers: CORS })
     }
     // The Stripe price decides the mode, so the annual price can be a one-off or a yearly subscription without a code change
     const price = await stripe.prices.retrieve(finalPriceId)
