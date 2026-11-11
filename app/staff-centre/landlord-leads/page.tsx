@@ -12,7 +12,7 @@ const STATUS: Record<string, { l: string; c: string }> = {
   meeting: { l: 'Meeting booked', c: C.goldDark }, signed: { l: 'Signed', c: C.green }, lost: { l: 'Lost', c: C.grey },
 }
 const ORDER = ['new', 'contacted', 'valuation', 'meeting', 'signed', 'lost']
-const SYM: Record<string, string> = { USD: '$', JMD: 'J$', GBP: '£' }
+const SYM: Record<string, string> = { USD: '$', JMD: 'J$', GBP: '£', EUR: '€', AED: 'AED ', CAD: 'C$' }
 const money = (n: any, c: string) => n == null ? '—' : (SYM[c] || '') + Math.round(Number(n)).toLocaleString('en-GB')
 
 async function api(body?: any) {

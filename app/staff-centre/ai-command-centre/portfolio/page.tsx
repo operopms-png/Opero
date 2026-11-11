@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Loading, Empty, btn, input, label } from '../../../../components/crm/Page'
 import { staffApi } from '../../../../lib/staff-api'
 
-const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
+const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 const th: React.CSSProperties = { textAlign: 'left', fontSize: 12, color: C.muted, fontWeight: 600, padding: '8px 10px', borderBottom: '1px solid ' + C.border, whiteSpace: 'nowrap' }
 const td: React.CSSProperties = { fontSize: 13.5, padding: '10px', borderBottom: '1px solid ' + C.border, whiteSpace: 'nowrap' }
 const card: React.CSSProperties = { background: '#fff', border: '1px solid ' + C.border, borderRadius: 8, padding: 14 }

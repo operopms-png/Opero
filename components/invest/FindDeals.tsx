@@ -5,7 +5,7 @@ import { staffApi } from '@/lib/staff-api'
 
 type Brief = { id: string; text: string; criteria: any; active: boolean; last_run: string | null }
 type Match = { id: string; brief_id: string; url: string; title: string; address: string | null; price: number | null; currency: string | null; beds: number | null; summary: string | null; fit_score: number | null; reason: string | null; status: string; deal_id: string | null }
-const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$' }
+const SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #E6E9EF', borderRadius: 8, padding: 20 }
 const btn = (primary = false): React.CSSProperties => ({ padding: '8px 14px', borderRadius: 6, border: primary ? 'none' : '1px solid #D0D4E4', background: primary ? '#2F6DB5' : '#fff', color: primary ? '#fff' : '#344054', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' })
 

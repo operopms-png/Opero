@@ -8,7 +8,8 @@ import { providerFor, defaultUnit } from '@/lib/utility-providers'
 
 const BLUE = '#2F6DB5', GREY = '#98A2B3'
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: 16, marginBottom: 14 }
-const sym = (c: string) => c === 'JMD' ? 'J$' : '£'
+const SYMS: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
+const sym = (c: string) => SYMS[c] ?? '£'
 const money = (n: number, c: string) => `${sym(c)}${Number(n).toLocaleString('en-GB', { maximumFractionDigits: n >= 1000 ? 0 : 2 })}`
 const day = (d?: string | null) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
 const mon = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short' })

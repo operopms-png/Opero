@@ -28,7 +28,7 @@ const SERVICES = [
 ]
 const SV = Object.fromEntries(SERVICES.map(s => [s.k, s.l]))
 const TYPES = ['House', 'Apartment', 'Townhouse', 'Villa', 'Bungalow', 'Land', 'Commercial']
-const SYM: Record<string, string> = { JMD: 'J$', USD: '$', GBP: '£' }
+const SYM: Record<string, string> = { JMD: 'J$', USD: '$', GBP: '£', EUR: '€', AED: 'AED ', CAD: 'C$' }
 const INK = '#191815', GOLD = '#2F6DB5', GOLD_T = '#89CFF0'
 
 const money = (n: any, cur = 'JMD', short = false) => {
