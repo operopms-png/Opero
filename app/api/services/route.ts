@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { DOC_SUBJECT_TABLE, isSubject } from '@/lib/lease-doc-types'
 
 // Staff Centre → Marketing → Services Pack: the documents a company sends to show its services,
 // and the share links that open them. Links stay live until paused or deleted.
@@ -9,7 +10,7 @@ import { getCaller } from '@/lib/mailbox'
 //   POST {action:'doc-add', title, description, url}
 //   POST {action:'doc-update', id, title?, description?, url?, active?}
 //   POST {action:'doc-delete', id}         admin only
-//   POST {action:'link-create', name, doc_ids[]}     -> { link }
+//   POST {action:'link-create', name, doc_ids[], subject?, subject_id?}     -> { link }   (subject: landlord | ea_landlord | cohost files submissions on their record)
 //   POST {action:'link-update', id, name?, doc_ids?, active?}
 //   POST {action:'link-delete', id}
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
@@ -26,11 +27,11 @@ export async function GET(req: NextRequest) {
   const { data: views } = ids.length ? await db.from('service_views').select('link_id,doc_id').in('link_id', ids).not('doc_id', 'is', null).limit(20000) : { data: [] as any[] }
   const per: Record<string, Record<string, number>> = {}
   for (const v of views ?? []) { per[v.link_id] = per[v.link_id] || {}; per[v.link_id][v.doc_id] = (per[v.link_id][v.doc_id] || 0) + 1 }
-  const { data: subs } = await db.from('service_submissions').select('id,link_id,doc_title,submitter_name,submitter_email,path,created_at').eq('business_id', biz).order('created_at', { ascending: false }).limit(100)
+  const { data: subs } = await db.from('service_submissions').select('id,link_id,doc_title,submitter_name,submitter_email,path,created_at,lease_doc_id').eq('business_id', biz).order('created_at', { ascending: false }).limit(100)
   const submissions = await Promise.all((subs ?? []).map(async (s: any) => {
     const { data: u } = await db.storage.from('service-submissions').createSignedUrl(s.path, 3600)
     const { path, ...rest } = s
-    return { ...rest, url: u?.signedUrl || null, link_name: (links ?? []).find((l: any) => l.id === s.link_id)?.name || '' }
+    return { ...rest, url: u?.signedUrl || null, link_name: (links ?? []).find((l: any) => l.id === s.link_id)?.name || '', filed_for: s.lease_doc_id ? (links ?? []).find((l: any) => l.id === s.link_id)?.subject_name || null : null }
   }))
   return NextResponse.json({ docs: docs ?? [], submissions, links: (links ?? []).map((l: any) => ({ ...l, doc_views: per[l.id] || {} })), isAdmin: c.isAdmin })
 }
@@ -75,7 +76,16 @@ export async function POST(req: NextRequest) {
     const ids = await mine(b.doc_ids)
     if (!ids?.length) return bad('Tick at least one document.')
     const name = String(b.name || '').trim().slice(0, 150) || (ids.length > 1 ? 'Our services' : 'Document link')
-    const { data, error } = await db.from('service_links').insert({ business_id: biz, token: randomBytes(12).toString('hex'), name, doc_ids: ids, created_by: by }).select('*').single()
+    // Optional: tie the link to one landlord or co-host so their submissions file onto their record.
+    let subj: any = {}
+    if (b.subject_id) {
+      const sj = String(b.subject || '')
+      if (!isSubject(sj) || !['landlord', 'ea_landlord', 'cohost'].includes(sj)) return bad('Pick a landlord or co-host.')
+      const { data: who } = await db.from(DOC_SUBJECT_TABLE[sj]).select('id,name').eq('id', String(b.subject_id)).eq('user_id', biz).maybeSingle()
+      if (!who) return bad('That person was not found.')
+      subj = { subject: sj, subject_id: who.id, subject_name: who.name }
+    }
+    const { data, error } = await db.from('service_links').insert({ business_id: biz, token: randomBytes(12).toString('hex'), name, doc_ids: ids, created_by: by, ...subj }).select('*').single()
     return error ? bad(error.message, 500) : NextResponse.json({ link: data })
   }
   if (b.action === 'link-update') {

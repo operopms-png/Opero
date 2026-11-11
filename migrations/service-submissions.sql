@@ -13,3 +13,5 @@ create table if not exists service_submissions (
 alter table service_submissions enable row level security;
 create index if not exists service_submissions_biz on service_submissions(business_id, created_at desc);
 insert into storage.buckets (id,name,public) values ('service-submissions','service-submissions',false) on conflict (id) do nothing;
+alter table service_links add column if not exists subject text, add column if not exists subject_id uuid, add column if not exists subject_name text;
+alter table service_submissions add column if not exists lease_doc_id uuid;

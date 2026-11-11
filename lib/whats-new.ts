@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Submissions file on the landlord record', text: 'Services Pack: pick a landlord or co-host when you create a link and whatever they submit is filed on their Documents record for you to approve.' },
   { date: '2026-11-11', title: 'Email when a landlord submits', text: 'Services Pack: the team is emailed with the completed PDF attached whenever a landlord or co-host submits a document from their link.' },
   { date: '2026-11-11', title: 'Fill in and submit on the link', text: 'Marketing, Services Pack: landlords now fill in the agreements and onboarding form right on their link and press Submit, and you open the completed copy under Submitted documents.' },
   { date: '2026-11-11', title: 'Agreements in the Landlord pack', text: 'Marketing, Services Pack: choose the Master Lease, Shortlet landlord or Estate agency Agreement before you send, and Landlord pack now also adds the Welcome letter and Shortlet landlord onboarding form.' },

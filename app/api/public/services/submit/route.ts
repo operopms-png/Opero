@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PDFDocument, PDFTextField, PDFCheckBox, PDFRadioGroup, PDFDropdown, PDFOptionList } from 'pdf-lib'
-import { randomBytes } from 'crypto'
+import { randomBytes, randomUUID } from 'crypto'
 import { sendEmail } from '@/lib/send-email'
 import { teamEmails } from '@/lib/feedback-notify'
 import { SITE_URL } from '@/lib/brand'
@@ -43,7 +43,21 @@ export async function POST(req: NextRequest) {
   const path = `${l.business_id}/${l.id}/${Date.now()}-${randomBytes(4).toString('hex')}.pdf`
   const up = await db.storage.from('service-submissions').upload(path, out, { contentType: 'application/pdf' })
   if (up.error) return bad('Could not save your document. Try again.', 500)
-  await db.from('service_submissions').insert({ business_id: l.business_id, link_id: l.id, doc_id: doc.id, doc_title: doc.title, submitter_name: String(b.name || '').trim().slice(0, 120) || null, submitter_email: String(b.email || '').trim().slice(0, 160) || null, path })
+  // If the link was made for a named landlord or co-host, file the completed copy on their record (Documents), awaiting review.
+  let leaseDocId: string | null = null
+  if (l.subject && l.subject_id) {
+    try {
+      const lp = `${l.business_id}/${l.subject}/${l.subject_id}/${randomUUID()}.pdf`
+      const u2 = await db.storage.from('lease-docs').upload(lp, out, { contentType: 'application/pdf' })
+      if (!u2.error) {
+        const cat = /^agreement/i.test(doc.title) ? (l.subject === 'cohost' ? 'cohost_agreement' : 'mgmt_agreement') : 'other'
+        const { data: ld } = await db.from('lease_documents').insert({ user_id: l.business_id, subject: l.subject, head_lease_id: l.subject_id, category: cat, name: `${doc.title} (completed).pdf`.slice(0, 120), path: lp, mime: 'application/pdf', size: out.length, uploaded_by: String(b.email || '').trim() || String(b.name || '').trim() || l.subject_name, uploaded_by_portal: true, status: 'pending', visible_to_portal: true }).select('id').single()
+        leaseDocId = ld?.id ?? null
+        await db.from('notifications').insert({ user_id: l.business_id, title: `Document to review: ${doc.title}`, message: `${l.subject_name || 'A landlord'} completed ${doc.title} on their link. Approve or reject it in Documents.`, type: 'document', module: 'staffcentre', link: '/staff-centre/documents' }).then(() => {}, () => {})
+      }
+    } catch { /* the submission is still kept in Services Pack */ }
+  }
+  await db.from('service_submissions').insert({ lease_doc_id: leaseDocId, business_id: l.business_id, link_id: l.id, doc_id: doc.id, doc_title: doc.title, submitter_name: String(b.name || '').trim().slice(0, 120) || null, submitter_email: String(b.email || '').trim().slice(0, 160) || null, path })
   // Tell the team, with the completed PDF attached. A failed email never blocks the submission.
   try {
     const esc = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

@@ -20,6 +20,8 @@ export default function ServicesPack() {
   const [d, setD] = useState<any>(null)
   const [err, setErr] = useState(''), [note, setNote] = useState(''), [busy, setBusy] = useState(false)
   const [sel, setSel] = useState<string[]>([]), [name, setName] = useState('')
+  const [who, setWho] = useState<any>(null), [q, setQ] = useState(''), [found, setFound] = useState<any[]>([])
+  useEffect(() => { if (q.trim().length < 2) { setFound([]); return }; const t = setTimeout(() => staffApi('/api/documents?people=' + encodeURIComponent(q)).then((r: any) => setFound((r.people || []).filter((x: any) => ['pm_owner', 'ea_owner', 'cohost'].includes(x.kind)))).catch(() => {}), 250); return () => clearTimeout(t) }, [q])
   const [add, setAdd] = useState<any>(null), [edit, setEdit] = useState<any>(null)
   const load = () => staffApi('/api/services').then((r: any) => { setD(r); setSel(s => s.filter(i => r.docs.some((x: any) => x.id === i && x.active))) }).catch(e => setErr(e.message))
   useEffect(() => { load() }, [])
@@ -89,8 +91,15 @@ export default function ServicesPack() {
           <div style={head}>2. Make the link</div>
           <div style={{ ...card, maxWidth: 560, display: 'grid', gap: 10 }}>
             <div><span style={label}>Link name (only you see this, e.g. the person or campaign)</span><input style={input} value={name} placeholder="Spring landlord campaign" onChange={e => setName(e.target.value)} /></div>
+            <div>
+              <span style={label}>For a landlord or co-host (optional). Anything they submit is filed on their record in Documents.</span>
+              {who ? <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13.5 }}><b>{who.name}</b><span style={{ color: '#667085' }}>{who.label}</span><button style={btn('ghost', true)} onClick={() => setWho(null)}>Remove</button></div> : <>
+                <input style={input} value={q} placeholder="Search landlords and co-hosts by name" onChange={e => setQ(e.target.value)} />
+                {found.length > 0 && <div style={{ border: '1px solid #E4E7EC', borderRadius: 6, marginTop: 4, background: '#fff' }}>{found.map(x => <div key={x.kind + x.id} onClick={() => { setWho(x); setQ(''); setFound([]); setName(n => n || x.name) }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13.5, borderTop: '1px solid #F2F4F7' }}><b>{x.name}</b> <span style={{ color: '#667085' }}>{x.label}</span></div>)}</div>}
+              </>}
+            </div>
             <div style={{ fontSize: 13, color: '#475467' }}>{sel.length === 0 ? 'Tick the documents above.' : sel.length === 1 ? 'This link opens one document.' : `This link lets them choose from ${sel.length} documents.`}</div>
-            <div><button style={btn('gold')} disabled={busy || !sel.length} onClick={async () => { const r = await act({ action: 'link-create', name, doc_ids: sel }); if (r?.link) { copy(url(r.link.token), `Link copied: ${url(r.link.token)}`); setName('') } }}>Create link</button></div>
+            <div><button style={btn('gold')} disabled={busy || !sel.length} onClick={async () => { const r = await act({ action: 'link-create', name, doc_ids: sel, ...(who ? { subject: who.kind === 'pm_owner' ? 'landlord' : who.kind === 'ea_owner' ? 'ea_landlord' : 'cohost', subject_id: who.id } : {}) }); if (r?.link) { copy(url(r.link.token), `Link copied: ${url(r.link.token)}`); setName(''); setWho(null) } }}>Create link</button></div>
           </div>
 
           <div style={head}>3. Your links</div>
@@ -101,7 +110,7 @@ export default function ServicesPack() {
                 return (
                   <div key={l.id} style={{ ...card, marginBottom: 0, opacity: l.active ? 1 : .6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                      <div><b>{l.name}</b>{!l.active && <span style={{ marginLeft: 8, fontSize: 11, color: '#B42318', fontWeight: 700 }}>PAUSED</span>}
+                      <div><b>{l.name}</b>{l.subject_name && <span style={{ marginLeft: 8, fontSize: 12, color: '#182D5E' }}>for {l.subject_name}</span>}{!l.active && <span style={{ marginLeft: 8, fontSize: 11, color: '#B42318', fontWeight: 700 }}>PAUSED</span>}
                         <div style={{ fontSize: 12, color: '#667085', marginTop: 3, wordBreak: 'break-all' }}>{u}</div></div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                         <button style={btn('ghost', true)} onClick={() => copy(u, `Link copied: ${u}`)}>Copy link</button>
@@ -125,7 +134,7 @@ export default function ServicesPack() {
             <div style={{ display: 'grid', gap: 8 }}>
               {(d?.submissions || []).map((s: any) => (
                 <div key={s.id} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 8, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                  <div><b>{s.doc_title}</b><div style={{ fontSize: 12.5, color: '#667085', marginTop: 3 }}>{s.submitter_name || 'No name'}{s.submitter_email ? ` · ${s.submitter_email}` : ''} · link {s.link_name || ''} · {when(s.created_at)}</div></div>
+                  <div><b>{s.doc_title}</b><div style={{ fontSize: 12.5, color: '#667085', marginTop: 3 }}>{s.submitter_name || 'No name'}{s.submitter_email ? ` · ${s.submitter_email}` : ''} · link {s.link_name || ''} · {when(s.created_at)}{s.filed_for ? ` · filed on ${s.filed_for}’s record, awaiting review in Documents` : ''}</div></div>
                   {s.url && <a href={s.url} target="_blank" rel="noreferrer" style={btn('gold', true)}>Open completed PDF</a>}
                 </div>
               ))}
