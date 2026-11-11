@@ -43,11 +43,8 @@ export default function ServicesPack() {
   const copy = async (text: string, msg: string) => { try { await navigator.clipboard.writeText(text); setNote(msg) } catch { setNote(text) } }
   const docs: any[] = d?.docs || [], links: any[] = d?.links || []
   const T = TABS.find(t => t.key === tab)!
-  // The wording that goes with a link: onboarding wording when it carries a document to fill in, otherwise a viewing message. The link sits under it.
-  const msg = (l: any, u: string) => (l.doc_ids as string[]).some(i => docs.find(x => x.id === i)?.fillable)
-    ? `Welcome to NOVOURQ. To get you set up, please use your private onboarding link to add your details and sign your agreement. It only takes a few minutes. This link is personal to you. If you need a hand or a new link, just reply to this message.\n\n${u}`
-    : `Welcome to NOVOURQ. Please use your private link to view your welcome information and documents. If you need a hand, just reply to this message.\n\n${u}`
-  const shown = tab === 'all' ? docs : docs.filter(x => T.pick.includes(x.title) || T.more.includes(x.title) || !AUDIENCE_TITLES.has(x.title))
+  // The wording that goes with every link, with the link under it.
+  const msg = (_l: any, u: string) => `Welcome to NOVOURQ. To get you set up, please use your private onboarding link to add your details, upload your documents and sign your agreement. It only takes a few minutes. This link is personal to you. If you need a hand or a new link, just reply to this message.\n\n${u}`
   const openTab = (k: typeof tab) => { const t = TABS.find(z => z.key === k)!; setTab(k); setSel(docs.filter(x => x.active && t.pick.includes(x.title)).map(x => x.id)); setReg(t.reg); setWho(null); setName(t.key === 'all' ? '' : `${t.label} pack`) }
   useEffect(() => { if (docs.length && !ready) { setReady(true); openTab('landlord') } })   // eslint-disable-line react-hooks/exhaustive-deps
   const title = (id: string) => docs.find(x => x.id === id)?.title || 'Removed document'
