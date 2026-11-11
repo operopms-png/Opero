@@ -10,7 +10,7 @@ import { DOC_SUBJECT_TABLE, isSubject } from '@/lib/lease-doc-types'
 //   POST {action:'doc-add', title, description, url}
 //   POST {action:'doc-update', id, title?, description?, url?, active?}
 //   POST {action:'doc-delete', id}         admin only
-//   POST {action:'link-create', name, doc_ids[], subject?, subject_id?}     -> { link }   (subject: landlord | ea_landlord | cohost files submissions on their record)
+//   POST {action:'link-create', name, doc_ids[], subject?, subject_id?, register?: 'landlord'|'cohost'}     -> { link }   (subject: landlord | ea_landlord | cohost files submissions on their record)
 //   POST {action:'link-update', id, name?, doc_ids?, active?}
 //   POST {action:'link-delete', id}
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
     const name = String(b.name || '').trim().slice(0, 150) || (ids.length > 1 ? 'Our services' : 'Document link')
     // Optional: tie the link to one landlord or co-host so their submissions file onto their record.
     let subj: any = {}
+    if (!b.subject_id && (b.register === 'landlord' || b.register === 'cohost')) subj = { subject: b.register }   // a new person: registered when they submit
     if (b.subject_id) {
       const sj = String(b.subject || '')
       if (!isSubject(sj) || !['landlord', 'ea_landlord', 'cohost'].includes(sj)) return bad('Pick a landlord or co-host.')

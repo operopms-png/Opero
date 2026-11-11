@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
   if (!l.doc_ids.includes(docId)) return bad('That document is not on this link.')
   const { data: doc } = await db.from('service_docs').select('id,title,url,fillable').eq('id', docId).eq('business_id', l.business_id).eq('active', true).maybeSingle()
   if (!doc || !doc.fillable) return bad('That document cannot be filled in online.')
+  const email = String(b.email || '').trim().toLowerCase().slice(0, 160)
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return bad('Enter your email address so we can reach you.')
+  if (!String(b.name || '').trim()) return bad('Enter your name first.')
   const values = b.values && typeof b.values === 'object' ? b.values as Record<string, unknown> : {}
   if (Object.keys(values).length > 600) return bad('Too many fields.')
 
@@ -45,6 +48,16 @@ export async function POST(req: NextRequest) {
   if (up.error) return bad('Could not save your document. Try again.', 500)
   // If the link was made for a named landlord or co-host, file the completed copy on their record (Documents), awaiting review.
   let leaseDocId: string | null = null
+  // A link made for "a new landlord / co-host" registers them now, from the name and email they entered.
+  if (l.subject && !l.subject_id) {
+    try {
+      const tbl = l.subject === 'cohost' ? 'cohosts' : 'pm_landlords'
+      const nm = String(b.name || '').trim().slice(0, 120)
+      let { data: ex } = await db.from(tbl).select('id,name').eq('user_id', l.business_id).ilike('email', email).limit(1).maybeSingle()
+      if (!ex) { const ins = await db.from(tbl).insert({ user_id: l.business_id, name: nm, email, ...(tbl === 'pm_landlords' ? { notes: `Registered from the Services Pack link "${l.name}"` } : {}) }).select('id,name').single(); ex = ins.data }
+      if (ex) { l.subject_id = ex.id; l.subject_name = ex.name; await db.from('service_links').update({ subject_id: ex.id, subject_name: ex.name }).eq('id', l.id) }
+    } catch { /* the submission is still kept in Services Pack */ }
+  }
   if (l.subject && l.subject_id) {
     try {
       const lp = `${l.business_id}/${l.subject}/${l.subject_id}/${randomUUID()}.pdf`

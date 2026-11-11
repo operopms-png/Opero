@@ -58,6 +58,7 @@ export default function FillablePdf({ url, token, docId, title }: { url: string;
   const set = (k: string, v: string | boolean) => setVals(p => ({ ...p, [k]: v }))
   const submit = async () => {
     if (!name.trim()) { setMsg('Enter your name first.'); return }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setMsg('Enter your email address so we can reach you.'); return }
     setBusy(true); setMsg('')
     try {
       const r = await fetch('/api/public/services/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, doc: docId, name, email, values: vals }) })
@@ -78,7 +79,7 @@ export default function FillablePdf({ url, token, docId, title }: { url: string;
           <div style={{ fontSize: 14, marginTop: 6 }}>We have your completed {title}. You can close this page.</div>
         </div>
       ) : (<>
-        <div style={{ fontSize: 13.5, color: '#344054', marginBottom: 10, lineHeight: 1.5 }}>Click any shaded box to type, or tick a box. When you have finished, enter your name below and press Submit. It goes straight to us.</div>
+        <div style={{ fontSize: 13.5, color: '#344054', marginBottom: 10, lineHeight: 1.5 }}>Click any shaded box to type, or tick a box. When you have finished, enter your name and email below and press Submit. It goes straight to us.</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
           {pages.map((p, pi) => (
             <div key={pi} style={{ position: 'relative', width: p.w, height: p.h, maxWidth: '100%', boxShadow: '0 1px 6px rgba(15,33,80,.18)', background: '#fff' }}>
@@ -102,7 +103,7 @@ export default function FillablePdf({ url, token, docId, title }: { url: string;
         </div>
         <div style={{ marginTop: 16, padding: 16, background: '#F3F6FB', border: '1px solid #D5DCEA', borderRadius: 8, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" style={{ flex: '1 1 200px', padding: '10px 12px', border: '1px solid #C5CFE3', borderRadius: 6, font: 'inherit' }} />
-          <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Your email (optional)" type="email" style={{ flex: '1 1 200px', padding: '10px 12px', border: '1px solid #C5CFE3', borderRadius: 6, font: 'inherit' }} />
+          <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Your email" type="email" style={{ flex: '1 1 200px', padding: '10px 12px', border: '1px solid #C5CFE3', borderRadius: 6, font: 'inherit' }} />
           <button onClick={submit} disabled={busy} style={{ background: NAVY, color: '#fff', border: 'none', borderRadius: 6, padding: '11px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: busy ? .6 : 1 }}>{busy ? 'Sending…' : 'Submit to NOVOURQ'}</button>
           {msg && <div style={{ flexBasis: '100%', fontSize: 13, color: '#B42318' }}>{msg}</div>}
         </div>
