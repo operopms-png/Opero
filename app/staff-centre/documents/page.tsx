@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Stat, Loading, Empty, Modal, btn, input, label } from '../../../components/crm/Page'
 import { staffApi } from '../../../lib/staff-api'
 import NewClientLink from '../../../components/documents/NewClientLink'
+import BankAccounts from '../../../components/documents/BankAccounts'
 import DocReviewQueue from '../../../components/documents/DocReviewQueue'
 import DocEditor, { DOC_CSS } from '../../../components/documents/DocEditor'
 import { DOC_STATUS, KIND_LABEL, downloadDocPdf, PersonSearch } from '../../../components/documents/shared'
@@ -30,7 +31,7 @@ export default function Documents() {
 
 // ── list ────────────────────────────────────────────────────────────────
 function List({ open, startNew }: { open: (id: string) => void; startNew: boolean }) {
-  const [d, setD] = useState<any>(null), [err, setErr] = useState(''), [tab, setTab] = useState('all'), [q, setQ] = useState(''), [newDoc, setNewDoc] = useState(startNew), [newClient, setNewClient] = useState(false)
+  const [d, setD] = useState<any>(null), [err, setErr] = useState(''), [tab, setTab] = useState('all'), [q, setQ] = useState(''), [newDoc, setNewDoc] = useState(startNew), [newClient, setNewClient] = useState(false), [banks, setBanks] = useState(false)
   useEffect(() => { staffApi('/api/documents').then(setD).catch(e => setErr(e.message)) }, [])
   useEffect(() => { if (startNew) setNewDoc(true) }, [startNew])
   const all: any[] = d?.docs || []
@@ -40,7 +41,7 @@ function List({ open, startNew }: { open: (id: string) => void; startNew: boolea
   return (
     <CrmPage>
       <CrmHeader title="Documents" subtitle="Everything sent to tenants, guests, owners and partners — and where it’s up to."
-        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents/templates' }}>Templates</button><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents/rules' }}>Automatic rules</button><button style={btn('ghost')} onClick={() => setNewClient(true)}>New client link</button><button style={btn('gold')} onClick={() => setNewDoc(true)}>Send a document</button></div>}
+        actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents/templates' }}>Templates</button><button style={btn('ghost')} onClick={() => setBanks(true)}>Bank accounts</button><button style={btn('ghost')} onClick={() => { window.location.href = '/staff-centre/documents/rules' }}>Automatic rules</button><button style={btn('ghost')} onClick={() => setNewClient(true)}>New client link</button><button style={btn('gold')} onClick={() => setNewDoc(true)}>Send a document</button></div>}
         tabs={[{ k: 'all', l: 'All', count: all.length }, { k: 'waiting', l: 'Waiting', count: count('waiting') }, { k: 'signed', l: 'Signed', count: count('signed') }, { k: 'approval', l: 'Awaiting approval', count: count('approval') }, { k: 'drafts', l: 'Drafts', count: count('drafts') }]} tab={tab} onTab={setTab} />
       <Body>
         {err && <div style={{ color: C.red, marginBottom: 12 }}>{err}</div>}
@@ -71,6 +72,7 @@ function List({ open, startNew }: { open: (id: string) => void; startNew: boolea
           )}
         </>}
       </Body>
+      {banks && <BankAccounts onClose={() => setBanks(false)} />}
       {newClient && <NewClientLink onClose={() => setNewClient(false)} />}
       {newDoc && <NewDocModal onClose={() => setNewDoc(false)} onCreated={id => open(id)} />}
     </CrmPage>

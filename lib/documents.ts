@@ -1,5 +1,6 @@
 // Documents — server side: who a document can go to, the values that fill its
 // blanks, sending it (email + PDF + signing link), reminders, and the automatic rules.
+import { bankLine } from '@/lib/bank-accounts'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { SITE_URL, EMAIL_DOMAIN } from '@/lib/brand'
 import { sendEmail } from '@/lib/send-email'
@@ -75,6 +76,7 @@ export async function fieldsFor(biz: string, kind: string | null, id: string | n
     if (kind === 'pm_tenant') {
       const t = await one(db.from('pm_tenants').select('*').eq('id', id).eq('user_id', biz).maybeSingle()); person(t)
       const p = t?.property_id ? await one(db.from('pm_properties').select('id,name,address,city,country,owner_id').eq('id', t.property_id).maybeSingle()) : null
+      v.currency_hint = pmCur(p)
       const l = await one(db.from('pm_leases').select('*').eq('tenant_id', id).order('start_date', { ascending: false }).limit(1).maybeSingle())
       const ll = p?.owner_id ? await one(db.from('pm_landlords').select('name').eq('id', p.owner_id).maybeSingle()) : null
       if (p) { v.property_address = [p.address || p.name, p.city].filter(Boolean).join(', '); property_label = p.name || p.address }
@@ -117,6 +119,12 @@ export async function fieldsFor(biz: string, kind: string | null, id: string | n
         property_label = p.name
       }
     }
+  }
+  {
+    const accts = await q(db.from('company_bank_accounts').select('*').eq('business_id', biz).eq('active', true).order('sort_order'))
+    const cur = v.currency_hint as string | undefined
+    const lines = (purpose: string) => { const all = (accts as any[]).filter(x => x.purpose === purpose); const own = cur ? all.filter(x => x.currency === cur) : []; return (own.length ? own : all).map(bankLine).join('  |  ') }
+    v.deposit_bank_details = lines('deposit'); v.payment_bank_details = lines('rent')
   }
   if (v.recipient_name) v.first_name = String(v.recipient_name).replace(/^(mr|mrs|ms|miss|dr)\.?\s+/i, '').split(/\s+/)[0]
   Object.assign(v, extra)

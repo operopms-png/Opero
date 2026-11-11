@@ -40,6 +40,8 @@ export const BLANKS: Blank[] = [
   { key: 'included_items', label: 'Included furniture / appliances', group: 'Agreement' },
   { key: 'payout_details', label: 'Payout currency & bank details', group: 'Agreement' },
   { key: 'payout_frequency', label: 'Payout frequency', group: 'Agreement' },
+  { key: 'deposit_bank_details', label: 'Deposit bank details', group: 'Bank accounts' },
+  { key: 'payment_bank_details', label: 'Payment bank details', group: 'Bank accounts' },
   { key: 'manager_name', label: 'Property manager name', group: 'NOVOURQ' },
   { key: 'manager_email', label: 'Property manager email', group: 'NOVOURQ' },
   { key: 'manager_phone', label: 'Property manager direct number', group: 'NOVOURQ' },
