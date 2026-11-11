@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
       mode: isOneTime ? 'payment' : 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: finalPriceId, quantity: 1 }],
-      ...(isOneTime ? {} : { subscription_data: { trial_period_days: 14 } }),
+      // One-off payments get a proper Stripe invoice too (subscriptions already do), so every client receives an invoice
+      ...(isOneTime ? { invoice_creation: { enabled: true } } : { subscription_data: { trial_period_days: 14 } }),
       // Prefilling this ties the payment reliably to the right account —
       // without it, Stripe just asks for an email fresh at checkout, and a
       // typo or different email there means the webhook can't match it to
