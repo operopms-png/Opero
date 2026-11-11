@@ -84,7 +84,7 @@ export default function TaxCompliance() {
               <Panel t={`${ent.name}${ent.country === 'JM' ? ' · Jamaica' : ent.country === 'UK' ? ' · UK' : ''} · ${ent.currency}`}>
                 <div style={{ color: '#667085', fontSize: 13, marginBottom: 10 }}>{ent.role}</div>
                 <div style={{ fontSize: 13, marginBottom: 8 }}>Registration: <b>{REG_LABEL[ent.registration_status]}</b>{ent.company_number ? ` · ${ent.company_number}` : ''}{ent.tax_registration_note ? ` · ${ent.tax_registration_note}` : ''}</div>
-                <button style={btn('ghost', true)} onClick={() => setReg({ entity_id: ent.id, registration_status: ent.registration_status, company_number: ent.company_number ?? '', tax_registration_note: ent.tax_registration_note ?? '' })}>Update registration</button>
+                <button style={btn('ghost', true)} onClick={() => setReg({ entity_id: ent.id, name: ent.name, currency: ent.currency, registration_status: ent.registration_status, company_number: ent.company_number ?? '', tax_registration_note: ent.tax_registration_note ?? '' })}>Edit details</button>
               </Panel>
               <Panel t="Bank accounts">
                 {ent.banks.length === 0 ? <div style={{ color: '#667085', fontSize: 13 }}>No bank accounts recorded for this company.</div> : ent.banks.map((b: any) => <Row key={b.id} a={`${b.account_label}${b.bank_name ? ' · ' + b.bank_name : ''}`} b={`${b.currency} · feed ${b.feed_status === 'not_connected' ? 'not connected' : b.feed_status}`} />)}
@@ -154,7 +154,9 @@ export default function TaxCompliance() {
         )}
 
         {reg && (
-          <Modal t="Registration" onClose={() => setReg(null)}>
+          <Modal t="Company details" onClose={() => setReg(null)}>
+            <Field l="Company name"><input style={input} value={reg.name ?? ''} onChange={e => setReg({ ...reg, name: e.target.value })} /></Field>
+            <Field l="Currency"><select style={input} value={reg.currency ?? 'GBP'} onChange={e => setReg({ ...reg, currency: e.target.value })}>{['GBP', 'USD', 'JMD', 'EUR', 'AED', 'CAD'].map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
             <Field l="Status"><select style={input} value={reg.registration_status} onChange={e => setReg({ ...reg, registration_status: e.target.value })}>
               <option value="not_registered">Not registered yet</option><option value="incorporated">Incorporated</option><option value="registered_for_tax">Registered for tax</option></select></Field>
             <Field l="Company number"><input style={input} value={reg.company_number} onChange={e => setReg({ ...reg, company_number: e.target.value })} /></Field>

@@ -135,7 +135,9 @@ export async function POST(req: NextRequest) {
     if (!e) return bad('Company not found', 404)
     const status = REG.includes(b.registration_status) ? b.registration_status : null
     if (!status) return bad('Choose a registration status.')
-    const patch = { registration_status: status, company_number: String(b.company_number || '').trim().slice(0, 50) || null, tax_registration_note: String(b.tax_registration_note || '').trim().slice(0, 300) || null }
+    const patch = { registration_status: status, company_number: String(b.company_number || '').trim().slice(0, 50) || null, tax_registration_note: String(b.tax_registration_note || '').trim().slice(0, 300) || null } as Record<string, any>
+    const nm = String(b.name || '').trim().slice(0, 120); if (nm) patch.name = nm
+    if (['GBP', 'USD', 'JMD', 'EUR', 'AED', 'CAD'].includes(b.currency)) patch.currency = b.currency
     const { error } = await db.from('legal_entities').update(patch).eq('id', e.id)
     if (error) return bad(error.message, 500)
     await audit(biz, actor, 'registration set to ' + status, e.id, { company: e.name, company_number: patch.company_number })
