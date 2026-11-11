@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     db.from('invoices').select('id, number, status, total, currency, due_date, issue_date, paid_at, token, note').eq('business_id', link.business_id).in('person_kind', kinds).eq('person_id', rec.id).in('status', ['sent', 'paid', 'overdue']).order('issue_date', { ascending: false }).limit(30),
   ])
   return NextResponse.json({
-    person: { name: rec.name, who: WHO[subject] }, company: s?.company_name || 'NOVOURQ', subject, expires_at: link.expires_at,
+    person: { name: rec.name, who: WHO[subject] }, company: s?.company_name || 'Your property manager', subject, expires_at: link.expires_at,
     signs: (docs ?? []).filter((d: any) => d.needs_signature || d.status === 'signed').map((d: any) => ({ title: d.title, token: d.token, signed: d.status === 'signed', signed_at: d.signed_at })),
     invoices: invs ?? [],
   })

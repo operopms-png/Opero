@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   // what the arrangement means in money, when it is a plain percentage; any other model is as per their agreement
   const pct = rec.payment_model === 'commission' || rec.payment_model === 'percentage' ? Number(rec.payment_value) || 0 : null
   return NextResponse.json({
-    preview, company: settings.data?.company_name || 'NOVOURQ',
+    preview, company: settings.data?.company_name || 'Your property manager',
     cohost: { id: rec.id, name: rec.name, email: rec.email, phone: rec.phone, currency: rec.currency || 'JMD', payment_model: rec.payment_model, payment_value: rec.payment_value, payment_note: rec.payment_note, agreement_start: rec.agreement_start, agreement_end: rec.agreement_end },
     properties: props.data ?? [], bookings: bookings.data ?? [], maintenance: tickets.data ?? [],
     totals: { gross, bookings: live.length, our_share: pct != null ? Math.round(gross * pct) / 100 : null, your_share: pct != null ? Math.round(gross * (100 - pct)) / 100 : null },

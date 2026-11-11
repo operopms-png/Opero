@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     link_token = (await ensureLink(l.business_id, SUBJECT[l.kind as 'owner'][l.module as 'pm'] as PortalSubject, l.subject_id, 'new client link')).token
     if (l.doc_send_id) doc_token = (await db.from('doc_sends').select('token').eq('id', l.doc_send_id).maybeSingle()).data?.token ?? null
   }
-  return NextResponse.json({ company: s?.company_name || 'NOVOURQ', kind: l.kind, subject: SUBJECT[l.kind as 'owner'][l.module as 'pm'], prefill: { name: l.name || '', email: l.email || '', property: l.property_label || '' }, ask_docs: l.ask_docs, has_contract: !!l.template_id, status: l.status, expired, link_token, doc_token })
+  return NextResponse.json({ company: s?.company_name || 'Your property manager', kind: l.kind, subject: SUBJECT[l.kind as 'owner'][l.module as 'pm'], prefill: { name: l.name || '', email: l.email || '', property: l.property_label || '' }, ask_docs: l.ask_docs, has_contract: !!l.template_id, status: l.status, expired, link_token, doc_token })
 }
 
 export async function POST(req: NextRequest) {

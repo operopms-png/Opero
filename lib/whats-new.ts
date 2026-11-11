@@ -4,6 +4,8 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'AI Assistant guide', text: 'Human Intelligence Hub → AI Assistant now has a banner and a step by step guide in Staff Training, and Novourq Cloud AI can explain it.' },
+  { date: '2026-11-11', title: 'AI Receptionist starts with your company', text: 'A new AI Receptionist now starts with your company name and time zone instead of NOVOURQ, and its time zone list includes Europe, the US and Canada.' },
   { date: '2026-11-11', title: 'Plan card shows a cancellation', text: 'Settings → Payments now says when your plan will end if you cancel, and that you keep full access until then.' },
   { date: '2026-11-11', title: 'Right currency on Property Management records', text: 'Records in Property Management tabs now show the symbol of the property\'s own currency, including dollars, euros, dirhams and Canadian dollars, and your company symbol when none is set.' },
   { date: '2026-11-11', title: 'Your own time zone', text: 'Settings → Currency now has a time zone. Overdue invoices and rent, due dates, compliance expiry, Finance alerts and the dashboard use your time zone instead of Jamaica time. It starts on UK time.' },

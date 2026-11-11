@@ -35,6 +35,7 @@ const PAGES: Record<string, B> = {
   '/analytics': { title: 'Analytics', text: 'Occupancy, average rate and revenue trends, so you can see what earns the most.' },
   '/staff-centre/data-hub': { title: 'Data Hub', text: 'Everything stored for your business, how complete it is, where it came from, and what tenants and landlords have asked for.' },
   '/staff-centre/tasks': { title: 'Tasks', text: 'Assign tasks to the team and track them to done. Each person sees their own on their dashboard.' },
+  '/staff-centre/receptionist': { title: 'AI Assistant', text: 'Your AI receptionist answers emails, tenant and landlord messages and website chat from your own company knowledge, and passes anything it can\'t handle to your team.' },
   '/staff-centre/meetings': { title: 'Meetings', text: 'Your booking links and scheduled meetings. Share a link and people pick a time that suits you.' },
   '/staff-centre/maintenance': { title: 'Maintenance', text: 'Repair jobs across all properties, with who is handling each one and its progress.' },
   '/staff-centre/applications': { title: 'Applications', text: 'Rental applications received, and where each one is in referencing and approval.' },

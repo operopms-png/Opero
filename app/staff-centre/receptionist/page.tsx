@@ -7,6 +7,7 @@ import { supabase } from '../../../lib/supabase'
 import PropertyManagerAgents from '../../../components/ai/PropertyManagerAgents'
 import AskChat from '../../../components/ai/AskChat'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, btn, input, label } from '../../../components/crm/Page'
+import { TIMEZONES } from '@/lib/company-tz'
 
 async function api(body?: any) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -24,7 +25,7 @@ const ACT: Record<string, { l: string; c: string }> = {
 }
 const DAYS: [string, string][] = [['mon', 'Monday'], ['tue', 'Tuesday'], ['wed', 'Wednesday'], ['thu', 'Thursday'], ['fri', 'Friday'], ['sat', 'Saturday'], ['sun', 'Sunday']]
 const VOICES = [{ v: 'Polly.Amy-Neural', l: 'Amy — British, female' }, { v: 'Polly.Brian-Neural', l: 'Brian — British, male' }, { v: 'Polly.Emma-Neural', l: 'Emma — British, female' }, { v: 'Polly.Arthur-Neural', l: 'Arthur — British, male' }]
-const TZ = [{ v: 'Europe/London', l: 'UK (London)' }, { v: 'America/Jamaica', l: 'Jamaica' }, { v: 'Asia/Dubai', l: 'UAE (Dubai)' }]
+const TZ = TIMEZONES
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 function ModePicker({ value, options, onChange, disabled }: { value: string; options: { v: string; l: string; c: string }[]; onChange: (v: string) => void; disabled?: boolean }) {
