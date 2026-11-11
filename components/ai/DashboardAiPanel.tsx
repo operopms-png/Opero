@@ -66,7 +66,7 @@ export default function DashboardAiPanel({ mapSlot, portfolioSlot }: { mapSlot?:
     <>
     <div style={{ marginBottom: 18 }}>
       <style>{`.ai-strip{display:grid;grid-template-columns:1.1fr repeat(4,minmax(0,1fr));gap:12px}
-        .ai-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-auto-rows:480px;gap:12px;margin-top:12px}.ai-two>*{min-height:0;overflow:auto}.ai-two>*>*{height:100%;box-sizing:border-box}
+        .ai-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-auto-rows:480px;gap:12px;margin-top:12px}.ai-two>*{min-height:0;overflow:auto}.ai-fill>*{height:100%;box-sizing:border-box}
         .ai-team{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:12px}
         @media(max-width:1000px){.ai-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-strip>:first-child{grid-column:1/-1}}
         @media(max-width:820px){.ai-two{grid-template-columns:1fr}}`}</style>
@@ -99,13 +99,13 @@ export default function DashboardAiPanel({ mapSlot, portfolioSlot }: { mapSlot?:
       </div>
 
       <div className="ai-two">
-        <div>{mapSlot ?? automationBox}</div>
+        <div className="ai-fill">{mapSlot ?? automationBox}</div>
         <div style={{ ...box, padding: 18, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ ...head, marginBottom: 2 }}>NOVOURQ Walk</h3>
           <div style={{ fontSize: 12.5, color: K.muted, marginBottom: 10 }}>Showcasing our new AI technology</div>
           <video src="/novourq-walk.mp4" poster="/novourq-walk-poster.jpg" controls playsInline preload="metadata" style={{ width: '100%', flex: 1, minHeight: 0, borderRadius: 12, objectFit: 'cover', display: 'block' }} />
         </div>
-        <div>{portfolioSlot ?? null}</div>
+        <div className="ai-fill">{portfolioSlot ?? null}</div>
         <div style={{ ...box, padding: 18, minWidth: 0 }}>
           <h3 style={head}>What Novourq Cloud AI did</h3>
           {act === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : act.length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No activity yet. Switch on a skill and its work will show here.</div> : act.map((x, i) => (
