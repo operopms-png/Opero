@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   // If the link was made for a named landlord or co-host, file the completed copy on their record (Documents), awaiting review.
   let leaseDocId: string | null = null
   // A link made for "a new landlord / co-host" registers them now. Which section they go in depends on the document:
-  // Estate agency agreement -> Estate Agency, Master Lease and Shortlet agreement -> Property Management, co-host links -> Co-hosts.
+  // Estate agency agreement -> Estate Agency, Master Lease and Shortlet agreement -> Property Management, Shortlet agreement and co-host links -> Co-hosts.
   // The property is created too when the form has an address. Field names below are the ones in our own PDFs.
   let propertyMade = ''
   if (l.subject && !l.subject_id) {
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       }
       const m = FM[file] || {}
       const val = (k: string) => { const v = m[k] ? values[m[k]] : ''; return typeof v === 'string' ? v.trim().slice(0, 300) : '' }
-      const kind = l.subject === 'cohost' ? 'cohost' : file === 'Agreement_Estate_Agency' ? 'ea_landlord' : 'landlord'
+      const kind = l.subject === 'cohost' || file === 'Agreement_Shortlet_Landlord' ? 'cohost' : file === 'Agreement_Estate_Agency' ? 'ea_landlord' : 'landlord'
       const tbl = kind === 'cohost' ? 'cohosts' : kind === 'ea_landlord' ? 'estate_landlords' : 'pm_landlords'
       const nm = (val('name') || String(b.name || '').trim()).slice(0, 120)
       let ex: any = (await db.from(tbl).select('id,name').eq('user_id', l.business_id).ilike('email', email).limit(1).maybeSingle()).data

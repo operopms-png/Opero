@@ -12,7 +12,7 @@ const when = (d: string | null) => d ? new Date(d).toLocaleString('en-GB', { day
 
 const PACKS: { name: string; titles: string[] }[] = [
   { name: 'Landlord pack', titles: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Lease your property to us', 'Landlord portal guide', 'Shortlet landlord onboarding form'] },
-  { name: 'Co-host pack', titles: ['Welcome to NOVOURQ', 'Company brochure', 'Vacation rental landlord pack', 'Co-host portal guide'] },
+  { name: 'Co-host pack', titles: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Vacation rental landlord pack', 'Co-host portal guide', 'Cohost detail sheet', 'Agreement: Shortlet co-host'] },
   { name: 'Tenant pack', titles: ['Welcome to NOVOURQ', 'Furnished apartments', 'Tenants portal guide', 'Tenant deposit guide'] },
 ]
 
@@ -58,7 +58,7 @@ export default function ServicesPack() {
             <span style={{ fontSize: 13, color: '#475467' }}>Quick pick:</span>
             {PACKS.map(k => <button key={k.name} style={btn('ghost', true)} onClick={() => { setSel(docs.filter(x => x.active && k.titles.includes(x.title)).map(x => x.id)); setName(n => n || k.name); if (k.name === 'Landlord pack') setReg('landlord'); if (k.name === 'Co-host pack') setReg('cohost') }}>{k.name}</button>)}
           </div>
-          <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 8 }}>Landlord pack ticks the welcome documents and onboarding form. Then tick the one Agreement that fits this landlord (Master Lease, Shortlet Landlord or Estate agency) before you send.</div>
+          <div style={{ fontSize: 12.5, color: '#667085', marginBottom: 8 }}>Landlord pack ticks the welcome documents and onboarding form. Then tick the one Agreement that fits this landlord (Master Lease or Estate agency) before you send. Co-host pack ticks the Shortlet co-host agreement and the Cohost detail sheet.</div>
           {docs.length === 0 ? <Empty>No documents yet. Press Add document and upload a PDF.</Empty> : (
             <div style={{ display: 'grid', gap: 8 }}>
               {docs.map(x => (

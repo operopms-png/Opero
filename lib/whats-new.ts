@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Co-host pack updated', text: 'Marketing, Services Pack: Co-host pack now ticks the Welcome letter, the Shortlet co-host agreement and the new Cohost detail sheet, which co-hosts fill in and submit on their link.' },
   { date: '2026-11-11', title: 'Submissions register and file the landlord', text: 'Services Pack: choose Who is this link for? A new landlord or co-host is registered when they submit (name and email), and their property is created from the address on the form (Estate agency agreement goes to Estate Agency, Master Lease and Shortlet to Property Management), and their completed documents are filed on their Documents record for you to approve.' },
   { date: '2026-11-11', title: 'Email when a landlord submits', text: 'Services Pack: the team is emailed with the completed PDF attached whenever a landlord or co-host submits a document from their link.' },
   { date: '2026-11-11', title: 'Fill in and submit on the link', text: 'Marketing, Services Pack: landlords now fill in the agreements and onboarding form right on their link and press Submit, and you open the completed copy under Submitted documents.' },
