@@ -82,7 +82,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
-  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(fromPricing ? 'signup' : 'login')
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(fromPricing && !success ? 'signup' : 'login')
   const [lifetimeLeft, setLifetimeLeft] = useState<number | null>(null)
   useEffect(() => { fetch('/api/lifetime-spots').then(r => r.json()).then(d => { if (typeof d.left === 'number') setLifetimeLeft(d.left) }).catch(() => {}) }, [])
   const [selectedPlan, setSelectedPlan] = useState(fromPricing ? initialPlan : '')
@@ -286,17 +286,8 @@ function LoginForm() {
           {/* Success plan banner */}
           {success && (
             <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '12px 16px', marginBottom: 24 }}>
-              {initialPlan === 'lifetime' ? (
-                <>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>✅ Payment successful!</div>
-                  <div style={{ fontSize: 12, color: '#6B7280' }}>Full access to every module is now unlocked</div>
-                </>
-              ) : (
-                <>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>✅ Plan selected!</div>
-                  <div style={{ fontSize: 12, color: '#6B7280' }}>14-day free trial active · No credit card charged yet</div>
-                </>
-              )}
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 2 }}>{initialPlan === 'lifetime' ? 'Payment successful' : 'Your plan is active'}</div>
+              <div style={{ fontSize: 12, color: '#6B7280' }}>{initialPlan === 'lifetime' ? 'Full access to every module is unlocked. ' : 'Your 14-day free trial has started and you have not been charged. '}We have emailed you a link to confirm your address. Click it, then sign in below to open your dashboard.</div>
             </div>
           )}
 
