@@ -210,18 +210,18 @@ function LoginForm() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", display: 'flex' }}>
+    <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter', -apple-system, sans-serif", display: 'flex', flexWrap: 'wrap' }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');`}</style>
 
       {/* Left — Plan selector (only on signup) */}
       {mode === 'signup' && (
-        <div style={{ width: 420, background: '#fff', borderRight: '1px solid #E4E7EC', padding: '40px 32px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: '100%', maxWidth: 420, flexShrink: 0, boxSizing: 'border-box', background: '#fff', borderRight: '1px solid #E4E7EC', padding: '40px 32px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
             <img src="/novouq-logo.jpg" alt="NOVOURQ" style={{ width: 28, height: 28, objectFit: 'contain' }} />
             <span style={{ fontSize: 16, fontWeight: 700, color: '#323338' }}>NOVOURQ</span>
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Choose your plan</div>
-          <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>14-day free trial · Card required, you are not charged until the trial ends, cancel anytime</div>
+          <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>{selectedPlan === 'lifetime' ? 'One payment today, no further bills' : '14-day free trial · Card required, you are not charged until the trial ends, cancel anytime'}</div>
 
           <div style={{ display: 'flex', background: '#F2F4F7', borderRadius: 10, padding: 4, marginBottom: 16 }}>
             {PLANS.map(plan => (
@@ -236,7 +236,7 @@ function LoginForm() {
             ))}
           </div>
 
-          {(() => {
+          {selectedPlan !== 'lifetime' && (() => {
             const plan = selectedPlan === 'lifetime' ? LIFETIME : (PLANS.find(p => p.id === selectedPlan) || PLANS[0])
             return (
               <div style={{ padding: '16px 18px', borderRadius: 12, border: `2px solid ${plan.color}`, background: plan.color + '08' }}>
@@ -270,6 +270,7 @@ function LoginForm() {
                 <span><span style={{ fontSize: 18, fontWeight: 700, color: '#323338' }}>£175.50</span><span style={{ fontSize: 12, color: '#98A2B3' }}> one-time</span></span>
               </div>
               <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>Pay once, use it for life. First 10 clients only{lifetimeLeft !== null ? `, ${lifetimeLeft} left` : ''}.</div>
+              {selectedPlan === 'lifetime' && <div style={{ fontSize: 12, color: '#667085', marginTop: 8 }}>Everything in the monthly and annual plans. No monthly or yearly bill, ever. No free trial, you pay today.</div>}
             </div>
           )}
 
@@ -279,7 +280,7 @@ function LoginForm() {
       )}
 
       {/* Right — Auth form */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+      <div style={{ flex: '1 1 340px', minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E4E7EC', padding: 40, width: '100%', maxWidth: 400 }}>
 
           {/* Success plan banner */}
