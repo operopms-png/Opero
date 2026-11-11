@@ -70,8 +70,11 @@ export async function POST(req: NextRequest) {
   const alertTo = (await alertEmail(p.business_id)) ?? undefined
   if (alertTo) await sendEmail(alertTo, `New meeting request: ${name}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5"><p><b>New meeting request from the booking link</b></p><p style="white-space:pre-wrap">${esc(summary)}</p><p><a href="${SITE_URL}/staff-centre/meetings">Open Meetings in the portal</a></p></div>`, email).catch(() => {})
 
-  // Confirmation to the client
-  await sendEmail(email, 'We’ve received your meeting request', `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for requesting a meeting with NOVOURQ Group${topic ? ` about <b>${esc(topic.toLowerCase())}</b>` : ''}. A member of our team will be in touch shortly to confirm a time${when ? ` — we’ve noted you prefer <b>${esc(when)}</b>` : ''}.</p><p>If anything changes, just reply to this email or call us on 020 7164 0329.</p><p>Kind regards,<br>NOVOURQ Group</p></div>`, alertTo).catch(() => {})
+  // Confirmation to the client, signed with the company's own name
+  const isDefault = p.code === 'sangsters'
+  const { data: cs } = await serviceClient.from('invoice_settings').select('company_name').eq('business_id', p.business_id).maybeSingle()
+  const co = isDefault ? 'NOVOURQ Group' : ((cs?.company_name as string | undefined)?.trim() || 'our team')
+  await sendEmail(email, 'We’ve received your meeting request', `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#323338"><p>Dear ${esc(name.split(' ')[0])},</p><p>Thank you for requesting a meeting with ${esc(co)}${topic ? ` about <b>${esc(topic.toLowerCase())}</b>` : ''}. A member of our team will be in touch shortly to confirm a time${when ? ` — we’ve noted you prefer <b>${esc(when)}</b>` : ''}.</p><p>If anything changes, just reply to this email${isDefault ? ' or call us on 020 7164 0329' : ''}.</p><p>Kind regards,<br>${esc(co)}</p></div>`, alertTo).catch(() => {})
 
   return NextResponse.json({ success: true, id: row.id })
 }

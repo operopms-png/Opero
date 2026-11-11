@@ -76,14 +76,17 @@ export default function MeetingsPage() {
 // The one link to share with clients (email footer, website, WhatsApp, socials).
 function BookingLink() {
   const [copied, setCopied] = useState(false)
-  const url = typeof window !== 'undefined' ? `${window.location.origin}/meeting` : '/meeting'
+  const [code, setCode] = useState<string | null>(null)
+  useEffect(() => { (async () => { const { data: { session } } = await supabase.auth.getSession(); const r = await fetch('/api/meeting-link', { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } }); const d = await r.json().catch(() => ({})); if (d.code) setCode(d.code) })() }, [])
+  const path = code ? `/meeting?code=${code}` : '/meeting'
+  const url = typeof window !== 'undefined' ? `${window.location.origin}${path}` : path
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 8 }}>
       <span style={{ fontSize: 12.5, color: BRAND.muted }}>Client booking link:</span>
       <code style={{ fontSize: 12.5, background: '#F6F7FB', border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '3px 8px', color: BRAND.ink }}>{url.replace(/^https?:\/\//, '')}</code>
       <button onClick={() => { navigator.clipboard?.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
         style={{ border: 'none', background: BRAND.goldDark, color: '#fff', borderRadius: 4, padding: '5px 12px', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{copied ? 'Copied ✓' : 'Copy'}</button>
-      <a href="/meeting" target="_blank" rel="noreferrer" style={{ fontSize: 12.5, color: BRAND.goldDark, textDecoration: 'none' }}>Open ↗</a>
+      <a href={path} target="_blank" rel="noreferrer" style={{ fontSize: 12.5, color: BRAND.goldDark, textDecoration: 'none' }}>Open ↗</a>
     </div>
   )
 }

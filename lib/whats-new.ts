@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-11', title: 'Your own meeting booking link', text: 'Each company now has its own client booking link on the Meetings page, so meeting requests from your link land in your own Meetings board and your confirmation email carries your company name.' },
   { date: '2026-11-11', title: 'Novourq Cloud AI reads your records', text: 'Novourq Cloud AI now looks at today\'s rent, leases, maintenance, compliance, check-ins and invoices, so questions like "what is overdue this week?" get a real answer.' },
   { date: '2026-11-11', title: '3 properties included', text: 'Every plan includes 3 properties, and each extra property is £12 a month added to your plan; Properties shows how many you have used, and adding a 4th asks you to confirm the £12.' },
   { date: '2026-11-11', title: 'Your plan in Settings', text: 'Settings → Payments now shows your NOVOURQ plan, status and trial days left, with a Manage billing button for your card, invoices and cancelling.' },

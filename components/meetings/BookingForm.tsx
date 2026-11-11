@@ -8,7 +8,9 @@ const GOLD = '#89CFF0', GOLD_DARK = '#89CFF0', BROWN = '#89CFF0', CREAM = '#FBF4
 const TYPES = ['Phone call', 'Video call', 'In person']
 const PARTS = ['Morning', 'Afternoon', 'Evening', 'Any time']
 
-export default function BookingForm({ code }: { code?: string }) {
+export default function BookingForm({ code: codeProp }: { code?: string }) {
+  // The link a company shares is /meeting?code=<its code>, so requests reach that company
+  const code = codeProp ?? (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('code') ?? undefined : undefined)
   const [page, setPage] = useState<any>(null)
   const [err, setErr] = useState('')
   const [f, setF] = useState({ name: '', email: '', phone: '', topic: '', meeting_type: 'Phone call', date: '', part: 'Any time', when_note: '', message: '', website: '' })
