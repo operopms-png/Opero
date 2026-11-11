@@ -1,4 +1,5 @@
 'use client'
+import { cur } from '@/lib/company-currency'
 import LandlordOnboarding from '../../components/landlords/LandlordOnboarding'
 import UtilityTracker from '../../components/pm/UtilityTracker'
 import RecordTab from '@/components/pm/RecordTab'
@@ -284,7 +285,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           {[0,0.25,0.5,0.75,1].map((p,i)=>(
             <g key={i}>
               <line x1={PAD} y1={y(maxVal*p)} x2={W-PAD} y2={y(maxVal*p)} stroke='#F2F4F7' strokeWidth='1'/>
-              <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{'£'}{(maxVal*p).toFixed(0)}</text>
+              <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{cur()}{(maxVal*p).toFixed(0)}</text>
             </g>
           ))}
           {months.map((m,i)=>(
@@ -312,18 +313,18 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           return(
             <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
               <span style={{fontWeight:500,color:'#323338'}}>{d.m} {year}</span>
-              <span style={{color:'#10B981'}}>£{d.inflow.toLocaleString()}</span>
-              <span style={{color:'#EF4444'}}>£{d.outflow.toLocaleString()}</span>
-              <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
-              <span>£{cumulative.toLocaleString()}</span>
+              <span style={{color:'#10B981'}}>{cur()}{d.inflow.toLocaleString()}</span>
+              <span style={{color:'#EF4444'}}>{cur()}{d.outflow.toLocaleString()}</span>
+              <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>{cur()}{d.net.toLocaleString()}</span>
+              <span>{cur()}{cumulative.toLocaleString()}</span>
             </div>
           )
         })}
         <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338',gap:8,borderTop:'2px solid #E4E7EC'}}>
           <span>TOTAL {year}</span>
-          <span style={{color:'#10B981'}}>£{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
-          <span style={{color:'#EF4444'}}>£{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
-          <span>£{cfData.reduce((s,d)=>s+d.net,0).toLocaleString()}</span>
+          <span style={{color:'#10B981'}}>{cur()}{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
+          <span style={{color:'#EF4444'}}>{cur()}{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
+          <span>{cur()}{cfData.reduce((s,d)=>s+d.net,0).toLocaleString()}</span>
           <span>—</span>
         </div>
       </div>
@@ -1271,8 +1272,8 @@ function PMPageInner() {
               {[
                 {label:'Total Properties',value:properties.length,sub:`${units.length} units total`},
                 {label:'Occupied Units',value:occupiedUnits,sub:`${occupancyRate}% occupancy`,green:true},
-                {label:'Rent Collected',value:`£${totalCollected.toLocaleString()}`,sub:'This month',green:true},
-                {label:'Arrears',value:`£${arrears.toLocaleString()}`,sub:`${payments.filter(p=>p.status==='overdue').length} overdue`,red:true},
+                {label:'Rent Collected',value:`${cur()}${totalCollected.toLocaleString()}`,sub:'This month',green:true},
+                {label:'Arrears',value:`${cur()}${arrears.toLocaleString()}`,sub:`${payments.filter(p=>p.status==='overdue').length} overdue`,red:true},
               ].map((c:any)=>(
                 <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
@@ -1300,7 +1301,7 @@ function PMPageInner() {
                 <div style={{fontSize:12,fontWeight:700,color:'#2F6DB5',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8}}>Short Stays</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
                   <div style={shortCard}><div style={shortLabel}>Short stay properties</div><div style={{fontSize:26,fontWeight:800,color:'#2F6DB5',letterSpacing:'-0.02em'}}>{strProperties.length}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Total active</div></div>
-                  <div style={shortCard}><div style={shortLabel}>Revenue this month</div><div style={{fontSize:26,fontWeight:800,color:'#1D4E89',letterSpacing:'-0.02em'}}>£{monthRevenue.toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Occupancy {monthOcc}%</div></div>
+                  <div style={shortCard}><div style={shortLabel}>Revenue this month</div><div style={{fontSize:26,fontWeight:800,color:'#1D4E89',letterSpacing:'-0.02em'}}>{cur()}{monthRevenue.toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Occupancy {monthOcc}%</div></div>
                   <div style={shortCard}><div style={shortLabel}>Next check-in</div><div style={{fontSize:20,fontWeight:800,color:'#323338',letterSpacing:'-0.02em'}}>{nextIn?.check_in??'None'}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>{nextIn?.properties?.name??'No upcoming check-ins'}</div></div>
                   <div style={shortCard}><div style={shortLabel}>Cleans and maintenance</div><div style={{fontSize:26,fontWeight:800,color:'#F59E0B',letterSpacing:'-0.02em'}}>{cleanPending} / {maintOpen}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Pending cleans / open tickets</div></div>
                 </div>
@@ -1312,7 +1313,7 @@ function PMPageInner() {
                 {label:'Cleanings This Week',value:`${cleaningsWeek.length}`,sub:`${cleaningsUnassigned} not assigned`},
                 {label:'Rented Properties',value:`${rentedPropertyIds.size} / ${properties.length}`,sub:`${Math.max(properties.length-rentedPropertyIds.size,0)} available`},
                 {label:'Tenancies',value:`${activeLeases.length} / ${leases.length}`,sub:`${leases.length-activeLeases.length} not active`},
-                {label:'Annual Rent',value:`£${annualRent.toLocaleString()}`,sub:`£${Math.round(annualRent/12).toLocaleString()} / month`},
+                {label:'Annual Rent',value:`${cur()}${annualRent.toLocaleString()}`,sub:`${cur()}${Math.round(annualRent/12).toLocaleString()} / month`},
               ].map((c:any)=>(
                 <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
@@ -1336,7 +1337,7 @@ function PMPageInner() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
               {[
-                {label:'Monthly Rent Due',value:`£${totalDue.toLocaleString()}`,dark:true},
+                {label:'Monthly Rent Due',value:`${cur()}${totalDue.toLocaleString()}`,dark:true},
                 {label:'Expiring Leases',value:expiringLeases.length,sub:'Next 60 days',amber:true},
                 {label:'Open Maintenance',value:openMaintenance.length,sub:`${maintenance.filter(m=>m.priority==='urgent').length} urgent`},
                 {label:'Inspections Scheduled',value:inspections.filter(i=>i.status==='scheduled').length},
@@ -1362,7 +1363,7 @@ function PMPageInner() {
                   {label:'Expenses',value:periodExpenses,color:'#323338'},
                   {label:'Net profit',value:periodPaid-periodExpenses,color:periodPaid-periodExpenses>=0?'#10B981':'#EF4444'},
                 ].map(r=>(
-                  <div key={r.label} style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid #F2F4F7',fontSize:14}}><span style={{color:'#667085'}}>{r.label}</span><span style={{fontWeight:700,color:r.color}}>£{r.value.toLocaleString()}</span></div>
+                  <div key={r.label} style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid #F2F4F7',fontSize:14}}><span style={{color:'#667085'}}>{r.label}</span><span style={{fontWeight:700,color:r.color}}>{cur()}{r.value.toLocaleString()}</span></div>
                 ))}
                 <div style={{fontSize:11,color:'#98A2B3',marginTop:10}}>Rent paid counts payments with a paid date in the period. Late rent counts overdue payments with a due date in the period.</div>
               </div>
@@ -1447,7 +1448,7 @@ function PMPageInner() {
                       <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{p.pm_tenants?.name??'—'}</div>
                       <div style={{fontSize:11,color:'#667085'}}>{p.pm_properties?.name}</div>
                     </div>
-                    <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>£{(p.amount??0).toLocaleString()}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:'#EF4444'}}>{cur()}{(p.amount??0).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -1517,7 +1518,7 @@ function PMPageInner() {
                   <span style={{fontWeight:500,color:'#323338'}}>{p.name}</span>
                   <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:badge.bg,color:badge.fg,justifySelf:'start'}}>{badge.label}</span>
-                  <span style={{display:'inline-flex',alignItems:'center',gap:10}}><span style={{display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms||'—'}</span><span style={{display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>{p.bathrooms||'—'}</span><span>£{(p.monthly_income??0).toLocaleString()}/mo</span></span>
+                  <span style={{display:'inline-flex',alignItems:'center',gap:10}}><span style={{display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms||'—'}</span><span style={{display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>{p.bathrooms||'—'}</span><span>{cur()}{(p.monthly_income??0).toLocaleString()}/mo</span></span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p.status==='active'?'#D1FAE5':'#F3F4F6',color:p.status==='active'?'#059669':'#6B7280',display:'inline-block',width:'fit-content'}}>{p.status}</span>
                   <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('property',p)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
@@ -1535,7 +1536,7 @@ function PMPageInner() {
                   <span style={{fontWeight:500,color:'#323338'}}>{p.name}</span>
                   <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:badge.bg,color:badge.fg,justifySelf:'start'}}>{badge.label}</span>
-                  <span style={{fontSize:12,color:'#667085'}}>{p.nightly_rate?`£${p.nightly_rate} / night`:'No nightly rate'} · {channels}</span>
+                  <span style={{fontSize:12,color:'#667085'}}>{p.nightly_rate?`${cur()}${p.nightly_rate} / night`:'No nightly rate'} · {channels}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#F2F4F7',color:'#475467',display:'inline-block',width:'fit-content'}}>—</span>
                   <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('strProperty',{...p,nightly_rate:p.nightly_rate??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
@@ -1562,7 +1563,7 @@ function PMPageInner() {
                 <span>{u.pm_properties?.name??'—'}</span>
                 <span>{u.pm_buildings?.name??'—'}</span>
                 <span>{tenants.find(t=>t.unit_id===u.id)?.name??'—'}</span>
-                <span>£{(u.monthly_rent??0).toLocaleString()}</span>
+                <span>{cur()}{(u.monthly_rent??0).toLocaleString()}</span>
                 <span>{u.lease_end??'—'}</span>
                 <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:u.status==='occupied'?'#D1FAE5':'#F3F4F6',color:u.status==='occupied'?'#059669':'#6B7280'}}>{u.status}</span>
                 <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('unit',{...u,monthly_rent:u.monthly_rent??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_units',u.id,setUnits)} style={{fontSize:12,color:'#EF4444',background:'none',border:'none',cursor:'pointer'}}>Delete</button></span>
@@ -1737,7 +1738,7 @@ function PMPageInner() {
           return (
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
-              <div style={cardStyle}><div style={labelStyle}>Total revenue</div><div style={{fontSize:24,fontWeight:800,color:'#323338'}}>£{totalRevenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{width:'100%',marginTop:8}}><polyline points={shortPolylinePoints(monthly.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={cardStyle}><div style={labelStyle}>Total revenue</div><div style={{fontSize:24,fontWeight:800,color:'#323338'}}>{cur()}{totalRevenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{width:'100%',marginTop:8}}><polyline points={shortPolylinePoints(monthly.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
               <div style={cardStyle}><div style={labelStyle}>Total bookings</div><div style={{fontSize:24,fontWeight:800,color:'#323338'}}>{live.length}</div><svg viewBox="0 0 200 50" style={{width:'100%',marginTop:8}}><polyline points={shortPolylinePoints(monthly.map(m=>m.nights),200,50)} fill="none" stroke="#2F6DB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
               <div style={{...cardStyle,border:'1px solid #FEE2E2'}}><div style={labelStyle}>Cancellations</div><div style={{fontSize:24,fontWeight:800,color:'#EF4444'}}>{cancelled.length}</div><svg viewBox="0 0 200 50" style={{width:'100%',marginTop:8}}><polyline points={shortPolylinePoints(monthly.map(m=>cancelled.filter((b:any)=>b.check_in?.startsWith(m.key)).length),200,50)} fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/></svg></div>
             </div>
@@ -2022,7 +2023,7 @@ function PMPageInner() {
                 <div key={h.id} style={{display:'grid',gridTemplateColumns:cols,padding:'14px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center'}}>
                   <span style={{fontWeight:500,color:'#323338'}}>{h.pm_properties?.name??'—'}</span>
                   <span>{h.landlord_name??'—'}</span>
-                  <span>{h.rent_payable!=null?`£${Number(h.rent_payable).toLocaleString()} / mo`:'—'}</span>
+                  <span>{h.rent_payable!=null?`${cur()}${Number(h.rent_payable).toLocaleString()} / mo`:'—'}</span>
                   <span style={{color:left!=null&&left<90?'#DC2626':'#344054',fontWeight:left!=null&&left<90?600:400}}>{h.expiry_date??'—'}{left!=null&&left<90?` (${left<0?'expired':`${left} days`})`:''}</span>
                   <span>{h.break_date??'—'}</span>
                   <span>{h.sublet_consent??'—'}</span>
@@ -2268,7 +2269,7 @@ function PMPageInner() {
                   <span>{p.policy_type}</span>
                   <span>{p.insurer??'—'}</span>
                   <span>{p.policy_number??'—'}</span>
-                  <span>{p.premium!=null?`£${Number(p.premium).toLocaleString()}`:'—'}</span>
+                  <span>{p.premium!=null?`${cur()}${Number(p.premium).toLocaleString()}`:'—'}</span>
                   <span>{p.renewal_date??'—'}</span>
                   <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('insurance',{...p,premium:p.premium??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
@@ -2320,7 +2321,7 @@ function PMPageInner() {
                   <span style={{fontWeight:500,color:'#323338'}}>{x.referrer_name}{x.referrer_type?<span style={{color:'#98A2B3'}}> · {x.referrer_type}</span>:null}</span>
                   <span>{x.referred_name}</span>
                   <span>{x.status}</span>
-                  <span>{x.reward_amount!=null?`£${Number(x.reward_amount).toLocaleString()}`:'—'}</span>
+                  <span>{x.reward_amount!=null?`${cur()}${Number(x.reward_amount).toLocaleString()}`:'—'}</span>
                   <span>{x.reward_status}</span>
                   <span>{x.referral_date??'—'}</span>
                   <div style={{display:'flex',gap:8}}>
@@ -2468,7 +2469,7 @@ function PMPageInner() {
               <div style={cardStyle}><div style={kpiLabel}>Properties</div><div style={{fontSize:28,fontWeight:800,color:'#2F6DB5'}}>{strProperties.length}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Total active</div></div>
               <div style={cardStyle}><div style={kpiLabel}>Cleaning tasks</div><div style={{fontSize:28,fontWeight:800,color:'#10B981'}}>{cleaningPending}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Pending</div></div>
               <div style={cardStyle}><div style={kpiLabel}>Maintenance</div><div style={{fontSize:28,fontWeight:800,color:'#F59E0B'}}>{maintOpen}</div><div style={{fontSize:12,color:'#98A2B3',marginTop:4}}>Open tickets</div></div>
-              <div style={{...cardStyle,background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3'}}><div style={{...kpiLabel,color:'#1D4E89'}}>Revenue</div><div style={{fontSize:28,fontWeight:800,color:'#1D4E89'}}>£{thisMonth.revenue.toLocaleString()}</div><div style={{fontSize:12,color:'#1D4E89',marginTop:4}}>This month</div></div>
+              <div style={{...cardStyle,background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3'}}><div style={{...kpiLabel,color:'#1D4E89'}}>Revenue</div><div style={{fontSize:28,fontWeight:800,color:'#1D4E89'}}>{cur()}{thisMonth.revenue.toLocaleString()}</div><div style={{fontSize:12,color:'#1D4E89',marginTop:4}}>This month</div></div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
               <div style={cardStyle}>
@@ -2502,7 +2503,7 @@ function PMPageInner() {
               <WeatherWidget />
               <div style={cardStyle}>
                 <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:14}}>Quick stats</div>
-                <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Average nightly rate</span><span style={{fontWeight:600,color:'#323338'}}>£{avgRate}</span></div>
+                <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Average nightly rate</span><span style={{fontWeight:600,color:'#323338'}}>{cur()}{avgRate}</span></div>
                 <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Total bookings</span><span style={{fontWeight:600,color:'#323338'}}>{bookings.length}</span></div>
                 <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Confirmed</span><span style={{fontWeight:600,color:'#10B981'}}>{bookings.filter((b:any)=>b.status==='confirmed').length}</span></div>
                 <div style={{...row,justifyContent:'space-between'}}><span style={{color:'#667085'}}>Cancelled</span><span style={{fontWeight:600,color:'#EF4444'}}>{bookings.filter((b:any)=>b.status==='cancelled').length}</span></div>
@@ -2573,7 +2574,7 @@ function PMPageInner() {
                   <span>{l.pm_units?.unit_number??'—'}</span>
                   <span>{l.start_date??'—'}</span>
                   <span style={{color:daysLeft!==null&&daysLeft<=30?'#EF4444':'inherit'}}>{l.end_date??'—'}</span>
-                  <span>£{(l.monthly_rent??0).toLocaleString()}</span>
+                  <span>{cur()}{(l.monthly_rent??0).toLocaleString()}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:l.status==='active'?'#D1FAE5':'#FEE2E2',color:l.status==='active'?'#059669':'#DC2626'}}>{l.status}</span>
                   <span>{depositBadge??<span style={{fontSize:11,color:'#98A2B3'}}>—</span>}</span>
                   {fullySigned?(
@@ -2593,7 +2594,7 @@ function PMPageInner() {
         {tab==='Rent'&&(
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>
-              {[{label:'Collected',value:`£${totalCollected.toLocaleString()}`,color:'#10B981'},{label:'Pending',value:`£${totalDue.toLocaleString()}`,color:'#F59E0B'},{label:'Overdue',value:`£${arrears.toLocaleString()}`,color:'#EF4444'}].map(c=>(
+              {[{label:'Collected',value:`${cur()}${totalCollected.toLocaleString()}`,color:'#10B981'},{label:'Pending',value:`${cur()}${totalDue.toLocaleString()}`,color:'#F59E0B'},{label:'Overdue',value:`${cur()}${arrears.toLocaleString()}`,color:'#EF4444'}].map(c=>(
                 <div key={c.label} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:'20px 24px'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
                   <div style={{fontSize:26,fontWeight:800,color:c.color}}>{c.value}</div>
@@ -2610,7 +2611,7 @@ function PMPageInner() {
                   <span style={{fontWeight:500,color:'#323338'}}>{p.pm_tenants?.name??'—'}</span>
                   <span>{p.pm_properties?.name??'—'}</span>
                   <span>{p.category??'Rent'}</span>
-                  <span>£{(p.amount??0).toLocaleString()}</span>
+                  <span>{cur()}{(p.amount??0).toLocaleString()}</span>
                   <span>{p.due_date??'—'}</span>
                   <span style={{textTransform:'capitalize'}}>{(p.method??'').replace('_',' ')}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:p.status==='paid'?'#D1FAE5':p.status==='overdue'?'#FEE2E2':'#FEF3C7',color:p.status==='paid'?'#059669':p.status==='overdue'?'#DC2626':'#D97706'}}>{p.status}</span>
@@ -2716,10 +2717,10 @@ function PMPageInner() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
               {[
-                {label:'Rent paid',value:`£${periodPaid.toLocaleString()}`,color:'#1D4E89'},
-                {label:'Late rent',value:`£${periodLate.toLocaleString()}`,color:periodLate>0?'#EF4444':'#323338'},
-                {label:'Expenses',value:`£${periodExpenses.toLocaleString()}`,color:'#323338'},
-                {label:'Net profit',value:`£${(periodPaid-periodExpenses).toLocaleString()}`,color:periodPaid-periodExpenses>=0?'#10B981':'#EF4444'},
+                {label:'Rent paid',value:`${cur()}${periodPaid.toLocaleString()}`,color:'#1D4E89'},
+                {label:'Late rent',value:`${cur()}${periodLate.toLocaleString()}`,color:periodLate>0?'#EF4444':'#323338'},
+                {label:'Expenses',value:`${cur()}${periodExpenses.toLocaleString()}`,color:'#323338'},
+                {label:'Net profit',value:`${cur()}${(periodPaid-periodExpenses).toLocaleString()}`,color:periodPaid-periodExpenses>=0?'#10B981':'#EF4444'},
               ].map(c=>(
                 <div key={c.label} style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'20px 24px'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:6}}>{c.label}</div>
@@ -2757,7 +2758,7 @@ function PMPageInner() {
                   <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{v.pm_properties?.name??'—'}{v.room_type?` · ${v.room_type}`:''}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{v.type??''}{v.bedrooms?` · ${v.bedrooms} bed`:''}{v.description?` · ${v.description}`:''}</div>
                 </div>
-                <div style={{fontSize:13,color:'#323338'}}>{v.rent!=null?`£${Number(v.rent).toLocaleString()} / month`:'—'}</div>
+                <div style={{fontSize:13,color:'#323338'}}>{v.rent!=null?`${cur()}${Number(v.rent).toLocaleString()} / month`:'—'}</div>
                 <div style={{fontSize:12,color:'#667085'}}>Available {v.available_date??'—'}</div>
                 <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('vacancy',v)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_vacancies',v.id,setVacancies)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
@@ -2793,8 +2794,8 @@ function PMPageInner() {
                   <div style={{fontWeight:600,fontSize:14,color:'#323338'}}>{m.pm_properties?.name??'—'}{m.bank?` · ${m.bank}`:''}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{m.type??''}{m.rate!=null?` · ${m.rate}%`:''}{m.start_date?` · from ${m.start_date}`:''}{m.end_date?` to ${m.end_date}`:''}</div>
                 </div>
-                <div style={{fontSize:13,color:'#323338'}}>{m.amount!=null?`£${Number(m.amount).toLocaleString()}`:'—'}</div>
-                <div style={{fontSize:13,color:'#323338'}}>{m.monthly_payment!=null?`£${Number(m.monthly_payment).toLocaleString()} / month`:'—'}</div>
+                <div style={{fontSize:13,color:'#323338'}}>{m.amount!=null?`${cur()}${Number(m.amount).toLocaleString()}`:'—'}</div>
+                <div style={{fontSize:13,color:'#323338'}}>{m.monthly_payment!=null?`${cur()}${Number(m.monthly_payment).toLocaleString()} / month`:'—'}</div>
                 <span style={{display:'flex',gap:8,alignItems:'center'}}><button onClick={()=>openEdit('mortgage',m)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'3px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>del('pm_mortgages',m.id,setMortgages)} style={{fontSize:18,color:'#D1D5DB',background:'none',border:'none',cursor:'pointer'}}>×</button></span>
               </div>
             ))}
@@ -2809,7 +2810,7 @@ function PMPageInner() {
           return (
             <div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:16}}>
-                <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Deposits held</div><div style={{fontSize:24,fontWeight:800,color:'#1D4E89'}}>£{total.toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{depRows.length} tenancies</div></div>
+                <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Deposits held</div><div style={{fontSize:24,fontWeight:800,color:'#1D4E89'}}>{cur()}{total.toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{depRows.length} tenancies</div></div>
                 <div style={{background:'#fff',border:'1px solid #E4E7EC',borderRadius:12,padding:'18px 22px'}}><div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase'}}>Need attention</div><div style={{fontSize:24,fontWeight:800,color:problems?'#EF4444':'#10B981'}}>{problems}</div><div style={{fontSize:12,color:'#98A2B3'}}>missing scheme, protection or prescribed info</div></div>
               </div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
@@ -2817,7 +2818,7 @@ function PMPageInner() {
                 depRows.map((l:any)=>{ const issue = depIssue(l); return (
                   <div key={l.id} style={{display:'grid',gridTemplateColumns:'1.2fr 1fr auto 1fr 1fr auto',gap:14,alignItems:'center',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13}}>
                     <div><div style={{fontWeight:600,color:'#323338'}}>{l.pm_tenants?.name??'Tenant'}</div><div style={{fontSize:12,color:'#667085'}}>{l.pm_properties?.name??''}</div><button onClick={()=>openEdit('lease',{...l,monthly_rent:l.monthly_rent??'',deposit:l.deposit??''})} style={{fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 8px',cursor:'pointer',fontFamily:'inherit',marginTop:4}}>Edit lease</button></div>
-                    <div style={{color:'#323338'}}>£{Number(l.deposit).toLocaleString()}</div>
+                    <div style={{color:'#323338'}}>{cur()}{Number(l.deposit).toLocaleString()}</div>
                     <div style={{color:'#667085',fontSize:12}}>{l.deposit_scheme??'—'}{l.deposit_scheme_ref?` · ${l.deposit_scheme_ref}`:''}</div>
                     <div style={{color:'#667085',fontSize:12}}>Protected {l.deposit_protected_date??'—'}</div>
                     <div style={{color:'#667085',fontSize:12}}>Prescribed info {l.prescribed_info_given?(l.prescribed_info_date??'given'):'not given'}</div>
@@ -2867,7 +2868,7 @@ function PMPageInner() {
                   <span style={{color:'#667085'}}>{r.date}</span>
                   <span style={{color:'#323338'}}>{r.type} · {r.description}</span>
                   <span style={{color:'#667085'}}>{r.property}</span>
-                  <span style={{textAlign:'right',fontWeight:600,color:r.amount<0?'#B42318':'#067647'}}>£{r.amount.toFixed(2)}</span>
+                  <span style={{textAlign:'right',fontWeight:600,color:r.amount<0?'#B42318':'#067647'}}>{cur()}{r.amount.toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -3029,7 +3030,7 @@ function PMPageInner() {
             <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
-                <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                <div style={{fontSize:36,fontWeight:800}}>{cur()}{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{expenses.length} records</div>
               </div>
               <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#323338',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
@@ -3038,7 +3039,7 @@ function PMPageInner() {
               {['Property','Utilities','Staff','Overhead'].map(cat=>(
                 <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>{cat}</div>
-                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>{cur()}{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -3049,7 +3050,7 @@ function PMPageInner() {
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Cleaning supplies" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Amazon" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category</label><select value={expForm.category} onChange={e=>setExpForm({...expForm,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Property','Staff','Overhead','Maintenance','Marketing','Insurance','Utilities','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                  <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount ({cur()})</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={expForm.date} onChange={e=>setExpForm({...expForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Paid','Unpaid'].map(s=><option key={s}>{s}</option>)}</select></div>
                   <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
@@ -3069,7 +3070,7 @@ function PMPageInner() {
                   <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}<button onClick={()=>openExpenseEdit(e)} style={{marginLeft:8,fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'1px 8px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button></span>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{e.category}</span>
-                  <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>{cur()}{parseFloat(e.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{e.date||'—'}</span>
                   <select value={e.status} onChange={ev=>toggleExpensePaid(e.id, ev.target.value)} style={{fontSize:11,fontWeight:600,padding:'3px 6px',borderRadius:4,border:'none',cursor:'pointer',background:e.status==='Paid'?'#ECFDF5':'#FEF3C7',color:e.status==='Paid'?'#10B981':'#F59E0B'}}>
                     <option value="Paid">Paid</option>
@@ -3094,7 +3095,7 @@ function PMPageInner() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>TOTAL CASH BALANCE</div>
-                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
                   <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
                 </div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
@@ -3116,7 +3117,7 @@ function PMPageInner() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Type</label><select value={bankForm.type} onChange={e=>setBankForm({...bankForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Current','Savings','Business','Credit'].map(t=><option key={t}>{t}</option>)}</select></div>
-                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Balance (£)</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Balance ({cur()})</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
@@ -3127,7 +3128,7 @@ function PMPageInner() {
                 )}
                 {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>openBankEdit(a)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span></div><div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
+                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>openBankEdit(a)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span></div><div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                     <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
                   </div>
                 )}
@@ -3141,7 +3142,7 @@ function PMPageInner() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Account</label><select value={txForm.account} onChange={e=>setTxForm({...txForm,account:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}><option value="">Select account</option>{bankAccounts.map((a:any)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
-                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount ({cur()})</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Type</label><select value={txForm.type} onChange={e=>setTxForm({...txForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Income','Expense'].map(t=><option key={t}>{t}</option>)}</select></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category</label><select value={txForm.category} onChange={e=>setTxForm({...txForm,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Rent','Maintenance','Utilities','Insurance','Marketing','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
@@ -3158,7 +3159,7 @@ function PMPageInner() {
                     <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 110px 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                       <span style={{fontSize:12,color:'#344054'}}>{bankAccounts.find((a:any)=>a.id===t.account_id)?.name||'—'}</span>
-                      <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span>
                       <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600}}>{t.type}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactionStatus(t.id, t.status==='Reconciled'?'Unreconciled':'Reconciled')}>{t.status}</span>
                       <button onClick={()=>deleteTransaction(t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
@@ -3172,7 +3173,7 @@ function PMPageInner() {
                 {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No transactions waiting for review.</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                   <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#2F6DB5',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#2F6DB5',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                   </div>
                 ))}
               </div>
@@ -3199,8 +3200,8 @@ function PMPageInner() {
           <div>
             <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
-              <div style={{fontSize:36,fontWeight:800}}>£{thisMonth.net.toLocaleString()}</div>
-              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{thisMonth.income.toLocaleString()} income · £{thisMonth.allExpenses.toLocaleString()} costs</div>
+              <div style={{fontSize:36,fontWeight:800}}>{cur()}{thisMonth.net.toLocaleString()}</div>
+              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{cur()}{thisMonth.income.toLocaleString()} income · {cur()}{thisMonth.allExpenses.toLocaleString()} costs</div>
             </div>
             <div style={{display:'flex',gap:8,marginBottom:20,justifyContent:'space-between',alignItems:'center'}}>
               <div style={{display:'flex',gap:8}}>
@@ -3221,10 +3222,10 @@ function PMPageInner() {
               {pnlByMonth.map((row,i)=>(
                 <div key={row.month} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
                   <span>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]} {year}</span>
-                  <span style={{color:'#10B981'}}>£{row.income.toLocaleString()}</span>
-                  <span style={{color:'#EF4444'}}>£{row.propertyCosts.toLocaleString()}</span>
-                  <span style={{color:'#F59E0B'}}>£{row.allExpenses.toLocaleString()}</span>
-                  <span style={{fontWeight:600}}>£{row.net.toLocaleString()}</span>
+                  <span style={{color:'#10B981'}}>{cur()}{row.income.toLocaleString()}</span>
+                  <span style={{color:'#EF4444'}}>{cur()}{row.propertyCosts.toLocaleString()}</span>
+                  <span style={{color:'#F59E0B'}}>{cur()}{row.allExpenses.toLocaleString()}</span>
+                  <span style={{fontWeight:600}}>{cur()}{row.net.toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -3266,7 +3267,7 @@ function PMPageInner() {
                   </div>
                   {cfData.map(d=>(
                     <div key={d.m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                      <span>{d.m} {year}</span><span style={{color:'#10B981'}}>£{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{d.moneyOut.toLocaleString()}</span><span>£{d.net.toLocaleString()}</span><span>£{d.cumulative.toLocaleString()}</span>
+                      <span>{d.m} {year}</span><span style={{color:'#10B981'}}>{cur()}{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>{cur()}{d.moneyOut.toLocaleString()}</span><span>{cur()}{d.net.toLocaleString()}</span><span>{cur()}{d.cumulative.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -3291,7 +3292,7 @@ function PMPageInner() {
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:20}}>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:12,color:'#667085'}}>Rent Collected</span></div>
-                <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{totalCollected.toLocaleString()}</div>
+                <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{totalCollected.toLocaleString()}</div>
                 <div style={{fontSize:12,color:'#98A2B3'}}>{payments.filter((p:any)=>p.status==='paid').length} payments</div>
                 <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
                   const sorted=[...payments].filter((p:any)=>p.status==='paid').sort((a:any,b:any)=>(a.due_date||'').localeCompare(b.due_date||''))
@@ -3316,7 +3317,7 @@ function PMPageInner() {
               </div>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #FEE2E2',padding:24}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>⚠️</span><span style={{fontSize:12,color:'#667085'}}>Arrears</span></div>
-                <div style={{fontSize:32,fontWeight:800,color:'#EF4444',marginBottom:4}}>£{arrears.toLocaleString()}</div>
+                <div style={{fontSize:32,fontWeight:800,color:'#EF4444',marginBottom:4}}>{cur()}{arrears.toLocaleString()}</div>
                 <div style={{fontSize:12,color:'#98A2B3'}}>{payments.filter((p:any)=>p.status==='overdue').length} overdue</div>
                 <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
                   const sorted=[...payments].filter((p:any)=>p.status==='overdue').sort((a:any,b:any)=>(a.due_date||'').localeCompare(b.due_date||''))
@@ -3347,19 +3348,19 @@ function PMPageInner() {
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                 <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Owner vs Management Split</div>
                 <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                  <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Owner (80%)</span><span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>£{Math.round(totalCollected*0.8).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#10B981',borderRadius:4,width:'80%'}}></div></div></div>
-                  <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (20%)</span><span style={{fontSize:13,fontWeight:600,color:'#2F6DB5'}}>£{Math.round(totalCollected*0.2).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#2F6DB5',borderRadius:4,width:'20%'}}></div></div></div>
+                  <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Owner (80%)</span><span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>{cur()}{Math.round(totalCollected*0.8).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#10B981',borderRadius:4,width:'80%'}}></div></div></div>
+                  <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (20%)</span><span style={{fontSize:13,fontWeight:600,color:'#2F6DB5'}}>{cur()}{Math.round(totalCollected*0.2).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#2F6DB5',borderRadius:4,width:'20%'}}></div></div></div>
                 </div>
               </div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Upcoming Payments Due</div>
-                {payments.filter((p:any)=>p.status==='pending').length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No pending payments</div>):payments.filter((p:any)=>p.status==='pending').slice(0,4).map((p:any)=>(<div key={p.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338',fontWeight:500}}>{p.pm_tenants?.name??'Tenant'}</span><span style={{color:'#F59E0B',fontWeight:600}}>£{(p.amount??0).toLocaleString()}</span></div>))}
+                {payments.filter((p:any)=>p.status==='pending').length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No pending payments</div>):payments.filter((p:any)=>p.status==='pending').slice(0,4).map((p:any)=>(<div key={p.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338',fontWeight:500}}>{p.pm_tenants?.name??'Tenant'}</span><span style={{color:'#F59E0B',fontWeight:600}}>{cur()}{(p.amount??0).toLocaleString()}</span></div>))}
               </div>
               <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Recent Finance</div>
-                {payments.filter((p:any)=>p.status==='paid').slice(0,4).map((p:any)=>(<div key={p.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338'}}>{p.pm_tenants?.name??'Tenant'} — rent</span><span style={{color:'#10B981',fontWeight:600}}>+£{(p.amount??0).toLocaleString()}</span></div>))}
+                {payments.filter((p:any)=>p.status==='paid').slice(0,4).map((p:any)=>(<div key={p.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338'}}>{p.pm_tenants?.name??'Tenant'} — rent</span><span style={{color:'#10B981',fontWeight:600}}>+{cur()}{(p.amount??0).toLocaleString()}</span></div>))}
                 {payments.filter((p:any)=>p.status==='paid').length===0&&<div style={{color:'#98A2B3',fontSize:13}}>No recent payments</div>}
               </div>
             </div>
@@ -3380,7 +3381,7 @@ function PMPageInner() {
           return (
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
-              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#323338'}}>£{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
+              <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#323338'}}>{cur()}{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#059669'}}>{onTimeCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid On Time</div></div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#D97706'}}>{lateCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid Late</div></div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #FEE2E2',padding:20,textAlign:'center'}}><div style={{fontSize:24,fontWeight:700,color:'#EF4444'}}>{overdueCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Overdue</div></div>
@@ -3397,7 +3398,7 @@ function PMPageInner() {
                   <div><label style={lbl}>Landlord</label><select style={inp} value={lpForm.landlord_id} onChange={e=>setLpForm({...lpForm,landlord_id:e.target.value})}><option value="">Select landlord…</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
                   <div><label style={lbl}>Property</label><select style={inp} value={lpForm.property_id} onChange={e=>setLpForm({...lpForm,property_id:e.target.value})}><option value="">Select property…</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                   <div><label style={lbl}>Category</label><select style={inp} value={lpForm.category} onChange={e=>setLpForm({...lpForm,category:e.target.value})}>{['Rent Share','Utility Bill','Maintenance Reimbursement','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div><label style={lbl}>Amount (£)</label><input type="number" style={inp} value={lpForm.amount} onChange={e=>setLpForm({...lpForm,amount:e.target.value})} placeholder="0.00"/></div>
+                  <div><label style={lbl}>Amount ({cur()})</label><input type="number" style={inp} value={lpForm.amount} onChange={e=>setLpForm({...lpForm,amount:e.target.value})} placeholder="0.00"/></div>
                   <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={lpForm.due_date} onChange={e=>setLpForm({...lpForm,due_date:e.target.value})}/></div>
                   <div><label style={lbl}>Paid Date (leave blank if not yet paid)</label><input type="date" style={inp} value={lpForm.paid_date} onChange={e=>setLpForm({...lpForm,paid_date:e.target.value})}/></div>
                   <div style={{gridColumn:'span 2'}}><label style={lbl}>Notes</label><input style={inp} value={lpForm.notes} onChange={e=>setLpForm({...lpForm,notes:e.target.value})} placeholder="Optional"/></div>
@@ -3431,7 +3432,7 @@ function PMPageInner() {
                   <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{p.pm_landlords?.name??'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{p.pm_properties?.name??'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{p.category}</span>
-                  <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>£{parseFloat(p.amount).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{cur()}{parseFloat(p.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{p.due_date??'—'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{p.paid_date??'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:s.bg,color:s.color,display:'inline-block'}}>{s.label}</span>
@@ -3589,7 +3590,7 @@ function PMPageInner() {
                   {aiReads.map((r:any)=>{
                     const e = r.extracted || {}
                     const L: Record<string,string> = {tenant_id:'Photo ID',right_to_rent:'Right to rent',income:'Proof of income',bank_statement:'Bank statements'}
-                    const bits = [e.full_name&&`Name: ${e.full_name}`, e.document_type&&e.document_type, e.date_of_birth&&`DOB ${e.date_of_birth}`, e.expiry&&`Expires ${e.expiry}`, e.status&&e.status, e.share_code&&`Share code ${e.share_code}`, e.employer&&`Employer: ${e.employer}`, e.monthly_income!=null&&`Income £${e.monthly_income}/month`, e.statement_start&&`Statements ${e.statement_start} to ${e.statement_end??'?'}`, e.overdraft_seen===true&&'Overdraft seen', e.bounced_payments_seen===true&&'Bounced payments seen', e.gambling_seen===true&&'Gambling seen', e.income_regular===false&&'Income not regular'].filter(Boolean)
+                    const bits = [e.full_name&&`Name: ${e.full_name}`, e.document_type&&e.document_type, e.date_of_birth&&`DOB ${e.date_of_birth}`, e.expiry&&`Expires ${e.expiry}`, e.status&&e.status, e.share_code&&`Share code ${e.share_code}`, e.employer&&`Employer: ${e.employer}`, e.monthly_income!=null&&`Income ${cur()}${e.monthly_income}/month`, e.statement_start&&`Statements ${e.statement_start} to ${e.statement_end??'?'}`, e.overdraft_seen===true&&'Overdraft seen', e.bounced_payments_seen===true&&'Bounced payments seen', e.gambling_seen===true&&'Gambling seen', e.income_regular===false&&'Income not regular'].filter(Boolean)
                     return <div key={r.id} style={{fontSize:12,color:'#344054',padding:'5px 0',borderTop:'1px solid #DCE0FF'}}><b>{L[r.category]??r.category}</b> · {bits.length?bits.join(' · '):'Nothing could be read, check the file by hand'}</div>
                   })}
                 </div>
@@ -3620,13 +3621,13 @@ function PMPageInner() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:14}}>
                   <div><label style={lbl}>Statement Start</label><input type="date" style={inp} value={bankCheckForm.statement_start} onChange={e=>setBankCheckForm({...bankCheckForm,statement_start:e.target.value})}/></div>
                   <div><label style={lbl}>Statement End</label><input type="date" style={inp} value={bankCheckForm.statement_end} onChange={e=>setBankCheckForm({...bankCheckForm,statement_end:e.target.value})}/></div>
-                  <div><label style={lbl}>Declared Monthly Income (£)</label><input type="number" style={inp} value={bankCheckForm.declared_income} onChange={e=>setBankCheckForm({...bankCheckForm,declared_income:e.target.value})}/></div>
+                  <div><label style={lbl}>Declared Monthly Income ({cur()})</label><input type="number" style={inp} value={bankCheckForm.declared_income} onChange={e=>setBankCheckForm({...bankCheckForm,declared_income:e.target.value})}/></div>
                 </div>
 
                 {ratio && (
                   <div style={{marginBottom:16}}>
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                      <span style={{fontSize:12,color:'#667085'}}>Rent-to-Income Ratio (rent £{editingLease?.monthly_rent})</span>
+                      <span style={{fontSize:12,color:'#667085'}}>Rent-to-Income Ratio (rent {cur()}{editingLease?.monthly_rent})</span>
                       <span style={{fontSize:12,fontWeight:600,color:ratio.withinGuideline?'#10B981':'#EF4444'}}>{ratio.pct}% — {ratio.withinGuideline?'within guideline (max ~40%)':'above guideline (max ~40%)'}</span>
                     </div>
                     <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',width:Math.min(ratio.pct,100)+'%',background:ratio.withinGuideline?'#10B981':'#EF4444'}}/></div>
@@ -3703,7 +3704,7 @@ function PMPageInner() {
               <div><label style={lbl}>Country</label><input style={inp} value={form.country??''} onChange={e=>setForm({...form,country:e.target.value})}/></div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-              <div><label style={lbl}>Nightly rate (£)</label><input type="number" style={inp} value={form.nightly_rate??''} onChange={e=>setForm({...form,nightly_rate:e.target.value})}/></div>
+              <div><label style={lbl}>Nightly rate ({cur()})</label><input type="number" style={inp} value={form.nightly_rate??''} onChange={e=>setForm({...form,nightly_rate:e.target.value})}/></div>
               <div><label style={lbl}>Max guests</label><input type="number" style={inp} value={form.max_guests??''} onChange={e=>setForm({...form,max_guests:e.target.value})}/></div>
             </div>
             <div style={{fontSize:12,fontWeight:600,color:'#667085',textTransform:'uppercase',letterSpacing:'0.05em',marginTop:8}}>Guest information</div>
@@ -3896,8 +3897,8 @@ function PMPageInner() {
             </div>
             <div><label style={lbl}>Unit Number *</label><input style={inp} value={form.unit_number??''} onChange={e=>setForm({...form,unit_number:e.target.value})} placeholder="e.g. 1A, Unit 4, Flat 2"/></div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-              <div><label style={lbl}>Monthly Rent (£)</label><input type="number" style={inp} value={form.monthly_rent??''} onChange={e=>setForm({...form,monthly_rent:parseFloat(e.target.value)})}/></div>
-              <div><label style={lbl}>Deposit (£)</label><input type="number" style={inp} value={form.deposit??''} onChange={e=>setForm({...form,deposit:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Monthly Rent ({cur()})</label><input type="number" style={inp} value={form.monthly_rent??''} onChange={e=>setForm({...form,monthly_rent:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Deposit ({cur()})</label><input type="number" style={inp} value={form.deposit??''} onChange={e=>setForm({...form,deposit:parseFloat(e.target.value)})}/></div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Lease Start</label><input type="date" style={inp} value={form.lease_start??''} onChange={e=>setForm({...form,lease_start:e.target.value})}/></div>
@@ -3942,8 +3943,8 @@ function PMPageInner() {
               <div><label style={lbl}>End Date</label><input type="date" style={inp} value={form.end_date??''} onChange={e=>setForm({...form,end_date:e.target.value})}/></div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-              <div><label style={lbl}>Monthly Rent (£)</label><input type="number" style={inp} value={form.monthly_rent??''} onChange={e=>setForm({...form,monthly_rent:parseFloat(e.target.value)})}/></div>
-              <div><label style={lbl}>Deposit (£)</label><input type="number" style={inp} value={form.deposit??''} onChange={e=>setForm({...form,deposit:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Monthly Rent ({cur()})</label><input type="number" style={inp} value={form.monthly_rent??''} onChange={e=>setForm({...form,monthly_rent:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Deposit ({cur()})</label><input type="number" style={inp} value={form.deposit??''} onChange={e=>setForm({...form,deposit:parseFloat(e.target.value)})}/></div>
             </div>
             <FileUpload label="Tenancy Agreement (PDF)" value={form.document_url??''} onChange={url=>setForm({...form,document_url:url})} folder="lease-documents" />
 
@@ -3999,7 +4000,7 @@ function PMPageInner() {
               </select>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-              <div><label style={lbl}>Amount (£) *</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Amount ({cur()}) *</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Due Date</label><input type="date" style={inp} value={form.due_date??''} onChange={e=>setForm({...form,due_date:e.target.value})}/></div>
             </div>
             <div><label style={lbl}>Category</label>
@@ -4225,7 +4226,7 @@ function PMPageInner() {
               </div>
               <div><label style={lbl}>Insurer</label><input style={inp} value={form.insurer??''} onChange={e=>setForm({...form,insurer:e.target.value})}/></div>
               <div><label style={lbl}>Policy number</label><input style={inp} value={form.policy_number??''} onChange={e=>setForm({...form,policy_number:e.target.value})}/></div>
-              <div><label style={lbl}>Premium (£)</label><input type="number" style={inp} value={form.premium??''} onChange={e=>setForm({...form,premium:e.target.value})}/></div>
+              <div><label style={lbl}>Premium ({cur()})</label><input type="number" style={inp} value={form.premium??''} onChange={e=>setForm({...form,premium:e.target.value})}/></div>
               <div><label style={lbl}>Renewal date</label><input type="date" style={inp} value={form.renewal_date??''} onChange={e=>setForm({...form,renewal_date:e.target.value})}/></div>
             </div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
@@ -4253,7 +4254,7 @@ function PMPageInner() {
               <div><label style={lbl}>Opened</label><input type="date" style={inp} value={form.opened_date??''} onChange={e=>setForm({...form,opened_date:e.target.value})}/></div>
               <div><label style={lbl}>Next deadline</label><input type="date" style={inp} value={form.next_deadline??''} onChange={e=>setForm({...form,next_deadline:e.target.value})}/></div>
               <div><label style={lbl}>Deadline is for</label><input type="text" style={inp} value={form.deadline_note??''} onChange={e=>setForm({...form,deadline_note:e.target.value})}/></div>
-              <div><label style={lbl}>Amount (£)</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:e.target.value})}/></div>
+              <div><label style={lbl}>Amount ({cur()})</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:e.target.value})}/></div>
             </div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
           </div>
@@ -4279,7 +4280,7 @@ function PMPageInner() {
               <div><label style={lbl}>Their phone or email</label><input type="text" style={inp} value={form.referred_contact??''} onChange={e=>setForm({...form,referred_contact:e.target.value})}/></div>
               <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??''} onChange={e=>setForm({...form,status:e.target.value})}><option value="">Select…</option><option>New</option><option>In progress</option><option>Converted</option><option>Lost</option></select></div>
               <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.referral_date??''} onChange={e=>setForm({...form,referral_date:e.target.value})}/></div>
-              <div><label style={lbl}>Reward (£)</label><input type="number" style={inp} value={form.reward_amount??''} onChange={e=>setForm({...form,reward_amount:e.target.value})}/></div>
+              <div><label style={lbl}>Reward ({cur()})</label><input type="number" style={inp} value={form.reward_amount??''} onChange={e=>setForm({...form,reward_amount:e.target.value})}/></div>
               <div><label style={lbl}>Reward status</label><select style={{...inp,cursor:'pointer'}} value={form.reward_status??''} onChange={e=>setForm({...form,reward_status:e.target.value})}><option value="">Select…</option><option>Not due</option><option>Due</option><option>Paid</option></select></div>
             </div>
             <div><label style={lbl}>Notes</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.notes??''} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
@@ -4325,7 +4326,7 @@ function PMPageInner() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Landlord name</label><input style={inp} value={form.landlord_name??''} onChange={e=>setForm({...form,landlord_name:e.target.value})}/></div>
-              <div><label style={lbl}>Rent payable to landlord (£ / mo)</label><input type="number" style={inp} value={form.rent_payable??''} onChange={e=>setForm({...form,rent_payable:e.target.value})}/></div>
+              <div><label style={lbl}>Rent payable to landlord ({cur()} / mo)</label><input type="number" style={inp} value={form.rent_payable??''} onChange={e=>setForm({...form,rent_payable:e.target.value})}/></div>
               <div><label style={lbl}>Start date</label><input type="date" style={inp} value={form.start_date??''} onChange={e=>setForm({...form,start_date:e.target.value})}/></div>
               <div><label style={lbl}>Expiry date</label><input type="date" style={inp} value={form.expiry_date??''} onChange={e=>setForm({...form,expiry_date:e.target.value})}/></div>
               <div><label style={lbl}>Break date</label><input type="date" style={inp} value={form.break_date??''} onChange={e=>setForm({...form,break_date:e.target.value})}/></div>
@@ -4414,7 +4415,7 @@ function PMPageInner() {
               <div><label style={lbl}>Check out</label><input type="date" style={inp} value={form.check_out??''} onChange={e=>setForm({...form,check_out:e.target.value})}/></div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-              <div><label style={lbl}>Total amount (£)</label><input type="number" style={inp} value={form.total_amount??''} onChange={e=>setForm({...form,total_amount:e.target.value})}/></div>
+              <div><label style={lbl}>Total amount ({cur()})</label><input type="number" style={inp} value={form.total_amount??''} onChange={e=>setForm({...form,total_amount:e.target.value})}/></div>
               <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??'confirmed'} onChange={e=>setForm({...form,status:e.target.value})}><option value="confirmed">Confirmed</option><option value="pending">Pending</option><option value="cancelled">Cancelled</option></select></div>
             </div>
           </div>
@@ -4437,7 +4438,7 @@ function PMPageInner() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Type</label><input style={inp} value={form.type??''} onChange={e=>setForm({...form,type:e.target.value})} placeholder="Whole property / Room"/></div>
               <div><label style={lbl}>Room type</label><input style={inp} value={form.room_type??''} onChange={e=>setForm({...form,room_type:e.target.value})}/></div>
-              <div><label style={lbl}>Rent per month (£)</label><input type="number" style={inp} value={form.rent??''} onChange={e=>setForm({...form,rent:e.target.value})}/></div>
+              <div><label style={lbl}>Rent per month ({cur()})</label><input type="number" style={inp} value={form.rent??''} onChange={e=>setForm({...form,rent:e.target.value})}/></div>
               <div><label style={lbl}>Available from</label><input type="date" style={inp} value={form.available_date??''} onChange={e=>setForm({...form,available_date:e.target.value})}/></div>
               <div><label style={lbl}>Bedrooms</label><input style={inp} value={form.bedrooms??''} onChange={e=>setForm({...form,bedrooms:e.target.value})}/></div>
             </div>
@@ -4490,13 +4491,13 @@ function PMPageInner() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Bank / lender</label><input style={inp} value={form.bank??''} onChange={e=>setForm({...form,bank:e.target.value})}/></div>
               <div><label style={lbl}>Type</label><input style={inp} value={form.type??''} onChange={e=>setForm({...form,type:e.target.value})} placeholder="Mortgage / Loan"/></div>
-              <div><label style={lbl}>Amount (£)</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:e.target.value})}/></div>
+              <div><label style={lbl}>Amount ({cur()})</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:e.target.value})}/></div>
               <div><label style={lbl}>Interest rate (%)</label><input type="number" step="0.01" style={inp} value={form.rate??''} onChange={e=>setForm({...form,rate:e.target.value})}/></div>
               <div><label style={lbl}>Start date</label><input type="date" style={inp} value={form.start_date??''} onChange={e=>setForm({...form,start_date:e.target.value})}/></div>
               <div><label style={lbl}>End date</label><input type="date" style={inp} value={form.end_date??''} onChange={e=>setForm({...form,end_date:e.target.value})}/></div>
               <div><label style={lbl}>Term</label><input style={inp} value={form.duration??''} onChange={e=>setForm({...form,duration:e.target.value})} placeholder="e.g. 25 years"/></div>
-              <div><label style={lbl}>Monthly payment (£)</label><input type="number" style={inp} value={form.monthly_payment??''} onChange={e=>setForm({...form,monthly_payment:e.target.value})}/></div>
-              <div><label style={lbl}>Insurance (£ / month)</label><input type="number" style={inp} value={form.insurance??''} onChange={e=>setForm({...form,insurance:e.target.value})}/></div>
+              <div><label style={lbl}>Monthly payment ({cur()})</label><input type="number" style={inp} value={form.monthly_payment??''} onChange={e=>setForm({...form,monthly_payment:e.target.value})}/></div>
+              <div><label style={lbl}>Insurance ({cur()} / month)</label><input type="number" style={inp} value={form.insurance??''} onChange={e=>setForm({...form,insurance:e.target.value})}/></div>
             </div>
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>

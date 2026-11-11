@@ -32,3 +32,5 @@ create table if not exists tenant_check_reads (
 );
 alter table tenant_check_reads enable row level security;
 create index if not exists tenant_check_reads_tenant on tenant_check_reads(business_id, tenant_id, created_at desc);
+
+alter table invoice_settings add column if not exists currency_symbol text not null default '£';

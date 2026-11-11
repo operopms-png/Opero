@@ -9,6 +9,7 @@ import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
 import TeamBoard from '@/components/settings/TeamBoard'
 import SubmissionsPanel from '@/components/settings/SubmissionsPanel'
 import PrivacyPanel from '@/components/settings/PrivacyPanel'
+import CurrencyPanel from '@/components/settings/CurrencyPanel'
 import PhoneAssistantPanel from '@/components/settings/PhoneAssistantPanel'
 import VoicePanel from '@/components/settings/VoicePanel'
 import AiAuthorityPanel from '@/components/settings/AiAuthorityPanel'
@@ -23,6 +24,7 @@ const NAV = [
     {s:'AI Authority',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>},
     {s:'Voice',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>},
     {s:'Phone Assistant',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>},
+    {s:'Currency',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5c-.5-1-1.4-1.5-2.5-1.5-1.4 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2c-1.1 0-2-.5-2.5-1.5M12 6.5V8M12 16v1.5"/></svg>},
     {s:'Privacy & Data',i:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>},
   ]}
 ]
@@ -517,6 +519,7 @@ function SettingsInner() {
           {section==='Phone Assistant'&&<PhoneAssistantPanel />}
           {section==='Voice'&&<VoicePanel />}
           {section==='Privacy & Data'&&<PrivacyPanel />}
+          {section==='Currency'&&<CurrencyPanel />}
 
           {section==='System Messages'&&(<div>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>

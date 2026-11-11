@@ -1,4 +1,5 @@
 'use client'
+import { cur } from '@/lib/company-currency'
 import { useEffect, useState } from 'react'
 import TabBanner from '@/components/TabBanner'
 import { supabase, getAccountId } from '../../lib/supabase'
@@ -615,7 +616,7 @@ export default function STRPage() {
               <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Properties</div><div style={{ fontSize:28, fontWeight:800, color:'#2F6DB5' }}>{stats.properties}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Total active</div></div>
               <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Cleaning Tasks</div><div style={{ fontSize:28, fontWeight:800, color:'#10B981' }}>{stats.cleaning}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Pending today</div></div>
               <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Maintenance</div><div style={{ fontSize:28, fontWeight:800, color:'#F59E0B' }}>{stats.maintenance}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Open tickets</div></div>
-              <div style={{ background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)', border:'1px solid #C9DEF3', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#1D4E89', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Revenue</div><div style={{ fontSize:28, fontWeight:800, color:'#1D4E89' }}>£{stats.revenue.toLocaleString()}</div><div style={{ fontSize:12, color:'#1D4E89', marginTop:4 }}>This month</div></div>
+              <div style={{ background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)', border:'1px solid #C9DEF3', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#1D4E89', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Revenue</div><div style={{ fontSize:28, fontWeight:800, color:'#1D4E89' }}>{cur()}{stats.revenue.toLocaleString()}</div><div style={{ fontSize:12, color:'#1D4E89', marginTop:4 }}>This month</div></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
@@ -654,7 +655,7 @@ export default function STRPage() {
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
                 <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:14 }}>Quick Stats</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Avg nightly rate</span><span style={{ fontWeight:600, color:'#323338' }}>£{properties.length>0?Math.round(properties.reduce((s:number,p:any)=>s+(p.nightly_rate??0),0)/properties.length):0}</span></div>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Avg nightly rate</span><span style={{ fontWeight:600, color:'#323338' }}>{cur()}{properties.length>0?Math.round(properties.reduce((s:number,p:any)=>s+(p.nightly_rate??0),0)/properties.length):0}</span></div>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total bookings</span><span style={{ fontWeight:600, color:'#323338' }}>{bookings.length}</span></div>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Confirmed</span><span style={{ fontWeight:600, color:'#10B981' }}>{bookings.filter((b:any)=>b.status==='confirmed').length}</span></div>
                   <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Cancelled</span><span style={{ fontWeight:600, color:'#EF4444' }}>{bookings.filter((b:any)=>b.status==='cancelled').length}</span></div>
@@ -778,7 +779,7 @@ export default function STRPage() {
         {tab==='Analytics' && (
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:24 }}>
-              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div><div style={{ fontSize:24, fontWeight:800, color:'#323338' }}>£{stats.revenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
+              <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Revenue</div><div style={{ fontSize:24, fontWeight:800, color:'#323338' }}>{cur()}{stats.revenue.toLocaleString()}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.revenue),200,50)} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Total Bookings</div><div style={{ fontSize:24, fontWeight:800, color:'#323338' }}>{bookings.filter(b=>b.status!=='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(monthlyTrend.map(m=>m.nights),200,50)} fill="none" stroke="#2F6DB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
               <div style={{ background:'#fff', borderRadius:12, border:'1px solid #FEE2E2', padding:'20px 24px' }}><div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:8 }}>Cancellations</div><div style={{ fontSize:24, fontWeight:800, color:'#EF4444' }}>{bookings.filter(b=>b.status==='cancelled').length}</div><svg viewBox="0 0 200 50" style={{ width:'100%', marginTop:8 }}><polyline points={polylinePoints(Array.from({length:6},(_,i)=>bookings.filter((b:any)=>b.status==='cancelled'&&b.check_in?.startsWith(monthlyTrend[i]?.key)).length),200,50)} fill="none" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/></svg></div>
             </div>
@@ -1027,8 +1028,8 @@ export default function STRPage() {
             {/* Net Profit Banner */}
             <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>{new Date().toLocaleString('default',{month:'long',year:'numeric'}).toUpperCase()} · NET PROFIT</div>
-              <div style={{fontSize:36,fontWeight:800}}>£{(stats.revenue - expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
-              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{stats.revenue.toLocaleString()} income · £{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()} costs</div>
+              <div style={{fontSize:36,fontWeight:800}}>{cur()}{(stats.revenue - expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
+              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{cur()}{stats.revenue.toLocaleString()} income · {cur()}{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()} costs</div>
             </div>
             {/* Period tabs */}
             <div style={{display:'flex',gap:8,marginBottom:20}}>
@@ -1056,7 +1057,7 @@ export default function STRPage() {
                   })))} style={{padding:'7px 14px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:12,fontWeight:600,color:'#344054',cursor:'pointer',fontFamily:'inherit'}}>⬇ Export CSV</button>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-                  {[{l:'YTD Income',v:'£'+stats.revenue.toLocaleString(),c:'#323338'},{l:'YTD Costs',v:'£'+totalLLCosts.toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:'£'+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:'£'+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
+                  {[{l:'YTD Income',v:cur()+stats.revenue.toLocaleString(),c:'#323338'},{l:'YTD Costs',v:cur()+totalLLCosts.toLocaleString(),c:'#EF4444'},{l:'YTD Expenses',v:cur()+totalExpenses.toLocaleString(),c:'#F59E0B'},{l:'YTD Net Profit',v:cur()+(stats.revenue-totalExpenses).toLocaleString(),c:'#10B981'}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                       <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                       <div style={{fontSize:11,color:'#667085',fontWeight:600,textTransform:'uppercase'}}>{s.l}</div>
@@ -1070,18 +1071,18 @@ export default function STRPage() {
                   {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m,i)=>(
                     <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
                       <span>{m} {year}</span>
-                      <span style={{color:'#10B981'}}>£{pnlByMonth[i].income.toLocaleString()}</span>
-                      <span style={{color:'#EF4444'}}>£{pnlByMonth[i].llCosts.toLocaleString()}</span>
-                      <span style={{color:'#F59E0B'}}>£{pnlByMonth[i].costs.toLocaleString()}</span>
-                      <span style={{fontWeight:600}}>£{(pnlByMonth[i].income-pnlByMonth[i].costs).toLocaleString()}</span>
+                      <span style={{color:'#10B981'}}>{cur()}{pnlByMonth[i].income.toLocaleString()}</span>
+                      <span style={{color:'#EF4444'}}>{cur()}{pnlByMonth[i].llCosts.toLocaleString()}</span>
+                      <span style={{color:'#F59E0B'}}>{cur()}{pnlByMonth[i].costs.toLocaleString()}</span>
+                      <span style={{fontWeight:600}}>{cur()}{(pnlByMonth[i].income-pnlByMonth[i].costs).toLocaleString()}</span>
                     </div>
                   ))}
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338'}}>
                     <span>TOTAL {year}</span>
-                    <span style={{color:'#10B981'}}>£{stats.revenue.toLocaleString()}</span>
-                    <span style={{color:'#EF4444'}}>£{totalLLCosts.toLocaleString()}</span>
-                    <span style={{color:'#F59E0B'}}>£{totalExpenses.toLocaleString()}</span>
-                    <span>£{(stats.revenue-totalExpenses).toLocaleString()}</span>
+                    <span style={{color:'#10B981'}}>{cur()}{stats.revenue.toLocaleString()}</span>
+                    <span style={{color:'#EF4444'}}>{cur()}{totalLLCosts.toLocaleString()}</span>
+                    <span style={{color:'#F59E0B'}}>{cur()}{totalExpenses.toLocaleString()}</span>
+                    <span>{cur()}{(stats.revenue-totalExpenses).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -1126,7 +1127,7 @@ export default function STRPage() {
                   </div>
                   {cfData.map(d=>(
                     <div key={d.m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                      <span>{d.m} {year}</span><span style={{color:'#10B981'}}>£{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{d.moneyOut.toLocaleString()}</span><span>£{d.net.toLocaleString()}</span><span>£{d.cumulative.toLocaleString()}</span>
+                      <span>{d.m} {year}</span><span style={{color:'#10B981'}}>{cur()}{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>{cur()}{d.moneyOut.toLocaleString()}</span><span>{cur()}{d.net.toLocaleString()}</span><span>{cur()}{d.cumulative.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -1149,7 +1150,7 @@ export default function STRPage() {
             <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
-                <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                <div style={{fontSize:36,fontWeight:800}}>{cur()}{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{expenses.length} records</div>
               </div>
               <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#323338',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
@@ -1159,7 +1160,7 @@ export default function STRPage() {
               {['Property','Utilities','Staff','Overhead'].map(cat=>(
                 <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>{cat}</div>
-                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>{cur()}{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -1171,7 +1172,7 @@ export default function STRPage() {
                   <div><label style={lbl}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Office rent" style={inp}/></div>
                   <div><label style={lbl}>Vendor</label><input value={expForm.vendor} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. Landlord" style={inp}/></div>
                   <div><label style={lbl}>Category</label><select value={expForm.category} onChange={e=>setExpForm({...expForm,category:e.target.value})} style={inp}>{['Property','Staff','Overhead','Maintenance','Marketing','Insurance','Utilities','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div><label style={lbl}>Amount (£)</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+                  <div><label style={lbl}>Amount ({cur()})</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
                   <div><label style={lbl}>Date</label><input value={expForm.date} onChange={e=>setExpForm({...expForm,date:e.target.value})} type="date" style={inp}/></div>
                   <div><label style={lbl}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={inp}>{['Paid','Unpaid'].map(s=><option key={s}>{s}</option>)}</select></div>
                   <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
@@ -1202,7 +1203,7 @@ export default function STRPage() {
                   </div>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054',display:'inline-block'}}>{e.category}</span>
-                  <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>{cur()}{parseFloat(e.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{e.date||'—'}</span>
                   <select value={e.status} onChange={ev=>toggleOfficeExpensePaid(e.id, ev.target.value)} style={{fontSize:11,fontWeight:600,padding:'3px 6px',borderRadius:4,border:'none',cursor:'pointer',background:e.status==='Paid'?'#ECFDF5':'#FEF3C7',color:e.status==='Paid'?'#10B981':'#F59E0B'}}>
                     <option value="Paid">Paid</option>
@@ -1230,7 +1231,7 @@ export default function STRPage() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>TOTAL CASH BALANCE</div>
-                    <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
+                    <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
                     <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
                   </div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
@@ -1251,7 +1252,7 @@ export default function STRPage() {
                     {transactions.length===0?<div style={{textAlign:'center',padding:24,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.slice(0,5).map((t:any)=>(
                       <div key={t.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #F2F4F7'}}>
                         <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                        <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                        <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -1276,7 +1277,7 @@ export default function STRPage() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={lbl}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={inp}/></div>
                       <div><label style={lbl}>Type</label><select value={bankForm.type} onChange={e=>setBankForm({...bankForm,type:e.target.value})} style={inp}>{['Current','Savings','Business','Credit'].map(t=><option key={t}>{t}</option>)}</select></div>
-                      <div><label style={lbl}>Balance (£)</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+                      <div><label style={lbl}>Balance ({cur()})</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
                       <div><label style={lbl}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={inp}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
@@ -1300,7 +1301,7 @@ export default function STRPage() {
                           <div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div>
                           <span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>openBankEdit(a)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span>
                         </div>
-                        <div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div>
+                        <div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{parseFloat(a.balance||0).toLocaleString()}</div>
                         <div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div>
                       </div>
                     ))}
@@ -1313,7 +1314,7 @@ export default function STRPage() {
             {bankingTab==='Transactions'&&(
               <div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12,marginBottom:16}}>
-                  {[{l:'Imported',v:transactions.length},{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length},{l:'Needs Review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length},{l:'Reconciled',v:Math.round(transactions.filter((t:any)=>t.status==='Reconciled').length/Math.max(transactions.length,1)*100)+'%'},{l:'Total Amount',v:'£'+transactions.reduce((s:number,t:any)=>s+(t.type==='Income'?parseFloat(t.amount||0):0),0).toLocaleString()}].map((s:any)=>(
+                  {[{l:'Imported',v:transactions.length},{l:'Matched',v:transactions.filter((t:any)=>t.status==='Reconciled').length},{l:'Needs Review',v:transactions.filter((t:any)=>t.status==='Unreconciled').length},{l:'Reconciled',v:Math.round(transactions.filter((t:any)=>t.status==='Reconciled').length/Math.max(transactions.length,1)*100)+'%'},{l:'Total Amount',v:cur()+transactions.reduce((s:number,t:any)=>s+(t.type==='Income'?parseFloat(t.amount||0):0),0).toLocaleString()}].map((s:any)=>(
                     <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,textAlign:'center'}}>
                       <div style={{fontSize:20,fontWeight:700,color:'#323338',marginBottom:4}}>{s.v}</div>
                       <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
@@ -1326,7 +1327,7 @@ export default function STRPage() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={lbl}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={inp}/></div>
                       <div><label style={lbl}>Account</label><select value={txForm.account} onChange={e=>setTxForm({...txForm,account:e.target.value})} style={inp}><option value="">Select account</option>{bankAccounts.map((a:any)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
-                      <div><label style={lbl}>Amount (£)</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+                      <div><label style={lbl}>Amount ({cur()})</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
                       <div><label style={lbl}>Type</label><select value={txForm.type} onChange={e=>setTxForm({...txForm,type:e.target.value})} style={inp}>{['Income','Expense'].map(t=><option key={t}>{t}</option>)}</select></div>
                       <div><label style={lbl}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={inp}/></div>
                       <div><label style={lbl}>Category</label><select value={txForm.category} onChange={e=>setTxForm({...txForm,category:e.target.value})} style={inp}>{['Rent','Maintenance','Utilities','Insurance','Marketing','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
@@ -1349,7 +1350,7 @@ export default function STRPage() {
                     <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 120px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
                       <span style={{fontSize:12,color:'#344054'}}>{bankAccounts.find((a:any)=>a.id===t.account_id)?.name||'—'}</span>
-                      <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span>
                       <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600,display:'inline-block'}}>{t.type}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{t.category}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block',background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactionStatus(t.id, t.status==='Reconciled'?'Unreconciled':'Reconciled')}>{t.status}</span>
@@ -1380,7 +1381,7 @@ export default function STRPage() {
                   <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date} · {t.category}</div></div>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
-                      <span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                      <span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span>
                       <button onClick={()=>setTransactionStatus(t.id, 'Reconciled')} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#2F6DB5',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button>
                     </div>
                   </div>
@@ -1417,7 +1418,7 @@ export default function STRPage() {
                       {[0,0.25,0.5,0.75,1].map((p:number,i:number)=>(
                         <g key={i}>
                           <line x1={PAD} y1={y(maxVal*p)} x2={W-PAD} y2={y(maxVal*p)} stroke='#F2F4F7' strokeWidth='1'/>
-                          <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>£{(maxVal*p).toFixed(0)}</text>
+                          <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{cur()}{(maxVal*p).toFixed(0)}</text>
                         </g>
                       ))}
                       {months.map((m:string,i:number)=>(
@@ -1449,18 +1450,18 @@ export default function STRPage() {
                       return(
                         <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',alignItems:'center',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
                           <span style={{fontWeight:500,color:'#323338'}}>{d.m} {year}</span>
-                          <span style={{color:'#10B981',fontWeight:500}}>£{d.inflow.toLocaleString()}</span>
-                          <span style={{color:'#EF4444',fontWeight:500}}>£{d.outflow.toLocaleString()}</span>
-                          <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
-                          <span style={{color:cumulative>=0?'#323338':'#EF4444'}}>£{cumulative.toLocaleString()}</span>
+                          <span style={{color:'#10B981',fontWeight:500}}>{cur()}{d.inflow.toLocaleString()}</span>
+                          <span style={{color:'#EF4444',fontWeight:500}}>{cur()}{d.outflow.toLocaleString()}</span>
+                          <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>{cur()}{d.net.toLocaleString()}</span>
+                          <span style={{color:cumulative>=0?'#323338':'#EF4444'}}>{cur()}{cumulative.toLocaleString()}</span>
                         </div>
                       )
                     })}
                     <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338',gap:8,borderTop:'2px solid #E4E7EC'}}>
                       <span>TOTAL {year}</span>
-                      <span style={{color:'#10B981'}}>£{cfData.reduce((s:number,d:any)=>s+d.inflow,0).toLocaleString()}</span>
-                      <span style={{color:'#EF4444'}}>£{cfData.reduce((s:number,d:any)=>s+d.outflow,0).toLocaleString()}</span>
-                      <span>£{cfData.reduce((s:number,d:any)=>s+d.net,0).toLocaleString()}</span>
+                      <span style={{color:'#10B981'}}>{cur()}{cfData.reduce((s:number,d:any)=>s+d.inflow,0).toLocaleString()}</span>
+                      <span style={{color:'#EF4444'}}>{cur()}{cfData.reduce((s:number,d:any)=>s+d.outflow,0).toLocaleString()}</span>
+                      <span>{cur()}{cfData.reduce((s:number,d:any)=>s+d.net,0).toLocaleString()}</span>
                       <span>—</span>
                     </div>
                   </div>
@@ -1665,7 +1666,7 @@ export default function STRPage() {
               <div><label style={lbl}>Check Out</label><input type="date" style={inp} value={form.check_out??''} onChange={e=>setForm({...form,check_out:e.target.value})}/></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <div><label style={lbl}>Total Amount (£)</label><input type="number" style={inp} value={form.total_amount??''} onChange={e=>setForm({...form,total_amount:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Total Amount ({cur()})</label><input type="number" style={inp} value={form.total_amount??''} onChange={e=>setForm({...form,total_amount:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Status</label><select style={{...inp,cursor:'pointer'}} value={form.status??'confirmed'} onChange={e=>setForm({...form,status:e.target.value})}><option value="confirmed">Confirmed</option><option value="pending">Pending</option><option value="cancelled">Cancelled</option></select></div>
             </div>
           </div>
@@ -1686,7 +1687,7 @@ export default function STRPage() {
               <div><label style={lbl}>Country</label><input style={inp} value={form.country??''} onChange={e=>setForm({...form,country:e.target.value})}/></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <div><label style={lbl}>Nightly Rate (£)</label><input type="number" style={inp} value={form.nightly_rate??''} onChange={e=>setForm({...form,nightly_rate:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Nightly Rate ({cur()})</label><input type="number" style={inp} value={form.nightly_rate??''} onChange={e=>setForm({...form,nightly_rate:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Max Guests</label><input type="number" style={inp} value={form.max_guests??''} onChange={e=>setForm({...form,max_guests:parseInt(e.target.value)})}/></div>
             </div>
             <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:8 }}>AI Guest Agent Knowledge Base</div>

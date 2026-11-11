@@ -1,4 +1,5 @@
 'use client'
+import { cur } from '@/lib/company-currency'
 import { useEffect, useState } from 'react'
 import TabBanner from '@/components/TabBanner'
 import WeatherWidget from '@/components/WeatherWidget'
@@ -120,7 +121,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           {[0,0.25,0.5,0.75,1].map((p,i)=>(
             <g key={i}>
               <line x1={PAD} y1={y(maxVal*p)} x2={W-PAD} y2={y(maxVal*p)} stroke='#F2F4F7' strokeWidth='1'/>
-              <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{'£'}{(maxVal*p).toFixed(0)}</text>
+              <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{cur()}{(maxVal*p).toFixed(0)}</text>
             </g>
           ))}
           {months.map((m,i)=>(
@@ -148,18 +149,18 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           return(
             <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
               <span style={{fontWeight:500,color:'#323338'}}>{d.m} {year}</span>
-              <span style={{color:'#10B981'}}>£{d.inflow.toLocaleString()}</span>
-              <span style={{color:'#EF4444'}}>£{d.outflow.toLocaleString()}</span>
-              <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
-              <span>£{cumulative.toLocaleString()}</span>
+              <span style={{color:'#10B981'}}>{cur()}{d.inflow.toLocaleString()}</span>
+              <span style={{color:'#EF4444'}}>{cur()}{d.outflow.toLocaleString()}</span>
+              <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>{cur()}{d.net.toLocaleString()}</span>
+              <span>{cur()}{cumulative.toLocaleString()}</span>
             </div>
           )
         })}
         <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338',gap:8,borderTop:'2px solid #E4E7EC'}}>
           <span>TOTAL {year}</span>
-          <span style={{color:'#10B981'}}>£{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
-          <span style={{color:'#EF4444'}}>£{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
-          <span>£{cfData.reduce((s,d)=>s+d.net,0).toLocaleString()}</span>
+          <span style={{color:'#10B981'}}>{cur()}{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
+          <span style={{color:'#EF4444'}}>{cur()}{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
+          <span>{cur()}{cfData.reduce((s,d)=>s+d.net,0).toLocaleString()}</span>
           <span>—</span>
         </div>
       </div>
@@ -407,7 +408,7 @@ export default function DevPage() {
   function paidBackTo(investorId: string) { return investorPayments.filter(p => p.investor_id === investorId).reduce((s, p) => s + (p.amount ?? 0), 0) }
   function paybackLabel(i: any) {
     if (!i.payback_value) return 'No terms set'
-    return i.payback_type === 'fixed' ? `£${Number(i.payback_value).toLocaleString()} fixed fee, ${i.payback_frequency}` : `${i.payback_value}% payback, ${i.payback_frequency}`
+    return i.payback_type === 'fixed' ? `${cur()}${Number(i.payback_value).toLocaleString()} fixed fee, ${i.payback_frequency}` : `${i.payback_value}% payback, ${i.payback_frequency}`
   }
   const activeProjects = projects.filter(p => p.status === 'active').length
   const today = new Date().toISOString().split('T')[0]
@@ -464,7 +465,7 @@ export default function DevPage() {
             <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
-                <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                <div style={{fontSize:36,fontWeight:800}}>{cur()}{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{expenses.length} records</div>
               </div>
               <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:'#323338',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
@@ -473,7 +474,7 @@ export default function DevPage() {
               {['Property','Utilities','Staff','Overhead'].map(cat=>(
                 <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',marginBottom:8}}>{cat}</div>
-                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:22,fontWeight:700,color:'#323338'}}>{cur()}{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -488,7 +489,7 @@ export default function DevPage() {
                     {projects.map((p:any)=><option key={p.id} value={p.name}>{p.name}</option>)}
                   </select></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category</label><select value={expForm.category} onChange={e=>setExpForm({...expForm,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Property','Staff','Overhead','Maintenance','Marketing','Insurance','Utilities','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
-                  <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                  <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount ({cur()})</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={expForm.date} onChange={e=>setExpForm({...expForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                   <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Paid','Unpaid'].map(s=><option key={s}>{s}</option>)}</select></div>
                   <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
@@ -515,7 +516,7 @@ export default function DevPage() {
                   <span style={{fontSize:12,color:'#344054'}}>{e.property_name||<span style={{color:'#98A2B3'}}>Office</span>}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{e.category}</span>
-                  <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>{cur()}{parseFloat(e.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{e.date||'—'}</span>
                   <select value={e.status} onChange={ev=>toggleExpensePaid(e.id, ev.target.value)} style={{fontSize:11,fontWeight:600,padding:'3px 6px',borderRadius:4,border:'none',cursor:'pointer',background:e.status==='Paid'?'#ECFDF5':'#FEF3C7',color:e.status==='Paid'?'#10B981':'#F59E0B'}}>
                     <option value="Paid">Paid</option>
@@ -540,7 +541,7 @@ export default function DevPage() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>TOTAL CASH BALANCE</div>
-                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
                   <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
                 </div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
@@ -562,7 +563,7 @@ export default function DevPage() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays Business" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Type</label><select value={bankForm.type} onChange={e=>setBankForm({...bankForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Current','Savings','Business','Credit'].map(t=><option key={t}>{t}</option>)}</select></div>
-                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Balance (£)</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Balance ({cur()})</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
@@ -573,7 +574,7 @@ export default function DevPage() {
                 )}
                 {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#2F6DB5',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>openBankEdit(a)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span></div><div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
+                    {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>openBankEdit(a)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>deleteBankAccount(a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span></div><div style={{fontSize:28,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                     <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
                   </div>
                 )}
@@ -586,7 +587,7 @@ export default function DevPage() {
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent payment" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
-                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount ({cur()})</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Type</label><select value={txForm.type} onChange={e=>setTxForm({...txForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Income','Expense'].map(t=><option key={t}>{t}</option>)}</select></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                     </div>
@@ -601,7 +602,7 @@ export default function DevPage() {
                   {transactions.length===0?<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.map((t:any)=>(
                     <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 80px 100px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                      <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span>
                       <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600}}>{t.type}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:x.status==='Reconciled'?'Unreconciled':'Reconciled'}:x))}>{t.status}</span>
                       <button onClick={()=>setTransactions(transactions.filter((x:any)=>x.id!==t.id))} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
@@ -615,7 +616,7 @@ export default function DevPage() {
                 {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div><div style={{fontSize:13}}>No transactions waiting for review.</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                   <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#2F6DB5',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
+                    <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>setTransactions(transactions.map((x:any)=>x.id===t.id?{...x,status:'Reconciled'}:x))} style={{padding:'6px 14px',borderRadius:6,border:'none',background:'#2F6DB5',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                   </div>
                 ))}
               </div>
@@ -648,8 +649,8 @@ export default function DevPage() {
           <div>
             <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>BUDGET VS ACTUAL · ALL PROJECTS</div>
-              <div style={{fontSize:36,fontWeight:800}}>£{totalSpent.toLocaleString()} <span style={{fontSize:18,opacity:0.6,fontWeight:600}}>of £{totalBudget.toLocaleString()}</span></div>
-              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{totalInvestment.toLocaleString()} raised from {investors.length} investor{investors.length===1?'':'s'}</div>
+              <div style={{fontSize:36,fontWeight:800}}>{cur()}{totalSpent.toLocaleString()} <span style={{fontSize:18,opacity:0.6,fontWeight:600}}>of {cur()}{totalBudget.toLocaleString()}</span></div>
+              <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{cur()}{totalInvestment.toLocaleString()} raised from {investors.length} investor{investors.length===1?'':'s'}</div>
             </div>
 
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
@@ -667,19 +668,19 @@ export default function DevPage() {
               ):byCategory.map(c=>(
                 <div key={c.category} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',textTransform:'capitalize' as const}}>
                   <span>{c.category.replace('_',' ')}</span>
-                  <span>£{c.budgeted.toLocaleString()}</span>
-                  <span style={{color:c.actual>c.budgeted?'#EF4444':'#344054'}}>£{c.actual.toLocaleString()}</span>
-                  <span style={{fontWeight:600,color:c.budgeted-c.actual<0?'#EF4444':'#10B981'}}>£{(c.budgeted-c.actual).toLocaleString()}</span>
+                  <span>{cur()}{c.budgeted.toLocaleString()}</span>
+                  <span style={{color:c.actual>c.budgeted?'#EF4444':'#344054'}}>{cur()}{c.actual.toLocaleString()}</span>
+                  <span style={{fontWeight:600,color:c.budgeted-c.actual<0?'#EF4444':'#10B981'}}>{cur()}{(c.budgeted-c.actual).toLocaleString()}</span>
                 </div>
               ))}
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',padding:'12px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338'}}>
-                <span>TOTAL</span><span>£{totalBudget.toLocaleString()}</span><span>£{totalSpent.toLocaleString()}</span><span>£{(totalBudget-totalSpent).toLocaleString()}</span>
+                <span>TOTAL</span><span>{cur()}{totalBudget.toLocaleString()}</span><span>{cur()}{totalSpent.toLocaleString()}</span><span>{cur()}{(totalBudget-totalSpent).toLocaleString()}</span>
               </div>
             </div>
 
             <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:12}}>Investment Summary</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-              {[{l:'Total Raised',v:'£'+totalInvestment.toLocaleString(),c:'#10B981'},{l:'Investors',v:investors.length,c:'#323338'},{l:'Active Projects',v:activeProjects,c:'#2F6DB5'}].map((s:any)=>(
+              {[{l:'Total Raised',v:cur()+totalInvestment.toLocaleString(),c:'#10B981'},{l:'Investors',v:investors.length,c:'#323338'},{l:'Active Projects',v:activeProjects,c:'#2F6DB5'}].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
                   <div style={{fontSize:22,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
@@ -697,9 +698,9 @@ export default function DevPage() {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
               {[
                 { label:'Total Projects', value:projects.length, sub:`${activeProjects} active` },
-                { label:'Total Budget', value:`£${totalBudget.toLocaleString()}`, sub:'Across all projects', purple:true },
-                { label:'Total Spent', value:`£${totalSpent.toLocaleString()}`, sub:`${totalBudget>0?Math.round((totalSpent/totalBudget)*100):0}% of budget`, amber:true },
-                { label:'Total Investment', value:`£${totalInvestment.toLocaleString()}`, sub:`${investors.length} investors`, green:true },
+                { label:'Total Budget', value:`${cur()}${totalBudget.toLocaleString()}`, sub:'Across all projects', purple:true },
+                { label:'Total Spent', value:`${cur()}${totalSpent.toLocaleString()}`, sub:`${totalBudget>0?Math.round((totalSpent/totalBudget)*100):0}% of budget`, amber:true },
+                { label:'Total Investment', value:`${cur()}${totalInvestment.toLocaleString()}`, sub:`${investors.length} investors`, green:true },
               ].map((c:any) => (
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
@@ -787,7 +788,7 @@ export default function DevPage() {
                       <div style={{ fontWeight:500, color:'#323338' }}>{i.name}</div>
                       <div style={{ fontSize:11, color:'#667085' }}>{i.dev_projects?.name} · {i.equity_percentage}% equity</div>
                     </div>
-                    <span style={{ fontWeight:600, color:'#10B981' }}>£{(i.investment_amount??0).toLocaleString()}</span>
+                    <span style={{ fontWeight:600, color:'#10B981' }}>{cur()}{(i.investment_amount??0).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -812,8 +813,8 @@ export default function DevPage() {
                         </div>
                         <div style={{ fontSize:13, color:'#667085', marginBottom:12 }}>{p.location}</div>
                         <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#667085', marginBottom:6 }}>
-                          <span>Budget: £{pBudget.toLocaleString()}</span>
-                          <span>Spent: £{pSpent.toLocaleString()} ({pct}%)</span>
+                          <span>Budget: {cur()}{pBudget.toLocaleString()}</span>
+                          <span>Spent: {cur()}{pSpent.toLocaleString()} ({pct}%)</span>
                         </div>
                         <div style={{ background:'#F2F4F7', borderRadius:100, height:6 }}>
                           <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#2F6DB5', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
@@ -832,10 +833,10 @@ export default function DevPage() {
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Projects</span><span style={{ fontWeight:600, color:'#323338' }}>{projects.length}</span></div>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Active</span><span style={{ fontWeight:600, color:'#10B981' }}>{projects.filter((p:any)=>p.status==='active').length}</span></div>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Budget</span><span style={{ fontWeight:600, color:'#2F6DB5' }}>£{totalBudget.toLocaleString()}</span></div>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Spent</span><span style={{ fontWeight:600, color:'#F59E0B' }}>£{totalSpent.toLocaleString()}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Budget</span><span style={{ fontWeight:600, color:'#2F6DB5' }}>{cur()}{totalBudget.toLocaleString()}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Spent</span><span style={{ fontWeight:600, color:'#F59E0B' }}>{cur()}{totalSpent.toLocaleString()}</span></div>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Investors</span><span style={{ fontWeight:600, color:'#323338' }}>{investors.length}</span></div>
-                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Investment</span><span style={{ fontWeight:600, color:'#10B981' }}>£{totalInvestment.toLocaleString()}</span></div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}><span style={{ color:'#667085' }}>Total Investment</span><span style={{ fontWeight:600, color:'#10B981' }}>{cur()}{totalInvestment.toLocaleString()}</span></div>
               </div>
             </div>
           </div>
@@ -860,8 +861,8 @@ export default function DevPage() {
                     <div style={{ fontSize:13, color:'#667085', marginBottom:4 }}>{p.location}</div>
                     <div style={{ fontSize:13, color:'#667085', marginBottom:12 }}>{p.description}</div>
                     <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, color:'#667085', marginBottom:8 }}>
-                      <span>Budget: £{pBudget.toLocaleString()}</span>
-                      <span>Spent: £{pSpent.toLocaleString()} ({pct}%)</span>
+                      <span>Budget: {cur()}{pBudget.toLocaleString()}</span>
+                      <span>Spent: {cur()}{pSpent.toLocaleString()} ({pct}%)</span>
                     </div>
                     <div style={{ background:'#F2F4F7', borderRadius:100, height:6, marginBottom:12 }}>
                       <div style={{ background:pct>90?'#EF4444':pct>70?'#F59E0B':'#2F6DB5', borderRadius:100, height:6, width:`${Math.min(100,pct)}%` }} />
@@ -882,9 +883,9 @@ export default function DevPage() {
           <div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginBottom:20 }}>
               {[
-                { label:'Total Budgeted', value:`£${budgetItems.reduce((s,b)=>s+(b.budgeted??0),0).toLocaleString()}`, color:'#323338' },
-                { label:'Total Actual', value:`£${budgetItems.reduce((s,b)=>s+(b.actual??0),0).toLocaleString()}`, color:'#F59E0B' },
-                { label:'Variance', value:`£${(budgetItems.reduce((s,b)=>s+(b.budgeted??0),0)-budgetItems.reduce((s,b)=>s+(b.actual??0),0)).toLocaleString()}`, color:'#10B981' },
+                { label:'Total Budgeted', value:`${cur()}${budgetItems.reduce((s,b)=>s+(b.budgeted??0),0).toLocaleString()}`, color:'#323338' },
+                { label:'Total Actual', value:`${cur()}${budgetItems.reduce((s,b)=>s+(b.actual??0),0).toLocaleString()}`, color:'#F59E0B' },
+                { label:'Variance', value:`${cur()}${(budgetItems.reduce((s,b)=>s+(b.budgeted??0),0)-budgetItems.reduce((s,b)=>s+(b.actual??0),0)).toLocaleString()}`, color:'#10B981' },
               ].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
@@ -902,8 +903,8 @@ export default function DevPage() {
                   <span style={{ fontWeight:500, color:'#323338' }}>{b.name}</span>
                   <span>{b.dev_projects?.name??'—'}</span>
                   <span style={{ textTransform:'capitalize' }}>{b.category}</span>
-                  <span>£{(b.budgeted??0).toLocaleString()}</span>
-                  <span style={{ color:(b.actual??0)>(b.budgeted??0)?'#EF4444':'#10B981', fontWeight:600 }}>£{(b.actual??0).toLocaleString()}</span>
+                  <span>{cur()}{(b.budgeted??0).toLocaleString()}</span>
+                  <span style={{ color:(b.actual??0)>(b.budgeted??0)?'#EF4444':'#10B981', fontWeight:600 }}>{cur()}{(b.actual??0).toLocaleString()}</span>
                   <div style={{ display:'flex', gap:6 }}>
                     <button onClick={()=>openEdit('budget',b)} style={{ fontSize:11, color:'#2F6DB5', background:'none', border:'1px solid #2F6DB5', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
                     <button onClick={()=>del('dev_budget_items',b.id)} style={{ fontSize:18, color:'#D1D5DB', background:'none', border:'none', cursor:'pointer' }}>×</button>
@@ -920,9 +921,9 @@ export default function DevPage() {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
               {[
                 { label:'Total Investors', value:investors.length },
-                { label:'Total Investment', value:`£${totalInvestment.toLocaleString()}`, green:true },
-                { label:'Paid Back So Far', value:`£${totalPaidBack.toLocaleString()}` },
-                { label:'Avg Investment', value:`£${investors.length>0?Math.round(totalInvestment/investors.length).toLocaleString():0}` },
+                { label:'Total Investment', value:`${cur()}${totalInvestment.toLocaleString()}`, green:true },
+                { label:'Paid Back So Far', value:`${cur()}${totalPaidBack.toLocaleString()}` },
+                { label:'Avg Investment', value:`${cur()}${investors.length>0?Math.round(totalInvestment/investors.length).toLocaleString():0}` },
               ].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
@@ -946,8 +947,8 @@ export default function DevPage() {
                       <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>{i.dev_projects?.name} · {paybackLabel(i)}</div>
                     </div>
                     <div style={{ textAlign:'right' }}>
-                      <div style={{ fontSize:16, fontWeight:700, color:'#10B981' }}>£{(i.investment_amount??0).toLocaleString()}</div>
-                      <div style={{ fontSize:11, color:'#98A2B3', marginTop:2 }}>£{paid.toLocaleString()} paid back</div>
+                      <div style={{ fontSize:16, fontWeight:700, color:'#10B981' }}>{cur()}{(i.investment_amount??0).toLocaleString()}</div>
+                      <div style={{ fontSize:11, color:'#98A2B3', marginTop:2 }}>{cur()}{paid.toLocaleString()} paid back</div>
                       <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:STATUS_COLORS[i.status]?.bg??'#F3F4F6', color:STATUS_COLORS[i.status]?.color??'#6B7280' }}>{i.status}</span>
                     </div>
                     <button onClick={()=>{setForm({investor_id:i.id});setEditId(null);setModal('investor-payment')}} style={{ fontSize:12, color:'#10B981', background:'none', border:'1px solid #10B981', borderRadius:6, padding:'4px 10px', cursor:'pointer', whiteSpace:'nowrap' }}>+ Log Payment</button>
@@ -962,7 +963,7 @@ export default function DevPage() {
                         <div key={p.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:13, padding:'6px 0', borderBottom:'1px solid #F2F4F7' }}>
                           <span style={{ color:'#667085' }}>{p.date}{p.note?` · ${p.note}`:''}</span>
                           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                            <span style={{ fontWeight:600, color:'#323338' }}>£{Number(p.amount).toLocaleString()}</span>
+                            <span style={{ fontWeight:600, color:'#323338' }}>{cur()}{Number(p.amount).toLocaleString()}</span>
                             <button onClick={()=>del('dev_investor_payments',p.id)} style={{ fontSize:11, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>Delete</button>
                           </div>
                         </div>
@@ -1122,7 +1123,7 @@ export default function DevPage() {
                 { label:'Total Units', value:units.length },
                 { label:'Available', value:units.filter(u=>u.status==='Available').length, green:true },
                 { label:'Reserved / Exchanged', value:units.filter(u=>['Reserved','Exchanged'].includes(u.status)).length },
-                { label:'Completed Sales Value', value:`£${soldValue.toLocaleString()}`, green:true },
+                { label:'Completed Sales Value', value:`${cur()}${soldValue.toLocaleString()}`, green:true },
               ].map((c:any)=>(
                 <div key={c.label} style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}>
                   <div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase' as const, letterSpacing:'0.05em', marginBottom:6 }}>{c.label}</div>
@@ -1141,7 +1142,7 @@ export default function DevPage() {
                     {u.buyer_name && <div style={{ fontSize:12, color:'#98A2B3', marginTop:2 }}>Buyer: {u.buyer_name} {u.buyer_solicitor?`· ${u.buyer_solicitor}`:''}</div>}
                   </div>
                   <div style={{ textAlign:'right' as const }}>
-                    <div style={{ fontSize:16, fontWeight:700, color:'#323338' }}>£{(u.price??0).toLocaleString()}</div>
+                    <div style={{ fontSize:16, fontWeight:700, color:'#323338' }}>{cur()}{(u.price??0).toLocaleString()}</div>
                     <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:UNIT_STATUS_COLORS[u.status]?.bg??'#F3F4F6', color:UNIT_STATUS_COLORS[u.status]?.color??'#6B7280' }}>{u.status}</span>
                   </div>
                   <button onClick={()=>{const{dev_projects,...clean}=u;setForm(clean);setEditId(u.id);setModal('unit')}} style={{ fontSize:12, color:'#2F6DB5', background:'none', border:'1px solid #2F6DB5', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
@@ -1273,8 +1274,8 @@ export default function DevPage() {
               <div><label style={lbl}>End Date</label><input type="date" style={inp} value={form.end_date??''} onChange={e=>setForm({...form,end_date:e.target.value})}/></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <div><label style={lbl}>Total Budget (£)</label><input type="number" style={inp} value={form.total_budget??''} onChange={e=>setForm({...form,total_budget:parseFloat(e.target.value)})}/></div>
-              <div><label style={lbl}>Spent So Far (£)</label><input type="number" style={inp} value={form.spent??''} onChange={e=>setForm({...form,spent:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Total Budget ({cur()})</label><input type="number" style={inp} value={form.total_budget??''} onChange={e=>setForm({...form,total_budget:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Spent So Far ({cur()})</label><input type="number" style={inp} value={form.spent??''} onChange={e=>setForm({...form,spent:parseFloat(e.target.value)})}/></div>
             </div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
@@ -1311,8 +1312,8 @@ export default function DevPage() {
               </select>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <div><label style={lbl}>Budgeted (£)</label><input type="number" style={inp} value={form.budgeted??''} onChange={e=>setForm({...form,budgeted:parseFloat(e.target.value)})}/></div>
-              <div><label style={lbl}>Actual (£)</label><input type="number" style={inp} value={form.actual??''} onChange={e=>setForm({...form,actual:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Budgeted ({cur()})</label><input type="number" style={inp} value={form.budgeted??''} onChange={e=>setForm({...form,budgeted:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Actual ({cur()})</label><input type="number" style={inp} value={form.actual??''} onChange={e=>setForm({...form,actual:parseFloat(e.target.value)})}/></div>
             </div>
             <div><label style={lbl}>Status</label>
               <select style={{...inp,cursor:'pointer'}} value={form.status??'pending'} onChange={e=>setForm({...form,status:e.target.value})}>
@@ -1342,7 +1343,7 @@ export default function DevPage() {
               </select>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <div><label style={lbl}>Investment Amount (£)</label><input type="number" style={inp} value={form.investment_amount??''} onChange={e=>setForm({...form,investment_amount:parseFloat(e.target.value)})}/></div>
+              <div><label style={lbl}>Investment Amount ({cur()})</label><input type="number" style={inp} value={form.investment_amount??''} onChange={e=>setForm({...form,investment_amount:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Equity %</label><input type="number" style={inp} value={form.equity_percentage??''} onChange={e=>setForm({...form,equity_percentage:parseFloat(e.target.value)})}/></div>
             </div>
             <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.04em', marginTop:6 }}>Payback terms</div>
@@ -1353,7 +1354,7 @@ export default function DevPage() {
                   <option value="fixed">Fixed fee</option>
                 </select>
               </div>
-              <div><label style={lbl}>{form.payback_type==='fixed'?'Fixed Fee (£)':'Percentage (%)'}</label><input type="number" style={inp} value={form.payback_value??''} onChange={e=>setForm({...form,payback_value:parseFloat(e.target.value)})} placeholder={form.payback_type==='fixed'?'e.g. 500':'e.g. 10'}/></div>
+              <div><label style={lbl}>{form.payback_type==='fixed'?'Fixed Fee ({cur()})':'Percentage (%)'}</label><input type="number" style={inp} value={form.payback_value??''} onChange={e=>setForm({...form,payback_value:parseFloat(e.target.value)})} placeholder={form.payback_type==='fixed'?'e.g. 500':'e.g. 10'}/></div>
             </div>
             <div><label style={lbl}>Frequency</label>
               <select style={{...inp,cursor:'pointer'}} value={form.payback_frequency??'monthly'} onChange={e=>setForm({...form,payback_frequency:e.target.value})}>
@@ -1388,7 +1389,7 @@ export default function DevPage() {
               </select>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-              <div><label style={lbl}>Amount (£) *</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:parseFloat(e.target.value)})} placeholder="500"/></div>
+              <div><label style={lbl}>Amount ({cur()}) *</label><input type="number" style={inp} value={form.amount??''} onChange={e=>setForm({...form,amount:parseFloat(e.target.value)})} placeholder="500"/></div>
               <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.date??today} onChange={e=>setForm({...form,date:e.target.value})}/></div>
             </div>
             <div><label style={lbl}>Note (optional)</label><input style={inp} value={form.note??''} onChange={e=>setForm({...form,note:e.target.value})} placeholder="e.g. March payback"/></div>
@@ -1444,7 +1445,7 @@ export default function DevPage() {
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
               <div><label style={lbl}>Size (sqft)</label><input type="number" style={inp} value={form.size_sqft??''} onChange={e=>setForm({...form,size_sqft:e.target.value?parseFloat(e.target.value):null})}/></div>
-              <div><label style={lbl}>Price (£)</label><input type="number" style={inp} value={form.price??''} onChange={e=>setForm({...form,price:e.target.value?parseFloat(e.target.value):null})}/></div>
+              <div><label style={lbl}>Price ({cur()})</label><input type="number" style={inp} value={form.price??''} onChange={e=>setForm({...form,price:e.target.value?parseFloat(e.target.value):null})}/></div>
             </div>
             <div><label style={lbl}>Status</label>
               <select style={{...inp,cursor:'pointer'}} value={form.status??'Available'} onChange={e=>setForm({...form,status:e.target.value})}>
@@ -1458,7 +1459,7 @@ export default function DevPage() {
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
                 <div><label style={lbl}>Buyer Solicitor</label><input style={inp} value={form.buyer_solicitor??''} onChange={e=>setForm({...form,buyer_solicitor:e.target.value})}/></div>
-                <div><label style={lbl}>Deposit Paid (£)</label><input type="number" style={inp} value={form.deposit_amount??''} onChange={e=>setForm({...form,deposit_amount:e.target.value?parseFloat(e.target.value):null})}/></div>
+                <div><label style={lbl}>Deposit Paid ({cur()})</label><input type="number" style={inp} value={form.deposit_amount??''} onChange={e=>setForm({...form,deposit_amount:e.target.value?parseFloat(e.target.value):null})}/></div>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14 }}>
                 <div><label style={lbl}>Reserved Date</label><input type="date" style={inp} value={form.reservation_date??''} onChange={e=>setForm({...form,reservation_date:e.target.value})}/></div>

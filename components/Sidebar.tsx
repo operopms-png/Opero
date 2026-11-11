@@ -8,6 +8,8 @@ import { useRole, ROLE_MODULES, getScTabs, resolveAccess } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import { BRAND_NAME } from '@/lib/brand'
+import { staffApi } from '@/lib/staff-api'
+import { cur, setCur } from '@/lib/company-currency'
 import { STAFF_HUBS, NON_HUMAN_HUBS, HUMAN_HUB_HREF, OWNER_TABS, humanHubTabs, tabMatches } from '@/lib/staffHubs'
 
 const NAV_GROUPS = [
@@ -86,6 +88,12 @@ export default function Sidebar() {
   const [userEmail, setUserEmail] = useState('')
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [search, setSearch] = useState('')
+  // The company's currency symbol. Pages read it when they draw, so if it differs from what this browser has kept, keep the new one and reload once.
+  useEffect(() => {
+    staffApi<{ symbol: string }>('/api/company-currency').then(d => {
+      if (d.symbol && d.symbol !== cur()) { setCur(d.symbol); try { if (!sessionStorage.getItem('cur-reloaded')) { sessionStorage.setItem('cur-reloaded', '1'); window.location.reload() } } catch { /* shown after the next page load */ } }
+    }).catch(() => {})
+  }, [])
   useEffect(() => {
     const read = () => setSearch(window.location.search)
     const h: any = window.history

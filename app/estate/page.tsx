@@ -1,4 +1,5 @@
 'use client'
+import { cur } from '@/lib/company-currency'
 import { useEffect, useState } from 'react'
 import TabBanner from '@/components/TabBanner'
 import LeaseDocuments from '@/components/pm/LeaseDocuments'
@@ -175,7 +176,7 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           {[0,0.25,0.5,0.75,1].map((p,i)=>(
             <g key={i}>
               <line x1={PAD} y1={y(maxVal*p)} x2={W-PAD} y2={y(maxVal*p)} stroke='#F2F4F7' strokeWidth='1'/>
-              <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{'£'}{(maxVal*p).toFixed(0)}</text>
+              <text x={PAD-4} y={y(maxVal*p)+4} textAnchor='end' fontSize='9' fill='#98A2B3'>{cur()}{(maxVal*p).toFixed(0)}</text>
             </g>
           ))}
           {months.map((m,i)=>(
@@ -203,18 +204,18 @@ function CashFlowTab({transactions}:{transactions:any[]}) {
           return(
             <div key={d.m} style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054',gap:8,background:i%2===0?'#fff':'#FAFAFA'}}>
               <span style={{fontWeight:500,color:'#323338'}}>{d.m} {year}</span>
-              <span style={{color:'#10B981'}}>£{d.inflow.toLocaleString()}</span>
-              <span style={{color:'#EF4444'}}>£{d.outflow.toLocaleString()}</span>
-              <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>£{d.net.toLocaleString()}</span>
-              <span>£{cumulative.toLocaleString()}</span>
+              <span style={{color:'#10B981'}}>{cur()}{d.inflow.toLocaleString()}</span>
+              <span style={{color:'#EF4444'}}>{cur()}{d.outflow.toLocaleString()}</span>
+              <span style={{fontWeight:600,color:d.net>=0?'#10B981':'#EF4444'}}>{cur()}{d.net.toLocaleString()}</span>
+              <span>{cur()}{cumulative.toLocaleString()}</span>
             </div>
           )
         })}
         <div style={{display:'grid',gridTemplateColumns:'120px 1fr 1fr 1fr 1fr',padding:'14px 20px',background:'#F9FAFB',fontSize:13,fontWeight:700,color:'#323338',gap:8,borderTop:'2px solid #E4E7EC'}}>
           <span>TOTAL {year}</span>
-          <span style={{color:'#10B981'}}>£{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
-          <span style={{color:'#EF4444'}}>£{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
-          <span>£{cfData.reduce((s,d)=>s+d.net,0).toLocaleString()}</span>
+          <span style={{color:'#10B981'}}>{cur()}{cfData.reduce((s,d)=>s+d.inflow,0).toLocaleString()}</span>
+          <span style={{color:'#EF4444'}}>{cur()}{cfData.reduce((s,d)=>s+d.outflow,0).toLocaleString()}</span>
+          <span>{cur()}{cfData.reduce((s,d)=>s+d.net,0).toLocaleString()}</span>
           <span>—</span>
         </div>
       </div>
@@ -870,7 +871,7 @@ export default function Page() {
                 {label:'Rented properties',value:rentedProps,total:properties.length,sub:`${properties.filter(p=>p.status==='Available').length} AVAILABLE`,color:ACCENT},
                 {label:'Tenants',value:tenants.length,total:tenants.length,sub:'0 ARCHIVED',color:ACCENT},
                 {label:'Tenancies',value:tenancies.filter(t=>t.status==='Active').length,total:tenancies.length,sub:'0 ARCHIVED',color:ACCENT},
-                {label:'Annual rent',value:'£'+annualRent.toLocaleString(),sub:'£'+monthlyRent.toLocaleString()+' / MONTH',color:ACCENT,big:true},
+                {label:'Annual rent',value:cur()+annualRent.toLocaleString(),sub:cur()+monthlyRent.toLocaleString()+' / MONTH',color:ACCENT,big:true},
               ].map(s=>(
                 <div key={s.label} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20}}>
                   <div style={{fontSize:12,color:'#667085',marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -902,11 +903,11 @@ export default function Page() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
                   <div style={{padding:12,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
                     <div style={{fontSize:11,color:'#667085',marginBottom:4}}>GROSS INCOME</div>
-                    <div style={{fontSize:18,fontWeight:700,color:ACCENT}}>£{collectedRentTotal.toLocaleString()}</div>
+                    <div style={{fontSize:18,fontWeight:700,color:ACCENT}}>{cur()}{collectedRentTotal.toLocaleString()}</div>
                   </div>
                   <div style={{padding:12,background:'#F9FAFB',borderRadius:8,border:'1px solid #E4E7EC'}}>
                     <div style={{fontSize:11,color:'#667085',marginBottom:4}}>NET PROFIT</div>
-                    <div style={{fontSize:18,fontWeight:700,color:(collectedRentTotal-expensesForPeriod)>=0?ACCENT:'#EF4444'}}>£{(collectedRentTotal-expensesForPeriod).toLocaleString()}</div>
+                    <div style={{fontSize:18,fontWeight:700,color:(collectedRentTotal-expensesForPeriod)>=0?ACCENT:'#EF4444'}}>{cur()}{(collectedRentTotal-expensesForPeriod).toLocaleString()}</div>
                   </div>
                 </div>
                 <div style={{fontSize:10,color:'#98A2B3',marginBottom:12,marginTop:-8}}>Gross income is total rent marked Paid to date; expenses are filtered to {periodTab==='CURRENT_MONTH'?'the current month':periodTab==='LAST_MONTH'?'last month':periodTab==='CURRENT_YEAR'?'the current year':'the trailing 12 months'}.</div>
@@ -915,7 +916,7 @@ export default function Page() {
                     {[0,0.5,1].map(p=>(
                       <g key={p}>
                         <line x1={28} y1={90-p*70} x2={400} y2={90-p*70} stroke="#F2F4F7" strokeWidth="1"/>
-                        <text x={0} y={90-p*70+3} fontSize="8" fill="#98A2B3">£{Math.round(maxMonthRevenue*p).toLocaleString()}</text>
+                        <text x={0} y={90-p*70+3} fontSize="8" fill="#98A2B3">{cur()}{Math.round(maxMonthRevenue*p).toLocaleString()}</text>
                       </g>
                     ))}
                     {revenueByMonth.map((m,i)=>{
@@ -926,7 +927,7 @@ export default function Page() {
                       return (
                         <g key={m.label+i}>
                           <rect x={x} y={90-h} width={barW} height={h} rx={2} fill={i===nowIdx?ACCENT:ACCENT+'55'}>
-                            <title>£{m.collected.toLocaleString()} collected — {m.label}</title>
+                            <title>{cur()}{m.collected.toLocaleString()} collected — {m.label}</title>
                           </rect>
                           <text x={x+barW/2} y={102} fontSize="8" fill="#98A2B3" textAnchor="middle">{m.label}</text>
                         </g>
@@ -987,7 +988,7 @@ export default function Page() {
               </div>
             </div>)}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total',v:properties.length,c:ACCENT},{l:'Available',v:properties.filter(p=>p.status==='Available').length,c:'#10B981'},{l:'Rented',v:rentedProps,c:'#F59E0B'},{l:'Annual rent',v:'£'+annualRent.toLocaleString(),c:ACCENT}].map(s=>(
+              {[{l:'Total',v:properties.length,c:ACCENT},{l:'Available',v:properties.filter(p=>p.status==='Available').length,c:'#10B981'},{l:'Rented',v:rentedProps,c:'#F59E0B'},{l:'Annual rent',v:cur()+annualRent.toLocaleString(),c:ACCENT}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:24,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
@@ -1423,8 +1424,8 @@ export default function Page() {
                 <div><label style={labelStyle}>Tenant</label><select value={tenancy.tenant} onChange={e=>setTenancy({...tenancy,tenant:e.target.value})} style={inputStyle}><option value="">Select tenant</option>{tenants.map((t:any)=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Start date</label><input value={tenancy.start} onChange={e=>setTenancy({...tenancy,start:e.target.value})} type="date" style={inputStyle}/></div>
                 <div><label style={labelStyle}>End date</label><input value={tenancy.end} onChange={e=>setTenancy({...tenancy,end:e.target.value})} type="date" style={inputStyle}/></div>
-                <div><label style={labelStyle}>Monthly rent (£)</label><input value={tenancy.rent} onChange={e=>setTenancy({...tenancy,rent:e.target.value})} type="number" placeholder="0.00" style={inputStyle}/></div>
-                <div><label style={labelStyle}>Deposit (£)</label><input value={tenancy.deposit} onChange={e=>setTenancy({...tenancy,deposit:e.target.value})} type="number" placeholder="0.00" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Monthly rent ({cur()})</label><input value={tenancy.rent} onChange={e=>setTenancy({...tenancy,rent:e.target.value})} type="number" placeholder="0.00" style={inputStyle}/></div>
+                <div><label style={labelStyle}>Deposit ({cur()})</label><input value={tenancy.deposit} onChange={e=>setTenancy({...tenancy,deposit:e.target.value})} type="number" placeholder="0.00" style={inputStyle}/></div>
                 <div><label style={labelStyle}>Status</label><select value={tenancy.status} onChange={e=>setTenancy({...tenancy,status:e.target.value})} style={inputStyle}>{['Active','Pending','Expired','Terminated'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div style={{gridColumn:'span 2'}}><FileUpload label="Tenancy Agreement (PDF)" value={tenancy.document_url||''} onChange={url=>setTenancy({...tenancy,document_url:url})} folder="estate-tenancy-documents" /></div>
               </div>
@@ -1446,7 +1447,7 @@ export default function Page() {
                   <span style={{fontSize:13,color:'#344054'}}>{t.estate_tenants?.name||'—'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{t.start_date||'—'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{t.end_date||'—'}</span>
-                  <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{t.rent?'£'+t.rent:' —'}</span>
+                  <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{t.rent?cur()+t.rent:' —'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:t.status==='Active'?'#ECFDF5':t.status==='Pending'?'#FEF3C7':'#FEE2E2',color:t.status==='Active'?'#10B981':t.status==='Pending'?'#F59E0B':'#EF4444',display:'inline-block'}}>{t.status}</span>
                   {fullySigned?(
                     <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:'#D1FAE5',color:'#059669',width:'fit-content'}}>Signed</span>
@@ -1508,20 +1509,20 @@ export default function Page() {
                 <div style={{height:'100%',background:'linear-gradient(90deg,#10B981,#059669)',borderRadius:5,width:rentSchedules.length>0?(rentSchedules.filter((r:any)=>r.status==='Paid').length/rentSchedules.length*100)+'%':'0%'}}></div>
               </div>
               <div style={{display:'flex',gap:16,fontSize:12}}>
-                <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#10B981',display:'inline-block'}}></span> Paid £{rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0).toLocaleString()}</span>
-                <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#EF4444',display:'inline-block'}}></span> Overdue £{rentSchedules.filter((r:any)=>r.status==='Overdue').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0).toLocaleString()}</span>
+                <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#10B981',display:'inline-block'}}></span> Paid {cur()}{rentSchedules.filter((r:any)=>r.status==='Paid').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0).toLocaleString()}</span>
+                <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:8,height:8,borderRadius:'50%',background:'#EF4444',display:'inline-block'}}></span> Overdue {cur()}{rentSchedules.filter((r:any)=>r.status==='Overdue').reduce((s:number,r:any)=>s+(parseFloat(r.amount)||0),0).toLocaleString()}</span>
               </div>
             </div>
             {/* Finance cards */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Gross Income for the Month</div>
-                <div style={{fontSize:28,fontWeight:800,color:'#323338'}}>£{monthlyRent.toLocaleString()}</div>
+                <div style={{fontSize:28,fontWeight:800,color:'#323338'}}>{cur()}{monthlyRent.toLocaleString()}</div>
                 <div style={{display:'inline-flex',alignItems:'center',gap:4,marginTop:8,background:'#ECFDF5',padding:'3px 8px',borderRadius:20}}><span style={{fontSize:11,color:'#10B981',fontWeight:600}}>↑ Active</span></div>
               </div>
               <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20}}>
                 <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>Monthly Expenses</div>
-                <div style={{fontSize:28,fontWeight:800,color:'#EF4444'}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                <div style={{fontSize:28,fontWeight:800,color:'#EF4444'}}>{cur()}{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                 <div style={{display:'inline-flex',alignItems:'center',gap:4,marginTop:8,background:'#FEE2E2',padding:'3px 8px',borderRadius:20}}><span style={{fontSize:11,color:'#EF4444',fontWeight:600}}>↓ Costs</span></div>
               </div>
             </div>
@@ -1530,7 +1531,7 @@ export default function Page() {
               <div style={{display:'flex',alignItems:'center',gap:12}}>
                 <span style={{fontSize:36,color:ACCENT,fontWeight:300}}>💰</span>
                 <div>
-                  <div style={{fontSize:36,fontWeight:800,color:ACCENT}}>£{(monthlyRent-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
+                  <div style={{fontSize:36,fontWeight:800,color:ACCENT}}>{cur()}{(monthlyRent-expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0)).toLocaleString()}</div>
                   <div style={{fontSize:12,color:'#667085'}}>vs previous month</div>
                 </div>
               </div>
@@ -1548,7 +1549,7 @@ export default function Page() {
                 <div key={t.id} style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
                   <div style={{fontSize:13,color:'#344054',width:180,flexShrink:0}}>{t.property}</div>
                   <div style={{flex:1,background:'#F2F4F7',borderRadius:4,height:8,overflow:'hidden'}}><div style={{width:monthlyRent?(parseFloat(t.rent)/monthlyRent*100)+'%':'0%',height:'100%',background:ACCENT,borderRadius:4}}/></div>
-                  <div style={{fontSize:13,fontWeight:600,color:ACCENT,width:80,textAlign:'right' as const}}>£{t.rent}/mo</div>
+                  <div style={{fontSize:13,fontWeight:600,color:ACCENT,width:80,textAlign:'right' as const}}>{cur()}{t.rent}/mo</div>
                 </div>
               ))}
             </div>
@@ -1560,7 +1561,7 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
               <div style={{background:'linear-gradient(135deg,'+ACCENT+',#1B4332)',borderRadius:10,padding:20,color:'#fff'}}>
                 <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.06em',opacity:0.8,marginBottom:8}}>Untapped potential / month</div>
-                <div style={{fontSize:32,fontWeight:700}}>£{vacancies.filter(v=>v.status==='Available').reduce((s,v)=>s+(parseFloat(v.rent)||0),0).toLocaleString()}</div>
+                <div style={{fontSize:32,fontWeight:700}}>{cur()}{vacancies.filter(v=>v.status==='Available').reduce((s,v)=>s+(parseFloat(v.rent)||0),0).toLocaleString()}</div>
                 <div style={{fontSize:12,opacity:0.7,marginTop:4}}>If all {vacancies.filter(v=>v.status==='Available').length} vacancies were filled</div>
               </div>
               <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
@@ -1568,7 +1569,7 @@ export default function Page() {
                 <div style={{fontSize:12,color:'#667085'}}>Vacant units</div>
               </div>
               <div style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
-                <div style={{fontSize:32,fontWeight:700,color:'#F59E0B',marginBottom:4}}>{vacancies.length>0?'£'+(vacancies.reduce((s,v)=>s+(parseFloat(v.rent)||0),0)/vacancies.length).toFixed(0):'£0'}</div>
+                <div style={{fontSize:32,fontWeight:700,color:'#F59E0B',marginBottom:4}}>{vacancies.length>0?cur()+(vacancies.reduce((s,v)=>s+(parseFloat(v.rent)||0),0)/vacancies.length).toFixed(0):'£0'}</div>
                 <div style={{fontSize:12,color:'#667085'}}>Avg rent / unit</div>
               </div>
             </div>
@@ -1578,7 +1579,7 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Property name *</label><select value={vacForm.property} onChange={e=>setVacForm({...vacForm,property:e.target.value})} style={inputStyle}><option value=''>Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={labelStyle}>Room type</label><select value={vacForm.roomType} onChange={e=>setVacForm({...vacForm,roomType:e.target.value})} style={inputStyle}>{['Whole Unit','Single','Double','Suite','Studio'].map(t=><option key={t}>{t}</option>)}</select></div>
-                <div><label style={labelStyle}>Monthly rent (£)</label><input value={vacForm.rent} onChange={e=>setVacForm({...vacForm,rent:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
+                <div><label style={labelStyle}>Monthly rent ({cur()})</label><input value={vacForm.rent} onChange={e=>setVacForm({...vacForm,rent:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Bedrooms</label><select value={vacForm.bedrooms} onChange={e=>setVacForm({...vacForm,bedrooms:e.target.value})} style={inputStyle}>{['Studio','1','2','3','4','5','6+'].map(b=><option key={b}>{b}</option>)}</select></div>
                 <div><label style={labelStyle}>Available from</label><input value={vacForm.available} onChange={e=>setVacForm({...vacForm,available:e.target.value})} type='date' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Type</label><select value={vacForm.type} onChange={e=>setVacForm({...vacForm,type:e.target.value})} style={inputStyle}>{['Apartment','House','Studio','HMO','Commercial'].map(t=><option key={t}>{t}</option>)}</select></div>
@@ -1614,7 +1615,7 @@ export default function Page() {
                       </div>
                       <div style={{fontSize:12,color:'#667085',marginBottom:4}}>{v.room_type} · {v.bedrooms} bed · {v.type}</div>
                       {v.description&&<div style={{fontSize:12,color:'#667085',marginBottom:8}}>{v.description}</div>}
-                      <div style={{fontSize:18,fontWeight:700,color:ACCENT,marginBottom:8}}>£{parseFloat(v.rent||0).toLocaleString()}<span style={{fontSize:12,fontWeight:400,color:'#667085'}}>/mo</span></div>
+                      <div style={{fontSize:18,fontWeight:700,color:ACCENT,marginBottom:8}}>{cur()}{parseFloat(v.rent||0).toLocaleString()}<span style={{fontSize:12,fontWeight:400,color:'#667085'}}>/mo</span></div>
                       {v.available_date&&<div style={{fontSize:11,color:'#667085',marginBottom:12}}>Available from {v.available_date}</div>}
                       <div style={{display:'flex',gap:6}}>
                         <button onClick={()=>saveRecord('estate_vacancies',{status:v.status==='Available'?'Let Agreed':'Available'},v.id)} style={{flex:1,padding:'7px',borderRadius:6,border:'none',background:v.status==='Available'?ACCENT:'#F2F4F7',color:v.status==='Available'?'#fff':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{v.status==='Available'?'Mark let':'Re-list'}</button>
@@ -1699,9 +1700,9 @@ export default function Page() {
             {/* Summary stats */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:16}}>
               {[
-                {l:'Interest Paid',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.interest_paid||0)),0).toLocaleString(),c:'#667085'},
-                {l:'Outstanding Capital',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaid_capital||0)),0).toLocaleString(),c:'#EF4444'},
-                {l:'Monthly Payments',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.monthly_payment||0)),0).toLocaleString(),c:ACCENT},
+                {l:'Interest Paid',v:cur()+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.interest_paid||0)),0).toLocaleString(),c:'#667085'},
+                {l:'Outstanding Capital',v:cur()+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaid_capital||0)),0).toLocaleString(),c:'#EF4444'},
+                {l:'Monthly Payments',v:cur()+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.monthly_payment||0)),0).toLocaleString(),c:ACCENT},
               ].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{s.l}</div>
@@ -1711,9 +1712,9 @@ export default function Page() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
               {[
-                {l:'Monthly Insurance',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.insurance||0)),0).toLocaleString()},
-                {l:'Already Refunded',v:'£0'},
-                {l:'Remaining to Pay',v:'£'+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaid_capital||0)),0).toLocaleString()},
+                {l:'Monthly Insurance',v:cur()+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.insurance||0)),0).toLocaleString()},
+                {l:'Already Refunded',v:cur()+'0'},
+                {l:'Remaining to Pay',v:cur()+mortgages.reduce((s:number,m:any)=>s+(parseFloat(m.amount||0)-parseFloat(m.repaid_capital||0)),0).toLocaleString()},
               ].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{s.l}</div>
@@ -1727,14 +1728,14 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Property *</label><select value={mortgageForm.property} onChange={e=>setMortgageForm({...mortgageForm,property:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}><option value="">Select property</option>{properties.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Bank / Lender</label><input value={mortgageForm.bank} onChange={e=>setMortgageForm({...mortgageForm,bank:e.target.value})} placeholder="e.g. Barclays" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
-                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Mortgage Amount (£)</label><input value={mortgageForm.amount} onChange={e=>setMortgageForm({...mortgageForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Mortgage Amount ({cur()})</label><input value={mortgageForm.amount} onChange={e=>setMortgageForm({...mortgageForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Interest Rate (%)</label><input value={mortgageForm.rate} onChange={e=>setMortgageForm({...mortgageForm,rate:e.target.value})} type="number" placeholder="5.0" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
-                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Payment (£)</label><input value={mortgageForm.monthlyPayment} onChange={e=>setMortgageForm({...mortgageForm,monthlyPayment:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Payment ({cur()})</label><input value={mortgageForm.monthlyPayment} onChange={e=>setMortgageForm({...mortgageForm,monthlyPayment:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Duration (years)</label><input value={mortgageForm.duration} onChange={e=>setMortgageForm({...mortgageForm,duration:e.target.value})} type="number" placeholder="25" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Start Date</label><input value={mortgageForm.startDate} onChange={e=>setMortgageForm({...mortgageForm,startDate:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>End Date</label><input value={mortgageForm.endDate} onChange={e=>setMortgageForm({...mortgageForm,endDate:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
                 <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Type</label><select value={mortgageForm.type} onChange={e=>setMortgageForm({...mortgageForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}>{['Repayment','Interest Only','Buy to Let','Commercial'].map(t=><option key={t}>{t}</option>)}</select></div>
-                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Insurance (£)</label><input value={mortgageForm.insurance} onChange={e=>setMortgageForm({...mortgageForm,insurance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
+                <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block' as const}}>Monthly Insurance ({cur()})</label><input value={mortgageForm.insurance} onChange={e=>setMortgageForm({...mortgageForm,insurance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box' as const}}/></div>
               </div>
               <div style={{display:'flex',gap:8}}>
                 <button onClick={()=>{if(!mortgageForm.property||!mortgageForm.amount)return;saveRecord('estate_mortgages',{property_id:mortgageForm.property,bank:mortgageForm.bank,amount:mortgageForm.amount,rate:mortgageForm.rate,start_date:mortgageForm.startDate||null,end_date:mortgageForm.endDate||null,duration:mortgageForm.duration,monthly_payment:mortgageForm.monthlyPayment,insurance:mortgageForm.insurance,type:mortgageForm.type},editItem?.id);setEditItem(null);setMortgageForm({property:'',bank:'',amount:'',rate:'',startDate:'',endDate:'',duration:'25',monthlyPayment:'',insurance:'',type:'Repayment'});setShowAddMortgage(false)}} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{editItem?'Save Changes':'Add Loan'}</button>
@@ -1758,9 +1759,9 @@ export default function Page() {
                     <div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{m.estate_properties?.name??'—'}</div>
                   </div>
                   <span style={{fontSize:12,color:'#344054'}}>{m.bank||'—'}</span>
-                  <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>£{parseFloat(m.amount||0).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{cur()}{parseFloat(m.amount||0).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{m.rate||'—'}%</span>
-                  <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(m.monthly_payment||0).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{cur()}{parseFloat(m.monthly_payment||0).toLocaleString()}</span>
                   <span style={{fontSize:11,color:'#667085'}}>{m.start_date||'—'}</span>
                   <span style={{fontSize:11,color:'#667085'}}>{m.end_date||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:'#2F6DB5'}}>{m.type}</span>
@@ -1782,7 +1783,7 @@ export default function Page() {
                     <div key={m.id} style={{marginBottom:16}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
                         <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{m.estate_properties?.name??'—'}</span>
-                        <span style={{fontSize:12,color:'#667085'}}>{pct}% repaid · £{repaid.toLocaleString()} of £{total.toLocaleString()}</span>
+                        <span style={{fontSize:12,color:'#667085'}}>{pct}% repaid · {cur()}{repaid.toLocaleString()} of {cur()}{total.toLocaleString()}</span>
                       </div>
                       <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:pct+'%'}}></div></div>
                     </div>
@@ -1794,7 +1795,7 @@ export default function Page() {
 
           {section==='Rent Collection'&&(<div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Scheduled',v:rentSchedules.length,c:ACCENT},{l:'Collected',v:'£'+rentSchedules.filter(r=>r.status==='Paid').reduce((s,r)=>s+(parseFloat(r.amount)||0),0).toLocaleString(),c:'#10B981'},{l:'Overdue',v:rentSchedules.filter(r=>r.status==='Overdue').length,c:'#EF4444'},{l:'Pending',v:rentSchedules.filter(r=>r.status==='Pending').length,c:'#F59E0B'}].map(s=>(
+              {[{l:'Scheduled',v:rentSchedules.length,c:ACCENT},{l:'Collected',v:cur()+rentSchedules.filter(r=>r.status==='Paid').reduce((s,r)=>s+(parseFloat(r.amount)||0),0).toLocaleString(),c:'#10B981'},{l:'Overdue',v:rentSchedules.filter(r=>r.status==='Overdue').length,c:'#EF4444'},{l:'Pending',v:rentSchedules.filter(r=>r.status==='Pending').length,c:'#F59E0B'}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:24,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
@@ -1805,7 +1806,7 @@ export default function Page() {
               <h3 style={{fontSize:15,fontWeight:600,color:'#323338',margin:'0 0 16px'}}>Add rent schedule</h3>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                 <div><label style={labelStyle}>Tenancy *</label><select value={rentForm.tenancy} onChange={e=>setRentForm({...rentForm,tenancy:e.target.value})} style={inputStyle}><option value=''>Select tenancy</option>{tenancies.map((t:any)=><option key={t.id} value={t.id}>{t.estate_properties?.name} — {t.estate_tenants?.name}</option>)}</select></div>
-                <div><label style={labelStyle}>Amount (£)</label><input value={rentForm.amount} onChange={e=>setRentForm({...rentForm,amount:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
+                <div><label style={labelStyle}>Amount ({cur()})</label><input value={rentForm.amount} onChange={e=>setRentForm({...rentForm,amount:e.target.value})} type='number' placeholder='0.00' style={inputStyle}/></div>
                 <div><label style={labelStyle}>Due day</label><select value={rentForm.dueDay} onChange={e=>setRentForm({...rentForm,dueDay:e.target.value})} style={inputStyle}>{Array.from({length:28},(_,i)=>String(i+1)).map(d=><option key={d}>{d}</option>)}</select></div>
                 <div><label style={labelStyle}>Frequency</label><select value={rentForm.frequency} onChange={e=>setRentForm({...rentForm,frequency:e.target.value})} style={inputStyle}>{['Monthly','Weekly','Quarterly'].map(f=><option key={f}>{f}</option>)}</select></div>
                 <div><label style={labelStyle}>Method</label><select value={rentForm.method} onChange={e=>setRentForm({...rentForm,method:e.target.value})} style={inputStyle}>{['Bank Transfer','Direct Debit','Standing Order','Cash','Cheque'].map(m=><option key={m}>{m}</option>)}</select></div>
@@ -1825,7 +1826,7 @@ export default function Page() {
                 <div key={r.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 80px 120px 140px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{scheduleTenancy?.estate_properties?.name??'—'}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{scheduleTenancy?.estate_tenants?.name??'—'}</span>
-                  <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{parseFloat(r.amount).toLocaleString()}</span>
+                  <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{cur()}{parseFloat(r.amount).toLocaleString()}</span>
                   <span style={{fontSize:12,color:'#344054'}}>{r.due_day}{['st','nd','rd'][parseInt(r.due_day)-1]||'th'}</span>
                   <span style={{fontSize:12,color:'#667085'}}>{r.frequency}</span>
                   <select value={r.status} onChange={e=>saveRecord('estate_rent_schedules',{status:e.target.value},r.id)} style={{fontSize:11,fontWeight:600,padding:'4px 8px',borderRadius:4,border:'1px solid #E4E7EC',background:r.status==='Paid'?'#ECFDF5':r.status==='Overdue'?'#FEE2E2':'#FEF3C7',color:r.status==='Paid'?'#10B981':r.status==='Overdue'?'#EF4444':'#F59E0B',cursor:'pointer',fontFamily:'inherit'}}>
@@ -1847,7 +1848,7 @@ export default function Page() {
               <div style={{background:'linear-gradient(135deg,'+ACCENT+',#1B4332)',borderRadius:12,padding:24,marginBottom:20,color:'#fff',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                 <div>
                   <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.7,marginBottom:6}}>TOTAL SPENT · ALL TIME</div>
-                  <div style={{fontSize:36,fontWeight:800}}>£{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                  <div style={{fontSize:36,fontWeight:800}}>{cur()}{expenses.reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                   <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{expenses.length} records</div>
                 </div>
                 <button onClick={()=>setShowAddExpense(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:'#fff',color:ACCENT,fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>+ Add</button>
@@ -1856,7 +1857,7 @@ export default function Page() {
                 {['Property','Utilities','Staff','Overhead'].map(cat=>(
                   <div key={cat} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>{cat}</div>
-                    <div style={{fontSize:22,fontWeight:700,color:ACCENT}}>£{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
+                    <div style={{fontSize:22,fontWeight:700,color:ACCENT}}>{cur()}{expenses.filter((e:any)=>e.category===cat).reduce((s:number,e:any)=>s+(parseFloat(e.amount)||0),0).toLocaleString()}</div>
                   </div>
                 ))}
               </div>
@@ -1867,7 +1868,7 @@ export default function Page() {
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={expForm.description} onChange={e=>setExpForm({...expForm,description:e.target.value})} placeholder="e.g. Repairs" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Vendor</label><input value={expForm.vendor||''} onChange={e=>setExpForm({...expForm,vendor:e.target.value})} placeholder="e.g. B&Q" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Category</label><select value={expForm.category} onChange={e=>setExpForm({...expForm,category:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>{['Property','Staff','Overhead','Maintenance','Marketing','Insurance','Utilities','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
-                    <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+                    <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount ({cur()})</label><input value={expForm.amount} onChange={e=>setExpForm({...expForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={expForm.date} onChange={e=>setExpForm({...expForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                     <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Status</label><select value={expForm.status} onChange={e=>setExpForm({...expForm,status:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>{['Paid','Unpaid'].map(s=><option key={s}>{s}</option>)}</select></div>
                     <div style={{display:'flex',alignItems:'center',gap:8,paddingTop:22}}><input type="checkbox" id="is_recurring" checked={expForm.is_recurring} onChange={e=>setExpForm({...expForm,is_recurring:e.target.checked})}/><label htmlFor="is_recurring" style={{fontSize:13,color:'#344054',cursor:'pointer'}}>Recurring monthly bill</label></div>
@@ -1887,7 +1888,7 @@ export default function Page() {
                     <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{e.description}{e.is_recurring && <span title="Recurring monthly bill" style={{marginLeft:6,fontSize:11}}>🔁</span>}<button onClick={()=>{const f:any={};for(const k of Object.keys(expForm))f[k]=e[k]??(typeof (expForm as any)[k]==='boolean'?false:'');f.amount=e.amount!=null?String(e.amount):'';setExpForm(f);setExpEditId(e.id);setShowAddExpense(true)}} style={{marginLeft:8,fontSize:11,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'1px 8px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button></span>
                     <span style={{fontSize:12,color:'#344054'}}>{e.vendor||'—'}</span>
                     <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:'#F2F4F7',color:'#344054'}}>{e.category}</span>
-                    <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>£{parseFloat(e.amount).toLocaleString()}</span>
+                    <span style={{fontSize:13,fontWeight:600,color:'#EF4444'}}>{cur()}{parseFloat(e.amount).toLocaleString()}</span>
                     <span style={{fontSize:12,color:'#667085'}}>{e.date||'—'}</span>
                     <select value={e.status} onChange={ev=>saveRecord('office_expenses',{status:ev.target.value},e.id)} style={{fontSize:11,fontWeight:600,padding:'3px 6px',borderRadius:4,border:'none',cursor:'pointer',background:e.status==='Paid'?'#ECFDF5':'#FEF3C7',color:e.status==='Paid'?'#10B981':'#F59E0B'}}>
                       <option value="Paid">Paid</option>
@@ -1912,7 +1913,7 @@ export default function Page() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
                     <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,marginBottom:8}}>TOTAL CASH BALANCE</div>
-                    <div style={{fontSize:32,fontWeight:800,color:ACCENT,marginBottom:4}}>£{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
+                    <div style={{fontSize:32,fontWeight:800,color:ACCENT,marginBottom:4}}>{cur()}{bankAccounts.reduce((s:number,a:any)=>s+(parseFloat(a.balance)||0),0).toLocaleString()}</div>
                     <div style={{fontSize:13,color:'#98A2B3'}}>{bankAccounts.length===0?'No connected accounts':bankAccounts.length+' account(s)'}</div>
                   </div>
                   <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}>
@@ -1933,7 +1934,7 @@ export default function Page() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Account name *</label><input value={bankForm.name} onChange={e=>setBankForm({...bankForm,name:e.target.value})} placeholder="e.g. Barclays" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Type</label><select value={bankForm.type} onChange={e=>setBankForm({...bankForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>{['Current','Savings','Business','Credit'].map(t=><option key={t}>{t}</option>)}</select></div>
-                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Balance (£)</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Balance ({cur()})</label><input value={bankForm.balance} onChange={e=>setBankForm({...bankForm,balance:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Currency</label><select value={bankForm.currency} onChange={e=>setBankForm({...bankForm,currency:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>{['GBP','USD','EUR','JMD'].map(c=><option key={c}>{c}</option>)}</select></div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
@@ -1943,7 +1944,7 @@ export default function Page() {
                   </div>)}
                   {bankAccounts.length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const,color:'#98A2B3'}}><div style={{fontSize:32,marginBottom:12}}>🏦</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:16}}>No bank accounts</div><button onClick={()=>setShowAddBank(true)} style={{padding:'10px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>+ Add Bank Account</button></div>):(
                     <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-                      {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>{setBankForm({name:a.name??'',type:a.type??'Current',balance:a.balance!=null?String(a.balance):'',currency:a.currency??'GBP'});setBankEditId(a.id);setShowAddBank(true)}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>delRecord('estate_bank_accounts',a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span></div><div style={{fontSize:28,fontWeight:800,color:ACCENT,marginBottom:4}}>£{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
+                      {bankAccounts.map((a:any)=>(<div key={a.id} style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}><div style={{fontSize:14,fontWeight:600,color:'#323338'}}>{a.name}</div><span style={{display:'flex',gap:10,alignItems:'center'}}><button onClick={()=>{setBankForm({name:a.name??'',type:a.type??'Current',balance:a.balance!=null?String(a.balance):'',currency:a.currency??'GBP'});setBankEditId(a.id);setShowAddBank(true)}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'2px 10px',cursor:'pointer',fontFamily:'inherit'}}>Edit</button><button onClick={()=>delRecord('estate_bank_accounts',a.id)} style={{background:'none',border:'none',cursor:'pointer',color:'#EF4444',fontSize:16}}>×</button></span></div><div style={{fontSize:28,fontWeight:800,color:ACCENT,marginBottom:4}}>{cur()}{parseFloat(a.balance||0).toLocaleString()}</div><div style={{fontSize:12,color:'#98A2B3'}}>{a.type} · {a.currency}</div></div>))}
                       <div onClick={()=>setShowAddBank(true)} style={{background:'#F9FAFB',borderRadius:12,border:'2px dashed #E4E7EC',padding:24,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:'#667085',fontSize:13}}>+ Add Account</div>
                     </div>
                   )}
@@ -1955,7 +1956,7 @@ export default function Page() {
                     <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 16px'}}>Add transaction</h3>
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Description *</label><input value={txForm.description} onChange={e=>setTxForm({...txForm,description:e.target.value})} placeholder="e.g. Rent received" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
-                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount (£)</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
+                      <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Amount ({cur()})</label><input value={txForm.amount} onChange={e=>setTxForm({...txForm,amount:e.target.value})} type="number" placeholder="0.00" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Type</label><select value={txForm.type} onChange={e=>setTxForm({...txForm,type:e.target.value})} style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}>{['Income','Expense'].map(t=><option key={t}>{t}</option>)}</select></div>
                       <div><label style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4,display:'block'}}>Date</label><input value={txForm.date} onChange={e=>setTxForm({...txForm,date:e.target.value})} type="date" style={{width:'100%',padding:'9px 12px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,fontFamily:'inherit',boxSizing:'border-box'}}/></div>
                     </div>
@@ -1969,7 +1970,7 @@ export default function Page() {
                     {transactions.length===0?<div style={{textAlign:'center' as const,padding:40,color:'#98A2B3',fontSize:13}}>No transactions yet</div>:transactions.map((t:any)=>(
                       <div key={t.id} style={{display:'grid',gridTemplateColumns:'1fr 100px 80px 120px 60px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                         <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                        <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span>
+                        <span style={{fontSize:13,fontWeight:600,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span>
                         <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:t.type==='Income'?'#ECFDF5':'#FEE2E2',color:t.type==='Income'?'#10B981':'#EF4444',fontWeight:600}}>{t.type}</span>
                         <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,display:'inline-block' as const,background:t.status==='Reconciled'?'#ECFDF5':'#FEF3C7',color:t.status==='Reconciled'?'#10B981':'#F59E0B',cursor:'pointer'}} onClick={()=>saveRecord('estate_transactions',{status:t.status==='Reconciled'?'Unreconciled':'Reconciled'},t.id)}>{t.status}</span>
                         <button onClick={()=>delRecord('estate_transactions',t.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
@@ -1983,7 +1984,7 @@ export default function Page() {
                   {transactions.filter((t:any)=>t.status==='Unreconciled').length===0?(<div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:60,textAlign:'center' as const}}><div style={{fontSize:32,marginBottom:12}}>✅</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>All caught up</div></div>):transactions.filter((t:any)=>t.status==='Unreconciled').map((t:any)=>(
                     <div key={t.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:16,marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                       <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{t.description}</div><div style={{fontSize:11,color:'#98A2B3'}}>{t.date}</div></div>
-                      <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}£{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>saveRecord('estate_transactions',{status:'Reconciled'},t.id)} style={{padding:'6px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
+                      <div style={{display:'flex',alignItems:'center',gap:12}}><span style={{fontSize:14,fontWeight:700,color:t.type==='Income'?'#10B981':'#EF4444'}}>{t.type==='Income'?'+':'-'}{cur()}{parseFloat(t.amount).toLocaleString()}</span><button onClick={()=>saveRecord('estate_transactions',{status:'Reconciled'},t.id)} style={{padding:'6px 14px',borderRadius:6,border:'none',background:ACCENT,color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>✓ Match</button></div>
                     </div>
                   ))}
                 </div>
@@ -2018,8 +2019,8 @@ export default function Page() {
             <div>
               <div style={{background:'linear-gradient(135deg,'+ACCENT+',#1B4332)',borderRadius:12,padding:24,marginBottom:20,color:'#fff'}}>
                 <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.08em',opacity:0.7,marginBottom:6}}>NET PROFIT · THIS MONTH</div>
-                <div style={{fontSize:36,fontWeight:800}}>£{(collectedRent-thisMonthExpenses).toLocaleString()}</div>
-                <div style={{fontSize:13,opacity:0.6,marginTop:4}}>£{collectedRent.toLocaleString()} income (all-time collected rent — see note below) · £{thisMonthExpenses.toLocaleString()} costs this month</div>
+                <div style={{fontSize:36,fontWeight:800}}>{cur()}{(collectedRent-thisMonthExpenses).toLocaleString()}</div>
+                <div style={{fontSize:13,opacity:0.6,marginTop:4}}>{cur()}{collectedRent.toLocaleString()} income (all-time collected rent — see note below) · {cur()}{thisMonthExpenses.toLocaleString()} costs this month</div>
               </div>
               <div style={{display:'flex',gap:8,marginBottom:20,justifyContent:'space-between',alignItems:'center'}}>
                 <div style={{display:'flex',gap:8}}>
@@ -2045,7 +2046,7 @@ export default function Page() {
                   const costs = expensesForMonth(i)
                   return (
                   <div key={m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                    <span>{m} {year}</span><span style={{color:'#10B981'}}>£{income.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{costs.toLocaleString()}</span><span style={{color:'#F59E0B'}}>£{costs.toLocaleString()}</span><span style={{fontWeight:600}}>£{(income-costs).toLocaleString()}</span>
+                    <span>{m} {year}</span><span style={{color:'#10B981'}}>{cur()}{income.toLocaleString()}</span><span style={{color:'#EF4444'}}>{cur()}{costs.toLocaleString()}</span><span style={{color:'#F59E0B'}}>{cur()}{costs.toLocaleString()}</span><span style={{fontWeight:600}}>{cur()}{(income-costs).toLocaleString()}</span>
                   </div>
                   )
                 })}
@@ -2089,7 +2090,7 @@ export default function Page() {
                     </div>
                     {cfData.map(d=>(
                       <div key={d.m} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr 1fr',padding:'12px 20px',borderBottom:'1px solid #F2F4F7',fontSize:13,color:'#344054'}}>
-                        <span>{d.m} {year}</span><span style={{color:'#10B981'}}>£{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>£{d.moneyOut.toLocaleString()}</span><span>£{d.net.toLocaleString()}</span><span>£{d.cumulative.toLocaleString()}</span>
+                        <span>{d.m} {year}</span><span style={{color:'#10B981'}}>{cur()}{d.moneyIn.toLocaleString()}</span><span style={{color:'#EF4444'}}>{cur()}{d.moneyOut.toLocaleString()}</span><span>{cur()}{d.net.toLocaleString()}</span><span>{cur()}{d.cumulative.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -2114,7 +2115,7 @@ export default function Page() {
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:20}}>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:12,color:'#667085'}}>Annual Rent Roll</span></div>
-                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>£{annualRent.toLocaleString()}</div>
+                  <div style={{fontSize:32,fontWeight:800,color:'#323338',marginBottom:4}}>{cur()}{annualRent.toLocaleString()}</div>
                   <div style={{fontSize:12,color:'#98A2B3'}}>{tenancies.filter((t:any)=>t.status==='Active').length} active tenancies</div>
                   <svg viewBox="0 0 200 50" style={{width:'100%',marginTop:12}}>{(()=>{
                     const sorted=[...tenancies].filter((t:any)=>t.status==='Active').sort((a:any,b:any)=>(a.created_at||'').localeCompare(b.created_at||''))
@@ -2163,19 +2164,19 @@ export default function Page() {
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:16}}>Owner vs Management Split</div>
                   <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                    <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Owner (85%)</span><span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>£{Math.round(annualRent*0.85).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#10B981',borderRadius:4,width:'85%'}}></div></div></div>
-                    <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (15%)</span><span style={{fontSize:13,fontWeight:600,color:ACCENT}}>£{Math.round(annualRent*0.15).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:'15%'}}></div></div></div>
+                    <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Owner (85%)</span><span style={{fontSize:13,fontWeight:600,color:'#10B981'}}>{cur()}{Math.round(annualRent*0.85).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:'#10B981',borderRadius:4,width:'85%'}}></div></div></div>
+                    <div><div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,color:'#667085'}}>Management (15%)</span><span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{cur()}{Math.round(annualRent*0.15).toLocaleString()}</span></div><div style={{height:8,background:'#F3F4F6',borderRadius:4}}><div style={{height:'100%',background:ACCENT,borderRadius:4,width:'15%'}}></div></div></div>
                   </div>
                 </div>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Active Tenancies</div>
-                  {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>):tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338',fontWeight:500}}>{t.tenant}</span><span style={{color:'#10B981',fontWeight:600}}>£{(parseFloat(t.rent)||0).toLocaleString()}/mo</span></div>))}
+                  {tenancies.filter((t:any)=>t.status==='Active').length===0?(<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>):tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338',fontWeight:500}}>{t.tenant}</span><span style={{color:'#10B981',fontWeight:600}}>{cur()}{(parseFloat(t.rent)||0).toLocaleString()}/mo</span></div>))}
                 </div>
                 <div style={{background:'#fff',borderRadius:14,border:'1px solid #E4E7EC',padding:24}}>
                   <div style={{fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:14}}>Recent Finance</div>
-                  {tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338'}}>{t.tenant} — monthly rent</span><span style={{color:'#10B981',fontWeight:600}}>+£{(parseFloat(t.rent)||0).toLocaleString()}</span></div>))}
+                  {tenancies.filter((t:any)=>t.status==='Active').slice(0,4).map((t:any)=>(<div key={t.id} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #F2F4F7',fontSize:13}}><span style={{color:'#323338'}}>{t.tenant} — monthly rent</span><span style={{color:'#10B981',fontWeight:600}}>+{cur()}{(parseFloat(t.rent)||0).toLocaleString()}</span></div>))}
                   {tenancies.filter((t:any)=>t.status==='Active').length===0&&<div style={{color:'#98A2B3',fontSize:13}}>No active tenancies</div>}
                 </div>
               </div>
@@ -2208,7 +2209,7 @@ export default function Page() {
             return (
             <div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginBottom:20}}>
-                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#323338'}}>£{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
+                <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#323338'}}>{cur()}{totalPaid.toLocaleString()}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Total Paid to Landlords</div></div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#059669'}}>{onTimeCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid On Time</div></div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#D97706'}}>{lateCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Paid Late</div></div>
                 <div style={{background:'#fff',borderRadius:12,border:'1px solid #FEE2E2',padding:20,textAlign:'center' as const}}><div style={{fontSize:24,fontWeight:700,color:'#EF4444'}}>{overdueCount}</div><div style={{fontSize:12,color:'#667085',marginTop:4}}>Overdue</div></div>
@@ -2232,13 +2233,13 @@ export default function Page() {
                   </div>
                   {lpForm.landlord_id && suggestedRent>0 && (
                     <div style={{background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:8,padding:'12px 16px',marginBottom:12,fontSize:12,color:'#166534'}}>
-                      Suggested from active tenancies: £{suggestedRent.toLocaleString()} rent − £{suggestedFee.toLocaleString()} fee ({commissionRate}%) = <strong>£{suggestedNet.toLocaleString()} net</strong>
+                      Suggested from active tenancies: {cur()}{suggestedRent.toLocaleString()} rent − {cur()}{suggestedFee.toLocaleString()} fee ({commissionRate}%) = <strong>{cur()}{suggestedNet.toLocaleString()} net</strong>
                       <button onClick={()=>setLpForm({...lpForm,category:'Rent Share',amount:String(suggestedNet)})} style={{marginLeft:10,fontSize:11,fontWeight:600,color:'#166534',background:'#DCFCE7',border:'none',borderRadius:6,padding:'3px 10px',cursor:'pointer'}}>Use this amount</button>
                     </div>
                   )}
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
                     <div><label style={labelStyle}>Category</label><select style={inputStyle} value={lpForm.category} onChange={e=>setLpForm({...lpForm,category:e.target.value})}>{['Rent Share','Utility Bill','Maintenance Reimbursement','Other'].map(c=><option key={c}>{c}</option>)}</select></div>
-                    <div><label style={labelStyle}>Amount (£)</label><input type="number" style={inputStyle} value={lpForm.amount} onChange={e=>setLpForm({...lpForm,amount:e.target.value})} placeholder="0.00"/></div>
+                    <div><label style={labelStyle}>Amount ({cur()})</label><input type="number" style={inputStyle} value={lpForm.amount} onChange={e=>setLpForm({...lpForm,amount:e.target.value})} placeholder="0.00"/></div>
                     <div><label style={labelStyle}>Due Date</label><input type="date" style={inputStyle} value={lpForm.due_date} onChange={e=>setLpForm({...lpForm,due_date:e.target.value})}/></div>
                     <div><label style={labelStyle}>Paid Date (leave blank if not yet paid)</label><input type="date" style={inputStyle} value={lpForm.paid_date} onChange={e=>setLpForm({...lpForm,paid_date:e.target.value})}/></div>
                     <div style={{gridColumn:'span 2'}}><label style={labelStyle}>Notes</label><input style={inputStyle} value={lpForm.notes} onChange={e=>setLpForm({...lpForm,notes:e.target.value})} placeholder="Optional"/></div>
@@ -2276,7 +2277,7 @@ export default function Page() {
                       <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{l?.name??'—'}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{prop?.name??'—'}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{p.category}</span>
-                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>£{parseFloat(p.amount).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{cur()}{parseFloat(p.amount).toLocaleString()}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{p.due_date??'—'}</span>
                       <span style={{fontSize:12,color:'#667085'}}>{p.paid_date??'—'}</span>
                       <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:st.bg,color:st.color,width:'fit-content'}}>{st.label}</span>
@@ -2355,13 +2356,13 @@ export default function Page() {
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:14}}>
                     <div><label style={labelStyle}>Statement Start</label><input type="date" style={inputStyle} value={bankCheckForm.statement_start} onChange={e=>setBankCheckForm({...bankCheckForm,statement_start:e.target.value})}/></div>
                     <div><label style={labelStyle}>Statement End</label><input type="date" style={inputStyle} value={bankCheckForm.statement_end} onChange={e=>setBankCheckForm({...bankCheckForm,statement_end:e.target.value})}/></div>
-                    <div><label style={labelStyle}>Declared Monthly Income (£)</label><input type="number" style={inputStyle} value={bankCheckForm.declared_income} onChange={e=>setBankCheckForm({...bankCheckForm,declared_income:e.target.value})}/></div>
+                    <div><label style={labelStyle}>Declared Monthly Income ({cur()})</label><input type="number" style={inputStyle} value={bankCheckForm.declared_income} onChange={e=>setBankCheckForm({...bankCheckForm,declared_income:e.target.value})}/></div>
                   </div>
 
                   {ratio && (
                     <div style={{marginBottom:16}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                        <span style={{fontSize:12,color:'#667085'}}>Rent-to-Income Ratio (rent £{editingTenancy?.rent})</span>
+                        <span style={{fontSize:12,color:'#667085'}}>Rent-to-Income Ratio (rent {cur()}{editingTenancy?.rent})</span>
                         <span style={{fontSize:12,fontWeight:600,color:ratio.withinGuideline?'#10B981':'#EF4444'}}>{ratio.pct}% — {ratio.withinGuideline?'within guideline (max ~40%)':'above guideline (max ~40%)'}</span>
                       </div>
                       <div style={{height:8,background:'#F3F4F6',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',width:Math.min(ratio.pct,100)+'%',background:ratio.withinGuideline?'#10B981':'#EF4444'}}/></div>

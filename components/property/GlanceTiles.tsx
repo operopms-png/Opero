@@ -2,6 +2,7 @@
 // At a glance: a few headline numbers for each area (short stays, lettings, estate agency, developments),
 // shown under the Real Estate Intelligence page. Read only; every figure comes from records already in the
 // platform and each tile opens the page it comes from.
+import { cur } from '@/lib/company-currency'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase, getAccountId } from '@/lib/supabase'
@@ -14,7 +15,7 @@ const C = { ink: '#10234d', muted: '#6b7a9f', line: '#e4e9f4', blue: '#2F6DB5', 
 const TONE: Record<Tone, string> = { good: '#067647', warn: '#B54708', bad: '#B42318', plain: '#667085' }
 const day = (d = 0) => { const x = new Date(); x.setDate(x.getDate() + d); return x.toISOString().slice(0, 10) }
 const monthStart = (back = 0) => { const x = new Date(); x.setDate(1); x.setMonth(x.getMonth() - back); return x.toISOString().slice(0, 10) }
-const money = (n: number, s = '£') => `${s}${Math.round(n).toLocaleString('en-GB')}`
+const money = (n: number, s = cur()) => `${s}${Math.round(n).toLocaleString('en-GB')}`
 const closed = (s: unknown) => /done|complete|closed|resolved|cancel|void/i.test(String(s ?? ''))
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`
 
