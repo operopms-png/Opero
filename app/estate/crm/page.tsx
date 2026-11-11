@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { cur } from '../../../lib/company-currency'
 const ACCENT = '#2F6DB5'
 const MODULE = 'estate'
 const CONTACT_TYPES = ['Landlord','Tenant','Buyer','Seller','Investor','Other']
@@ -161,7 +162,7 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
               <div><label style={lbl}>Deal Name *</label><input value={dealForm.name} onChange={e=>setDealForm({...dealForm,name:e.target.value})} placeholder="e.g. 3 bed sale" style={inp}/></div>
               <div><label style={lbl}>Contact</label><select value={dealForm.contact_id} onChange={e=>setDealForm({...dealForm,contact_id:e.target.value})} style={inp}><option value="">Select…</option>{contacts.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-              <div><label style={lbl}>Value (£)</label><input value={dealForm.value} onChange={e=>setDealForm({...dealForm,value:e.target.value})} type="number" style={inp}/></div>
+              <div><label style={lbl}>Value ({cur()})</label><input value={dealForm.value} onChange={e=>setDealForm({...dealForm,value:e.target.value})} type="number" style={inp}/></div>
               <div><label style={lbl}>Stage</label><select value={dealForm.stage} onChange={e=>setDealForm({...dealForm,stage:e.target.value})} style={inp}>{DEAL_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
             </div>
             <div style={{display:'flex',gap:8}}>
@@ -175,7 +176,7 @@ export default function Page() {
               <div key={d.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 100px 130px 100px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{d.name}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{d.crm_contacts?.name||'—'}</span>
-                <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{d.value?'£'+parseFloat(d.value).toLocaleString():'—'}</span>
+                <span style={{fontSize:13,fontWeight:600,color:ACCENT}}>{d.value?cur()+parseFloat(d.value).toLocaleString():'—'}</span>
                 <select value={d.stage} onChange={e=>updateDealStage(d.id,e.target.value)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{DEAL_STAGES.map(s=><option key={s}>{s}</option>)}</select>
                 <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
                   <button onClick={()=>openEditDeal(d)} style={{fontSize:11,color:ACCENT,background:'none',border:'1px solid '+ACCENT,borderRadius:6,padding:'3px 8px',cursor:'pointer'}}>Edit</button>
@@ -194,7 +195,7 @@ export default function Page() {
                 {deals.filter((d:any)=>d.stage===stage).map((d:any)=>(
                   <div key={d.id} style={{background:'#fff',borderRadius:8,border:'1px solid #E4E7EC',padding:10,marginBottom:8}}>
                     <div style={{fontSize:12,fontWeight:600,color:'#323338',marginBottom:2}}>{d.name}</div>
-                    <div style={{fontSize:11,color:ACCENT,fontWeight:600}}>£{parseFloat(d.value||0).toLocaleString()}</div>
+                    <div style={{fontSize:11,color:ACCENT,fontWeight:600}}>{cur()}{parseFloat(d.value||0).toLocaleString()}</div>
                   </div>
                 ))}
               </div>

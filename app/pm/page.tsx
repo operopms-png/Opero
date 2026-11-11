@@ -2144,7 +2144,7 @@ function PMPageInner() {
             return { u, name: prop?.name ?? u.pm_properties?.name ?? '—', income, head, costs, margin: income-head-costs, rateMissing: rate==null }
           })
           const totals = rows.reduce((t:any,r:any)=>({income:t.income+r.income,head:t.head+r.head,costs:t.costs+r.costs,margin:t.margin+r.margin}),{income:0,head:0,costs:0,margin:0})
-          const fmt = (n:number) => `${n<0?'-':''}£${Math.abs(Math.round(n)).toLocaleString()}`
+          const fmt = (n:number) => `${n<0?'-':''}${cur()}${Math.abs(Math.round(n)).toLocaleString()}`
           return (
           <div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:16}}>
@@ -2187,7 +2187,7 @@ function PMPageInner() {
                   <span>{u.service}</span>
                   <span>{u.account_holder??'—'}</span>
                   <span>{u.supplier??'—'}</span>
-                  <span>{u.monthly_amount!=null?`£${Number(u.monthly_amount).toLocaleString()}`:'—'}</span>
+                  <span>{u.monthly_amount!=null?`${cur()}${Number(u.monthly_amount).toLocaleString()}`:'—'}</span>
                   <span>{u.next_bill_date??'—'}</span>
                   <div style={{display:'flex',gap:8}}>
                     <button onClick={()=>openEdit('utility',{...u,monthly_amount:u.monthly_amount??''})} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>

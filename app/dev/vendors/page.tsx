@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { cur } from '../../../lib/company-currency'
 const ACCENT = '#2F6DB5'
 const MODULE = 'dev'
 const LABEL = 'Developments'
@@ -191,7 +192,7 @@ export default function Page() {
 
           {section==='Invoices'&&(<div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Pending invoices',v:pendingInvoices.length,c:'#F59E0B'},{l:'Total approved spend',v:'£'+totalSpend.toLocaleString(),c:'#10B981'},{l:'Awaiting approval',v:pendingInvoices.length,c:ACCENT}].map(s=>(
+              {[{l:'Pending invoices',v:pendingInvoices.length,c:'#F59E0B'},{l:'Total approved spend',v:cur()+totalSpend.toLocaleString(),c:'#10B981'},{l:'Awaiting approval',v:pendingInvoices.length,c:ACCENT}].map(s=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:20,textAlign:'center'}}>
                   <div style={{fontSize:24,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:12,color:'#667085'}}>{s.l}</div>
@@ -207,7 +208,7 @@ export default function Page() {
                   <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{w.title}</div>{w.property&&<div style={{fontSize:11,color:'#667085'}}>{w.property}</div>}</div>
                   <span style={{fontSize:13,color:'#344054'}}>{w.vendor_contractors?.name||'—'}</span>
                   <div style={{display:'flex',gap:4,alignItems:'center'}}>
-                    <span style={{fontSize:12,color:'#667085'}}>£</span>
+                    <span style={{fontSize:12,color:'#667085'}}>{cur()}</span>
                     <input value={w.invoice_amount||''} onChange={e=>updateWOField(w.id,'invoice_amount',e.target.value)} placeholder="0.00" style={{width:80,padding:'4px 8px',border:'1px solid #D0D5DD',borderRadius:6,fontSize:12,fontFamily:'inherit',outline:'none'}}/>
                   </div>
                   <span style={{fontSize:12,fontWeight:600,color:STATUS_COLORS[w.status]||'#344054'}}>{w.status}</span>
@@ -227,7 +228,7 @@ export default function Page() {
                 <div key={w.id} style={{padding:'20px',borderBottom:'1px solid #F2F4F7'}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
                     <div><div style={{fontSize:14,fontWeight:600,color:'#323338',marginBottom:2}}>{w.title}</div><div style={{fontSize:12,color:'#667085'}}>{w.vendor_contractors?.name} · {w.property} · {new Date(w.created_at).toLocaleDateString('en-GB')}</div></div>
-                    <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</div>
+                    <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{cur()}{parseFloat(w.invoice_amount||0).toLocaleString()}</div>
                   </div>
                   {w.description&&<div style={{fontSize:13,color:'#667085',marginBottom:12,background:'#F9FAFB',padding:'10px 12px',borderRadius:8}}>{w.description}</div>}
                   <div style={{display:'flex',gap:8}}>
@@ -242,7 +243,7 @@ export default function Page() {
                   <div key={w.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #F9FAFB'}}>
                     <div><div style={{fontSize:13,color:'#344054'}}>{w.title}</div><div style={{fontSize:11,color:'#667085'}}>{w.vendor_contractors?.name}</div></div>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
-                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>£{parseFloat(w.invoice_amount||0).toLocaleString()}</span>
+                      <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{cur()}{parseFloat(w.invoice_amount||0).toLocaleString()}</span>
                       <span style={{fontSize:12,fontWeight:600,color:STATUS_COLORS[w.status]}}>{w.status}</span>
                     </div>
                   </div>

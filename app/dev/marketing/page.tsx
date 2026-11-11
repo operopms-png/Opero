@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { cur } from '../../../lib/company-currency'
 const ACCENT = '#2F6DB5'
 const MODULE = 'dev'
 const LABEL = 'DEVELOPMENTS'
@@ -227,7 +228,7 @@ export default function Page() {
               <div><label style={lbl}>Name *</label><input value={campaignForm.name} onChange={e=>setCampaignForm({...campaignForm,name:e.target.value})} placeholder="Campaign name" style={inp}/></div>
               <div><label style={lbl}>Type</label><select value={campaignForm.type} onChange={e=>setCampaignForm({...campaignForm,type:e.target.value})} style={inp}>{['Email','Social','Ads','SMS','Multi-channel'].map(t=><option key={t}>{t}</option>)}</select></div>
               <div><label style={lbl}>Audience</label><input value={campaignForm.audience} onChange={e=>setCampaignForm({...campaignForm,audience:e.target.value})} placeholder="Target audience" style={inp}/></div>
-              <div><label style={lbl}>Budget (£)</label><input value={campaignForm.budget} onChange={e=>setCampaignForm({...campaignForm,budget:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+              <div><label style={lbl}>Budget ({cur()})</label><input value={campaignForm.budget} onChange={e=>setCampaignForm({...campaignForm,budget:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
               <div><label style={lbl}>Start Date</label><input value={campaignForm.start_date} onChange={e=>setCampaignForm({...campaignForm,start_date:e.target.value})} type="date" style={inp}/></div>
               <div><label style={lbl}>End Date</label><input value={campaignForm.end_date} onChange={e=>setCampaignForm({...campaignForm,end_date:e.target.value})} type="date" style={inp}/></div>
             </div>
@@ -245,7 +246,7 @@ export default function Page() {
                 <div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.name}</div>{c.start_date&&<div style={{fontSize:11,color:'#98A2B3'}}>{c.start_date} - {c.end_date}</div>}</div>
                 <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT,fontWeight:600}}>{c.type}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{c.audience||'—'}</span>
-                <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{c.budget?'£'+parseFloat(c.budget).toLocaleString():'—'}</span>
+                <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{c.budget?cur()+parseFloat(c.budget).toLocaleString():'—'}</span>
                 <select value={c.status} onChange={e=>updateField('marketing_campaigns',c.id,'status',e.target.value,setCampaigns)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Draft','Active','Paused','Completed'].map(s=><option key={s}>{s}</option>)}</select>
                 <button onClick={()=>del('marketing_campaigns',c.id,setCampaigns)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>Delete</button>
               </div>
@@ -270,7 +271,7 @@ export default function Page() {
             </div>
             {showSendSettings&&(<div style={{background:'#fff',borderRadius:12,border:'1px solid '+ACCENT,padding:24,marginBottom:20}}>
               <h3 style={{fontSize:15,fontWeight:600,margin:'0 0 6px'}}>Sending Address</h3>
-              <p style={{fontSize:12,color:'#98A2B3',marginBottom:16,lineHeight:1.5}}>This address's domain must be verified in Resend (SPF/DKIM records added to its DNS) or sends will fail or land in spam. If you haven't verified sangstersgroup.com in Resend yet, do that first — this setting alone won't make sends work on an unverified domain.</p>
+              <p style={{fontSize:12,color:'#98A2B3',marginBottom:16,lineHeight:1.5}}>This address's domain must be verified in Resend (SPF/DKIM records added to its DNS) or sends will fail or land in spam. Use an address on a domain you own and have verified, otherwise sends may fail.</p>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
                 <div><label style={lbl}>From Name</label><input value={sendSettings.marketing_from_name} onChange={e=>setSendSettings({...sendSettings,marketing_from_name:e.target.value})} placeholder="Your company name" style={inp}/></div>
                 <div><label style={lbl}>From Email</label><input value={sendSettings.marketing_from_email} onChange={e=>setSendSettings({...sendSettings,marketing_from_email:e.target.value})} placeholder="info@yourcompany.com" style={inp}/></div>
@@ -561,7 +562,7 @@ export default function Page() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
               <div><label style={lbl}>Ad Name *</label><input value={adForm.name} onChange={e=>setAdForm({...adForm,name:e.target.value})} placeholder="Ad name" style={inp}/></div>
               <div><label style={lbl}>Platform</label><select value={adForm.platform} onChange={e=>setAdForm({...adForm,platform:e.target.value})} style={inp}>{['Google','Facebook','Instagram','TikTok','LinkedIn'].map(p=><option key={p}>{p}</option>)}</select></div>
-              <div><label style={lbl}>Budget (£)</label><input value={adForm.budget} onChange={e=>setAdForm({...adForm,budget:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
+              <div><label style={lbl}>Budget ({cur()})</label><input value={adForm.budget} onChange={e=>setAdForm({...adForm,budget:e.target.value})} type="number" placeholder="0.00" style={inp}/></div>
               <div><label style={lbl}>Status</label><select value={adForm.status} onChange={e=>setAdForm({...adForm,status:e.target.value})} style={inp}>{['Draft','Active','Paused','Ended'].map(s=><option key={s}>{s}</option>)}</select></div>
               <div><label style={lbl}>Start Date</label><input value={adForm.start_date} onChange={e=>setAdForm({...adForm,start_date:e.target.value})} type="date" style={inp}/></div>
               <div><label style={lbl}>End Date</label><input value={adForm.end_date} onChange={e=>setAdForm({...adForm,end_date:e.target.value})} type="date" style={inp}/></div>
@@ -579,7 +580,7 @@ export default function Page() {
               <div key={a.id} style={{display:'grid',gridTemplateColumns:'1fr 120px 100px 100px 100px 60px',padding:'13px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                 <span style={{fontSize:13,fontWeight:500,color:'#323338'}}>{a.name}</span>
                 <span style={{fontSize:11,padding:'3px 8px',borderRadius:4,background:'#EAF3FC',color:ACCENT,fontWeight:600}}>{a.platform}</span>
-                <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{a.budget?'£'+parseFloat(a.budget).toLocaleString():'—'}</span>
+                <span style={{fontSize:13,fontWeight:600,color:'#323338'}}>{a.budget?cur()+parseFloat(a.budget).toLocaleString():'—'}</span>
                 <span style={{fontSize:12,color:'#667085'}}>{a.start_date||'—'}</span>
                 <select value={a.status} onChange={e=>updateField('marketing_ads',a.id,'status',e.target.value,setAds)} style={{fontSize:11,border:'1px solid #E4E7EC',borderRadius:4,padding:'3px 6px',fontFamily:'inherit'}}>{['Draft','Active','Paused','Ended'].map(s=><option key={s}>{s}</option>)}</select>
                 <button onClick={()=>del('marketing_ads',a.id,setAds)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',color:'#EF4444'}}>×</button>
@@ -620,7 +621,7 @@ export default function Page() {
             </div>
 
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
-              {[{l:'Total Campaigns',v:campaigns.length,c:ACCENT},{l:'Emails Sent',v:sentEmails.length,c:'#10B981'},{l:'Social Posts',v:socials.length,c:'#F59E0B'},{l:'Ad Spend',v:'£'+ads.reduce((s:number,a:any)=>s+parseFloat(a.budget||0),0).toLocaleString(),c:'#323338'}].map((s:any)=>(
+              {[{l:'Total Campaigns',v:campaigns.length,c:ACCENT},{l:'Emails Sent',v:sentEmails.length,c:'#10B981'},{l:'Social Posts',v:socials.length,c:'#F59E0B'},{l:'Ad Spend',v:cur()+ads.reduce((s:number,a:any)=>s+parseFloat(a.budget||0),0).toLocaleString(),c:'#323338'}].map((s:any)=>(
                 <div key={s.l} style={{background:'#fff',borderRadius:10,border:'1px solid #E4E7EC',padding:18,textAlign:'center' as const}}>
                   <div style={{fontSize:26,fontWeight:700,color:s.c,marginBottom:4}}>{s.v}</div>
                   <div style={{fontSize:11,color:'#667085'}}>{s.l}</div>
@@ -672,7 +673,7 @@ export default function Page() {
                   {Object.entries(adsByPlatform).map(([platform,d])=>(
                     <div key={platform} style={{border:'1px solid #F2F4F7',borderRadius:8,padding:14}}>
                       <div style={{fontSize:11,color:'#667085',textTransform:'uppercase' as const,marginBottom:4}}>{platform}</div>
-                      <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>£{d.spend.toLocaleString()}</div>
+                      <div style={{fontSize:18,fontWeight:700,color:'#323338'}}>{cur()}{d.spend.toLocaleString()}</div>
                       <div style={{fontSize:11,color:d.active>0?'#10B981':'#98A2B3',marginTop:2}}>{d.active>0?`● ${d.active} Active`:d.paused>0?`● ${d.paused} Paused`:d.ended>0?`● ${d.ended} Ended`:'No active ads'}</div>
                     </div>
                   ))}
@@ -690,7 +691,7 @@ export default function Page() {
                   <div key={c.id} style={{display:'grid',gridTemplateColumns:'1.5fr 100px 100px 120px 100px',padding:'13px 22px',borderBottom:'1px solid #F2F4F7',fontSize:13,alignItems:'center'}}>
                     <span style={{color:'#323338',fontWeight:500}}>{c.name}</span>
                     <span style={{color:'#667085'}}>{c.type}</span>
-                    <span style={{color:'#323338',fontWeight:600}}>{c.budget?'£'+parseFloat(c.budget).toLocaleString():'—'}</span>
+                    <span style={{color:'#323338',fontWeight:600}}>{c.budget?cur()+parseFloat(c.budget).toLocaleString():'—'}</span>
                     <span style={{color:'#667085',fontSize:11}}>{c.start_date?`${c.start_date} – ${c.end_date||'—'}`:'—'}</span>
                     <span style={{fontSize:11,fontWeight:600,color:c.status==='Active'?'#10B981':'#667085',background:c.status==='Active'?'#ECFDF5':'#F9FAFB',padding:'3px 8px',borderRadius:4,width:'fit-content'}}>{c.status}</span>
                   </div>
