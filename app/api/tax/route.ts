@@ -27,10 +27,22 @@ const KINDS = ['dividend', 'loan', 'management_charge', 'other']
 
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
 
+// Paying clients get one neutral company of their own, never the NOVOURQ group entities.
+const CLIENT_ENTITY = { code: 'company', country: 'OTHER', currency: 'GBP', role: 'Company tax and compliance',
+  obligations: ['Corporation / income tax', 'VAT / sales tax', 'Payroll tax', 'Social insurance', 'Property taxes', 'Annual filings'] }
+
+async function isClientAccount(biz: string) {
+  const { data: sub } = await db.from('subscriptions').select('stripe_customer_id,billing_period').eq('user_id', biz).limit(1)
+  const s = sub?.[0]
+  return !!s && (!!s.stripe_customer_id || s.billing_period === 'lifetime')
+}
+
 async function ensureSeeded(biz: string) {
+  const client = await isClientAccount(biz)
+  const list = client ? [{ ...CLIENT_ENTITY, name: ((await db.from('invoice_settings').select('company_name').eq('business_id', biz).maybeSingle()).data?.company_name as string | undefined)?.trim() || 'Your company' }] : ENTITIES
   const { data: existing } = await db.from('legal_entities').select('id,code').eq('business_id', biz)
   const have = new Set((existing ?? []).map((e: any) => e.code))
-  for (const e of ENTITIES) {
+  for (const e of list) {
     if (!have.has(e.code)) {
       const { data: row } = await db.from('legal_entities').insert({ business_id: biz, code: e.code, name: e.name, country: e.country, currency: e.currency, role: e.role }).select('id').single()
       if (row) await db.from('tax_obligations').insert(e.obligations.map(t => ({ business_id: biz, entity_id: row.id, tax_type: t })))

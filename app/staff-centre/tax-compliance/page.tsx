@@ -81,7 +81,7 @@ export default function TaxCompliance() {
 
           {ent && (
             <div style={{ display: 'grid', gap: 14 }}>
-              <Panel t={`${ent.name} · ${ent.country === 'JM' ? 'Jamaica' : 'UK'} · ${ent.currency}`}>
+              <Panel t={`${ent.name}${ent.country === 'JM' ? ' · Jamaica' : ent.country === 'UK' ? ' · UK' : ''} · ${ent.currency}`}>
                 <div style={{ color: '#667085', fontSize: 13, marginBottom: 10 }}>{ent.role}</div>
                 <div style={{ fontSize: 13, marginBottom: 8 }}>Registration: <b>{REG_LABEL[ent.registration_status]}</b>{ent.company_number ? ` · ${ent.company_number}` : ''}{ent.tax_registration_note ? ` · ${ent.tax_registration_note}` : ''}</div>
                 <button style={btn('ghost', true)} onClick={() => setReg({ entity_id: ent.id, registration_status: ent.registration_status, company_number: ent.company_number ?? '', tax_registration_note: ent.tax_registration_note ?? '' })}>Update registration</button>
