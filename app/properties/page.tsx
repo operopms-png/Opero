@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../lib/supabase'
+import { isPropertyLimitError } from '../../lib/property-allowance'
 
 type Property = {
   id: string
@@ -129,7 +130,7 @@ export default function PropertiesPage() {
       if (error) { alert(error.message); setSaving(false); return }
     } else {
       const { error } = await (supabase as any).from('properties').insert([payload])
-      if (error) { alert(error.message); setSaving(false); return }
+      if (error) { alert(isPropertyLimitError(error) ? 'Your plan includes 3 properties. To add more, open Real Estate Intelligence, then Properties, and press Add more properties (£12 a month for each extra property).' : error.message); setSaving(false); return }
     }
     setSaving(false)
     setShowModal(false)
