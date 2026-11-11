@@ -5,6 +5,7 @@ import { SITE_URL, EMAIL_DOMAIN } from '@/lib/brand'
 import { sendEmail } from '@/lib/send-email'
 import { documentPdf } from '@/lib/document-pdf'
 import { sanitizeHtml, settleBlanks, wordingText, changeSummary, esc } from '@/lib/doc-text'
+import { isHrFolder } from '@/lib/hr-docs'
 import { searchPeople, createFromTemplate, deliverDocument, docSettings, docEmailHtml, runDocAutomation, TRIGGERS } from '@/lib/documents'
 
 // Staff Centre → Documents.
@@ -21,10 +22,11 @@ import { searchPeople, createFromTemplate, deliverDocument, docSettings, docEmai
 //        Wording changes on an "Editable with approval" template go to Finance → Approvals first (admins send straight away).
 //   POST {action:'remind'|'void'|'delete', id}
 //   POST {action:'template-save'|'template-delete'|'template-import', …}   (any staff; a non-admin's template is saved as a draft until an admin makes it live; delete is admin only)
-//   POST {action:'file-add'|'file-delete'|'file-send', …}
+//   POST {action:'file-add'|'file-update'|'file-delete'|'file-send', …}   (files in an HR folder: Admin and HR Team only; GET ?files=1&scope=hr lists them)
 //   POST {action:'rule-save'|'rule-delete'|'run-rules', …}                  (admins)
 
 export const maxDuration = 60
+const hrOk = (c: any) => c.isAdmin || c.role === 'HR Team'
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
 const LIST_COLS = 'id,title,status,person_kind,recipient_name,recipient_email,property_label,created_by,created_at,sent_at,opened_at,signed_at,signed_name,changed,rule_id,needs_signature,reminders,template_id'
 const AUDIENCES = ['tenant', 'owner', 'guest', 'partner', 'client', 'any']
@@ -46,8 +48,11 @@ export async function GET(req: NextRequest) {
     return data ? NextResponse.json({ template: data, isAdmin: c.isAdmin }) : bad('Template not found', 404)
   }
   if (sp.get('files')) {
+    // HR folders (payslips and the like) only show in HR Documents, and only to Admin and HR Team
+    const hr = sp.get('scope') === 'hr'
+    if (hr && !hrOk(c)) return bad('HR documents are for Admin and HR Team only.', 403)
     const { data } = await db.from('doc_files').select('*').eq('business_id', biz).order('created_at', { ascending: false }).limit(1000)
-    return NextResponse.json({ files: data ?? [], isAdmin: c.isAdmin })
+    return NextResponse.json({ files: (data ?? []).filter((f: any) => isHrFolder(f.folder) === hr), isAdmin: c.isAdmin, canHr: hrOk(c) })
   }
   if (sp.get('rules')) {
     const [{ data: rules }, { data: templates }] = await Promise.all([
@@ -147,6 +152,12 @@ export async function POST(req: NextRequest) {
   }
 
   // ---------- library ----------
+  if (['file-add', 'file-update', 'file-delete', 'file-send'].includes(b.action)) {
+    // anything in or going into an HR folder needs Admin or HR Team
+    let target = String(b.folder || '')
+    if (b.id) { const { data: cur } = await db.from('doc_files').select('folder').eq('id', String(b.id)).eq('business_id', biz).maybeSingle(); if (cur && isHrFolder(cur.folder)) target = cur.folder }
+    if (isHrFolder(target) && !hrOk(c)) return bad('HR documents are for Admin and HR Team only.', 403)
+  }
   if (b.action === 'file-add') {
     const url = String(b.url || '')
     if (!/^https:\/\//.test(url)) return bad('Upload failed — try again.')
@@ -157,6 +168,9 @@ export async function POST(req: NextRequest) {
     const patch: any = {}
     if (b.name) patch.name = String(b.name).slice(0, 200)
     if (b.folder) patch.folder = String(b.folder).slice(0, 60)
+    if (b.property_label !== undefined) patch.property_label = String(b.property_label || '').slice(0, 200) || null
+    // replacing the file keeps its name and place in the library, e.g. after filling in a copy offline
+    if (b.url) { if (!/^https:\/\//.test(String(b.url))) return bad('Upload failed — try again.'); patch.url = String(b.url); patch.size = Number(b.size) || null; patch.mime = String(b.mime || '').slice(0, 100) || null }
     const { data, error } = await db.from('doc_files').update(patch).eq('id', String(b.id || '')).eq('business_id', biz).select('*').single()
     return error ? bad(error.message, 500) : NextResponse.json({ file: data })
   }
