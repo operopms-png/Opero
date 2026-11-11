@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 export default function DocumentsPage() {
     const [docs, setDocs] = useState<any[]>([])
@@ -16,8 +16,8 @@ export default function DocumentsPage() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     const [{ data: d }, { data: p }] = await Promise.all([
-      supabase.from('documents').select('*, properties(name)').eq('user_id', user?.id).order('created_at', { ascending: false }),
-      supabase.from('properties').select('id, name').eq('user_id', user?.id).is('ended_at', null),
+      supabase.from('documents').select('*, properties(name)').eq('user_id', user ? await getAccountId(user) : '').order('created_at', { ascending: false }),
+      supabase.from('properties').select('id, name').eq('user_id', user ? await getAccountId(user) : '').is('ended_at', null),
     ])
     setDocs(d ?? [])
     setProperties(p ?? [])

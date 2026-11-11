@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 
 
@@ -35,7 +35,7 @@ export default function OwnersPage() {
   async function fetchData() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: props } = await supabase.from('properties').select('*').eq('user_id', user?.id).is('ended_at', null)
+    const { data: props } = await supabase.from('properties').select('*').eq('user_id', user ? await getAccountId(user) : '').is('ended_at', null)
     const propIds = (props ?? []).map((p: any) => p.id)
     const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
     const [{ data: bkgs }, { data: tix }] = await Promise.all([

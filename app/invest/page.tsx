@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, applyStress } from '../../lib/dealCalculators'
 import AskChat from '../../components/ai/AskChat'
 import MarketCheck from '../../components/invest/MarketCheck'
@@ -126,8 +126,8 @@ export default function InvestPage() {
       if (!user) { window.location.href = '/login'; return }
       setUserId(user.id)
       const [dealsRes, watchRes] = await Promise.all([
-        supabase.from('investment_deals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('investment_watchlist').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('investment_deals').select('*').eq('user_id', await getAccountId(user)).order('created_at', { ascending: false }),
+        supabase.from('investment_watchlist').select('*').eq('user_id', await getAccountId(user)).order('created_at', { ascending: false }),
       ])
       setSavedDeals((dealsRes.data ?? []).map((d: any) => ({ id: d.id, strategy: d.strategy, address: d.address, savedAt: new Date(d.created_at).toLocaleDateString(), ...d.data, stage: d.stage || 'Found', propertyId: d.property_id || null })))
       setWatchlist((watchRes.data ?? []).map((w: any) => ({ id: w.id, address: w.address, price: w.price, notes: w.notes, status: w.status })))

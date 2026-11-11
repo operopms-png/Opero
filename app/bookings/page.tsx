@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 
 
@@ -56,7 +56,7 @@ export default function BookingsPage() {
   async function fetchBookings() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: props } = await supabase.from('properties').select('id').eq('user_id', user?.id)
+    const { data: props } = await supabase.from('properties').select('id').eq('user_id', user ? await getAccountId(user) : '')
     const safeIds = (props ?? []).map((p: any) => p.id)
     const idsToUse = safeIds.length ? safeIds : ['00000000-0000-0000-0000-000000000000']
     const { data } = await supabase
@@ -70,7 +70,7 @@ export default function BookingsPage() {
 
   async function fetchProperties() {
     const { data: { user } } = await supabase.auth.getUser()
-    const { data } = await supabase.from('properties').select('id, name').eq('user_id', user?.id).is('ended_at', null)
+    const { data } = await supabase.from('properties').select('id, name').eq('user_id', user ? await getAccountId(user) : '').is('ended_at', null)
     if (data) setProperties(data)
   }
 

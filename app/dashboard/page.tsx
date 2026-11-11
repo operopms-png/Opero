@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 const PLAN_FEATURES: Record<string, string[]> = {
   starter: ['properties', 'cleaning', 'maintenance', 'turnovers'],
@@ -44,7 +44,7 @@ export default function DashboardPage() {
       // maintenance_tickets don't — they only relate to the business
       // via property_id, so fetch this user's properties first and
       // filter the rest by that (same pattern used elsewhere in the app).
-      const { data: props } = await supabase.from('properties').select('*').eq('user_id', user?.id).is('ended_at', null)
+      const { data: props } = await supabase.from('properties').select('*').eq('user_id', user ? await getAccountId(user) : '').is('ended_at', null)
       const propIds = (props ?? []).map((p: any) => p.id)
       const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
 

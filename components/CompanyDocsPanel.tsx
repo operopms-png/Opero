@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, getAccountId } from '@/lib/supabase'
 
 type Category = 'sop' | 'contract_template'
 

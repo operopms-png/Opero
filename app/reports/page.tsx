@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 export default function ReportsPage() {
     const [bookings, setBookings] = useState<any[]>([])
@@ -11,7 +11,7 @@ export default function ReportsPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      const { data: p } = await supabase.from('properties').select('*').eq('user_id', user?.id).is('ended_at', null)
+      const { data: p } = await supabase.from('properties').select('*').eq('user_id', user ? await getAccountId(user) : '').is('ended_at', null)
       const propIds = (p ?? []).map((x: any) => x.id)
       const safeIds = propIds.length ? propIds : ['00000000-0000-0000-0000-000000000000']
       const { data: b } = await supabase.from('bookings').select('*, properties(name)').in('property_id', safeIds).order('check_in', { ascending: false })

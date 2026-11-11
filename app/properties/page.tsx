@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 type Property = {
   id: string
@@ -68,9 +68,9 @@ export default function PropertiesPage() {
       const { data: sub } = await supabase.from('subscriptions').select('plan').eq('user_id', user.id).single()
       if (sub && (sub as any).plan) setPlan((sub as any).plan)
     }
-    const { data } = await (supabase as any).from('properties').select('*').eq('user_id', user?.id).is('ended_at', null).order('created_at', { ascending: false })
+    const { data } = await (supabase as any).from('properties').select('*').eq('user_id', user ? await getAccountId(user) : '').is('ended_at', null).order('created_at', { ascending: false })
     if (data) setProperties(data as Property[])
-    const { data: gone } = await (supabase as any).from('properties').select('*').eq('user_id', user?.id).not('ended_at', 'is', null).order('ended_at', { ascending: false })
+    const { data: gone } = await (supabase as any).from('properties').select('*').eq('user_id', user ? await getAccountId(user) : '').not('ended_at', 'is', null).order('ended_at', { ascending: false })
     setFormer(gone ?? [])
     setLoading(false)
   }

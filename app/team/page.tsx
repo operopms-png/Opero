@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 type TeamMember = {
   id: string
@@ -27,7 +27,7 @@ export default function TeamPage() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data } = await supabase.from('team_members').select('*').eq('user_id', user.id).order('name')
+    const { data } = await supabase.from('team_members').select('*').eq('user_id', await getAccountId(user)).order('name')
     if (data) setMembers(data)
     setLoading(false)
   }

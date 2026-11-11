@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 
 const TEMPLATES = [
   { id: 'welcome', label: 'Welcome Message', subject: 'Welcome to {property_name}!', body: 'Hi {guest_name},\n\nWelcome! We\'re excited to host you at {property_name}.\n\nCheck-in: {check_in}\nCheck-out: {check_out}\n\nPlease don\'t hesitate to reach out if you need anything.\n\nBest regards' },
@@ -19,7 +19,7 @@ export default function GuestCommsPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      const { data: props } = await supabase.from('properties').select('id').eq('user_id', user?.id)
+      const { data: props } = await supabase.from('properties').select('id').eq('user_id', user ? await getAccountId(user) : '')
       const safeIds = (props ?? []).map((p: any) => p.id)
       const idsToUse = safeIds.length ? safeIds : ['00000000-0000-0000-0000-000000000000']
       const { data } = await supabase.from('bookings').select('*, properties(name, address)').in('property_id', idsToUse).order('check_in', { ascending: false }).limit(20)
