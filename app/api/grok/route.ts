@@ -106,6 +106,8 @@ const ACQUISITIONS_CHECKS: Check[] = [
 
 // Which roles get a records snapshot sent with each question.
 const SNAPSHOT_CHECKS: Record<string, Check[]> = {
+  // The main Novourq Cloud AI gets the daily records too, so "what is overdue this week?" can be answered
+  general: [...CHECKS, ...FINANCE_CHECKS.filter(f => f.label !== 'late_rent')],
   property_manager: CHECKS,
   finance_director: FINANCE_CHECKS,
   acquisitions: ACQUISITIONS_CHECKS,
