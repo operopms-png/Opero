@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   }))
   const items = DOC_SETS[kind].map(t => {
     const mine = files.filter(f => f.category === t.key)
-    const state = t.optional ? (mine.length ? 'approved' : 'optional') : mine.some(f => f.status === 'approved') || all.some((f: any) => f.category === t.key && f.visible_to_portal === false && f.status !== 'rejected') ? 'approved' : mine.some(f => f.status === 'pending') ? 'pending' : mine.some(f => f.status === 'rejected') ? 'rejected' : 'todo'
+    const state = t.byUs && !(mine.some(f => f.status === 'approved') || all.some((f: any) => f.category === t.key && f.status !== 'rejected')) ? 'byus' : t.optional ? (mine.length ? 'approved' : 'optional') : mine.some(f => f.status === 'approved') || all.some((f: any) => f.category === t.key && f.visible_to_portal === false && f.status !== 'rejected') ? 'approved' : mine.some(f => f.status === 'pending') ? 'pending' : mine.some(f => f.status === 'rejected') ? 'rejected' : 'todo'
     return { key: t.key, label: t.label, hint: t.hint, expiry: !!t.expiry, optional: !!t.optional, state, reason: mine.find(f => f.status === 'rejected')?.reason ?? null }
   })
   return NextResponse.json({ files, items, canUpload: !!w.self })
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
   const rec = w.rec!
   const cat = String(form.get('category') || '')
   const type = DOC_SETS[kind].find(t => t.key === cat); if (!type) return bad('Choose a document type.')
+  if (type.byUs) return bad('We add this document for you, so there is nothing to upload.')
   const file = form.get('file'); if (!(file instanceof File)) return bad('Choose a file first.')
   const ext = TYPES[file.type]; if (!ext) return bad('Upload a PDF, Word file or a photo (JPG, PNG, HEIC).')
   if (file.size > MAX) return bad('That file is too large. The limit is 15 MB.')

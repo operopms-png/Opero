@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 
 type Kind = 'landlord' | 'tenant' | 'ea_landlord' | 'ea_tenant'
 const pill = (bg: string, fg: string): React.CSSProperties => ({ fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 10, background: bg, color: fg, whiteSpace: 'nowrap' })
-const STATE: Record<string, [string, string, string]> = { todo: ['Required', '#FFF4E0', '#B54708'], pending: ['Being reviewed', '#E3EDFA', '#2F6DB5'], approved: ['Approved', '#E7F6EC', '#067647'], rejected: ['Replace', '#FEF3F2', '#B42318'], optional: ['Optional', '#F2F4F7', '#667085'] }
+const STATE: Record<string, [string, string, string]> = { todo: ['Required', '#FFF4E0', '#B54708'], pending: ['Being reviewed', '#E3EDFA', '#2F6DB5'], approved: ['Approved', '#E7F6EC', '#067647'], rejected: ['Replace', '#FEF3F2', '#B42318'], optional: ['Optional', '#F2F4F7', '#667085'], byus: ["We'll add this", '#F2F4F7', '#667085'] }
 
 export default function PortalDocuments({ kind, id, accent = '#2F6DB5', link }: { kind: Kind; id?: string; accent?: string; link?: string }) {
   const [d, setD] = useState<{ files: any[]; items: any[]; canUpload: boolean } | null>(null)
@@ -35,7 +35,7 @@ export default function PortalDocuments({ kind, id, accent = '#2F6DB5', link }: 
   }
   if (!d) return null
   const todo = d.items.filter(i => i.state === 'todo' || i.state === 'rejected')
-  const key = d.items.filter(i => !i.optional), got = key.filter(i => i.state === 'approved' || i.state === 'pending').length
+  const key = d.items.filter(i => !i.optional && i.state !== 'byus'), got = key.filter(i => i.state === 'approved' || i.state === 'pending').length
   const soon = (x?: string) => x && Math.ceil((new Date(x).getTime() - Date.now()) / 864e5) < 90
   const row = (it: any) => {
     const files = d.files.filter(f => f.category === it.key)
@@ -50,7 +50,7 @@ export default function PortalDocuments({ kind, id, accent = '#2F6DB5', link }: 
             <span style={{ whiteSpace: 'nowrap' }}>{f.url && <a href={f.url} target="_blank" rel="noreferrer" style={{ color: accent, fontWeight: 600, marginRight: 10 }}>View</a>}{f.mine && f.status === 'pending' && <button onClick={() => remove(f.id)} style={{ border: 'none', background: 'none', color: '#B42318', cursor: 'pointer', fontSize: 12.5, padding: 0 }}>Remove</button>}</span>
           </div>
         ))}
-        {d.canUpload && (it.state !== 'approved' || it.optional) && (
+        {d.canUpload && (it.state !== 'approved' || it.optional) && it.state !== 'byus' && (
           <div style={{ display: 'flex', gap: 8, marginTop: 9, alignItems: 'center' }}>
             {it.expiry && <input type="date" value={exp[it.key] ?? ''} onChange={e => setExp({ ...exp, [it.key]: e.target.value })} title="Expiry date" style={{ fontSize: 13, padding: '8px', borderRadius: 8, border: '1px solid #C9D6E6' }} />}
             <button disabled={!!busy} onClick={() => { target.current = it.key; pick.current?.click() }} style={{ flex: 1, border: 'none', borderRadius: 9, background: accent, color: '#fff', fontSize: 13, fontWeight: 700, padding: '10px', cursor: 'pointer', fontFamily: 'inherit' }}>{busy === it.key ? 'Uploading…' : it.state === 'rejected' ? 'Upload a replacement' : 'Take photo or upload'}</button>

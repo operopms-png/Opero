@@ -15,7 +15,7 @@ export const REMIND_EVERY_DAYS = 3, MAX_REMINDERS = 5
 /** Key documents with no pending or approved file yet (rejected files do not count as received). */
 export function missingKeys(subject: PortalSubject, rows: { category: string; status: string }[]) {
   const have = new Set(rows.filter(r => r.status !== 'rejected').map(r => r.category))
-  return keyDocs(subject).filter(t => !have.has(t.key))
+  return keyDocs(subject).filter(t => !t.byUs && !have.has(t.key))
 }
 
 export async function emailPerson(biz: string, subject: PortalSubject, person: { name: string; email: string }, headline: string, lines: string[], button = 'Open your documents', url = '') {

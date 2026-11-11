@@ -1,5 +1,5 @@
 // The document checklist on each head lease (Real Estate Intelligence → Head Leases → Documents).
-export type DocType = { key: string; label: string; hint: string; expiry?: boolean; optional?: boolean }
+export type DocType = { key: string; label: string; hint: string; expiry?: boolean; optional?: boolean; byUs?: boolean }
 export const LEASE_DOC_TYPES: DocType[] = [
   { key: 'master_lease', label: 'Master lease agreement', hint: 'Signed copy of the head lease' },
   { key: 'head_lessor', label: 'Head lessor documents', hint: "Landlord's authority to sublet, consent letters" },
@@ -18,13 +18,13 @@ export const DOC_SETS: Record<DocSubject, typeof LEASE_DOC_TYPES> = {
   landlord: [
     { key: 'landlord_id', label: 'Landlord ID', hint: 'Passport or driving licence', expiry: true },
     { key: 'ownership', label: 'Proof of ownership', hint: 'Title deed or land registry entry' },
-    { key: 'mgmt_agreement', label: 'Management agreement', hint: 'Signed agreement between you and the owner' },
+    { key: 'mgmt_agreement', label: 'Management agreement', hint: 'Signed agreement between you and the owner', byUs: true },
     { key: 'address', label: 'Proof of address', hint: 'Utility bill or bank statement, under 3 months old' },
     { key: 'bank', label: 'Bank details', hint: 'Letter or statement for rent payouts' },
     { key: 'other', label: 'Other documents', hint: 'Anything else for this owner', optional: true },
   ],
   tenant: [
-    { key: 'tenancy', label: 'Tenancy agreement', hint: 'Signed copy of the tenancy' },
+    { key: 'tenancy', label: 'Tenancy agreement', hint: 'Signed copy of the tenancy', byUs: true },
     { key: 'tenant_id', label: 'Tenant ID', hint: 'Passport or driving licence', expiry: true },
     { key: 'right_to_rent', label: 'Right to rent', hint: 'Share code check or visa, with its expiry date', expiry: true },
     { key: 'income', label: 'Proof of income', hint: 'Payslips, contract or bank statements' },
