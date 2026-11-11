@@ -4,6 +4,7 @@ import { randomBytes, randomUUID } from 'crypto'
 import { sendEmail } from '@/lib/send-email'
 import { teamEmails } from '@/lib/feedback-notify'
 import { SITE_URL } from '@/lib/brand'
+import { DOC_SETS, isSubject } from '@/lib/lease-doc-types'
 import { serviceClient as db } from '@/lib/admin-auth'
 
 // A recipient fills in a fillable document on their services link (/s/[token]) and presses Submit.
@@ -111,5 +112,7 @@ export async function POST(req: NextRequest) {
     const replyTo = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(b.email || '').trim()) ? String(b.email).trim() : undefined
     for (const addr of await teamEmails(l.business_id)) await sendEmail(addr, subject, html, replyTo, undefined, att).catch(() => null)
   } catch { /* ignore */ }
-  return NextResponse.json({ ok: true })
+  // Documents they should now upload (ID and so on), when the submission was filed on a landlord or co-host record.
+  const upload = leaseDocId && l.subject && isSubject(l.subject) ? DOC_SETS[l.subject as keyof typeof DOC_SETS].filter(t => !t.byUs).map(t => ({ key: t.key, label: t.label, hint: t.hint })) : []
+  return NextResponse.json({ ok: true, upload })
 }

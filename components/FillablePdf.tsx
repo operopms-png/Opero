@@ -15,10 +15,11 @@ export default function FillablePdf({ url, token, docId, title }: { url: string;
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [name, setName] = useState(''), [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false), [msg, setMsg] = useState(''), [done, setDone] = useState(false)
+  const [need, setNeed] = useState<{ key: string; label: string; hint: string }[]>([]), [sent, setSent] = useState<Record<string, string>>({}), [upBusy, setUpBusy] = useState(''), [upMsg, setUpMsg] = useState('')
 
   useEffect(() => {
     let dead = false
-    setStatus('loading'); setPages([]); setFields([]); setVals({}); setDone(false); setMsg('')
+    setStatus('loading'); setPages([]); setFields([]); setVals({}); setDone(false); setMsg(''); setNeed([]); setSent({})
     ;(async () => {
       try {
         const pdfjs = await importer('/pdfjs/pdf.min.mjs')
@@ -63,11 +64,21 @@ export default function FillablePdf({ url, token, docId, title }: { url: string;
     try {
       const r = await fetch('/api/public/services/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, doc: docId, name, email, values: vals }) })
       const j = await r.json().catch(() => ({}))
-      if (!r.ok) setMsg(j.error || 'Could not send. Try again.'); else setDone(true)
+      if (!r.ok) setMsg(j.error || 'Could not send. Try again.'); else { setNeed(j.upload || []); setDone(true) }
     } catch { setMsg('Could not send. Check your connection and try again.') }
     setBusy(false)
   }
 
+  const upload = async (key: string, file: File | undefined) => {
+    if (!file) return
+    setUpBusy(key); setUpMsg('')
+    const fd = new FormData(); fd.append('t', token); fd.append('email', email.trim()); fd.append('category', key); fd.append('file', file)
+    try {
+      const r = await fetch('/api/public/services/upload', { method: 'POST', body: fd }); const j = await r.json().catch(() => ({}))
+      if (!r.ok) setUpMsg(j.error || 'Upload failed. Try again.'); else setSent(p => ({ ...p, [key]: file.name }))
+    } catch { setUpMsg('Upload failed. Check your connection and try again.') }
+    setUpBusy('')
+  }
   const inp: React.CSSProperties = { position: 'absolute', boxSizing: 'border-box', background: 'rgba(214,228,255,.55)', border: '1px solid #8aa4d6', borderRadius: 2, padding: '0 3px', margin: 0, font: 'inherit', color: '#0f2150', outline: 'none' }
   if (status === 'error') return <div><iframe src={url} title={title} style={{ width: '100%', height: '78vh', border: '1px solid #D5DCEA', borderRadius: 4 }} /><div style={{ fontSize: 12.5, color: '#B42318', marginTop: 8 }}>This document can’t be filled in here on this device. Press Open / download PDF.</div></div>
   return (
@@ -76,7 +87,25 @@ export default function FillablePdf({ url, token, docId, title }: { url: string;
       {status === 'ready' && (done ? (
         <div style={{ padding: 30, textAlign: 'center', background: '#EAF7F0', border: '1px solid #B7E3CB', borderRadius: 8, color: '#0F5132' }}>
           <div style={{ fontSize: 18, fontWeight: 700 }}>Sent. Thank you.</div>
-          <div style={{ fontSize: 14, marginTop: 6 }}>We have your completed {title}. You can close this page.</div>
+          <div style={{ fontSize: 14, marginTop: 6 }}>We have your completed {title}.{need.length ? ' Next, please upload your documents below.' : ' You can close this page.'}</div>
+          {need.length > 0 && (
+            <div style={{ marginTop: 18, textAlign: 'left', background: '#fff', border: '1px solid #B7E3CB', borderRadius: 8, padding: 14, color: '#18223a' }}>
+              <div style={{ fontWeight: 700, color: NAVY, marginBottom: 8 }}>Upload your documents</div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {need.map(n => (
+                  <div key={n.key} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                    <div style={{ minWidth: 200, flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{n.label}{sent[n.key] ? ' ✓' : ''}</div><div style={{ fontSize: 12.5, color: '#667085' }}>{sent[n.key] ? `Sent: ${sent[n.key]}` : n.hint}</div></div>
+                    <label style={{ background: sent[n.key] ? '#fff' : NAVY, color: sent[n.key] ? NAVY : '#fff', border: `1px solid ${NAVY}`, borderRadius: 6, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: upBusy === n.key ? .6 : 1 }}>
+                      {upBusy === n.key ? 'Uploading…' : sent[n.key] ? 'Replace' : 'Choose file'}
+                      <input type="file" accept="application/pdf,image/*" capture={undefined} style={{ display: 'none' }} disabled={!!upBusy} onChange={e => { upload(n.key, e.target.files?.[0]); e.target.value = '' }} />
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {upMsg && <div style={{ fontSize: 13, color: '#B42318', marginTop: 8 }}>{upMsg}</div>}
+              <div style={{ fontSize: 12.5, color: '#667085', marginTop: 10 }}>PDF or photo, up to 15 MB each. Upload what you have now.</div>
+            </div>
+          )}
         </div>
       ) : (<>
         <div style={{ fontSize: 13.5, color: '#344054', marginBottom: 10, lineHeight: 1.5 }}>Click any shaded box to type, or tick a box. When you have finished, enter your name and email below and press Submit. It goes straight to us.</div>
