@@ -236,7 +236,7 @@ function SettingsInner() {
         <div className="set-head" style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <h1 style={{fontSize:17,fontWeight:600,margin:0,color:'#323338'}}>{section}</h1>
         </div>
-        <div className="set-body" style={{flex:1,padding:24,overflowY:'auto'}}>
+        <div className="set-body" style={{flex:1,minWidth:0,padding:24,overflowY:'auto'}}>
 
           {section==='My Account'&&(<div style={{maxWidth:600}}>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',padding:24,marginBottom:16}}>

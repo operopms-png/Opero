@@ -87,6 +87,9 @@ export default function TeamBoard({ me, myRole, team, roles, propertyCount, onIn
         @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
         .tm-row:hover, .tm-row:hover .tm-sticky { background: ${BRAND.hover} !important }
         .tm-editable:hover { background: #EAF3FC !important }
+        .tm-scroll::-webkit-scrollbar { height: 12px }
+        .tm-scroll::-webkit-scrollbar-thumb { background: #B8BCC8; border-radius: 6px }
+        .tm-scroll::-webkit-scrollbar-track { background: #EEF0F4 }
         .tm-tb:hover { background: ${BRAND.hover} }
         @media (max-width: 900px) { .tm-tiles { grid-template-columns: repeat(2, minmax(0,1fr)) !important } }
       `}</style>
@@ -116,7 +119,7 @@ export default function TeamBoard({ me, myRole, team, roles, propertyCount, onIn
         <span style={{ marginLeft: 'auto', fontSize: 12.5, color: BRAND.muted }}>{visible.length} {visible.length === 1 ? 'member' : 'members'}</span>
       </div>
 
-      <div style={{ overflowX: 'auto', paddingBottom: 20 }}>
+      <div className="tm-scroll" style={{ overflowX: 'scroll', paddingBottom: 20 }}>
         <div style={{ minWidth: totalW }}>
           {groups.map(g => {
             const isCol = collapsed.includes(g.role)
@@ -133,7 +136,7 @@ export default function TeamBoard({ me, myRole, team, roles, propertyCount, onIn
                       <div style={{ width: 6, background: g.color, borderTopLeftRadius: 6 }} />
                       <div style={{ width: NAME_W, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13.5, borderRight: `1px solid ${BRAND.rowBorder}`, boxShadow: '2px 0 3px -2px rgba(0,0,0,0.08)' }}>Member</div>
                     </div>
-                    {COLS.map(c => <div key={c.key} style={{ width: c.width, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13.5, borderRight: `1px solid ${BRAND.rowBorder}` }}>{c.title}</div>)}
+                    {COLS.map(c => <div key={c.key} style={{ width: c.width, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13.5, borderRight: `1px solid ${BRAND.rowBorder}`, ...(c.key === 'actions' ? { position: 'sticky', right: 0, zIndex: 2, background: '#fff', borderRight: 'none' } : {}) }}>{c.title}</div>)}
                   </div>
                   {g.items.map(m => <Row key={m.id} m={m} color={g.color} roles={roles} propertyCount={propertyCount} onEdit={onEdit} onDelete={onDelete} onRoleChange={onRoleChange} />)}
                   <div style={{ display: 'flex', height: 36, borderBottom: `1px solid ${BRAND.rowBorder}` }}>
@@ -193,7 +196,7 @@ function Row({ m, color, roles, propertyCount, onEdit, onDelete, onRoleChange }:
       <div title={m.you ? access : `${access} — click to change`} onClick={() => !m.you && onEdit(m)} className={m.you ? undefined : 'tm-editable'} style={{ ...cell, width: COLS[3].width, padding: '0 10px', gap: 6, cursor: m.you ? 'default' : 'pointer', color: access === 'Role default' ? BRAND.muted : BRAND.ink, whiteSpace: 'nowrap' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{access}</span>{!m.you && <span style={{ color: BRAND.goldDark, flexShrink: 0 }}>✎</span>}</div>
       <div title={m.you ? undefined : 'Click to choose which properties they can see'} onClick={() => !m.you && onEdit(m)} className={m.you ? undefined : 'tm-editable'} style={{ ...cell, width: COLS[4].width, justifyContent: 'center', gap: 6, cursor: m.you ? 'default' : 'pointer', color: props === 'All' ? BRAND.muted : BRAND.ink }}>{props}{!m.you && <span style={{ color: BRAND.goldDark }}>✎</span>}</div>
       <div style={{ ...cell, width: COLS[5].width, padding: 1 }}><Pill text={m.status ?? 'Active'} color={active ? '#00C875' : '#FDAB3D'} /></div>
-      <div style={{ ...cell, width: COLS[6].width, gap: 6, justifyContent: 'center' }}>
+      <div className="tm-sticky" style={{ ...cell, width: COLS[6].width, gap: 6, justifyContent: 'center', position: 'sticky', right: 0, zIndex: 1, background: '#fff', borderRight: 'none', boxShadow: '-2px 0 3px -2px rgba(0,0,0,0.12)' }}>
         {!m.you && <>
           <a href={`/staff-dashboard?staff_id=${m.id}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, color: BRAND.goldDark, textDecoration: 'none', border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '3px 8px', whiteSpace: 'nowrap' }}>View as</a>
           <button onClick={() => onEdit(m)} style={{ fontSize: 12.5, color: BRAND.ink, background: '#fff', border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
