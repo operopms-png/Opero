@@ -3,6 +3,8 @@
 // Planned Maintenance and Emergency Contacts. Each one is a table of records with Add, Edit and Delete.
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { cur } from '@/lib/company-currency'
+const CUR_SYM: Record<string, string> = { GBP: '£', JMD: 'J$', USD: '$', EUR: '€', AED: 'AED ', CAD: 'C$' }
 
 export type Field = {
   key: string; label: string; type?: 'text' | 'number' | 'date' | 'select' | 'property' | 'textarea'
@@ -36,7 +38,7 @@ export default function RecordTab({ cfg, userId, properties }: { cfg: RecordTabC
   }
   useEffect(() => { load() /* eslint-disable-next-line */ }, [userId, cfg.table])
 
-  const sym = (r: any) => (r.pm_properties?.currency === 'JMD' ? 'J$' : '£')
+  const sym = (r: any) => CUR_SYM[r.pm_properties?.currency as string] ?? cur()
   const summary = useMemo(() => cfg.summary?.(rows, today) ?? [], [rows, cfg, today])
 
   function openAdd() { setForm({ ...(cfg.defaults ?? {}) }); setEditId(null); setErr(''); setModal(true) }
