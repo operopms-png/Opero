@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
 
 // AI Command Centre → Operations cards. Real counts only, scoped to the signed-in account.
 // Maintenance, cleaning and turnovers are linked to the account through their property.
@@ -9,7 +11,7 @@ export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   const biz = c.businessId
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+  const today = todayIn(await companyTz(biz))
   const in7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10)
   const in30 = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)
 

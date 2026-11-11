@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
 
 // AI Command Centre → Invoices and Approvals counts for the account (business_id scoped).
 export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   const biz = c.businessId
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+  const today = todayIn(await companyTz(biz))
   const [inv, appr] = await Promise.all([
     db.from('invoices').select('status,due_date,paid_at,total,currency').eq('business_id', biz),
     db.from('approvals').select('status,amount,currency').eq('business_id', biz),

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
 import { hasScTab } from '@/lib/staff-access'
+import { companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
 
 // Staff Centre → Finance → Risk alerts. For every property we sublet under a head lease
 // (Property Management → Head Leases), flags the ones where tenant rent is late while we
@@ -14,14 +16,13 @@ import { hasScTab } from '@/lib/staff-access'
 // when both are GBP.
 
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
-const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
 const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
 
 export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return bad('Not signed in', 401)
   if (!(await hasScTab(c, 'finance'))) return bad('You don’t have access to Finance — ask an admin to tick it in Team Management.', 403)
-  const T = today(), month = T.slice(0, 7)
+  const T = todayIn(await companyTz(c.businessId)), month = T.slice(0, 7)
   const [leases, props, rent, tenants] = await Promise.all([
     q(db.from('pm_head_leases').select('id,property_id,landlord_name,rent_payable,expiry_date,break_date').eq('user_id', c.businessId)),
     q(db.from('pm_properties').select('id,name,country').eq('user_id', c.businessId).is('ended_at', null)),

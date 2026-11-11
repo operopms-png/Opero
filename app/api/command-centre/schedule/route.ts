@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
 
 // AI Command Centre → Calendar, Meetings and Tasks counts, from the account's own records.
 const isDone = (s: string | null) => /done|complete|closed|finished/i.test(s || '')
@@ -9,7 +11,7 @@ export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   const biz = c.businessId
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date())
+  const today = todayIn(await companyTz(biz))
   const d = new Date(today + 'T00:00:00Z')
   const dow = (d.getUTCDay() + 6) % 7 // Monday = 0
   const mon = new Date(d); mon.setUTCDate(d.getUTCDate() - dow)

@@ -5,6 +5,8 @@ import { ratesPerGBP, type Cur } from '@/lib/currency'
 import { companySymbol } from '@/lib/company-currency-server'
 import { codeOf } from '@/lib/company-currency'
 import { hasScTab } from '@/lib/staff-access'
+import { companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
 
 // Staff Centre → Finance. Money worked out from what's already recorded in the
 // portal — nothing has to be typed in twice:
@@ -20,7 +22,7 @@ import { hasScTab } from '@/lib/staff-access'
 // POST {action:'rent-paid',   module:'pm'|'ea', id}
 
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
-const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
+const todayFor = async (biz: string) => todayIn(await companyTz(biz))
 const CURS = ['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD']
 const ym = (d?: string | null) => (d || '').slice(0, 7)
 const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
@@ -62,7 +64,7 @@ export async function GET(req: NextRequest) {
   const eaCur = (p: any): Cur => (CURS.includes(p?.currency) ? p.currency : base)
   const view = req.nextUrl.searchParams.get('view') || 'overview'
   const d = await load(c.businessId)
-  const T = today()
+  const T = await todayFor(c.businessId)
   const name = (list: any[], id: string, f = 'name') => list.find((x: any) => x.id === id)?.[f] || null
   const pmProp = (id: string) => d.pmProps.find((p: any) => p.id === id), eaProp = (id: string) => d.eaProps.find((p: any) => p.id === id)
 
@@ -144,7 +146,7 @@ export async function POST(req: NextRequest) {
   const id = String(b.id || '')
   if (b.action === 'payout-paid') {
     const table = b.module === 'ea' ? 'estate_landlord_payments' : 'pm_landlord_payments'
-    const { error } = await db.from(table).update({ paid_date: b.paid === false ? null : today() }).eq('id', id).eq('user_id', c.businessId)
+    const { error } = await db.from(table).update({ paid_date: b.paid === false ? null : await todayFor(c.businessId) }).eq('id', id).eq('user_id', c.businessId)
     return error ? bad(error.message, 500) : NextResponse.json({ ok: true })
   }
   if (b.action === 'partner-add') {
@@ -155,13 +157,13 @@ export async function POST(req: NextRequest) {
     return error ? bad(error.message, 500) : NextResponse.json({ ok: true })
   }
   if (b.action === 'partner-paid') {
-    const { error } = await db.from('partner_payouts').update({ paid_date: b.paid === false ? null : today() }).eq('id', id).eq('user_id', c.businessId)
+    const { error } = await db.from('partner_payouts').update({ paid_date: b.paid === false ? null : await todayFor(c.businessId) }).eq('id', id).eq('user_id', c.businessId)
     return error ? bad(error.message, 500) : NextResponse.json({ ok: true })
   }
   if (b.action === 'rent-paid') {
     const { error } = b.module === 'ea'
       ? await db.from('estate_rent_schedules').update({ status: 'Paid' }).eq('id', id).eq('user_id', c.businessId)
-      : await db.from('pm_rent_payments').update({ status: 'paid', paid_date: today() }).eq('id', id).eq('user_id', c.businessId)
+      : await db.from('pm_rent_payments').update({ status: 'paid', paid_date: await todayFor(c.businessId) }).eq('id', id).eq('user_id', c.businessId)
     return error ? bad(error.message, 500) : NextResponse.json({ ok: true })
   }
   return bad('Unknown action')

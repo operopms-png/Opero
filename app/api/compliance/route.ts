@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
 
 // Operations → Compliance: every certificate, licence and insurance across
 // Vacation Rentals, Property Management, Estate Agency and Developments in one
@@ -12,7 +14,6 @@ import { getCaller } from '@/lib/mailbox'
 
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
 const TABLE: Record<string, string> = { vr: 'str_compliance', pm: 'pm_compliance', ea: 'estate_compliance', dev: 'dev_compliance' }
-const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
 const date = (v: any) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : null
 const q = (p: PromiseLike<{ data: any }>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
 
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
     vr: vrP.map((p: any) => ({ id: p.id, name: p.name })), pm: pmP.map((p: any) => ({ id: p.id, name: p.name })),
     ea: eaP.map((p: any) => ({ id: p.id, name: p.name || p.address })), dev: devP.map((p: any) => ({ id: p.id, name: p.name })),
   }
-  const T = today()
+  const T = todayIn(await companyTz(biz))
   const norm = (module: string, r: any) => {
     const expiry = r.expiry_date || null, pid = module === 'dev' ? r.project_id : r.property_id
     const days = expiry ? Math.round((new Date(expiry).getTime() - new Date(T).getTime()) / 864e5) : null

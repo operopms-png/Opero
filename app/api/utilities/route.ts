@@ -6,6 +6,9 @@ import { getCaller } from '@/lib/mailbox'
 import { LEASE_DOC_BUCKET } from '@/lib/lease-doc-types'
 import { loadUtilities } from '@/lib/utilities-data'
 import { limitSplit } from '@/lib/utility-limit'
+import { companySymbol, companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
+import { CURRENCIES } from '@/lib/company-currency'
 
 // Utility bills per property (electricity, internet and the rest). Staff only; private bill files; scoped to the caller's company.
 //   GET                                   → { properties: [{id,name,currency,accounts:[{…, bills:[…]}]}] }
@@ -65,12 +68,13 @@ async function invoiceTenant(c: any, billId: string) {
     db.from('pm_tenants').select('id, name, email, phone').eq('user_id', c.businessId).eq('property_id', bill.property_id).order('created_at', { ascending: false }).limit(1),
   ])
   const t = tenants?.[0]; if (!t) return bad('No tenant is linked to this property yet.')
-  const cur = ['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD'].includes(prop?.currency) ? prop!.currency : 'JMD'
+  const bizSym = await companySymbol(c.businessId)
+  const cur = ['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD'].includes(prop?.currency) ? prop!.currency : (CURRENCIES.find(x => x.symbol === bizSym)?.code ?? 'GBP')
   const { data: num, error: nErr } = await db.rpc('next_invoice_number', { biz: c.businessId })
   if (nErr) return bad('Could not number the invoice.', 500)
   const sym = ({ JMD: 'J$', USD: 'US$', GBP: '£', EUR: '€', AED: 'AED ', CAD: 'C$' } as Record<string, string>)[cur] ?? '£', fmt = (n: number) => sym + Math.round(n).toLocaleString('en-GB')
   const desc = `${acct?.supplier || 'Electricity'} bill ${bill.period_end}: ${fmt(Number(bill.amount))}, less ${fmt(Number(acct!.covered_limit))} covered. Your share above the limit`
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
+  const today = todayIn(await companyTz(c.businessId))
   const { data: inv, error } = await db.from('invoices').insert({
     business_id: c.businessId, created_by: c.name || c.email, number: num, status: 'draft', bill_to_name: t.name, bill_to_email: t.email || null, bill_to_phone: t.phone || null,
     bill_to_address: prop?.name || null, person_kind: 'pm_tenant', person_id: t.id, module: 'pm', issue_date: today, due_date: bill.due_date || null, currency: cur,

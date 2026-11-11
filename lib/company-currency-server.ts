@@ -5,3 +5,9 @@ export async function companySymbol(businessId: string): Promise<string> {
   const { data } = await db.from('invoice_settings').select('currency_symbol').eq('business_id', businessId).maybeSingle()
   return data?.currency_symbol || '£'
 }
+
+// The company's time zone (Settings → Currency). Defaults to London.
+export async function companyTz(businessId: string): Promise<string> {
+  const { data } = await db.from('invoice_settings').select('timezone').eq('business_id', businessId).maybeSingle()
+  return (data as any)?.timezone || 'Europe/London'
+}

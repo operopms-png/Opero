@@ -1,4 +1,4 @@
-import { companySymbol } from '@/lib/company-currency-server'
+import { companySymbol, companyTz } from '@/lib/company-currency-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
@@ -13,10 +13,8 @@ import { getCaller } from '@/lib/mailbox'
 // GET ?range=today|week|month
 
 export const maxDuration = 30
-const TZ = 'America/Jamaica'
 const CLOSED = ['resolved', 'completed', 'complete', 'closed', 'done', 'cancelled', 'canceled', 'fixed']
 const open = (s: any) => !CLOSED.includes(String(s || '').toLowerCase())
-const day = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d) // YYYY-MM-DD
 const addDays = (ymd: string, n: number) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10) }
 const nights = (a: string, b: string) => Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 864e5))
 
@@ -25,6 +23,8 @@ export async function GET(req: NextRequest) {
   if (!c) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   const biz = c.businessId
   const sy = await companySymbol(biz)
+  const TZ = await companyTz(biz)
+  const day = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d) // YYYY-MM-DD
   const range = ['week', 'month'].includes(req.nextUrl.searchParams.get('range') || '') ? req.nextUrl.searchParams.get('range')! : 'today'
 
   const today = day(new Date())

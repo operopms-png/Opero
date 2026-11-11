@@ -4,6 +4,8 @@ import { getCaller } from '@/lib/mailbox'
 import { SITE_URL, EMAIL_DOMAIN } from '@/lib/brand'
 import { sendEmail } from '@/lib/send-email'
 import { invoicePdf, fmtMoney, fmtDate } from '@/lib/invoice-pdf'
+import { companyTz } from '@/lib/company-currency-server'
+import { todayIn } from '@/lib/company-tz'
 
 // Finance → Invoices, in the NOVOURQ invoice format.
 //   GET                       -> { invoices, settings, isAdmin }
@@ -27,12 +29,12 @@ async function settingsFor(biz: string) {
   if (!data) { await db.from('invoice_settings').insert({ business_id: biz }); ({ data } = await db.from('invoice_settings').select('*').eq('business_id', biz).maybeSingle()) }
   return data
 }
-const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Jamaica' }).format(new Date())
-const withStatus = (i: any) => ({ ...i, shown_status: i.status === 'sent' && i.due_date && i.due_date < today() ? 'overdue' : i.status })
+const withStatus = (i: any, tz?: string) => ({ ...i, shown_status: i.status === 'sent' && i.due_date && i.due_date < todayIn(tz) ? 'overdue' : i.status })
 
 export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return bad('Not signed in', 401)
+  const tz = await companyTz(c.businessId)
   const sp = req.nextUrl.searchParams
   const settings = await settingsFor(c.businessId)
 
@@ -76,16 +78,17 @@ export async function GET(req: NextRequest) {
       const bytes = await invoicePdf(inv, settings, SITE_URL)
       return new NextResponse(Buffer.from(bytes), { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${inv.number || 'invoice-draft'}.pdf"` } })
     }
-    return NextResponse.json({ invoice: withStatus(inv), settings })
+    return NextResponse.json({ invoice: withStatus(inv, tz), settings })
   }
   const { data, error } = await db.from('invoices').select('*').eq('business_id', c.businessId).order('created_at', { ascending: false }).limit(500)
   if (error) return bad(error.message, 500)
-  return NextResponse.json({ invoices: (data ?? []).map(withStatus), settings, isAdmin: c.isAdmin })
+  return NextResponse.json({ invoices: (data ?? []).map(i => withStatus(i, tz)), settings, isAdmin: c.isAdmin })
 }
 
 export async function POST(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return bad('Not signed in', 401)
+  const tz = await companyTz(c.businessId)
   const b = await req.json().catch(() => ({}))
   const by = c.name || c.email
 
@@ -107,7 +110,7 @@ export async function POST(req: NextRequest) {
       bill_to_name: String(b.bill_to_name).trim().slice(0, 150), bill_to_phone: String(b.bill_to_phone || '').slice(0, 60) || null,
       bill_to_email: String(b.bill_to_email || '').trim().slice(0, 200) || null, bill_to_address: String(b.bill_to_address || '').slice(0, 300) || null,
       person_kind: b.person_kind || null, person_id: /^[0-9a-f-]{36}$/.test(b.person_id || '') ? b.person_id : null, module: b.module || 'company',
-      issue_date: /^\d{4}-\d{2}-\d{2}$/.test(b.issue_date || '') ? b.issue_date : today(), due_date: /^\d{4}-\d{2}-\d{2}$/.test(b.due_date || '') ? b.due_date : null,
+      issue_date: /^\d{4}-\d{2}-\d{2}$/.test(b.issue_date || '') ? b.issue_date : todayIn(tz), due_date: /^\d{4}-\d{2}-\d{2}$/.test(b.due_date || '') ? b.due_date : null,
       currency: CURS.includes(b.currency) ? b.currency : 'GBP', items, total: Math.round(items.reduce((a: number, i: any) => a + i.qty * i.amount, 0) * 100) / 100,
       note: String(b.note || '').slice(0, 1000) || null, updated_at: new Date().toISOString(),
     }
@@ -116,12 +119,12 @@ export async function POST(req: NextRequest) {
       if (!cur) return bad('Invoice not found', 404)
       if (cur.status === 'paid') return bad('This invoice is paid — mark it unpaid first to change it.')
       const { data, error } = await db.from('invoices').update(row).eq('id', cur.id).select('*').single()
-      return error ? bad(error.message, 500) : NextResponse.json({ invoice: withStatus(data) })
+      return error ? bad(error.message, 500) : NextResponse.json({ invoice: withStatus(data, tz) })
     }
     const { data: num, error: nErr } = await db.rpc('next_invoice_number', { biz: c.businessId })
     if (nErr) return bad(nErr.message, 500)
     const { data, error } = await db.from('invoices').insert({ ...row, business_id: c.businessId, created_by: by, number: num, status: 'draft' }).select('*').single()
-    return error ? bad(error.message, 500) : NextResponse.json({ invoice: withStatus(data) })
+    return error ? bad(error.message, 500) : NextResponse.json({ invoice: withStatus(data, tz) })
   }
 
   const { data: inv } = await db.from('invoices').select('*').eq('id', String(b.id || '')).eq('business_id', c.businessId).maybeSingle()
@@ -146,13 +149,13 @@ export async function POST(req: NextRequest) {
     if ((r as any).skipped) return bad('Email isn’t set up on the portal yet (RESEND_API_KEY missing in Netlify). Download the PDF and send it yourself for now.', 503)
     if ((r as any).error) return bad(`The email didn’t go: ${(r as any).error}`.slice(0, 400), 502)
     const { data } = await db.from('invoices').update({ status: inv.status === 'paid' ? 'paid' : 'sent', sent_at: new Date().toISOString(), sent_to: to, bill_to_email: inv.bill_to_email || to, updated_at: new Date().toISOString() }).eq('id', inv.id).select('*').single()
-    return NextResponse.json({ invoice: withStatus(data) })
+    return NextResponse.json({ invoice: withStatus(data, tz) })
   }
   if (['paid', 'unpaid', 'void'].includes(b.action)) {
     if (!c.isAdmin) return bad('Only admins can mark invoices paid.', 403)
     const patch = b.action === 'paid' ? { status: 'paid', paid_at: new Date().toISOString(), paid_by: by } : b.action === 'void' ? { status: 'void' } : { status: inv.sent_at ? 'sent' : 'draft', paid_at: null, paid_by: null }
     const { data } = await db.from('invoices').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', inv.id).select('*').single()
-    return NextResponse.json({ invoice: withStatus(data) })
+    return NextResponse.json({ invoice: withStatus(data, tz) })
   }
   if (b.action === 'delete') {
     if (inv.status !== 'draft') return bad('Only drafts can be deleted — void a sent invoice instead.')
