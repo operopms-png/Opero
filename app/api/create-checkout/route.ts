@@ -2,11 +2,10 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { SITE_URL } from '@/lib/brand'
 
-// Novourq sells one thing: all-modules access, either monthly or as a one-time
-// lifetime payment. The two Stripe price IDs live in Netlify env vars so the
+// Novourq sells one thing: all-modules access, billed monthly or annually. The two Stripe price IDs live in Netlify env vars so the
 // price can change in Stripe without a code change:
 //   STRIPE_PRICE_NOVOURQ_MONTHLY   (recurring, £49 / month)
-//   STRIPE_PRICE_NOVOURQ_ONETIME   (one-off, £470.40 = £588 less 20%)
+//   STRIPE_PRICE_NOVOURQ_ONETIME   (£470.40 = £588 less 20%, billed annually)
 // The webhook (app/api/stripe-webhook/route.ts) reads the same two vars.
 const PRICE_IDS: Record<string, string | undefined> = {
   monthly: process.env.STRIPE_PRICE_NOVOURQ_MONTHLY,
@@ -37,7 +36,9 @@ export async function POST(request: NextRequest) {
       const known = plan === 'monthly' || plan === 'onetime'
       return NextResponse.json({ error: known ? 'This plan is not set up yet' : 'Invalid plan' }, { status: 400, headers: CORS })
     }
-    const isOneTime = plan === 'onetime'
+    // The Stripe price decides the mode, so the annual price can be a one-off or a yearly subscription without a code change
+    const price = await stripe.prices.retrieve(finalPriceId)
+    const isOneTime = price.type !== 'recurring'
     const successPath = returnTo || `/login?plan=${plan}&success=true`
     const cleanEmail = typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? email.trim().slice(0, 200) : ''
     const back = typeof cancelUrl === 'string' && WEBSITE.test(cancelUrl) ? cancelUrl : `${SITE_URL}/settings`

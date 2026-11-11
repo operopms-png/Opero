@@ -31,16 +31,16 @@ const PLANS = [
   },
   {
     id: 'onetime',
-    label: 'One-time (lifetime access)',
+    label: 'Annually',
     price: '£470.40',
-    period: ' one-time',
+    period: '/year',
     color: BABY_BLUE,
     features: [
       'All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager',
       '6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification',
       'Staff Centre included free — conversations, property portals, CRM & more',
       'Unlimited properties',
-      'One login, no recurring bill',
+      'One login, one bill, 20% off the monthly price',
     ],
   },
 ]
@@ -208,47 +208,45 @@ function LoginForm() {
           <div style={{ fontSize: 18, fontWeight: 700, color: '#323338', marginBottom: 4 }}>Choose your plan</div>
           <div style={{ fontSize: 13, color: '#667085', marginBottom: 24 }}>14-day free trial · Card required, you are not charged until the trial ends, cancel anytime</div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', background: '#F2F4F7', borderRadius: 10, padding: 4, marginBottom: 16 }}>
             {PLANS.map(plan => (
-              <div
+              <button
                 key={plan.id}
+                type="button"
                 onClick={() => setSelectedPlan(plan.id)}
-                style={{
-                  padding: '16px 18px', borderRadius: 12, cursor: 'pointer',
-                  border: `2px solid ${selectedPlan === plan.id ? plan.color : '#E4E7EC'}`,
-                  background: selectedPlan === plan.id ? plan.color + '08' : '#fff',
-                  position: 'relative', transition: 'all 0.15s',
-                }}
+                style={{ flex: 1, padding: '9px 8px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, background: selectedPlan === plan.id ? '#fff' : 'transparent', color: selectedPlan === plan.id ? '#323338' : '#667085', boxShadow: selectedPlan === plan.id ? '0 1px 2px rgba(16,24,40,0.1)' : 'none' }}
               >
-                {plan.popular && (
-                  <div style={{ position: 'absolute', top: -10, left: 16, background: plan.color, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Most popular</div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', border: `2px solid ${plan.color}`, background: selectedPlan === plan.id ? plan.color : 'transparent', transition: 'all 0.15s' }} />
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{plan.label}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: 18, fontWeight: 700, color: plan.color }}>{plan.price}</span>
-                    <span style={{ fontSize: 12, color: '#98A2B3' }}>{plan.period}</span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {plan.features.slice(0, 3).map(f => (
-                    <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#667085' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={plan.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      {f}
-                    </div>
-                  ))}
-                  {plan.features.length > 3 && <div style={{ fontSize: 11, color: '#98A2B3', marginTop: 2 }}>+{plan.features.length - 3} more features</div>}
-                </div>
-              </div>
+                {plan.label}{plan.id === 'onetime' ? ' · Save 20%' : ''}
+              </button>
             ))}
           </div>
 
+          {(() => {
+            const plan = PLANS.find(p => p.id === selectedPlan) || PLANS[0]
+            return (
+              <div style={{ padding: '16px 18px', borderRadius: 12, border: `2px solid ${plan.color}`, background: plan.color + '08' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#323338' }}>{plan.label}</span>
+                  <div>
+                    <span style={{ fontSize: 22, fontWeight: 700, color: '#323338' }}>{plan.price}</span>
+                    <span style={{ fontSize: 12, color: '#98A2B3' }}>{plan.period}</span>
+                  </div>
+                </div>
+                {plan.id === 'onetime' && <div style={{ fontSize: 12, color: '#667085', marginBottom: 10 }}>£588 a year paid monthly, less 20%</div>}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {plan.features.map(f => (
+                    <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: 12, color: '#667085' }}>
+                      <svg style={{ flexShrink: 0, marginTop: 2 }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#12B76A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           <div style={{ marginTop: 'auto', paddingTop: 24, fontSize: 12, color: '#98A2B3', textAlign: 'center' }}>
-            The monthly plan includes a 14-day free trial, cancel anytime. The one-time plan is £470.40 (£588 less 20%), a single lifetime-access purchase.
-          </div>
+            Switch between monthly (£49) and annual (£470.40, £588 less 20%) at any time before you pay. Cancel anytime.</div>
         </div>
       )}
 

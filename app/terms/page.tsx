@@ -15,7 +15,7 @@ export default function TermsPage() {
       <p>You must give accurate details and keep logins secure. You are responsible for everything done under your account, including by people you invite. The account admin controls who has access.</p>
 
       <H>3. Subscription and payment</H>
-      <p>The service costs £49 a month after a 14-day free trial. Payment is by card through Stripe, and we do not store card details. You can cancel at any time from your account settings or by contacting us. Cancellation takes effect at the end of the paid period. Fees already paid are not refundable, except where the law requires otherwise.</p>
+      <p>The service costs £49 a month, or £470.40 a year, after a 14-day free trial. Payment is by card through Stripe, and we do not store card details. You can cancel at any time from your account settings or by contacting us. Cancellation takes effect at the end of the paid period. Fees already paid are not refundable, except where the law requires otherwise.</p>
 
       <H>4. Your data</H>
       <p>You own the data you put into Novourq. You give us permission to process it only to provide the service. Where we handle personal data of your landlords, tenants, guests or leads, you are the controller and we are the processor, and we handle it under a data processing agreement that forms part of these terms. Account admins can download all company data and request deletion under Settings, Privacy &amp; Data. See our <a href="/privacy" style={link}>Privacy Policy</a>.</p>
