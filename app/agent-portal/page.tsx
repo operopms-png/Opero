@@ -11,6 +11,27 @@ const lab: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 6
 const card: React.CSSProperties = { background: '#fff', borderRadius: 14, padding: '18px 18px', boxShadow: '0 1px 3px rgba(16,24,40,.08)', marginBottom: 14 }
 const STATUS: Record<string, string> = { logged: 'Logged', screening: 'Screening', approved: 'Approved', rejected: 'Rejected', completed: 'Completed', cancelled: 'Cancelled' }
 const CSTAT: Record<string, string> = { none: '', pending: 'Commission pending', payable: 'Commission due', paid: 'Paid', clawed_back: 'Clawed back' }
+const STEPS = [
+  ['1', 'Log', 'Add your guest or tenant with the + Log button.'],
+  ['2', 'We screen', 'Our team checks them. You can follow the status below.'],
+  ['3', 'Approved', 'They book or move in. The status changes to Approved, then Completed.'],
+  ['4', 'You get paid', 'We confirm your commission and pay it to the account you gave us.'],
+]
+function HowItWorks() {
+  return (
+    <details open style={{ ...card, padding: '14px 18px' }}>
+      <summary style={{ fontWeight: 700, cursor: 'pointer', fontSize: 15 }}>How it works</summary>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 10, marginTop: 14 }}>
+        {STEPS.map(([n, t, d], i) => (
+          <div key={n} style={{ position: 'relative', background: '#F5F8FC', border: '1px solid #E4EAF3', borderRadius: 12, padding: '12px 12px 14px' }}>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', background: i === 3 ? '#12B76A' : BLUE, color: '#fff', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</div>
+            <div style={{ fontWeight: 700, fontSize: 14, margin: '8px 0 3px' }}>{t}</div>
+            <div style={{ fontSize: 12.5, color: '#667085', lineHeight: 1.45 }}>{d}</div>
+          </div>))}
+      </div>
+    </details>
+  )
+}
 const blank = { referral_type: 'short_term', channel: 'direct', person_name: '', person_email: '', person_phone: '', property_label: '', start_date: '', end_date: '', value: '', notes: '' }
 
 export default function AgentPortal() {
@@ -95,6 +116,7 @@ export default function AgentPortal() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 14 }}>
             {[['Due to you', money(owed)], ['Pending', money(pending)], ['Paid', money(paid)]].map(([l, v]) => <div key={l} style={{ ...card, marginBottom: 0 }}><div style={{ fontSize: 12.5, color: '#667085' }}>{l}</div><div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>{v}</div></div>)}
           </div>
+          <HowItWorks />
           {a.status === 'active' && !showForm && <button onClick={() => setShowForm(true)} style={{ display: 'block', width: '100%', border: 'none', borderRadius: 10, background: NAVY, color: '#fff', fontSize: 16, fontWeight: 700, padding: 13, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14 }}>+ Log a guest or tenant</button>}
           {showForm && (
             <form onSubmit={save} style={card}>

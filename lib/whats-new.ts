@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-12', title: 'How it works for agents', text: 'The agent portal now opens with a four step How it works strip: log, we screen, approved, you get paid.' },
   { date: '2026-11-12', title: 'Agents no longer see commission rates', text: 'In the agent portal, agents only see the commission amount you set on each referral; the rates stay private.' },
   { date: '2026-11-12', title: 'Agents can change currency', text: 'In the agent portal, agents can show their commission in pounds, dollars, Jamaican dollars, euros, dirhams or Canadian dollars; it is display only.' },
   { date: '2026-11-12', title: 'Agent portal', text: 'Agents now have their own portal: they sign up on a link, you press Activate, then they log in to log their own guests and tenants and see their commission.' },
