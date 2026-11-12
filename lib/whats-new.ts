@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-12', title: 'Agent page form feeds the CRM', text: 'The agent recruitment form on your website now creates a CRM contact and an Enquiry deal for each applicant, and emails them the link to create their agent portal login.' },
   { date: '2026-11-12', title: 'Three ways for agents to earn', text: 'The agent portal now shows Place a renter, Send a guest and List a property with us, each with its own form; property leads appear in the Referral pipeline as Property to lease.' },
   { date: '2026-11-12', title: 'How it works for agents', text: 'The agent portal now opens with a four step How it works strip: log, we screen, approved, you get paid.' },
   { date: '2026-11-12', title: 'Agents no longer see commission rates', text: 'In the agent portal, agents only see the commission amount you set on each referral; the rates stay private.' },
