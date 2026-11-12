@@ -795,7 +795,7 @@ export default function PartnersPage() {
               <Panel title="Referral pipeline" meta={PERIOD_LABEL[period]}>
                 <Funnel stages={funnel} />
               </Panel>
-              <Panel title="Top agents" meta="by commission earned" pad={false}><div style={{ overflowX: 'auto' }}>
+              <Panel title="Agent leaderboard" meta="by commission earned" pad={false}><div style={{ overflowX: 'auto' }}>
                 {topAgents.length === 0
                   ? <div style={{ padding: 18, fontSize: 13, color: '#8a857a' }}>No agents yet. Add one in the Agent Programme tab.</div>
                   : <table style={tbl}>
