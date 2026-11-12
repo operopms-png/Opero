@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { ownerFetch } from '@/lib/platform-fetch'
 import { BRAND } from '@/lib/crm-board'
 import { BOARDS, boardByKey } from '@/lib/marketing-boards'
 import { useMarketing, type Mk } from '@/components/marketing/useMarketing'
@@ -122,6 +123,28 @@ function NavItem({ icon, label, active, onClick, count }: { icon: React.ReactNod
   )
 }
 
+function EnquiryLinkCard() {
+  const [d, setD] = useState<{ url: string; active: boolean; isAdmin: boolean } | null>(null)
+  const [copied, setCopied] = useState(false)
+  useEffect(() => { ownerFetch('/api/enquiry-link').then(r => { if (r.data?.url) setD(r.data) }).catch(() => {}) }, [])
+  if (!d) return null
+  const copy = () => { navigator.clipboard?.writeText(d.url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800) }).catch(() => {}) }
+  const toggle = async () => { const a = !d.active; setD({ ...d, active: a }); await ownerFetch('/api/enquiry-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: a }) }) }
+  return (
+    <div style={{ border: `1px solid ${BRAND.rowBorder}`, borderRadius: 8, padding: '14px 16px', marginBottom: 12 }}>
+      <div style={{ fontWeight: 600, fontSize: 14 }}>Enquiry form link</div>
+      <div style={{ fontSize: 12.5, color: BRAND.muted, margin: '2px 0 10px' }}>Send this to landlords and investors. They choose Guaranteed Rent, Short Let Partnership or Estate Property Management and submit. Every enquiry lands in your CRM Pipeline at Enquiry.</div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input readOnly value={d.url} onFocus={e => e.currentTarget.select()} style={{ flex: '1 1 260px', minWidth: 0, padding: '8px 10px', border: `1px solid ${BRAND.border}`, borderRadius: 6, fontSize: 13, fontFamily: 'inherit' }} />
+        <button onClick={copy} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 600, padding: '0 14px' }}>{copied ? 'Copied' : 'Copy link'}</button>
+        <a href={d.url} target="_blank" rel="noreferrer" className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}`, textDecoration: 'none', color: 'inherit' }}>Open</a>
+        {d.isAdmin && <button onClick={toggle} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{d.active ? 'Switch off' : 'Switch on'}</button>}
+      </div>
+      {!d.active && <div style={{ fontSize: 12.5, color: '#B42318', marginTop: 8 }}>This link is off. Anyone opening it sees that it is not active.</div>}
+    </div>
+  )
+}
+
 function Home({ mk, onOpen, onDashboard, onScripts }: { mk: Mk; onOpen: (k: string) => void; onDashboard: () => void; onScripts: () => void }) {
   const last = (k: string) => mk.rows[k].reduce((a, r) => Math.max(a, new Date(r.created_at).getTime()), 0)
   const td: React.CSSProperties = { padding: '11px 16px', borderBottom: `1px solid ${BRAND.rowBorder}` }
@@ -144,6 +167,7 @@ function Home({ mk, onOpen, onDashboard, onScripts }: { mk: Mk; onOpen: (k: stri
           <button onClick={onDashboard} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.dashboard} Open dashboard</button>
           <button onClick={onScripts} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.scripts} Scripts</button>
         </div>
+        <EnquiryLinkCard />
         <div style={{ border: `1px solid ${BRAND.rowBorder}`, borderRadius: 8, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 520 }}>
             <thead><tr style={{ color: BRAND.muted, textAlign: 'left' }}>{['Board', 'Items', 'In progress', 'Last added'].map(h => <th key={h} style={{ padding: '10px 16px', fontWeight: 500, borderBottom: `1px solid ${BRAND.rowBorder}` }}>{h}</th>)}</tr></thead>

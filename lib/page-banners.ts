@@ -43,7 +43,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/hr-documents': { title: 'HR Documents', text: 'Payslips, HR forms and contracts in one place. Open a form to fill it in, edit or replace it, and send it to the person by email. Only Admin and HR Team can see this.' },
   '/staff-centre/hr': { title: 'People & HR', text: 'Your team records in one place: staff details, leave, contracts and reviews.' },
   '/staff-centre/crm': { title: 'CRM', text: 'Contacts, deals and follow-ups for landlords, tenants and buyers.' },
-  '/staff-centre/marketing': { title: 'Marketing', text: 'Campaigns, content and leads from your marketing, with results for each.' },
+  '/staff-centre/marketing': { title: 'Marketing', text: 'Campaigns, content and leads from your marketing, with results for each. Copy the enquiry form link from the home page to send to landlords.' },
   '/staff-centre/performance': { title: 'Staff Performance', text: 'How each team member is doing: tasks finished, response times and targets.' },
   '/staff-centre/website-chats': { title: 'Website Chats', text: 'Conversations from your website. Novourq Cloud AI answers visitors, books viewings and saves leads.' },
   '/staff-centre/ask-grok': { title: 'Novourq Cloud AI', text: 'Ask Novourq Cloud AI anything about your business. It answers from your own records.' },
