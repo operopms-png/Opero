@@ -122,6 +122,22 @@ export default function AgentPortal() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 14 }}>
             {[['Due to you', money(owed)], ['Pending', money(pending)], ['Paid', money(paid)]].map(([l, v]) => <div key={l} style={{ ...card, marginBottom: 0 }}><div style={{ fontSize: 12.5, color: '#667085' }}>{l}</div><div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>{v}</div></div>)}
           </div>
+          {Array.isArray(data?.leaderboard) && data.leaderboard.length > 0 && (
+            <div style={card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>Leaderboard</div>
+                {data.myRank > 0 && <div style={{ fontSize: 13, color: '#667085' }}>You are number {data.myRank} of {data.agentCount}</div>}
+              </div>
+              <div style={{ marginTop: 10 }}>
+                {data.leaderboard.map((x: any) => (
+                  <div key={x.rank} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 8px', borderRadius: 8, background: x.me ? '#EAF2FB' : 'transparent' }}>
+                    <div style={{ width: 24, fontWeight: 700, color: x.rank === 1 ? '#B7791F' : '#667085' }}>{x.rank}</div>
+                    <div style={{ width: 110, fontWeight: x.me ? 700 : 500, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.name}{x.me ? ' (you)' : ''}</div>
+                    <div style={{ flex: 1, height: 8, background: '#EEF1F6', borderRadius: 999, overflow: 'hidden' }}><div style={{ width: `${Math.max(x.pct, x.pct ? 4 : 0)}%`, height: '100%', background: x.me ? BLUE : NAVY, borderRadius: 999 }} /></div>
+                  </div>))}
+              </div>
+              <div style={{ fontSize: 12, color: '#667085', marginTop: 8 }}>Ranked by confirmed commission. Only you see your own amounts.</div>
+            </div>)}
           <div style={{ fontWeight: 700, fontSize: 15, margin: '4px 2px 10px' }}>Three ways to earn</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 12, marginBottom: 14 }}>
             {WAYS.map(([k, l, t, d]) => (

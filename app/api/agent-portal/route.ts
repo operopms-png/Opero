@@ -20,7 +20,18 @@ export async function GET(req: NextRequest) {
   const { data: refs } = await db.from('agent_referrals').select('id,referral_type,channel,person_name,property_label,start_date,end_date,status,commission_amount,commission_status,created_at').eq('agent_id', a.id).order('created_at', { ascending: false })
   const referrals = (refs ?? []).map(r => ({ ...r, commission: commission(r) }))
   const { data: u } = await db.auth.admin.getUserById(a.user_id)
-  return NextResponse.json({ agent: { name: a.name, code: a.code, status: a.status }, referrals, company: (u?.user?.user_metadata as any)?.company_name || '', rates: await ratesPerGBP() })
+  // Leaderboard: every active agent of this company ranked by confirmed commission. Others show as first name and initial,
+  // and only a relative bar is shared, never anyone's amounts.
+  const { data: peers } = await db.from('partner_agents').select('id,name').eq('user_id', a.user_id).eq('status', 'active')
+  const { data: peerRefs } = await db.from('agent_referrals').select('agent_id,commission_amount,commission_status').eq('user_id', a.user_id).in('commission_status', ['paid', 'payable', 'pending'])
+  const tot: Record<string, number> = {}
+  for (const r of peerRefs ?? []) tot[r.agent_id] = (tot[r.agent_id] || 0) + (Number(r.commission_amount) || 0)
+  const nice = (n: string) => { const p = n.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()); return p.length > 1 ? `${p[0]} ${p[p.length - 1].charAt(0)}.` : p[0] }
+  const ranked = (peers ?? []).map(x => ({ id: x.id, name: nice(x.name), t: tot[x.id] || 0 })).sort((x, y) => y.t - x.t)
+  const top = ranked[0]?.t || 0
+  const leaderboard = ranked.slice(0, 10).map((x, i) => ({ rank: i + 1, name: x.name, me: x.id === a.id, pct: top ? Math.round((x.t / top) * 100) : 0 }))
+  const myRank = ranked.findIndex(x => x.id === a.id) + 1
+  return NextResponse.json({ leaderboard, myRank, agentCount: ranked.length, agent: { name: a.name, code: a.code, status: a.status }, referrals, company: (u?.user?.user_metadata as any)?.company_name || '', rates: await ratesPerGBP() })
 }
 export async function POST(req: NextRequest) {
   const a = await me(req); if (!a) return NextResponse.json({ error: 'No agent account found for this login.' }, { status: 404 })
