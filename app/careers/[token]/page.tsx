@@ -16,6 +16,7 @@ export default function CareersPage() {
   const [live, setLive] = useState(true)
   const [pick, setPick] = useState<string>('')
   const [f, setF] = useState({ name: '', email: '', phone: '', message: '', website: '' })
+  const [cv, setCv] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const [done, setDone] = useState(false)
@@ -24,7 +25,7 @@ export default function CareersPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setErr(''); setBusy(true)
     try {
-      const r = await fetch('/api/public/careers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, role_id: pick, ...f }) })
+      const r = await fetch('/api/public/careers', { method: 'POST', body: (() => { const d = new FormData(); d.append('token', token); d.append('role_id', pick); Object.entries(f).forEach(([k, v]) => d.append(k, v)); if (cv) d.append('cv', cv); return d })() })
       const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Something went wrong.')
       setDone(true); window.scrollTo(0, 0)
     } catch (x: any) { setErr(x.message) }
@@ -59,6 +60,9 @@ export default function CareersPage() {
                 <label style={lab}>Email <span style={{ color: '#D92D20' }}>*</span></label><input style={inp} type="email" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} required />
                 <label style={lab}>Phone</label><input style={inp} type="tel" value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} />
                 <label style={lab}>Tell us about yourself</label><textarea style={{ ...inp, minHeight: 110, resize: 'vertical' }} value={f.message} onChange={e => setF({ ...f, message: e.target.value })} />
+                <label style={lab}>Upload your CV</label>
+                <input type="file" accept=".pdf,.doc,.docx,application/pdf" onChange={e => setCv(e.target.files?.[0] ?? null)} style={{ ...inp, padding: 9 }} />
+                <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>PDF or Word, up to 5 MB.{cv ? ` Selected: ${cv.name}` : ''}</div>
                 <input tabIndex={-1} autoComplete="off" aria-hidden="true" value={f.website} onChange={e => setF({ ...f, website: e.target.value })} style={{ position: 'absolute', left: -9999, opacity: 0, height: 0 }} />
                 {err && <div style={{ marginTop: 14, color: '#B42318', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8, fontSize: 14 }}>{err}</div>}
                 <button type="submit" disabled={busy} style={{ display: 'block', width: '100%', marginTop: 18, border: 'none', borderRadius: 10, background: NAVY, color: '#fff', fontSize: 16, fontWeight: 700, padding: 14, cursor: 'pointer', fontFamily: 'inherit', opacity: busy ? .6 : 1 }}>{busy ? 'Sending…' : 'Submit application'}</button>

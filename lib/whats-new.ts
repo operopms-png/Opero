@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-12', title: 'CV upload on the careers page', text: 'Candidates can attach a CV (PDF or Word) when they apply; it appears in the CV link column on their application and in the team email.' },
   { date: '2026-11-12', title: 'Careers page and open roles', text: 'Applications now has Open roles & careers link: add your open roles and send one link where people choose a role and apply; applications land at Applied.' },
   { date: '2026-11-12', title: 'Enquiry form link', text: 'Marketing home has a link landlords and investors open to enquire about Guaranteed Rent, Short Let Partnership or Estate Property Management; each enquiry lands in the CRM at Enquiry.' },
   { date: '2026-11-11', title: 'AI Assistant guide', text: 'Human Intelligence Hub → AI Assistant now has a banner and a step by step guide in Staff Training, and Novourq Cloud AI can explain it.' },
