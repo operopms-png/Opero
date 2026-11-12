@@ -11,6 +11,12 @@ const lab: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 6
 const card: React.CSSProperties = { background: '#fff', borderRadius: 14, padding: '18px 18px', boxShadow: '0 1px 3px rgba(16,24,40,.08)', marginBottom: 14 }
 const STATUS: Record<string, string> = { logged: 'Logged', screening: 'Screening', approved: 'Approved', rejected: 'Rejected', completed: 'Completed', cancelled: 'Cancelled' }
 const CSTAT: Record<string, string> = { none: '', pending: 'Commission pending', payable: 'Commission due', paid: 'Paid', clawed_back: 'Clawed back' }
+const WAYS: [string, string, string, string][] = [
+  ['long_term', 'A', 'Represent Renters', 'Represent clients looking for fully furnished homes.'],
+  ['short_term', 'B', 'Refer a Guest', 'Turn referrals into effortless revenue.'],
+  ['property', 'C', 'Lease Properties You Represent', 'Instantly monetize your listings to us.'],
+]
+const KIND: Record<string, string> = { short_term: 'Guest', long_term: 'Renter', property: 'Property' }
 const STEPS = [
   ['1', 'Log', 'Add your guest or tenant with the + Log button.'],
   ['2', 'We screen', 'Our team checks them. You can follow the status below.'],
@@ -32,7 +38,7 @@ function HowItWorks() {
     </details>
   )
 }
-const blank = { referral_type: 'short_term', channel: 'direct', person_name: '', person_email: '', person_phone: '', property_label: '', start_date: '', end_date: '', value: '', notes: '' }
+const blank: any = { referral_type: 'short_term', channel: 'direct', person_name: '', person_email: '', person_phone: '', property_label: '', start_date: '', end_date: '', value: '', notes: '' }
 
 export default function AgentPortal() {
   const [state, setState] = useState<'loading' | 'out' | 'in'>('loading')
@@ -116,35 +122,42 @@ export default function AgentPortal() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 14 }}>
             {[['Due to you', money(owed)], ['Pending', money(pending)], ['Paid', money(paid)]].map(([l, v]) => <div key={l} style={{ ...card, marginBottom: 0 }}><div style={{ fontSize: 12.5, color: '#667085' }}>{l}</div><div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>{v}</div></div>)}
           </div>
+          <div style={{ fontWeight: 700, fontSize: 15, margin: '4px 2px 10px' }}>Three ways to earn</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 12, marginBottom: 14 }}>
+            {WAYS.map(([k, l, t, d]) => (
+              <div key={k} style={{ ...card, marginBottom: 0, display: 'flex', flexDirection: 'column' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: NAVY, color: '#fff', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{l}</div>
+                <div style={{ fontWeight: 700, fontSize: 15, margin: '10px 0 4px' }}>{t}</div>
+                <div style={{ fontSize: 13, color: '#667085', lineHeight: 1.45, flex: 1 }}>{d}</div>
+                {a.status === 'active' && <button onClick={() => { setForm({ ...blank, referral_type: k }); setShowForm(true); setErr('') }} style={{ marginTop: 12, border: `1.5px solid ${BLUE}`, background: '#fff', color: BLUE, borderRadius: 8, padding: '8px 10px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Log one</button>}
+              </div>))}
+          </div>
           <HowItWorks />
-          {a.status === 'active' && !showForm && <button onClick={() => setShowForm(true)} style={{ display: 'block', width: '100%', border: 'none', borderRadius: 10, background: NAVY, color: '#fff', fontSize: 16, fontWeight: 700, padding: 13, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 14 }}>+ Log a guest or tenant</button>}
           {showForm && (
             <form onSubmit={save} style={card}>
-              <div style={{ fontWeight: 700 }}>Log a guest or tenant</div>
-              <label style={lab}>Is this a guest or a tenant?</label>
-              <select style={inp} value={form.referral_type} onChange={e => set('referral_type', e.target.value)}><option value="short_term">Guest (short stay)</option><option value="long_term">Tenant (long term)</option></select>
-              <label style={lab}>Name *</label><input style={inp} value={form.person_name} onChange={e => set('person_name', e.target.value)} required />
+              <div style={{ fontWeight: 700 }}>{WAYS.find(w => w[0] === form.referral_type)?.[2]}</div>
+              <label style={lab}>{form.referral_type === 'property' ? 'Property owner name *' : form.referral_type === 'long_term' ? 'Client name *' : 'Guest name *'}</label><input style={inp} value={form.person_name} onChange={e => set('person_name', e.target.value)} required />
               <label style={lab}>Email</label><input style={inp} type="email" value={form.person_email} onChange={e => set('person_email', e.target.value)} />
               <label style={lab}>Phone</label><input style={inp} type="tel" value={form.person_phone} onChange={e => set('person_phone', e.target.value)} />
-              <label style={lab}>Property</label><input style={inp} value={form.property_label} onChange={e => set('property_label', e.target.value)} placeholder="Which property" />
+              <label style={lab}>{form.referral_type === 'property' ? 'Property address or area' : form.referral_type === 'long_term' ? 'Property or area they want' : 'Property'}</label><input style={inp} value={form.property_label} onChange={e => set('property_label', e.target.value)} />
               {form.referral_type === 'short_term' && <><label style={lab}>Where did they book?</label><select style={inp} value={form.channel} onChange={e => set('channel', e.target.value)}><option value="direct">Direct</option><option value="airbnb">Airbnb</option><option value="booking_com">Booking.com</option><option value="other">Other</option></select></>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10 }}>
-                <div><label style={lab}>{form.referral_type === 'short_term' ? 'Check-in' : 'Move-in'}</label><input style={inp} type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} /></div>
+              {form.referral_type !== 'property' && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10 }}>
+                <div><label style={lab}>{form.referral_type === 'short_term' ? 'Check-in' : 'Move-in date'}</label><input style={inp} type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} /></div>
                 {form.referral_type === 'short_term' && <div><label style={lab}>Check-out</label><input style={inp} type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} /></div>}
-              </div>
-              <label style={lab}>{form.referral_type === 'short_term' ? 'Booking value (£)' : 'Monthly rent (£)'}</label><input style={inp} type="number" min="0" step="any" value={form.value} onChange={e => set('value', e.target.value)} />
-              <label style={lab}>Notes</label><textarea style={{ ...inp, minHeight: 70 }} value={form.notes} onChange={e => set('notes', e.target.value)} />
+              </div>}
+              <label style={lab}>{form.referral_type === 'short_term' ? 'Booking value (£)' : form.referral_type === 'long_term' ? 'Monthly budget (£)' : 'Monthly rent expected (£)'}</label><input style={inp} type="number" min="0" step="any" value={form.value} onChange={e => set('value', e.target.value)} />
+              <label style={lab}>{form.referral_type === 'property' ? 'Bedrooms, furnishing and anything else we should know' : 'Notes'}</label><textarea style={{ ...inp, minHeight: 70 }} value={form.notes} onChange={e => set('notes', e.target.value)} />
               {err && <div style={{ marginTop: 12, color: '#B42318', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8, fontSize: 14 }}>{err}</div>}
               <div style={{ display: 'flex', gap: 10, marginTop: 14 }}><button type="submit" disabled={busy} style={{ flex: 1, border: 'none', borderRadius: 10, background: NAVY, color: '#fff', fontWeight: 700, padding: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{busy ? 'Saving…' : 'Save'}</button><button type="button" onClick={() => { setShowForm(false); setErr('') }} style={{ borderRadius: 10, border: '1px solid #D0D5DD', background: '#fff', padding: '12px 18px', cursor: 'pointer', fontFamily: 'inherit', color: NAVY }}>Cancel</button></div>
             </form>)}
           <div style={card}>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>Your guests and tenants</div>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>Everything you have logged</div>
             {refs.length === 0 && <div style={{ color: '#667085', fontSize: 14, padding: '8px 0' }}>None logged yet.</div>}
             {refs.map(r => (
               <div key={r.id} style={{ padding: '12px 0', borderTop: '1px solid #EAECF0', display: 'flex', gap: 10, justifyContent: 'space-between' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>{r.person_name}</div>
-                  <div style={{ fontSize: 12.5, color: '#667085' }}>{r.referral_type === 'short_term' ? 'Guest' : 'Tenant'}{r.property_label ? ' · ' + r.property_label : ''} · Logged {new Date(r.created_at).toLocaleDateString('en-GB')}</div>
+                  <div style={{ fontSize: 12.5, color: '#667085' }}>{KIND[r.referral_type] ?? 'Renter'}{r.property_label ? ' · ' + r.property_label : ''} · Logged {new Date(r.created_at).toLocaleDateString('en-GB')}</div>
                 </div>
                 <div style={{ textAlign: 'right', flex: 'none' }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{STATUS[r.status] ?? r.status}</div>

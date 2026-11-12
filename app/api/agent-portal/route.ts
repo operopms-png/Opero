@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const a = await me(req); if (!a) return NextResponse.json({ error: 'No agent account found for this login.' }, { status: 404 })
   if (a.status !== 'active') return NextResponse.json({ error: 'Your account is waiting for approval. You can log guests and tenants once it is approved.' }, { status: 403 })
   const b = await req.json().catch(() => ({}))
-  const type = b.referral_type === 'long_term' ? 'long_term' : 'short_term'
+  const type = ['long_term', 'property'].includes(b.referral_type) ? b.referral_type : 'short_term'
   const name = clean(b.person_name, 120); if (!name) return NextResponse.json({ error: 'Please add the guest or tenant name.' }, { status: 400 })
   const val = b.value === '' || b.value == null ? null : Number(b.value)
   const { error } = await db.from('agent_referrals').insert({
@@ -36,6 +36,6 @@ export async function POST(req: NextRequest) {
     value: val != null && isFinite(val) ? val : null, notes: clean(b.notes, 1000) || null,
   })
   if (error) return NextResponse.json({ error: 'Could not save. Please try again.' }, { status: 500 })
-  alertTeam(a.user_id, `Agent referral: ${name}`, `${a.name} (${a.code}) logged a ${type === 'short_term' ? 'guest' : 'tenant'}: ${name}.`, '/partners').catch(() => {})
+  alertTeam(a.user_id, `Agent referral: ${name}`, `${a.name} (${a.code}) logged a ${type === 'short_term' ? 'guest' : type === 'property' ? 'property to lease' : 'renter'}: ${name}.`, '/partners').catch(() => {})
   return NextResponse.json({ ok: true })
 }

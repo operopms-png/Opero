@@ -637,7 +637,7 @@ export default function PartnersPage() {
           <div>
             <div style={{ fontWeight: 700, fontSize: 16 }}>{r.person_name}</div>
             <div style={{ fontSize: 12, color: '#667085' }}>
-              {st ? `Guest · ${CHANNEL_LABEL[r.channel] ?? 'Direct'}` : 'Tenant'} · Agent: {agentName(r.agent_id)} · Logged {new Date(r.created_at).toLocaleDateString('en-GB')}
+              {st ? `Guest · ${CHANNEL_LABEL[r.channel] ?? 'Direct'}` : r.referral_type === 'property' ? 'Property to lease' : 'Tenant'} · Agent: {agentName(r.agent_id)} · Logged {new Date(r.created_at).toLocaleDateString('en-GB')}
             </div>
             <div style={{ fontSize: 12, color: '#667085' }}>{[r.person_email, r.person_phone].filter(Boolean).join(' · ')}</div>
           </div>
