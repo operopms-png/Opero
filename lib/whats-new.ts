@@ -4,7 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
-  { date: '2026-11-12', title: 'Three ways for agents to earn', text: 'The agent portal now shows Represent Renters, Refer a Guest and Lease Properties You Represent, each with its own form; property leads appear in the Referral pipeline as Property to lease.' },
+  { date: '2026-11-12', title: 'Three ways for agents to earn', text: 'The agent portal now shows Place a renter, Send a guest and List a property with us, each with its own form; property leads appear in the Referral pipeline as Property to lease.' },
   { date: '2026-11-12', title: 'How it works for agents', text: 'The agent portal now opens with a four step How it works strip: log, we screen, approved, you get paid.' },
   { date: '2026-11-12', title: 'Agents no longer see commission rates', text: 'In the agent portal, agents only see the commission amount you set on each referral; the rates stay private.' },
   { date: '2026-11-12', title: 'Agents can change currency', text: 'In the agent portal, agents can show their commission in pounds, dollars, Jamaican dollars, euros, dirhams or Canadian dollars; it is display only.' },

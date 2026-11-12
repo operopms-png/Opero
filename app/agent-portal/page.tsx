@@ -12,9 +12,9 @@ const card: React.CSSProperties = { background: '#fff', borderRadius: 14, paddin
 const STATUS: Record<string, string> = { logged: 'Logged', screening: 'Screening', approved: 'Approved', rejected: 'Rejected', completed: 'Completed', cancelled: 'Cancelled' }
 const CSTAT: Record<string, string> = { none: '', pending: 'Commission pending', payable: 'Commission due', paid: 'Paid', clawed_back: 'Clawed back' }
 const WAYS: [string, string, string, string][] = [
-  ['long_term', 'A', 'Represent Renters', 'Represent clients looking for fully furnished homes.'],
-  ['short_term', 'B', 'Refer a Guest', 'Turn referrals into effortless revenue.'],
-  ['property', 'C', 'Lease Properties You Represent', 'Instantly monetize your listings to us.'],
+  ['long_term', 'A', 'Place a renter', 'Bring us someone who needs a fully furnished home, for a few months or longer.'],
+  ['short_term', 'B', 'Send a guest', 'Recommend us to travellers and get paid when their stay is completed.'],
+  ['property', 'C', 'List a property with us', 'Own or look after a property? Hand it to us to let and earn on it.'],
 ]
 const KIND: Record<string, string> = { short_term: 'Guest', long_term: 'Renter', property: 'Property' }
 const STEPS = [
