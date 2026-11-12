@@ -25,6 +25,7 @@ const SEED_PORTALS = [
   { module: 'pm', name: 'Property Management — Tenant Portal', url: '/pm-tenant-portal', live: true, sort_order: 2 },
   { module: 'ea', name: 'Estate Agency — Landlord Portal', url: '/estate-owner-portal', live: true, sort_order: 3 },
   { module: 'ea', name: 'Estate Agency — Tenant Portal', url: '/estate-tenant-portal', live: true, sort_order: 4 },
+  { module: 'partners', name: 'Agent Portal', url: '/agent-portal', live: true, sort_order: 5 },
   { module: 'partners', name: 'Partners Portal', url: '/partners', live: true, sort_order: 5 },
   { module: 'dev', name: 'Developments — Partners Portal', url: '/dev-investor-portal', live: false, sort_order: 7 },
   { module: 'staff', name: 'Cleaners Portal', url: '/staff-dashboard?team=cleaning', live: true, sort_order: 6 },

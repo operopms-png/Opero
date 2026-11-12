@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   let { data } = await db.from('enquiry_links').select('token,active').eq('business_id', c.businessId).maybeSingle()
   if (!data) { const r = await db.from('enquiry_links').insert({ business_id: c.businessId }).select('token,active').single(); data = r.data }
   if (!data) return NextResponse.json({ error: 'Could not create the link.' }, { status: 500 })
-  return NextResponse.json({ url: `${SITE_URL}/enquire/${data.token}`, careersUrl: `${SITE_URL}/careers/${data.token}`, active: data.active, isAdmin: c.isAdmin })
+  return NextResponse.json({ url: `${SITE_URL}/enquire/${data.token}`, careersUrl: `${SITE_URL}/careers/${data.token}`, agentUrl: `${SITE_URL}/agent-signup/${data.token}`, active: data.active, isAdmin: c.isAdmin })
 }
 export async function POST(req: NextRequest) {
   const c = await getCaller(req); if (!c) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })

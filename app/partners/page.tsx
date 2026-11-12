@@ -10,6 +10,7 @@ import { SITE_HOST } from '@/lib/brand'
 import { money } from '../../lib/partner-schedule'
 import RepaymentPanel from '../../components/partners/RepaymentPanel'
 import LongTermDashboard, { type LongTerm } from '../../components/partners/LongTermDashboard'
+import AgentLinks from '../../components/partners/AgentLinks'
 import LongTermLink from '../../components/partners/LongTermLink'
 import PartnerDocuments from '../../components/partners/PartnerDocuments'
 import { buckets, bucketSum, Kpi, Panel, StackedBars, TrendLine, Funnel, Legend, Seg, Badge, Avatar, agentTier, ST_COL, LT_COL, PERIOD_LABEL, type Period, type Bucket } from '../../components/partners/PartnerCharts'
@@ -908,6 +909,7 @@ export default function PartnersPage() {
                   <button onClick={() => { setShowAgentForm(!showAgentForm); setEditingAgentId(null); setAgentForm(EMPTY_AGENT) }} style={btnGhost}>{showAgentForm ? 'Close' : 'Add agent'}</button>
                 </div>
               </div>
+              <AgentLinks />
               {showAgentForm && (
                 <div id="agent-form" style={{ padding: 18, borderBottom: '1px solid #ebe7de', background: '#fcfbf8' }}>
                   <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>{editingAgentId ? 'Edit agent' : 'New agent'}</div>
