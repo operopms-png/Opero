@@ -5,6 +5,7 @@ import { APPLICATIONS_BOARD } from '@/lib/marketing-boards'
 import { useApplications } from '@/components/applications/useApplications'
 import MkBoardView from '@/components/marketing/MkBoardView'
 import MkPanel from '@/components/marketing/MkPanel'
+import OpenRoles from '@/components/applications/OpenRoles'
 
 // Staff Centre → Applications: job applicants (including the website careers form),
 // shown as a CRM-style board with table, Kanban and interview calendar views.
@@ -27,7 +28,7 @@ export default function ApplicationsPage() {
           : store.error
             ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load applications: {store.error}</div>
             : <MkBoardView mk={store} board={APPLICATIONS_BOARD} onOpen={setOpen}
-                headerRight={<span style={{ fontSize: 12.5, color: BRAND.muted, marginRight: 8 }}>Website job applications land here automatically</span>} />}
+                headerRight={<><OpenRoles /><span style={{ fontSize: 12.5, color: BRAND.muted, marginRight: 8 }}>Job applications land here automatically</span></>} />}
       </main>
       {open && <MkPanel key={open} mk={store} board={APPLICATIONS_BOARD} id={open} onClose={() => setOpen(null)} onOpenOther={(_b, id) => setOpen(id)} />}
     </div>
