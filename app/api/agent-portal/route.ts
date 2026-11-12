@@ -13,18 +13,14 @@ async function me(req: NextRequest) {
   const { data } = await db.from('partner_agents').select('*').eq('portal_user_id', user.id).maybeSingle()
   return data
 }
-function commission(a: any, r: any) {
-  if (r.commission_amount != null) return Number(r.commission_amount)
-  const st = r.referral_type === 'short_term'
-  const type = st ? a.st_rate_type : a.lt_rate_type, rate = Number(st ? a.st_rate : a.lt_rate) || 0
-  return type === 'flat' ? rate : ((Number(r.value) || 0) * rate) / 100
-}
+// Agents never see the commission rates. They only see an amount once staff have set it on that referral.
+const commission = (r: any) => (r.commission_amount != null ? Number(r.commission_amount) : null)
 export async function GET(req: NextRequest) {
   const a = await me(req); if (!a) return NextResponse.json({ error: 'No agent account found for this login.' }, { status: 404 })
-  const { data: refs } = await db.from('agent_referrals').select('id,referral_type,channel,person_name,property_label,start_date,end_date,value,status,commission_amount,commission_status,created_at').eq('agent_id', a.id).order('created_at', { ascending: false })
-  const referrals = (refs ?? []).map(r => ({ ...r, commission: commission(a, r) }))
+  const { data: refs } = await db.from('agent_referrals').select('id,referral_type,channel,person_name,property_label,start_date,end_date,status,commission_amount,commission_status,created_at').eq('agent_id', a.id).order('created_at', { ascending: false })
+  const referrals = (refs ?? []).map(r => ({ ...r, commission: commission(r) }))
   const { data: u } = await db.auth.admin.getUserById(a.user_id)
-  return NextResponse.json({ agent: { name: a.name, code: a.code, status: a.status, st_rate_type: a.st_rate_type, st_rate: a.st_rate, lt_rate_type: a.lt_rate_type, lt_rate: a.lt_rate }, referrals, company: (u?.user?.user_metadata as any)?.company_name || '', rates: await ratesPerGBP() })
+  return NextResponse.json({ agent: { name: a.name, code: a.code, status: a.status }, referrals, company: (u?.user?.user_metadata as any)?.company_name || '', rates: await ratesPerGBP() })
 }
 export async function POST(req: NextRequest) {
   const a = await me(req); if (!a) return NextResponse.json({ error: 'No agent account found for this login.' }, { status: 404 })

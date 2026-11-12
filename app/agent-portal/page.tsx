@@ -55,9 +55,9 @@ export default function AgentPortal() {
   }
   const set = (k: string, v: string) => setForm((p: any) => ({ ...p, [k]: v }))
   const a = data?.agent, refs: any[] = data?.referrals ?? []
-  const owed = refs.filter(r => r.commission_status === 'payable').reduce((s, r) => s + r.commission, 0)
-  const paid = refs.filter(r => r.commission_status === 'paid').reduce((s, r) => s + r.commission, 0)
-  const pending = refs.filter(r => ['pending', 'none'].includes(r.commission_status) && !['rejected', 'cancelled'].includes(r.status)).reduce((s, r) => s + r.commission, 0)
+  const owed = refs.filter(r => r.commission_status === 'payable').reduce((s, r) => s + (r.commission ?? 0), 0)
+  const paid = refs.filter(r => r.commission_status === 'paid').reduce((s, r) => s + (r.commission ?? 0), 0)
+  const pending = refs.filter(r => ['pending', 'none'].includes(r.commission_status) && !['rejected', 'cancelled'].includes(r.status)).reduce((s, r) => s + (r.commission ?? 0), 0)
 
   return (
     <div style={{ minHeight: '100vh', background: '#F2F5F9', fontFamily: 'Inter, system-ui, sans-serif', color: NAVY }}>
@@ -84,8 +84,6 @@ export default function AgentPortal() {
             <div style={{ fontSize: 22, fontWeight: 700 }}>{a.name}</div>
             <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 14 }}>
               <span style={{ background: '#EAF2FB', borderRadius: 999, padding: '5px 12px' }}>Your code: <b>{a.code}</b></span>
-              <span style={{ background: '#F2F4F7', borderRadius: 999, padding: '5px 12px' }}>Guests: {a.st_rate_type === 'flat' ? money(a.st_rate) + ' each' : a.st_rate + '% of booking'}</span>
-              <span style={{ background: '#F2F4F7', borderRadius: 999, padding: '5px 12px' }}>Tenants: {a.lt_rate_type === 'flat' ? money(a.lt_rate) + ' each' : a.lt_rate + '% of a month’s rent'}</span>
             </div>
             {a.status !== 'active' && <div style={{ marginTop: 12, background: '#FFF6E5', border: '1px solid #F5D9A0', borderRadius: 8, padding: '10px 12px', fontSize: 14 }}>Your account is waiting for approval. You can log guests and tenants once it is approved.</div>}
           </div>
@@ -128,7 +126,7 @@ export default function AgentPortal() {
                 </div>
                 <div style={{ textAlign: 'right', flex: 'none' }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{STATUS[r.status] ?? r.status}</div>
-                  <div style={{ fontSize: 12.5, color: '#667085' }}>{money(r.commission)}{CSTAT[r.commission_status] ? ' · ' + CSTAT[r.commission_status] : ''}</div>
+                  <div style={{ fontSize: 12.5, color: '#667085' }}>{r.commission == null ? 'Commission to be confirmed' : money(r.commission) + (CSTAT[r.commission_status] ? ' · ' + CSTAT[r.commission_status] : '')}</div>
                 </div>
               </div>))}
           </div>
