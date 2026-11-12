@@ -22,10 +22,12 @@ export default function DashboardAiPanel({ mapSlot, portfolioSlot }: { mapSlot?:
   const [ov, setOv] = useState<any>(null)
   const [wf, setWf] = useState<any[] | null>(null)
   const [act, setAct] = useState<any[] | null>(null)
+  const [lb, setLb] = useState<any[] | null>(null)
 
   useEffect(() => {
     staffApi('/api/ai-overview').then(setOv).catch(() => setOv(false))
     staffApi('/api/ai-workflows').then((d: any) => setWf(d.workflows ?? [])).catch(() => setWf([]))
+    staffApi('/api/agent-leaderboard').then((d: any) => setLb(d.agents ?? [])).catch(() => setLb([]))
     staffApi('/api/ai-activity').then((d: any) => setAct((d.items ?? []).slice(0, 6))).catch(() => setAct([]))
   }, [])
 
@@ -60,6 +62,35 @@ export default function DashboardAiPanel({ mapSlot, portfolioSlot }: { mapSlot?:
             </div>
           )}
         </div>
+  )
+
+  // Agent leaderboard: the staff view (names and amounts) and what agents see in their portal (first name, initial and a bar).
+  const gbp = (n: number) => '£' + Math.round(n).toLocaleString('en-GB')
+  const nice = (n: string) => { const p = n.trim().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()); return p.length > 1 ? `${p[0]} ${p[p.length - 1].charAt(0)}.` : p[0] }
+  const lbTop = lb?.[0]?.total || 0
+  const leaderboards = (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 12, marginTop: 12 }}>
+      <div style={{ ...box, padding: 18, minWidth: 0 }}>
+        <h3 style={head}>Agent leaderboard (staff view)</h3>
+        {lb === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : lb.length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No active agents yet.</div> : lb.map((x, i) => (
+          <div key={x.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: i ? `1px solid ${K.line}` : 'none' }}>
+            <div style={{ width: 22, fontWeight: 800, color: i === 0 ? '#b7791f' : K.soft }}>{i + 1}</div>
+            <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13.5, fontWeight: 600, color: K.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.name}</div><div style={{ fontSize: 11.5, color: K.soft }}>{x.referrals} referral{x.referrals === 1 ? '' : 's'}{x.owed ? ` · ${gbp(x.owed)} owed` : ''}</div></div>
+            <div style={{ fontWeight: 800, color: K.ink }}>{gbp(x.total)}</div>
+          </div>))}
+        <Link href="/staff-centre/partners" style={{ display: 'inline-block', marginTop: 10, fontSize: 12.5, color: K.blue, fontWeight: 600, textDecoration: 'none' }}>Open Partners →</Link>
+      </div>
+      <div style={{ ...box, padding: 18, minWidth: 0 }}>
+        <h3 style={head}>Agent leaderboard (what agents see)</h3>
+        {lb === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : lb.length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No active agents yet.</div> : lb.map((x, i) => (
+          <div key={x.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
+            <div style={{ width: 22, fontWeight: 800, color: i === 0 ? '#b7791f' : K.soft }}>{i + 1}</div>
+            <div style={{ width: 110, fontSize: 13.5, color: K.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nice(x.name)}</div>
+            <div style={{ flex: 1, height: 8, background: '#dbe8fa', borderRadius: 999, overflow: 'hidden' }}><div style={{ width: `${lbTop ? Math.max(Math.round((x.total / lbTop) * 100), x.total ? 4 : 0) : 0}%`, height: '100%', background: 'linear-gradient(90deg,#2f5bd6,#6c9bff)', borderRadius: 999 }} /></div>
+          </div>))}
+        <div style={{ fontSize: 12, color: K.soft, marginTop: 8 }}>Agents see this in their portal. Others show as first name and initial with a bar, never amounts.</div>
+      </div>
+    </div>
   )
 
   return (
@@ -118,6 +149,7 @@ export default function DashboardAiPanel({ mapSlot, portfolioSlot }: { mapSlot?:
         </div>
       </div>
       {mapSlot ? <div style={{ marginTop: 12 }}>{automationBox}</div> : null}
+      {leaderboards}
     </div>
     </>
   )
