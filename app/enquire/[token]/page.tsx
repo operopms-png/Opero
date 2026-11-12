@@ -59,9 +59,6 @@ export default function EnquirePage() {
         {done && <div style={card}><h2 style={{ marginTop: 0 }}>Thank you{f.first_name ? `, ${f.first_name}` : ''}.</h2><p style={{ lineHeight: 1.6 }}>We have your enquiry{svc ? ` about ${svc.label}` : ''}. A member of our team will contact you shortly. We have also sent a confirmation to {f.email}.</p></div>}
         {live && !done && (
           <form onSubmit={submit}>
-            <div style={{ ...card, background: '#EAF2FB', fontSize: 14, lineHeight: 1.6 }}>
-              For tenant housing enquiries, please check our <a href="/homes" style={{ color: BLUE, fontWeight: 600 }}>available units</a>. This form is for landlords and investors.
-            </div>
             <div style={card}>
               <div style={{ fontWeight: 700, marginBottom: 10 }}>What are you interested in?<Req /></div>
               <div style={{ display: 'grid', gap: 10 }}>
