@@ -106,8 +106,8 @@ function calcCommission(agent: any, ref: any): number {
   return ((Number(ref.value) || 0) * rate) / 100
 }
 
-const EMPTY_AGENT = { name: '', email: '', phone: '', country: '', code: '', st_rate_type: 'percent', st_rate: '10', lt_rate_type: 'percent', lt_rate: '50', payout_method: 'bank', payout_details: '', notes: '' }
-const EMPTY_REFERRAL = { agent_id: '', referral_type: 'short_term', channel: 'direct', person_name: '', person_email: '', person_phone: '', property_id: '', property_label: '', start_date: '', end_date: '', value: '', notes: '' }
+const EMPTY_AGENT = { name: '', email: '', phone: '', country: '', code: '', st_rate_type: 'percent', st_rate: '10', lt_rate_type: 'percent', lt_rate: '50', payout_method: 'bank', payout_details: '', notes: '', password: '' }
+const EMPTY_REFERRAL = { agent_id: '', referral_type: 'short_term', channel: 'direct', person_name: '', person_email: '', person_phone: '', property_id: '', property_label: '', start_date: '', end_date: '', value: '', notes: '', commission: '', paid: false }
 
 export default function PartnersPage() {
   const [loading, setLoading] = useState(true)
@@ -333,17 +333,25 @@ export default function PartnersPage() {
       payout_details: agentForm.payout_details || null,
       notes: agentForm.notes || null,
     }
-    const { error } = editingAgentId
-      ? await supabase.from('partner_agents').update(payload).eq('id', editingAgentId)
-      : await supabase.from('partner_agents').insert(payload)
+    const res = editingAgentId
+      ? await supabase.from('partner_agents').update(payload).eq('id', editingAgentId).select('id').single()
+      : await supabase.from('partner_agents').insert(payload).select('id').single()
+    const error = res.error
+    if (error) { setSaving(false); alert(error.message.includes('idx_partner_agents_code') ? 'That agent code is already in use' : error.message); return }
+    if (agentForm.password) {
+      const { data: { session } } = await supabase.auth.getSession()
+      const lr = await fetch('/api/admin/agent-login', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` }, body: JSON.stringify({ agent_id: res.data!.id, email: agentForm.email, password: agentForm.password }) })
+      const lj = await lr.json().catch(() => ({}))
+      if (!lr.ok) { setSaving(false); alert('Agent saved, but the login was not created: ' + (lj.error || 'something went wrong')); await loadStaff(businessId); return }
+      alert((lj.created ? 'Login created and agent activated.' : 'Password reset.') + '\n\nSign in at ' + window.location.origin + '/agent-portal\nEmail: ' + agentForm.email + '\nPassword: the one you just typed.')
+    }
     setSaving(false)
-    if (error) { alert(error.message.includes('idx_partner_agents_code') ? 'That agent code is already in use' : error.message); return }
     setShowAgentForm(false); setEditingAgentId(null); setAgentForm(EMPTY_AGENT)
     await loadStaff(businessId)
   }
 
   function editAgent(a: any) {
-    setAgentForm({ ...EMPTY_AGENT, ...a, st_rate: String(a.st_rate ?? ''), lt_rate: String(a.lt_rate ?? ''), email: a.email ?? '', phone: a.phone ?? '', country: a.country ?? '', payout_details: a.payout_details ?? '', notes: a.notes ?? '' })
+    setAgentForm({ ...EMPTY_AGENT, ...a, st_rate: String(a.st_rate ?? ''), lt_rate: String(a.lt_rate ?? ''), email: a.email ?? '', phone: a.phone ?? '', country: a.country ?? '', payout_details: a.payout_details ?? '', notes: a.notes ?? '', password: '' })
     setEditingAgentId(a.id)
     setShowAgentForm(true)
   }
@@ -373,6 +381,12 @@ export default function PartnersPage() {
       end_date: refForm.referral_type === 'short_term' ? (refForm.end_date || null) : null,
       value: refForm.value === '' ? null : Number(refForm.value),
       notes: refForm.notes || null,
+      ...(refForm.commission !== '' ? {
+        status: 'completed',
+        commission_amount: Number(refForm.commission),
+        commission_status: refForm.paid ? 'paid' : 'payable',
+        ...(refForm.paid ? { paid_at: new Date().toISOString() } : {}),
+      } : {}),
     })
     setSaving(false)
     if (error) { alert(error.message); return }
@@ -873,6 +887,10 @@ export default function PartnersPage() {
                       {refForm.referral_type === 'short_term' && <Field label="Check-out"><input style={input} type="date" value={refForm.end_date} onChange={e => setRefForm({ ...refForm, end_date: e.target.value })} /></Field>}
                       <Field label={refForm.referral_type === 'short_term' ? 'Booking value (£)' : 'Monthly rent (£)'}><input style={input} type="number" value={refForm.value} onChange={e => setRefForm({ ...refForm, value: e.target.value })} /></Field>
                     </div>
+                    <div style={{ ...formGrid, marginBottom: 12 }}>
+                      <Field label="Commission earned (£), optional"><input style={input} type="number" value={refForm.commission} onChange={e => setRefForm({ ...refForm, commission: e.target.value })} placeholder="Leave blank if not earned yet" /></Field>
+                      <Field label="Already paid to the agent?"><select style={input} value={refForm.paid ? 'yes' : 'no'} onChange={e => setRefForm({ ...refForm, paid: e.target.value === 'yes' })}><option value="no">Not yet (owed)</option><option value="yes">Yes, paid</option></select></Field>
+                    </div>
                     <Field label="Notes"><textarea style={{ ...input, minHeight: 60 }} value={refForm.notes} onChange={e => setRefForm({ ...refForm, notes: e.target.value })} /></Field>
                     <div style={{ marginTop: 14 }}><button onClick={saveReferral} disabled={saving} style={btnDark}>{saving ? 'Saving…' : 'Log referral'}</button></div>
                   </div>
@@ -941,6 +959,11 @@ export default function PartnersPage() {
                     <Field label="Payout details"><input style={input} value={agentForm.payout_details} onChange={e => setAgentForm({ ...agentForm, payout_details: e.target.value })} placeholder="Account name / reference" /></Field>
                   </div>
                   <Field label="Notes"><textarea style={{ ...input, minHeight: 60 }} value={agentForm.notes} onChange={e => setAgentForm({ ...agentForm, notes: e.target.value })} /></Field>
+                  <div style={{ marginTop: 12, padding: 12, border: '1px solid #ebe7de', borderRadius: 8, background: '#fff' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Agent portal login {editingAgentId && agents.find(x => x.id === editingAgentId)?.portal_user_id ? <span style={{ color: '#2e7d4f', fontWeight: 600 }}>(has a login)</span> : <span style={{ color: '#8a857a', fontWeight: 400 }}>(no login yet)</span>}</div>
+                    <div style={{ fontSize: 12, color: '#8a857a', marginBottom: 8 }}>Type a password (8+ characters) and press Save agent. This creates their login with the email above, activates them, and lets them sign in at the agent portal. For an agent who already has a login, it sets a new password.</div>
+                    <input style={input} type="text" autoComplete="off" placeholder="Password for the agent" value={agentForm.password} onChange={e => setAgentForm({ ...agentForm, password: e.target.value })} />
+                  </div>
                   <div style={{ marginTop: 14 }}><button onClick={saveAgent} disabled={saving} style={btnDark}>{saving ? 'Saving…' : 'Save agent'}</button></div>
                 </div>
               )}
