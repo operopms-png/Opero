@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-12', title: 'Agent leaderboard', text: 'Approved agents now see a leaderboard in their portal ranking your agents by confirmed commission, without anyone seeing another agent\'s amounts.' },
   { date: '2026-11-12', title: 'Create agent logins and record earnings', text: 'In Partners, Agent Programme you can now create an agent\'s portal login yourself, and log what an agent has earned and whether it is paid.' },
   { date: '2026-11-12', title: 'Agent page now loads from the portal', text: 'The agent page on your website can now be added with a two-line snippet that loads from the portal, so WordPress no longer blocks it when saving.' },
   { date: '2026-11-12', title: 'Agent page form feeds the CRM', text: 'The agent recruitment form on your website now creates a CRM contact and an Enquiry deal for each applicant, and emails them the link to create their agent portal login.' },
