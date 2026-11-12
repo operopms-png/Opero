@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 // Agent portal: an agent signs in, sees their code, logs their own guests and tenants and follows each one's commission.
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { CURRENCIES, type Cur } from '@/lib/currency'
 
 const NAVY = '#16233F', BLUE = '#2F6DB5'
 const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 15, fontFamily: 'inherit', boxSizing: 'border-box', color: NAVY, background: '#fff' }
@@ -10,7 +11,6 @@ const lab: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 6
 const card: React.CSSProperties = { background: '#fff', borderRadius: 14, padding: '18px 18px', boxShadow: '0 1px 3px rgba(16,24,40,.08)', marginBottom: 14 }
 const STATUS: Record<string, string> = { logged: 'Logged', screening: 'Screening', approved: 'Approved', rejected: 'Rejected', completed: 'Completed', cancelled: 'Cancelled' }
 const CSTAT: Record<string, string> = { none: '', pending: 'Commission pending', payable: 'Commission due', paid: 'Paid', clawed_back: 'Clawed back' }
-const money = (n: number) => '£' + (Number(n) || 0).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 const blank = { referral_type: 'short_term', channel: 'direct', person_name: '', person_email: '', person_phone: '', property_label: '', start_date: '', end_date: '', value: '', notes: '' }
 
 export default function AgentPortal() {
@@ -18,6 +18,10 @@ export default function AgentPortal() {
   const [data, setData] = useState<any>(null)
   const [err, setErr] = useState('')
   const [email, setEmail] = useState(''), [pw, setPw] = useState('')
+  const [cur, setCur] = useState<Cur>('GBP')
+  useEffect(() => { try { const c = localStorage.getItem('agent-cur') as Cur; if (c && CURRENCIES[c]) setCur(c) } catch {} }, [])
+  const pick = (c: Cur) => { setCur(c); try { localStorage.setItem('agent-cur', c) } catch {} }
+  const money = (n: number) => { const x = (Number(n) || 0) * (data?.rates?.[cur] ?? 1); return CURRENCIES[cur].sym + x.toLocaleString(CURRENCIES[cur].locale, { minimumFractionDigits: 0, maximumFractionDigits: cur === 'JMD' ? 0 : 2 }) }
   const [form, setForm] = useState<any>(blank), [showForm, setShowForm] = useState(false), [busy, setBusy] = useState(false)
 
   const call = useCallback(async (init?: RequestInit) => {
@@ -85,6 +89,11 @@ export default function AgentPortal() {
             </div>
             {a.status !== 'active' && <div style={{ marginTop: 12, background: '#FFF6E5', border: '1px solid #F5D9A0', borderRadius: 8, padding: '10px 12px', fontSize: 14 }}>Your account is waiting for approval. You can log guests and tenants once it is approved.</div>}
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', marginBottom: 10, fontSize: 13 }}>
+            <label htmlFor="cur" style={{ margin: 0, color: '#667085', fontWeight: 400 }}>Show amounts in</label>
+            <select id="cur" value={cur} onChange={e => pick(e.target.value as Cur)} style={{ ...inp, width: 'auto', padding: '6px 10px', fontSize: 13.5 }}>{(Object.keys(CURRENCIES) as Cur[]).map(c => <option key={c} value={c}>{CURRENCIES[c].label}</option>)}</select>
+          </div>
+          {cur !== 'GBP' && <div style={{ fontSize: 12, color: '#667085', margin: '-4px 0 10px', textAlign: 'right' }}>Converted from pounds at today’s rate. Your commission is agreed and paid in pounds.</div>}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 14 }}>
             {[['Due to you', money(owed)], ['Pending', money(pending)], ['Paid', money(paid)]].map(([l, v]) => <div key={l} style={{ ...card, marginBottom: 0 }}><div style={{ fontSize: 12.5, color: '#667085' }}>{l}</div><div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>{v}</div></div>)}
           </div>

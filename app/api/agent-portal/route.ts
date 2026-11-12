@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { alertTeam } from '@/lib/crm-lead'
+import { ratesPerGBP } from '@/lib/currency'
 
 // The signed-in agent's own portal data. Only their own agent record and referrals, never another agent's.
 // GET → { agent, referrals }    POST { referral_type, channel, person_name, person_email, person_phone, property_label, start_date, end_date, value, notes }
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
   const { data: refs } = await db.from('agent_referrals').select('id,referral_type,channel,person_name,property_label,start_date,end_date,value,status,commission_amount,commission_status,created_at').eq('agent_id', a.id).order('created_at', { ascending: false })
   const referrals = (refs ?? []).map(r => ({ ...r, commission: commission(a, r) }))
   const { data: u } = await db.auth.admin.getUserById(a.user_id)
-  return NextResponse.json({ agent: { name: a.name, code: a.code, status: a.status, st_rate_type: a.st_rate_type, st_rate: a.st_rate, lt_rate_type: a.lt_rate_type, lt_rate: a.lt_rate }, referrals, company: (u?.user?.user_metadata as any)?.company_name || '' })
+  return NextResponse.json({ agent: { name: a.name, code: a.code, status: a.status, st_rate_type: a.st_rate_type, st_rate: a.st_rate, lt_rate_type: a.lt_rate_type, lt_rate: a.lt_rate }, referrals, company: (u?.user?.user_metadata as any)?.company_name || '', rates: await ratesPerGBP() })
 }
 export async function POST(req: NextRequest) {
   const a = await me(req); if (!a) return NextResponse.json({ error: 'No agent account found for this login.' }, { status: 404 })

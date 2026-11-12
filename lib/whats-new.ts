@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-12', title: 'Agents can change currency', text: 'In the agent portal, agents can show their commission in pounds, dollars, Jamaican dollars, euros, dirhams or Canadian dollars; it is display only.' },
   { date: '2026-11-12', title: 'Agent portal', text: 'Agents now have their own portal: they sign up on a link, you press Activate, then they log in to log their own guests and tenants and see their commission.' },
   { date: '2026-11-12', title: 'Which link to send', text: 'Staff Guide and Novourq Cloud AI now list every link to send: all properties, enquiry form, careers page, and the landlord and tenant portals.' },
   { date: '2026-11-12', title: 'CV upload on the careers page', text: 'Candidates can attach a CV (PDF or Word) when they apply; it appears in the CV link column on their application and in the team email.' },
