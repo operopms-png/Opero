@@ -147,6 +147,7 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(body.access_teams)) patch.access_teams = body.access_teams.map((x: string) => String(x))
     if (body.use_for_marketing !== undefined) patch.use_for_marketing = !!body.use_for_marketing
     if (body.kind === 'staff' || body.kind === 'shared') patch.kind = body.kind
+    if (body.kind === 'private') { patch.kind = 'private'; if (!Array.isArray(body.access) || !body.access.length) patch.access = [c.email] }
     if (['off', 'draft', 'auto'].includes(body.ai_mode)) patch.ai_mode = body.ai_mode
     if (body.disconnect) Object.assign(patch, { password_enc: null, auth_type: 'password', status: 'not_connected', last_error: null })
     if (body.email && body.email !== mb.email) {

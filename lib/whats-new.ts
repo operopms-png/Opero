@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Private mailboxes', text: 'A mailbox can now be Private: it shows under its own heading in Email and only the people named can open it, not other admins.' },
   { date: '2026-11-13', title: 'Acceptance and decline messages for applicants', text: 'Open a candidate in Team, Applications and use Reply to candidate for a ready-made acceptance, decline or interview message.' },
   { date: '2026-11-13', title: 'Onboard a landlord: step by step', text: 'Settings → Guide now has Onboard a landlord (staff step by step), with a numbered picture, from enquiry to Mark as onboarded.' },
   { date: '2026-11-13', title: 'Picture for onboarding a landlord', text: 'Staff Training, Portal guides now shows a numbered picture of the Human Intelligence Hub for Landlord Leads and Owners: enquiry, add the owner, co-host, documents.' },

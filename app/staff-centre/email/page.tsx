@@ -293,9 +293,15 @@ export default function EmailPage() {
           <NavItem on={view === 'mail' && folder === 'Sent'} onClick={() => { setView('mail'); setFolder('Sent'); setOpenId(null); setMsg(null) }}>Sent</NavItem>
           <div style={{ fontSize: 12, color: C.muted, padding: '12px 6px 4px' }}>Mailboxes</div>
           <NavItem on={view === 'mail' && box === 'all'} onClick={() => { setView('mail'); setBox('all'); setOpenId(null); setMsg(null) }} count={totalUnread}>All mailboxes</NavItem>
-          {boxes.filter(b => b.kind !== 'staff').map(b => (
+          {boxes.filter(b => b.kind !== 'staff' && b.kind !== 'private').map(b => (
             <NavItem key={b.id} on={view === 'mail' && box === b.id} onClick={() => { setView('mail'); setBox(b.id); setOpenId(null); setMsg(null) }} count={b.unread} dot={b.status === 'connected' ? colorFor(b.email) : C.grey}>
               <span title={b.email}>{b.email.split('@')[0]}</span>
+            </NavItem>
+          ))}
+          {boxes.some(b => b.kind === 'private') && <div style={{ fontSize: 12, color: C.muted, padding: '12px 6px 4px' }}>Private (only you)</div>}
+          {boxes.filter(b => b.kind === 'private').map(b => (
+            <NavItem key={b.id} on={view === 'mail' && box === b.id} onClick={() => { setView('mail'); setBox(b.id); setOpenId(null); setMsg(null) }} count={b.unread} dot={b.status === 'connected' ? colorFor(b.email) : C.grey}>
+              <span title={b.email}>{b.display_name || b.email.split('@')[0]}</span>
             </NavItem>
           ))}
           {boxes.some(b => b.kind === 'staff') && <div style={{ fontSize: 12, color: C.muted, padding: '12px 6px 4px' }}>Staff</div>}

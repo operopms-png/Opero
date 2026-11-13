@@ -56,6 +56,8 @@ export async function getCaller(req: NextRequest): Promise<Caller | null> {
 
 export function canAccess(mb: any, c: Caller) {
   if (mb.user_id !== c.businessId) return false
+  // Private mailboxes (kind 'private') are for the people named in Access only, admins included.
+  if (mb.kind === 'private') return (mb.access ?? []).map((x: string) => x.toLowerCase()).includes(c.email)
   if (c.isAdmin) return true
   if ((mb.access ?? []).map((x: string) => x.toLowerCase()).includes(c.email)) return true
   return !!c.role && (mb.access_teams ?? []).map((x: string) => x.toLowerCase()).includes(c.role.toLowerCase())
