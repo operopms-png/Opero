@@ -2,7 +2,8 @@
 // Marketing → Emails as Sent. Used by Marketing → Emails → Mailing list and by an approved Novourq Cloud AI request.
 import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
-import { EMAIL_DOMAIN } from '@/lib/brand'
+import { EMAIL_DOMAIN, MARKETING_FROM } from '@/lib/brand'
+import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 import { unsubFooterHtml, unsubHeaders } from '@/lib/marketing-optin'
 import { pagePictures, absUrl } from '@/lib/service-images'
 import { alertEmail } from '@/lib/crm-lead'
@@ -38,9 +39,10 @@ export async function sendToList(o: { businessId: string; audience?: string; mod
   }).join('')
 
   const { data: settings } = await serviceClient.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id', o.businessId).single()
-  const from = settings?.marketing_from_email ? `${settings.marketing_from_name || 'Property Management Team'} <${settings.marketing_from_email}>` : undefined
+  const own = o.businessId === LISTINGS_BUSINESS_ID   // NOVOURQ itself: always from noreply@thenovourq.com with no reply address
+  const from = own ? MARKETING_FROM : settings?.marketing_from_email ? `${settings.marketing_from_name || 'Property Management Team'} <${settings.marketing_from_email}>` : undefined
   // Replies: to the tracked address for a saved draft, otherwise to the company's own sending address (or its alert address), never to a no-reply one.
-  const replyTo = o.replyToken ? `marketing+${o.replyToken}@${EMAIL_DOMAIN}` : (settings?.marketing_from_email || await alertEmail(o.businessId) || undefined)
+  const replyTo = own ? undefined : o.replyToken ? `marketing+${o.replyToken}@${EMAIL_DOMAIN}` : (settings?.marketing_from_email || await alertEmail(o.businessId) || undefined)
 
   let sent = 0, failed = 0
   for (const c of people) {

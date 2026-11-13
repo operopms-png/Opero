@@ -11,4 +11,6 @@ export const SITE_URL = (ENV_SITE && !/helloopero/i.test(ENV_SITE) ? ENV_SITE : 
 export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '')
 export const EMAIL_DOMAIN = process.env.EMAIL_DOMAIN || 'helloopero.com'
 export const EMAIL_FROM = `${BRAND_NAME} <notifications@${EMAIL_DOMAIN}>`
+// NOVOURQ's own marketing emails come from here. No reply address: we contact people on their preferred email.
+export const MARKETING_FROM = `${BRAND_NAME} <noreply@thenovourq.com>`
 export const CONTACT_EMAIL = 'admin@thenovourq.com'

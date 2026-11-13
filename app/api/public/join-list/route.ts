@@ -4,7 +4,7 @@ import { serviceClient as db } from '@/lib/admin-auth'
 import { addCrmLead, alertTeam } from '@/lib/crm-lead'
 import { sendEmail } from '@/lib/send-email'
 import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
-import { SITE_URL } from '@/lib/brand'
+import { SITE_URL, MARKETING_FROM } from '@/lib/brand'
 import { unsubFooterHtml } from '@/lib/marketing-optin'
 
 // Public. The website popup ("Find out more") posts here: {email, name?, consent, source?, website(honeypot)}.
@@ -51,6 +51,6 @@ export async function POST(req: NextRequest) {
   alertTeam(businessId, `New website sign-up: ${name}`, notes, '/staff-centre/crm', email).catch(() => {})
   const foot = token ? unsubFooterHtml(token) : ''
   const brochure = own ? `<p>In the meantime, you can read our brochure here: <a href="${SITE_URL}/services/NOVOURQ_Brochure.pdf">NOVOURQ brochure</a>.</p>` : ''
-  sendEmail(email, own ? 'Thank you from NOVOURQ' : 'Thank you for signing up', `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1A2C5E"><p>Hello ${esc(name)},</p><p>Thank you for your interest${own ? ' in NOVOURQ' : ''}. A member of the team will be in touch soon.</p>${brochure}${own ? '<p>NOVOURQ</p>' : ''}${foot}</div>`).catch(() => {})
+  sendEmail(email, own ? 'Thank you from NOVOURQ' : 'Thank you for signing up', `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1A2C5E"><p>Hello ${esc(name)},</p><p>Thank you for your interest${own ? ' in NOVOURQ' : ''}. A member of the team will be in touch soon.</p>${brochure}${own ? '<p>NOVOURQ</p>' : ''}${foot}</div>`, undefined, own ? MARKETING_FROM : undefined).catch(() => {})
   return NextResponse.json({ ok: true }, { headers: CORS })
 }
