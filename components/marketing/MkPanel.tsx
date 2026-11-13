@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { BRAND } from '@/lib/crm-board'
 import { type MkBoard, fmtDate } from '@/lib/marketing-boards'
 import MkCell from './MkCell'
+import { applicationReply, APP_REPLY_LABEL, type AppReply } from '@/lib/application-messages'
 import type { BoardStore as Mk } from '@/lib/marketing-boards'
 
 // Renders an email body exactly as /api/marketing-send sends it (newlines -> <br/>, wrapped in <p>).
@@ -34,6 +35,37 @@ function LongText({ title, value, onSave, placeholder, disabled }: { title: stri
     <div style={{ marginBottom: 16 }}>
       <label style={lbl}>{title}</label>
       <textarea value={t} disabled={disabled} onChange={e => setT(e.target.value)} onBlur={() => { if (t !== value) onSave(t) }} rows={5} placeholder={placeholder} style={{ ...field, resize: 'vertical', background: disabled ? '#FAFAFB' : '#fff' }} />
+    </div>
+  )
+}
+
+// Applications: generated Acceptance / Decline / Interview messages for the open candidate. Opens in the user's own email app, or copy.
+function ApplicantReply({ row, onStage }: { row: any; onStage: (s: string) => void }) {
+  const [kind, setKind] = useState<AppReply>('decline')
+  const gen = applicationReply(kind, row.candidate_name ?? '', row.role_applied ?? '')
+  const [subject, setSubject] = useState(gen.subject)
+  const [body, setBody] = useState(gen.body)
+  const [done, setDone] = useState('')
+  const pick = (k: AppReply) => { const g = applicationReply(k, row.candidate_name ?? '', row.role_applied ?? ''); setKind(k); setSubject(g.subject); setBody(g.body); setDone('') }
+  const stageFor: Record<AppReply, string> = { accept: 'Offered', decline: 'Rejected', interview: 'Interviewing' }
+  const b = { border: '1px solid #D0D4E4', background: '#fff', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' } as const
+  return (
+    <div style={{ border: '1px solid #E6E9EF', borderRadius: 8, padding: 14, margin: '14px 0' }}>
+      <div style={{ fontWeight: 600, marginBottom: 8 }}>Reply to {row.candidate_name || 'candidate'}</div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+        {(['accept', 'decline', 'interview'] as AppReply[]).map(k => <button key={k} onClick={() => pick(k)} style={{ ...b, ...(kind === k ? { background: '#0B1F3A', color: '#fff', borderColor: '#0B1F3A' } : {}) }}>{APP_REPLY_LABEL[k]}</button>)}
+      </div>
+      <input value={subject} onChange={e => setSubject(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: 8, border: '1px solid #D0D4E4', borderRadius: 6, marginBottom: 8, fontFamily: 'inherit' }} />
+      <textarea value={body} onChange={e => setBody(e.target.value)} rows={10} style={{ width: '100%', boxSizing: 'border-box', padding: 8, border: '1px solid #D0D4E4', borderRadius: 6, fontFamily: 'inherit', fontSize: 13.5 }} />
+      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {row.email
+          ? <a href={`mailto:${row.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`} style={{ ...b, textDecoration: 'none', color: '#0B1F3A' }}>Open in my email</a>
+          : <span style={{ fontSize: 12, color: '#DF2F4A' }}>Add the candidate's email first.</span>}
+        <button style={b} onClick={async () => { try { await navigator.clipboard.writeText(`${subject}\n\n${body}`); setDone('Copied') } catch { setDone('Copy failed') } }}>Copy</button>
+        <button style={b} onClick={() => { onStage(stageFor[kind]); setDone(`Stage set to ${stageFor[kind]}`) }}>Set stage to {stageFor[kind]}</button>
+        {done && <span style={{ fontSize: 12, color: '#037F4C' }}>{done}</span>}
+      </div>
+      <div style={{ fontSize: 12, color: '#676879', marginTop: 8 }}>Nothing is sent from here. Edit the wording, then open it in your email and press Send.</div>
     </div>
   )
 }
@@ -127,6 +159,7 @@ export default function MkPanel({ mk, board, id, onClose, onOpenOther }: { mk: M
               ))}
             </div>
             {board.cols.filter(c => c.type === 'longtext').map(c => <LongText key={c.key} disabled={c.readonlyWhen?.(row)} title={c.title} value={row[c.key] ?? ''} onSave={v => save({ [c.key]: v || null })} placeholder={board.key === 'campaigns' ? "Goals, budget breakdown, who it's aimed at…" : 'Add notes…'} />)}
+            {board.key === 'applications' && <ApplicantReply row={row} onStage={st => save({ stage: st })} />}
             {(isEmail || isTpl) && (
               <div>
                 {isTpl && <div style={{ marginBottom: 14 }}>
