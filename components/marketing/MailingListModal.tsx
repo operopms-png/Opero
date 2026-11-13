@@ -35,7 +35,7 @@ export default function MailingListModal({ mk, onClose }: { mk: Mk; onClose: () 
   const n = counts ? (aud === 'all' ? counts.total : counts.types[aud] ?? 0) : 0
   const draft = drafts.find((x: any) => x.id === emailId)
   const pickDraft = (id: string) => { setEmailId(id); const d = drafts.find((x: any) => x.id === id); if (d) { setSubject(d.subject || ''); setBody(d.body || '') } }
-  const generate = () => { const g = generateMessage(); setEmailId(''); setSubject(g.subject); setBody(g.text) }
+  const generate = () => { const g = generateMessage(aud); setEmailId(''); setSubject(g.subject); setBody(g.text); if (aud === 'platform') setDocIds((counts?.docs ?? []).filter(d => /ai platform/i.test(d.title)).map(d => d.id)) }
   const toggleDoc = (id: string) => setDocIds(d => d.includes(id) ? d.filter(x => x !== id) : [...d, id])
   const send = async () => {
     if (!subject.trim() || !body.trim()) { setMsg('Add a subject and write the message first.'); return }

@@ -104,7 +104,7 @@ async function queueMarketingFromReply(c: NonNullable<Awaited<ReturnType<typeof 
     const people = await audience(c.businessId, aud)
     const { data: docs } = await serviceClient.from('service_docs').select('id,title').eq('business_id', c.businessId).eq('active', true)
     const picked = (docs ?? []).filter(d => words.some(w => String(d.title).toLowerCase().includes(w)))
-    const g = generateMessage()
+    const g = generateMessage(aud)
     const q = await queueAiAction({
       userId: c.businessId, agentKey: 'marketing', actionType: 'marketing_list',
       title: `Marketing email to ${people.length} opted-in ${people.length === 1 ? 'person' : 'people'}${aud !== 'all' ? ` (${aud})` : ''}`,
