@@ -13,7 +13,7 @@ const MESSAGE = {
     '* Vetted, ready-to-move tenants and well-kept furnished homes',
     '* Day-to-day management, maintenance and compliance handled for you',
     '',
-    'schedule a meeting with us: https://app.thenovourq.com/meeting',
+    'Schedule a meeting with us: https://app.thenovourq.com/meeting',
     '',
     'Website: http://www.thenovourq.com',
     '',
