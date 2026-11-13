@@ -68,7 +68,7 @@ form.onsubmit=function(e){
   else{msg.className='e';msg.textContent=(x.j&&x.j.error)||'Something went wrong. Please try again.';go.disabled=false;go.textContent='Send'}
  }).catch(function(){msg.className='e';msg.textContent='Something went wrong. Please try again.';go.disabled=false;go.textContent='Send'});
 };
-if(path===''&&!seen)setTimeout(show,1500);
+if(location.search.indexOf('nqtest')>-1||(path===''&&!seen))setTimeout(show,1500);
 }
 if(document.body)build();else document.addEventListener('DOMContentLoaded',build);
 })();
