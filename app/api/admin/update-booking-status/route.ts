@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireStaff, serviceClient } from '@/lib/admin-auth'
+import { requireStaffWithBusiness, ownsRow, serviceClient } from '@/lib/admin-auth'
 
 export async function PATCH(req: NextRequest) {
-  const staffId = await requireStaff(req)
-  if (!staffId) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+  const staff = await requireStaffWithBusiness(req)
+  if (!staff) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
 
   const body = await req.json()
   const { booking_id } = body
   if (!booking_id) return NextResponse.json({ error: 'booking_id is required' }, { status: 400 })
 
+  const { data: bk } = await serviceClient.from('bookings').select('property_id').eq('id', booking_id).maybeSingle()
+  if (!bk || !(await ownsRow('properties', bk.property_id, staff.businessId, 'user_id'))) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const patch: Record<string, any> = {}
   if ('status' in body) patch.status = body.status
   if ('total_amount' in body) patch.total_amount = body.total_amount === '' ? null : Number(body.total_amount)

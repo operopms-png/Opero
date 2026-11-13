@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireStaff, serviceClient } from '@/lib/admin-auth'
+import { requireStaffWithBusiness, ownsRow, serviceClient } from '@/lib/admin-auth'
 
 export async function POST(req: NextRequest) {
-  const staffId = await requireStaff(req)
-  if (!staffId) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+  const staff = await requireStaffWithBusiness(req)
+  if (!staff) return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
 
   const { owner_id, message, attachment_url } = await req.json()
+  if (!(await ownsRow('owner_profiles', owner_id, staff.businessId, 'business_id'))) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!owner_id || (!message?.trim() && !attachment_url)) return NextResponse.json({ error: 'owner_id and message or attachment are required' }, { status: 400 })
 
   const { error } = await serviceClient.from('owner_messages').insert({

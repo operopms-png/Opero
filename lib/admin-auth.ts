@@ -85,3 +85,11 @@ export async function requireStaffWithBusiness(req: NextRequest): Promise<{ staf
   const businessId = await resolveBusinessUserId(user.id, user.email)
   return { staffId: user.id, email: user.email ?? null, businessId }
 }
+
+// Does this row belong to the signed-in staff member's own company? Every admin route that takes a record id
+// from the request must check it with this before reading or writing, because serviceClient bypasses RLS.
+export async function ownsRow(table: string, id: unknown, businessId: string, col = 'user_id'): Promise<boolean> {
+  if (!id || typeof id !== 'string') return false
+  const { data } = await serviceClient.from(table).select('id').eq('id', id).eq(col, businessId).maybeSingle()
+  return !!data
+}
