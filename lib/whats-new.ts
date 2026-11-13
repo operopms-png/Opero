@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Where do I go? on Human Intelligence Hub', text: 'The Human Intelligence Hub now has a Where do I go? card at the top: pick a job such as Chase rent or Log a repair and it opens the right page.' },
   { date: '2026-11-13', title: 'Website pricing from Stripe', text: 'The website pricing now reads your live Stripe prices and Choose plan opens Stripe Checkout, so clients can sign up and pay from the website.' },
   { date: '2026-11-12', title: 'Agent leaderboards on the Dashboard', text: 'The Dashboard now shows the agent leaderboard under Automation by area, both your staff view with amounts and what agents see.' },
   { date: '2026-11-12', title: 'Agent leaderboard', text: 'Approved agents now see a leaderboard in their portal ranking your agents by confirmed commission, without anyone seeing another agent\'s amounts.' },

@@ -1,6 +1,6 @@
 'use client'
 // Staff Centre → Human Intelligence Hub: every people-run area, grouped under four headings.
-// A list of headings on the left, the areas and their pages on the right, and a search box.
+// A "Where do I go?" card at the top, a list of headings on the left, the areas and their pages on the right, and a search box.
 // Only pages this person can open are shown (same rules as the sidebar and HubTabs).
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -14,8 +14,28 @@ const GROUPS: { name: string; note: string; hubs: string[] }[] = [
   { name: 'Company', note: 'Your team and records', hubs: ['Company Documents', 'Team'] },
 ]
 
+// Where do I go? Plain tasks that open the right page. Each page is looked up in STAFF_HUBS,
+// so the label and the "can this person open it" rule are the same as everywhere else.
+const TASKS: { task: string; pages: string[] }[] = [
+  { task: 'Reply to a customer', pages: ['/staff-centre/inbox', '/staff-centre/email', '/staff-centre/airbnb', '/staff-centre/website-chats'] },
+  { task: 'Follow up a lead', pages: ['/staff-centre/crm', '/staff-centre/landlord-leads'] },
+  { task: 'Check a client’s property', pages: ['/staff-centre/client-properties'] },
+  { task: 'Add an owner or tenant', pages: ['/pm?tab=Landlords', '/pm?tab=Tenants'] },
+  { task: 'Onboard a tenant', pages: ['/staff-centre/tenant-onboarding'] },
+  { task: 'Send a landlord or tenant their link', pages: ['/staff-centre/documents'] },
+  { task: 'Add a partner or investor', pages: ['/staff-centre/partners', '/staff-centre/investors'] },
+  { task: 'Chase rent', pages: ['/staff-centre/finance/arrears'] },
+  { task: 'Pay an owner', pages: ['/staff-centre/finance/payouts'] },
+  { task: 'Raise an invoice', pages: ['/staff-centre/invoices'] },
+  { task: 'Log a repair', pages: ['/staff-centre/maintenance'] },
+  { task: 'Check a certificate or compliance', pages: ['/staff-centre/compliance'] },
+  { task: 'Plan the day', pages: ['/staff-centre/calendar', '/staff-centre/tasks'] },
+  { task: 'Manage staff', pages: ['/staff-centre/hr', '/settings?section=Team+Management'] },
+]
+
 const C = { ink: '#10234d', text: '#34456b', muted: '#6b7a9f', blue: '#2f5bd6', soft: '#eaf0fd', line: '#dfe6f4' }
 const shadow = '0 1px 2px rgba(16,35,77,.05), 0 8px 24px rgba(16,35,77,.06)'
+const chip: React.CSSProperties = { background: '#eaf0fd', color: '#2f5bd6', fontSize: 13, fontWeight: 600, padding: '4px 10px', borderRadius: 8, textDecoration: 'none' }
 
 export default function HumanIntelligenceHub() {
   const { role, modules: teamModules } = useRole()
@@ -41,10 +61,36 @@ export default function HumanIntelligenceHub() {
 
   const cur = groups[Math.min(cat, Math.max(groups.length - 1, 0))]
 
+  const tasks = useMemo(() => {
+    const byHref = new Map<string, HubTab>(STAFF_HUBS.flatMap(h => h.tabs).map(t => [t.href, t]))
+    return TASKS.map(t => ({
+      task: t.task,
+      pages: t.pages.map(h => byHref.get(h)).filter((p): p is HubTab => !!p && allowed(p)),
+    })).filter(t => t.pages.length > 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, teamModules])
+
   return (
     <div style={{ padding: '28px 30px 40px', fontFamily: 'inherit', maxWidth: 1100 }}>
       <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: C.ink, letterSpacing: '-0.01em' }}>Human Intelligence Hub</h1>
       <p style={{ margin: '6px 0 18px', fontSize: 14, color: C.muted, maxWidth: 560, lineHeight: 1.5 }}>Everything your people run. Novourq Cloud AI drafts the work and you decide.</p>
+
+      {tasks.length > 0 && (
+        <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '16px 20px', marginBottom: 16, boxShadow: shadow }}>
+          <b style={{ display: 'block', color: C.ink, fontSize: 16, fontWeight: 700 }}>Where do I go?</b>
+          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick what you want to do and we open the right page. Only pages your role can open are shown.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 10 }}>
+            {tasks.map(t => (
+              <div key={t.task} style={{ border: `1px solid ${C.line}`, borderRadius: 10, padding: '10px 12px' }}>
+                <b style={{ display: 'block', color: C.ink, fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{t.task}</b>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {t.pages.map(p => <Link key={p.href} href={p.href} style={chip}>{t.pages.length > 1 ? p.label : 'Open'}</Link>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '0 14px', height: 46, boxShadow: shadow }}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
