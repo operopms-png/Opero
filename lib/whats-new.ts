@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'New Help Centre videos', text: 'The Help Centre now has five new video walkthroughs (packs and onboarding, agent programme, website links and careers, your plan and currency, co-hosts crew and HR) and an updated Human Intelligence Hub video.' },
   { date: '2026-11-13', title: 'At a glance on Human Intelligence Hub', text: 'The Human Intelligence Hub now ends with At a glance: tiles showing what needs you today, such as unread messages, approvals, overdue rent and tasks, each opening its page.' },
   { date: '2026-11-13', title: 'Where do I go? on Human Intelligence Hub', text: 'The Human Intelligence Hub now has a Where do I go? card at the top: pick a job such as Chase rent or Log a repair and it opens the right page.' },
   { date: '2026-11-13', title: 'Website pricing from Stripe', text: 'The website pricing now reads your live Stripe prices and Choose plan opens Stripe Checkout, so clients can sign up and pay from the website.' },
