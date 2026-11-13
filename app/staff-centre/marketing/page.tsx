@@ -131,6 +131,7 @@ function EnquiryLinkCard() {
   const [copied, setCopied] = useState(false)
   const [copied2, setCopied2] = useState(false)
   const [copied3, setCopied3] = useState(false)
+  const [copied4, setCopied4] = useState(false)
   useEffect(() => { ownerFetch('/api/enquiry-link').then(r => { if (r.data?.url) setD(r.data) }).catch(() => {}) }, [])
   if (!d) return null
   const copy = () => { navigator.clipboard?.writeText(d.url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800) }).catch(() => {}) }
@@ -156,6 +157,12 @@ function EnquiryLinkCard() {
         <input readOnly value={d.url.split('/enquire/')[0] + '/tenants'} onFocus={e => e.currentTarget.select()} style={{ flex: '1 1 260px', minWidth: 0, padding: '8px 10px', border: `1px solid ${BRAND.border}`, borderRadius: 6, fontSize: 13, fontFamily: 'inherit' }} />
         <button onClick={() => navigator.clipboard?.writeText(d.url.split('/enquire/')[0] + '/tenants').then(() => { setCopied3(true); setTimeout(() => setCopied3(false), 1800) }).catch(() => {})} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 600, padding: '0 14px' }}>{copied3 ? 'Copied' : 'Copy link'}</button>
         <a href={d.url.split('/enquire/')[0] + '/tenants'} target="_blank" rel="noreferrer" className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}`, textDecoration: 'none', color: 'inherit' }}>Open</a>
+      </div>
+      <div style={{ fontSize: 12.5, color: BRAND.muted, margin: '14px 0 6px' }}><b style={{ color: 'inherit' }}>One link for representatives.</b> Staff sign in to the oversight portal, agents sign in to the agent portal, and new agents sign up, all from one page. It uses the same on/off switch.</div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input readOnly value={d.url.replace('/enquire/', '/representatives/')} onFocus={e => e.currentTarget.select()} style={{ flex: '1 1 260px', minWidth: 0, padding: '8px 10px', border: `1px solid ${BRAND.border}`, borderRadius: 6, fontSize: 13, fontFamily: 'inherit' }} />
+        <button onClick={() => navigator.clipboard?.writeText(d.url.replace('/enquire/', '/representatives/')).then(() => { setCopied4(true); setTimeout(() => setCopied4(false), 1800) }).catch(() => {})} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 600, padding: '0 14px' }}>{copied4 ? 'Copied' : 'Copy link'}</button>
+        <a href={d.url.replace('/enquire/', '/representatives/')} target="_blank" rel="noreferrer" className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}`, textDecoration: 'none', color: 'inherit' }}>Open</a>
       </div>
       {!d.active && <div style={{ fontSize: 12.5, color: '#B42318', marginTop: 8 }}>This link is off. Anyone opening it sees that it is not active.</div>}
     </div>
