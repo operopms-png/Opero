@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRole, ROLE_MODULES, getScTabs } from '@/lib/useRole'
 import { STAFF_HUBS, type HubTab, type Hub } from '@/lib/staffHubs'
+import HumanGlance from '@/components/staff/HumanGlance'
 
 const GROUPS: { name: string; note: string; hubs: string[] }[] = [
   { name: 'Clients and sales', note: 'Everyone you deal with', hubs: ['Inbox', 'CRM', 'Client Properties', 'Owners & Tenants', 'Partners & Investors', 'Marketing'] },
@@ -32,6 +33,8 @@ const TASKS: { task: string; pages: string[] }[] = [
   { task: 'Plan the day', pages: ['/staff-centre/calendar', '/staff-centre/tasks'] },
   { task: 'Manage staff', pages: ['/staff-centre/hr', '/settings?section=Team+Management'] },
 ]
+
+const allTabs = new Map<string, HubTab>(STAFF_HUBS.flatMap(h => h.tabs).map(t => [t.href, t]))
 
 const C = { ink: '#10234d', text: '#34456b', muted: '#6b7a9f', blue: '#2f5bd6', soft: '#eaf0fd', line: '#dfe6f4' }
 const shadow = '0 1px 2px rgba(16,35,77,.05), 0 8px 24px rgba(16,35,77,.06)'
@@ -62,7 +65,7 @@ export default function HumanIntelligenceHub() {
   const cur = groups[Math.min(cat, Math.max(groups.length - 1, 0))]
 
   const tasks = useMemo(() => {
-    const byHref = new Map<string, HubTab>(STAFF_HUBS.flatMap(h => h.tabs).map(t => [t.href, t]))
+    const byHref = allTabs
     return TASKS.map(t => ({
       task: t.task,
       pages: t.pages.map(h => byHref.get(h)).filter((p): p is HubTab => !!p && allowed(p)),
@@ -129,6 +132,7 @@ export default function HumanIntelligenceHub() {
           </div>
         </div>
       )}
+      <HumanGlance canOpen={href => { const t = allTabs.get(href); return !!t && allowed(t) }} />
       <style>{`@media (max-width: 720px){ .hih-grid{ grid-template-columns: 1fr !important } .hih-row{ grid-template-columns: 1fr !important } }`}</style>
     </div>
   )
