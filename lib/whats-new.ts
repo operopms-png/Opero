@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Sign-ups land in the CRM and mailing list', text: 'Everyone who creates a portal account is saved in the CRM as a platform lead, and joins the Mailing list if they tick the new product news box on the sign-up form.' },
   { date: '2026-11-13', title: 'Platform message in the Mailing list', text: 'Choosing the platform audience and pressing Generate NOVOURQ message now writes a message about the AI platform and ticks the AI platform brochure.' },
   { date: '2026-11-13', title: 'Landlords and platform leads kept apart', text: 'A website sign-up form with data-interest="platform" tags people as platform leads, who appear as their own audience in the Mailing list, separate from landlords.' },
   { date: '2026-11-13', title: 'Mailing list documents grouped', text: 'In the Mailing list window, documents are now grouped under AI platform and Property management so you can pick the right brochure quickly.' },

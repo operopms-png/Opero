@@ -80,6 +80,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState(searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
+  const [newsOk, setNewsOk] = useState(false)   // sign-up: tick to get product news and offers by email (never pre-ticked)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
@@ -176,6 +177,8 @@ function LoginForm() {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })
       if (error) { setError(error.message) }
       else {
+        // Save the new sign-up in the NOVOURQ CRM as a platform lead (opted in to the mailing list only if they ticked the box)
+        fetch('/api/public/join-list', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, consent: newsOk, signup: true, interest: 'platform', source: 'Portal sign-up' }) }).catch(() => {})
         // Go to Stripe checkout
         const priceId = searchParams.get('priceId')
         const body = priceId && selectedPlan === initialPlan ? { plan: selectedPlan, priceId, email } : { plan: selectedPlan, email }
@@ -314,6 +317,12 @@ function LoginForm() {
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#344054', marginBottom: 5 }}>Password</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
               </div>
+            )}
+            {mode === 'signup' && (
+              <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, color: '#344054', cursor: 'pointer' }}>
+                <input type="checkbox" checked={newsOk} onChange={e => setNewsOk(e.target.checked)} style={{ marginTop: 3 }} />
+                <span>Email me NOVOURQ product news and offers. You can unsubscribe at any time.</span>
+              </label>
             )}
             {error && <div style={{ fontSize: 13, color: '#F04438', background: '#FEF3F2', padding: '10px 12px', borderRadius: 8 }}>{error}</div>}
             {successMsg && <div style={{ fontSize: 13, color: '#12B76A', background: '#F6FEF9', padding: '10px 12px', borderRadius: 8 }}>{successMsg}</div>}

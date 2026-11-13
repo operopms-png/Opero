@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
   if (b.website) return NextResponse.json({ ok: true }, { headers: CORS })
   const email = clean(b.email, 200).toLowerCase()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err('Please add a valid email address.')
-  if (b.consent !== true) return err('Please tick the box so we can email you.')
+  const signup = b.signup === true   // a new portal sign-up: always saved as a lead, but only opted in to marketing if they ticked the box
+  if (b.consent !== true && !signup) return err('Please tick the box so we can email you.')
+  const consent = b.consent === true
   // Each company's own website form sends its business id; the NOVOURQ popup sends none.
   let businessId = LISTINGS_BUSINESS_ID
   const bid = clean(b.business, 60)
@@ -41,14 +43,16 @@ export async function POST(req: NextRequest) {
   const { count } = await db.from('crm_contacts').select('id', { count: 'exact', head: true }).eq('user_id', businessId).ilike('email', email).gte('created_at', since)
   if ((count ?? 0) >= 5) return NextResponse.json({ ok: true }, { headers: CORS })
 
-  const notes = `Signed up on the website popup (Find out more).\nMarketing emails: Yes, ticked the consent box on ${new Date().toISOString().slice(0, 10)}.`
+  const day = new Date().toISOString().slice(0, 10)
+  const notes = signup ? `Signed up for a NOVOURQ portal trial.\nMarketing emails: ${consent ? `Yes, ticked the box on ${day}` : 'No, did not tick the box'}.` : `Signed up on the website popup (Find out more).\nMarketing emails: Yes, ticked the consent box on ${day}.`
   const contactId = await addCrmLead({ businessId, name, email, phone: null, source, module: 'pm', type: platform ? 'platform' : 'landlord', notes, dealName: `${name} — ${source}` })
   let token = ''
-  if (contactId) {
+  if (contactId && consent) {
     await db.from('crm_contacts').update({ marketing_opt_in: true, marketing_opt_in_at: new Date().toISOString(), marketing_unsub_at: null }).eq('id', contactId)
     const { data: c } = await db.from('crm_contacts').select('unsub_token').eq('id', contactId).single()
     token = (c?.unsub_token as string) || ''
   }
+  if (signup) return NextResponse.json({ ok: true }, { headers: CORS })   // a portal sign-up gets the app's own emails, not the popup thank-you
   alertTeam(businessId, `New website sign-up: ${name}`, notes, '/staff-centre/crm', email).catch(() => {})
   const foot = token ? unsubFooterHtml(token) : ''
   const brochure = own ? `<p>In the meantime, you can read our brochure here: <a href="${SITE_URL}/services/NOVOURQ_Brochure.pdf">NOVOURQ brochure</a>.</p>` : ''
