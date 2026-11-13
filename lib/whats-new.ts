@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Website pricing from Stripe', text: 'The website pricing now reads your live Stripe prices and Choose plan opens Stripe Checkout, so clients can sign up and pay from the website.' },
   { date: '2026-11-12', title: 'Agent leaderboards on the Dashboard', text: 'The Dashboard now shows the agent leaderboard under Automation by area, both your staff view with amounts and what agents see.' },
   { date: '2026-11-12', title: 'Agent leaderboard', text: 'Approved agents now see a leaderboard in their portal ranking your agents by confirmed commission, without anyone seeing another agent\'s amounts.' },
   { date: '2026-11-12', title: 'Create agent logins and record earnings', text: 'In Partners, Agent Programme you can now create an agent\'s portal login yourself, and log what an agent has earned and whether it is paid.' },
