@@ -88,14 +88,19 @@ export default function MailingListModal({ mk, onClose }: { mk: Mk; onClose: () 
         <textarea value={body} onChange={e => setBody(e.target.value)} rows={9} placeholder="Press Generate NOVOURQ message, or write your own." style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: 10, fontFamily: 'inherit', fontSize: 14, marginBottom: 12, resize: 'vertical' }} />
 
         <label style={lbl}>Documents to include (from Services Pack)</label>
-        <div style={{ border: `1px solid ${BRAND.border}`, borderRadius: 6, marginBottom: 12, maxHeight: 170, overflowY: 'auto' }}>
+        <div style={{ border: `1px solid ${BRAND.border}`, borderRadius: 6, marginBottom: 12, maxHeight: 260, overflowY: 'auto' }}>
           {(counts?.docs ?? []).length === 0 && <div style={{ padding: 10, fontSize: 13, color: BRAND.muted }}>No documents yet. Add them under Marketing → Services Pack.</div>}
-          {(counts?.docs ?? []).map(d => (
-            <label key={d.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 12px', fontSize: 13.5, borderBottom: `1px solid ${BRAND.border}`, cursor: 'pointer', margin: 0, color: BRAND.ink }}>
-              <input type="checkbox" checked={docIds.includes(d.id)} onChange={() => toggleDoc(d.id)} />
-              <span style={{ flex: 1 }}>{d.title}</span>
-              <span style={{ fontSize: 11.5, color: BRAND.muted }}>{d.pictures ? `${d.pictures} ${d.pictures === 1 ? 'picture' : 'pictures'}` : 'PDF link only'}</span>
-            </label>
+          {[{ h: 'AI platform', list: (counts?.docs ?? []).filter(d => /ai platform/i.test(d.title)) }, { h: 'Property management', list: (counts?.docs ?? []).filter(d => !/ai platform/i.test(d.title)) }].filter(g => g.list.length).map(g => (
+            <div key={g.h}>
+              <div style={{ padding: '7px 12px', fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: BRAND.muted, background: '#F5F7FB', borderBottom: `1px solid ${BRAND.border}` }}>{g.h}</div>
+              {g.list.map(d => (
+                <label key={d.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 12px', fontSize: 13.5, borderBottom: `1px solid ${BRAND.border}`, cursor: 'pointer', margin: 0, color: BRAND.ink }}>
+                  <input type="checkbox" checked={docIds.includes(d.id)} onChange={() => toggleDoc(d.id)} />
+                  <span style={{ flex: 1 }}>{d.title}</span>
+                  <span style={{ fontSize: 11.5, color: BRAND.muted }}>{d.pictures ? `${d.pictures} ${d.pictures === 1 ? 'picture' : 'pictures'}` : 'PDF link only'}</span>
+                </label>
+              ))}
+            </div>
           ))}
         </div>
         {docIds.length > 0 && <>
