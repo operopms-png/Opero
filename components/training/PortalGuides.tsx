@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { BUILT_IN_PICTURES } from '../../lib/tab-pictures'
 import { buildGuides, GUIDE_AREAS } from '../../lib/tab-guides'
 import { WHATS_NEW } from '../../lib/whats-new'
 import { HELP_VIDEOS } from '../../lib/help-videos'
@@ -99,8 +100,9 @@ export default function PortalGuides({ accountId, isAdmin, userEmail }: { accoun
               <div>
                 <b style={{ fontSize: 14 }}>Pictures</b>
                 <div style={{ display: 'grid', gap: 8, marginTop: 6 }}>
+                  {(BUILT_IN_PICTURES[g.key] ?? []).map(b => <figure key={b.src} style={{ margin: 0 }}><img src={b.src} alt={g.title} style={{ width: '100%', borderRadius: 8, border: '1px solid #E4E7EC' }} /><figcaption style={{ fontSize: 12.5, color: '#475467', marginTop: 4, lineHeight: 1.4 }}>{b.caption}</figcaption></figure>)}
                   {mine(g.key, 'image').map(m => <div key={m.id}><img src={m.url} alt={g.title} style={{ width: '100%', borderRadius: 8, border: '1px solid #E4E7EC' }} />{isAdmin && <button onClick={() => remove(m.id)} style={{ ...btn('ghost', true), marginTop: 4 }}>Remove</button>}</div>)}
-                  {mine(g.key, 'image').length === 0 && <div style={slot}>No picture yet{isAdmin && <label style={{ ...btn('ghost', true), cursor: 'pointer' }}>Upload picture<input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && upload(e.target.files[0], 'image')} /></label>}</div>}
+                  {mine(g.key, 'image').length === 0 && !(BUILT_IN_PICTURES[g.key]?.length) && <div style={slot}>No picture yet{isAdmin && <label style={{ ...btn('ghost', true), cursor: 'pointer' }}>Upload picture<input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && upload(e.target.files[0], 'image')} /></label>}</div>}
                   {isAdmin && mine(g.key, 'image').length > 0 && <label style={{ ...btn('ghost', true), cursor: 'pointer', justifySelf: 'start' }}>Add another<input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && upload(e.target.files[0], 'image')} /></label>}
                 </div>
               </div>

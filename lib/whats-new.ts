@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Pictures in the Marketing guides', text: 'Staff Training, Portal guides now shows pictures for the Mailing list, the landlord and tenant links and the AI platform brochure.' },
   { date: '2026-11-13', title: 'One link for all tenants', text: 'Marketing now has a single tenant link: existing tenants go to the tenants portal and people looking for a home go to the property listings.' },
   { date: '2026-11-13', title: 'One link for all landlords', text: 'Marketing now has a single landlord link: existing landlords sign in to the owners portal and new ones open the enquiry form, so you share one link instead of two.' },
   { date: '2026-11-13', title: 'Sign-ups land in the CRM and mailing list', text: 'Everyone who creates a portal account is saved in the CRM as a platform lead, and joins the Mailing list if they tick the new product news box on the sign-up form.' },
