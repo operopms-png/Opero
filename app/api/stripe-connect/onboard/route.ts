@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
           responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' },
         },
         configuration: {
-          merchant: { capabilities: { card_payments: { requested: true } } },
+          merchant: { capabilities: { card_payments: { requested: true }, bacs_debit_payments: { requested: true } } },
         },
       })
       accountId = account.id
