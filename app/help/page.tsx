@@ -13,12 +13,12 @@ function VideoCard({ v, playing, onPlay }: { v: HelpVideo; playing: boolean; onP
     <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, overflow: 'hidden', boxShadow: shadow }}>
       {playing ? (
         <video src={`/help/${v.id}.mp4`} poster={`/help/${v.id}.jpg`} controls autoPlay playsInline preload="metadata"
-          style={{ width: '100%', display: 'block', background: '#000', aspectRatio: '9 / 16', maxHeight: 520, objectFit: 'contain' }} />
+          style={{ width: '100%', display: 'block', background: '#000', aspectRatio: '16 / 9', objectFit: 'contain' }} />
       ) : (
         <button onClick={onPlay} aria-label={`Play ${v.title}`}
           style={{ position: 'relative', display: 'block', width: '100%', padding: 0, border: 0, cursor: 'pointer', background: '#0b1f3a' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/help/${v.id}.jpg`} alt="" style={{ width: '100%', display: 'block', aspectRatio: '9 / 16', maxHeight: 520, objectFit: 'cover' }} />
+          <img src={`/help/${v.id}.jpg`} alt="" style={{ width: '100%', display: 'block', aspectRatio: '16 / 9', objectFit: 'cover' }} />
           <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,.94)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(0,0,0,.3)' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill={C.ink}><path d="M8 5v14l11-7z" /></svg>
@@ -51,7 +51,7 @@ export default function HelpCentre() {
         {tabBtn('guide', 'Step-by-step guide')}
       </div>
       {tab === 'videos' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 18 }}>
           {HELP_VIDEOS.map(v => <VideoCard key={v.id} v={v} playing={playing === v.id} onPlay={() => setPlaying(v.id)} />)}
         </div>
       ) : (
