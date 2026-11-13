@@ -9,7 +9,6 @@ const MODULES: { k: string; l: string; color: string }[] = [
   { k: 'ea', l: 'Estate Agency', color: MODULE_COLOR.ea },
   { k: 'partners', l: 'Partners', color: MODULE_COLOR.ea },
   { k: 'dev', l: 'Developments', color: MODULE_COLOR.dev },
-  { k: 'marketing', l: 'Marketing', color: MODULE_COLOR.marketing },
   { k: 'staff', l: 'Staff', color: MODULE_COLOR.staff },
   { k: 'other', l: 'Other', color: MODULE_COLOR.other },
 ]
@@ -29,9 +28,6 @@ const SEED_PORTALS = [
   { module: 'partners', name: 'Agent Portal', url: '/agent-portal', live: true, sort_order: 5 },
   { module: 'partners', name: 'Partners Portal', url: '/partners', live: true, sort_order: 5 },
   { module: 'dev', name: 'Developments — Partners Portal', url: '/dev-investor-portal', live: false, sort_order: 7 },
-  { module: 'marketing', name: 'Marketing — Mailing list and emails', url: '/staff-centre/marketing', live: true, sort_order: 9 },
-  { module: 'marketing', name: 'Marketing — Brochures and flyers', url: '/staff-centre/services-pack', live: true, sort_order: 10 },
-  { module: 'marketing', name: 'Marketing — Properties for rent (public listings)', url: '/homes', live: true, sort_order: 11 },
   { module: 'staff', name: 'Cleaners Portal', url: '/staff-dashboard?team=cleaning', live: true, sort_order: 6 },
   { module: 'staff', name: 'Maintenance Portal', url: '/staff-dashboard?team=maintenance', live: true, sort_order: 8 },
 ]
@@ -70,12 +66,6 @@ export default function PortalAccessPage() {
     }
     if (rows && rows.length && !rows.some((r: any) => String(r.url).includes('team=maintenance'))) {
       const add = { module: 'staff', name: 'Maintenance Portal', url: '/staff-dashboard?team=maintenance', live: true, sort_order: 8, user_id: uid }
-      const { error } = await supabase.from('client_portals').insert(add)
-      if (!error) { const { data: again } = await supabase.from('client_portals').select('*').eq('user_id', uid).order('sort_order', { ascending: true }); rows = again }
-    }
-    // accounts seeded before the Marketing group existed get its portals added once
-    if (rows && rows.length && !rows.some((r: any) => r.module === 'marketing')) {
-      const add = SEED_PORTALS.filter(x => x.module === 'marketing').map(x => ({ ...x, user_id: uid }))
       const { error } = await supabase.from('client_portals').insert(add)
       if (!error) { const { data: again } = await supabase.from('client_portals').select('*').eq('user_id', uid).order('sort_order', { ascending: true }); rows = again }
     }

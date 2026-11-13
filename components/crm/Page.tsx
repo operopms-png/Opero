@@ -11,7 +11,7 @@ export const C = {
 }
 
 export const MODULE_COLOR: Record<string, string> = {
-  str: '#2F6DB5', pm: '#00C875', ea: '#FDAB3D', dev: '#9D50DD', marketing: '#E2445C', staff: '#1D4E89', other: '#9699A6',
+  str: '#2F6DB5', pm: '#00C875', ea: '#FDAB3D', dev: '#9D50DD', staff: '#1D4E89', other: '#9699A6',
 }
 
 export const btn = (kind: 'gold' | 'ghost' | 'danger' = 'gold', small = false): React.CSSProperties => ({

@@ -44,7 +44,6 @@ const PAGES: Record<string, B> = {
   '/staff-centre/hr-documents': { title: 'HR Documents', text: 'Payslips, HR forms and contracts in one place. Open a form to fill it in, edit or replace it, and send it to the person by email. Only Admin and HR Team can see this.' },
   '/staff-centre/hr': { title: 'People & HR', text: 'Your team records in one place: staff details, leave, contracts and reviews.' },
   '/staff-centre/crm': { title: 'CRM', text: 'Contacts, deals and follow-ups for landlords, tenants and buyers.' },
-  '/staff-centre/portal-access': { title: 'Portal Access', text: 'Every client-facing portal and link, grouped by area: Property Management, Estate Agency, Developments, Marketing and more. Press Open to use one, or switch it between Live and Preview.' },
   '/staff-centre/marketing': { title: 'Marketing', text: 'Campaigns, content and leads from your marketing, with results for each. Copy the enquiry form link from the home page to send to landlords. In Emails, the Mailing list button emails everyone who opted in and gives you a website sign-up form.' },
   '/staff-centre/performance': { title: 'Staff Performance', text: 'How each team member is doing: tasks finished, response times and targets.' },
   '/staff-centre/website-chats': { title: 'Website Chats', text: 'Conversations from your website. Novourq Cloud AI answers visitors, books viewings and saves leads.' },
