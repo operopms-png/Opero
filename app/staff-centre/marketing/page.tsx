@@ -129,6 +129,7 @@ function NavItem({ icon, label, active, onClick, count }: { icon: React.ReactNod
 function EnquiryLinkCard() {
   const [d, setD] = useState<{ url: string; active: boolean; isAdmin: boolean } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [copied2, setCopied2] = useState(false)
   useEffect(() => { ownerFetch('/api/enquiry-link').then(r => { if (r.data?.url) setD(r.data) }).catch(() => {}) }, [])
   if (!d) return null
   const copy = () => { navigator.clipboard?.writeText(d.url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800) }).catch(() => {}) }
@@ -142,6 +143,12 @@ function EnquiryLinkCard() {
         <button onClick={copy} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 600, padding: '0 14px' }}>{copied ? 'Copied' : 'Copy link'}</button>
         <a href={d.url} target="_blank" rel="noreferrer" className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}`, textDecoration: 'none', color: 'inherit' }}>Open</a>
         {d.isAdmin && <button onClick={toggle} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{d.active ? 'Switch off' : 'Switch on'}</button>}
+      </div>
+      <div style={{ fontSize: 12.5, color: BRAND.muted, margin: '14px 0 6px' }}><b style={{ color: 'inherit' }}>One link for all landlords.</b> Existing landlords sign in to the owners portal and new ones complete the enquiry form, so you only share one link. It uses the same on/off switch.</div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input readOnly value={d.url.replace('/enquire/', '/landlords/')} onFocus={e => e.currentTarget.select()} style={{ flex: '1 1 260px', minWidth: 0, padding: '8px 10px', border: `1px solid ${BRAND.border}`, borderRadius: 6, fontSize: 13, fontFamily: 'inherit' }} />
+        <button onClick={() => navigator.clipboard?.writeText(d.url.replace('/enquire/', '/landlords/')).then(() => { setCopied2(true); setTimeout(() => setCopied2(false), 1800) }).catch(() => {})} style={{ ...tb, background: BRAND.goldDark, color: '#fff', fontWeight: 600, padding: '0 14px' }}>{copied2 ? 'Copied' : 'Copy link'}</button>
+        <a href={d.url.replace('/enquire/', '/landlords/')} target="_blank" rel="noreferrer" className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}`, textDecoration: 'none', color: 'inherit' }}>Open</a>
       </div>
       {!d.active && <div style={{ fontSize: 12.5, color: '#B42318', marginTop: 8 }}>This link is off. Anyone opening it sees that it is not active.</div>}
     </div>
