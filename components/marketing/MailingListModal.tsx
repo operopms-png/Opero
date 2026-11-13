@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { BRAND } from '@/lib/crm-board'
 import { Modal } from '@/components/crm/Popover'
 import type { Mk } from '@/components/marketing/useMarketing'
+import { generateMessage } from '@/lib/marketing-message'
 
 // Marketing → Emails → Mailing list: how many contacts have opted in, send a saved email to them (all, or one
 // type), and the code to put a sign-up form on this company's own website.
@@ -13,9 +14,11 @@ const field: React.CSSProperties = { width: '100%', height: 36, border: `1px sol
 const lbl: React.CSSProperties = { fontSize: 12.5, color: BRAND.muted, display: 'block', marginBottom: 4 }
 
 export default function MailingListModal({ mk, onClose }: { mk: Mk; onClose: () => void }) {
-  const [counts, setCounts] = useState<{ total: number; types: Record<string, number>; people: { name: string; email: string; type: string; source: string | null; at: string | null }[] } | null>(null)
+  const [counts, setCounts] = useState<{ total: number; types: Record<string, number>; people: { name: string; email: string; type: string; source: string | null; at: string | null }[]; docs: { id: string; title: string; pictures: number }[] } | null>(null)
   const [aud, setAud] = useState('all')
   const [emailId, setEmailId] = useState('')
+  const [subject, setSubject] = useState(''), [body, setBody] = useState('')
+  const [mode, setMode] = useState<'both' | 'picture' | 'link'>('both'), [docIds, setDocIds] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [copied, setCopied] = useState(false)
@@ -30,13 +33,16 @@ export default function MailingListModal({ mk, onClose }: { mk: Mk; onClose: () 
   })() }, [])
 
   const n = counts ? (aud === 'all' ? counts.total : counts.types[aud] ?? 0) : 0
+  const draft = drafts.find((x: any) => x.id === emailId)
+  const pickDraft = (id: string) => { setEmailId(id); const d = drafts.find((x: any) => x.id === id); if (d) { setSubject(d.subject || ''); setBody(d.body || '') } }
+  const generate = () => { const g = generateMessage(aud); setEmailId(''); setSubject(g.subject); setBody(g.text) }
+  const toggleDoc = (id: string) => setDocIds(d => d.includes(id) ? d.filter(x => x !== id) : [...d, id])
   const send = async () => {
-    const e = drafts.find((x: any) => x.id === emailId)
-    if (!e) { setMsg('Choose an email first.'); return }
+    if (!subject.trim() || !body.trim()) { setMsg('Add a subject and write the message first.'); return }
     if (!n) { setMsg('Nobody in that audience has opted in.'); return }
-    if (!confirm(`Send "${e.subject}" to ${n} opted-in ${n === 1 ? 'person' : 'people'} now? Each email carries an unsubscribe link. This cannot be undone.`)) return
+    if (!confirm(`Send "${subject}" to ${n} opted-in ${n === 1 ? 'person' : 'people'} now? Each email carries an unsubscribe link. This cannot be undone.`)) return
     setBusy(true); setMsg('')
-    const r = await fetch('/api/marketing-list', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` }, body: JSON.stringify({ email_id: emailId, audience: aud }) })
+    const r = await fetch('/api/marketing-list', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await token()}` }, body: JSON.stringify({ email_id: draft && draft.subject === subject && (draft.body || '') === body ? emailId : undefined, subject, body, audience: aud, doc_ids: docIds, mode }) })
     const j = await r.json().catch(() => ({}))
     setBusy(false)
     if (!r.ok) { setMsg(j.error || 'Could not send.'); return }
@@ -63,19 +69,46 @@ export default function MailingListModal({ mk, onClose }: { mk: Mk; onClose: () 
           </div>}
         </div>}
 
-        <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Send an email to the list</h3>
-        <label style={lbl}>Email (a saved draft with a body)</label>
-        <select value={emailId} onChange={e => setEmailId(e.target.value)} style={field}>
-          <option value="">{drafts.length ? 'Choose an email…' : 'No drafts yet. Write one in Emails first.'}</option>
-          {drafts.map((e: any) => <option key={e.id} value={e.id}>{e.subject}</option>)}
-        </select>
+        <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Send a message to the list</h3>
         <label style={lbl}>Audience</label>
         <select value={aud} onChange={e => setAud(e.target.value)} style={field}>
           <option value="all">Everyone opted in{counts ? ` (${counts.total})` : ''}</option>
           {counts && Object.entries(counts.types).map(([k, v]) => <option key={k} value={k}>{k} ({v})</option>)}
         </select>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <button style={btn} onClick={generate}>Generate NOVOURQ message</button>
+          {drafts.length > 0 && <select value={emailId} onChange={e => pickDraft(e.target.value)} style={{ ...field, width: 'auto', flex: 1, minWidth: 180, marginBottom: 0 }}>
+            <option value="">Or use a saved draft…</option>
+            {drafts.map((e: any) => <option key={e.id} value={e.id}>{e.subject}</option>)}
+          </select>}
+        </div>
+        <label style={lbl}>Subject</label>
+        <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject" style={field} />
+        <label style={lbl}>Message <span style={{ color: '#9699A6' }}>({'{{first_name}}'} becomes each person’s first name)</span></label>
+        <textarea value={body} onChange={e => setBody(e.target.value)} rows={9} placeholder="Press Generate NOVOURQ message, or write your own." style={{ width: '100%', boxSizing: 'border-box', border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: 10, fontFamily: 'inherit', fontSize: 14, marginBottom: 12, resize: 'vertical' }} />
+
+        <label style={lbl}>Documents to include (from Services Pack)</label>
+        <div style={{ border: `1px solid ${BRAND.border}`, borderRadius: 6, marginBottom: 12, maxHeight: 170, overflowY: 'auto' }}>
+          {(counts?.docs ?? []).length === 0 && <div style={{ padding: 10, fontSize: 13, color: BRAND.muted }}>No documents yet. Add them under Marketing → Services Pack.</div>}
+          {(counts?.docs ?? []).map(d => (
+            <label key={d.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 12px', fontSize: 13.5, borderBottom: `1px solid ${BRAND.border}`, cursor: 'pointer', margin: 0, color: BRAND.ink }}>
+              <input type="checkbox" checked={docIds.includes(d.id)} onChange={() => toggleDoc(d.id)} />
+              <span style={{ flex: 1 }}>{d.title}</span>
+              <span style={{ fontSize: 11.5, color: BRAND.muted }}>{d.pictures ? `${d.pictures} ${d.pictures === 1 ? 'picture' : 'pictures'}` : 'PDF link only'}</span>
+            </label>
+          ))}
+        </div>
+        {docIds.length > 0 && <>
+          <label style={lbl}>Send documents as</label>
+          <select value={mode} onChange={e => setMode(e.target.value as any)} style={field}>
+            <option value="both">Pictures in the email, plus a PDF button (recommended)</option>
+            <option value="picture">Pictures only</option>
+            <option value="link">PDF button only</option>
+          </select>
+          <p style={{ fontSize: 12, color: BRAND.muted, margin: '-6px 0 12px' }}>Pictures show the pages in the email itself, so people see them without opening a PDF. Documents with no pictures are sent as a PDF button.</p>
+        </>}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <button disabled={busy || !emailId || !n} onClick={send} style={{ ...gold, opacity: busy || !emailId || !n ? 0.6 : 1 }}>{busy ? 'Sending…' : `Send to ${n}`}</button>
+          <button disabled={busy || !n} onClick={send} style={{ ...gold, opacity: busy || !n ? 0.6 : 1 }}>{busy ? 'Sending…' : `Send to ${n}`}</button>
           {msg && <span style={{ fontSize: 13, color: BRAND.ink }}>{msg}</span>}
         </div>
 
