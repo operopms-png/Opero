@@ -63,6 +63,7 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
   ] },
   { id: 'ai', title: 'Novourq Cloud AI', steps: [
     'Novourq Cloud AI is one assistant with many skills, such as rent reminders, chasing invoices, replying to reviews and watching compliance dates.',
+    'Novourq Cloud AI opens on a front page like the other hubs: Where do I go? for everyday tasks, a search box, pages grouped under headings with a line on each, and At a glance at the bottom. Inside a page, use ← Novourq Cloud AI at the top of the side menu to return.',
     'Open Workflows to see every skill. Switch a skill on or off, and choose "Send automatically" if you want it to send without waiting for you.',
     'Novourq Cloud AI has its own picture: the Novourq symbol as a glossy 3D mark on a blue glow. It plays as a short looping animation on the AI pages and the Dashboard AI panel. The Voice button is a light blue pill with the blue logo animating on it, with no box behind it. Devices set to reduce motion show the still picture. On the Dashboard, the NOVOURQ Walk video (showcasing our new AI technology) sits beside the Property map; Portfolio Performance and What Novourq Cloud AI did are the same size below, with Automation by area full width under them; press play to watch, it does not start by itself.',
     'Ask Novourq Cloud AI questions in plain words, typed or by voice, such as "What is overdue this week?". It reads today\'s rent, leases, maintenance, compliance, check-ins and invoices that you can see, and it never changes anything itself.',

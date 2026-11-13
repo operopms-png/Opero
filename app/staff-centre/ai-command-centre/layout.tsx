@@ -40,6 +40,9 @@ export default function AiCommandCentreLayout({ children }: { children: React.Re
   useEffect(() => { staffApi<{ approvals: number; alerts: number }>('/api/ai-overview?counts=1').then(setCounts).catch(() => {}) }, [path])
   const on = (href: string) => (href === BASE ? path === BASE : path === href || path.startsWith(href + '/'))
 
+  // The Novourq Cloud AI front page is the hub (Where do I go?, search, groups, At a glance), so it has no side menu.
+  if (path === BASE) return <>{children}</>
+
   return (
     <div className="aicc-wrap">
       <style>{`
@@ -54,6 +57,7 @@ export default function AiCommandCentreLayout({ children }: { children: React.Re
         @media(max-width:760px){.aicc-wrap{grid-template-columns:1fr}.aicc-nav{position:static;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid #D9E2F0;padding:8px;gap:4px;max-height:none}.aicc-nav h6{display:none}.aicc-nav a{white-space:nowrap;margin:0;gap:8px}}
       `}</style>
       <nav className="aicc-nav">
+        <Link href={BASE} style={{ fontWeight: 600 }}><span>← Novourq Cloud AI</span></Link>
         {NAV.map(g => (
           <React.Fragment key={g.heading}>
             <h6>{g.heading}</h6>
