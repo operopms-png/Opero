@@ -5,6 +5,7 @@ import { sendEmail } from '@/lib/send-email'
 import { EMAIL_DOMAIN } from '@/lib/brand'
 import { unsubFooterHtml, unsubHeaders } from '@/lib/marketing-optin'
 import { pagePictures, absUrl } from '@/lib/service-images'
+import { alertEmail } from '@/lib/crm-lead'
 
 const esc = (t: string) => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 
@@ -38,7 +39,8 @@ export async function sendToList(o: { businessId: string; audience?: string; mod
 
   const { data: settings } = await serviceClient.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id', o.businessId).single()
   const from = settings?.marketing_from_email ? `${settings.marketing_from_name || 'Property Management Team'} <${settings.marketing_from_email}>` : undefined
-  const replyTo = o.replyToken ? `marketing+${o.replyToken}@${EMAIL_DOMAIN}` : undefined
+  // Replies: to the tracked address for a saved draft, otherwise to the company's own sending address (or its alert address), never to a no-reply one.
+  const replyTo = o.replyToken ? `marketing+${o.replyToken}@${EMAIL_DOMAIN}` : (settings?.marketing_from_email || await alertEmail(o.businessId) || undefined)
 
   let sent = 0, failed = 0
   for (const c of people) {
