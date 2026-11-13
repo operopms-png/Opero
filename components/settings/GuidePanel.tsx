@@ -2,7 +2,7 @@
 // Help Centre -> Step-by-step guide (app/help/page.tsx): plain-English how-to for people using the platform.
 import { useState } from 'react'
 
-const SECTIONS: { id: string; title: string; steps: string[] }[] = [
+const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: string; alt: string } }[] = [
   { id: 'start', title: 'Getting started', steps: [
     'Open Settings, then My Account, and check your name and email are right.',
     'Under Payments, check your plan. Under Team Management, invite the people who will use Novourq with you and choose what each of them can see. Edit a team member to give them modules, then untick any Human Intelligence Hub tab you want locked for them: Novourq Cloud AI, Data Hub, Company Documents, CRM, Landlord Leads, Client Properties, Invoices, Approvals, Announcements, Activity Log and more. Only admins can unlock a tab again. Team members work on the company\'s own records everywhere, including Marketing and Company Documents.',
@@ -44,6 +44,17 @@ const SECTIONS: { id: string; title: string; steps: string[] }[] = [
   { id: 'meetings-tax', title: 'Meetings and Tax Compliance', steps: [
     'Meetings: open Staff Centre, Schedule, Meetings. The Client booking link at the top is your own company\'s link. Share it by email, website or WhatsApp. When someone sends a request it appears under New request, you get a bell notification and an email, they are added to your CRM, and they receive a confirmation with your company name. Each company\'s link only reaches that company.',
     'Tax Compliance (admins only): open Staff Centre, Tax Compliance, then your company\'s tab and press Edit details to change the company name, currency, registration status, company number and tax note. You can also add bank accounts, tax headings and transfers. Nothing is filed or paid from here.',
+  ] },
+  { id: 'onboard-landlord', title: 'Onboard a landlord (staff step by step)', pic: { src: '/guide/hub-landlord-onboarding.jpg', alt: 'Human Intelligence Hub, Clients and sales: 1 Landlord Leads, 2 Owners, 3 Co-hosts, 4 Documents' }, steps: [
+    'Get the enquiry: the landlord opens your landlords link or enquiry form (Staff Centre → Marketing → Enquiry form link). It lands in Staff Centre → Human Intelligence Hub → Clients and sales → CRM (Pipeline, Enquiry stage) and Landlord Leads (picture, number 1).',
+    'Contact them, then move the lead along the Pipeline as you speak and book a valuation.',
+    'Send the new client link: Human Intelligence Hub → Clients and sales → Owners & Tenants → Documents (picture, number 4) → New client link. Choose Who is this link for?, tick the agreement, press Create link and send it.',
+    'The landlord fills in the agreement and uploads their ID, proof of ownership, proof of address and bank details. They are registered from the name and email they enter, and the copies file under their Documents.',
+    'Add or check the owner: Human Intelligence Hub → Clients and sales → Owners & Tenants → Owners (picture, number 2), or Property Management → Landlords.',
+    'If they have a co-host, open Co-hosts (picture, number 3) and add them.',
+    'Approve the filed documents in Documents (number 4).',
+    'Open Property Management → Landlords and press Onboarding on the landlord. Tick off the checklist, pick their named manager, set the agreement type, start and end dates, then press Mark as onboarded.',
+    'Limits: there is no signature box yet, so signing happens separately. Only admins can unlock a locked tab.',
   ] },
   { id: 'earnings-checker', title: 'Landlord earnings checker', steps: [
     'Open Staff Centre, Landlord Leads, then Link & embed code. The link is your own company\'s earnings checker. Use it in ads, letters and with realtors, or paste the embed code into your website.',
@@ -156,9 +167,12 @@ export default function GuidePanel() {
                 {s.title}<span aria-hidden="true" style={{ color: '#98A2B3' }}>{isOpen ? '−' : '+'}</span>
               </button>
               {isOpen && (
+                <>
+                {s.pic && <img src={s.pic.src} alt={s.pic.alt} style={{ display: 'block', maxWidth: '100%', margin: '4px 16px 8px', border: '1px solid #E4E7EC', borderRadius: 8 }} />}
                 <ol id={'guide-' + s.id} style={{ margin: 0, padding: '4px 18px 16px 40px', fontSize: 14, color: '#344054', lineHeight: 1.6 }}>
                   {s.steps.map((t, i) => <li key={i} style={{ marginBottom: 6 }}>{t}</li>)}
                 </ol>
+                </>
               )}
             </div>
           )
