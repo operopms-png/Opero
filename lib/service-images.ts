@@ -5,6 +5,7 @@ import { SITE_URL } from '@/lib/brand'
 
 const PAGES: Record<string, { prefix: string; pages: number }> = {
   'NOVOURQ_Brochure.pdf': { prefix: 'NOVOURQ_Brochure', pages: 12 },
+  'NOVOURQ_Cloud_AI_Brochure.pdf': { prefix: 'NOVOURQ_Cloud_AI_Brochure', pages: 9 },
   'Vacation_Rental_Landlord_Pack.pdf': { prefix: 'Vacation_Rental_Landlord_Pack', pages: 12 },
   'Furnished_Apartments_Flyer.pdf': { prefix: 'Furnished_Apartments_Flyer', pages: 1 },
   'Lease_Your_Property_Flyer.pdf': { prefix: 'Lease_Your_Property_Flyer', pages: 1 },

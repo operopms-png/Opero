@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 import { DOC_SUBJECT_TABLE, isSubject } from '@/lib/lease-doc-types'
 
 // Staff Centre → Marketing → Services Pack: the documents a company sends to show its services,
@@ -19,6 +20,11 @@ export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return bad('Not signed in', 401)
   const biz = c.businessId
+  // NOVOURQ's own pack always has the AI platform brochure (added once, then yours to rename or pause)
+  if (biz === LISTINGS_BUSINESS_ID) {
+    const { data: has } = await db.from('service_docs').select('id').eq('business_id', biz).like('url', '%NOVOURQ_Cloud_AI_Brochure.pdf').limit(1)
+    if (!has?.length) await db.from('service_docs').insert({ business_id: biz, title: 'AI platform brochure', description: 'Real estate, run by AI: the dashboard, tabs and 3D walk-through for landlords, Airbnb hosts, estate agencies and developers.', url: '/services/NOVOURQ_Cloud_AI_Brochure.pdf', sort: 99 })
+  }
   const [{ data: docs }, { data: links }] = await Promise.all([
     db.from('service_docs').select('*').eq('business_id', biz).order('sort').order('created_at'),
     db.from('service_links').select('*').eq('business_id', biz).order('created_at', { ascending: false }).limit(200),
