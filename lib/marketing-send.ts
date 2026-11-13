@@ -4,7 +4,7 @@ import { serviceClient } from '@/lib/admin-auth'
 import { sendEmail } from '@/lib/send-email'
 import { EMAIL_DOMAIN, MARKETING_FROM } from '@/lib/brand'
 import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
-import { unsubFooterHtml, unsubHeaders } from '@/lib/marketing-optin'
+import { unsubFooterHtml, unsubHeaders, logoHeaderHtml } from '@/lib/marketing-optin'
 import { pagePictures, absUrl } from '@/lib/service-images'
 import { alertEmail } from '@/lib/crm-lead'
 
@@ -48,7 +48,7 @@ export async function sendToList(o: { businessId: string; audience?: string; mod
   for (const c of people) {
     const first = String(c.name || '').trim().split(/\s+/)[0] || 'there'
     const text = o.body.replace(/\{\{\s*first_name\s*\}\}/gi, first)
-    const html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1d2433;max-width:600px">${esc(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#1A2C5E">$1</a>').replace(/\n/g, '<br/>')}${docHtml}</div>` + unsubFooterHtml(c.unsub_token as string)
+    const html = `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1d2433;max-width:600px">${own ? logoHeaderHtml() : ''}${esc(text).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#1A2C5E">$1</a>').replace(/\n/g, '<br/>')}${docHtml}</div>` + unsubFooterHtml(c.unsub_token as string)
     const r = await sendEmail(c.email as string, o.subject, html, replyTo, from, undefined, unsubHeaders(c.unsub_token as string)).catch(() => ({ error: 'x' } as any))
     if (r?.skipped) return { sent: 0, failed: 0, error: 'Email sending is not configured yet — nothing was sent.' }
     if (r?.error) failed++; else sent++
