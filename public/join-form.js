@@ -1,10 +1,12 @@
 /* Embeddable "join our list" form. Paste on any website:
    <script src="https://app.thenovourq.com/join-form.js" data-business="COMPANY_ID" data-title="Get our updates"></script>
+   Add data-interest="platform" for people who want the AI platform (they are tagged "platform" in the CRM and get their own audience in the Mailing list); leave it off for landlord services.
    Saves the person into that company's CRM with marketing opt-in recorded. */
 (function(){
 var s=document.currentScript;if(!s)return;
 var biz=s.getAttribute('data-business')||'';
 var title=s.getAttribute('data-title')||'Join our mailing list';
+var interest=s.getAttribute('data-interest')||'';   // 'platform' = wants the AI platform; blank = landlord services
 var API='https://app.thenovourq.com/api/public/join-list';
 var host=document.createElement('nq-join');host.style.display='block';
 s.parentNode.insertBefore(host,s.nextSibling);
@@ -17,7 +19,7 @@ var email=$('e').value.trim();
 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){m.textContent='Please enter a valid email address.';return}
 if(!$('c').checked){m.textContent='Please tick the box so we can email you.';return}
 var b=$('b');b.disabled=true;b.textContent='Sending...';
-fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,name:$('n').value.trim(),consent:true,website:$('hp').value,business:biz,source:'Website sign-up form'})})
+fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,name:$('n').value.trim(),consent:true,website:$('hp').value,business:biz,source:interest==='platform'?'Website sign-up form (AI platform)':'Website sign-up form',interest:interest})})
 .then(function(x){return x.json().then(function(j){return{ok:x.ok,j:j}})})
 .then(function(x){if(x.ok){$('f').style.display='none';$('d').style.display='block'}else{m.textContent=(x.j&&x.j.error)||'Something went wrong.';b.disabled=false;b.textContent='Sign up'}})
 .catch(function(){m.textContent='Something went wrong.';b.disabled=false;b.textContent='Sign up'});};

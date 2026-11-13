@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Landlords and platform leads kept apart', text: 'A website sign-up form with data-interest="platform" tags people as platform leads, who appear as their own audience in the Mailing list, separate from landlords.' },
   { date: '2026-11-13', title: 'Mailing list documents grouped', text: 'In the Mailing list window, documents are now grouped under AI platform and Property management so you can pick the right brochure quickly.' },
   { date: '2026-11-13', title: 'AI platform brochure in Services Pack', text: 'Marketing, Services Pack now has the AI platform brochure (9 pages with the dashboard, tabs and 3D walk-through) that you can link, or tick in the Mailing list to send as pictures and a PDF.' },
   { date: '2026-11-13', title: 'Ask the AI to send your marketing email', text: 'Tell Novourq Cloud AI to send the marketing email to the mailing list and it queues it in AI Approvals; you check it and press Approve, and only then does it go out.' },

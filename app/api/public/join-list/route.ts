@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   const own = businessId === LISTINGS_BUSINESS_ID
   const name = clean(b.name, 120) || email.split('@')[0]
   const source = clean(b.source, 60) || 'Website popup'
+  const platform = clean(b.interest, 20) === 'platform'   // wants the AI platform (software), not our landlord services
 
   // Flood protection: 5 sign-ups a day per email.
   const since = new Date(Date.now() - 86400000).toISOString()
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
   if ((count ?? 0) >= 5) return NextResponse.json({ ok: true }, { headers: CORS })
 
   const notes = `Signed up on the website popup (Find out more).\nMarketing emails: Yes, ticked the consent box on ${new Date().toISOString().slice(0, 10)}.`
-  const contactId = await addCrmLead({ businessId, name, email, phone: null, source, module: 'pm', type: 'landlord', notes, dealName: `${name} — ${source}` })
+  const contactId = await addCrmLead({ businessId, name, email, phone: null, source, module: 'pm', type: platform ? 'platform' : 'landlord', notes, dealName: `${name} — ${source}` })
   let token = ''
   if (contactId) {
     await db.from('crm_contacts').update({ marketing_opt_in: true, marketing_opt_in_at: new Date().toISOString(), marketing_unsub_at: null }).eq('id', contactId)
