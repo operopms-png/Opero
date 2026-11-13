@@ -78,6 +78,15 @@ export async function POST(request: NextRequest) {
   }
   const billingStripe = fromNovourq && novourqStripe ? novourqStripe : stripe
 
+  // Bacs Direct Debit rent clears days after checkout: the money arrives with async_payment_succeeded.
+  if (event.type === 'checkout.session.async_payment_succeeded') {
+    const session = event.data.object as any
+    if (session.metadata?.type === 'tenant_rent_payment' && session.metadata.payment_id) {
+      await supabase.from('pm_rent_payments').update({ status: 'paid', paid_date: new Date().toISOString().slice(0, 10), method: 'direct debit' }).eq('id', session.metadata.payment_id)
+    }
+    return NextResponse.json({ received: true })
+  }
+
   if (event.type === 'checkout.session.completed') {
     try {
       const session = event.data.object as any
@@ -97,7 +106,8 @@ export async function POST(request: NextRequest) {
 
       if (session.metadata?.type === 'tenant_rent_payment') {
         const paymentId = session.metadata.payment_id
-        if (paymentId) {
+        // A Direct Debit is 'unpaid' until it clears; async_payment_succeeded marks it paid then.
+        if (paymentId && session.payment_status === 'paid') {
           await supabase.from('pm_rent_payments').update({
             status: 'paid',
             paid_date: new Date().toISOString().slice(0, 10),

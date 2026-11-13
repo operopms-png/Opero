@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Tenants can pay rent by Direct Debit', text: 'On a Property Management lease, a tenant paying rent online can now choose Bacs Direct Debit as well as card; the rent shows as paid once the money clears, usually a few days later.' },
   { date: '2026-11-13', title: 'Help Centre videos are now widescreen', text: 'All Help Centre video walkthroughs are now in a wide rectangular shape, with the steps written large beside the screen, so they fill the page and are easier to read.' },
   { date: '2026-11-13', title: 'Novourq Cloud AI front page', text: 'Novourq Cloud AI now opens like the other hubs, with Where do I go?, a search box, pages grouped under headings, and At a glance, and each page still has its side menu with a back link.' },
   { date: '2026-11-13', title: 'New Help Centre videos', text: 'The Help Centre now has five new video walkthroughs (packs and onboarding, agent programme, website links and careers, your plan and currency, co-hosts crew and HR) and an updated Human Intelligence Hub video.' },

@@ -59,9 +59,9 @@ export async function POST(req: NextRequest) {
   const applicationFeeAmount = Math.round(amountCents * (feePercent / 100))
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const create = (types: ('card' | 'bacs_debit')[]) => stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'],
+      payment_method_types: types,
       line_items: [{
         price_data: {
           currency: 'gbp',
@@ -76,6 +76,9 @@ export async function POST(req: NextRequest) {
       success_url: `${SITE_URL}/pm-tenant-portal?paid=true`,
       cancel_url: `${SITE_URL}/pm-tenant-portal`,
     }, { stripeAccount: businessSub.stripe_connect_account_id }) // direct charge on the business's own account
+    // Offer Bacs Direct Debit too; if this Stripe account has not switched it on, fall back to card only.
+    let session
+    try { session = await create(['card', 'bacs_debit']) } catch { session = await create(['card']) }
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     console.error('[pay-rent]', err)
