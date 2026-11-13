@@ -13,12 +13,13 @@ const field: React.CSSProperties = { width: '100%', height: 36, border: `1px sol
 const lbl: React.CSSProperties = { fontSize: 12.5, color: BRAND.muted, display: 'block', marginBottom: 4 }
 
 export default function MailingListModal({ mk, onClose }: { mk: Mk; onClose: () => void }) {
-  const [counts, setCounts] = useState<{ total: number; types: Record<string, number> } | null>(null)
+  const [counts, setCounts] = useState<{ total: number; types: Record<string, number>; people: { name: string; email: string; type: string; source: string | null; at: string | null }[] } | null>(null)
   const [aud, setAud] = useState('all')
   const [emailId, setEmailId] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [copied, setCopied] = useState(false)
+  const [showList, setShowList] = useState(false)
   const drafts = mk.rows.emails.filter((e: any) => e.status !== 'Sent' && e.body?.trim())
   const embed = `<script src="https://app.thenovourq.com/join-form.js" data-business="${mk.accountId}" data-title="Join our mailing list"></script>`
 
@@ -51,6 +52,16 @@ export default function MailingListModal({ mk, onClose }: { mk: Mk; onClose: () 
         <div style={{ background: '#F6F7FB', borderRadius: 8, padding: '12px 14px', marginBottom: 18, fontSize: 14 }}>
           {counts ? <><b style={{ fontSize: 20 }}>{counts.total}</b> opted in{Object.keys(counts.types).length > 0 && <span style={{ color: BRAND.muted }}> · {Object.entries(counts.types).map(([k, v]) => `${v} ${k}`).join(' · ')}</span>}</> : 'Loading…'}
         </div>
+
+        {counts && counts.total > 0 && <div style={{ marginBottom: 18 }}>
+          <button style={btn} onClick={() => setShowList(!showList)}>{showList ? 'Hide who is on the list' : 'See who is on the list'}</button>
+          {showList && <div style={{ marginTop: 8, maxHeight: 220, overflowY: 'auto', border: `1px solid ${BRAND.border}`, borderRadius: 6 }}>
+            {counts.people.map((p, i) => <div key={i} style={{ padding: '8px 12px', fontSize: 13, borderBottom: `1px solid ${BRAND.border}`, display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+              <span><b style={{ fontWeight: 600 }}>{p.name}</b><br /><span style={{ color: BRAND.muted }}>{p.email}</span></span>
+              <span style={{ color: BRAND.muted, textAlign: 'right', fontSize: 12 }}>{p.source || ''}<br />{p.at ? new Date(p.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</span>
+            </div>)}
+          </div>}
+        </div>}
 
         <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Send an email to the list</h3>
         <label style={lbl}>Email (a saved draft with a body)</label>

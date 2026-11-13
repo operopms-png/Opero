@@ -11,7 +11,7 @@ import { unsubFooterHtml, unsubHeaders } from '@/lib/marketing-optin'
 export const maxDuration = 300
 
 async function audience(businessId: string, type?: string) {
-  let q = serviceClient.from('crm_contacts').select('id,name,email,type,unsub_token').eq('user_id', businessId).eq('marketing_opt_in', true).not('email', 'is', null).neq('email', '')
+  let q = serviceClient.from('crm_contacts').select('id,name,email,type,unsub_token,source,marketing_opt_in_at').eq('user_id', businessId).eq('marketing_opt_in', true).not('email', 'is', null).neq('email', '')
   if (type && type !== 'all') q = q.eq('type', type)
   const { data } = await q.limit(5000)
   const seen = new Set<string>()
@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
   const all = await audience(caller.businessId)
   const types: Record<string, number> = {}
   for (const c of all) { const k = c.type || 'other'; types[k] = (types[k] ?? 0) + 1 }
-  return NextResponse.json({ total: all.length, types })
+  const people = all.map(c => ({ name: c.name, email: c.email, type: c.type || 'other', source: c.source, at: c.marketing_opt_in_at })).sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')))
+  return NextResponse.json({ total: all.length, types, people })
 }
 
 export async function POST(req: NextRequest) {
