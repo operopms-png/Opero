@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Marketing group in Portal Access', text: 'Portal Access now has a Marketing group beside Property Management, with one-click links to the mailing list and emails, the brochures and flyers, and the public properties-for-rent page.' },
   { date: '2026-11-13', title: 'Ask the AI to send your marketing email', text: 'Tell Novourq Cloud AI to send the marketing email to the mailing list and it queues it in AI Approvals; you check it and press Approve, and only then does it go out.' },
   { date: '2026-11-13', title: 'Marketing documents as pictures', text: 'In Marketing, Emails, Mailing list you can generate a NOVOURQ marketing message and tick the brochure, flyers and landlord pack to send as pictures in the email, a PDF button, or both.' },
   { date: '2026-11-13', title: 'Mailing list and unsubscribe', text: 'Marketing, Emails now has a Mailing list button to email everyone who opted in (all, or one type), every email carries an unsubscribe link, and there is a sign-up form you can paste on your website.' },
