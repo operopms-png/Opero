@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-13', title: 'Website popup sign-ups reach the CRM', text: 'People who press Find out more on the website popup and tick the email box now land in the CRM as a contact and a deal at Enquiry, with their marketing consent noted and an alert to the team.' },
   { date: '2026-11-13', title: 'Brochure updated', text: 'The Company brochure in Services Pack now has two new pages after Our Acquisitions, showing the AI dashboard and how the technology removes human error, and the owners portal.' },
   { date: '2026-11-13', title: 'Tenants can pay rent by Direct Debit', text: 'On a Property Management lease, a tenant paying rent online can now choose Bacs Direct Debit as well as card; the rent shows as paid once the money clears, usually a few days later.' },
   { date: '2026-11-13', title: 'Help Centre videos are now widescreen', text: 'All Help Centre video walkthroughs are now in a wide rectangular shape, with the steps written large beside the screen, so they fill the page and are easier to read.' },
