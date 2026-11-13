@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -141,6 +141,11 @@ export async function executeAiAction(action: { user_id: string; action_type: st
       await getServiceClient().from('estate_viewings').update({ status: 'Scheduled' }).eq('id', p.confirm_viewing_id).eq('user_id', action.user_id).ilike('status', 'requested')
     }
     return r
+  }
+  if (action.action_type === 'marketing_list') {
+    const { sendToList } = await import('./marketing-send')
+    const r = await sendToList({ businessId: action.user_id, audience: p.audience, mode: p.mode, subject: String(p.subject || ''), body, docIds: Array.isArray(p.doc_ids) ? p.doc_ids : [] })
+    return r.error ? { error: r.error } : { success: true }
   }
   if (action.action_type === 'owner_report') return emailOut(p.to, p.subject || 'Your monthly property report', body, action.user_id)
   if (action.action_type === 'cleaning_instruction') return emailOut(p.to, p.subject || 'Cleaning instructions', body, action.user_id)

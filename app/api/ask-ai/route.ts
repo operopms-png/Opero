@@ -74,6 +74,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     const portal = b.use_portal === false ? null : await portalContext(c).catch(() => null)
     const r = await askClaude(systemPrompt({ c, portal, web, deal: kind === 'deal' ? b.deal : undefined }), messages, web, c.businessId)
     if (!r.text) return { error: r.error || 'The AI couldn’t answer' }
+    r.text = await queueMarketingFromReply(c, r.text)
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
@@ -84,4 +85,33 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
       chat = data
     }
     return { chat: { ...chat, messages, title } }
+}
+
+// If the AI added the [[SEND_MARKETING …]] line, put the NOVOURQ marketing email in AI Approvals. A person approves it there;
+// nothing is sent from the chat. The line is removed from what the user sees.
+async function queueMarketingFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
+  const m = text.match(/\[\[SEND_MARKETING([^\]]*)\]\]/)
+  if (!m) return text
+  const clean = text.replace(/\s*\[\[SEND_MARKETING[^\]]*\]\]\s*/g, '\n').trim()
+  const arg = (k: string) => (m[1].match(new RegExp(k + '=([^\\s\\]]+)')) || [])[1] || ''
+  const aud = ['landlord', 'investor'].includes(arg('audience')) ? arg('audience') : 'all'
+  const mode = ['picture', 'link'].includes(arg('mode')) ? arg('mode') : 'both'
+  const words = arg('docs').split(',').map(w => w.trim().toLowerCase()).filter(w => w && w !== 'none')
+  try {
+    const { audience } = await import('@/lib/marketing-send')
+    const { generateMessage } = await import('@/lib/marketing-message')
+    const { queueAiAction } = await import('@/lib/ai-approvals')
+    const people = await audience(c.businessId, aud)
+    const { data: docs } = await serviceClient.from('service_docs').select('id,title').eq('business_id', c.businessId).eq('active', true)
+    const picked = (docs ?? []).filter(d => words.some(w => String(d.title).toLowerCase().includes(w)))
+    const g = generateMessage()
+    const q = await queueAiAction({
+      userId: c.businessId, agentKey: 'marketing', actionType: 'marketing_list',
+      title: `Marketing email to ${people.length} opted-in ${people.length === 1 ? 'person' : 'people'}${aud !== 'all' ? ` (${aud})` : ''}`,
+      draftBody: g.text, payload: { subject: g.subject, audience: aud, doc_ids: picked.map(d => d.id), mode },
+      context: { summary: `Will email ${people.length} opted-in ${aud === 'all' ? 'contacts' : aud + ' contacts'}${picked.length ? ' with ' + picked.map(d => d.title).join(', ') : ''}, each with an unsubscribe link. Requested by ${c.name} in Ask AI.` },
+    })
+    if ('error' in q && q.error) return clean + `\n\n(I could not queue it: ${q.error})`
+    return clean + `\n\nIt is waiting in Staff Centre → AI Command Centre → AI Approvals. Open it, check the wording and the ${people.length} people, then press Approve to send.`
+  } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
 }
