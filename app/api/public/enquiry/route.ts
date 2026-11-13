@@ -50,7 +50,9 @@ export async function POST(req: NextRequest) {
     `How we can help: ${message}`, `Marketing opt-in: ${b.marketing ? 'Yes' : 'No'}`,
   ]
   const notes = lines.join('\n')
-  await addCrmLead({ businessId: business, name, email, phone, source: 'Enquiry form', module: svc.module, type: 'landlord', notes, dealName: `${name} — ${svc.label}` })
+  const contactId = await addCrmLead({ businessId: business, name, email, phone, source: 'Enquiry form', module: svc.module, type: 'landlord', notes, dealName: `${name} — ${svc.label}` })
+  // Ticked "receive news and offers": record it as a real opt-in so they can be emailed from Marketing → Emails → Mailing list.
+  if (contactId && b.marketing === true) await db.from('crm_contacts').update({ marketing_opt_in: true, marketing_opt_in_at: new Date().toISOString(), marketing_unsub_at: null }).eq('id', contactId)
   alertTeam(business, `New enquiry: ${name} (${svc.label})`, notes, '/staff-centre/crm', email).catch(() => {})
   sendEmail(email, `We have your enquiry — ${svc.label}`, `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#16233F"><p>Dear ${esc(first)},</p><p>Thank you for your interest in <b>${esc(svc.label)}</b>. We have your details and a member of our team will contact you shortly to arrange a call.</p><p>If anything changes in the meantime, just reply to this email.</p></div>`).catch(() => {})
   return NextResponse.json({ ok: true })

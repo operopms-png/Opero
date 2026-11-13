@@ -9,6 +9,7 @@ import MkPanel from '@/components/marketing/MkPanel'
 import MkDashboard from '@/components/marketing/MkDashboard'
 import { Modal } from '@/components/crm/Popover'
 import ScriptsView from '@/components/marketing/ScriptsView'
+import MailingListModal from '@/components/marketing/MailingListModal'
 
 type View = { kind: 'home' } | { kind: 'dashboard' } | { kind: 'scripts' } | { kind: 'board'; key: string }
 
@@ -30,6 +31,7 @@ export default function MarketingPage() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [open, setOpen] = useState<{ board: string; id: string } | null>(null)
   const [senderModal, setSenderModal] = useState(false)
+  const [listModal, setListModal] = useState(false)
 
   useEffect(() => {
     if (mk.loading) return
@@ -84,12 +86,13 @@ export default function MarketingPage() {
         )}
         {board && <MkBoardView key={board.key} mk={mk} board={board} onOpen={id => openItem(board.key, id)}
           headerRight={board.key === 'emails' ? (
-            <span style={{ fontSize: 12.5, color: BRAND.muted, marginRight: 8 }}>Sending as <b style={{ color: BRAND.ink, fontWeight: 500 }}>{sender}</b> <button onClick={() => setSenderModal(true)} style={{ border: 'none', background: 'none', color: BRAND.goldDark, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600 }}>{mk.sendSettings.marketing_from_email ? 'Change' : 'Set up'}</button></span>
+            <span style={{ fontSize: 12.5, color: BRAND.muted, marginRight: 8 }}>Sending as <b style={{ color: BRAND.ink, fontWeight: 500 }}>{sender}</b> <button onClick={() => setSenderModal(true)} style={{ border: 'none', background: 'none', color: BRAND.goldDark, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600 }}>{mk.sendSettings.marketing_from_email ? 'Change' : 'Set up'}</button> <button onClick={() => setListModal(true)} style={{ border: `1px solid ${BRAND.goldDark}`, background: 'none', color: BRAND.goldDark, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, borderRadius: 4, padding: '4px 10px', marginLeft: 8 }}>Mailing list</button></span>
           ) : undefined} />}
       </main>
 
       {open && boardByKey(open.board) && <MkPanel key={open.id} mk={mk} board={boardByKey(open.board)!} id={open.id} onClose={() => setOpen(null)} onOpenOther={openItem} />}
       {senderModal && <SenderModal mk={mk} onClose={() => setSenderModal(false)} />}
+      {listModal && <MailingListModal mk={mk} onClose={() => setListModal(false)} />}
     </Shell>
   )
 }
