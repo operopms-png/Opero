@@ -40,7 +40,7 @@ function LongText({ title, value, onSave, placeholder, disabled }: { title: stri
 }
 
 // Applications: generated Acceptance / Decline / Interview messages for the open candidate. Opens in the user's own email app, or copy.
-function ApplicantReply({ row, onStage }: { row: any; onStage: (s: string) => void }) {
+export function ApplicantReply({ row, onStage }: { row: any; onStage: (s: string) => void }) {
   const [kind, setKind] = useState<AppReply>('decline')
   const gen = applicationReply(kind, row.candidate_name ?? '', row.role_applied ?? '')
   const [subject, setSubject] = useState(gen.subject)

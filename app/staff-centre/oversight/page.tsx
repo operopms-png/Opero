@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
+import DashboardApplicants from '../../../components/applications/DashboardApplicants'
 import GrokPanel from '../../../components/GrokPanel'
 import DashboardAiPanel from '../../../components/ai/DashboardAiPanel'
 import PortfolioPerformancePanel from '../../../components/ai/PortfolioPerformancePanel'
@@ -189,6 +190,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <DashboardApplicants />
       <GrokPanel />
     </div>
   )
