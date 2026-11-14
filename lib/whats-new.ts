@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-14', title: 'Call minutes per client company', text: 'The platform owner can set a monthly call-minute allowance for each client under Revenue and Customers and see what each has used.' },
   { date: '2026-11-14', title: 'Group and video calls in Team Chat', text: 'Open a Team Chat and press Group call or Video call; everyone in the chat gets a Join call button in the chat instead of calling mobiles.' },
   { date: '2026-11-14', title: 'All staff chat stays up to date', text: 'New team members are now added to the All staff chat automatically when you open it under Inbox → Conversations → Message everyone.' },
   { date: '2026-11-14', title: 'New careers page with a map', text: 'The website careers page is now a modern vacancies page with a map of United Kingdom, United States and Jamaica; roles and applications still come from and go to Applications and the CRM.' },

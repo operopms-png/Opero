@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient, requireStaffWithBusiness } from '@/lib/admin-auth'
 import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
+import { companyCode, monthMinutesFor } from '@/lib/call-usage'
 
 // Group voice and video calls for Team Chat. Rooms are made on Daily (needs DAILY_API_KEY).
 // A call is announced as a chat message carrying a [[call:ROOM:voice|video]] marker; joining checks
@@ -21,9 +22,7 @@ async function daily(path: string, body?: any, method = body ? 'POST' : 'GET') {
 export async function POST(req: NextRequest) {
   const auth = await requireStaffWithBusiness(req)
   if (!auth || !auth.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  // Calls run on the platform owner's Daily account and are billed to it, so they are limited to the
-  // owner's own company until each client company can connect its own call account.
-  if (auth.businessId !== LISTINGS_BUSINESS_ID) return NextResponse.json({ error: 'Group and video calls are not switched on for your company yet.' }, { status: 403 })
+  const isOwnerCompany = auth.businessId === LISTINGS_BUSINESS_ID
   if (!process.env.DAILY_API_KEY) return NextResponse.json({ error: 'Group calling is not switched on yet. Add DAILY_API_KEY in Netlify to enable it.' }, { status: 503 })
 
   const { action, conversation_id, room, video } = await req.json().catch(() => ({}))
@@ -34,6 +33,15 @@ export async function POST(req: NextRequest) {
   const { data: mem } = await serviceClient.from('staff_conversation_members').select('member_name')
     .eq('conversation_id', conversation_id).ilike('member_email', auth.email).maybeSingle()
   if (!mem) return NextResponse.json({ error: 'You are not in this chat' }, { status: 403 })
+  // Calls run on the platform owner's Daily account. Client companies only get them when the owner has
+  // granted them a monthly allowance of participant minutes (Revenue and Customers), and are stopped at it.
+  if (!isOwnerCompany) {
+    const { data: sub } = await serviceClient.from('subscriptions').select('call_minutes_limit').eq('user_id', auth.businessId).maybeSingle()
+    const limit = Number(sub?.call_minutes_limit) || 0
+    if (limit <= 0) return NextResponse.json({ error: 'Group and video calls are not switched on for your company yet.' }, { status: 403 })
+    const used = await monthMinutesFor(auth.businessId).catch(() => limit)
+    if (used >= limit) return NextResponse.json({ error: `Your company has used its ${limit} call minutes for this month. Ask your account manager for more.` }, { status: 403 })
+  }
   const myName = String(mem.member_name || auth.email.split('@')[0]).trim()
   const exp = Math.floor(Date.now() / 1000) + 3 * 3600
 
@@ -41,7 +49,7 @@ export async function POST(req: NextRequest) {
     let roomName: string, withVideo: boolean
     if (action === 'start') {
       withVideo = !!video
-      roomName = 'nvq-' + crypto.randomUUID().replace(/-/g, '').slice(0, 20)
+      roomName = `nvq-${companyCode(auth.businessId)}-` + crypto.randomUUID().replace(/-/g, '').slice(0, 16)
       await daily('/rooms', { name: roomName, privacy: 'private', properties: { exp, eject_at_room_exp: true, enable_screenshare: true, enable_chat: true, start_video_off: !withVideo } })
       await serviceClient.from('staff_messages').insert({
         conversation_id, sender_email: auth.email, sender_name: myName,

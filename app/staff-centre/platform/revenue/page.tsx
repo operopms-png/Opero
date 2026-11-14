@@ -21,7 +21,19 @@ export default function RevenuePage() {
   const [d, setD] = useState<any>(null)
   const [err, setErr] = useState('')
   const [filter, setFilter] = useState('all')
+  const [calls, setCalls] = useState<any>(null)
+  const [edit, setEdit] = useState<Record<string, string>>({})
+  const [saved, setSaved] = useState('')
   useEffect(() => { ownerFetch('/api/platform/revenue').then(r => r.ok ? setD(r.data) : setErr(r.data?.error || 'Could not load')) }, [])
+  useEffect(() => { ownerFetch('/api/platform/call-minutes').then(r => r.ok && setCalls(r.data)) }, [])
+  async function saveLimit(id: string) {
+    const v = edit[id]; if (v === undefined) return
+    const r = await ownerFetch('/api/platform/call-minutes', { method: 'POST', body: JSON.stringify({ user_id: id, limit: v }) })
+    if (!r.ok) { alert(r.data?.error || 'Could not save'); return }
+    setCalls((c: any) => ({ ...c, companies: { ...c.companies, [id]: { ...(c.companies?.[id] || { used: 0, cost: 0 }), limit: r.data.limit } } }))
+    setEdit(e => { const n = { ...e }; delete n[id]; return n })
+    setSaved(id); setTimeout(() => setSaved(''), 2000)
+  }
   if (err) return <CrmPage><CrmHeader title="Revenue and Customers" /><Body><Empty>{err}</Empty></Body></CrmPage>
   if (!d) return <Loading />
   const s = d.summary
@@ -46,7 +58,7 @@ export default function RevenuePage() {
           <div style={{ background: '#fff', border: '1px solid ' + C.border, borderRadius: 8, overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead><tr style={{ background: '#F5F6F8', textAlign: 'left', color: C.muted, fontSize: 12 }}>
-                {['Customer', 'Status', 'Plan', 'Billing', 'Customer since', 'Last change', 'Trial ends'].map(h => <th key={h} style={{ padding: '10px 14px', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>)}
+                {['Customer', 'Status', 'Plan', 'Billing', 'Customer since', 'Last change', 'Trial ends', 'Call minutes this month'].map(h => <th key={h} style={{ padding: '10px 14px', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>)}
               </tr></thead>
               <tbody>{list.map(c => (
                 <tr key={c.id} style={{ borderTop: '1px solid ' + C.row }}>
@@ -57,6 +69,16 @@ export default function RevenuePage() {
                   <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{day(c.since)}</td>
                   <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{day(c.changed)}</td>
                   <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>{day(c.trial_end)}</td>
+                  <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                    {(() => { const cm = calls?.companies?.[c.id]; const lim = cm?.limit ?? 0; return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 12, color: C.muted }}>{cm ? `${cm.used} used of` : 'of'}</span>
+                        <input type="number" min={0} value={edit[c.id] ?? String(lim)} onChange={e => setEdit(x => ({ ...x, [c.id]: e.target.value }))} title="Monthly allowance in participant minutes. 0 = calls off." style={{ width: 80, height: 30, padding: '0 8px', border: '1px solid #D0D4E4', borderRadius: 4, fontSize: 13 }} />
+                        {edit[c.id] !== undefined && <button onClick={() => saveLimit(c.id)} style={{ height: 30, padding: '0 12px', border: 'none', borderRadius: 4, background: '#0F1C3F', color: '#fff', fontSize: 12.5, cursor: 'pointer' }}>Save</button>}
+                        {saved === c.id && <span style={{ fontSize: 12, color: '#00A05A' }}>Saved</span>}
+                        {cm && cm.used > 0 && <span style={{ fontSize: 12, color: C.faint }}>Daily cost ${cm.cost.toFixed(2)}</span>}
+                      </div>) })()}
+                  </td>
                 </tr>))}</tbody>
             </table>
           </div>
