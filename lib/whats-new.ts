@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-14', title: 'Novourq Cloud AI on every page', text: 'The Novourq Cloud AI box now sits at the bottom of every page, so you can ask a question wherever you are.' },
   { date: '2026-11-13', title: 'Private mailboxes', text: 'A mailbox can now be Private: it shows under its own heading in Email and only the people named can open it, not other admins.' },
   { date: '2026-11-13', title: 'Acceptance and decline messages for applicants', text: 'Open a candidate in Team, Applications and use Reply to candidate for a ready-made acceptance, decline or interview message.' },
   { date: '2026-11-13', title: 'Onboard a landlord: step by step', text: 'Settings → Guide now has Onboard a landlord (staff step by step), with a numbered picture, from enquiry to Mark as onboarded.' },

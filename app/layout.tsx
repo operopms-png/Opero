@@ -1,4 +1,5 @@
 'use client'
+import GrokPanel from '../components/GrokPanel'
 import type { Metadata } from 'next'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -165,6 +166,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 function LayoutBody({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebarCollapse()
+  const pathname = usePathname()
+  // Novourq Cloud AI sits at the bottom of every page; these pages already have it or are full-screen tools.
+  const hasAi = !['/staff-centre/oversight', '/staff-centre/ask-grok', '/staff-centre/ai-command-centre', '/staff-centre/email'].some(p => pathname === p || pathname?.startsWith(p + '/'))
   const width = collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH
   return (
     <>
@@ -174,6 +178,7 @@ function LayoutBody({ children }: { children: React.ReactNode }) {
         <HubTabs />
         <PageBanner />
         {children}
+        {hasAi && <div style={{ paddingTop: 24 }}><GrokPanel /></div>}
       </main>
       <VoiceDictation />
     </>
