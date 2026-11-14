@@ -1,5 +1,6 @@
 'use client'
 import GrokPanel from '../components/GrokPanel'
+import SessionTracker from '../components/work/SessionTracker'
 import type { Metadata } from 'next'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -47,6 +48,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/approvals': 'approvals',
   '/staff-centre/announcements': 'announcements',
   '/staff-centre/activity-log': 'activitylog',
+  '/staff-centre/work-hours': 'activitylog',
   '/staff-centre/partners': 'partners',
   '/partners': 'partners',
   '/staff-centre/investors': 'investors',
@@ -173,6 +175,7 @@ function LayoutBody({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Sidebar />
+      <SessionTracker />
       <main className="app-main" style={{ marginLeft: width, flex: 1, minHeight: '100vh', transition: 'margin-left 0.15s ease' }}>
         <ViewOnlyBanner />
         <HubTabs />

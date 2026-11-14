@@ -93,6 +93,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/settings?section=Team+Management', label: 'Team Management' },
     { href: '/staff-centre/announcements', label: 'Announcements', scTab: 'announcements', badge: 'announcements' },
     { href: '/staff-centre/activity-log', label: 'Activity Log', scTab: 'activitylog' },
+    { href: '/staff-centre/work-hours', label: 'Work Hours', scTab: 'activitylog' },
     { href: '/staff-centre/hr', label: 'People & HR', scTab: 'hr', badge: 'hr' },
     { href: '/staff-centre/hr-documents', label: 'HR Documents', scTab: 'hr' },
     { href: '/staff-centre/performance', label: 'Staff Performance', scTab: 'performance' },

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useEffect, useState } from 'react'
 import { BRAND_NAME } from '@/lib/brand'
+import { endWorkSession } from '@/components/work/SessionTracker'
 const NAV = [
   { group: 'VACATION RENTALS', items: [
     { label: 'Vacation Rentals', href: '/str', icon: '🏖️' },
@@ -51,7 +52,7 @@ export default function Sidebar() {
           <div style={{ fontSize:12, fontWeight:600, color:'#323338', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email?.split('@')[0]??'admin'}</div>
           <div style={{ fontSize:11, color:'#667085' }}>Professional</div>
         </div>
-        <button onClick={()=>supabase.auth.signOut().then(()=>window.location.href='/login')} style={{ background:'none', border:'none', cursor:'pointer', fontSize:16, color:'#667085' }}>→</button>
+        <button onClick={async()=>{ await endWorkSession(); await supabase.auth.signOut(); window.location.href='/login' }} style={{ background:'none', border:'none', cursor:'pointer', fontSize:16, color:'#667085' }}>→</button>
       </div>
     </div>
   )
