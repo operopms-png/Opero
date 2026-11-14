@@ -1,0 +1,448 @@
+<!--
+=====================================================================
+ NOVOURQ — CAREERS / OPEN POSITIONS PAGE (website)
+=====================================================================
+ HOW TO USE:
+ 1. In Elementor, open the Career insights page and replace the old
+    HTML widget code with this whole block.
+ 2. The roles are NOT typed in here any more. They load live from the
+    NOVOURQ portal (Staff Centre > Human Intelligence Hub > Team >
+    Applications > Open roles & careers link). Add, edit or hide a
+    role there and this page updates by itself.
+ 3. Applications go to the NOVOURQ portal (Applications and CRM), with
+    the CV, and the team is emailed. They no longer go to the old
+    Sangsters portal.
+=====================================================================
+-->
+
+<section class="careers">
+  <div class="careers__inner">
+
+    <nav class="careers__tabs" id="categoryTabs">
+      <button class="tab active" data-category="all">View all</button>
+      <button class="tab" data-category="Estate Agency">Estate agency</button>
+      <button class="tab" data-category="Operations">Operations</button>
+      <button class="tab" data-category="STR & Marketing">STR &amp; marketing</button>
+      <button class="tab" data-category="HR & Recruitment">HR &amp; recruitment</button>
+    </nav>
+
+    <div class="careers__filters">
+      <div class="filter-field">
+        <div class="filter-field__label-row">
+          <label for="searchInput">Search</label>
+          <button class="clear-btn" data-clear="search">Clear</button>
+        </div>
+        <input type="text" id="searchInput" placeholder="Search by title">
+      </div>
+
+      <div class="filter-field">
+        <div class="filter-field__label-row">
+          <label for="categorySelect">Category</label>
+          <button class="clear-btn" data-clear="category">Clear</button>
+        </div>
+        <select id="categorySelect">
+          <option value="">All categories</option>
+          <option value="Estate Agency">Estate Agency</option>
+          <option value="Operations">Operations</option>
+          <option value="STR & Marketing">STR &amp; Marketing</option>
+          <option value="HR & Recruitment">HR &amp; Recruitment</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <div class="filter-field__label-row">
+          <label for="typeSelect">Type</label>
+          <button class="clear-btn" data-clear="type">Clear</button>
+        </div>
+        <select id="typeSelect">
+          <option value="">All types</option>
+          <option value="Full-time">Full-time</option>
+          <option value="Part-time">Part-time</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <div class="filter-field__label-row">
+          <label for="perPageSelect">Results per page</label>
+        </div>
+        <select id="perPageSelect">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="careers__results-bar">
+      <span id="resultsCount">Loading roles...</span>
+      <div class="pager">
+        <button id="prevPage" aria-label="Previous page">&larr;</button>
+        <button id="nextPage" aria-label="Next page">&rarr;</button>
+      </div>
+    </div>
+
+    <div class="careers__grid">
+      <div class="careers__list" id="jobList"></div>
+      <div class="careers__detail" id="jobDetail"></div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .careers {
+    --navy: #1B2F6E;
+    --navy-dark: #132252;
+    --accent: #2F5597;
+    --text-dark: #1A1A1A;
+    --text-muted: #6B7280;
+    --border: #D9DEE8;
+    --bg-soft: #F3F6FB;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #FFFFFF;
+    padding: 56px 20px 88px;
+    color: var(--text-dark);
+  }
+  .careers__inner { max-width: 1200px; margin: 0 auto; }
+  .careers__tabs {
+    display: flex; flex-wrap: wrap; gap: 8px 32px; justify-content: center;
+    border-bottom: 1px solid var(--border); margin-bottom: 32px;
+  }
+  .tab {
+    font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; background: none; border: none; border-radius: 0;
+    padding: 14px 0 12px; color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--navy); }
+  .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .careers__filters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+  .filter-field__label-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .filter-field__label-row label { color: var(--text-dark); }
+  .clear-btn {
+    background: none; border: none; font-family: inherit; font-size: 11px;
+    color: var(--accent); text-decoration: underline; cursor: pointer; padding: 0;
+  }
+  .filter-field input, .filter-field select {
+    width: 100%; box-sizing: border-box; font-family: inherit; font-size: 14px;
+    padding: 11px 12px; border-radius: 0; border: 1px solid var(--border);
+    background: #FFFFFF; color: var(--text-dark); appearance: auto;
+  }
+  .filter-field input:focus, .filter-field select:focus {
+    outline: none; border-color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy);
+  }
+  .careers__results-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 14px;
+  }
+  .pager { display: flex; gap: 8px; }
+  .pager button {
+    background: #FFFFFF; border: 1px solid var(--border); border-radius: 0;
+    width: 32px; height: 32px; cursor: pointer; color: var(--navy); font-size: 14px;
+  }
+  .pager button:disabled { opacity: 0.4; cursor: default; }
+  .careers__grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 0; border: 1px solid var(--border); }
+  .careers__list { display: flex; flex-direction: column; max-height: 660px; overflow-y: auto; }
+  .job-card {
+    padding: 18px 22px 18px 19px; cursor: pointer; border-bottom: 1px solid var(--border);
+    border-left: 3px solid transparent; background: #FFFFFF; transition: background 0.15s;
+  }
+  .job-card:last-child { border-bottom: none; }
+  .job-card:hover { background: var(--bg-soft); }
+  .job-card.active { background: var(--bg-soft); border-left-color: var(--navy); }
+  .job-card h3 { font-weight: 700; font-size: 16px; margin: 0 0 4px; color: var(--navy); }
+  .job-card .job-location {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-muted); margin: 0 0 8px;
+  }
+  .job-card .job-blurb { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0; }
+  .careers__detail { background: var(--navy); color: #FFFFFF; padding: 32px 36px; }
+  .careers__detail-top { padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.25); margin-bottom: 8px; }
+  .careers__detail h2 { font-weight: 700; font-size: 24px; margin: 0 0 6px; color: #FFFFFF; }
+  .careers__detail .job-meta {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    color: rgba(255,255,255,0.75); margin: 0;
+  }
+  .careers__detail h4 {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    margin: 22px 0 10px; color: #FFFFFF;
+  }
+  .careers__detail ul { margin: 0; padding-left: 18px; }
+  .careers__detail li { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.92); }
+  .careers__detail .apply-btn {
+    display: inline-block; background: #FFFFFF; color: var(--navy); text-decoration: none;
+    font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 13px 26px; border-radius: 0; border: 1px solid #FFFFFF;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .careers__detail .apply-btn:hover { background: var(--bg-soft); }
+  .careers__detail .apply-btn:disabled { opacity: 0.6; cursor: default; }
+  .apply-form { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .apply-form input[type="text"], .apply-form input[type="email"], .apply-form input[type="tel"] {
+    font-family: inherit; font-size: 14px; padding: 12px 14px; border-radius: 0;
+    border: 1px solid #FFFFFF; background: #FFFFFF; color: var(--text-dark);
+  }
+  .apply-form input::placeholder { color: var(--text-muted); }
+  .apply-form input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--navy-dark); }
+  .apply-form .cv-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85); margin-top: 4px;
+  }
+  .apply-form input[type="file"] {
+    font-family: inherit; font-size: 13px; color: #FFFFFF; padding: 8px 0;
+  }
+  .apply-form .apply-btn { align-self: flex-start; margin-top: 6px; }
+  .apply-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .apply-status { font-size: 13px; margin: 6px 0 0; min-height: 16px; color: #FFFFFF; }
+  .apply-status--success { color: #BBF7D0; }
+  .apply-status--error { color: #FECACA; }
+  .careers__empty { text-align: center; color: var(--text-muted); font-size: 14px; padding: 60px 20px; }
+
+  @media (max-width: 900px) {
+    .careers__filters { grid-template-columns: repeat(2, 1fr); }
+    .careers__grid { grid-template-columns: 1fr; }
+    .careers__list { max-height: none; overflow: visible; }
+    .careers__detail { padding: 28px 22px; }
+  }
+  @media (max-width: 520px) {
+    .careers__filters { grid-template-columns: 1fr; }
+    .careers__tabs { gap: 6px 20px; }
+  }
+</style>
+
+<script>
+(function () {
+  // Roles load live from the NOVOURQ portal; applications go back to it.
+  var API = 'https://app.thenovourq.com/api/public/careers';
+  var TOKEN = '09f49b848f8f451c';
+
+  var JOBS = [];
+  var activeCategory = 'all';
+  var searchTerm = '';
+  var categoryFilter = '';
+  var typeFilter = '';
+  var perPage = 5;
+  var currentPage = 0;
+  var selectedIndex = 0;
+
+  var listEl = document.getElementById('jobList');
+  var detailEl = document.getElementById('jobDetail');
+  var countEl = document.getElementById('resultsCount');
+  var tabsEl = document.getElementById('categoryTabs');
+  var searchEl = document.getElementById('searchInput');
+  var categorySelectEl = document.getElementById('categorySelect');
+  var typeSelectEl = document.getElementById('typeSelect');
+  var perPageEl = document.getElementById('perPageSelect');
+  var prevBtn = document.getElementById('prevPage');
+  var nextBtn = document.getElementById('nextPage');
+
+  function esc(t) {
+    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // The portal stores one description: a summary line, then "Responsibilities" and
+  // "Requirements" followed by "- " bullet lines. Split it back into parts.
+  function parseRole(r) {
+    var blurb = '', resp = [], req = [], mode = 'blurb';
+    String(r.description || '').split(/\r?\n/).forEach(function (line) {
+      var l = line.trim();
+      if (!l) return;
+      if (/^responsibilities$/i.test(l)) { mode = 'resp'; return; }
+      if (/^requirements$/i.test(l)) { mode = 'req'; return; }
+      if (mode === 'blurb') blurb += (blurb ? ' ' : '') + l;
+      else if (mode === 'resp') resp.push(l.replace(/^[-•]\s*/, ''));
+      else req.push(l.replace(/^[-•]\s*/, ''));
+    });
+    return {
+      id: r.id,
+      title: r.title,
+      location: r.location || '',
+      type: String(r.job_type || '').replace(/\s+/g, '-').replace(/^Full-?time$/i, 'Full-time').replace(/^Part-?time$/i, 'Part-time'),
+      category: r.category || '',
+      blurb: blurb,
+      responsibilities: resp,
+      requirements: req
+    };
+  }
+
+  function getFiltered() {
+    return JOBS.filter(function (job) {
+      var matchesTab = activeCategory === 'all' || job.category === activeCategory;
+      var matchesCategory = categoryFilter === '' || job.category === categoryFilter;
+      var matchesType = typeFilter === '' || job.type === typeFilter;
+      var matchesSearch = job.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
+      return matchesTab && matchesCategory && matchesType && matchesSearch;
+    });
+  }
+
+  function renderList() {
+    var filtered = getFiltered();
+    var totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+    if (currentPage >= totalPages) currentPage = totalPages - 1;
+    if (currentPage < 0) currentPage = 0;
+
+    var pageItems = filtered.slice(currentPage * perPage, currentPage * perPage + perPage);
+
+    countEl.textContent = filtered.length + (filtered.length === 1 ? ' role found' : ' roles found') +
+      ' — page ' + (currentPage + 1) + ' of ' + totalPages;
+
+    prevBtn.disabled = currentPage === 0;
+    nextBtn.disabled = currentPage >= totalPages - 1;
+
+    if (pageItems.length === 0) {
+      listEl.innerHTML = '<div class="careers__empty">No roles match your search.</div>';
+      detailEl.innerHTML = '<div class="careers__empty" style="color:#FFFFFF;">Select a role to see details.</div>';
+      return;
+    }
+
+    if (selectedIndex >= pageItems.length) selectedIndex = 0;
+
+    listEl.innerHTML = pageItems.map(function (job, i) {
+      return '<div class="job-card' + (i === selectedIndex ? ' active' : '') + '" data-index="' + i + '">' +
+        '<h3>' + esc(job.title) + '</h3>' +
+        '<p class="job-location">' + esc(job.location) + '</p>' +
+        '<p class="job-blurb">' + esc(job.blurb) + '</p>' +
+      '</div>';
+    }).join('');
+
+    Array.prototype.forEach.call(listEl.querySelectorAll('.job-card'), function (card) {
+      card.addEventListener('click', function () {
+        selectedIndex = parseInt(card.getAttribute('data-index'), 10);
+        renderList();
+      });
+    });
+
+    renderDetail(pageItems[selectedIndex]);
+  }
+
+  function renderDetail(job) {
+    if (!job) {
+      detailEl.innerHTML = '<div class="careers__empty" style="color:#FFFFFF;">Select a role to see details.</div>';
+      return;
+    }
+    detailEl.innerHTML =
+      '<div class="careers__detail-top">' +
+        '<div>' +
+          '<h2>' + esc(job.title) + '</h2>' +
+          '<p class="job-meta">' + esc(job.location) + ' &middot; ' + esc(job.type) + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<h4>Responsibilities</h4>' +
+      '<ul>' + job.responsibilities.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
+      '<h4>Requirements</h4>' +
+      '<ul>' + job.requirements.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
+      '<h4>Apply for this role</h4>' +
+      '<form class="apply-form" id="applyForm">' +
+        '<input type="text" name="name" placeholder="Full name" required>' +
+        '<input type="email" name="email" placeholder="Email address" required>' +
+        '<input type="tel" name="phone" placeholder="Phone number">' +
+        '<label class="cv-label" for="cvFile">Upload your CV (PDF or Word, optional)</label>' +
+        '<input type="file" id="cvFile" name="cv" accept=".pdf,.doc,.docx">' +
+        '<input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+        '<button type="submit" class="apply-btn">Submit application</button>' +
+        '<p class="apply-status" id="applyStatus"></p>' +
+      '</form>';
+
+    var form = document.getElementById('applyForm');
+    var status = document.getElementById('applyStatus');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      status.textContent = 'Submitting...';
+      status.className = 'apply-status';
+
+      var btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+
+      var fd = new FormData(form);
+      fd.append('token', TOKEN);
+      fd.append('role_id', job.id);
+
+      fetch(API, { method: 'POST', body: fd })
+        .then(function (res) {
+          return res.json().then(function (d) {
+            if (!res.ok || d.error) throw new Error(d.error || 'Request failed');
+            status.textContent = 'Application submitted. We will be in touch.';
+            status.className = 'apply-status apply-status--success';
+            form.reset();
+          });
+        })
+        .catch(function (err) {
+          var msg = err && err.message && err.message !== 'Request failed' && err.message.indexOf('JSON') === -1 ? err.message : 'Something went wrong. Please try again or email us directly.';
+          status.textContent = msg;
+          status.className = 'apply-status apply-status--error';
+        })
+        .then(function () { btn.disabled = false; });
+    });
+  }
+
+  tabsEl.addEventListener('click', function (e) {
+    if (!e.target.classList.contains('tab')) return;
+    Array.prototype.forEach.call(tabsEl.querySelectorAll('.tab'), function (t) { t.classList.remove('active'); });
+    e.target.classList.add('active');
+    activeCategory = e.target.getAttribute('data-category');
+    currentPage = 0;
+    selectedIndex = 0;
+    renderList();
+  });
+
+  searchEl.addEventListener('input', function (e) {
+    searchTerm = e.target.value;
+    currentPage = 0;
+    selectedIndex = 0;
+    renderList();
+  });
+
+  categorySelectEl.addEventListener('change', function (e) {
+    categoryFilter = e.target.value;
+    currentPage = 0;
+    selectedIndex = 0;
+    renderList();
+  });
+
+  typeSelectEl.addEventListener('change', function (e) {
+    typeFilter = e.target.value;
+    currentPage = 0;
+    selectedIndex = 0;
+    renderList();
+  });
+
+  perPageEl.addEventListener('change', function (e) {
+    perPage = parseInt(e.target.value, 10);
+    currentPage = 0;
+    renderList();
+  });
+
+  document.querySelectorAll('.clear-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var field = btn.getAttribute('data-clear');
+      if (field === 'search') { searchTerm = ''; searchEl.value = ''; }
+      if (field === 'category') { categoryFilter = ''; categorySelectEl.value = ''; }
+      if (field === 'type') { typeFilter = ''; typeSelectEl.value = ''; }
+      currentPage = 0;
+      selectedIndex = 0;
+      renderList();
+    });
+  });
+
+  prevBtn.addEventListener('click', function () { currentPage -= 1; selectedIndex = 0; renderList(); });
+  nextBtn.addEventListener('click', function () { currentPage += 1; selectedIndex = 0; renderList(); });
+
+  // Load the open roles from the portal
+  fetch(API + '?t=' + encodeURIComponent(TOKEN))
+    .then(function (res) { return res.json(); })
+    .then(function (d) {
+      JOBS = (d && d.roles ? d.roles : []).map(parseRole);
+      renderList();
+    })
+    .catch(function () {
+      countEl.textContent = '';
+      listEl.innerHTML = '<div class="careers__empty">Roles could not be loaded right now. Please try again shortly.</div>';
+    });
+})();
+</script>
