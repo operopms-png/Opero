@@ -140,6 +140,7 @@
   .nvq-form .go:disabled { opacity: .6; cursor: default; }
   .nvq-status { font-size: 15px; min-height: 20px; }
   .nvq-status.ok { color: #137A3A; } .nvq-status.err { color: #B42318; }
+  .nvq .leaflet-tile-pane { filter: saturate(.55) brightness(1.05) contrast(.9); }
   .nvq .leaflet-control-zoom a { color: var(--ink); }
   .nvq .leaflet-tooltip.nvq-cl { background: none; border: 0; box-shadow: none; color: #9AA1B0; font: 700 11px 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: .08em; pointer-events: none; }
   .nvq .leaflet-tooltip.nvq-cl::before { display: none; }
@@ -201,7 +202,7 @@
 
   // ---- map ----
   var map = L.map('nvqMap', { zoomControl: true, scrollWheelZoom: false, minZoom: 2, maxZoom: 8, worldCopyJump: false, attributionControl: true });
-  var baseTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+  var baseTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors', maxZoom: 19 }).addTo(map);
   // Back-up map: country shapes drawn by the page itself. If the map pictures above cannot load
   // (blocked or slow), the map still shows the world instead of an empty box.
   map.createPane('land'); map.getPane('land').style.zIndex = 150;
