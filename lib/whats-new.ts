@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-14', title: 'All staff chat stays up to date', text: 'New team members are now added to the All staff chat automatically when you open it under Inbox → Conversations → Message everyone.' },
   { date: '2026-11-14', title: 'New careers page with a map', text: 'The website careers page is now a modern vacancies page with a map of United Kingdom, United States and Jamaica; roles and applications still come from and go to Applications and the CRM.' },
   { date: '2026-11-14', title: 'Work hours on the Dashboard', text: 'A Work hours today box now sits next to New applicants; only the owner sees it unless they choose staff under Who can see this.' },
   { date: '2026-11-14', title: 'Work Hours', text: 'Admins can now see when each person signed in and out, how long they were on the portal and which pages they used, with a CSV for payroll.' },

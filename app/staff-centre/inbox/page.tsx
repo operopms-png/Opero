@@ -245,6 +245,17 @@ export default function Page() {
       convoId = created.id
     }
 
+    // Keep the All staff chat in step with the team list: add anyone added since it was created
+    // (external partners are left out).
+    if (convoId && identity.isAdmin) {
+      const { data: have } = await supabase.from('staff_conversation_members').select('member_email').eq('conversation_id', convoId)
+      const haveSet = new Set((have ?? []).map((m:any) => String(m.member_email).toLowerCase()))
+      const missing = team
+        .filter((t:any) => t.email && !/partner/i.test(t.role || '') && !haveSet.has(String(t.email).toLowerCase()))
+        .map((t:any) => ({ conversation_id: convoId, member_email: t.email, member_name: String(t.name || '').trim() }))
+      if (missing.length) await supabase.from('staff_conversation_members').insert(missing)
+    }
+
     const list = await loadTeamConversations(identity)
     setTab('All')
     setFilter('team')
