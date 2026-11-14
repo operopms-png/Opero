@@ -1,0 +1,78 @@
+<!--
+=====================================================================
+ NOVOURQ — "ALREADY WORKING AT NOVOURQ?" REFERRAL CARD
+=====================================================================
+ HOW TO USE: In Elementor add a NEW HTML widget where you want the card
+ (e.g. under the vacancies list) and paste this whole block. It is
+ separate from the vacancies code, so the two do not affect each other.
+ The five circles are your team photos, served from the portal
+ (app.thenovourq.com/team/...). To swap a person, change the file name
+ in the PHOTOS list at the bottom.
+=====================================================================
+-->
+<section class="nvr" id="nvr">
+  <div class="nvr-card">
+    <h2>Already working<br>at NOVOURQ?</h2>
+    <p class="nvr-sub">Let&rsquo;s recruit together and find your next colleague.</p>
+
+    <form class="nvr-form" id="nvrForm" novalidate>
+      <label class="nvr-sr" for="nvrEmail">Your NOVOURQ email</label>
+      <input type="email" id="nvrEmail" placeholder="name@thenovourq.com" autocomplete="email" required>
+      <button type="submit" aria-label="Continue">
+        <svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M20 14l11 10-11 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+    <p class="nvr-msg" id="nvrMsg" role="status"></p>
+
+    <div class="nvr-faces" id="nvrFaces" aria-hidden="true"></div>
+  </div>
+</section>
+
+<style>
+  .nvr { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 24px 20px 90px; background: #fff; -webkit-text-size-adjust: 100%; }
+  .nvr *, .nvr *::before, .nvr *::after { box-sizing: border-box; }
+  .nvr :where(h2, p, form) { margin: 0; padding: 0; }
+  .nvr-card { position: relative; max-width: 580px; margin: 0 auto; padding: 64px 44px 92px; border-radius: 22px; background: #262839; color: #fff; text-align: center;
+    box-shadow: 0 24px 60px rgba(15, 28, 63, .18); }
+  .nvr-card h2 { font-size: clamp(32px, 6vw, 46px); font-weight: 800; line-height: 1.12; letter-spacing: -.02em; }
+  .nvr-sub { margin-top: 18px; font-size: clamp(18px, 3.2vw, 23px); line-height: 1.55; color: #D6D8E4; }
+  .nvr-form { margin: 40px auto 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 24px; border-radius: 14px; background: #484A5C; }
+  .nvr-form input { flex: 1; min-width: 0; padding: 14px 0; border: 0; background: transparent; color: #fff; font: inherit; font-size: 18px; outline: none; }
+  .nvr-form input::placeholder { color: #fff; opacity: .95; }
+  .nvr-form:focus-within { box-shadow: 0 0 0 2px #fff; }
+  .nvr-form button { display: flex; padding: 0; border: 0; background: none; color: #fff; cursor: pointer; border-radius: 50%; transition: transform .15s; }
+  .nvr-form button:hover { transform: translateX(3px); }
+  .nvr-msg { margin-top: 16px; min-height: 22px; font-size: 15px; line-height: 1.5; color: #D6D8E4; }
+  .nvr-msg.err { color: #FFB4A8; }
+  .nvr-msg a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+  .nvr-faces { position: absolute; left: 0; right: 0; bottom: -46px; display: flex; justify-content: center; gap: 14px; }
+  .nvr-faces span { width: 92px; height: 92px; border-radius: 50%; border: 5px solid #fff; background: #E3E6EE center / cover no-repeat; box-shadow: 0 10px 26px rgba(15, 28, 63, .22); }
+  .nvr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 560px) {
+    .nvr-card { padding: 48px 22px 80px; }
+    .nvr-form { padding-left: 18px; }
+    .nvr-form input { font-size: 16px; }
+    .nvr-faces { gap: 8px; bottom: -34px; }
+    .nvr-faces span { width: 62px; height: 62px; border-width: 4px; }
+  }
+</style>
+
+<script>
+(function () {
+  var BASE = 'https://app.thenovourq.com/team/';
+  var PHOTOS = ['azuo.jpg', 'sarah-bennett.jpg', 'jim.jpg', 'samantha-pierce.jpg', 'remick-vincent.jpg'];
+  var faces = document.getElementById('nvrFaces');
+  PHOTOS.forEach(function (f) { var s = document.createElement('span'); s.style.backgroundImage = 'url(' + BASE + f + ')'; faces.appendChild(s); });
+
+  var form = document.getElementById('nvrForm'), input = document.getElementById('nvrEmail'), msg = document.getElementById('nvrMsg');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = input.value.trim().toLowerCase();
+    if (!/^[^\s@]+@thenovourq\.com$/.test(v)) {
+      msg.className = 'nvr-msg err'; msg.textContent = 'Please use your NOVOURQ email (name@thenovourq.com).'; return;
+    }
+    msg.className = 'nvr-msg';
+    msg.innerHTML = 'Thank you. Ask your colleague to apply for a role above and mention your name, or send their CV to <a href="mailto:career@thenovourq.com">career@thenovourq.com</a>.';
+  });
+})();
+</script>
