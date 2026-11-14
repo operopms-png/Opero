@@ -23,6 +23,8 @@ export default function DashboardAiPanel({ mapSlot, portfolioSlot }: { mapSlot?:
   const [wf, setWf] = useState<any[] | null>(null)
   const [act, setAct] = useState<any[] | null>(null)
   const [lb, setLb] = useState<any[] | null>(null)
+  const [openAreas, setOpenAreas] = useState<Record<string, boolean>>({})
+  const [onlyOff, setOnlyOff] = useState(false)
 
   useEffect(() => {
     staffApi('/api/ai-overview').then(setOv).catch(() => setOv(false))
@@ -37,28 +39,50 @@ export default function DashboardAiPanel({ mapSlot, portfolioSlot }: { mapSlot?:
 
   // Group the workflows by area for the "Automation by area" box.
   const areas: Record<string, { on: number; n: number; items: any[] }> = {}
-  for (const w of wf ?? []) { const a = (areas[w.module] ??= { on: 0, n: 0, items: [] }); a.n++; if (w.on) a.on++; a.items.push(w) }
+  const areaKey: Record<string, string> = {}
+  for (const w of wf ?? []) { const m = String(w.module ?? 'Other').trim(); const k = areaKey[m.toLowerCase()] ??= m; const a = (areas[k] ??= { on: 0, n: 0, items: [] }); a.n++; if (w.on) a.on++; a.items.push(w) }
 
   const stat = (label: string, value: React.ReactNode, sub: string, href?: string) => {
     const inner = (<><div style={{ fontSize: 12, color: K.muted }}>{label}</div><div style={{ fontSize: 28, fontWeight: 800, color: K.ink, margin: '4px 0 2px', letterSpacing: '-.02em' }}>{value}</div><div style={{ fontSize: 12, color: K.soft }}>{sub}</div></>)
     return href ? <Link href={href} style={{ ...box, padding: 16, textDecoration: 'none', display: 'block' }}>{inner}</Link> : <div style={{ ...box, padding: 16 }}>{inner}</div>
   }
 
+  const allOn = Object.values(areas).reduce((t, a) => t + a.on, 0), allN = Object.values(areas).reduce((t, a) => t + a.n, 0)
+  const ctl: React.CSSProperties = { border: '1px solid #cfdcf3', background: '#fff', color: K.ink, borderRadius: 6, padding: '5px 11px', fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit' }
+  const rows = Object.entries(areas).filter(([, a]) => !onlyOff || a.on < a.n)
   const automationBox = (
-        <div style={{ ...box, padding: 18, minWidth: 0 }}>
-          <h3 style={head}>Automation by area</h3>
-          {wf === null ? <div style={{ fontSize: 13, color: K.soft }}>Loading…</div> : Object.keys(areas).length === 0 ? <div style={{ fontSize: 13, color: K.soft }}>No automations yet.</div> : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {Object.entries(areas).map(([name, a]) => (
-                <div key={name}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: K.ink, marginBottom: 6, fontWeight: 600 }}><span>{name}</span><span style={{ color: K.blue, fontWeight: 700 }}>{a.on} of {a.n} on</span></div>
-                  <div style={{ height: 7, borderRadius: 7, background: '#dbe8fa', overflow: 'hidden' }}><div style={{ width: `${(a.on / a.n) * 100}%`, height: '100%', background: 'linear-gradient(90deg,#2f5bd6,#6c9bff)', borderRadius: 7 }} /></div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                    {a.items.map(w => <span key={w.agent} style={{ fontSize: 11.5, color: w.on ? K.mid : '#8a9bc0', background: w.on ? K.chip : '#f5f7fb', border: `1px ${w.on ? 'solid' : 'dashed'} ${K.chipLine}`, borderRadius: 999, padding: '3px 9px' }}>{w.label.replace(/ \(.*\)$/, '')}</span>)}
+        <div style={{ ...box, padding: 0, minWidth: 0, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', padding: '16px 20px', borderBottom: `1px solid ${K.line}` }}>
+            <div>
+              <h3 style={{ ...head, margin: 0 }}>Automation by area</h3>
+              {wf !== null && <div style={{ fontSize: 19, fontWeight: 700, color: K.ink, marginTop: 4 }}>{allOn} of {allN} automations running</div>}
+            </div>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              <button style={ctl} onClick={() => { const all = rows.every(([n]) => openAreas[n]); setOpenAreas(Object.fromEntries(rows.map(([n]) => [n, !all]))) }}>{rows.every(([n]) => openAreas[n]) ? 'Collapse all' : 'Expand all'}</button>
+              <button style={{ ...ctl, ...(onlyOff ? { background: K.ink, color: '#fff', borderColor: K.ink } : {}) }} onClick={() => setOnlyOff(v => !v)}>Show only off</button>
+            </div>
+          </div>
+          {wf === null ? <div style={{ fontSize: 13, color: K.soft, padding: 20 }}>Loading…</div> : rows.length === 0 ? <div style={{ fontSize: 13, color: K.soft, padding: 20 }}>{onlyOff ? 'Everything is switched on.' : 'No automations yet.'}</div> : (
+            <div>
+              {rows.map(([name, a]) => {
+                const full = a.on === a.n, isOpen = !!openAreas[name]
+                const items = onlyOff ? a.items.filter(w => !w.on) : a.items
+                return (
+                  <div key={name} style={{ borderBottom: `1px solid ${K.line}` }}>
+                    <button onClick={() => setOpenAreas(o => ({ ...o, [name]: !o[name] }))} style={{ all: 'unset', boxSizing: 'border-box', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, padding: '13px 20px' }}>
+                      <span style={{ color: K.soft, width: 10, fontSize: 12 }}>{isOpen ? '▾' : '▸'}</span>
+                      <span style={{ width: 170, flexShrink: 0, fontWeight: 600, fontSize: 14, color: K.ink }}>{name}</span>
+                      <span style={{ flex: 1, minWidth: 40, height: 6, background: '#e3ebf7', borderRadius: 3 }}><span style={{ display: 'block', width: `${(a.on / a.n) * 100}%`, height: 6, borderRadius: 3, background: full ? K.ink : '#b8892b' }} /></span>
+                      <span style={{ width: 96, textAlign: 'right', fontSize: 13, color: K.mid }}><b style={{ color: K.ink }}>{a.on}</b> of {a.n} on</span>
+                      <span style={{ width: 62, textAlign: 'center', fontSize: 11.5, padding: '3px 8px', borderRadius: 10, background: full ? '#e6f4ec' : '#fff3dc', color: full ? '#1b7f4b' : '#8a6100' }}>{full ? 'All on' : `${a.n - a.on} off`}</span>
+                    </button>
+                    {isOpen && <div style={{ padding: '2px 20px 16px 44px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: '8px 20px' }}>
+                      {items.map(w => <div key={w.agent} style={{ fontSize: 13, display: 'flex', gap: 8, alignItems: 'center', color: w.on ? K.ink : '#9aa6bf' }}><i style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: w.on ? '#1b9e5a' : '#c9d2e3' }} />{String(w.label ?? w.agent).replace(/ \(.*\)$/, '')}{!w.on && <span style={{ fontSize: 11 }}>Off</span>}</div>)}
+                    </div>}
                   </div>
-                </div>
-              ))}
-              <Link href="/staff-centre/ai-command-centre/agents" style={{ fontSize: 12.5, color: K.blue, fontWeight: 600, textDecoration: 'none' }}>Manage skills →</Link>
+                )
+              })}
+              <div style={{ padding: '12px 20px' }}><Link href="/staff-centre/ai-command-centre/agents" style={{ fontSize: 12.5, color: K.blue, fontWeight: 600, textDecoration: 'none' }}>Manage skills →</Link></div>
             </div>
           )}
         </div>
