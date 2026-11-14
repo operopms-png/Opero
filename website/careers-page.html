@@ -305,7 +305,7 @@
     listEl.innerHTML = pageItems.map(function (job, i) {
       return '<div class="job-card' + (i === selectedIndex ? ' active' : '') + '" data-index="' + i + '">' +
         '<h3>' + esc(job.title) + '</h3>' +
-        '<p class="job-location">' + esc(job.location) + '</p>' +
+        '<p class="job-location">' + esc(job.location || job.category) + '</p>' +
         '<p class="job-blurb">' + esc(job.blurb) + '</p>' +
       '</div>';
     }).join('');
@@ -329,7 +329,7 @@
       '<div class="careers__detail-top">' +
         '<div>' +
           '<h2>' + esc(job.title) + '</h2>' +
-          '<p class="job-meta">' + esc(job.location) + ' &middot; ' + esc(job.type) + '</p>' +
+          '<p class="job-meta">' + [job.location || job.category, job.type].filter(Boolean).map(esc).join(' &middot; ') + '</p>' +
         '</div>' +
       '</div>' +
       '<h4>Responsibilities</h4>' +
