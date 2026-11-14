@@ -3,6 +3,7 @@ import { TextModal } from '@/components/TextComposer'
 import { useEffect, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import CallButton from '@/components/CallButton'
+import GroupCallModal from '@/components/calls/GroupCallModal'
 
 const ACCENT = '#2F6DB5'
 const CHANNELS = [
@@ -64,6 +65,8 @@ export default function Page() {
   const [conversations, setConversations] = useState<any[]>([])
   const [openConvo, setOpenConvo] = useState<any>(null)
   const [thread, setThread] = useState<any[]>([])
+  const [groupCall, setGroupCall] = useState<{ url:string; token:string; title:string } | null>(null)
+  const [callBusy, setCallBusy] = useState(false)
   const [reply, setReply] = useState('')
   const [sending, setSending] = useState(false)
   const [tab, setTab] = useState<typeof TABS[number]>('All')
@@ -221,7 +224,7 @@ export default function Page() {
       return {
         channel: 'team', channelLabel: 'Team Chat', channelBg: TEAM_BG, channelFg: TEAM_FG,
         recipientId: c.id, recipientName: c.name,
-        lastMessage: lastMsg?.body ?? 'No messages yet', lastAt: lastMsg?.created_at ?? c.created_at,
+        lastMessage: lastMsg?.body ? String(lastMsg.body).replace(/\s*\[\[call:[a-z0-9-]+:(voice|video)\]\]/, '') : 'No messages yet', lastAt: lastMsg?.created_at ?? c.created_at,
         unread, members, teamMemberEmail: other?.member_email, teamMemberName: other?.member_name,
       }
     })
@@ -286,6 +289,19 @@ export default function Page() {
     const ch = CHANNELS.find(c=>c.key===convo.channel)!
     const { data } = await supabase.from(ch.table).select('*').eq(ch.idField, convo.recipientId).order('created_at',{ascending:true})
     setThread(data??[])
+  }
+
+  // Group voice/video call for the open Team Chat (or join one already announced in it)
+  async function groupCallAction(action: 'start' | 'join', opts: { video?: boolean; room?: string } = {}) {
+    if (!openConvo || callBusy) return
+    setCallBusy(true)
+    try {
+      const res = await fetch('/api/calls', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ action, conversation_id: openConvo.recipientId, ...opts }) })
+      const r = await res.json().catch(() => ({}))
+      if (!res.ok) { alert(r.error || 'Could not start the call'); return }
+      setGroupCall({ url: r.url, token: r.token, title: `${r.video ? 'Video' : 'Voice'} call · ${openConvo.recipientName}` })
+      if (action === 'start') { await openThread(openConvo); await loadTeamConversations(identity!) }
+    } finally { setCallBusy(false) }
   }
 
   async function sendReply() {
@@ -476,6 +492,16 @@ export default function Page() {
                 <div style={{marginTop:2}}><Pill c={openConvo}/></div>
               </div>
               {(openConvo.channel==='whatsapp'||openConvo.channel==='sms') && <CallButton phone={openConvo.recipientId} name={openConvo.recipientName} size={18}/>}
+              {openConvo.channel==='team' && (
+                <>
+                  {(openConvo.members?.length ?? 0) > 2 && (
+                    <button onClick={()=>groupCallAction('start',{video:false})} disabled={callBusy} title="Start a group voice call"
+                      style={{height:32,padding:'0 12px',border:`1px solid ${BORDER}`,borderRadius:4,background:'#fff',cursor:'pointer',fontSize:13.5,fontFamily:'inherit'}}>📞 Group call</button>
+                  )}
+                  <button onClick={()=>groupCallAction('start',{video:true})} disabled={callBusy} title="Start a video call"
+                    style={{height:32,padding:'0 12px',border:`1px solid ${BORDER}`,borderRadius:4,background:'#fff',cursor:'pointer',fontSize:13.5,fontFamily:'inherit'}}>🎥 Video call</button>
+                </>
+              )}
               {canCallOpenTeam && (
                 <button onClick={()=>window.dispatchEvent(new CustomEvent('opero:call', { detail: { teamMemberEmail: openConvo.teamMemberEmail, name: openConvo.teamMemberName } }))} title={`Call ${openConvo.teamMemberName}`}
                   style={{height:32,padding:'0 12px',border:`1px solid ${BORDER}`,borderRadius:4,background:'#fff',cursor:'pointer',fontSize:13.5,fontFamily:'inherit'}}>📞 Call</button>
@@ -488,7 +514,7 @@ export default function Page() {
                 const label = openConvo.channel==='team' ? (isStaff?'You':msg.senderName) : (isStaff?'Staff':openConvo.recipientName)
                 return (
                   <div key={msg.id} style={{alignSelf:isStaff?'flex-end':'flex-start',maxWidth:'70%'}}>
-                    <div style={{background:isStaff?ACCENT:'#fff',color:isStaff?'#fff':INK,border:isStaff?'none':`1px solid ${LINE}`,borderRadius:8,padding:'10px 14px',fontSize:13.5,lineHeight:1.5,whiteSpace:'pre-wrap',boxShadow:'0 1px 2px rgba(0,0,0,0.04)'}}>{msg.message}{msg.attachment_url && <a href={msg.attachment_url} target="_blank" rel="noreferrer" style={{display:'block',marginTop:msg.message?6:0,color:isStaff?'#fff':ACCENT,textDecoration:'underline',fontSize:13}}>📎 {/\.(png|jpe?g|gif|webp)(\?|$)/i.test(msg.attachment_url)?'Photo':'Attachment'}</a>}{!msg.message && !msg.attachment_url && <span style={{opacity:0.7,fontStyle:'italic'}}>(empty message)</span>}</div>
+                    <div style={{background:isStaff?ACCENT:'#fff',color:isStaff?'#fff':INK,border:isStaff?'none':`1px solid ${LINE}`,borderRadius:8,padding:'10px 14px',fontSize:13.5,lineHeight:1.5,whiteSpace:'pre-wrap',boxShadow:'0 1px 2px rgba(0,0,0,0.04)'}}>{String(msg.message||'').replace(/\s*\[\[call:[a-z0-9-]+:(voice|video)\]\]/,'')}{(()=>{ const cm = String(msg.message||'').match(/\[\[call:([a-z0-9-]+):(voice|video)\]\]/); return cm ? <button onClick={()=>groupCallAction('join',{room:cm[1]})} disabled={callBusy} style={{display:'block',marginTop:8,height:30,padding:'0 16px',borderRadius:999,border:'none',background:isStaff?'#fff':ACCENT,color:isStaff?ACCENT:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Join call</button> : null })()}{msg.attachment_url && <a href={msg.attachment_url} target="_blank" rel="noreferrer" style={{display:'block',marginTop:msg.message?6:0,color:isStaff?'#fff':ACCENT,textDecoration:'underline',fontSize:13}}>📎 {/\.(png|jpe?g|gif|webp)(\?|$)/i.test(msg.attachment_url)?'Photo':'Attachment'}</a>}{!msg.message && !msg.attachment_url && <span style={{opacity:0.7,fontStyle:'italic'}}>(empty message)</span>}</div>
                     <div style={{fontSize:11.5,color:MUTED,marginTop:4,textAlign:isStaff?'right':'left'}}>{label} · {new Date(msg.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
                   </div>
                 )
@@ -534,6 +560,7 @@ export default function Page() {
         </div>
       )}
 
+      {groupCall && <GroupCallModal url={groupCall.url} token={groupCall.token} title={groupCall.title} onLeave={()=>setGroupCall(null)} />}
       {showNewText && <TextModal onClose={()=>setShowNewText(false)} onSent={async (phone)=>{ await loadSmsConnections(); if (activeSmsConnection) await loadSmsConversations(activeSmsConnection); setTab('All'); setFilter('sms') }} />}
       {showNewConvo && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(41,47,76,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }} onClick={e=>e.target===e.currentTarget&&setShowNewConvo(false)}>
