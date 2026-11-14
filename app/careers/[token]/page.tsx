@@ -51,7 +51,7 @@ export default function CareersPage() {
                   <button type="button" key={r.id} onClick={() => setPick(r.id)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', borderRadius: 10, border: `2px solid ${pick === r.id ? BLUE : '#E4E7EC'}`, background: pick === r.id ? '#EAF2FB' : '#fff', cursor: 'pointer', fontFamily: 'inherit', color: NAVY, marginBottom: 10 }}>
                     <div style={{ fontWeight: 700 }}>{r.title}</div>
                     <div style={{ fontSize: 12.5, color: '#667085', marginTop: 2 }}>{[r.category, r.location, r.job_type].filter(Boolean).join(' · ')}</div>
-                    {pick === r.id && r.description && <div style={{ fontSize: 13.5, marginTop: 8, whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>{r.description}</div>}
+                    {pick === r.id && r.description && <RoleText text={r.description} />}
                   </button>))}
               </div>
               {pick && <div style={card}>
@@ -69,6 +69,22 @@ export default function CareersPage() {
               </div>}
             </form>)}
       </div>
+    </div>
+  )
+}
+
+// Shows a role's text: a summary line, then "Responsibilities" and "Requirements" headings with bullet lists.
+function RoleText({ text }: { text: string }) {
+  const blocks: { head?: string; lines: string[] }[] = [{ lines: [] }]
+  text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).forEach(l => {
+    if (/^(responsibilities|requirements)$/i.test(l)) blocks.push({ head: l, lines: [] })
+    else blocks[blocks.length - 1].lines.push(l.replace(/^[-•]\s*/, ''))
+  })
+  return (
+    <div style={{ fontSize: 13.5, marginTop: 8, lineHeight: 1.55 }}>
+      {blocks.map((b, i) => b.head
+        ? <div key={i} style={{ marginTop: 12 }}><div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#16233F' }}>{b.head}</div><ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>{b.lines.map((l, j) => <li key={j}>{l}</li>)}</ul></div>
+        : <div key={i}>{b.lines.join(' ')}</div>)}
     </div>
   )
 }
