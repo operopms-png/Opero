@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const business = await biz(clean(b.token, 40)); if (!business) return J({ error: 'This page is no longer active.' }, { status: 404 })
   const { data: role } = await db.from('job_roles').select('title,category').eq('id', clean(b.role_id, 40)).eq('business_id', business).eq('active', true).maybeSingle()
   if (!role) return J({ error: 'Please choose a role.' }, { status: 400 })
-  const name = clean(b.name, 120), email = clean(b.email, 200).toLowerCase(), phone = clean(b.phone, 40), message = clean(b.message, 3000)
+  const name = clean(b.name, 120), email = clean(b.email, 200).toLowerCase(), phone = clean(b.phone, 40), message = clean(b.message, 3000), where = clean(b.location, 80)
   if (!name) return J({ error: 'Please enter your name.' }, { status: 400 })
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ error: 'Please check your email address.' }, { status: 400 })
   const since = new Date(Date.now() - 600000).toISOString()
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     cv = cvLink(path)
   }
   const mod = MODULE[role.category.toLowerCase()] ?? ''
-  const notes = ['Applied on the careers page', role.category ? `Category: ${role.category}` : null, message ? `Message: ${message}` : null].filter(Boolean).join('\n')
+  const notes = ['Applied on the careers page', role.category ? `Category: ${role.category}` : null, where ? `Location: ${where}` : null, message ? `Message: ${message}` : null].filter(Boolean).join('\n')
   const { error } = await db.from('job_applications').insert({ user_id: business, candidate_name: name, email, phone: phone || null, role_applied: role.title, module: mod, stage: 'Applied', notes, resume_url: cv || null })
   if (error) return J({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   await db.from('crm_contacts').insert({ user_id: business, name, email, phone: phone || null, type: 'applicant', source: 'Careers page', module: mod || 'pm', status: 'prospect', notes: `Applied for: ${role.title}${message ? `\nMessage: ${message}` : ''}${cv ? `\nCV: ${cv}` : ''}` })

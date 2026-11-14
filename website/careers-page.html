@@ -1,312 +1,316 @@
 <!--
 =====================================================================
- NOVOURQ — CAREERS / OPEN POSITIONS PAGE (website)
+ NOVOURQ — CURRENT VACANCIES (website careers page, map style)
 =====================================================================
  HOW TO USE:
  1. In Elementor, open the Career insights page and replace the old
-    HTML widget code with this whole block.
- 2. The roles are NOT typed in here any more. They load live from the
-    NOVOURQ portal (Staff Centre > Human Intelligence Hub > Team >
-    Applications > Open roles & careers link). Add, edit or hide a
-    role there and this page updates by itself.
- 3. Applications go to the NOVOURQ portal (Applications and CRM), with
-    the CV, and the team is emailed. They no longer go to the old
-    Sangsters portal.
+    HTML widget code with this whole block. Press Update, then
+    hard-refresh the page.
+ 2. Roles are NOT typed in here. They load live from the NOVOURQ portal
+    (Staff Centre > Human Intelligence Hub > Team > Applications >
+    Open roles & careers link). Add, edit or hide a role there and this
+    page and its map update by themselves.
+ 3. Where a role is based: in the portal's role form, Location can hold
+    one or more of: United Kingdom, United States, Jamaica (separate
+    with commas). Leave it empty and the role shows in all three.
+ 4. Applications go to the NOVOURQ portal: Applications (with the CV and
+    the location the person picked) and the CRM, and the team is
+    emailed. The applicant gets an automatic thank-you.
 =====================================================================
 -->
 
-<section class="careers">
-  <div class="careers__inner">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-    <nav class="careers__tabs" id="categoryTabs">
-      <button class="tab active" data-category="all">View all</button>
-      <button class="tab" data-category="Estate Agency">Estate agency</button>
-      <button class="tab" data-category="Operations">Operations</button>
-      <button class="tab" data-category="STR & Marketing">STR &amp; marketing</button>
-      <button class="tab" data-category="HR & Recruitment">HR &amp; recruitment</button>
-    </nav>
+<section class="nvq" id="nvq">
+  <header class="nvq-hero"><h1>Current vacancies</h1></header>
 
-    <div class="careers__grid">
-      <div class="careers__list" id="jobList"></div>
-      <div class="careers__detail" id="jobDetail"></div>
+  <div class="nvq-searchbar">
+    <button type="button" class="nvq-search" id="nvqOpen" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <span class="nvq-search__text">
+        <b>Looking for <span id="nvqArea">(Map area)</span></b>
+        <small id="nvqSummary">Business areas &middot; Regions &middot; Job type</small>
+      </span>
+    </button>
+  </div>
+
+  <div class="nvq-filters" id="nvqFilters" hidden>
+    <div class="nvq-filters__group"><h3>Search by title</h3><input type="text" id="nvqQ" placeholder="e.g. Property Manager"></div>
+    <div class="nvq-filters__group"><h3>Business areas</h3><div class="nvq-chips" id="nvqCats"></div></div>
+    <div class="nvq-filters__group"><h3>Regions</h3><div class="nvq-chips" id="nvqRegions"></div></div>
+    <div class="nvq-filters__group"><h3>Job type</h3><div class="nvq-chips" id="nvqTypes"></div></div>
+    <div class="nvq-filters__actions">
+      <button type="button" class="nvq-btn nvq-btn--ghost" id="nvqReset">Reset</button>
+      <button type="button" class="nvq-btn" id="nvqDone">Show jobs</button>
     </div>
+  </div>
 
+  <div class="nvq-mapwrap"><div id="nvqMap" aria-label="Map of our vacancies"></div></div>
+
+  <div class="nvq-count"><b id="nvqCount">0 jobs</b> <span id="nvqOf"></span></div>
+
+  <ul class="nvq-list" id="nvqList"></ul>
+  <div class="nvq-more"><button type="button" class="nvq-btn" id="nvqMore" hidden>Show more</button></div>
+
+  <div class="nvq-about">
+    <h2>About NOVOURQ</h2>
+    <p>NOVOURQ is an AI-run property management and hospitality group. We look after homes, owners and guests across the United Kingdom, the United States and Jamaica, and we hire people who take pride in doing the details well.</p>
+  </div>
+
+  <div class="nvq-modal" id="nvqModal" hidden>
+    <div class="nvq-modal__panel" role="dialog" aria-modal="true" aria-labelledby="nvqRoleTitle">
+      <button type="button" class="nvq-modal__close" id="nvqClose" aria-label="Close">&times;</button>
+      <div id="nvqRole"></div>
+    </div>
   </div>
 </section>
 
 <style>
-  .careers {
-    --navy: #1B2F6E;
-    --navy-dark: #132252;
-    --accent: #2F5597;
-    --text-dark: #1A1A1A;
-    --text-muted: #6B7280;
-    --border: #D9DEE8;
-    --bg-soft: #F3F6FB;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: #FFFFFF;
-    padding: 56px 20px 88px;
-    color: var(--text-dark);
+  .nvq {
+    --navy: #1B2F6E; --ink: #232538; --deep: #0F1C3F; --muted: #5F6578; --line: #E3E6EE; --soft: #F4F6FA; --water: #9ED8E6;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: var(--ink); background: #fff;
+    -webkit-text-size-adjust: 100%; position: relative;
   }
-  .careers__inner { max-width: 1400px; margin: 0 auto; }
-  /* Keep the website theme's pink/red highlight off the tabs and labels */
-  .careers ::selection { background: #DCE4F5; color: #1A1A1A; }
-  .careers__detail ::selection { background: rgba(255,255,255,0.3); color: #FFFFFF; }
-  .careers__tabs, .careers__list { -webkit-user-select: none; user-select: none; }
-  .careers label, .careers button, .careers option { background-color: transparent; text-shadow: none; }
-  .careers__tabs {
-    display: flex; flex-wrap: wrap; gap: 8px 32px; justify-content: center;
-    border-bottom: 1px solid var(--border); margin-bottom: 32px;
-  }
-  .tab {
-    font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase; background: none; border: none; border-radius: 0;
-    padding: 14px 0 12px; color: var(--text-muted); cursor: pointer;
-    border-bottom: 2px solid transparent; margin-bottom: -1px;
-  }
-  .tab:hover { color: var(--navy); }
-  .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
-  .careers__grid { display: grid; grid-template-columns: 0.8fr 1.4fr; gap: 0; border: 1px solid var(--border); }
-  .careers__list { display: flex; flex-direction: column; max-height: 820px; overflow-y: auto; }
-  .job-card {
-    padding: 18px 22px 18px 19px; cursor: pointer; border-bottom: 1px solid var(--border);
-    border-left: 3px solid transparent; background: #FFFFFF; transition: background 0.15s;
-  }
-  .job-card:last-child { border-bottom: none; }
-  .job-card:hover { background: var(--bg-soft); }
-  .job-card.active { background: var(--bg-soft); border-left-color: var(--navy); }
-  .job-card h3 { font-weight: 700; font-size: 16px; margin: 0 0 4px; color: var(--navy); }
-  .job-card .job-location {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--text-muted); margin: 0 0 8px;
-  }
-  .job-card .job-blurb { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0; }
-  .careers__detail { background: var(--navy); color: #FFFFFF; padding: 48px 56px; }
-  .careers__detail-top { padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.25); margin-bottom: 8px; }
-  .careers__detail h2 { font-weight: 700; font-size: 30px; margin: 0 0 6px; color: #FFFFFF; }
-  .careers__detail .job-meta {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-    color: rgba(255,255,255,0.75); margin: 0;
-  }
-  .careers__detail h4 {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    margin: 22px 0 10px; color: #FFFFFF;
-  }
-  .careers__detail ul { margin: 0; padding-left: 18px; }
-  .careers__detail li { font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.92); }
-  .careers__detail .apply-btn {
-    display: inline-block; background: #FFFFFF; color: var(--navy); text-decoration: none;
-    font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; padding: 13px 26px; border-radius: 0; border: 1px solid #FFFFFF;
-    cursor: pointer; transition: background 0.15s, color 0.15s;
-  }
-  .careers__detail .apply-btn:hover { background: var(--bg-soft); }
-  .careers__detail .apply-btn:disabled { opacity: 0.6; cursor: default; }
-  .apply-form { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; width: 100%; }
-  .apply-form input[type="text"], .apply-form input[type="email"], .apply-form input[type="tel"] {
-    font-family: inherit; font-size: 16px; padding: 18px 20px; border-radius: 0; width: 100%; box-sizing: border-box;
-    border: 1px solid #FFFFFF; background: #FFFFFF; color: var(--text-dark);
-  }
-  .apply-form input::placeholder { color: var(--text-muted); }
-  .apply-form input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--navy-dark); }
-  .apply-form .cv-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: rgba(255,255,255,0.85); margin-top: 4px;
-  }
-  .apply-form input[type="file"] {
-    font-family: inherit; font-size: 14px; color: #FFFFFF; padding: 12px 0;
-  }
-  .apply-form .apply-btn { align-self: flex-start; margin-top: 10px; padding: 18px 44px; font-size: 13px; }
-  .apply-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-  .apply-status { font-size: 13px; margin: 6px 0 0; min-height: 16px; color: #FFFFFF; }
-  .apply-status--success { color: #BBF7D0; }
-  .apply-status--error { color: #FECACA; }
-  .careers__empty { text-align: center; color: var(--text-muted); font-size: 14px; padding: 60px 20px; }
-
-  @media (max-width: 900px) {
-    .careers__grid { grid-template-columns: 1fr; }
-    .careers__list { max-height: none; overflow: visible; }
-    .careers__detail { padding: 30px 22px; }
-  }
-  @media (max-width: 520px) {
-    .careers__tabs { gap: 6px 20px; }
+  .nvq *, .nvq *::before, .nvq *::after { box-sizing: border-box; }
+  .nvq :where(h1, h2, h3, h4, p, ul, li) { margin: 0; padding: 0; list-style: none; }
+  .nvq :where(button) { font-family: inherit; cursor: pointer; background: none; border: 0; border-radius: 0; color: inherit; text-transform: none; letter-spacing: normal; box-shadow: none; }
+  .nvq ::selection { background: #DCE4F5; color: #1A1A1A; }
+  .nvq-hero { background: var(--deep); padding: 56px 24px 52px; }
+  .nvq-hero h1 { max-width: 1240px; margin: 0 auto; color: #fff; font-size: clamp(34px, 6vw, 56px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+  .nvq-searchbar { position: sticky; top: 0; z-index: 800; padding: 14px 20px; background: linear-gradient(#fff 70%, rgba(255,255,255,0)); }
+  .nvq-search { display: flex; align-items: center; gap: 18px; width: 100%; max-width: 1240px; margin: 0 auto; padding: 16px 28px; border-radius: 999px; background: #DCEEF4; text-align: left; color: var(--ink); box-shadow: 0 6px 22px rgba(15,28,63,.12); }
+  .nvq-search:hover { background: #D1E8F0; }
+  .nvq-search__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .nvq-search__text b { font-size: 18px; font-weight: 700; }
+  .nvq-search__text small { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nvq-filters { max-width: 1240px; margin: 0 auto 8px; padding: 22px 24px; border: 1px solid var(--line); border-radius: 18px; background: #fff; display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .nvq-filters[hidden], .nvq-modal[hidden], .nvq-more button[hidden] { display: none !important; }
+  .nvq-filters__group h3 { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .nvq-filters input { width: 100%; padding: 14px 16px; font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); }
+  .nvq-filters input:focus { outline: 2px solid var(--navy); outline-offset: 0; }
+  .nvq-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .nvq-chip { padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px; background: #fff; color: var(--ink); -webkit-user-select: none; user-select: none; }
+  .nvq-chip:hover { border-color: var(--navy); }
+  .nvq-chip.on { background: var(--deep); border-color: var(--deep); color: #fff; }
+  .nvq-filters__actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; }
+  .nvq-btn { padding: 15px 30px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 15px; font-weight: 700; }
+  .nvq-btn:hover { background: var(--navy); }
+  .nvq-btn--ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .nvq-btn--ghost:hover { background: var(--soft); }
+  .nvq-mapwrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+  #nvqMap { width: 100%; height: 520px; border-radius: 18px; overflow: hidden; background: var(--water); z-index: 1; }
+  .nvq .leaflet-container { font-family: inherit; background: var(--water); }
+  .nvq-pin { display: flex !important; align-items: center; justify-content: center; border-radius: 50%; background: var(--deep); color: #fff; font-weight: 700; font-size: 17px; border: 5px solid rgba(15,28,63,.28); background-clip: padding-box; transition: transform .15s, background .15s; }
+  .nvq-pin:hover { transform: scale(1.08); }
+  .nvq-pin.on { background: #fff; color: var(--deep); border-color: var(--deep); }
+  .nvq-pinlabel { margin-top: 4px; font-size: 12px; font-weight: 700; color: #3C4257; text-align: center; text-shadow: 0 0 4px #fff, 0 0 4px #fff; white-space: nowrap; }
+  .nvq-count { max-width: 1240px; margin: 34px auto 6px; padding: 0 20px; text-align: center; font-size: 34px; }
+  .nvq-count b { font-weight: 500; }
+  .nvq-count span { font-size: 22px; color: #9AA0B2; }
+  .nvq-list { max-width: 860px; margin: 0 auto; padding: 10px 20px; }
+  .nvq-list li { border-bottom: 1px solid var(--line); padding: 28px 8px; text-align: center; }
+  .nvq-list li:last-child { border-bottom: 0; }
+  .nvq-list .t { font-size: 22px; line-height: 1.25; color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px; text-decoration-color: var(--deep); background: none; padding: 0; text-align: center; }
+  .nvq-list .t:hover { color: var(--navy); }
+  .nvq-list .m { margin-top: 10px; font-size: 16px; color: #3C4257; }
+  .nvq-list .s { margin: 10px auto 0; max-width: 620px; font-size: 14.5px; line-height: 1.6; color: var(--muted); }
+  .nvq-empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 16px; }
+  .nvq-more { text-align: center; padding: 12px 20px 8px; }
+  .nvq-about { max-width: 860px; margin: 56px auto 0; padding: 40px 24px 64px; background: var(--soft); border-radius: 18px; }
+  .nvq-about h2 { font-size: 34px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 16px; }
+  .nvq-about p { font-size: 18px; line-height: 1.65; }
+  .nvq-modal { position: fixed; inset: 0; z-index: 99999; background: rgba(15,28,63,.6); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 4vh 14px; }
+  .nvq-modal__panel { position: relative; width: 100%; max-width: 980px; background: #fff; border-radius: 18px; padding: 52px 56px 56px; margin: auto 0; }
+  .nvq-modal__close { position: absolute; top: 14px; right: 18px; width: 44px; height: 44px; font-size: 34px; line-height: 1; color: var(--muted); }
+  .nvq-role h2 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -.01em; line-height: 1.12; }
+  .nvq-role .m { margin-top: 10px; font-size: 15px; color: var(--muted); }
+  .nvq-role h4 { margin: 28px 0 10px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--navy); }
+  .nvq-role ul { padding-left: 20px; }
+  .nvq-role li { list-style: disc; font-size: 16px; line-height: 1.7; }
+  .nvq-role .sum { margin-top: 20px; font-size: 17px; line-height: 1.65; }
+  .nvq-form { margin-top: 12px; padding: 30px; background: var(--soft); border-radius: 16px; display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+  .nvq-form .full { grid-column: 1 / -1; }
+  .nvq-form label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; background: none; }
+  .nvq-form input[type=text], .nvq-form input[type=email], .nvq-form input[type=tel], .nvq-form select {
+    width: 100%; padding: 18px 18px; font: inherit; font-size: 17px; border: 1px solid #D5D9E4; border-radius: 12px; background: #fff; color: var(--ink); appearance: auto; }
+  .nvq-form input:focus, .nvq-form select:focus { outline: 2px solid var(--navy); outline-offset: 0; }
+  .nvq-form input[type=file] { width: 100%; padding: 14px; font: inherit; font-size: 15px; border: 1px dashed #AEB6CC; border-radius: 12px; background: #fff; }
+  .nvq-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+  .nvq-form .go { padding: 19px 44px; font-size: 16px; }
+  .nvq-form .go:disabled { opacity: .6; cursor: default; }
+  .nvq-status { font-size: 15px; min-height: 20px; }
+  .nvq-status.ok { color: #137A3A; } .nvq-status.err { color: #B42318; }
+  .nvq .leaflet-control-zoom a { color: var(--ink); }
+  @media (max-width: 760px) {
+    .nvq-hero { padding: 40px 20px 36px; }
+    .nvq-search { padding: 14px 20px; gap: 14px; }
+    .nvq-search__text b { font-size: 16px; } .nvq-search__text small { font-size: 13px; }
+    #nvqMap { height: 62vh; min-height: 380px; border-radius: 14px; }
+    .nvq-mapwrap { padding: 0 12px; }
+    .nvq-count { font-size: 28px; } .nvq-count span { font-size: 18px; }
+    .nvq-list .t { font-size: 20px; }
+    .nvq-modal { padding: 0; } .nvq-modal__panel { border-radius: 0; min-height: 100%; padding: 56px 20px 40px; }
+    .nvq-form { grid-template-columns: 1fr; padding: 20px; }
+    .nvq-about { margin: 40px 12px 0; padding: 28px 20px 40px; }
   }
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function () {
-  // Roles load live from the NOVOURQ portal; applications go back to it.
   var API = 'https://app.thenovourq.com/api/public/careers';
   var TOKEN = '09f49b848f8f451c';
+  // The places we hire in. Add one here and in the portal's role form to put another marker on the map.
+  var REGIONS = [
+    { key: 'UK', name: 'United Kingdom', lat: 54.2, lng: -2.6, alias: /^(uk|u\.k\.|united kingdom|great britain|gb|england|scotland|wales|northern ireland|london)$/i },
+    { key: 'US', name: 'United States', lat: 39.5, lng: -98.3, alias: /^(us|u\.s\.|usa|u\.s\.a\.|united states|united states of america|america)$/i },
+    { key: 'JM', name: 'Jamaica', lat: 18.15, lng: -77.3, alias: /^jamaica$/i }
+  ];
+  var JOBS = [], sel = { q: '', cat: '', region: '', type: '' }, shown = 10, STEP = 10;
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
-  var JOBS = [];
-  var activeCategory = 'all';
-  var searchTerm = '';
-  var categoryFilter = '';
-  var typeFilter = '';
-  var perPage = 50;
-  var currentPage = 0;
-  var selectedIndex = 0;
-
-  var listEl = document.getElementById('jobList');
-  var detailEl = document.getElementById('jobDetail');
-  var tabsEl = document.getElementById('categoryTabs');
-
-  function esc(t) {
-    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  function regionsOf(loc) {
+    var out = [];
+    String(loc || '').split(/[,;/|]+/).forEach(function (p) {
+      p = p.trim(); if (!p) return;
+      REGIONS.forEach(function (r) { if (r.alias.test(p) && out.indexOf(r.key) < 0) out.push(r.key); });
     });
+    return out.length ? out : REGIONS.map(function (r) { return r.key; });
   }
-
-  // The portal stores one description: a summary line, then "Responsibilities" and
-  // "Requirements" followed by "- " bullet lines. Split it back into parts.
   function parseRole(r) {
     var blurb = '', resp = [], req = [], mode = 'blurb';
     String(r.description || '').split(/\r?\n/).forEach(function (line) {
-      var l = line.trim();
-      if (!l) return;
+      var l = line.trim(); if (!l) return;
       if (/^responsibilities$/i.test(l)) { mode = 'resp'; return; }
       if (/^requirements$/i.test(l)) { mode = 'req'; return; }
       if (mode === 'blurb') blurb += (blurb ? ' ' : '') + l;
-      else if (mode === 'resp') resp.push(l.replace(/^[-•]\s*/, ''));
-      else req.push(l.replace(/^[-•]\s*/, ''));
+      else (mode === 'resp' ? resp : req).push(l.replace(/^[-•]\s*/, ''));
     });
-    return {
-      id: r.id,
-      title: r.title,
-      location: r.location || '',
-      type: String(r.job_type || '').replace(/\s+/g, '-').replace(/^Full-?time$/i, 'Full-time').replace(/^Part-?time$/i, 'Part-time'),
-      category: r.category || '',
-      blurb: blurb,
-      responsibilities: resp,
-      requirements: req
-    };
+    return { id: r.id, title: r.title, category: r.category || '', type: String(r.job_type || '').trim(), regions: regionsOf(r.location), blurb: blurb, resp: resp, req: req };
+  }
+  var rname = function (k) { return REGIONS.filter(function (r) { return r.key === k; })[0].name; };
+  function matches(j, skip) {
+    return (skip === 'region' || !sel.region || j.regions.indexOf(sel.region) >= 0) &&
+      (skip === 'cat' || !sel.cat || j.category === sel.cat) &&
+      (skip === 'type' || !sel.type || j.type === sel.type) &&
+      (!sel.q || j.title.toLowerCase().indexOf(sel.q.toLowerCase()) >= 0);
   }
 
-  function getFiltered() {
-    return JOBS.filter(function (job) {
-      var matchesTab = activeCategory === 'all' || job.category === activeCategory;
-      var matchesCategory = categoryFilter === '' || job.category === categoryFilter;
-      var matchesType = typeFilter === '' || job.type === typeFilter;
-      var matchesSearch = job.title.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
-      return matchesTab && matchesCategory && matchesType && matchesSearch;
-    });
-  }
-
-  function renderList() {
-    var filtered = getFiltered();
-    var totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-    if (currentPage >= totalPages) currentPage = totalPages - 1;
-    if (currentPage < 0) currentPage = 0;
-
-    var pageItems = filtered.slice(currentPage * perPage, currentPage * perPage + perPage);
-
-    if (pageItems.length === 0) {
-      listEl.innerHTML = '<div class="careers__empty">No roles match your search.</div>';
-      detailEl.innerHTML = '<div class="careers__empty" style="color:#FFFFFF;">Select a role to see details.</div>';
-      return;
-    }
-
-    if (selectedIndex >= pageItems.length) selectedIndex = 0;
-
-    listEl.innerHTML = pageItems.map(function (job, i) {
-      return '<div class="job-card' + (i === selectedIndex ? ' active' : '') + '" data-index="' + i + '">' +
-        '<h3>' + esc(job.title) + '</h3>' +
-        '<p class="job-location">' + esc(job.location || job.category) + '</p>' +
-        '<p class="job-blurb">' + esc(job.blurb) + '</p>' +
-      '</div>';
-    }).join('');
-
-    Array.prototype.forEach.call(listEl.querySelectorAll('.job-card'), function (card) {
-      card.addEventListener('click', function () {
-        selectedIndex = parseInt(card.getAttribute('data-index'), 10);
-        renderList();
-      });
-    });
-
-    renderDetail(pageItems[selectedIndex]);
-  }
-
-  function renderDetail(job) {
-    if (!job) {
-      detailEl.innerHTML = '<div class="careers__empty" style="color:#FFFFFF;">Select a role to see details.</div>';
-      return;
-    }
-    detailEl.innerHTML =
-      '<div class="careers__detail-top">' +
-        '<div>' +
-          '<h2>' + esc(job.title) + '</h2>' +
-          '<p class="job-meta">' + [job.location || job.category, job.type].filter(Boolean).map(esc).join(' &middot; ') + '</p>' +
-        '</div>' +
-      '</div>' +
-      '<h4>Responsibilities</h4>' +
-      '<ul>' + job.responsibilities.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
-      '<h4>Requirements</h4>' +
-      '<ul>' + job.requirements.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
-      '<h4>Apply for this role</h4>' +
-      '<form class="apply-form" id="applyForm">' +
-        '<input type="text" name="name" placeholder="Full name" required>' +
-        '<input type="email" name="email" placeholder="Email address" required>' +
-        '<input type="tel" name="phone" placeholder="Phone number">' +
-        '<label class="cv-label" for="cvFile">Upload your CV (PDF or Word, optional)</label>' +
-        '<input type="file" id="cvFile" name="cv" accept=".pdf,.doc,.docx">' +
-        '<input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-        '<button type="submit" class="apply-btn">Submit application</button>' +
-        '<p class="apply-status" id="applyStatus"></p>' +
-      '</form>';
-
-    var form = document.getElementById('applyForm');
-    var status = document.getElementById('applyStatus');
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      status.textContent = 'Submitting...';
-      status.className = 'apply-status';
-
-      var btn = form.querySelector('button[type="submit"]');
-      btn.disabled = true;
-
-      var fd = new FormData(form);
-      fd.append('token', TOKEN);
-      fd.append('role_id', job.id);
-
-      fetch(API, { method: 'POST', body: fd })
-        .then(function (res) {
-          return res.json().then(function (d) {
-            if (!res.ok || d.error) throw new Error(d.error || 'Request failed');
-            status.textContent = 'Application submitted. We will be in touch.';
-            status.className = 'apply-status apply-status--success';
-            form.reset();
-          });
-        })
-        .catch(function (err) {
-          var msg = err && err.message && err.message !== 'Request failed' && err.message.indexOf('JSON') === -1 ? err.message : 'Something went wrong. Please try again or email us directly.';
-          status.textContent = msg;
-          status.className = 'apply-status apply-status--error';
-        })
-        .then(function () { btn.disabled = false; });
-    });
-  }
-
-  tabsEl.addEventListener('click', function (e) {
-    if (!e.target.classList.contains('tab')) return;
-    Array.prototype.forEach.call(tabsEl.querySelectorAll('.tab'), function (t) { t.classList.remove('active'); });
-    e.target.classList.add('active');
-    activeCategory = e.target.getAttribute('data-category');
-    currentPage = 0;
-    selectedIndex = 0;
-    renderList();
+  // ---- map ----
+  var map = L.map('nvqMap', { zoomControl: true, scrollWheelZoom: false, minZoom: 2, maxZoom: 8, worldCopyJump: false, attributionControl: true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+  var home = L.latLngBounds([[14, -112], [59, 4]]);
+  function fit() { if (window.innerWidth < 760) map.setView([36, -44], 2); else map.fitBounds(home, { padding: [30, 40] }); }
+  fit();
+  map.once('click', function () { map.scrollWheelZoom.enable(); });
+  var pins = {};
+  REGIONS.forEach(function (r) {
+    var m = L.marker([r.lat, r.lng], { keyboard: true, title: r.name }).addTo(map);
+    m.on('click', function () { sel.region = sel.region === r.key ? '' : r.key; shown = STEP; if (sel.region) map.flyTo([r.lat, r.lng], r.key === 'JM' ? 6 : (r.key === 'UK' ? 5 : 4), { duration: .7 }); else map.flyToBounds(home, { padding: [30, 30], duration: .7 }); render(); });
+    pins[r.key] = m;
   });
-
-  // Load the open roles from the portal
-  fetch(API + '?t=' + encodeURIComponent(TOKEN))
-    .then(function (res) { return res.json(); })
-    .then(function (d) {
-      JOBS = (d && d.roles ? d.roles : []).map(parseRole);
-      renderList();
-    })
-    .catch(function () {
-      listEl.innerHTML = '<div class="careers__empty">Roles could not be loaded right now. Please try again shortly.</div>';
+  function drawPins() {
+    REGIONS.forEach(function (r) {
+      var n = JOBS.filter(function (j) { return j.regions.indexOf(r.key) >= 0 && matches(j, 'region'); }).length;
+      var size = (window.innerWidth < 760 ? 44 : 54) + Math.min(16, n * 2);
+      pins[r.key].setIcon(L.divIcon({ className: '', iconSize: [size, size + 22], iconAnchor: [size / 2, size / 2],
+        html: '<div class="nvq-pin' + (sel.region === r.key ? ' on' : '') + '" style="width:' + size + 'px;height:' + size + 'px">' + n + '</div><div class="nvq-pinlabel">' + esc(r.name) + '</div>' }));
+      pins[r.key].setOpacity(n || sel.region === r.key ? 1 : 0.45);
     });
+  }
+
+  // ---- filters ----
+  function chips(el, items, key, all) {
+    el.innerHTML = '';
+    items.forEach(function (it) {
+      var b = document.createElement('button'); b.type = 'button';
+      b.className = 'nvq-chip' + (sel[key] === it.v ? ' on' : ''); b.textContent = it.l;
+      b.addEventListener('click', function () { sel[key] = sel[key] === it.v ? '' : it.v; shown = STEP; render(); });
+      el.appendChild(b);
+    });
+  }
+  function uniq(arr) { return arr.filter(function (v, i) { return v && arr.indexOf(v) === i; }).sort(); }
+  function summary() {
+    var parts = [];
+    if (sel.cat) parts.push(sel.cat); if (sel.region) parts.push(rname(sel.region)); if (sel.type) parts.push(sel.type); if (sel.q) parts.push('“' + sel.q + '”');
+    $('nvqSummary').textContent = parts.length ? parts.join(' · ') : 'Business areas · Regions · Job type';
+    $('nvqArea').textContent = sel.region ? '(' + rname(sel.region) + ')' : '(Map area)';
+  }
+
+  function render() {
+    var list = JOBS.filter(function (j) { return matches(j); });
+    chips($('nvqCats'), uniq(JOBS.map(function (j) { return j.category; })).map(function (c) { return { v: c, l: c }; }), 'cat');
+    chips($('nvqRegions'), REGIONS.map(function (r) { return { v: r.key, l: r.name }; }), 'region');
+    chips($('nvqTypes'), uniq(JOBS.map(function (j) { return j.type; })).map(function (c) { return { v: c, l: c }; }), 'type');
+    summary(); drawPins();
+    $('nvqCount').textContent = list.length + (list.length === 1 ? ' job' : ' jobs');
+    $('nvqOf').textContent = '(out of ' + JOBS.length + ')';
+    var ul = $('nvqList');
+    if (!list.length) { ul.innerHTML = '<li class="nvq-empty">No roles match. Try clearing a filter.</li>'; $('nvqMore').hidden = true; return; }
+    ul.innerHTML = list.slice(0, shown).map(function (j) {
+      var where = sel.region ? rname(sel.region) : j.regions.map(rname).join(' · ');
+      return '<li><button type="button" class="t" data-id="' + esc(j.id) + '">' + esc(j.title) + '</button>' +
+        '<p class="m">' + esc([j.category, where].filter(Boolean).join(' · ')) + '</p>' +
+        (j.blurb ? '<p class="s">' + esc(j.blurb) + '</p>' : '') + '</li>';
+    }).join('');
+    var left = list.length - shown;
+    $('nvqMore').hidden = left <= 0; $('nvqMore').textContent = 'Show ' + Math.min(STEP, Math.max(left, 0)) + ' more';
+  }
+
+  $('nvqOpen').addEventListener('click', function () { var f = $('nvqFilters'); f.hidden = !f.hidden; $('nvqOpen').setAttribute('aria-expanded', String(!f.hidden)); });
+  $('nvqDone').addEventListener('click', function () { $('nvqFilters').hidden = true; $('nvqOpen').setAttribute('aria-expanded', 'false'); $('nvqCount').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('nvqReset').addEventListener('click', function () { sel = { q: '', cat: '', region: '', type: '' }; $('nvqQ').value = ''; shown = STEP; fit(); render(); });
+  $('nvqQ').addEventListener('input', function (e) { sel.q = e.target.value; shown = STEP; render(); });
+  $('nvqMore').addEventListener('click', function () { shown += STEP; render(); });
+  $('nvqList').addEventListener('click', function (e) { var b = e.target.closest('.t'); if (b) openRole(b.getAttribute('data-id')); });
+
+  // ---- role + application ----
+  function openRole(id) {
+    var j = JOBS.filter(function (x) { return x.id === id; })[0]; if (!j) return;
+    var regs = sel.region && j.regions.indexOf(sel.region) >= 0 ? [sel.region] : j.regions;
+    $('nvqRole').innerHTML = '<div class="nvq-role"><h2 id="nvqRoleTitle">' + esc(j.title) + '</h2>' +
+      '<p class="m">' + esc([j.category, j.type, j.regions.map(rname).join(' · ')].filter(Boolean).join('  ·  ')) + '</p>' +
+      (j.blurb ? '<p class="sum">' + esc(j.blurb) + '</p>' : '') +
+      (j.resp.length ? '<h4>Responsibilities</h4><ul>' + j.resp.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+      (j.req.length ? '<h4>Requirements</h4><ul>' + j.req.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+      '<h4>Apply for this role</h4>' +
+      '<form class="nvq-form" id="nvqForm">' +
+        '<div><label for="fName">Full name</label><input type="text" id="fName" name="name" required></div>' +
+        '<div><label for="fEmail">Email address</label><input type="email" id="fEmail" name="email" required></div>' +
+        '<div><label for="fPhone">Phone number</label><input type="tel" id="fPhone" name="phone"></div>' +
+        '<div><label for="fLoc">Where would you work?</label><select id="fLoc" name="location">' + j.regions.map(function (k) { return '<option value="' + esc(rname(k)) + '"' + (regs.indexOf(k) >= 0 && regs[0] === k ? ' selected' : '') + '>' + esc(rname(k)) + '</option>'; }).join('') + '</select></div>' +
+        '<div class="full"><label for="fCv">Upload your CV (PDF or Word, optional)</label><input type="file" id="fCv" name="cv" accept=".pdf,.doc,.docx"></div>' +
+        '<input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+        '<div class="full"><button type="submit" class="nvq-btn go">Submit application</button></div>' +
+        '<p class="nvq-status full" id="nvqStatus" role="status"></p>' +
+      '</form></div>';
+    $('nvqModal').hidden = false; document.documentElement.style.overflow = 'hidden';
+    var form = $('nvqForm'), st = $('nvqStatus');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); st.className = 'nvq-status full'; st.textContent = 'Submitting…';
+      var btn = form.querySelector('.go'); btn.disabled = true;
+      var fd = new FormData(form); fd.append('token', TOKEN); fd.append('role_id', j.id);
+      fetch(API, { method: 'POST', body: fd }).then(function (res) {
+        return res.json().then(function (d) {
+          if (!res.ok || d.error) throw new Error(d.error || 'Request failed');
+          st.className = 'nvq-status full ok'; st.textContent = 'Thank you. Your application has been received and we will be in touch.'; form.reset();
+        });
+      }).catch(function (err) {
+        st.className = 'nvq-status full err';
+        st.textContent = err && err.message && err.message !== 'Request failed' && err.message.indexOf('JSON') < 0 ? err.message : 'Something went wrong. Please try again in a moment.';
+      }).then(function () { btn.disabled = false; });
+    });
+  }
+  function closeRole() { $('nvqModal').hidden = true; document.documentElement.style.overflow = ''; }
+  $('nvqClose').addEventListener('click', closeRole);
+  $('nvqModal').addEventListener('click', function (e) { if (e.target === $('nvqModal')) closeRole(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeRole(); });
+
+  // ---- load roles from the portal ----
+  fetch(API + '?t=' + encodeURIComponent(TOKEN)).then(function (r) { return r.json(); }).then(function (d) {
+    JOBS = (d && d.roles ? d.roles : []).map(parseRole); render(); setTimeout(function () { map.invalidateSize(); fit(); }, 200);
+  }).catch(function () { $('nvqList').innerHTML = '<li class="nvq-empty">Roles could not be loaded right now. Please try again shortly.</li>'; });
+  window.addEventListener('resize', function () { map.invalidateSize(); });
 })();
 </script>
