@@ -141,6 +141,8 @@
   .nvq-status { font-size: 15px; min-height: 20px; }
   .nvq-status.ok { color: #137A3A; } .nvq-status.err { color: #B42318; }
   .nvq .leaflet-control-zoom a { color: var(--ink); }
+  .nvq .leaflet-tooltip.nvq-cl { background: none; border: 0; box-shadow: none; color: #9AA1B0; font: 700 11px 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: .08em; pointer-events: none; }
+  .nvq .leaflet-tooltip.nvq-cl::before { display: none; }
   @media (max-width: 760px) {
     .nvq-hero { padding: 40px 20px 36px; }
     .nvq-search { padding: 14px 20px; gap: 14px; }
@@ -199,7 +201,28 @@
 
   // ---- map ----
   var map = L.map('nvqMap', { zoomControl: true, scrollWheelZoom: false, minZoom: 2, maxZoom: 8, worldCopyJump: false, attributionControl: true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+  var baseTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+  // Back-up map: country shapes drawn by the page itself. If the map pictures above cannot load
+  // (blocked or slow), the map still shows the world instead of an empty box.
+  map.createPane('land'); map.getPane('land').style.zIndex = 150;
+  var LABELS = ['France', 'Germany', 'Spain', 'Italy', 'Canada', 'Mexico', 'Brazil', 'Morocco', 'Norway', 'Sweden', 'Poland', 'Colombia', 'Venezuela'];
+  var landLayer = null, labelsOn = false;
+  function showLabels() {
+    if (labelsOn || !landLayer) return; labelsOn = true;
+    landLayer.eachLayer(function (l) {
+      var n = l.feature && l.feature.properties && l.feature.properties.name;
+      if (LABELS.indexOf(n) >= 0) l.bindTooltip(n.toUpperCase(), { permanent: true, direction: 'center', className: 'nvq-cl', pane: 'land' }).openTooltip();
+    });
+  }
+  function addLand() {
+    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(function (r) { return r.json(); }).then(function (t) {
+      landLayer = L.geoJSON(window.topojson.feature(t, t.objects.countries), { pane: 'land', interactive: false, style: { fillColor: '#F3EEDC', fillOpacity: 1, color: '#B4BCC8', weight: 1 } }).addTo(map);
+      if (tilesFailed) showLabels();
+    }).catch(function () {});
+  }
+  var tilesFailed = false;
+  baseTiles.on('tileerror', function () { if (!tilesFailed) { tilesFailed = true; showLabels(); } });
+  var ts = document.createElement('script'); ts.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js'; ts.onload = addLand; document.head.appendChild(ts);
   var home = L.latLngBounds([[14, -112], [59, 4]]);
   function fit() { if (window.innerWidth < 760) map.setView([36, -44], 2); else map.fitBounds(home, { padding: [30, 40] }); }
   fit();
