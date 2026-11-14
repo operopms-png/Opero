@@ -40,12 +40,14 @@ function LongText({ title, value, onSave, placeholder, disabled }: { title: stri
 }
 
 // Applications: generated Acceptance / Decline / Interview messages for the open candidate. Opens in the user's own email app, or copy.
-export function ApplicantReply({ row, onStage }: { row: any; onStage: (s: string) => void }) {
-  const [kind, setKind] = useState<AppReply>('decline')
+export function ApplicantReply({ row, onStage, initialKind = 'decline' }: { row: any; onStage: (s: string) => void; initialKind?: AppReply }) {
+  const [kind, setKind] = useState<AppReply>(initialKind)
   const gen = applicationReply(kind, row.candidate_name ?? '', row.role_applied ?? '')
   const [subject, setSubject] = useState(gen.subject)
   const [body, setBody] = useState(gen.body)
   const [done, setDone] = useState('')
+  const [sending, setSending] = useState(false)
+  const [err, setErr] = useState('')
   const pick = (k: AppReply) => { const g = applicationReply(k, row.candidate_name ?? '', row.role_applied ?? ''); setKind(k); setSubject(g.subject); setBody(g.body); setDone('') }
   const stageFor: Record<AppReply, string> = { accept: 'Offered', decline: 'Rejected', interview: 'Interviewing' }
   const b = { border: '1px solid #D0D4E4', background: '#fff', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' } as const
@@ -58,14 +60,85 @@ export function ApplicantReply({ row, onStage }: { row: any; onStage: (s: string
       <input value={subject} onChange={e => setSubject(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', padding: 8, border: '1px solid #D0D4E4', borderRadius: 6, marginBottom: 8, fontFamily: 'inherit' }} />
       <textarea value={body} onChange={e => setBody(e.target.value)} rows={10} style={{ width: '100%', boxSizing: 'border-box', padding: 8, border: '1px solid #D0D4E4', borderRadius: 6, fontFamily: 'inherit', fontSize: 13.5 }} />
       <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {row.email && <button disabled={sending} style={{ ...b, background: '#0B1F3A', color: '#fff', borderColor: '#0B1F3A' }} onClick={async () => {
+          if (!confirm(`Send this ${APP_REPLY_LABEL[kind].toLowerCase()} message to ${row.email}?`)) return
+          setSending(true); setErr(''); setDone('')
+          try {
+            const r = await fetch('/api/applications/reply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: row.id, subject, body }) })
+            const j = await r.json().catch(() => ({}))
+            if (!r.ok) setErr(j.error || 'Could not send')
+            else { onStage(stageFor[kind]); setDone(`Sent from ${j.from}`) }
+          } catch { setErr('Could not send') }
+          setSending(false)
+        }}>{sending ? 'Sending...' : 'Send to ' + row.email}</button>}
         {row.email
           ? <a href={`mailto:${row.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`} style={{ ...b, textDecoration: 'none', color: '#0B1F3A' }}>Open in my email</a>
           : <span style={{ fontSize: 12, color: '#DF2F4A' }}>Add the candidate's email first.</span>}
         <button style={b} onClick={async () => { try { await navigator.clipboard.writeText(`${subject}\n\n${body}`); setDone('Copied') } catch { setDone('Copy failed') } }}>Copy</button>
         <button style={b} onClick={() => { onStage(stageFor[kind]); setDone(`Stage set to ${stageFor[kind]}`) }}>Set stage to {stageFor[kind]}</button>
         {done && <span style={{ fontSize: 12, color: '#037F4C' }}>{done}</span>}
+        {err && <span style={{ fontSize: 12, color: '#DF2F4A' }}>{err}</span>}
       </div>
-      <div style={{ fontSize: 12, color: '#676879', marginTop: 8 }}>Nothing is sent from here. Edit the wording, then open it in your email and press Send.</div>
+      <div style={{ fontSize: 12, color: '#676879', marginTop: 8 }}>Goes to the email the applicant applied with, from your company's applicants mailbox (Email, Mailbox settings, Applicants). Nothing is sent until you press Send. Edit the wording first if you like.</div>
+    </div>
+  )
+}
+
+// Applications: AI opinion on the CV plus the human decision. Choosing an option sets the stage and opens the matching message.
+const DECISIONS: { kind: AppReply; label: string; stage: string }[] = [
+  { kind: 'interview', label: 'Invite to interview', stage: 'Interviewing' },
+  { kind: 'accept', label: 'Make an offer', stage: 'Offered' },
+  { kind: 'decline', label: 'Decline', stage: 'Rejected' },
+]
+const VERDICT_COLOR: Record<string, string> = { 'Strong fit': '#00A66B', Possible: '#E8A200', 'Not a fit': '#DF2F4A' }
+export function ApplicantDecision({ row, save }: { row: any; save: (p: Record<string, any>) => void }) {
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const [open, setOpen] = useState<AppReply | null>(null)
+  const b = { border: '1px solid #D0D4E4', background: '#fff', borderRadius: 6, padding: '7px 13px', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' } as const
+  const run = async () => {
+    setBusy(true); setErr('')
+    try {
+      const r = await fetch('/api/applications/screen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: row.id }) })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) setErr(j.error || 'Could not review this CV')
+      else save({ ai_score: j.ai_score, ai_verdict: j.ai_verdict, ai_reasons: j.ai_reasons, ai_concerns: j.ai_concerns, ai_reviewed_at: j.ai_reviewed_at })
+    } catch { setErr('Could not review this CV') }
+    setBusy(false)
+  }
+  const choose = (d: typeof DECISIONS[number]) => {
+    const v = row.ai_verdict
+    const agreed = !v || v === 'Possible' ? null : (v === 'Not a fit') === (d.kind === 'decline')
+    save({ decision: d.kind, decision_by: 'staff', decision_at: new Date().toISOString(), ai_agreed: agreed, stage: d.stage })
+    setOpen(d.kind)
+  }
+  const lines = (t: string) => String(t || '').split('\n').filter(Boolean)
+  const hasAi = row.ai_verdict
+  const overrode = row.decision && row.ai_agreed === false
+  return (
+    <div style={{ margin: '14px 0' }}>
+      <div style={{ border: '1px solid #E6E9EF', borderRadius: 8, padding: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: hasAi ? 8 : 0 }}>
+          <div style={{ fontWeight: 600 }}>AI opinion on the CV</div>
+          {hasAi && <span style={{ background: VERDICT_COLOR[row.ai_verdict] || '#999', color: '#fff', borderRadius: 12, padding: '2px 10px', fontSize: 12.5, fontWeight: 600 }}>{row.ai_verdict} · {row.ai_score}/100</span>}
+          <button disabled={busy || !row.resume_url} onClick={run} style={{ ...b, marginLeft: 'auto', padding: '5px 11px' }}>{busy ? 'Reading the CV...' : hasAi ? 'Review again' : 'Run AI review'}</button>
+        </div>
+        {!row.resume_url && <div style={{ fontSize: 12.5, color: '#676879', marginTop: 6 }}>No CV was attached, so there is nothing for the AI to read. Decide from the application.</div>}
+        {err && <div style={{ fontSize: 12.5, color: '#DF2F4A', marginTop: 6 }}>{err}</div>}
+        {hasAi && <div style={{ fontSize: 13, lineHeight: 1.5 }}>
+          {lines(row.ai_reasons).map((x, i) => <div key={i}>+ {x}</div>)}
+          {lines(row.ai_concerns).map((x, i) => <div key={i} style={{ color: '#8A6100' }}>? {x}</div>)}
+        </div>}
+        <div style={{ fontSize: 11.5, color: '#676879', marginTop: 8 }}>The AI only advises, using skills and experience from the CV. A person makes every decision.</div>
+      </div>
+      <div style={{ border: '1px solid #E6E9EF', borderRadius: 8, padding: 14, marginTop: 10 }}>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>Your decision</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {DECISIONS.map(d => <button key={d.kind} onClick={() => choose(d)} style={{ ...b, ...(row.decision === d.kind ? { background: '#0B1F3A', color: '#fff', borderColor: '#0B1F3A' } : {}) }}>{d.label}</button>)}
+        </div>
+        {row.decision && <div style={{ fontSize: 12, color: '#676879', marginTop: 8 }}>Stage: {row.stage}.{overrode ? ' You went against the AI opinion; that is recorded.' : ''}{row.decision_at ? ' Decided ' + new Date(row.decision_at).toLocaleDateString('en-GB') + '.' : ''}</div>}
+      </div>
+      {open && <ApplicantReply key={open} row={row} initialKind={open} onStage={st => save({ stage: st })} />}
     </div>
   )
 }
@@ -159,7 +232,7 @@ export default function MkPanel({ mk, board, id, onClose, onOpenOther }: { mk: M
               ))}
             </div>
             {board.cols.filter(c => c.type === 'longtext').map(c => <LongText key={c.key} disabled={c.readonlyWhen?.(row)} title={c.title} value={row[c.key] ?? ''} onSave={v => save({ [c.key]: v || null })} placeholder={board.key === 'campaigns' ? "Goals, budget breakdown, who it's aimed at…" : 'Add notes…'} />)}
-            {board.key === 'applications' && <ApplicantReply row={row} onStage={st => save({ stage: st })} />}
+            {board.key === 'applications' && <ApplicantDecision row={row} save={save} />}
             {(isEmail || isTpl) && (
               <div>
                 {isTpl && <div style={{ marginBottom: 14 }}>

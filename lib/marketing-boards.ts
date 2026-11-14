@@ -189,6 +189,9 @@ export const APPLICATIONS_BOARD: MkBoard = {
       { value: '', label: 'General / Other', color: '#C4C4C4' },
       { value: 'str', label: 'Vacation Rentals', color: '#89CFF0' }, { value: 'pm', label: 'Property Management', color: '#579BFC' },
       { value: 'estate', label: 'Estate Agency', color: '#00C875' }, { value: 'dev', label: 'Developments', color: '#9D50DD' }] },
+    { key: 'ai_verdict', title: 'AI opinion', type: 'status', width: 130, options: [
+      { value: 'Strong fit', color: '#00C875' }, { value: 'Possible', color: '#FDAB3D' }, { value: 'Not a fit', color: '#DF2F4A' }] },
+    { key: 'ai_score', title: 'AI score', type: 'number', width: 90, hideInTable: false },
     { key: 'email', title: 'Email', type: 'email', width: 210 },
     { key: 'phone', title: 'Phone', type: 'phone', width: 140 },
     { key: 'interview_at', title: 'Interview', type: 'datetime', width: 160 },

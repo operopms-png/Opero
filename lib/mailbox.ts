@@ -63,7 +63,7 @@ export function canAccess(mb: any, c: Caller) {
   return !!c.role && (mb.access_teams ?? []).map((x: string) => x.toLowerCase()).includes(c.role.toLowerCase())
 }
 
-export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,access_teams,use_for_marketing,ai_mode,kind,auth_type,created_at'
+export const PUBLIC_COLS = 'id,user_id,email,display_name,imap_host,imap_port,smtp_host,smtp_port,username,status,last_error,last_synced_at,access,access_teams,use_for_marketing,use_for_applicants,ai_mode,kind,auth_type,created_at'
 
 // ---------- connections ----------
 // The second argument is the mailbox password, or for a mailbox signed in with Google or Microsoft a short-lived access token.

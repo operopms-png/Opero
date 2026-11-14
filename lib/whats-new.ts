@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-14', title: 'AI CV review and decisions', text: 'Open a candidate, press Run AI review for an opinion on their CV, then choose Invite, Offer or Decline to open the matching message and send it from your applicants mailbox.' },
   { date: '2026-11-14', title: 'Website careers page uses the portal', text: 'The thenovourq.com careers page now loads its roles from Open roles and sends applications, with CV, into Applications.' },
   { date: '2026-11-14', title: 'New applicants on the Dashboard', text: 'The Dashboard now lists new applicants with a Reply button for ready-made acceptance, decline and interview messages.' },
   { date: '2026-11-14', title: 'Novourq Cloud AI on every page', text: 'The Novourq Cloud AI box now sits at the bottom of every page, so you can ask a question wherever you are.' },

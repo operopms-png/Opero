@@ -146,6 +146,8 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(body.access)) patch.access = body.access.map((x: string) => String(x).toLowerCase())
     if (Array.isArray(body.access_teams)) patch.access_teams = body.access_teams.map((x: string) => String(x))
     if (body.use_for_marketing !== undefined) patch.use_for_marketing = !!body.use_for_marketing
+    // Only one mailbox sends applicant replies (acceptance, decline, interview)
+    if (body.use_for_applicants !== undefined) { patch.use_for_applicants = !!body.use_for_applicants; if (body.use_for_applicants) await serviceClient.from('mailboxes').update({ use_for_applicants: false }).eq('user_id', c.businessId).neq('id', body.id) }
     if (body.kind === 'staff' || body.kind === 'shared') patch.kind = body.kind
     if (body.kind === 'private') { patch.kind = 'private'; if (!Array.isArray(body.access) || !body.access.length) patch.access = [c.email] }
     if (['off', 'draft', 'auto'].includes(body.ai_mode)) patch.ai_mode = body.ai_mode

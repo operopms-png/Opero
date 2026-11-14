@@ -515,7 +515,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
   const [editing, setEditing] = useState<string | null>(null)
   const [nameDraft, setNameDraft] = useState('')
   const act = async (body: any, ok?: string) => { try { await api('', body); if (ok) flash(ok); await reload() } catch (e: any) { flash(e.message) } }
-  const cols = 'minmax(220px,1.4fr) 150px 110px 130px minmax(150px,1fr) 90px 120px 180px'
+  const cols = 'minmax(220px,1.4fr) 150px 110px 130px minmax(150px,1fr) 90px 100px 120px 180px'
   return (
     <div style={{ flex: 1, minWidth: 0, overflow: 'auto' }}>
       <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
@@ -540,7 +540,7 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
         <div style={{ overflowX: 'auto' }}>
           <div style={{ minWidth: 1150 }}>
             <div style={{ display: 'grid', gridTemplateColumns: cols, borderLeft: '6px solid ' + C.gold, borderTop: '1px solid ' + C.row, borderRight: '1px solid ' + C.row, fontSize: 13, color: C.muted }}>
-              {['Address', 'Shown as', 'Type', 'Status', 'Who can see it', 'Marketing', 'AI replies', ''].map((h, i) => <div key={i} style={{ padding: '8px 10px', borderLeft: i ? '1px solid ' + C.row : 'none', borderBottom: '1px solid ' + C.row, textAlign: i ? 'center' : 'left' }}>{h}</div>)}
+              {['Address', 'Shown as', 'Type', 'Status', 'Who can see it', 'Marketing', 'Applicants', 'AI replies', ''].map((h, i) => <div key={i} style={{ padding: '8px 10px', borderLeft: i ? '1px solid ' + C.row : 'none', borderBottom: '1px solid ' + C.row, textAlign: i ? 'center' : 'left' }}>{h}</div>)}
             </div>
             {boxes.map((b: any) => (
               <div key={b.id} style={{ display: 'grid', gridTemplateColumns: cols, borderLeft: '6px solid ' + C.gold, borderRight: '1px solid ' + C.row, fontSize: 14 }}>
@@ -567,6 +567,9 @@ function Settings({ boxes, team, onConnect, onAccess, reload, flash, templates, 
                   {(b.access_teams ?? []).map((r: string) => <span key={'t' + r} style={{ background: C.cream, border: '1px solid ' + C.creamLine, color: C.brown, borderRadius: 10, padding: '1px 7px' }}>{r}</span>)}
                   {(b.access ?? []).map((e: string) => { const t = team.find((x: any) => x.email?.toLowerCase() === e); return <span key={e} style={{ background: C.hover, border: '1px solid ' + C.row, borderRadius: 10, padding: '1px 7px' }}>{t?.name || e}</span> })}
                   <span style={{ color: C.goldDark }}>+</span>
+                </div>
+                <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Pill width={60} color={b.use_for_applicants ? C.green : C.grey} onClick={() => act({ action: 'update', id: b.id, use_for_applicants: !b.use_for_applicants })} title="Send replies to job applicants (acceptance, decline, interview) from this address. Only one mailbox can do this.">{b.use_for_applicants ? 'Yes' : 'No'}</Pill>
                 </div>
                 <div style={{ padding: '6px 10px', borderLeft: '1px solid ' + C.row, borderBottom: '1px solid ' + C.row, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Pill width={60} color={b.use_for_marketing ? C.green : C.grey} onClick={() => act({ action: 'update', id: b.id, use_for_marketing: !b.use_for_marketing })} title="Can Marketing send from this address?">{b.use_for_marketing ? 'Yes' : 'No'}</Pill>
