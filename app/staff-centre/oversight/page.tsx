@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import DashboardApplicants from '../../../components/applications/DashboardApplicants'
+import DashboardWorkHours from '../../../components/work/DashboardWorkHours'
 import GrokPanel from '../../../components/GrokPanel'
 import DashboardAiPanel from '../../../components/ai/DashboardAiPanel'
 import PortfolioPerformancePanel from '../../../components/ai/PortfolioPerformancePanel'
@@ -190,7 +191,10 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      <DashboardApplicants />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(380px,1fr))', gap: 16, margin: '0 30px 24px', alignItems: 'start' }}>
+        <DashboardApplicants />
+        <DashboardWorkHours />
+      </div>
       <GrokPanel />
     </div>
   )

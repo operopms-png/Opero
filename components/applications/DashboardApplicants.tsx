@@ -18,7 +18,7 @@ export default function DashboardApplicants() {
   useEffect(() => { load() }, [])
   const setStage = async (id: string, stage: string) => { await supabase.from('job_applications').update({ stage }).eq('id', id); setTimeout(load, 800) }
   return (
-    <div style={{ margin: '0 30px 24px', background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '18px 20px' }}>
+    <div style={{ margin: 0, minWidth: 0, background: '#fff', border: '1px solid #E4E7EC', borderRadius: 12, padding: '18px 20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div><div style={{ fontSize: 14.5, fontWeight: 700, color: '#16233F' }}>New applicants</div><div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>Reply with a ready-made acceptance, decline or interview message</div></div>
         <Link href="/staff-centre/applications" style={{ fontSize: 12.5, fontWeight: 600, color: '#2F6DB5', textDecoration: 'none' }}>Open Applications →</Link>

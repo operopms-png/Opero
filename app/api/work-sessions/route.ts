@@ -41,11 +41,14 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-// GET ?from=YYYY-MM-DD&to=YYYY-MM-DD: admins see everyone in their company.
+// GET ?from=YYYY-MM-DD&to=YYYY-MM-DD: the account owner, and staff the owner has chosen, see everyone in the company.
 export async function GET(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
-  if (!c.isAdmin) return NextResponse.json({ error: 'Only admins can see work hours' }, { status: 403 })
+  if (c.uid !== c.businessId) {
+    const { count } = await serviceClient.from('work_hours_viewers').select('email', { count: 'exact', head: true }).eq('business_id', c.businessId).eq('email', c.email)
+    if (!count) return NextResponse.json({ error: 'Work hours are only shown to the account owner and anyone they choose' }, { status: 403 })
+  }
   const u = new URL(req.url)
   const from = u.searchParams.get('from') || new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)
   const to = u.searchParams.get('to') || new Date().toISOString().slice(0, 10)

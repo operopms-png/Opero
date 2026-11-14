@@ -48,7 +48,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/performance': { title: 'Staff Performance', text: 'How each team member is doing: tasks finished, response times and targets.' },
   '/staff-centre/website-chats': { title: 'Website Chats', text: 'Conversations from your website. Novourq Cloud AI answers visitors, books viewings and saves leads.' },
   '/staff-centre/ask-grok': { title: 'Novourq Cloud AI', text: 'Ask Novourq Cloud AI anything about your business. It answers from your own records.' },
-  '/staff-centre/work-hours': { title: 'Work Hours', text: 'When each person signed in, how long they were on the portal and when they signed out, with the pages they used. Admins only. Download the CSV for payroll.' },
+  '/staff-centre/work-hours': { title: 'Work Hours', text: 'When each person signed in, how long they were on the portal and when they signed out, with the pages they used. Only the account owner sees it, plus any staff the owner picks. Download the CSV for payroll.' },
   '/staff-centre/activity-log': { title: 'Activity Log', text: 'Who changed what, and when, across properties, people, money and operations. Admins see every change in the company. Everyone else sees their own.' },
   '/staff-centre/inbox': { title: 'Inbox', text: 'Every message from guests, tenants and landlords in one place. Replies are drafted for your approval.' },
   '/staff-centre/email': { title: 'Email', text: 'Email templates and sent messages, with your branding applied.' },
