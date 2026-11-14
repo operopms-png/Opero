@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient, requireStaffWithBusiness } from '@/lib/admin-auth'
+import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 
 // Group voice and video calls for Team Chat. Rooms are made on Daily (needs DAILY_API_KEY).
 // A call is announced as a chat message carrying a [[call:ROOM:voice|video]] marker; joining checks
@@ -20,6 +21,9 @@ async function daily(path: string, body?: any, method = body ? 'POST' : 'GET') {
 export async function POST(req: NextRequest) {
   const auth = await requireStaffWithBusiness(req)
   if (!auth || !auth.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // Calls run on the platform owner's Daily account and are billed to it, so they are limited to the
+  // owner's own company until each client company can connect its own call account.
+  if (auth.businessId !== LISTINGS_BUSINESS_ID) return NextResponse.json({ error: 'Group and video calls are not switched on for your company yet.' }, { status: 403 })
   if (!process.env.DAILY_API_KEY) return NextResponse.json({ error: 'Group calling is not switched on yet. Add DAILY_API_KEY in Netlify to enable it.' }, { status: 503 })
 
   const { action, conversation_id, room, video } = await req.json().catch(() => ({}))
