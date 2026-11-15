@@ -72,6 +72,8 @@ export default function Page() {
   const [tab, setTab] = useState<typeof TABS[number]>('All')
   const [filter, setFilter] = useState('All')
   const [waConnections, setWaConnections] = useState<any[]>([])
+  const [waMeta, setWaMeta] = useState<{window_open:boolean;window_ends:string|null;ai_paused:boolean;paused_reason:string|null;ai_draft:string|null}|null>(null)
+  const [tplName, setTplName] = useState('')
   const [activeWaConnection, setActiveWaConnection] = useState<string | null>(null)
   const [activeSmsConnection, setActiveSmsConnection] = useState<string | null>(null)
   const [smsConfigured, setSmsConfigured] = useState<boolean | null>(null)
@@ -274,6 +276,7 @@ export default function Page() {
       const res = await fetch(`${base}?connection_id=${convo.connectionId}&contact_phone=${encodeURIComponent(convo.recipientId)}`, { headers: await authHeaders() })
       const result = await res.json()
       setThread((result.messages ?? []).map((msg:any)=>({ id:msg.id, message:msg.body, sender:msg.sender, created_at:msg.created_at })))
+      setWaMeta(convo.channel==='whatsapp' ? { window_open: !!result.window_open, window_ends: result.window_ends ?? null, ai_paused: !!result.ai_paused, paused_reason: result.paused_reason ?? null, ai_draft: result.ai_draft ?? null } : null)
       return
     }
     if (convo.channel === 'team') {
@@ -302,6 +305,24 @@ export default function Page() {
       setGroupCall({ url: r.url, token: r.token, title: `${r.video ? 'Video' : 'Voice'} call · ${openConvo.recipientName}` })
       if (action === 'start') { await openThread(openConvo); await loadTeamConversations(identity!) }
     } finally { setCallBusy(false) }
+  }
+
+  async function toggleAi(paused: boolean) {
+    if (!openConvo || openConvo.channel!=='whatsapp') return
+    await fetch('/api/whatsapp/thread', { method:'POST', headers: await authHeaders(), body: JSON.stringify({ connection_id: openConvo.connectionId, contact_phone: openConvo.recipientId, ai_paused: paused }) })
+    await openThread(openConvo)
+    await loadWaConversations(openConvo.connectionId)
+  }
+
+  async function sendTemplateMsg() {
+    if (!openConvo || !tplName.trim()) return
+    setSending(true)
+    const res = await fetch('/api/whatsapp/send', { method:'POST', headers: await authHeaders(), body: JSON.stringify({ connection_id: openConvo.connectionId, to: openConvo.recipientId, template: tplName.trim() }) })
+    setSending(false)
+    if (!res.ok) { const r = await res.json().catch(()=>({})); alert(r.error||'Could not send'); return }
+    setTplName('')
+    await openThread(openConvo)
+    await loadWaConversations(openConvo.connectionId)
   }
 
   async function sendReply() {
@@ -511,7 +532,7 @@ export default function Page() {
               {thread.length===0 && <div style={{textAlign:'center',color:MUTED,fontSize:13.5,padding:30}}>No messages yet — say hello below.</div>}
               {thread.map((msg:any)=>{
                 const isStaff = openConvo.channel==='team' ? msg.sender===identity.email : msg.sender !== NON_STAFF_SENDER[openConvo.channel]
-                const label = openConvo.channel==='team' ? (isStaff?'You':msg.senderName) : (isStaff?'Staff':openConvo.recipientName)
+                const label = openConvo.channel==='team' ? (isStaff?'You':msg.senderName) : (isStaff?(openConvo.channel==='whatsapp' ? (msg.sender==='ai'?'Novourq Cloud AI':msg.sender) : 'Staff'):openConvo.recipientName)
                 return (
                   <div key={msg.id} style={{alignSelf:isStaff?'flex-end':'flex-start',maxWidth:'70%'}}>
                     <div style={{background:isStaff?ACCENT:'#fff',color:isStaff?'#fff':INK,border:isStaff?'none':`1px solid ${LINE}`,borderRadius:8,padding:'10px 14px',fontSize:13.5,lineHeight:1.5,whiteSpace:'pre-wrap',boxShadow:'0 1px 2px rgba(0,0,0,0.04)'}}>{String(msg.message||'').replace(/\s*\[\[call:[a-z0-9-]+:(voice|video)\]\]/,'')}{(()=>{ const cm = String(msg.message||'').match(/\[\[call:([a-z0-9-]+):(voice|video)\]\]/); return cm ? <button onClick={()=>groupCallAction('join',{room:cm[1]})} disabled={callBusy} style={{display:'block',marginTop:8,height:30,padding:'0 16px',borderRadius:999,border:'none',background:isStaff?'#fff':ACCENT,color:isStaff?ACCENT:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Join call</button> : null })()}{msg.attachment_url && <a href={msg.attachment_url} target="_blank" rel="noreferrer" style={{display:'block',marginTop:msg.message?6:0,color:isStaff?'#fff':ACCENT,textDecoration:'underline',fontSize:13}}>📎 {/\.(png|jpe?g|gif|webp)(\?|$)/i.test(msg.attachment_url)?'Photo':'Attachment'}</a>}{!msg.message && !msg.attachment_url && <span style={{opacity:0.7,fontStyle:'italic'}}>(empty message)</span>}</div>
@@ -520,6 +541,26 @@ export default function Page() {
                 )
               })}
             </div>
+            {openConvo.channel==='whatsapp' && waMeta && (<>
+              {waMeta.ai_paused ? (
+                <div style={{padding:'10px 16px',background:'#FDECEC',borderTop:`1px solid ${LINE}`,fontSize:13,color:'#B42318',display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+                  <span style={{flex:1,minWidth:200}}><b>A person has this chat.</b> Novourq Cloud AI is off here{waMeta.paused_reason?` — ${waMeta.paused_reason}`:''}.{waMeta.ai_draft?` Suggested reply: “${waMeta.ai_draft}”`:''}</span>
+                  {waConnections.find(c=>c.id===openConvo.connectionId)?.ai_receptionist_enabled && <button onClick={()=>toggleAi(false)} style={{height:30,padding:'0 12px',borderRadius:4,border:'1px solid #B42318',background:'#fff',color:'#B42318',cursor:'pointer',fontSize:13,fontFamily:'inherit'}}>Hand back to AI</button>}
+                </div>
+              ) : waConnections.find(c=>c.id===openConvo.connectionId)?.ai_receptionist_enabled && (
+                <div style={{padding:'10px 16px',background:'#EAF2FB',borderTop:`1px solid ${LINE}`,fontSize:13,color:ACCENT,display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+                  <span style={{flex:1,minWidth:200}}><b>Novourq Cloud AI is answering this chat.</b> It hands over by itself for money, contracts and complaints.</span>
+                  <button onClick={()=>toggleAi(true)} style={{height:30,padding:'0 12px',borderRadius:4,border:`1px solid ${ACCENT}`,background:'#fff',color:ACCENT,cursor:'pointer',fontSize:13,fontFamily:'inherit'}}>Take over</button>
+                </div>
+              )}
+              {!waMeta.window_open && (
+                <div style={{padding:'10px 16px',background:'#FFF6E0',borderTop:`1px solid ${LINE}`,fontSize:13,color:'#9A6700',display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+                  <span style={{flex:1,minWidth:200}}><b>More than 24 hours since they last wrote.</b> WhatsApp only allows an approved template message now.</span>
+                  <input value={tplName} onChange={e=>setTplName(e.target.value)} placeholder="Template name" style={{height:30,border:`1px solid ${BORDER}`,borderRadius:4,padding:'0 8px',fontSize:13,fontFamily:'inherit'}}/>
+                  <button onClick={sendTemplateMsg} disabled={sending||!tplName.trim()} style={{height:30,padding:'0 12px',borderRadius:4,border:'none',background:'#9A6700',color:'#fff',cursor:'pointer',fontSize:13,fontFamily:'inherit',opacity:sending||!tplName.trim()?0.6:1}}>Send template</button>
+                </div>
+              )}
+            </>)}
             <div style={{padding:16,background:'#fff',borderTop:`1px solid ${LINE}`}}>
               <div style={{border:`1px solid ${BORDER}`,borderRadius:8,padding:10,display:'flex',gap:10,alignItems:'flex-end'}}>
                 <textarea value={reply} onChange={e=>setReply(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendReply() } }} rows={2} placeholder={`Reply to ${openConvo.recipientName}…  (Enter to send, Shift+Enter for a new line)`} style={{flex:1,border:'none',outline:'none',resize:'none',fontSize:13.5,fontFamily:'inherit',color:INK}}/>
