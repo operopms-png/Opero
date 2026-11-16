@@ -86,6 +86,14 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Quick Insights (AI) writes a few plain sentences from those same figures, once a day. Press Refresh to write them again. It does not add outside market figures. Open market check goes to the Deal Analyser.',
     'A deal only has a yield when it was saved with a purchase price and a rent, so rent-to-rent deals do not appear in the yield panels. Press Preview example to see the layout with example figures that are not your data, then press it again to go back to yours.',
   ] },
+  { id: 'onboarding-tracker', title: 'Onboarding tracker', steps: [
+    'Where: Human Intelligence Hub, Owners & Tenants, Onboarding tracker. Any staff member can use it. It lists every landlord, tenant, co-host and investor being onboarded, plus people you sent a new client link who have not opened it.',
+    'Each row shows a progress bar, the next step and how many days nothing has moved. Stuck means not finished and nothing has moved for 7 days. Use the Stuck, In progress, Not started and Finished buttons, the Landlords, Tenants, Co-hosts and Investors buttons, or the search box.',
+    'Press a row to see its steps. Steps marked automatic tick themselves from real records, such as an uploaded ID, an agreement signed from Documents, a protected deposit or a first rent payment. Agreement signed, first rent and move-in can also be ticked by hand if it happened on paper. Every other step you tick yourself.',
+    'Under Contact and link: Copy link, Remind now (emails them their private link again) and Extend 14 days (gives an expired link more time and restarts the reminders).',
+    'Reminders are automatic. Someone who was sent a private link and has not finished is emailed 2 days later, then every 3 days, up to 4 times, and never after the link expires. You also get a bell alert, at most every 3 days, naming clients who are stuck.',
+    'Clients added more than 120 days ago are hidden unless you tick Include clients added more than 120 days ago. Property onboarding stays in Settings, Platform Owner, Customer Onboarding (platform owner only).',
+  ] },
   { id: 'video-library', title: 'Video library', steps: [
     'Where: Human Intelligence Hub, Marketing, Video library (in the left list, or the Video library button on the Marketing home page). Your company keeps its own marketing videos and pictures here and no other company can see them.',
     'Press + Add video, choose a video (MP4, MOV or WebM) or a picture (JPG, PNG or WebP) up to 500 MB, then fill in the title, caption and hashtags, tick the platforms it is for, choose a status (Draft, Ready, Scheduled or Posted) and an optional planned post time, and press Upload and save. Keep the page open while it uploads.',
