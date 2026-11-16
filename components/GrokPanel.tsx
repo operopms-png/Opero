@@ -1,10 +1,16 @@
 'use client'
-// "Novourq Cloud AI" panel on the Staff Centre dashboard. Read only: it sends the question
-// to /api/grok and shows the reply. It cannot change records or send messages.
+// "Novourq Cloud AI" panel on the Staff Centre dashboard. Questions go to /api/grok, which only reads
+// records. The one thing it can add is pictures: attach them here and they are saved as drafts in
+// Marketing → Video library, each with an AI-written title, caption and hashtags to check.
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import AiMark from './ai/AiMark'
 import { speak as speakShared } from '../lib/speak'
+import { VIDEO_BUCKET, PLATFORMS } from '../lib/marketing-videos'
+
+const PICTURE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_PICTURES = 10
+const MAX_PICTURE_BYTES = 20 * 1024 * 1024
 
 const C = { blue: '#2F6DB5', brown: '#1D4E89', soft: '#EAF3FC', line: '#E4E7EC', muted: '#667085', text: '#323338', bg: '#F9FAFB' }
 
@@ -22,6 +28,8 @@ export default function GrokPanel() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Msg[]>([])
   const [busy, setBusy] = useState(false)
+  const [pictures, setPictures] = useState<File[]>([])
+  const fileRef = useRef<HTMLInputElement>(null)
   // One assistant: Novourq Cloud AI. No separate named staff to pick from.
   const role = 'general'
   const agent: Agent | undefined = undefined
@@ -81,9 +89,65 @@ export default function GrokPanel() {
   }
 
 
+  function pickPictures(list: FileList | null) {
+    const chosen = Array.from(list ?? [])
+    if (fileRef.current) fileRef.current.value = ''
+    if (!chosen.length) return
+    const ok = chosen.filter(f => PICTURE_MIMES.includes(f.type) && f.size <= MAX_PICTURE_BYTES)
+    const skipped = chosen.length - ok.length
+    const room = MAX_PICTURES - pictures.length
+    setPictures(p => [...p, ...ok.slice(0, Math.max(0, room))])
+    const notes: string[] = []
+    if (skipped) notes.push(`${skipped} file${skipped === 1 ? ' was' : 's were'} skipped. Use a JPG, PNG or WebP picture under 20 MB.`)
+    if (ok.length > room) notes.push(`Only ${MAX_PICTURES} pictures at a time. Send these, then add more.`)
+    if (notes.length) setMessages(m => [...m, { role: 'bot', text: notes.join(' ') }])
+  }
+
+  // Saves each picture as a draft in Marketing → Video library, with a title, caption and hashtags written by the AI.
+  async function addPictures(text: string) {
+    const files = pictures
+    const brief = text.trim()
+    const wants = (p: string) => p === 'X' ? /\bX\b/.test(brief) : new RegExp('\\b' + p + '\\b', 'i').test(brief)
+    const platforms = PLATFORMS.filter(wants)
+    setInput('')
+    setPictures([])
+    setMessages(m => [...m, { role: 'me', text: `${brief ? brief + '\n' : ''}Add ${files.length} picture${files.length === 1 ? '' : 's'} to Marketing` }])
+    setBusy(true)
+    let added = 0
+    const failed: string[] = []
+    for (const file of files) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }
+        const call = async (url: string, body: any) => {
+          const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) })
+          const d = await res.json().catch(() => ({}))
+          if (!res.ok || d.error) throw new Error(d.error || 'Something went wrong')
+          return d
+        }
+        const s = await call('/api/marketing-videos', { action: 'sign', name: file.name, mime: file.type, size: file.size })
+        const up = await supabase.storage.from(VIDEO_BUCKET).uploadToSignedUrl(s.path, s.token, file, { contentType: file.type })
+        if (up.error) throw new Error(up.error.message || 'The upload failed')
+        const cap = await call('/api/marketing-pictures', { path: s.path, name: file.name, brief }).catch(() => ({ title: file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'Picture', caption: '', hashtags: '' }))
+        await call('/api/marketing-videos', { action: 'save', path: s.path, video: { title: cap.title, caption: cap.caption, hashtags: cap.hashtags, platforms, status: 'Draft', file_name: file.name, mime: file.type, size_bytes: file.size } })
+        added++
+      } catch {
+        failed.push(file.name)
+      }
+    }
+    const reply = [
+      added ? `Added ${added} picture${added === 1 ? '' : 's'} to Marketing as drafts, each with a title, caption and hashtags for you to check. Open them at Human Intelligence Hub → Marketing → Marketing → Video library.` : 'No pictures were added.',
+      failed.length ? `These did not upload, so try them again: ${failed.join(', ')}.` : '',
+    ].filter(Boolean).join('\n')
+    setMessages(m => [...m, { role: 'bot', text: reply }])
+    if (speakRef.current) speak(added ? `Added ${added} picture${added === 1 ? '' : 's'} to Marketing as drafts.` : 'No pictures were added.')
+    setBusy(false)
+  }
+
   async function send(text: string) {
     const message = text.trim()
-    if (!message || busy) return
+    if ((!message && !pictures.length) || busy) return
+    if (pictures.length) return addPictures(message)
     setInput('')
     setMessages(m => [...m, { role: 'me', text: message }])
     setBusy(true)
@@ -121,7 +185,7 @@ export default function GrokPanel() {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '12px 18px', borderBottom: '1px solid #F2F4F7' }}>
         {CHIPS.map(c => (
-          <button key={c} onClick={() => { unlockSpeech(); send(c) }} disabled={busy} style={{ fontSize: 12, color: C.brown, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 20, padding: '5px 11px', cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit' }}>{c}</button>
+          <button key={c} onClick={() => { unlockSpeech(); send(c) }} disabled={busy || pictures.length > 0} style={{ fontSize: 12, color: C.brown, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 20, padding: '5px 11px', cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit' }}>{c}</button>
         ))}
       </div>
 
@@ -142,16 +206,33 @@ export default function GrokPanel() {
         {busy && <div style={{ color: C.muted, fontSize: 12 }}>Working on it…</div>}
       </div>
 
-      <form onSubmit={e => { e.preventDefault(); unlockSpeech(); send(input) }} style={{ display: 'flex', gap: 10, padding: '14px 18px', borderTop: `1px solid ${C.line}` }}>
+      {pictures.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '12px 18px 0', borderTop: `1px solid ${C.line}` }}>
+          {pictures.map((f, i) => (
+            <span key={f.name + i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.brown, background: C.soft, border: '1px solid #C9DEF3', borderRadius: 20, padding: '4px 6px 4px 11px', maxWidth: 220 }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+              <button type="button" onClick={() => setPictures(p => p.filter((_, j) => j !== i))} disabled={busy} aria-label={`Remove ${f.name}`} style={{ border: 'none', background: 'transparent', color: C.brown, cursor: 'pointer', fontSize: 15, lineHeight: 1, padding: '0 4px' }}>×</button>
+            </span>
+          ))}
+          <span style={{ fontSize: 12, color: C.muted }}>Say what they are for, then press Send. They are saved as drafts in Marketing.</span>
+        </div>
+      )}
+
+      <form onSubmit={e => { e.preventDefault(); unlockSpeech(); send(input) }} style={{ display: 'flex', gap: 10, padding: '14px 18px', borderTop: pictures.length ? 'none' : `1px solid ${C.line}` }}>
+        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => pickPictures(e.target.files)} style={{ display: 'none' }} />
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={busy} aria-label="Add pictures to Marketing" title="Add pictures to Marketing"
+          style={{ width: 42, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: pictures.length ? C.blue : C.soft, color: pictures.length ? '#fff' : C.brown, border: `1px solid ${pictures.length ? C.blue : '#C9DEF3'}`, borderRadius: 8, cursor: busy ? 'default' : 'pointer' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+        </button>
         {micOk && (
           <button type="button" onClick={toggleMic} disabled={busy} aria-label={listening ? 'Stop listening' : 'Speak your question'} title={listening ? 'Listening. Tap to stop' : 'Speak your question'}
             style={{ width: 42, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: listening ? '#B42318' : C.soft, color: listening ? '#fff' : C.brown, border: `1px solid ${listening ? '#B42318' : '#C9DEF3'}`, borderRadius: 8, cursor: busy ? 'default' : 'pointer' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
           </button>
         )}
-        <input value={input} onChange={e => setInput(e.target.value)} placeholder={listening ? 'Listening…' : 'Ask about arrears, compliance, maintenance or bookings'} maxLength={4000}
+        <input value={input} onChange={e => setInput(e.target.value)} placeholder={listening ? 'Listening…' : pictures.length ? 'What are these pictures for? (optional)' : 'Ask about arrears, compliance, maintenance or bookings'} maxLength={4000}
           style={{ flex: 1, fontSize: 13, border: `1px solid #D0D5DD`, borderRadius: 8, padding: '10px 12px', fontFamily: 'inherit', color: C.text, minWidth: 0 }} />
-        <button type="submit" disabled={busy || !input.trim()} style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: C.blue, border: 'none', borderRadius: 8, padding: '10px 18px', cursor: busy || !input.trim() ? 'default' : 'pointer', opacity: busy || !input.trim() ? 0.6 : 1, fontFamily: 'inherit' }}>Send</button>
+        <button type="submit" disabled={busy || (!input.trim() && !pictures.length)} style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: C.blue, border: 'none', borderRadius: 8, padding: '10px 18px', cursor: busy || (!input.trim() && !pictures.length) ? 'default' : 'pointer', opacity: busy || (!input.trim() && !pictures.length) ? 0.6 : 1, fontFamily: 'inherit' }}>Send</button>
       </form>
     </div>
   )
