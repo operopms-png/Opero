@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-16', title: 'Dynamic Dossier for vacation rentals', text: 'Real Estate Intelligence → Vacation Rentals → Dynamic Dossier suggests nightly prices from your own floor, ceiling and rules and shows occupancy and income; prices are suggestions only and are not sent to Airbnb yet.' },
   { date: '2026-11-16', title: 'Scale tab for master leases and co-hosting', text: 'Scale in the left menu shows doors under management, margin after head rent, co-host bookings and which leases or agreements are ending, with a Preview example button.' },
   { date: '2026-11-16', title: 'Onboarding tracker and automatic reminders', text: 'Human Intelligence Hub → Owners & Tenants → Onboarding tracker shows every landlord, tenant, co-host and investor being onboarded and who has gone quiet; clients who have not finished their private link are now reminded by email automatically, and more steps tick themselves.' },
   { date: '2026-11-16', title: 'Market intelligence on the Dashboard', text: 'The Dashboard now shows Featured Property Analysis, Top Locations by Rental Yield, My Watchlist and Quick Insights (AI) from your saved deals and watchlist, each linking to Human Intelligence Hub → Client Properties; press Preview example to see it filled in.' },

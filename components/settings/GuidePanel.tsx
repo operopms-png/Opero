@@ -86,6 +86,13 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Quick Insights (AI) writes a few plain sentences from those same figures, once a day. Press Refresh to write them again. It does not add outside market figures. Open market check goes to the Deal Analyser.',
     'A deal only has a yield when it was saved with a purchase price and a rent, so rent-to-rent deals do not appear in the yield panels. Press Preview example to see the layout with example figures that are not your data, then press it again to go back to yours.',
   ] },
+  { id: 'dynamic-dossier', title: 'Dynamic Dossier (suggested nightly prices)', steps: [
+    'Where: Real Estate Intelligence → Vacation Rentals → Dynamic Dossier (under Insights). It is also listed under Vacation Rentals on the Property page.',
+    'Rates: pick a property and enter a base price, a floor and a ceiling, then the weekend uplift, last-minute cut, single-night gap cut and busy-month uplift in percent. Press Save rules. Rules are saved per property for your company only.',
+    'The next 14 nights show a suggested price and the reason. Prices never go below your floor or above your ceiling, and booked nights show Booked.',
+    'Performance: occupancy, average nightly rate and income for the last 30 days, how full the next 60 days are, and a table by property, from the bookings in the portal.',
+    'Limits: prices are suggestions only and nothing is sent to Airbnb or any other channel yet, so copy them into your channel manager. There is no market or competitor data yet. Press Preview example to see sample figures that are not your data.',
+  ] },
   { id: 'scale', title: 'Scale (master leases and co-hosting)', steps: [
     'Where: Scale in the left menu, between Real Estate Intelligence and Novourq Cloud AI. It shows how big your master lease and co-host business is, from your own Head Leases and Co-hosts only.',
     'The top cards show doors under management (head leases plus properties assigned to co-hosts), master leases, co-hosts, margin after head rent and co-host bookings for the last 90 days.',
