@@ -4,123 +4,9 @@ import { supabase, getAccountId } from '../../../lib/supabase'
 import { C, MODULE_COLOR, CrmPage, CrmHeader, Body, Pill, Avatar, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
 
 
-type ChecklistItem = { key: string; label: string; auto: boolean }
-
-// Same 10 steps the owner sees in their portal (Owner Portal -> Property Onboarding).
-// Progress is stored as a number on the property (properties.staging_stage = steps done, in order).
-const PROPERTY_STEPS = [
-  'Property virtually viewed and confirmed',
-  'Management agreement signed',
-  'Fees, rent and deposit sent to the property manager',
-  'Offer accepted or rejected by landlord',
-  'Contract viewed and signed',
-  'Rent and deposit sent to broker',
-  'Furnishing the property',
-  'Cleaning the property',
-  'Pictures of the property',
-  'Going live on all travel booking platforms',
-]
-const PROPERTY_ITEMS: ChecklistItem[] = PROPERTY_STEPS.map((label, i) => ({ key: 'step_' + i, label, auto: false }))
-
-type ModuleDef = {
-  key: string
-  label: string
-  color: string
-  segments: {
-    key: string
-    label: string
-    table: string
-    items: ChecklistItem[]
-  }[]
-}
-
-const MODULES: ModuleDef[] = [
-  {
-    key: 'str', label: 'Vacation Rentals', color: MODULE_COLOR.str,
-    segments: [
-      {
-        key: 'str_owner', label: 'Client onboarding (owners)', table: 'owner_profiles',
-        items: [
-          { key: 'intro_call', label: 'Introduction call done', auto: false },
-          { key: 'agreement_signed', label: 'Management agreement signed', auto: false },
-          { key: 'id_uploaded', label: 'ID document uploaded', auto: false },
-          { key: 'compliance_uploaded', label: 'Compliance / insurance documents uploaded', auto: true },
-          { key: 'first_payout', label: 'First payout sent', auto: false },
-          { key: 'live_on_platforms', label: 'Property live on booking platforms', auto: true },
-        ],
-      },
-      {
-        key: 'str_property', label: 'Property onboarding', table: 'properties',
-        items: PROPERTY_ITEMS,
-      },
-    ],
-  },
-  {
-    key: 'pm', label: 'Property Management', color: MODULE_COLOR.pm,
-    segments: [
-      {
-        key: 'pm_landlord', label: 'Landlords', table: 'pm_landlords',
-        items: [
-          { key: 'id_uploaded', label: 'ID document uploaded', auto: true },
-          { key: 'agreement_signed', label: 'Management agreement signed', auto: false },
-          { key: 'first_payment', label: 'First payment received', auto: true },
-          { key: 'certificates_uploaded', label: 'Insurance / certificates uploaded', auto: false },
-          { key: 'intro_call', label: 'Introduction call done', auto: false },
-        ],
-      },
-      {
-        key: 'pm_tenant', label: 'Tenants', table: 'pm_tenants',
-        items: [
-          { key: 'id_uploaded', label: 'ID document uploaded', auto: true },
-          { key: 'agreement_signed', label: 'Tenancy agreement signed', auto: true },
-          { key: 'deposit_protected', label: 'Deposit protected', auto: true },
-          { key: 'first_payment', label: 'First rent payment received', auto: false },
-          { key: 'move_in_done', label: 'Move-in done', auto: false },
-        ],
-      },
-    ],
-  },
-  {
-    key: 'ea', label: 'Estate Agency', color: MODULE_COLOR.ea,
-    segments: [
-      {
-        key: 'ea_landlord', label: 'Landlords', table: 'estate_landlords',
-        items: [
-          { key: 'id_uploaded', label: 'ID document uploaded', auto: true },
-          { key: 'agreement_signed', label: 'Agreement signed', auto: false },
-          { key: 'first_payment', label: 'First payment received', auto: true },
-          { key: 'certificates_uploaded', label: 'Certificates / insurance uploaded', auto: true },
-          { key: 'intro_call', label: 'Introduction call done', auto: false },
-        ],
-      },
-      {
-        key: 'ea_tenant', label: 'Tenants', table: 'estate_tenants',
-        items: [
-          { key: 'id_uploaded', label: 'ID document uploaded', auto: true },
-          { key: 'agreement_signed', label: 'Tenancy agreement signed', auto: true },
-          { key: 'documents_uploaded', label: 'Documents / certificates uploaded', auto: true },
-          { key: 'first_payment', label: 'First payment received', auto: false },
-          { key: 'move_in_done', label: 'Move-in done', auto: false },
-        ],
-      },
-    ],
-  },
-  {
-    key: 'dev', label: 'Developments', color: MODULE_COLOR.dev,
-    segments: [
-      {
-        key: 'dev_investor', label: 'Off-Plan Buyers / Investors', table: 'dev_investors',
-        items: [
-          { key: 'intro_call', label: 'Introduction call done', auto: false },
-          { key: 'reservation_signed', label: 'Reservation agreement signed', auto: false },
-          { key: 'contract_exchanged', label: 'Contract exchanged', auto: false },
-          { key: 'deposit_received', label: 'Deposit / investment payment received', auto: false },
-          { key: 'documents_provided', label: 'Certificates / documents provided', auto: false },
-        ],
-      },
-    ],
-  },
-]
+import { MODULES_BASE, PROPERTY_STEPS, computeAuto, itemDone, itemEditable, type Item as ChecklistItem } from '../../../lib/onboarding-steps'
+// The steps for each kind of client live in lib/onboarding-steps.ts so this page and the Onboarding tracker always agree
+const MODULES = MODULES_BASE.map(m => ({ ...m, color: (MODULE_COLOR as any)[m.key] as string }))
 
 function moduleInfo(k: string) { return MODULES.find(m => m.key === k)! }
 
@@ -201,72 +87,7 @@ export default function CustomerOnboardingPage() {
     setCustomers(custs)
 
     const ids = custs.map((c: any) => c.id)
-    const auto: Record<string, Record<string, boolean>> = {}
-    custs.forEach((c: any) => { auto[c.id] = {} })
-
-    if (ids.length) {
-      if (currentSeg.key === 'str_owner') {
-        const allPropertyIds: string[] = custs.flatMap((c: any) => c.property_ids ?? [])
-        let compliantPropertyIds = new Set<string>()
-        if (allPropertyIds.length) {
-          const { data: comp } = await supabase.from('str_compliance').select('property_id').in('property_id', allPropertyIds)
-          compliantPropertyIds = new Set((comp ?? []).map((r: any) => r.property_id))
-        }
-        let liveIds = new Set<string>()
-        if (allPropertyIds.length) {
-          const { data: props } = await supabase.from('properties').select('id, staging_stage').in('id', allPropertyIds)
-          liveIds = new Set((props ?? []).filter((p: any) => (p.staging_stage ?? 0) >= PROPERTY_STEPS.length).map((p: any) => p.id))
-        }
-        custs.forEach((c: any) => {
-          const owned: string[] = c.property_ids ?? []
-          auto[c.id].compliance_uploaded = owned.some(pid => compliantPropertyIds.has(pid))
-          // Ticks itself once a property finishes Property onboarding (last step: going live)
-          auto[c.id].live_on_platforms = owned.some(pid => liveIds.has(pid))
-        })
-      }
-
-      if (currentSeg.key === 'pm_landlord') {
-        custs.forEach((c: any) => { auto[c.id].id_uploaded = !!c.id_url })
-        const { data: pays } = await supabase.from('pm_landlord_payments').select('landlord_id,paid_date').in('landlord_id', ids)
-        const paidIds = new Set((pays ?? []).filter((p: any) => !!p.paid_date).map((p: any) => p.landlord_id))
-        custs.forEach((c: any) => { auto[c.id].first_payment = paidIds.has(c.id) })
-      }
-
-      if (currentSeg.key === 'pm_tenant') {
-        custs.forEach((c: any) => { auto[c.id].id_uploaded = !!c.id_url })
-        const { data: leases } = await supabase.from('pm_leases').select('tenant_id,tenant_signed_at,deposit_protected_date').in('tenant_id', ids)
-        const signedIds = new Set((leases ?? []).filter((l: any) => !!l.tenant_signed_at).map((l: any) => l.tenant_id))
-        const depositIds = new Set((leases ?? []).filter((l: any) => !!l.deposit_protected_date).map((l: any) => l.tenant_id))
-        custs.forEach((c: any) => {
-          auto[c.id].agreement_signed = signedIds.has(c.id)
-          auto[c.id].deposit_protected = depositIds.has(c.id)
-        })
-      }
-
-      if (currentSeg.key === 'ea_landlord') {
-        custs.forEach((c: any) => { auto[c.id].id_uploaded = !!c.id_url })
-        const { data: pays } = await supabase.from('estate_landlord_payments').select('landlord_id,paid_date').in('landlord_id', ids)
-        const paidIds = new Set((pays ?? []).filter((p: any) => !!p.paid_date).map((p: any) => p.landlord_id))
-        const { data: docs } = await supabase.from('estate_documents').select('landlord_id').in('landlord_id', ids)
-        const docIds = new Set((docs ?? []).map((d: any) => d.landlord_id))
-        custs.forEach((c: any) => {
-          auto[c.id].first_payment = paidIds.has(c.id)
-          auto[c.id].certificates_uploaded = docIds.has(c.id)
-        })
-      }
-
-      if (currentSeg.key === 'ea_tenant') {
-        custs.forEach((c: any) => { auto[c.id].id_uploaded = !!c.id_url })
-        const { data: tenancies } = await supabase.from('estate_tenancies').select('tenant_id,tenant_signed_at').in('tenant_id', ids)
-        const signedIds = new Set((tenancies ?? []).filter((t: any) => !!t.tenant_signed_at).map((t: any) => t.tenant_id))
-        const { data: docs } = await supabase.from('estate_documents').select('tenant_id').in('tenant_id', ids)
-        const docIds = new Set((docs ?? []).map((d: any) => d.tenant_id))
-        custs.forEach((c: any) => {
-          auto[c.id].agreement_signed = signedIds.has(c.id)
-          auto[c.id].documents_uploaded = docIds.has(c.id)
-        })
-      }
-    }
+    const auto = await computeAuto(supabase, currentSeg.key, custs)
     setAutoDone(auto)
 
     const ov: Record<string, Record<string, boolean>> = {}
@@ -288,8 +109,7 @@ export default function CustomerOnboardingPage() {
       const p = customers.find(c => c.id === customerId)
       return Number(item.key.slice(5)) < (p?.staging_stage ?? 0)
     }
-    if (item.auto) return !!autoDone[customerId]?.[item.key]
-    return !!overrides[customerId]?.[item.key]
+    return itemDone(item, autoDone[customerId], overrides[customerId])
   }
 
   // Property steps go in order: ticking step 5 completes 1–5; unticking step 3 leaves 1–2 done.
@@ -308,7 +128,7 @@ export default function CustomerOnboardingPage() {
 
   async function toggleManual(customerId: string, item: ChecklistItem) {
     if (seg.key === 'str_property') return toggleStep(customerId, item)
-    if (item.auto) return
+    if (!itemEditable(item, autoDone[customerId])) return
     const current = !!overrides[customerId]?.[item.key]
     const next = !current
     setSaving(customerId + item.key)
@@ -372,7 +192,7 @@ export default function CustomerOnboardingPage() {
     { k: 'n', l: isProp ? 'Property' : 'Client', w: 'minmax(230px,1fr)' },
     ...extraCol,
     { k: 'p', l: 'Progress', w: 150 },
-    ...seg.items.map((it, i) => ({ k: it.key, l: <span title={it.label} style={{ fontSize: 12 }}>{isProp ? `${i + 1}. ` : ''}{it.label}{it.auto ? <span style={{ color: C.faint }}> · auto</span> : null}</span>, w: 118 })),
+    ...seg.items.map((it, i) => ({ k: it.key, l: <span title={it.label} style={{ fontSize: 12 }}>{isProp ? `${i + 1}. ` : ''}{it.label}{it.hybrid ? <span style={{ color: C.faint }}> · auto or manual</span> : it.auto ? <span style={{ color: C.faint }}> · auto</span> : null}</span>, w: 118 })),
   ]
   const inProgress = rows.filter(r => !r.complete)
   const done = rows.filter(r => r.complete)
@@ -382,13 +202,14 @@ export default function CustomerOnboardingPage() {
     const busy = saving === c.id + item.key
     const stage = isProp ? Math.min(c.staging_stage ?? 0, PROPERTY_STEPS.length) : -1
     const next = isProp && i === stage
-    const clickable = isProp || !item.auto
-    const color = d ? C.green : next ? C.orange : item.auto ? '#EEF0F4' : C.grey
+    const locked = !isProp && !itemEditable(item, autoDone[c.id])
+    const clickable = isProp || !locked
+    const color = d ? C.green : next ? C.orange : locked ? '#EEF0F4' : C.grey
     return (
       <div onClick={() => clickable && toggleManual(c.id, item)}
-        title={isProp ? 'Steps go in order: ticking a step ticks every step before it. The owner sees the same progress in their portal.' : item.auto ? 'Ticks itself from a real record — cannot be ticked by hand' : 'Click to tick / untick'}
-        style={{ width: '100%', height: 30, borderRadius: 4, background: color, color: d || next ? '#fff' : item.auto ? C.faint : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 500, cursor: clickable ? 'pointer' : 'default', opacity: busy ? 0.6 : 1, userSelect: 'none' }}>
-        {d ? '✓ Done' : next ? 'Up next' : item.auto ? 'Auto' : ''}
+        title={isProp ? 'Steps go in order: ticking a step ticks every step before it. The owner sees the same progress in their portal.' : locked ? 'Ticks itself from a real record — cannot be ticked by hand' : item.hybrid ? 'Ticks itself from a real record, or click to tick it by hand' : 'Click to tick / untick'}
+        style={{ width: '100%', height: 30, borderRadius: 4, background: color, color: d || next ? '#fff' : locked ? C.faint : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12.5, fontWeight: 500, cursor: clickable ? 'pointer' : 'default', opacity: busy ? 0.6 : 1, userSelect: 'none' }}>
+        {d ? '✓ Done' : next ? 'Up next' : locked ? 'Auto' : ''}
       </div>
     )
   }

@@ -22,6 +22,7 @@ const TASKS: { task: string; pages: string[] }[] = [
   { task: 'Follow up a lead', pages: ['/staff-centre/crm', '/staff-centre/landlord-leads'] },
   { task: 'Check a client’s property', pages: ['/staff-centre/client-properties'] },
   { task: 'Add an owner or tenant', pages: ['/pm?tab=Landlords', '/pm?tab=Tenants'] },
+  { task: 'See who is stuck in onboarding', pages: ['/staff-centre/onboarding-tracker'] },
   { task: 'Onboard a tenant', pages: ['/staff-centre/tenant-onboarding'] },
   { task: 'Send a landlord or tenant their link', pages: ['/staff-centre/documents'] },
   { task: 'Add a partner or investor', pages: ['/staff-centre/partners', '/staff-centre/investors'] },

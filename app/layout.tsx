@@ -40,6 +40,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/oversight': 'oversight',
   '/staff-centre/data-hub': 'datahub',
   '/staff-centre/company-documents': 'companydocs',
+  '/staff-centre/onboarding-tracker': 'companydocs',
   '/staff-centre/hr-documents': 'hr',
   '/staff-centre/services-pack': 'marketing',
   '/staff-centre/ai-command-centre': 'ai',
