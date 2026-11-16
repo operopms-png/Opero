@@ -65,6 +65,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Guest comms', targets: [str('Guest Comms')] },
     { name: 'Channels', targets: [pm('Channels')] },
     { name: 'Analytics', targets: [str('Analytics')] },
+    { name: 'Dynamic Dossier', targets: [str('Dynamic Dossier')] },
     { name: 'Integrations', targets: [str('Integrations')] },
   ] },
   { name: 'Developments', note: 'Projects from plan to sale', items: [

@@ -9,15 +9,16 @@ import { useRole, getAllowedTab } from '@/lib/useRole'
 import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import GuestCheckins from '@/components/pm/GuestCheckins'
+import DynamicDossier from '@/components/str/DynamicDossier'
 
-const TABS = ['Home','Bookings','Guest Check-ins','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms']
+const TABS = ['Home','Bookings','Guest Check-ins','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms','Dynamic Dossier']
 const STR_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Home'] },
   { label: 'PORTFOLIO', items: ['Properties','Bookings','Guest Check-ins'] },
   { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms'] },
   { label: 'COMPLIANCE', items: ['Compliance'] },
   { label: 'REPUTATION', items: ['Reviews'] },
-  { label: 'INSIGHTS', items: ['Analytics','Channels','Integrations'] },
+  { label: 'INSIGHTS', items: ['Analytics','Dynamic Dossier','Channels','Integrations'] },
   { label: 'TEAM', items: ['Team','Owners'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'FINANCE', items: ['Expenses','Banking'] },
@@ -784,6 +785,8 @@ export default function STRPage() {
 
         {tab==='Company SOPs' && <CompanyDocsPanel category="sop" />}
         {tab==='Contract Templates' && <CompanyDocsPanel category="contract_template" />}
+
+        {tab==='Dynamic Dossier' && <DynamicDossier />}
 
         {tab==='Analytics' && (
           <div>

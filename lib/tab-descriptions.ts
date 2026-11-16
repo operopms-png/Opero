@@ -79,6 +79,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'str:Properties': 'Your short-stay properties with nightly rate, status and calendar. Open one to edit it.',
   'str:Maintenance': 'Repair jobs between stays, with priority, who it is assigned to and progress.',
   'str:Compliance': 'Safety certificates and licences for each short-stay property and your business, with expiry dates.',
+  'str:Dynamic Dossier': 'Suggested nightly prices for each short-stay property from your own rules and bookings, plus occupancy and income results. Suggestions only; nothing is sent to Airbnb.',
   'str:Reports': 'Revenue, occupancy and expense reports for your short-stay portfolio.',
 }
 export function describeTab(module: 'pm' | 'estate' | 'str' | 'dev', name: string): string {
