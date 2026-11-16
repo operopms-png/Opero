@@ -164,7 +164,7 @@ function Editor({ video, me, onClose, onChanged }: { video: VideoRow | null; me:
           <input ref={fileRef} type="file" accept="video/mp4,video/quicktime,video/webm,video/x-m4v,image/jpeg,image/png,image/webp" onChange={e => pickFile(e.target.files?.[0] ?? null)} style={{ display: 'none' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <button type="button" style={btn('ghost')} onClick={() => fileRef.current?.click()}>{file ? 'Choose another file' : 'Choose file'}</button>
-            <span style={{ fontSize: 13, color: C.muted }}>{file ? `${file.name} · ${fileSize(file.size)}` : 'MP4, MOV or WebM, up to 500 MB'}</span>
+            <span style={{ fontSize: 13, color: C.muted }}>{file ? `${file.name} · ${fileSize(file.size)}` : 'MP4, MOV or WebM video, or a JPG, PNG or WebP picture, up to 500 MB'}</span>
           </div>
         </div>
       )}
