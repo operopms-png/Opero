@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-16', title: 'Video library in Marketing', text: 'Keep your marketing videos and pictures in Marketing → Video library with caption, hashtags, platforms and status, then download the file and copy the post text when you post.' },
   { date: '2026-11-15', title: 'WhatsApp Business in the Inbox', text: 'Connect your company WhatsApp number in Settings → WhatsApp, then reply from Inbox → Conversations, and let Novourq Cloud AI answer and hand over to a person.' },
   { date: '2026-11-14', title: 'Call minutes per client company', text: 'The platform owner can set a monthly call-minute allowance for each client under Revenue and Customers and see what each has used.' },
   { date: '2026-11-14', title: 'Group and video calls in Team Chat', text: 'Open a Team Chat and press Group call or Video call; everyone in the chat gets a Join call button in the chat instead of calling mobiles.' },
