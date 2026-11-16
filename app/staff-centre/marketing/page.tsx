@@ -9,9 +9,10 @@ import MkPanel from '@/components/marketing/MkPanel'
 import MkDashboard from '@/components/marketing/MkDashboard'
 import { Modal } from '@/components/crm/Popover'
 import ScriptsView from '@/components/marketing/ScriptsView'
+import VideoLibrary from '@/components/marketing/VideoLibrary'
 import MailingListModal from '@/components/marketing/MailingListModal'
 
-type View = { kind: 'home' } | { kind: 'dashboard' } | { kind: 'scripts' } | { kind: 'board'; key: string }
+type View = { kind: 'home' } | { kind: 'dashboard' } | { kind: 'scripts' } | { kind: 'videos' } | { kind: 'board'; key: string }
 
 const ICON: Record<string, React.ReactNode> = {
   home: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" /></svg>,
@@ -22,6 +23,7 @@ const ICON: Record<string, React.ReactNode> = {
   templates: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>,
   scripts: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M7 4h10a2 2 0 012 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 012-2z" /><path d="M9 9h6M9 13h4" /></svg>,
   dashboard: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 16v-3M12 16V8M17 16v-5" /></svg>,
+  videos: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="14" height="14" rx="2" /><path d="M17 10l4-2.5v9L17 14" /></svg>,
 }
 const tb: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 10px', border: 'none', background: 'none', borderRadius: 4, fontSize: 13.5, color: BRAND.ink, cursor: 'pointer', fontFamily: 'inherit' }
 
@@ -40,11 +42,12 @@ export default function MarketingPage() {
     if (b && boardByKey(b)) setViewState({ kind: 'board', key: b })
     else if (sp.get('view') === 'dashboard') setViewState({ kind: 'dashboard' })
     else if (sp.get('view') === 'scripts') setViewState({ kind: 'scripts' })
+    else if (sp.get('view') === 'videos') setViewState({ kind: 'videos' })
   }, [mk.loading])
 
   const setView = (v: View) => {
     setViewState(v)
-    window.history.replaceState(null, '', v.kind === 'board' ? `?board=${v.key}` : v.kind === 'dashboard' ? '?view=dashboard' : v.kind === 'scripts' ? '?view=scripts' : window.location.pathname)
+    window.history.replaceState(null, '', v.kind === 'board' ? `?board=${v.key}` : v.kind === 'dashboard' ? '?view=dashboard' : v.kind === 'scripts' ? '?view=scripts' : v.kind === 'videos' ? '?view=videos' : window.location.pathname)
   }
   const openItem = (b: string, id: string) => setOpen({ board: b as string, id })
 
@@ -69,6 +72,7 @@ export default function MarketingPage() {
           <NavItem icon={ICON.home} label="Workspace home" active={view.kind === 'home'} onClick={() => setView({ kind: 'home' })} />
           {BOARDS.map(b => <NavItem key={b.key} icon={ICON[b.key]} label={b.title} count={mk.rows[b.key].length} active={view.kind === 'board' && view.key === b.key} onClick={() => setView({ kind: 'board', key: b.key })} />)}
           <NavItem icon={ICON.scripts} label="Scripts" active={view.kind === 'scripts'} onClick={() => setView({ kind: 'scripts' })} />
+          <NavItem icon={ICON.videos} label="Video library" active={view.kind === 'videos'} onClick={() => setView({ kind: 'videos' })} />
           <NavItem icon={ICON.dashboard} label="Marketing dashboard" active={view.kind === 'dashboard'} onClick={() => setView({ kind: 'dashboard' })} />
         </aside>
       ) : (
@@ -77,7 +81,8 @@ export default function MarketingPage() {
 
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#fff' }}>
         {view.kind === 'scripts' && <ScriptsView />}
-        {view.kind === 'home' && <Home mk={mk} onOpen={k => setView({ kind: 'board', key: k })} onDashboard={() => setView({ kind: 'dashboard' })} onScripts={() => setView({ kind: 'scripts' })} />}
+        {view.kind === 'videos' && <VideoLibrary />}
+        {view.kind === 'home' && <Home mk={mk} onOpen={k => setView({ kind: 'board', key: k })} onDashboard={() => setView({ kind: 'dashboard' })} onScripts={() => setView({ kind: 'scripts' })} onVideos={() => setView({ kind: 'videos' })} />}
         {view.kind === 'dashboard' && (
           <div style={{ flex: 1, overflow: 'auto', padding: '18px 24px 40px', background: '#F6F7FB' }}>
             <h1 style={{ fontSize: 26, fontWeight: 500, margin: '0 0 14px' }}>Marketing dashboard</h1>
@@ -169,7 +174,7 @@ function EnquiryLinkCard() {
   )
 }
 
-function Home({ mk, onOpen, onDashboard, onScripts }: { mk: Mk; onOpen: (k: string) => void; onDashboard: () => void; onScripts: () => void }) {
+function Home({ mk, onOpen, onDashboard, onScripts, onVideos }: { mk: Mk; onOpen: (k: string) => void; onDashboard: () => void; onScripts: () => void; onVideos: () => void }) {
   const last = (k: string) => mk.rows[k].reduce((a, r) => Math.max(a, new Date(r.created_at).getTime()), 0)
   const td: React.CSSProperties = { padding: '11px 16px', borderBottom: `1px solid ${BRAND.rowBorder}` }
   return (
@@ -190,6 +195,7 @@ function Home({ mk, onOpen, onDashboard, onScripts }: { mk: Mk; onOpen: (k: stri
           <button onClick={() => onOpen('emails')} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.emails} Write an email</button>
           <button onClick={onDashboard} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.dashboard} Open dashboard</button>
           <button onClick={onScripts} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.scripts} Scripts</button>
+          <button onClick={onVideos} className="crm-tb" style={{ ...tb, border: `1px solid ${BRAND.border}` }}>{ICON.videos} Video library</button>
         </div>
         <EnquiryLinkCard />
         <div style={{ border: `1px solid ${BRAND.rowBorder}`, borderRadius: 8, overflow: 'auto' }}>
