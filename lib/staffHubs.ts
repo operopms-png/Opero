@@ -13,6 +13,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Dashboard', icon: 'trendingup', tabs: [
     { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
   ] },
+  { label: 'Scale', icon: 'chart', tabs: [{ href: '/staff-centre/scale', label: 'Scale', scTab: 'companydocs' }] },
   { label: 'Data Hub', icon: 'folder', tabs: [{ href: '/staff-centre/data-hub', label: 'Data Hub', scTab: 'datahub' }] },
   { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'companydocs' }] },
   { label: 'Novourq Cloud AI', icon: 'sparkles', tabs: [
@@ -45,7 +46,6 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/onboarding-tracker', label: 'Onboarding tracker', scTab: 'companydocs' },
     { href: '/staff-centre/tenant-onboarding', label: 'Tenant onboarding', scTab: 'companydocs' },
     { href: '/staff-centre/cohosts', label: 'Co-hosts', scTab: 'companydocs' },
-    { href: '/staff-centre/scale', label: 'Scale', scTab: 'companydocs' },
     { href: '/staff-centre/documents', label: 'Documents', scTab: 'companydocs' },
   ] },
   { label: 'Partners & Investors', icon: 'users', tabs: [
@@ -105,7 +105,7 @@ export const STAFF_HUBS: Hub[] = [
 ]
 
 // Hubs that stay on their own in the menu; every other hub sits inside the Human Intelligence Hub.
-export const NON_HUMAN_HUBS = ['Dashboard', 'Novourq Cloud AI']
+export const NON_HUMAN_HUBS = ['Dashboard', 'Scale', 'Novourq Cloud AI']
 
 export const HUMAN_HUB_HREF = '/staff-centre/human-intelligence'
 // Every tab of every people-run hub, with the hub's own page first, so one sidebar link covers them all.

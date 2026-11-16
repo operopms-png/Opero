@@ -2,7 +2,7 @@
 // Staff Centre → Scale: how far this company's master lease and co-host business has grown, from its own records.
 // Master leases come from Property Management → Head Leases, co-hosting from Staff Centre → Co-hosts and the bookings on
 // the properties they host. Only this company's records are read. "Preview example" shows labelled sample figures.
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { CrmPage, CrmHeader, Body, Stat, Pill, Empty, Loading, btn, C } from '../../../components/crm/Page'
 import { buildScale, EXAMPLE, moneyLine, type Scale } from '../../../lib/scale'
@@ -49,8 +49,8 @@ export default function ScalePage() {
   const [example, setExample] = useState(false)
   const [err, setErr] = useState('')
 
-  useEffect(() => {
-    ;(async () => {
+  const load = useCallback(async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
       const acct = await getAccountId(user)
@@ -63,9 +63,17 @@ export default function ScalePage() {
       const ids = Array.from(new Set((c.data ?? []).flatMap((x: any) => x.property_ids ?? []))) as string[]
       const since = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10)
       const b = ids.length ? await supabase.from('bookings').select('property_id,check_in,status,total_amount').in('property_id', ids).gte('check_in', since).limit(5000) : { data: [] as any[] }
-      setRows({ leases: l.data ?? [], pmProps: p.data ?? [], cohosts: c.data ?? [], bookings: (b as any).data ?? [] })
-    })().catch(e => setErr(e?.message || 'Could not load.'))
+      setRows({ leases: l.data ?? [], pmProps: p.data ?? [], cohosts: c.data ?? [], bookings: (b as any).data ?? [] }); setErr('')
+    } catch (e: any) { setErr(e?.message || 'Could not load.') }
   }, [])
+
+  // Everyone on the team reads the same company records. Reload when the page is opened again or the tab regains focus.
+  useEffect(() => {
+    load()
+    const again = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', again); window.addEventListener('focus', again)
+    return () => { document.removeEventListener('visibilitychange', again); window.removeEventListener('focus', again) }
+  }, [load])
 
   const live = useMemo(() => (rows ? buildScale(rows) : null), [rows])
   const empty = !!live && live.masters.count === 0 && live.cohosts.count === 0
@@ -76,7 +84,7 @@ export default function ScalePage() {
   return (
     <CrmPage>
       <CrmHeader title="Scale" subtitle={example ? 'Example figures for preview only. These are not your records.' : 'How big your master lease and co-host business is, and what needs attention to keep growing it. Read from your own Head Leases and Co-hosts.'}
-        actions={<button style={btn(example ? 'gold' : 'ghost')} onClick={() => setExample(!example)}>{example ? 'Back to my data' : 'Preview example'}</button>} />
+        actions={<>{!example && <button style={btn('ghost')} onClick={() => load()}>Refresh</button>}<button style={btn(example ? 'gold' : 'ghost')} onClick={() => setExample(!example)}>{example ? 'Back to my data' : 'Preview example'}</button></>} />
       <Body>
         {empty && !example && (
           <div style={{ marginBottom: 14 }}><Empty>Nothing to show yet. Add a head lease in Property Management, Head Leases, or a co-host in Human Intelligence Hub, Owners &amp; Tenants, Co-hosts. Press Preview example to see what this page will look like.</Empty></div>
