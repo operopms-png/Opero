@@ -87,11 +87,11 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'A deal only has a yield when it was saved with a purchase price and a rent, so rent-to-rent deals do not appear in the yield panels. Press Preview example to see the layout with example figures that are not your data, then press it again to go back to yours.',
   ] },
   { id: 'scale', title: 'Scale (master leases and co-hosting)', steps: [
-    'Where: Human Intelligence Hub, Owners & Tenants, Scale. It shows how big your master lease and co-host business is, from your own Head Leases and Co-hosts only.',
+    'Where: Scale in the left menu, between Real Estate Intelligence and Novourq Cloud AI. It shows how big your master lease and co-host business is, from your own Head Leases and Co-hosts only.',
     'The top cards show doors under management (head leases plus properties assigned to co-hosts), master leases, co-hosts, margin after head rent and co-host bookings for the last 90 days.',
     'Margin is the monthly income entered on the property minus the rent payable on its head lease. It only counts leases where both are entered, and amounts are shown per currency, not converted.',
     'What needs attention lists head leases that have ended or end within 90 days, leases whose sublet consent is not Yes, and co-host agreements that have ended or end within 90 days. Press a row to open Head Leases or Co-hosts and fix it.',
-    'Growth shows doors under management at the end of each of the last 12 months. Press Preview example to see sample figures (not your data) and Back to my data to return. It only reads your records and changes nothing.',
+    'Growth shows doors under management at the end of each of the last 12 months. Press Preview example to see sample figures (not your data) and Back to my data to return. It only reads your records and changes nothing. Everyone on your team who can open Scale sees the same company figures, and it refreshes when you come back to the page or press Refresh.',
   ] },
   { id: 'onboarding-tracker', title: 'Onboarding tracker', steps: [
     'Where: Human Intelligence Hub, Owners & Tenants, Onboarding tracker. Any staff member can use it. It lists every landlord, tenant, co-host and investor being onboarded, plus people you sent a new client link who have not opened it.',
