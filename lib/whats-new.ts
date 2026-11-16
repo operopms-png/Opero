@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-16', title: 'Market intelligence on the Dashboard', text: 'The Dashboard now shows Featured Property Analysis, Top Locations by Rental Yield, My Watchlist and Quick Insights (AI) from your saved deals and watchlist, each linking to Human Intelligence Hub → Client Properties; press Preview example to see it filled in.' },
   { date: '2026-11-16', title: 'Video library in Marketing', text: 'Keep your marketing videos and pictures in Human Intelligence Hub → Marketing → Video library with caption, hashtags, platforms and status, then download the file and copy the post text when you post.' },
   { date: '2026-11-15', title: 'WhatsApp Business in the Inbox', text: 'Connect your company WhatsApp number in Settings → WhatsApp, then reply from Inbox → Conversations, and let Novourq Cloud AI answer and hand over to a person.' },
   { date: '2026-11-14', title: 'Call minutes per client company', text: 'The platform owner can set a monthly call-minute allowance for each client under Revenue and Customers and see what each has used.' },
