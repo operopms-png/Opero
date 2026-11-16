@@ -1,5 +1,5 @@
 'use client'
-// Marketing → Video library: the company's marketing videos and pictures in one place, each with
+// Marketing → Video library and Picture library (same component, split by file type): each item has
 // its caption, hashtags, platforms, status and planned post date. Posting is done by hand for now:
 // download the file, copy the post text, then tick where it went.
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -23,7 +23,10 @@ const niceDate = (iso: string | null) => iso ? new Date(iso).toLocaleString('en-
 type Draft = { id?: string; title: string; caption: string; hashtags: string; platforms: string[]; status: string; scheduled_for: string; notes: string }
 const BLANK: Draft = { title: '', caption: '', hashtags: '', platforms: [], status: 'Draft', scheduled_for: '', notes: '' }
 
-export default function VideoLibrary() {
+// kind 'video' shows the videos, kind 'picture' shows the pictures (the Picture library). Both live in the same table.
+export default function VideoLibrary({ kind = 'video' }: { kind?: 'video' | 'picture' }) {
+  const pic = kind === 'picture'
+  const noun = pic ? 'picture' : 'video'
   const [list, setList] = useState<VideoRow[] | null>(null)
   const [me, setMe] = useState({ name: '', isAdmin: false })
   const [err, setErr] = useState('')
@@ -36,31 +39,32 @@ export default function VideoLibrary() {
   const load = () => api().then(d => { setList(d.videos); setMe({ name: d.me, isAdmin: d.isAdmin }) }).catch(e => setErr(e.message))
   useEffect(() => { load() }, [])
 
-  const shown = useMemo(() => (list ?? []).filter(v => (!status || v.status === status) && (!q || `${v.title} ${v.caption ?? ''} ${v.hashtags ?? ''} ${v.platforms.join(' ')}`.toLowerCase().includes(q.toLowerCase()))), [list, q, status])
-  const counts = useMemo(() => { const m: Record<string, number> = {}; for (const v of list ?? []) m[v.status] = (m[v.status] ?? 0) + 1; return m }, [list])
+  const mine = useMemo(() => (list ?? []).filter(v => isImage(v.mime) === pic), [list, pic])
+  const shown = useMemo(() => mine.filter(v => (!status || v.status === status) && (!q || `${v.title} ${v.caption ?? ''} ${v.hashtags ?? ''} ${v.platforms.join(' ')}`.toLowerCase().includes(q.toLowerCase()))), [mine, q, status])
+  const counts = useMemo(() => { const m: Record<string, number> = {}; for (const v of mine) m[v.status] = (m[v.status] ?? 0) + 1; return m }, [mine])
 
   return (
     <div style={{ flex: 1, overflow: 'auto', background: '#fff' }}>
       <div style={{ padding: '22px 28px 16px', background: 'linear-gradient(135deg,#EAF3FC,#C9DEF3)', borderBottom: '1px solid ' + C.creamLine, display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>Video library</h1>
-          <div style={{ fontSize: 13, color: C.muted, maxWidth: 720, lineHeight: 1.5 }}>Keep your marketing videos and pictures here with their caption, hashtags and the platforms they are for. When you post, download the file, copy the post text, then tick where it went. Only your own company sees these files.</div>
+          <h1 style={{ fontSize: 26, fontWeight: 500, color: C.brown, margin: '0 0 2px' }}>{pic ? 'Picture library' : 'Video library'}</h1>
+          <div style={{ fontSize: 13, color: C.muted, maxWidth: 720, lineHeight: 1.5 }}>Keep your marketing {noun}s here with their caption, hashtags and the platforms they are for. When you post, download the file, copy the post text, then tick where it went. Only your own company sees these files.</div>
         </div>
-        <button style={btn('gold')} onClick={() => setOpen('new')}>+ Add video</button>
+        <button style={btn('gold')} onClick={() => setOpen('new')}>+ Add {noun}</button>
       </div>
 
       <div style={{ padding: '16px 28px 40px' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 14 }}>
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search videos…" style={{ ...input, flex: 1, minWidth: 200, width: 'auto' }} />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder={`Search ${noun}s…`} style={{ ...input, flex: 1, minWidth: 200, width: 'auto' }} />
           {['', ...STATUSES].map(s => (
             <button key={s || 'all'} onClick={() => setStatus(s)} style={{ fontSize: 12.5, padding: '5px 11px', borderRadius: 14, border: '1px solid ' + (status === s ? C.ink : C.border), background: status === s ? C.ink : '#fff', color: status === s ? '#fff' : C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>{s || 'All'}{s && counts[s] ? ` ${counts[s]}` : ''}</button>
           ))}
         </div>
 
         {err && <div style={{ color: C.red, padding: 20 }}>{err}</div>}
-        {!list && !err && <div style={{ color: C.faint, padding: 20 }}>Loading videos…</div>}
-        {list && !list.length && <div style={{ color: C.muted, padding: '30px 0', fontSize: 14 }}>No videos yet. Press <b>+ Add video</b> and upload your first one.</div>}
-        {list && !!list.length && !shown.length && <div style={{ color: C.muted, padding: '30px 0', fontSize: 14 }}>Nothing matches that search.</div>}
+        {!list && !err && <div style={{ color: C.faint, padding: 20 }}>Loading {noun}s…</div>}
+        {list && !mine.length && <div style={{ color: C.muted, padding: '30px 0', fontSize: 14 }}>No {noun}s yet. Press <b>+ Add {noun}</b> and upload your first one.</div>}
+        {list && !!mine.length && !shown.length && <div style={{ color: C.muted, padding: '30px 0', fontSize: 14 }}>Nothing matches that search.</div>}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
           {shown.map(v => {
@@ -87,13 +91,13 @@ export default function VideoLibrary() {
         </div>
       </div>
 
-      {open && <Editor key={open === 'new' ? 'new' : open.id} video={open === 'new' ? null : open} me={me} onClose={() => setOpen(null)} onChanged={(msg) => { flash(msg); load() }} />}
+      {open && <Editor key={open === 'new' ? 'new' : open.id} kind={kind} video={open === 'new' ? null : open} me={me} onClose={() => setOpen(null)} onChanged={(msg) => { flash(msg); load() }} />}
       {toast && <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.ink, color: '#fff', padding: '10px 18px', borderRadius: 6, fontSize: 13.5, zIndex: 80 }}>{toast}</div>}
     </div>
   )
 }
 
-function Editor({ video, me, onClose, onChanged }: { video: VideoRow | null; me: { name: string; isAdmin: boolean }; onClose: () => void; onChanged: (msg: string) => void }) {
+function Editor({ kind, video, me, onClose, onChanged }: { kind: 'video' | 'picture'; video: VideoRow | null; me: { name: string; isAdmin: boolean }; onClose: () => void; onChanged: (msg: string) => void }) {
   const [d, setD] = useState<Draft>(video ? { id: video.id, title: video.title, caption: video.caption ?? '', hashtags: video.hashtags ?? '', platforms: video.platforms, status: video.status, scheduled_for: toLocalInput(video.scheduled_for), notes: video.notes ?? '' } : BLANK)
   const [file, setFile] = useState<File | null>(null)
   const [posted, setPosted] = useState<string[]>(video?.posted_platforms ?? [])
@@ -109,6 +113,7 @@ function Editor({ video, me, onClose, onChanged }: { video: VideoRow | null; me:
     setErr('')
     if (!f) return setFile(null)
     if (!VIDEO_MIMES.includes(f.type)) return setErr('Use an MP4, MOV or WebM video, or a JPG, PNG or WebP picture.')
+    if (isImage(f.type) !== (kind === 'picture')) return setErr(kind === 'picture' ? 'This is the Picture library. Use a JPG, PNG or WebP picture, or add videos in the Video library.' : 'This is the Video library. Use an MP4, MOV or WebM video, or add pictures in the Picture library.')
     if (f.size > MAX_VIDEO_BYTES) return setErr('That file is over 500 MB. Compress it and try again.')
     setFile(f)
     if (!d.title) set({ title: f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() })
@@ -116,8 +121,8 @@ function Editor({ video, me, onClose, onChanged }: { video: VideoRow | null; me:
 
   async function save() {
     setErr('')
-    if (!d.title.trim()) return setErr('Give the video a title.')
-    if (!video && !file) return setErr('Choose a video or picture to upload.')
+    if (!d.title.trim()) return setErr(`Give the ${kind} a title.`)
+    if (!video && !file) return setErr(`Choose a ${kind} to upload.`)
     const payload = { ...d, scheduled_for: d.scheduled_for ? new Date(d.scheduled_for).toISOString() : null }
     try {
       if (video) {
@@ -131,7 +136,7 @@ function Editor({ video, me, onClose, onChanged }: { video: VideoRow | null; me:
       if (up.error) throw new Error(up.error.message || 'The upload failed. Try again.')
       setBusy('Saving…')
       await api({ action: 'save', path: s.path, video: { ...payload, file_name: file!.name, mime: file!.type, size_bytes: file!.size } })
-      onChanged('Added to the video library'); onClose()
+      onChanged(kind === 'picture' ? 'Added to the picture library' : 'Added to the video library'); onClose()
     } catch (e: any) { setErr(e.message || 'Something went wrong'); setBusy('') }
   }
 
@@ -151,7 +156,7 @@ function Editor({ video, me, onClose, onChanged }: { video: VideoRow | null; me:
   const field: React.CSSProperties = { marginBottom: 14 }
 
   return (
-    <Modal title={video ? 'Video details' : 'Add video'} onClose={() => !busy && onClose()} width={640}>
+    <Modal title={kind === 'picture' ? (video ? 'Picture details' : 'Add picture') : (video ? 'Video details' : 'Add video')}onClose={() => !busy && onClose()} width={640}>
       {video?.url && (
         <div style={{ background: '#0F1117', borderRadius: 6, overflow: 'hidden', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
           {isImage(video.mime) ? <img src={video.url} alt="" style={{ maxWidth: '100%', maxHeight: 340 }} /> : <video src={video.url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 340 }} />}
@@ -160,11 +165,11 @@ function Editor({ video, me, onClose, onChanged }: { video: VideoRow | null; me:
 
       {!video && (
         <div style={field}>
-          <label style={label}>Video or picture</label>
-          <input ref={fileRef} type="file" accept="video/mp4,video/quicktime,video/webm,video/x-m4v,image/jpeg,image/png,image/webp" onChange={e => pickFile(e.target.files?.[0] ?? null)} style={{ display: 'none' }} />
+          <label style={label}>{kind === 'picture' ? 'Picture' : 'Video'}</label>
+          <input ref={fileRef} type="file" accept={kind === 'picture' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/quicktime,video/webm,video/x-m4v'} onChange={e => pickFile(e.target.files?.[0] ?? null)} style={{ display: 'none' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <button type="button" style={btn('ghost')} onClick={() => fileRef.current?.click()}>{file ? 'Choose another file' : 'Choose file'}</button>
-            <span style={{ fontSize: 13, color: C.muted }}>{file ? `${file.name} · ${fileSize(file.size)}` : 'MP4, MOV or WebM video, or a JPG, PNG or WebP picture, up to 500 MB'}</span>
+            <span style={{ fontSize: 13, color: C.muted }}>{file ? `${file.name} · ${fileSize(file.size)}` : kind === 'picture' ? 'JPG, PNG or WebP, up to 500 MB' : 'MP4, MOV or WebM, up to 500 MB'}</span>
           </div>
         </div>
       )}

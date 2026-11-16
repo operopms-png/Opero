@@ -1,7 +1,7 @@
 'use client'
 // "Novourq Cloud AI" panel on the Staff Centre dashboard. Questions go to /api/grok, which only reads
 // records. The one thing it can add is pictures: attach them here and they are saved as drafts in
-// Marketing → Video library, each with an AI-written title, caption and hashtags to check.
+// Marketing → Picture library, each with an AI-written title, caption and hashtags to check.
 import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import AiMark from './ai/AiMark'
@@ -103,7 +103,7 @@ export default function GrokPanel() {
     if (notes.length) setMessages(m => [...m, { role: 'bot', text: notes.join(' ') }])
   }
 
-  // Saves each picture as a draft in Marketing → Video library, with a title, caption and hashtags written by the AI.
+  // Saves each picture as a draft in Marketing → Picture library, with a title, caption and hashtags written by the AI.
   async function addPictures(text: string) {
     const files = pictures
     const brief = text.trim()
@@ -136,7 +136,7 @@ export default function GrokPanel() {
       }
     }
     const reply = [
-      added ? `Added ${added} picture${added === 1 ? '' : 's'} to Marketing as drafts, each with a title, caption and hashtags for you to check. Open them at Human Intelligence Hub → Marketing → Marketing → Video library.` : 'No pictures were added.',
+      added ? `Added ${added} picture${added === 1 ? '' : 's'} to Marketing as drafts, each with a title, caption and hashtags for you to check. Open them at Human Intelligence Hub → Marketing → Marketing → Picture library.` : 'No pictures were added.',
       failed.length ? `These did not upload, so try them again: ${failed.join(', ')}.` : '',
     ].filter(Boolean).join('\n')
     setMessages(m => [...m, { role: 'bot', text: reply }])

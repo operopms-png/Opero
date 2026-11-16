@@ -4,7 +4,7 @@ import { getCaller } from '@/lib/mailbox'
 import { callClaude, callClaudeWithDocument } from '@/lib/claude'
 import { VIDEO_BUCKET } from '@/lib/marketing-videos'
 
-// Novourq Cloud AI → Add pictures. After a picture has been uploaded to the Marketing Video library,
+// Novourq Cloud AI → Add pictures. After a picture has been uploaded to the Marketing Picture library,
 // the AI looks at it and writes a title, caption and hashtags for the team to check.
 //   POST { path, name, brief } -> { ok, title, caption, hashtags }
 // Each company can only use files inside its own folder of the private bucket.

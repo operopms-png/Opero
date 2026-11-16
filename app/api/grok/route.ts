@@ -11,7 +11,7 @@ import { requireStaff, serviceClient } from '@/lib/admin-auth'
 export const maxDuration = 60
 
 const RULES = `You cannot change any records, send messages, make payments or delete anything. Any draft you write is for a member of staff to read and send.
-The one thing the chat can add is marketing pictures: staff press the picture button next to the message box and the pictures are saved as drafts in Marketing, Video library. You cannot do that from typed text alone, so tell staff to use the picture button.
+The one thing the chat can add is marketing pictures: staff press the picture button next to the message box and the pictures are saved as drafts in Marketing, Picture library. You cannot do that from typed text alone, so tell staff to use the picture button.
 You do not give legal advice. For deposits, notice, eviction or Right to Rent questions, say that a member of staff must handle it.
 Use only the records given to you. If the answer is not in them, say so. Keep answers short and plain.`
 
