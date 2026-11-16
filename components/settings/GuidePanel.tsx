@@ -86,6 +86,13 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Quick Insights (AI) writes a few plain sentences from those same figures, once a day. Press Refresh to write them again. It does not add outside market figures. Open market check goes to the Deal Analyser.',
     'A deal only has a yield when it was saved with a purchase price and a rent, so rent-to-rent deals do not appear in the yield panels. Press Preview example to see the layout with example figures that are not your data, then press it again to go back to yours.',
   ] },
+  { id: 'clock-in', title: 'Clock in and late arrivals (Work Hours)', steps: [
+    'Where: Human Intelligence Hub → Team → Work Hours, and a small Clock in box on the Dashboard. Everyone presses Clock in when they start and Clock out when they finish. Signing in to the portal does not clock them in.',
+    'The account owner, and staff the owner picks under Who can see this, see Clock-ins and late arrivals on Work Hours: time in, time out, hours, and On time or Late with the minutes.',
+    'Press Set shift times (owner only) to give each person a start time, a grace period in minutes and working days. Without a shift set, nobody is flagged late.',
+    'Anyone with a shift today who has not clocked in after the grace period is named in red. A clock-in left open for 18 hours shows as Not clocked out.',
+    'Download (CSV) exports clock-ins for payroll. Limits: it records the button presses, not what someone does away from the portal, and there is no email alert yet.',
+  ] },
   { id: 'dynamic-dossier', title: 'Dynamic Dossier (suggested nightly prices)', steps: [
     'Where: Real Estate Intelligence → Vacation Rentals → Dynamic Dossier (under Insights). It is also listed under Vacation Rentals on the Property page.',
     'Rates: pick a property and enter a base price, a floor and a ceiling, then the weekend uplift, last-minute cut, single-night gap cut and busy-month uplift in percent. Press Save rules. Rules are saved per property for your company only.',

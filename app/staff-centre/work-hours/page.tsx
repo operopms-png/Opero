@@ -4,6 +4,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { C, CrmPage, CrmHeader, Body, Loading, Empty } from '../../../components/crm/Page'
 import { staffApi } from '../../../lib/staff-api'
+import ClockCard from '../../../components/work/ClockCard'
+import ClockReport from '../../../components/work/ClockReport'
 
 const iso = (d: Date) => d.toISOString().slice(0, 10)
 const hm = (d: string | null) => d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
@@ -45,6 +47,8 @@ export default function WorkHours() {
     <CrmPage>
       <CrmHeader title="Work Hours" subtitle="When each person signed in, how long they were on the portal and when they signed out." />
       <Body>
+        <div style={{ marginBottom: 14 }}><ClockCard /></div>
+        <ClockReport />
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
           <label style={{ fontSize: 13, color: C.muted }}>From <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={field} /></label>
           <label style={{ fontSize: 13, color: C.muted }}>To <input type="date" value={to} onChange={e => setTo(e.target.value)} style={field} /></label>
