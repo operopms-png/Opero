@@ -157,7 +157,8 @@ export async function deliverDocument(doc: any, opts: { reminder?: boolean } = {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return 'Add the email address to send it to.'
   const s = await docSettings(doc.business_id)
   const company = s.company_name || 'Property Management Team'
-  const bytes = await documentPdf(doc, s, SITE_URL)
+  const cf = contactFor(doc, s)
+  const bytes = await documentPdf(doc, { ...s, contact_lines: cf.contact_lines }, SITE_URL)
   const link = `${SITE_URL}/sign/${doc.token}`
   const parts = String(doc.recipient_name || '').trim().split(/\s+/)
   const first = /^(mr|mrs|ms|miss|dr)\.?$/i.test(parts[0]) ? parts.slice(0, 2).join(' ') : parts[0]   // keeps "Mr. Campbell"
@@ -165,7 +166,6 @@ export async function deliverDocument(doc: any, opts: { reminder?: boolean } = {
     ? `Just a reminder — your ${doc.title}${doc.property_label ? ` for ${doc.property_label}` : ''} is still waiting for your signature. It only takes a minute.`
     : (String(doc.email_message || '').trim() || `Please find your ${doc.title}${doc.property_label ? ` for ${doc.property_label}` : ''}. ${doc.needs_signature ? 'You can read it and sign online in a couple of minutes.' : 'You can read it online or open the PDF attached.'}`)
   const subject = opts.reminder ? `Reminder: ${doc.title} is waiting for your signature` : (String(doc.email_subject || '').trim().replace(/\{company_name\}/g, company).replace(/\{(recipient_name|employee_name)\}/g, String(doc.recipient_name || '')).replace(/\{first_name\}/g, first) || `${doc.title}${doc.property_label ? ` — ${doc.property_label}` : ''}`)
-  const cf = contactFor(doc, s)
   const html = docEmailHtml(company, cf.contact_lines, first, msg, link, doc.needs_signature ? 'Review and sign' : 'View document', 'A PDF copy is attached. Questions? Just reply to this email.')
   const r = await sendEmail(to, subject, html, doc.created_email || cf.reply_to || undefined, `${company} <notifications@${EMAIL_DOMAIN}>`, [{ filename: `${String(doc.title).replace(/[^\w\- ]+/g, '').trim() || 'document'}.pdf`, content: Buffer.from(bytes).toString('base64') }])
   if ((r as any).skipped) return 'Email isn’t set up on the portal yet (RESEND_API_KEY missing in Netlify). Download the PDF and send it yourself for now.'

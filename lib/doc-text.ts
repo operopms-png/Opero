@@ -60,8 +60,8 @@ export const fieldKind = (key: string): 'initials' | 'date' | 'text' => /^initia
 export const TOKEN_RE = /\{([a-z][a-z0-9_]*)(?::([^{}<>]*))?\}/g
 /** Page background for a document: the NOVOURQ artwork on every offer letter, whatever the role. */
 export const docBackground = (title?: string | null): string | null => /^offer letter/i.test(String(title || '').trim()) ? '/novourq-letter-bg.jpg' : null
-/** Landlord onboarding agreements open in the NOVOURQ form layout (logo, navy headings, ruled fill-in lines, tick boxes). */
-export const formLayout = (title?: string | null): boolean => /^(master lease|landlord|co-host|global co-host|corporate accommodation|shortlet)/i.test(String(title || '').trim())
+/** Every contract and letter opens in the NOVOURQ form layout (logo, navy headings, ruled fill-in lines, tick boxes). */
+export const formLayout = (_title?: string | null): boolean => true
 export const esc = (t: any) => String(t ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))
 export const decode = (t: string) => t.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
 

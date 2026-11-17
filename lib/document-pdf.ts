@@ -27,12 +27,13 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   pdf.setTitle(safe(doc.title))
   const W = 595.28, H = 841.89, M = 58, TOP = 112, BOTTOM = 70, CW = W - 2 * M
   const F = {
-    reg: await pdf.embedFont(StandardFonts.TimesRoman), bold: await pdf.embedFont(StandardFonts.TimesRomanBold),
-    ital: await pdf.embedFont(StandardFonts.TimesRomanItalic), boldItal: await pdf.embedFont(StandardFonts.TimesRomanBoldItalic),
+    reg: await pdf.embedFont(StandardFonts.Helvetica), bold: await pdf.embedFont(StandardFonts.HelveticaBold),
+    ital: await pdf.embedFont(StandardFonts.HelveticaOblique), boldItal: await pdf.embedFont(StandardFonts.HelveticaBoldOblique),
     sans: await pdf.embedFont(StandardFonts.Helvetica), sansBold: await pdf.embedFont(StandardFonts.HelveticaBold),
   }
-  const ink = hex('#1F1F1F'), grey = hex('#6B6B6B'), gold = hex('#89CFF0'), goldBg = hex('#89CFF0')
-  const logo = await loadImage(pdf, s.logo_url, siteUrl)
+  const ink = hex('#1F2937'), grey = hex('#4B5563'), navy = hex('#182D5E')
+  // NOVOURQ form look: the NOVOURQ mark top-left on every page, navy uppercase headings, a ruled footer with page numbers
+  const logo = await loadImage(pdf, (s.company_name || '').trim().toUpperCase() === 'NOVOURQ' ? '/novourq-form-logo.png' : (s.logo_url || '/novourq-form-logo.png'), siteUrl)
   const bgUrl = docBackground(doc.title)
   const bg = bgUrl ? await loadImage(pdf, bgUrl, siteUrl) : null
   const company = s.company_name || 'Property Management Team'
@@ -42,14 +43,8 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   const newPage = () => {
     page = pdf.addPage([W, H]); pages.push(page); y = TOP
     if (bg) { const bh = W * bg.height / bg.width; page.drawImage(bg, { x: 0, y: (H - bh) / 2, width: W, height: bh, opacity: 0.55 }) }
-    page.drawRectangle({ x: 0, y: H - 6, width: W, height: 6, color: goldBg })
-    if (logo) { page.drawRectangle({ x: M, y: H - 34 - 40, width: 40, height: 40, color: goldBg }); const d = logo.scaleToFit(34, 34); page.drawImage(logo, { x: M + 3, y: H - 34 - 37, width: d.width, height: d.height }) }
-    const tx = logo ? M + 50 : M
-    page.drawText(safe(company), { x: tx, y: H - 52, size: 13, font: F.sansBold, color: ink })
-    page.drawText(safe(doc.title).slice(0, 80), { x: tx, y: H - 67, size: 8.5, font: F.sans, color: grey })
-    const contact = (s.contact_lines || '').split('\n').filter(Boolean).slice(0, 3)
-    contact.forEach((l, k) => { const t = safe(l); page.drawText(t, { x: W - M - F.sans.widthOfTextAtSize(t, 8), y: H - 46 - k * 11, size: 8, font: F.sans, color: grey }) })
-    page.drawLine({ start: { x: M, y: H - 88 }, end: { x: W - M, y: H - 88 }, thickness: 0.6, color: hex('#D8CFB8') })
+    if (logo) { const d = logo.scaleToFit(48, 48); page.drawImage(logo, { x: M, y: H - 36 - d.height, width: d.width, height: d.height }) }
+    else page.drawText(safe(company), { x: M, y: H - 52, size: 14, font: F.sansBold, color: navy })
   }
   const ensure = (h: number) => { if (y + h > H - BOTTOM) newPage() }
 
@@ -83,7 +78,7 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
       if (li === 0 && opts.marker) page.drawText(safe(opts.marker), { x: opts.x - 14, y: H - y - opts.size, size: opts.size, font: F.reg, color: opts.color || ink })
       for (let k = 0; k < line.length; k++) {
         const w = line[k], ww = w.font.widthOfTextAtSize(w.text, opts.size)
-        page.drawText(w.text, { x, y: H - y - opts.size, size: opts.size, font: w.font, color: w.empty ? grey : (opts.color || ink) })
+        page.drawText(w.text, { x, y: H - y - opts.size, size: opts.size, font: w.font, color: w.empty ? grey : (opts.color || (w.font === F.bold || w.font === F.boldItal ? navy : ink)) })
         if (w.u) page.drawLine({ start: { x, y: H - y - opts.size - 1.5 }, end: { x: x + ww, y: H - y - opts.size - 1.5 }, thickness: 0.5, color: ink })
         x += ww + (w.space ? space(w.font) : 0)
       }
@@ -91,23 +86,26 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     })
   }
 
+  const upper = (runs: Run[]) => runs.map(r => (r.empty ? r : { ...r, text: r.text.toUpperCase() }))
   newPage()
   const blocks = htmlToBlocks(doc.body)
+  // a document with no heading of its own (offer letters, notices) gets its title above the text
+  if (blocks[0]?.type !== 'h1') { y += 4; drawRuns([{ text: safe(doc.title).toUpperCase() }], { size: 14, lead: 19, x: M, width: CW, base: 'head', color: navy }); y += 8 }
   for (const bl of blocks) {
     if (bl.type === 'hr') { ensure(14); page.drawLine({ start: { x: M, y: H - y - 6 }, end: { x: W - M, y: H - y - 6 }, thickness: 0.5, color: hex('#BBBBBB') }); y += 14; continue }
-    if (bl.type === 'h1') { ensure(40); y += 6; drawRuns(bl.runs, { size: 15, lead: 20, x: M, width: CW, center: true, base: 'head' }); y += 10; continue }
-    if (bl.type === 'h2') { ensure(34); y += 8; drawRuns(bl.runs, { size: 11.5, lead: 16, x: M, width: CW, center: bl.center, base: 'head', color: gold }); y += 4; continue }
-    if (bl.type === 'h3') { ensure(28); y += 4; drawRuns(bl.runs, { size: 11, lead: 15, x: M, width: CW, center: bl.center, base: 'head' }); y += 2; continue }
-    if (bl.type === 'li') { const ind = 18 + (bl.depth || 0) * 16; drawRuns(bl.runs, { size: 11, lead: 15, x: M + ind, width: CW - ind, marker: bl.marker }); y += 3; continue }
+    if (bl.type === 'h1') { ensure(40); y += 6; drawRuns(upper(bl.runs), { size: 14, lead: 19, x: M, width: CW, base: 'head', color: navy }); y += 8; continue }
+    if (bl.type === 'h2') { ensure(34); y += 8; drawRuns(upper(bl.runs), { size: 11, lead: 16, x: M, width: CW, base: 'head', color: navy }); y += 4; continue }
+    if (bl.type === 'h3') { ensure(28); y += 4; drawRuns(upper(bl.runs), { size: 10.5, lead: 15, x: M, width: CW, base: 'head', color: navy }); y += 2; continue }
+    if (bl.type === 'li') { const ind = 18 + (bl.depth || 0) * 16; drawRuns(bl.runs, { size: 10.5, lead: 14.5, x: M + ind, width: CW - ind, marker: bl.marker }); y += 3; continue }
     if (bl.type === 'quote') { drawRuns(bl.runs, { size: 10.5, lead: 14.5, x: M + 16, width: CW - 16, color: grey }); y += 6; continue }
-    drawRuns(bl.runs, { size: 11, lead: 15.5, x: M, width: CW, center: bl.center }); y += 7
+    drawRuns(bl.runs, { size: 10.5, lead: 15, x: M, width: CW, center: bl.center }); y += 7
   }
 
   // signatures
   if (doc.signed_at) {
     ensure(110); y += 14
-    page.drawRectangle({ x: M, y: H - y - 88, width: CW, height: 88, color: hex('#FAF6EC'), borderColor: hex('#89CFF0'), borderWidth: 0.6 })
-    page.drawText('SIGNED ELECTRONICALLY', { x: M + 14, y: H - y - 18, size: 8, font: F.sansBold, color: gold })
+    page.drawRectangle({ x: M, y: H - y - 88, width: CW, height: 88, color: hex('#F4F6FA'), borderColor: navy, borderWidth: 0.6 })
+    page.drawText('SIGNED ELECTRONICALLY', { x: M + 14, y: H - y - 18, size: 8, font: F.sansBold, color: navy })
     let drew = false
     if (doc.signature_data?.startsWith('data:image/png;base64,')) {
       try { const img = await pdf.embedPng(Buffer.from(doc.signature_data.split(',')[1], 'base64')); const sc = Math.min(200 / img.width, 40 / img.height); page.drawImage(img, { x: M + 14, y: H - y - 56, width: img.width * sc, height: img.height * sc }); drew = true } catch { /* fall back to the typed name */ }
@@ -128,10 +126,14 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     }
   }
 
+  const contact = (s.contact_lines || '').split('\n').map(l => l.trim()).filter(l => /@|www\./i.test(l))
+  const foot = safe([company, ...contact].join(' · '))
   pages.forEach((p, k) => {
     const t = `Page ${k + 1} of ${pages.length}`
-    p.drawText(t, { x: W - M - F.sans.widthOfTextAtSize(t, 8), y: 34, size: 8, font: F.sans, color: grey })
-    p.drawText(safe(company), { x: M, y: 34, size: 8, font: F.sans, color: grey })
+    p.drawLine({ start: { x: M, y: 50 }, end: { x: W - M, y: 50 }, thickness: 0.8, color: navy })
+    let f = foot; while (f.length > 4 && F.sans.widthOfTextAtSize(f, 8) > CW - 80) f = f.slice(0, -2)
+    p.drawText(f, { x: M, y: 36, size: 8, font: F.sans, color: grey })
+    p.drawText(t, { x: W - M - F.sansBold.widthOfTextAtSize(t, 8), y: 36, size: 8, font: F.sansBold, color: navy })
   })
   return pdf.save()
 }

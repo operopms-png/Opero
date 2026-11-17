@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   if (!d) return bad('Document not found', 404)
   const s = await docSettings(d.business_id)
   if (req.nextUrl.searchParams.get('pdf')) {
-    const bytes = await documentPdf(d, s, SITE_URL)
+    const bytes = await documentPdf(d, { ...s, contact_lines: contactFor(d, s).contact_lines }, SITE_URL)
     return new NextResponse(Buffer.from(bytes), { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${String(d.title).replace(/[^\w\- ]+/g, '').trim() || 'document'}.pdf"` } })
   }
   if (d.status === 'sent') {
