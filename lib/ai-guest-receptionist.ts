@@ -8,6 +8,7 @@
 // sendGuestMessage() below once a staff member approves it in
 // Staff Centre -> AI Approvals. Approved replies are logged with
 // sender:'ai' so the thread still shows which messages were AI-written.
+import { open as openSecret } from '@/lib/secret-store'
 import { createClient } from '@supabase/supabase-js'
 import { callClaude } from './claude'
 import { queueAiAction } from './ai-approvals'
@@ -41,7 +42,7 @@ export async function sendGuestMessage(userId: string, bookingId: string, subjec
     const { data: integ } = await supabase.from('integrations').select('smoobu_api_key, smoobu_api_secret').eq('user_id', userId).single()
     if (!integ?.smoobu_api_key) return { error: 'Smoobu is not connected for this account.' }
     try {
-      await sendSmoobuGuestMessage({ apiKey: integ.smoobu_api_key, secret: (integ as any).smoobu_api_secret }, smoobuMatch[1], subject, body)
+      await sendSmoobuGuestMessage({ apiKey: openSecret(integ.smoobu_api_key) as string, secret: openSecret((integ as any).smoobu_api_secret) }, smoobuMatch[1], subject, body)
     } catch (e) {
       return { error: e instanceof Error ? e.message : String(e) }
     }

@@ -814,11 +814,22 @@ function PMPageInner() {
     const accountId = await getAccountId(user)
     setIntegrationLoading(prev => ({ ...prev, [id]: true }))
     const extra: any = column === 'smoobu_api_key' && !integrationsRow?.smoobu_webhook_token ? { smoobu_webhook_token: crypto.randomUUID().replace(/-/g, '') } : {}
-    const { error } = await supabase.from('integrations').upsert({ user_id: accountId, [column]: value, ...extra }, { onConflict: 'user_id' })
+    // The Smoobu key and secret are saved encrypted through the server; other integration keys are saved as before.
+    let error: { message: string } | null = null, shown: any = value
+    if (column === 'smoobu_api_key' || column === 'smoobu_api_secret') {
+      const { data: { session } } = await supabase.auth.getSession()
+      const r = await fetch('/api/integrations/smoobu-keys', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ column, value }) })
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) error = { message: j.error || 'Could not save' }
+      else { if (j.smoobu_webhook_token) extra.smoobu_webhook_token = j.smoobu_webhook_token; shown = 'saved' }
+    } else {
+      const res = await supabase.from('integrations').upsert({ user_id: accountId, [column]: value, ...extra }, { onConflict: 'user_id' })
+      error = res.error
+    }
     setIntegrationLoading(prev => ({ ...prev, [id]: false }))
     if (error) { setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'error', text: error.message } })); return }
     setIntegrationMessages(prev => ({ ...prev, [id]: { type: 'success', text: 'Connected!' } }))
-    setIntegrationsRow((prev: any) => ({ ...prev, [column]: value, ...extra }))
+    setIntegrationsRow((prev: any) => ({ ...prev, [column]: shown, ...extra }))
   }
 
   async function disconnectIntegration(id: string, column: string) {

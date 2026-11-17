@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'Smoobu keys now encrypted', text: 'Your Smoobu API key and secret are now stored encrypted; keys saved earlier are encrypted automatically at the next sync.' },
   { date: '2026-11-17', title: 'Missed clock-in email', text: 'The account owner is emailed when someone with a shift today has not clocked in 15 minutes after it starts.' },
   { date: '2026-11-17', title: 'Work Hours staff notice', text: 'HR Documents → Add NOVOURQ templates now includes a staff notice explaining what Work Hours records, with a signature line for the employee.' },
   { date: '2026-11-17', title: 'Main image for development projects', text: 'Upload a render or photo on a development project (Real Estate Intelligence → Developments → Projects → Edit) and it shows on the project card and in the Map side panel.' },
