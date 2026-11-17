@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'Email me test contracts', text: 'Documents → Templates → Email me test contracts sends you a test copy of every agreement template so you can try the signing link.' },
   { date: '2026-11-17', title: 'Landlord templates added', text: 'Documents → Templates → Add landlord templates adds the Shortlet Landlord Agreement, Landlord Onboarding and Estate Agency Property Management Agreement in the NOVOURQ layout, ready to send by link.' },
   { date: '2026-11-17', title: 'NOVOURQ background on every contract', text: 'Contracts now have the NOVOURQ artwork as the page background on the signing page and in the PDF, with the corner logo removed, like the offer letters.' },
   { date: '2026-11-17', title: 'All contracts and letters in the NOVOURQ look', text: 'Every contract and letter now shows the NOVOURQ logo and navy form layout on the signing page and in the PDF copy, with the logo on every page and a footer with page numbers.' },
