@@ -59,7 +59,7 @@ export const fieldKind = (key: string): 'initials' | 'date' | 'text' => /^initia
 
 export const TOKEN_RE = /\{([a-z][a-z0-9_]*)(?::([^{}<>]*))?\}/g
 /** Page background for a document: the NOVOURQ artwork on every offer letter, whatever the role. */
-export const docBackground = (title?: string | null): string | null => /^offer letter/i.test(String(title || '').trim()) ? '/novourq-letter-bg.jpg' : null
+export const docBackground = (title?: string | null): string | null => /^offer letter/i.test(String(title || '').trim()) ? '/novourq-letter-bg.jpg' : '/novourq-contract-bg.jpg'
 /** Every contract and letter opens in the NOVOURQ form layout (logo, navy headings, ruled fill-in lines, tick boxes). */
 export const formLayout = (_title?: string | null): boolean => true
 export const esc = (t: any) => String(t ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))

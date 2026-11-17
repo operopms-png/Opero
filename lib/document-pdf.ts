@@ -33,17 +33,19 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   }
   const ink = hex('#1F2937'), grey = hex('#4B5563'), navy = hex('#182D5E')
   // NOVOURQ form look: the NOVOURQ mark top-left on every page, navy uppercase headings, a ruled footer with page numbers
-  const logo = await loadImage(pdf, (s.company_name || '').trim().toUpperCase() === 'NOVOURQ' ? '/novourq-form-logo.png' : (s.logo_url || '/novourq-form-logo.png'), siteUrl)
-  const bgUrl = docBackground(doc.title)
+  const isNov = (s.company_name || '').trim().toUpperCase() === 'NOVOURQ'
+  const bgUrl = isNov ? docBackground(doc.title) : null
   const bg = bgUrl ? await loadImage(pdf, bgUrl, siteUrl) : null
+  const logo = !bg ? await loadImage(pdf, s.logo_url, siteUrl) : null
   const company = s.company_name || 'Property Management Team'
   const pages: PDFPage[] = []
   let page!: PDFPage, y = 0
 
   const newPage = () => {
     page = pdf.addPage([W, H]); pages.push(page); y = TOP
-    if (bg) { const bh = W * bg.height / bg.width; page.drawImage(bg, { x: 0, y: (H - bh) / 2, width: W, height: bh, opacity: 0.55 }) }
-    if (logo) { const d = logo.scaleToFit(44, 44); page.drawImage(logo, { x: M, y: H - 14 - d.height, width: d.width, height: d.height }) }
+    // the NOVOURQ artwork fills the page behind the text (covers the page, centred); no corner logo
+    if (bg) { const k = Math.max(W / bg.width, H / bg.height), bw = bg.width * k, bh = bg.height * k; page.drawImage(bg, { x: (W - bw) / 2, y: (H - bh) / 2, width: bw, height: bh, opacity: 0.5 }) }
+    else if (logo) { const d = logo.scaleToFit(44, 44); page.drawImage(logo, { x: M, y: H - 14 - d.height, width: d.width, height: d.height }) }
     else page.drawText(safe(company), { x: M, y: H - 52, size: 14, font: F.sansBold, color: navy })
   }
   const ensure = (h: number) => { if (y + h > H - BOTTOM) newPage() }

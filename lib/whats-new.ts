@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'NOVOURQ background on every contract', text: 'Contracts now have the NOVOURQ artwork as the page background on the signing page and in the PDF, with the corner logo removed, like the offer letters.' },
   { date: '2026-11-17', title: 'All contracts and letters in the NOVOURQ look', text: 'Every contract and letter now shows the NOVOURQ logo and navy form layout on the signing page and in the PDF copy, with the logo on every page and a footer with page numbers.' },
   { date: '2026-11-17', title: 'Landlord agreements in the NOVOURQ form layout', text: 'When a landlord opens the link for a Master Lease, Landlord Management or Co-Host agreement, it now looks like the NOVOURQ agreement PDFs, with the logo, navy headings, ruled fill-in lines and tick boxes.' },
   { date: '2026-11-17', title: 'Offer letters: date to sign', text: 'The employee signature and date line on offer letters and the Work Hours notice is now a date box the employee fills in when signing, with the signature drawn in the box below.' },
