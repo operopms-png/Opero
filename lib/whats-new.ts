@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'Dynamic Dossier Listings and Market', text: 'Dynamic Dossier now has a Listings tab (rules and suggested prices per property) and a Market tab (how full your next 60 nights are and which weekdays fill), from your own bookings.' },
   { date: '2026-11-17', title: 'Smoobu keys now encrypted', text: 'Your Smoobu API key and secret are now stored encrypted; keys saved earlier are encrypted automatically at the next sync.' },
   { date: '2026-11-17', title: 'Missed clock-in email', text: 'The account owner is emailed when someone with a shift today has not clocked in 15 minutes after it starts.' },
   { date: '2026-11-17', title: 'Work Hours staff notice', text: 'HR Documents → Add NOVOURQ templates now includes a staff notice explaining what Work Hours records, with a signature line for the employee.' },
