@@ -4,6 +4,7 @@ import { supabase, getAccountId } from '../../lib/supabase'
 import { calcBTL, calcHMO, calcR2R, calcFlip, calcLand, getStressScenarios, applyStress } from '../../lib/dealCalculators'
 import AskChat from '../../components/ai/AskChat'
 import MarketCheck from '../../components/invest/MarketCheck'
+import JamaicaCosts from '../../components/invest/JamaicaCosts'
 import LandlordOffer, { landlordOffer } from '../../components/invest/LandlordOffer'
 import { ListingImportBox, ListingCard, propertyTypeFor, type Listing } from '../../components/invest/ListingImport'
 import { CURRENCIES, FALLBACK_PER_GBP, curOf, symOf, type Cur } from '../../lib/currency'
@@ -528,6 +529,7 @@ export default function InvestPage() {
                       <div><label style={lbl}>Monthly Expenses (% of rent)</label><input value={form.expenses||'20'} onChange={e=>setForm({...form,expenses:e.target.value})} type="number" placeholder="20" style={inp}/></div>
                     )}
                   </div>
+                  <JamaicaCosts strategy={strategy!} form={form} setForm={setForm}/>
                   <button onClick={()=>analyse()} style={{width:'100%',padding:'14px',borderRadius:4,border:'none',background:BLUE,color:'#fff',fontSize:15,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>▶ Start Deal Analysis</button>
                 </div>
               </div>
@@ -612,6 +614,8 @@ export default function InvestPage() {
                     </div>
                   )
                 })()}
+
+                <JamaicaCosts strategy={strategy!} form={form} setForm={setForm}/>
 
                 <MarketCheck strategy={strategy!} strategyLabel={STRATEGIES.find(s=>s.id===strategy)?.label} form={form} setForm={setForm} market={market} onMarket={gotMarket} />
 
