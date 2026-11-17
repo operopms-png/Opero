@@ -41,7 +41,7 @@ async function uploadFile(file: File, folder: string): Promise<string | null> {
   return data.publicUrl
 }
 
-function FileUpload({ label, value, onChange, folder }: { label: string; value: string; onChange: (url: string) => void; folder: string }) {
+function FileUpload({ label, value, onChange, folder, imageOnly }: { label: string; value: string; onChange: (url: string) => void; folder: string; imageOnly?: boolean }) {
   const [uploading, setUploading] = useState(false)
   async function handle(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -57,8 +57,8 @@ function FileUpload({ label, value, onChange, folder }: { label: string; value: 
       <div style={{ display:'flex', gap:8, alignItems:'center' }}>
         <label style={{ flex:1, padding:'10px 12px', borderRadius:8, border:'2px dashed #D0D5DD', fontSize:13, color:'#667085', cursor:'pointer', display:'flex', alignItems:'center', gap:8, background:'#F9FAFB' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          {uploading ? 'Uploading…' : value ? 'Replace file' : 'Upload file (PDF, JPG, PNG)'}
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handle} style={{ display:'none' }} />
+          {uploading ? 'Uploading…' : value ? (imageOnly ? 'Replace image' : 'Replace file') : (imageOnly ? 'Upload image (JPG, PNG)' : 'Upload file (PDF, JPG, PNG)')}
+          <input type="file" accept={imageOnly ? '.jpg,.jpeg,.png,.webp' : '.pdf,.jpg,.jpeg,.png'} onChange={handle} style={{ display:'none' }} />
         </label>
         {value && <a href={value} target="_blank" rel="noreferrer" style={{ fontSize:12, color:'#2F6DB5', fontWeight:500, textDecoration:'none', whiteSpace:'nowrap' }}>View file</a>}
       </div>
@@ -806,7 +806,8 @@ export default function DevPage() {
                     const pct = pBudget > 0 ? Math.round((pSpent / pBudget) * 100) : 0
                     const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.planning
                     return (
-                      <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px' }}>
+                      <div key={p.id} style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', padding:'20px 24px', overflow:'hidden' }}>
+                    {p.image_url && <img src={p.image_url} alt={p.name} style={{ display:'block', width:'calc(100% + 48px)', margin:'-20px -24px 16px', height:190, objectFit:'cover' }} />}
                         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
                           <div style={{ fontWeight:600, fontSize:15, color:'#323338' }}>{p.name}</div>
                           <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:sc.bg, color:sc.color, textTransform:'capitalize' }}>{p.status}</span>
@@ -1261,6 +1262,11 @@ export default function DevPage() {
             <div><label style={lbl}>Project Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Rose Hall Development"/></div>
             <div><label style={lbl}>Description</label><textarea style={{...inp,resize:'vertical'}} rows={3} value={form.description??''} onChange={e=>setForm({...form,description:e.target.value})}/></div>
             <div><label style={lbl}>Location</label><input style={inp} value={form.location??''} onChange={e=>setForm({...form,location:e.target.value})} placeholder="e.g. Montego Bay, Jamaica"/></div>
+            <div>
+              {form.image_url && <img src={form.image_url} alt="Main image" style={{ display:'block', width:'100%', height:150, objectFit:'cover', borderRadius:8, marginBottom:8 }} />}
+              <FileUpload label="Main image (shown on the card and the Map)" value={form.image_url??''} onChange={url=>setForm({...form,image_url:url})} folder="dev-projects" imageOnly />
+              {form.image_url && <button type="button" onClick={()=>setForm({...form,image_url:null})} style={{ marginTop:6, fontSize:12, color:'#B42318', background:'none', border:'none', cursor:'pointer', padding:0 }}>Remove image</button>}
+            </div>
             <div><label style={lbl}>Status</label>
               <select style={{...inp,cursor:'pointer'}} value={form.status??'planning'} onChange={e=>setForm({...form,status:e.target.value})}>
                 <option value="planning">Planning</option>

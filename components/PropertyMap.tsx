@@ -9,7 +9,7 @@ import BuildingFloors from '@/components/BuildingFloors'
 import PropertyMap3D from '@/components/PropertyMap3D'
 
 type Status = 'let' | 'vac' | 'arr' | 'cert' | 'deal' | 'plan'
-type Item = { id: string; source: string; name: string; address: string; country: string; lat: number | null; lng: number | null; status: Status; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate' | 'dev'; id: string; name: string } }
+type Item = { id: string; source: string; name: string; address: string; country: string; lat: number | null; lng: number | null; status: Status; facts: { label: string; value: string }[]; href: string; url?: string; image?: string | null; building?: { source: 'pm' | 'estate' | 'dev'; id: string; name: string } }
 const LINE = '#D9E2F0', NAVY = '#1B2F6E', MUTED = '#667085', TXT = '#101828', BLUE = '#2F6DB5'
 const ST: Record<Status, { label: string; color: string }> = {
   let: { label: 'Let', color: '#0E7C55' }, vac: { label: 'Vacant', color: '#2F6DB5' },
@@ -89,6 +89,7 @@ export default function PropertyMap({ compact = false }: { compact?: boolean }) 
 
   const panel = selOk ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {selOk.image && <img src={selOk.image} alt={selOk.name} style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 10, display: 'block' }} />}
       <div style={{ fontSize: 11.5, letterSpacing: '.09em', textTransform: 'uppercase', color: MUTED, fontWeight: 700 }}>{selOk.status === 'deal' ? 'Deal' : 'Property'}</div>
       <div style={{ fontSize: 18, fontWeight: 700, color: TXT }}>{selOk.name}</div>
       {selOk.address && <div style={{ fontSize: 13, color: MUTED }}>{selOk.address}</div>}
