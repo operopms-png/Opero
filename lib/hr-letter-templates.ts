@@ -7,32 +7,23 @@
 const offerLetter = (role: string, reportsTo: string, duties: string[]) => ({
   name: `Offer letter: ${role}`, category: 'HR', lock_mode: 'editable', needs_signature: true,
   email_subject: `Your offer of employment — {company_name}`,
-  body: `<h1>Offer of Employment</h1>
-<p>Date: {today}</p>
-<p>Private and confidential</p>
+  body: `<p>{company_name}<br>{company_address}</p>
+<p>{today}</p>
+<p>{employee_name}<br>{employee_address}</p>
 <p>Dear {employee_name},</p>
-<p>We are pleased to offer you the position of <b>${role}</b> with {company_name}. This letter sets out the main terms. Please read it carefully, and if you are happy to accept, sign at the bottom by {offer_expiry_date}.</p>
-<h3>1. Your role</h3>
-<p>Job title: {job_title}<br>Reports to: ${reportsTo}<br>Employment type: {employment_type:full-time permanent|part-time permanent|fixed-term|casual}<br>Start date: {employment_start_date}</p>
+<h3>Offer of Employment</h3>
+<p>I am pleased to offer you {employment_type:full-time permanent|part-time permanent|fixed-term|casual} employment in the role of <b>${role}</b> with {company_name} (referred to as 'the Employer', 'us' or 'we' in the rest of this letter). You will report to ${reportsTo}.</p>
+<p>This letter is to confirm the offer to you, summarise the main commercial terms on which we would like to employ you and explain the conditions of our offer.</p>
+<h3>Summary of Employment Terms</h3>
+<p>The main terms of your employment are:</p>
+<ol><li>We will pay you a basic salary of {salary_annual} per year ({salary_monthly} per month), paid {pay_frequency};</li><li>Your normal place of work will be {work_location};</li><li>Your normal hours of work will be {working_hours};</li><li>You will be entitled to {holiday_days} days of holiday per year plus public holidays;</li><li>Your employment will start on {employment_start_date}, and the first {probation_period} will be a probation period;</li><li>You will be able to take part in the following benefits, subject to meeting any eligibility criteria and the terms of the relevant schemes: {benefits};</li><li>You or we can end your employment by giving written notice of at least {notice_period}. This does not limit the Employer's right to end employment without notice for serious misconduct.</li></ol>
 <p>Your main responsibilities will include:</p>
-<ul>${duties.map(d => `<li>${d}</li>`).join('')}<li>Any other reasonable duties linked to the role that the company asks of you.</li></ul>
-<h3>2. Place and hours of work</h3>
-<p>Your normal place of work is {work_location}. Your normal hours are {hours_per_week} hours per week, {working_days}, and the company may agree flexible or remote working with you from time to time. Hours may need to flex to meet the needs of the business.</p>
-<h3>3. Pay</h3>
-<p>Your gross salary will be {salary_annual} per annum ({salary_monthly} per month), paid {pay_frequency} into the bank account you give us. Tax, national insurance or statutory contributions will be deducted as the law where you work requires. Your pay will be reviewed from time to time; a review does not guarantee an increase.</p>
-<h3>4. Holiday</h3>
-<p>You are entitled to {holiday_days} days of paid holiday per year, plus public holidays where you work. Holiday must be agreed with {staff_name} or your line manager in advance.</p>
-<h3>5. Probation</h3>
-<p>The first {probation_period} of employment is a probation period. We will review your performance during and at the end of it, and may extend it where appropriate. Either side may end the employment during probation with {probation_notice} notice.</p>
-<h3>6. Notice</h3>
-<p>After probation, either side must give {notice_period} written notice to end the employment. The company may pay in place of notice or ask you not to attend work during notice. Nothing here limits the company's right to end employment without notice in cases of serious misconduct.</p>
-<h3>7. Confidentiality and company property</h3>
-<p>You must keep confidential all information about the company, its clients, guests, owners and staff, both during and after your employment. All work you produce for the company, and everything you are given to do it (logins, devices, documents, client data), belongs to the company and must be returned when you leave. Please use company systems only as the company's policies allow.</p>
-<h3>8. Conditions of this offer</h3>
-<p>This offer depends on satisfactory references, proof of your right to work where you will be based, and any checks the role needs. The company may withdraw the offer if these are not satisfactory.</p>
-<h3>9. Other terms</h3>
-<p>Further policies and procedures, including the Staff notice on Work Hours recording, will be given to you when you start. If anything in this letter conflicts with the law where you work, the law applies. This letter, with any policies given to you, is the whole agreement about your employment unless we both agree changes in writing.</p>
-<p>We are delighted to welcome you and look forward to working with you.</p>
+<ul>${duties.map(d => `<li>${d}</li>`).join('')}<li>Any other reasonable duties linked to the role that we ask of you.</li></ul>
+<p>The above is intended as a high-level summary only and does not explain in full either the terms of your employment or the arrangements applicable to each of the items listed. The items covered in this letter and your employment are subject to the terms set out in the contract of employment, which takes precedence over this letter if there is any inconsistency.</p>
+<h3>Conditions of Offer</h3>
+<p>This offer is conditional on:</p>
+<ol><li>Satisfactory references;</li><li>Proof of your right to work where you will be based;</li><li>Any other checks the role needs, such as ID and background checks;</li><li>You keeping all information about the Employer, its clients, guests, owners and staff confidential, during and after your employment.</li></ol>
+<p>We may withdraw this offer if any condition is not met. Please confirm you accept by signing and returning this letter by {offer_expiry_date}. We look forward to welcoming you.</p>
 <p>Yours sincerely,</p>
 <p><br></p>
 <p>{staff_name}<br>{staff_role}<br>{company_name}</p>
