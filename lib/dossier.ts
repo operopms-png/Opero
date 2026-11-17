@@ -75,3 +75,23 @@ export function performance(props: { id: string; name: string }[], bookings: Boo
     rows: props.map(p => { const r = per(p.id, d30, t0); return { id: p.id, name: p.name, occupancy: r.nights / 30, adr: r.nights ? r.income / r.nights : null, income: r.income } }),
   }
 }
+
+export type Market = { days: { date: string; filled: number }[]; weekday: { label: string; occupancy: number }[]; avgStay: number | null; bestDay: string | null; quietDay: string | null }
+const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+/** Demand from this company's own bookings: how full the next 60 nights are, which weekdays fill, and the typical stay. No outside data. */
+export function market(props: { id: string }[], bookings: Booking[], today = new Date()): Market {
+  const t0 = at(iso(today)), N = Math.max(1, props.length), ids = new Set(props.map(p => p.id))
+  const taken = new Map<string, number>()
+  for (const b of bookings) {
+    if (!ids.has(b.property_id) || !live(b) || !b.check_in || !b.check_out) continue
+    for (let t = at(b.check_in); t < at(b.check_out); t += DAY) taken.set(iso(new Date(t)), (taken.get(iso(new Date(t))) ?? 0) + 1)
+  }
+  const days = Array.from({ length: 60 }, (_, i) => { const d = iso(new Date(t0 + i * DAY)); return { date: d, filled: Math.min(1, (taken.get(d) ?? 0) / N) } })
+  const sum = new Array(7).fill(0), cnt = new Array(7).fill(0)
+  for (let i = 1; i <= 60; i++) { const d = new Date(t0 - i * DAY), k = (d.getDay() + 6) % 7; cnt[k]++; sum[k] += Math.min(1, (taken.get(iso(d)) ?? 0) / N) }
+  const weekday = WD.map((label, k) => ({ label, occupancy: cnt[k] ? sum[k] / cnt[k] : 0 }))
+  const stays = bookings.filter(b => ids.has(b.property_id) && live(b) && b.check_in && b.check_out).map(b => (at(b.check_out) - at(b.check_in)) / DAY).filter(n => n > 0)
+  const any = bookings.some(b => ids.has(b.property_id) && live(b))
+  const sorted = [...weekday].sort((a, b) => b.occupancy - a.occupancy)
+  return { days, weekday, avgStay: stays.length ? stays.reduce((a, b) => a + b, 0) / stays.length : null, bestDay: any ? sorted[0].label : null, quietDay: any ? sorted[6].label : null }
+}
