@@ -8,6 +8,7 @@
 // Auth lives in lib/smoobu-client.ts: HMAC-signed when an API secret is
 // saved, otherwise the legacy Api-Key header (accepted until 31 Oct 2026).
 import { createClient } from '@supabase/supabase-js'
+import { open as openSecret, sealIfPlain } from './secret-store'
 import { smoobuFetch } from './smoobu-client'
 import { maybeAutoReplyToGuest } from './ai-guest-receptionist'
 
@@ -81,7 +82,8 @@ export async function syncSmoobuReservation(userId: string, reservationId: strin
   const supabase = getServiceClient()
   const { data: integ } = await supabase.from('integrations').select('smoobu_api_key, smoobu_api_secret').eq('user_id', userId).maybeSingle()
   if (!integ?.smoobu_api_key) return { error: 'Smoobu not connected' }
-  const apiKey: Creds = { apiKey: integ.smoobu_api_key, secret: (integ as any).smoobu_api_secret ?? null }
+  await sealIfPlain(supabase, userId, integ as any)
+  const apiKey: Creds = { apiKey: openSecret(integ.smoobu_api_key) as string, secret: openSecret((integ as any).smoobu_api_secret) }
   const { data: mappedProps } = await supabase.from('properties').select('id, smoobu_apartment_id').eq('user_id', userId).is('ended_at', null).not('smoobu_apartment_id', 'is', null)
   const apartmentToProperty = new Map((mappedProps ?? []).map((p: any) => [String(p.smoobu_apartment_id), p.id]))
 
@@ -110,8 +112,9 @@ export async function runSmoobuSync(onlyUserId?: string) {
   if (!accounts?.length) return { synced: [] }
 
   for (const account of accounts) {
-    const apiKey: Creds = { apiKey: account.smoobu_api_key as string, secret: (account as any).smoobu_api_secret as string | null }
     const userId = account.user_id as string
+    await sealIfPlain(supabase, userId, account as any)
+    const apiKey: Creds = { apiKey: openSecret(account.smoobu_api_key as string) as string, secret: openSecret((account as any).smoobu_api_secret) }
 
     try {
       const { data: mappedProps } = await supabase
