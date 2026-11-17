@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { cur } from '@/lib/company-currency'
-import { DEFAULTS, bookedNights, suggest, performance, type Booking, type Settings } from '@/lib/dossier'
+import { DEFAULTS, bookedNights, suggest, performance, market, type Booking, type Settings } from '@/lib/dossier'
 
 type Prop = { id: string; name: string; city?: string | null; nightly_rate?: number | null }
 type Row = Settings & { property_id: string }
@@ -26,7 +26,7 @@ const sampleBookings = (): Booking[] => { const t = Date.now(), d = (n: number) 
 export default function DynamicDossier() {
   const [props, setProps] = useState<Prop[]>([]), [rules, setRules] = useState<Record<string, Settings>>({}), [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true), [err, setErr] = useState(''), [sample, setSample] = useState(false)
-  const [sel, setSel] = useState(''), [view, setView] = useState<'Rates' | 'Performance'>('Rates')
+  const [sel, setSel] = useState(''), [view, setView] = useState<'Rates' | 'Performance' | 'Listings' | 'Market'>('Rates')
   const [draft, setDraft] = useState<Record<string, any>>({}), [saving, setSaving] = useState(false), [msg, setMsg] = useState('')
   const c = cur()
 
@@ -50,6 +50,9 @@ export default function DynamicDossier() {
   useEffect(() => { setDraft({}); setMsg('') }, [cur_])
   const nights = useMemo(() => cur_ ? suggest(st, bookedNights(B, cur_)) : [], [cur_, B, JSON.stringify(st)])
   const perf = useMemo(() => performance(P, B), [P, B])
+  const mkt = useMemo(() => market(P, B), [P, B])
+  const rulesFor = (id: string, p: Prop): Settings => sample ? { ...DEFAULTS, base_price: 18000, floor_price: 12000, ceiling_price: 30000 } : (rules[id] ?? { ...DEFAULTS, base_price: p.nightly_rate ?? null })
+  const listRows = useMemo(() => P.map(p => { const r = rulesFor(p.id, p), ns = suggest(r, bookedNights(B, p.id)).filter(n => n.price != null), occ = perf.rows.find(x => x.id === p.id)?.occupancy ?? 0; return { p, r, set: sample || !!rules[p.id], avg: ns.length ? Math.round(ns.reduce((a, n) => a + (n.price as number), 0) / ns.length) : null, occ } }), [P, B, rules, perf, sample])
   const set = (k: keyof Settings, v: any) => setDraft(d => ({ ...d, [k]: v }))
   const save = async () => {
     setSaving(true); setMsg('')
@@ -63,7 +66,7 @@ export default function DynamicDossier() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        {(['Rates', 'Performance'] as const).map(v => <button key={v} onClick={() => setView(v)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid ' + (view === v ? '#2F6DB5' : '#D0D5DD'), background: view === v ? '#EAF2FB' : '#fff', color: view === v ? '#2F6DB5' : '#344054', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>{v}</button>)}
+        {(['Rates', 'Performance', 'Listings', 'Market'] as const).map(v => <button key={v} onClick={() => setView(v)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid ' + (view === v ? '#2F6DB5' : '#D0D5DD'), background: view === v ? '#EAF2FB' : '#fff', color: view === v ? '#2F6DB5' : '#344054', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>{v}</button>)}
         <div style={{ flex: 1 }} />
         <button onClick={() => setSample(s => !s)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer' }}>{sample ? 'Back to my data' : 'Preview example'}</button>
         <button onClick={load} disabled={sample} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer' }}>Refresh</button>
@@ -107,6 +110,53 @@ export default function DynamicDossier() {
                 <span style={{ fontWeight: 700, color: n.booked ? '#98A2B3' : '#323338' }}>{n.price != null ? `${c}${n.price.toLocaleString()}` : n.booked ? 'Booked' : '–'}</span>
               </div>)}
             </div>
+          </div>
+        </div>
+      </>}
+
+      {P.length > 0 && view === 'Listings' && <div style={card}>
+        <div style={{ fontWeight: 700, marginBottom: 10 }}>Your listings</div>
+        <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 620 }}>
+          <thead><tr style={{ textAlign: 'left', color: '#667085' }}>{['Property', 'Base', 'Floor to ceiling', 'Average suggested, next 14 nights', 'Occupancy, 30 days', 'Rules', ''].map(h => <th key={h} style={{ padding: '6px 8px' }}>{h}</th>)}</tr></thead>
+          <tbody>{listRows.map(({ p, r, set, avg, occ }) => <tr key={p.id} style={{ borderTop: '1px solid #F2F4F7' }}>
+            <td style={{ padding: 8, fontWeight: 600 }}>{p.name}{p.city ? <div style={{ fontWeight: 400, color: '#667085', fontSize: 12 }}>{p.city}</div> : null}</td>
+            <td style={{ padding: 8 }}>{r.base_price != null ? `${c}${r.base_price.toLocaleString()}` : '–'}</td>
+            <td style={{ padding: 8 }}>{r.floor_price != null || r.ceiling_price != null ? `${r.floor_price != null ? c + r.floor_price.toLocaleString() : '–'} to ${r.ceiling_price != null ? c + r.ceiling_price.toLocaleString() : '–'}` : 'Not set'}</td>
+            <td style={{ padding: 8 }}>{avg != null ? `${c}${avg.toLocaleString()}` : '–'}</td>
+            <td style={{ padding: 8 }}>{pctTxt(occ)}</td>
+            <td style={{ padding: 8 }}><span style={{ borderRadius: 999, padding: '3px 10px', fontSize: 12, fontWeight: 600, background: set ? '#ECFDF3' : '#FFFAEB', color: set ? '#027A48' : '#B54708' }}>{set ? 'Saved' : 'Not saved yet'}</span></td>
+            <td style={{ padding: 8 }}><button onClick={() => { setSel(p.id); setView('Rates') }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #D0D5DD', background: '#fff', fontSize: 13, cursor: 'pointer' }}>Edit rules</button></td></tr>)}</tbody>
+        </table></div>
+        <div style={{ fontSize: 12, color: '#667085', marginTop: 10 }}>These are the short-stay properties in this portal. Prices are suggestions only and are not sent to Airbnb or any other channel.</div>
+      </div>}
+
+      {P.length > 0 && view === 'Market' && <>
+        <div style={card}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>How full your next 60 nights are</div>
+          <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Each bar is one night, across all your properties. Taller means more of your properties are booked.</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 110, overflowX: 'auto' }}>
+            {mkt.days.map(d => <div key={d.date} title={`${d.date}: ${pctTxt(d.filled)} booked`} style={{ flex: '1 0 8px', minWidth: 8, height: `${Math.max(3, d.filled * 100)}%`, background: d.filled >= 0.7 ? '#2F6DB5' : d.filled > 0 ? '#8DB4E8' : '#E4E7EC', borderRadius: 2 }} />)}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: '#667085', marginTop: 6 }}><span>Today</span><span>+30 days</span><span>+60 days</span></div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 16 }}>
+          <div style={card}>
+            <div style={{ fontWeight: 700, marginBottom: 10 }}>Which weekdays fill, last 60 days</div>
+            {mkt.weekday.map(w => <div key={w.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0', fontSize: 13 }}>
+              <span style={{ width: 34, color: '#344054' }}>{w.label}</span>
+              <div style={{ flex: 1, background: '#F2F4F7', borderRadius: 100, height: 8 }}><div style={{ width: `${Math.round(w.occupancy * 100)}%`, background: '#2F6DB5', borderRadius: 100, height: 8 }} /></div>
+              <span style={{ width: 40, textAlign: 'right', fontWeight: 600 }}>{pctTxt(w.occupancy)}</span></div>)}
+          </div>
+          <div style={card}>
+            <div style={{ fontWeight: 700, marginBottom: 10 }}>What this tells you</div>
+            <div style={{ fontSize: 13.5, lineHeight: 1.7, color: '#344054' }}>
+              {mkt.bestDay ? <>
+                <div>Busiest night: <b>{mkt.bestDay}</b>. Quietest night: <b>{mkt.quietDay}</b>.</div>
+                <div>Typical stay: <b>{mkt.avgStay != null ? `${mkt.avgStay.toFixed(1)} nights` : '–'}</b>.</div>
+                <div>Consider a higher weekend uplift if your busiest nights are Friday and Saturday, and a small cut on your quietest night.</div>
+              </> : <div>No bookings in the last 75 days or the next 75 days yet, so there is nothing to show.</div>}
+            </div>
+            <div style={{ fontSize: 12, color: '#667085', marginTop: 12 }}>Worked out from your own bookings only. It does not include competitor prices or other markets.</div>
           </div>
         </div>
       </>}
