@@ -4,6 +4,8 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'Missed clock-in email', text: 'The account owner is emailed when someone with a shift today has not clocked in 15 minutes after it starts.' },
+  { date: '2026-11-17', title: 'Work Hours staff notice', text: 'HR Documents → Add NOVOURQ templates now includes a staff notice explaining what Work Hours records, with a signature line for the employee.' },
   { date: '2026-11-17', title: 'Main image for development projects', text: 'Upload a render or photo on a development project (Real Estate Intelligence → Developments → Projects → Edit) and it shows on the project card and in the Map side panel.' },
   { date: '2026-11-17', title: 'Jamaica real estate charges in the Deal Analyser', text: 'For a purchase or land deal in Jamaica, Staff Centre → Client Properties → Deal Analyser now shows the purchaser and vendor costs worked out from the price, and you can change any rate for the deal or save your own company rates.' },
   { date: '2026-11-16', title: 'Clock in, clock out and late arrivals', text: 'Staff press Clock in and Clock out on the Dashboard or Work Hours, and the owner sets shift start times in Work Hours to see who was late or has not clocked in.' },
