@@ -25,7 +25,7 @@ export type DocForPdf = {
 export async function documentPdf(doc: DocForPdf, s: { company_name?: string | null; logo_url?: string | null; contact_lines?: string | null }, siteUrl: string): Promise<Uint8Array> {
   const pdf = await PDFDocument.create()
   pdf.setTitle(safe(doc.title))
-  const W = 595.28, H = 841.89, M = 58, TOP = 112, BOTTOM = 70, CW = W - 2 * M
+  const W = 595.28, H = 841.89, M = 46, TOP = 88, BOTTOM = 66, CW = W - 2 * M
   const F = {
     reg: await pdf.embedFont(StandardFonts.Helvetica), bold: await pdf.embedFont(StandardFonts.HelveticaBold),
     ital: await pdf.embedFont(StandardFonts.HelveticaOblique), boldItal: await pdf.embedFont(StandardFonts.HelveticaBoldOblique),
@@ -43,12 +43,14 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   const newPage = () => {
     page = pdf.addPage([W, H]); pages.push(page); y = TOP
     if (bg) { const bh = W * bg.height / bg.width; page.drawImage(bg, { x: 0, y: (H - bh) / 2, width: W, height: bh, opacity: 0.55 }) }
-    if (logo) { const d = logo.scaleToFit(48, 48); page.drawImage(logo, { x: M, y: H - 36 - d.height, width: d.width, height: d.height }) }
+    if (logo) { const d = logo.scaleToFit(44, 44); page.drawImage(logo, { x: M, y: H - 14 - d.height, width: d.width, height: d.height }) }
     else page.drawText(safe(company), { x: M, y: H - 52, size: 14, font: F.sansBold, color: navy })
   }
   const ensure = (h: number) => { if (y + h > H - BOTTOM) newPage() }
 
-  type Word = { text: string; font: PDFFont; u?: boolean; empty?: boolean; space: boolean }
+  type Word = { text: string; font: PDFFont; u?: boolean; empty?: boolean; space: boolean; kind?: 'line' | 'opt'; w?: number }
+  const wOf = (w: Word, size: number) => w.kind === 'line' ? 70 : w.kind === 'opt' ? 12 + w.font.widthOfTextAtSize(w.text, size) : w.font.widthOfTextAtSize(w.text, size)
+  const BOX = 8
   const fontFor = (r: Run, base: 'serif' | 'head') => base === 'head' ? F.sansBold : r.b && r.i ? F.boldItal : r.b ? F.bold : r.i ? F.ital : F.reg
 
   function drawRuns(runs: Run[], opts: { size: number; lead: number; x: number; width: number; center?: boolean; base?: 'serif' | 'head'; color?: any; marker?: string }) {
@@ -59,6 +61,16 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     for (const r of runs) {
       if (r.text === '\n') { lines.push([]); lineW = 0; continue }
       const font = fontFor(r, opts.base || 'serif')
+      if (r.empty) {
+        const items: Word[] = r.choice?.length ? r.choice.map(o => ({ text: safe(o), font: F.reg, kind: 'opt' as const, space: true })) : [{ text: '', font, kind: 'line' as const, empty: true, space: false }]
+        for (const it of items) {
+          const line = lines[lines.length - 1]
+          const w = wOf(it, opts.size), gap = line.length && line[line.length - 1].space ? space(line[line.length - 1].font) : 0
+          if (line.length && lineW + gap + w > opts.width) { lines.push([it]); lineW = w } else { line.push(it); lineW += gap + w }
+        }
+        if (lines[lines.length - 1].length) lines[lines.length - 1][lines[lines.length - 1].length - 1].space = true
+        continue
+      }
       const parts = safe(r.text).split(/(\s+)/)
       for (const p of parts) {
         if (!p) continue
@@ -73,12 +85,14 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     lines.forEach((line, li) => {
       if (!line.length && li === lines.length - 1) return
       ensure(opts.lead)
-      const width = line.reduce((a, w, k) => a + w.font.widthOfTextAtSize(w.text, opts.size) + (k < line.length - 1 && w.space ? space(w.font) : 0), 0)
+      const width = line.reduce((a, w, k) => a + wOf(w, opts.size) + (k < line.length - 1 && w.space ? space(w.font) : 0), 0)
       let x = opts.center ? M + (CW - width) / 2 : opts.x
       if (li === 0 && opts.marker) page.drawText(safe(opts.marker), { x: opts.x - 14, y: H - y - opts.size, size: opts.size, font: F.reg, color: opts.color || ink })
       for (let k = 0; k < line.length; k++) {
-        const w = line[k], ww = w.font.widthOfTextAtSize(w.text, opts.size)
-        page.drawText(w.text, { x, y: H - y - opts.size, size: opts.size, font: w.font, color: w.empty ? grey : (opts.color || (w.font === F.bold || w.font === F.boldItal ? navy : ink)) })
+        const w = line[k], ww = wOf(w, opts.size)
+        if (w.kind === 'line') { page.drawLine({ start: { x, y: H - y - opts.size - 1.5 }, end: { x: x + ww, y: H - y - opts.size - 1.5 }, thickness: 0.5, color: ink }) }
+        else if (w.kind === 'opt') { page.drawRectangle({ x, y: H - y - opts.size - 0.5, width: BOX, height: BOX, borderColor: ink, borderWidth: 0.7 }); page.drawText(w.text, { x: x + 12, y: H - y - opts.size, size: opts.size, font: w.font, color: ink }) }
+        else page.drawText(w.text, { x, y: H - y - opts.size, size: opts.size, font: w.font, color: opts.color || ink })
         if (w.u) page.drawLine({ start: { x, y: H - y - opts.size - 1.5 }, end: { x: x + ww, y: H - y - opts.size - 1.5 }, thickness: 0.5, color: ink })
         x += ww + (w.space ? space(w.font) : 0)
       }
@@ -86,19 +100,47 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     })
   }
 
+  // a "Label  ______" line is drawn as a form row: navy label, then a ruled line (or tick boxes) that fills the rest of the row
+  const lineRuns = (runs: Run[]) => { const out: Run[][] = [[]]; for (const r of runs) { if (r.text === '\n') out.push([]); else out[out.length - 1].push(r) } return out.filter(l => l.some(r => r.empty || r.text.trim())) }
+  const isRow = (l: Run[]) => l.some(r => r.empty) && !!l.find(r => r.text.trim() || r.empty)?.b
+  function formRow(l: Run[], size: number) {
+    type Tok = { k: 'label' | 'text' | 'line' | 'opts'; t?: string; o?: string[]; w: number }
+    const toks: Tok[] = []
+    for (const r of l) {
+      if (r.empty) { if (r.choice?.length) toks.push({ k: 'opts', o: r.choice.map(safe), w: r.choice.reduce((a, o) => a + BOX + 4 + F.reg.widthOfTextAtSize(safe(o), size) + 12, 0) }); else toks.push({ k: 'line', w: 0 }) }
+      else { const raw = safe(r.text).replace(/\s+/g, ' '); const isLabel = !!r.b; const t = isLabel ? raw.replace(/:\s*$/, '').trim() : raw.trim(); if (t) toks.push({ k: isLabel ? 'label' : 'text', t, w: (isLabel ? F.bold : F.reg).widthOfTextAtSize(t, size) }) }
+    }
+    const GAP = 8, n = toks.filter(t => t.k === 'line').length
+    const fixed = toks.reduce((a, t) => a + t.w, 0) + GAP * (toks.length - 1)
+    if (n && CW - fixed < 50 * n) return false
+    const share = n ? (CW - fixed) / n : 0
+    ensure(20)
+    let x = M; const base = H - y - size
+    for (const t of toks) {
+      if (t.k === 'label') page.drawText(t.t!, { x, y: base, size, font: F.bold, color: navy })
+      else if (t.k === 'text') page.drawText(t.t!, { x, y: base, size, font: F.reg, color: ink })
+      else if (t.k === 'line') { page.drawLine({ start: { x, y: base - 2 }, end: { x: x + share, y: base - 2 }, thickness: 0.5, color: ink }); x += share - t.w }
+      else { let ox = x; for (const o of t.o!) { page.drawRectangle({ x: ox, y: base - 0.5, width: BOX, height: BOX, borderColor: ink, borderWidth: 0.7 }); page.drawText(o, { x: ox + BOX + 4, y: base, size, font: F.reg, color: ink }); ox += BOX + 4 + F.reg.widthOfTextAtSize(o, size) + 12 } }
+      x += t.w + GAP
+    }
+    y += 20
+    return true
+  }
   const upper = (runs: Run[]) => runs.map(r => (r.empty ? r : { ...r, text: r.text.toUpperCase() }))
   newPage()
   const blocks = htmlToBlocks(doc.body)
   // a document with no heading of its own (offer letters, notices) gets its title above the text
-  if (blocks[0]?.type !== 'h1') { y += 4; drawRuns([{ text: safe(doc.title).toUpperCase() }], { size: 14, lead: 19, x: M, width: CW, base: 'head', color: navy }); y += 8 }
+  if (blocks[0]?.type !== 'h1') { y += 4; drawRuns([{ text: safe(doc.title).toUpperCase() }], { size: 12, lead: 17, x: M, width: CW, base: 'head', color: navy }); y += 8 }
   for (const bl of blocks) {
     if (bl.type === 'hr') { ensure(14); page.drawLine({ start: { x: M, y: H - y - 6 }, end: { x: W - M, y: H - y - 6 }, thickness: 0.5, color: hex('#BBBBBB') }); y += 14; continue }
-    if (bl.type === 'h1') { ensure(40); y += 6; drawRuns(upper(bl.runs), { size: 14, lead: 19, x: M, width: CW, base: 'head', color: navy }); y += 8; continue }
-    if (bl.type === 'h2') { ensure(34); y += 8; drawRuns(upper(bl.runs), { size: 11, lead: 16, x: M, width: CW, base: 'head', color: navy }); y += 4; continue }
-    if (bl.type === 'h3') { ensure(28); y += 4; drawRuns(upper(bl.runs), { size: 10.5, lead: 15, x: M, width: CW, base: 'head', color: navy }); y += 2; continue }
-    if (bl.type === 'li') { const ind = 18 + (bl.depth || 0) * 16; drawRuns(bl.runs, { size: 10.5, lead: 14.5, x: M + ind, width: CW - ind, marker: bl.marker }); y += 3; continue }
-    if (bl.type === 'quote') { drawRuns(bl.runs, { size: 10.5, lead: 14.5, x: M + 16, width: CW - 16, color: grey }); y += 6; continue }
-    drawRuns(bl.runs, { size: 10.5, lead: 15, x: M, width: CW, center: bl.center }); y += 7
+    if (bl.type === 'h1') { ensure(40); y += 6; drawRuns(upper(bl.runs), { size: 12, lead: 17, x: M, width: CW, base: 'head', color: navy }); y += 8; continue }
+    if (bl.type === 'h2') { ensure(34); y += 8; drawRuns(upper(bl.runs), { size: 9.5, lead: 14, x: M, width: CW, base: 'head', color: navy }); y += 4; continue }
+    if (bl.type === 'h3') { ensure(28); y += 4; drawRuns(upper(bl.runs), { size: 9.5, lead: 14, x: M, width: CW, base: 'head', color: navy }); y += 2; continue }
+    if (bl.type === 'li') { const ind = 18 + (bl.depth || 0) * 16; drawRuns(bl.runs, { size: 9.5, lead: 13.5, x: M + ind, width: CW - ind, marker: bl.marker }); y += 6; continue }
+    if (bl.type === 'quote') { drawRuns(bl.runs, { size: 9.5, lead: 13.5, x: M + 16, width: CW - 16, color: grey }); y += 6; continue }
+    const ls = lineRuns(bl.runs)
+    if (ls.some(isRow)) { for (const l of ls) { if (!(isRow(l) && formRow(l, 9.5))) { drawRuns(l, { size: 9.5, lead: 13.5, x: M, width: CW }); y += 4 } } y += 2; continue }
+    drawRuns(bl.runs, { size: 9.5, lead: 13.5, x: M, width: CW, center: bl.center }); y += 6
   }
 
   // signatures
@@ -130,10 +172,10 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   const foot = safe([company, ...contact].join(' · '))
   pages.forEach((p, k) => {
     const t = `Page ${k + 1} of ${pages.length}`
-    p.drawLine({ start: { x: M, y: 50 }, end: { x: W - M, y: 50 }, thickness: 0.8, color: navy })
+    p.drawLine({ start: { x: M + 8, y: 52 }, end: { x: W - M - 8, y: 52 }, thickness: 1.8, color: hex('#111111') })
     let f = foot; while (f.length > 4 && F.sans.widthOfTextAtSize(f, 8) > CW - 80) f = f.slice(0, -2)
-    p.drawText(f, { x: M, y: 36, size: 8, font: F.sans, color: grey })
-    p.drawText(t, { x: W - M - F.sansBold.widthOfTextAtSize(t, 8), y: 36, size: 8, font: F.sansBold, color: navy })
+    p.drawText(f, { x: M + 8, y: 36, size: 8, font: F.sans, color: grey })
+    p.drawText(t, { x: W - M - 8 - F.sans.widthOfTextAtSize(t, 8), y: 36, size: 8, font: F.sans, color: grey })
   })
   return pdf.save()
 }

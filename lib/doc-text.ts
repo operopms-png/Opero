@@ -160,14 +160,14 @@ export function changeSummary(base: string, body: string, max = 6): string[] {
 }
 
 // ---- turning the HTML into blocks (for the PDF) ----
-export type Run = { text: string; b?: boolean; i?: boolean; u?: boolean; empty?: boolean }
+export type Run = { text: string; b?: boolean; i?: boolean; u?: boolean; empty?: boolean; choice?: string[] }
 export type Block = { type: 'p' | 'h1' | 'h2' | 'h3' | 'li' | 'hr' | 'quote'; runs: Run[]; center?: boolean; marker?: string; depth?: number }
 export function htmlToBlocks(html: string): Block[] {
   const blocks: Block[] = []
   let cur: Block | null = null as Block | null
   let b = 0, i = 0, u = 0, quote = 0
   const lists: { ordered: boolean; n: number }[] = []
-  const spans: boolean[] = []
+  const spans: { empty: boolean; choice?: string[] }[] = []
   const flush = () => { if (cur && cur.runs.some(r => r.text.trim())) blocks.push(cur); cur = null }
   const start = (type: Block['type'], center = false) => { flush(); cur = { type: quote && type === 'p' ? 'quote' : type, runs: [], center } }
   for (const m of String(html || '').matchAll(/<(\/?)([a-z0-9]+)([^>]*)>|([^<]+)/gi)) {
@@ -175,8 +175,8 @@ export function htmlToBlocks(html: string): Block[] {
       const text = decode(m[4]).replace(/\s+/g, ' ')
       if (!text.trim() && !cur) continue
       if (!cur) start('p')
-      const empty = spans.includes(true)
-      cur!.runs.push({ text: empty ? '____________' : text, b: b > 0, i: i > 0, u: u > 0, empty })
+      const sp = [...spans].reverse().find(x => x.empty)
+      cur!.runs.push({ text: sp ? '' : text, b: b > 0, i: i > 0, u: u > 0, empty: !!sp, choice: sp?.choice })
       continue
     }
     const close = m[1] === '/', tag = m[2].toLowerCase(), attrs = m[3] || ''
@@ -189,7 +189,7 @@ export function htmlToBlocks(html: string): Block[] {
     if (tag === 'b' || tag === 'strong') { b += close ? -1 : 1; continue }
     if (tag === 'i' || tag === 'em') { i += close ? -1 : 1; continue }
     if (tag === 'u') { u += close ? -1 : 1; continue }
-    if (tag === 'span') { if (close) spans.pop(); else spans.push(/data-empty="1"/.test(attrs)); continue }
+    if (tag === 'span') { if (close) spans.pop(); else { const ch = attrs.match(/data-choice="([^"]*)"/); spans.push({ empty: /data-empty="1"/.test(attrs), choice: ch ? decode(ch[1]).split('|').map(x => x.trim()).filter(Boolean) : undefined }) } continue }
   }
   flush()
   return blocks
