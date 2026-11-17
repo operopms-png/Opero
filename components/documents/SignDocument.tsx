@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { fieldKind, blankLabel, docBackground } from '@/lib/doc-text'
+import { DOC_CSS } from '@/components/documents/DocEditor'
 
 const BLUE = '#2F6DB5', NAVY = '#0B1B45', LINE = '#C9D6E6'
 const FONT = "Manrope, -apple-system, 'Segoe UI', Arial, sans-serif"
@@ -28,9 +29,14 @@ export default function SignDocument({ token, first }: { token: string; first: {
 
   const blanks: { key: string; options?: string[] }[] = doc.blanks ?? []
   const html = useMemo(() => String(doc.body || '').replace(/<span data-field="([a-z0-9_]+)" data-empty="1"[^>]*>[\s\S]*?<\/span>/g, '<span data-slot="$1"></span>'), [doc.body])
+  // The letter is written into the page by hand (not with dangerouslySetInnerHTML): React rewrote that HTML after the
+  // input boxes were attached to it, which left every blank empty and uneditable.
   useEffect(() => {
     const m: Record<string, HTMLElement> = {}
-    box.current?.querySelectorAll<HTMLElement>('[data-slot]').forEach(el => { m[el.dataset.slot!] = el })
+    if (box.current) {
+      box.current.innerHTML = html
+      box.current.querySelectorAll<HTMLElement>('[data-slot]').forEach(el => { m[el.dataset.slot!] = el })
+    }
     setSlots(m)
   }, [html])
 
@@ -93,7 +99,8 @@ export default function SignDocument({ token, first }: { token: string; first: {
           {blanks.some(b => fieldKind(b.key) === 'initials') && <button onClick={fillInitials} style={{ fontSize: 12.5, fontWeight: 700, color: BLUE, background: '#fff', border: `1px solid ${BLUE}`, borderRadius: 9, padding: '7px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Fill my initials</button>}
           <button onClick={goNext} style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', background: BLUE, border: 'none', borderRadius: 9, padding: '8px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Next</button>
         </div>}
-        <div ref={box} className="doc-read" style={{ ...(docBackground(doc.title) ? { backgroundImage: `linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,.45)),url(${docBackground(doc.title)})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : {}), padding: '22px', fontFamily: 'Georgia, serif', fontSize: 15.5, lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: html }} />
+        <style>{DOC_CSS}</style>
+        <div ref={box} className="doc-sheet doc-read" style={{ ...(docBackground(doc.title) ? { backgroundImage: `linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,.45)),url(${docBackground(doc.title)})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : {}), padding: '22px', fontFamily: 'Georgia, serif', fontSize: 15.5, lineHeight: 1.65 }} />
         {Object.entries(slots).map(([k, el]) => { const b = blanks.find(x => x.key === k); return b ? createPortal(fieldUI(b), el, k) : null })}
         {signed ? (
           <div style={{ margin: 22, background: '#F0FAF4', border: '1px solid #BFE3CC', borderRadius: 14, padding: 18 }}>
