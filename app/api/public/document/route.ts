@@ -5,7 +5,7 @@ import { sendEmail } from '@/lib/send-email'
 import { documentPdf } from '@/lib/document-pdf'
 import { randomUUID } from 'crypto'
 import { emptyBlanks, applyClientFields, blankLabel, fieldKind } from '@/lib/doc-text'
-import { docSettings, docEmailHtml, longDate } from '@/lib/documents'
+import { docSettings, docEmailHtml, longDate, contactFor } from '@/lib/documents'
 
 // The page a client opens from their email to read and sign a document (/sign/[token]).
 //   GET ?t=<token>          -> { doc, company }     (records the first open)
@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
   // tell the team, and email signed copies to the client and to whoever sent it
   await db.from('notifications').insert({ user_id: d.business_id, title: `Signed: ${d.title}`.slice(0, 300), message: `${name} signed ${d.title}${d.property_label ? ` for ${d.property_label}` : ''}.`, type: 'document', module: 'staffcentre', link: `/staff-centre/documents?id=${d.id}`, read: false })
   try {
-    const s = await docSettings(d.business_id), company = s.company_name || 'Property Management Team'
+    const s0 = await docSettings(d.business_id), company = s0.company_name || 'Property Management Team'
+    const s = { ...s0, ...contactFor(d, s0) }
     const bytes = await documentPdf(signed, s, SITE_URL)
     await saveSignedCopy(signed, bytes)
     await db.from('onboarding_links').update({ status: 'done', completed_at: now }).eq('doc_send_id', d.id).neq('status', 'done')

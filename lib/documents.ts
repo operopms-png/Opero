@@ -131,6 +131,17 @@ export async function fieldsFor(biz: string, kind: string | null, id: string | n
   return { values: v, property_label }
 }
 
+/** Offer letters (and other HR hires) show the careers address in the email footer and reply there; everything else keeps the company's normal contact details. */
+export const CAREERS_EMAIL = 'career@thenovourq.com'
+export const isOfferLetter = (title?: string | null) => /^offer letter/i.test(String(title || '').trim())
+export function contactFor(doc: { title?: string | null }, s: { contact_lines: string | null; reply_to: string | null }) {
+  if (!isOfferLetter(doc.title)) return { contact_lines: s.contact_lines, reply_to: s.reply_to }
+  const lines = String(s.contact_lines || '').split('\n').map(l => l.trim()).filter(Boolean)
+  const i = lines.findIndex(l => /^[^@\s]+@[^@\s]+$/.test(l))
+  if (i >= 0) lines[i] = CAREERS_EMAIL; else lines.splice(1, 0, CAREERS_EMAIL)
+  return { contact_lines: lines.join('\n'), reply_to: CAREERS_EMAIL }
+}
+
 export function docEmailHtml(company: string, contact: string | null, first: string, message: string, link: string, button: string, foot: string) {
   return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#323338">
   <div style="background:#191815;padding:16px 22px;color:#fff;font-weight:700;font-size:16px">${esc(company)}</div>
@@ -153,9 +164,10 @@ export async function deliverDocument(doc: any, opts: { reminder?: boolean } = {
   const msg = opts.reminder
     ? `Just a reminder — your ${doc.title}${doc.property_label ? ` for ${doc.property_label}` : ''} is still waiting for your signature. It only takes a minute.`
     : (String(doc.email_message || '').trim() || `Please find your ${doc.title}${doc.property_label ? ` for ${doc.property_label}` : ''}. ${doc.needs_signature ? 'You can read it and sign online in a couple of minutes.' : 'You can read it online or open the PDF attached.'}`)
-  const subject = opts.reminder ? `Reminder: ${doc.title} is waiting for your signature` : (String(doc.email_subject || '').trim() || `${doc.title}${doc.property_label ? ` — ${doc.property_label}` : ''}`)
-  const html = docEmailHtml(company, s.contact_lines, first, msg, link, doc.needs_signature ? 'Review and sign' : 'View document', 'A PDF copy is attached. Questions? Just reply to this email.')
-  const r = await sendEmail(to, subject, html, doc.created_email || s.reply_to || undefined, `${company} <notifications@${EMAIL_DOMAIN}>`, [{ filename: `${String(doc.title).replace(/[^\w\- ]+/g, '').trim() || 'document'}.pdf`, content: Buffer.from(bytes).toString('base64') }])
+  const subject = opts.reminder ? `Reminder: ${doc.title} is waiting for your signature` : (String(doc.email_subject || '').trim().replace(/\{company_name\}/g, company).replace(/\{(recipient_name|employee_name)\}/g, String(doc.recipient_name || '')).replace(/\{first_name\}/g, first) || `${doc.title}${doc.property_label ? ` — ${doc.property_label}` : ''}`)
+  const cf = contactFor(doc, s)
+  const html = docEmailHtml(company, cf.contact_lines, first, msg, link, doc.needs_signature ? 'Review and sign' : 'View document', 'A PDF copy is attached. Questions? Just reply to this email.')
+  const r = await sendEmail(to, subject, html, doc.created_email || cf.reply_to || undefined, `${company} <notifications@${EMAIL_DOMAIN}>`, [{ filename: `${String(doc.title).replace(/[^\w\- ]+/g, '').trim() || 'document'}.pdf`, content: Buffer.from(bytes).toString('base64') }])
   if ((r as any).skipped) return 'Email isn’t set up on the portal yet (RESEND_API_KEY missing in Netlify). Download the PDF and send it yourself for now.'
   if ((r as any).error) return `The email didn’t go: ${(r as any).error}`.slice(0, 400)
   const now = new Date().toISOString()

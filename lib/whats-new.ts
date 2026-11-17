@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'Signing links fixed, offer letter emails', text: 'Signing links sent from Documents now open correctly, and offer letter emails show the careers address in the footer and send replies to it, with the company name filled into the subject.' },
   { date: '2026-11-17', title: 'Offer letters for each role', text: 'Documents → Templates → Add HR templates now adds an offer letter for Receptionist, CEO, COO, CPMO, CFO, CTO, CDO, CCO and CRO that you fill in and send by link for the new hire to view and sign, on the NOVOURQ page background.' },
   { date: '2026-11-17', title: 'Dynamic Dossier Listings and Market', text: 'Dynamic Dossier now has a Listings tab (rules and suggested prices per property) and a Market tab (how full your next 60 nights are and which weekdays fill), from your own bookings.' },
   { date: '2026-11-17', title: 'Smoobu keys now encrypted', text: 'Your Smoobu API key and secret are now stored encrypted; keys saved earlier are encrypted automatically at the next sync.' },

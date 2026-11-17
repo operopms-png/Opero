@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { BRAND_NAME } from '@/lib/brand'
 import SignDocument from '@/components/documents/SignDocument'
 
@@ -262,12 +263,16 @@ const toggleBtn = (active: boolean): React.CSSProperties => ({
 })
 
 // One link, two kinds of thing to sign: a document sent from Documents (initials, dates, signature) or a tenancy lease.
-export default function SignPage({ params }: { params: { token: string } }) {
-  const [state, setState] = useState<'loading' | 'lease' | { doc: any; company: any }>('loading')
+export default function SignPage() {
+  // params is a Promise in newer Next.js client pages (params.token was undefined, which broke every signing link), so read it with useParams
+  const params = { token: String(useParams<{ token: string }>()?.token || '') }
+  const [state, setState] = useState<'loading' | 'lease' | { error: string } | { doc: any; company: any }>('loading')
   useEffect(() => {
-    fetch(`/api/public/document?t=${params.token}`).then(async r => { const j = await r.json().catch(() => ({})); setState(r.ok && j.doc ? j : 'lease') }).catch(() => setState('lease'))
+    // 404 = not a document, so try it as a lease. Any other failure is a real error: show it instead of the misleading lease message.
+    fetch(`/api/public/document?t=${params.token}`).then(async r => { const j = await r.json().catch(() => ({})); setState(r.ok && j.doc ? j : r.status === 404 ? 'lease' : { error: j.error || `Could not load this document (error ${r.status})` }) }).catch(() => setState({ error: 'Could not reach the server. Check your connection and refresh.' }))
   }, [params.token])
   if (state === 'loading') return <div style={{ padding: 60, textAlign: 'center', color: '#98A2B3', fontFamily: 'Manrope, Arial, sans-serif' }}>Loading…</div>
+  if (typeof state === 'object' && 'error' in state) return <div style={{ padding: 60, textAlign: 'center', color: '#DC2626', fontFamily: 'Manrope, Arial, sans-serif' }}>{state.error}</div>
   if (state === 'lease') return <SignLeasePage params={params} />
-  return <SignDocument token={params.token} first={state} />
+  return <SignDocument token={params.token} first={state as { doc: any; company: any }} />
 }
