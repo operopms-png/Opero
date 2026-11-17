@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'Landlord agreements in the NOVOURQ form layout', text: 'When a landlord opens the link for a Master Lease, Landlord Management or Co-Host agreement, it now looks like the NOVOURQ agreement PDFs, with the logo, navy headings, ruled fill-in lines and tick boxes.' },
   { date: '2026-11-17', title: 'Offer letters: date to sign', text: 'The employee signature and date line on offer letters and the Work Hours notice is now a date box the employee fills in when signing, with the signature drawn in the box below.' },
   { date: '2026-11-17', title: 'Offer letters: employee fills in their own address', text: 'On an offer letter the employee types their own home address when they sign, so you can leave it empty when you send; company details such as the company address and work location are still filled in by you before sending.' },
   { date: '2026-11-17', title: 'Signing page: fill in blanks', text: 'On a document sent for signing, the blanks left for the signer now show as boxes they can type into, and the letter has proper spacing and lists.' },

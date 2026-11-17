@@ -3,9 +3,27 @@
 // initials and dates at the marked sections, then a drawn or typed signature.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { fieldKind, blankLabel, docBackground } from '@/lib/doc-text'
+import { fieldKind, blankLabel, docBackground, formLayout } from '@/lib/doc-text'
 import { DOC_CSS } from '@/components/documents/DocEditor'
 
+// The NOVOURQ landlord form layout: navy uppercase headings, bold navy labels, ruled fill-in lines and tick boxes.
+const FORM_NAVY = '#182D5E'
+const FORM_CSS = `
+.doc-form{font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#1F2937;padding:8px 22px 22px;background:#fff}
+.doc-form h1{font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:700;color:${FORM_NAVY};text-align:left;text-transform:uppercase;letter-spacing:0;margin:14px 0 12px}
+.doc-form h2,.doc-form h3{font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:${FORM_NAVY};text-transform:uppercase;margin:22px 0 8px}
+.doc-form p{margin:0 0 10px}.doc-form ul,.doc-form ol{margin:0 0 10px;padding-left:24px}.doc-form li{margin-bottom:4px}
+.doc-form b{color:${FORM_NAVY}}
+.doc-form .frow{display:flex;flex-wrap:wrap;align-items:flex-end;column-gap:10px;row-gap:2px;margin:0 0 12px}
+.doc-form .fline{margin:0 0 12px}
+.doc-form .frow>b{flex:0 0 auto}
+.doc-form .frow>span[data-slot]{flex:1 1 210px;min-width:0}
+.doc-form .fopts label{display:inline-flex;align-items:center;gap:6px;margin:0 16px 4px 0;cursor:pointer}
+.doc-form .fopts input{position:absolute;opacity:0;width:0;height:0}
+.doc-form .fopts .box{width:15px;height:15px;border:1.5px solid ${FORM_NAVY};border-radius:2px;display:inline-block;background:#fff}
+.doc-form .fopts input:checked+.box{background:${FORM_NAVY};box-shadow:inset 0 0 0 2.5px #fff}
+.doc-form .fopts input:focus-visible+.box{outline:2px solid #2F6DB5;outline-offset:2px}
+`
 const BLUE = '#2F6DB5', NAVY = '#0B1B45', LINE = '#C9D6E6'
 const FONT = "Manrope, -apple-system, 'Segoe UI', Arial, sans-serif"
 const initialsOf = (n: string) => n.trim().split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase()).join('').slice(0, 4)
@@ -28,7 +46,13 @@ export default function SignDocument({ token, first }: { token: string; first: {
   const drawing = useRef(false)
 
   const blanks: { key: string; options?: string[] }[] = doc.blanks ?? []
-  const html = useMemo(() => String(doc.body || '').replace(/<span data-field="([a-z0-9_]+)" data-empty="1"[^>]*>[\s\S]*?<\/span>/g, '<span data-slot="$1"></span>'), [doc.body])
+  const formMode = formLayout(doc.title)
+  const html = useMemo(() => {
+    let h = String(doc.body || '').replace(/<span data-field="([a-z0-9_]+)" data-empty="1"[^>]*>[\s\S]*?<\/span>/g, '<span data-slot="$1"></span>')
+    // form layout: each "Label: blank" line becomes a row, label on the left and the ruled line filling the rest
+    if (formMode) h = h.replace(/<p>([\s\S]*?)<\/p>/g, (all, inner: string) => inner.startsWith('<b>') && inner.includes('data-slot') ? inner.split(/<br\s*\/?>/).map(l => l.includes('data-slot') ? `<div class="frow">${l}</div>` : `<div class="fline">${l}</div>`).join('') : all)
+    return h
+  }, [doc.body, formMode])
   // The letter is written into the page by hand (not with dangerouslySetInnerHTML): React rewrote that HTML after the
   // input boxes were attached to it, which left every blank empty and uneditable.
   useEffect(() => {
@@ -80,6 +104,13 @@ export default function SignDocument({ token, first }: { token: string; first: {
   const fieldUI = (b: { key: string; options?: string[] }) => {
     const k = fieldKind(b.key), v = vals[b.key] || ''
     const base: React.CSSProperties = { ...inp, fontSize: 14, padding: '4px 8px', margin: '0 3px', borderColor: v ? '#067647' : BLUE, background: v ? '#F0FAF4' : '#F4F9FF', borderStyle: v ? 'solid' : 'dashed', borderWidth: 1.5 }
+    if (formMode) {
+      if (b.options?.length && k !== 'initials' && k !== 'date') return <span className="fopts" role="radiogroup" aria-label={blankLabel(b.key)}>{b.options.map(o => <label key={o}><input type="radio" name={b.key} checked={v === o} onChange={() => set(b.key, o)} /><span className="box" />{o}</label>)}</span>
+      const line: React.CSSProperties = { fontFamily: 'inherit', fontSize: 14, width: '100%', boxSizing: 'border-box', padding: '2px 4px', border: 'none', borderBottom: `1.5px solid ${v ? '#067647' : FORM_NAVY}`, borderRadius: 0, background: v ? '#F0FAF4' : 'transparent', color: '#111827', outline: 'none' }
+      if (k === 'initials') return <input aria-label="Your initials" value={v} maxLength={8} placeholder="Initials" onChange={e => set(b.key, e.target.value.toUpperCase())} style={{ ...line, width: 92, textAlign: 'center', fontWeight: 700 }} />
+      if (k === 'date') return <input aria-label="Date" type="date" value={v} onChange={e => set(b.key, e.target.value)} style={{ ...line, width: 170 }} />
+      return <input aria-label={blankLabel(b.key)} value={v} onChange={e => set(b.key, e.target.value)} style={line} />
+    }
     if (k === 'initials') return <input aria-label="Your initials" value={v} maxLength={8} placeholder="Initial here" onChange={e => set(b.key, e.target.value.toUpperCase())} style={{ ...base, width: 92, textAlign: 'center', fontWeight: 700, letterSpacing: 1 }} />
     if (k === 'date') return <span style={{ whiteSpace: 'nowrap' }}><input aria-label="Date" type="date" value={v} onChange={e => set(b.key, e.target.value)} style={{ ...base, width: 150 }} /><button type="button" onClick={() => set(b.key, today())} style={{ fontSize: 12, color: BLUE, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Today</button></span>
     if (b.options?.length) return <select aria-label={blankLabel(b.key)} value={v} onChange={e => set(b.key, e.target.value)} style={base}><option value="">Choose…</option>{b.options.map(o => <option key={o}>{o}</option>)}</select>
@@ -99,8 +130,10 @@ export default function SignDocument({ token, first }: { token: string; first: {
           {blanks.some(b => fieldKind(b.key) === 'initials') && <button onClick={fillInitials} style={{ fontSize: 12.5, fontWeight: 700, color: BLUE, background: '#fff', border: `1px solid ${BLUE}`, borderRadius: 9, padding: '7px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Fill my initials</button>}
           <button onClick={goNext} style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', background: BLUE, border: 'none', borderRadius: 9, padding: '8px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Next</button>
         </div>}
-        <style>{DOC_CSS}</style>
-        <div ref={box} className="doc-sheet doc-read" style={{ ...(docBackground(doc.title) ? { backgroundImage: `linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,.45)),url(${docBackground(doc.title)})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : {}), padding: '22px', fontFamily: 'Georgia, serif', fontSize: 15.5, lineHeight: 1.65 }} />
+        <style>{DOC_CSS}{FORM_CSS}</style>
+        {formMode && <div style={{ padding: '22px 22px 0', background: '#fff' }}><img src={company?.name === 'NOVOURQ' ? '/novourq-form-logo.png' : (company?.logo_url || '/novourq-form-logo.png')} alt={company?.name || ''} style={{ height: 56, display: 'block' }} /></div>}
+        <div ref={box} className={formMode ? 'doc-form doc-read' : 'doc-sheet doc-read'} style={{ ...(docBackground(doc.title) ? { backgroundImage: `linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,.45)),url(${docBackground(doc.title)})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : {}), ...(formMode ? {} : { padding: '22px', fontFamily: 'Georgia, serif', fontSize: 15.5, lineHeight: 1.65 }) }} />
+        {formMode && <div style={{ margin: '0 22px', padding: '8px 0 14px', borderTop: `1px solid ${FORM_NAVY}`, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 11, color: '#4B5563' }}>{company?.contact || company?.name}</div>}
         {Object.entries(slots).map(([k, el]) => { const b = blanks.find(x => x.key === k); return b ? createPortal(fieldUI(b), el, k) : null })}
         {signed ? (
           <div style={{ margin: 22, background: '#F0FAF4', border: '1px solid #BFE3CC', borderRadius: 14, padding: 18 }}>

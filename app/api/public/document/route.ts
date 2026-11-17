@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     await db.from('doc_sends').update({ status: 'opened', opened_at: new Date().toISOString() }).eq('id', d.id)
     d.status = 'opened'
   }
-  return NextResponse.json({ doc: pub(d), company: { name: s.company_name, logo_url: s.logo_url } })
+  return NextResponse.json({ doc: pub(d), company: { name: s.company_name, logo_url: s.logo_url, contact: String(s.contact_lines || '').split('\n').map((l: string) => l.trim()).filter(Boolean).join(' · ') } })
 }
 
 export async function POST(req: NextRequest) {
