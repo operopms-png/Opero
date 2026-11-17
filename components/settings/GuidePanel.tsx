@@ -92,6 +92,11 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Quick Insights (AI) writes a few plain sentences from those same figures, once a day. Press Refresh to write them again. It does not add outside market figures. Open market check goes to the Deal Analyser.',
     'A deal only has a yield when it was saved with a purchase price and a rent, so rent-to-rent deals do not appear in the yield panels. Press Preview example to see the layout with example figures that are not your data, then press it again to go back to yours.',
   ] },
+  { id: 'project-image', title: 'Development project main image', steps: [
+    'Where: Real Estate Intelligence → Developments → Projects. Press New Project, or Edit on an existing one, and use Main image to upload a JPG, PNG or WebP render or photo.',
+    'The image shows at the top of the project card and in the side panel when you open the project on the Map. Press Remove image to take it off.',
+    'Projects with no image look as they did before. Images belong to your company only.',
+  ] },
   { id: 'clock-in', title: 'Clock in and late arrivals (Work Hours)', steps: [
     'Where: Human Intelligence Hub → Team → Work Hours, and a small Clock in box on the Dashboard. Everyone presses Clock in when they start and Clock out when they finish. Signing in to the portal does not clock them in.',
     'The account owner, and staff the owner picks under Who can see this, see Clock-ins and late arrivals on Work Hours: time in, time out, hours, and On time or Late with the minutes.',

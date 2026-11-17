@@ -67,7 +67,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Messages': 'Messages between you, your tenants and landlords.',
   'Team': 'Your team members, their roles and what each can see.',
   'dev:Dashboard': 'Progress across your development projects: budget, milestones and what needs attention.',
-  'dev:Projects': 'Every development project with its stage, budget and timeline.',
+  'dev:Projects': 'Every development project with its main image, stage, budget and timeline.',
   'dev:Checklist': 'The steps each development must complete, ticked off as you go.',
   'dev:Budget': 'Planned and actual spend for each project, so you can see where you are against budget.',
   'dev:Investors': 'People who have invested in your developments, how much, and what they have been sent.',

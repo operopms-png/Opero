@@ -5,7 +5,7 @@ import { serviceClient as db } from '@/lib/admin-auth'
 export type MapStatus = 'let' | 'vac' | 'arr' | 'cert' | 'deal' | 'plan'
 export type MapItem = {
   id: string; source: 'pm' | 'estate' | 'str' | 'deal' | 'dev'; name: string; address: string; country: string
-  lat: number | null; lng: number | null; status: MapStatus; facts: { label: string; value: string }[]; href: string; url?: string; building?: { source: 'pm' | 'estate' | 'dev'; id: string; name: string }
+  lat: number | null; lng: number | null; status: MapStatus; facts: { label: string; value: string }[]; href: string; url?: string; image?: string | null; building?: { source: 'pm' | 'estate' | 'dev'; id: string; name: string }
 }
 
 const TABLE = { pm: 'pm_properties', estate: 'estate_properties', str: 'properties', deal: 'deal_matches', dev: 'dev_projects' } as const
@@ -38,7 +38,7 @@ export async function loadPropertyMap(businessId: string): Promise<{ items: MapI
     db.from('estate_units').select('property_id,building_id').eq('user_id', businessId).not('building_id', 'is', null).limit(3000),
     db.from('pm_buildings').select('id,name').eq('user_id', businessId).limit(500),
     db.from('estate_buildings').select('id,name').eq('user_id', businessId).limit(500),
-    db.from('dev_projects').select('id,name,location,status,total_budget,lat,lng,geocoded_at').eq('user_id', businessId).limit(200),
+    db.from('dev_projects').select('id,name,location,status,total_budget,lat,lng,geocoded_at,image_url').eq('user_id', businessId).limit(200),
     db.from('dev_units').select('project_id,status').eq('user_id', businessId).limit(5000),
   ])
   const by = <T extends { property_id: any }>(rows: T[] | null) => { const m = new Map<string, T[]>(); (rows ?? []).forEach(r => { const k = String(r.property_id); m.set(k, [...(m.get(k) ?? []), r]) }); return m }
@@ -96,7 +96,7 @@ export async function loadPropertyMap(businessId: string): Promise<{ items: MapI
   for (const p of devP.data ?? []) {
     const id = String(p.id), c = devCount.get(id)
     const stage = ({ planning: 'Planning', active: 'Under construction', on_hold: 'On hold' } as Record<string, string>)[String(p.status)] || String(p.status || 'Planned')
-    items.push({ id, source: 'dev', name: p.name || 'Development', address: p.location || '', country: countryOf(p.lat, p.lng, p.location || ''), lat: p.lat, lng: p.lng, status: 'plan', facts: [{ label: 'Stage', value: stage }, ...(c ? [{ label: 'Units', value: `${c.avail} available of ${c.n}` }] : []), ...(p.total_budget ? [{ label: 'Budget', value: money(p.total_budget) }] : [])], href: '/dev', building: { source: 'dev', id, name: p.name || 'Development' }, _geo: p.lat == null && !p.geocoded_at && !!p.location, _q: p.location || '' })
+    items.push({ id, source: 'dev', name: p.name || 'Development', address: p.location || '', country: countryOf(p.lat, p.lng, p.location || ''), lat: p.lat, lng: p.lng, status: 'plan', facts: [{ label: 'Stage', value: stage }, ...(c ? [{ label: 'Units', value: `${c.avail} available of ${c.n}` }] : []), ...(p.total_budget ? [{ label: 'Budget', value: money(p.total_budget) }] : [])], href: '/dev', image: p.image_url || null, building: { source: 'dev', id, name: p.name || 'Development' }, _geo: p.lat == null && !p.geocoded_at && !!p.location, _q: p.location || '' })
   }
 
   // Look up a few missing positions per visit (OpenStreetMap allows about one a second); the rest fill in on later visits.
