@@ -27,6 +27,7 @@ export const BLANKS: Blank[] = [
   { key: 'check_in', label: 'Check-in date', group: 'Booking' },
   { key: 'check_out', label: 'Check-out date', group: 'Booking' },
   { key: 'booking_total', label: 'Booking total', group: 'Booking' },
+  { key: 'employee_address', label: 'Your home address', group: 'Usually the client fills in' },
   { key: 'date_of_birth', label: 'Date of birth', group: 'Usually the client fills in' },
   { key: 'permanent_residence', label: 'Permanent residence', group: 'Usually the client fills in' },
   { key: 'country_of_residence', label: 'Country of residence', group: 'Usually the client fills in' },
