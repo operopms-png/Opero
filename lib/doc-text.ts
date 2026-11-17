@@ -57,6 +57,8 @@ export const blankLabel = (key: string) => BLANKS.find(b => b.key === key)?.labe
 export const fieldKind = (key: string): 'initials' | 'date' | 'text' => /^initials_/.test(key) ? 'initials' : /^signdate_/.test(key) ? 'date' : 'text'
 
 export const TOKEN_RE = /\{([a-z][a-z0-9_]*)(?::([^{}<>]*))?\}/g
+/** Page background for a document: the NOVOURQ artwork on every offer letter, whatever the role. */
+export const docBackground = (title?: string | null): string | null => /^offer letter/i.test(String(title || '').trim()) ? '/novourq-letter-bg.jpg' : null
 export const esc = (t: any) => String(t ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!))
 export const decode = (t: string) => t.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
 

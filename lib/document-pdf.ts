@@ -2,7 +2,7 @@
 // page, the document text (headings, paragraphs, lists, bold/italic), and at the
 // end either signature lines or the electronic signature record.
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
-import { htmlToBlocks, type Run } from './doc-text'
+import { htmlToBlocks, docBackground, type Run } from './doc-text'
 
 const hex = (h: string) => { const n = parseInt(h.slice(1), 16); return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255) }
 const safe = (s: any) => String(s ?? '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[‑‐]/g, '-').replace(/☐/g, '[ ]').replace(/☑|☒/g, '[x]').replace(/[^\x20-\x7E -ÿ–—•€]/g, '')
@@ -33,12 +33,15 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   }
   const ink = hex('#1F1F1F'), grey = hex('#6B6B6B'), gold = hex('#89CFF0'), goldBg = hex('#89CFF0')
   const logo = await loadImage(pdf, s.logo_url, siteUrl)
+  const bgUrl = docBackground(doc.title)
+  const bg = bgUrl ? await loadImage(pdf, bgUrl, siteUrl) : null
   const company = s.company_name || 'Property Management Team'
   const pages: PDFPage[] = []
   let page!: PDFPage, y = 0
 
   const newPage = () => {
     page = pdf.addPage([W, H]); pages.push(page); y = TOP
+    if (bg) { const bh = W * bg.height / bg.width; page.drawImage(bg, { x: 0, y: (H - bh) / 2, width: W, height: bh, opacity: 0.55 }) }
     page.drawRectangle({ x: 0, y: H - 6, width: W, height: 6, color: goldBg })
     if (logo) { page.drawRectangle({ x: M, y: H - 34 - 40, width: 40, height: 40, color: goldBg }); const d = logo.scaleToFit(34, 34); page.drawImage(logo, { x: M + 3, y: H - 34 - 37, width: d.width, height: d.height }) }
     const tx = logo ? M + 50 : M
