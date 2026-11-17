@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-17', title: 'Offer letters: date to sign', text: 'The employee signature and date line on offer letters and the Work Hours notice is now a date box the employee fills in when signing, with the signature drawn in the box below.' },
   { date: '2026-11-17', title: 'Offer letters: employee fills in their own address', text: 'On an offer letter the employee types their own home address when they sign, so you can leave it empty when you send; company details such as the company address and work location are still filled in by you before sending.' },
   { date: '2026-11-17', title: 'Signing page: fill in blanks', text: 'On a document sent for signing, the blanks left for the signer now show as boxes they can type into, and the letter has proper spacing and lists.' },
   { date: '2026-11-17', title: 'Signing links fixed, offer letter emails', text: 'Signing links sent from Documents now open correctly, and offer letter emails show the careers address in the footer and send replies to it, with the company name filled into the subject.' },
