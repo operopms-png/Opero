@@ -8,7 +8,7 @@ import { sanitizeHtml, settleBlanks, wordingText, changeSummary, esc } from '@/l
 import { isHrFolder } from '@/lib/hr-docs'
 import { HR_LETTER_TEMPLATES } from '@/lib/hr-letter-templates'
 import { LANDLORD_TEMPLATES } from '@/lib/landlord-templates'
-import { searchPeople, createFromTemplate, deliverDocument, docSettings, docEmailHtml, runDocAutomation, TRIGGERS } from '@/lib/documents'
+import { searchPeople, sendTestDocuments, createFromTemplate, deliverDocument, docSettings, docEmailHtml, runDocAutomation, TRIGGERS } from '@/lib/documents'
 
 // Staff Centre → Documents.
 //   GET                         -> { docs, stats, isAdmin }               sent documents
@@ -126,18 +126,8 @@ export async function POST(req: NextRequest) {
     // admin: sends a test copy of every active Agreements template to the admin's own email, to try the signing link
     const no = adminOnly(); if (no) return no
     if (!c.email) return bad('Your login has no email address.')
-    const { data: tpls } = await db.from('doc_templates').select('*').eq('business_id', biz).eq('active', true).eq('category', 'Agreements')
-    let sent = 0; const failed: string[] = []
-    for (const tpl of tpls ?? []) {
-      try {
-        const doc = await createFromTemplate(biz, tpl, null, null, { name: by, email: c.email })
-        const patch = { recipient_name: by || 'Test', recipient_email: c.email, email_subject: ('[TEST] ' + (doc.email_subject || tpl.name)).slice(0, 200) }
-        const { data: saved } = await db.from('doc_sends').update(patch).eq('id', doc.id).select('*').single()
-        const err = await deliverDocument(saved)
-        if (err) failed.push(`${tpl.name}: ${err}`); else sent++
-      } catch (e: any) { failed.push(`${tpl.name}: ${e.message}`) }
-    }
-    return NextResponse.json({ sent, failed })
+    const r = await sendTestDocuments(biz, { name: by, email: c.email })
+    return NextResponse.json({ sent: r.sent.length, failed: r.failed })
   }
   if (b.action === 'template-seed-hr') {
     // adds the HR templates this company doesn't have yet; never changes one that exists

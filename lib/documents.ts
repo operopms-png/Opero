@@ -280,3 +280,22 @@ export async function runDocAutomation(onlyBiz?: string) {
   report.push({ reminders: reminded })
   return report
 }
+
+
+/** Sends a [TEST] copy of the company's active Agreements templates to the person's OWN email so they can try the signing link. Never goes to anyone else. */
+export async function sendTestDocuments(biz: string, by: { name?: string; email: string }, nameFilter?: string) {
+  const { data: tpls } = await db.from('doc_templates').select('*').eq('business_id', biz).eq('active', true).eq('category', 'Agreements')
+  const f = String(nameFilter || '').toLowerCase().trim()
+  const list = (tpls ?? []).filter((t: any) => !f || String(t.name).toLowerCase().includes(f))
+  const sent: string[] = [], failed: string[] = []
+  for (const tpl of list) {
+    try {
+      const doc = await createFromTemplate(biz, tpl, null, null, { name: by.name, email: by.email })
+      const patch = { recipient_name: by.name || 'Test', recipient_email: by.email, email_subject: ('[TEST] ' + (doc.email_subject || tpl.name)).slice(0, 200) }
+      const { data: saved } = await db.from('doc_sends').update(patch).eq('id', doc.id).select('*').single()
+      const err = await deliverDocument(saved)
+      if (err) failed.push(`${tpl.name}: ${err}`); else sent.push(tpl.name)
+    } catch (e: any) { failed.push(`${tpl.name}: ${e.message}`) }
+  }
+  return { sent, failed, found: list.length }
+}
