@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-20', title: 'Invite co-hosts to their portal', text: 'Staff Centre, Co-hosts, Invite to Portal emails the co-host a link to set their own password, the same as landlords and tenants.' },
   { date: '2026-11-20', title: 'Tenant files in Services Pack', text: 'The Tenant tab now has How to rent in Jamaica, a fillable Client onboarding sheet and Tenancy agreement, registers a new tenant from the link, and tenants can be invited to their portal.' },
   { date: '2026-11-20', title: 'Invite landlords to their portal', text: 'Property Management, Landlords, Invite to Portal emails the landlord a link to set their own password, and the Landlord detail sheet now has a property page that creates the property when they submit.' },
   { date: '2026-11-20', title: 'Landlord detail sheet', text: 'Marketing, Services Pack now has a fillable Landlord detail sheet, ticked on the Landlord tab, and completed copies are filed on the landlord\u2019s record.' },

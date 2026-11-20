@@ -42,12 +42,13 @@ export default function CohostsPage() {
     if (error) { setMsg(error.message); return }
     setModal(null); load()
   }
-  async function makeLogin() {
+  async function makeLogin(invite = false) {
     setSaving(true); setMsg('')
     const { data: { session } } = await supabase.auth.getSession()
-    const r = await fetch('/api/create-cohost-account', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` }, body: JSON.stringify({ cohost_id: form.id, email: form.email, password: form.password }) })
+    const r = await fetch('/api/create-cohost-account', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` }, body: JSON.stringify({ cohost_id: form.id, email: form.email, ...(invite ? {} : { password: form.password }) }) })
     const j = await r.json().catch(() => ({})); setSaving(false)
     if (!r.ok) { setMsg(j.error || 'Could not create the login.'); return }
+    if (invite) alert(j.emailed === false ? 'Portal access created but the email could not be sent. Use a password and share it yourself.' : `Invite sent to ${form.email}. They set their own password from the link.`)
     setModal(null); load()
   }
   async function remove(c: any) {
@@ -79,7 +80,7 @@ export default function CohostsPage() {
               <button style={btn('ghost', true)} onClick={() => { setForm({ ...c, property_ids: c.property_ids ?? [] }); setMsg(''); setModal('edit') }}>Edit</button>
               <button style={btn('ghost', true)} onClick={() => setDocs(c)}>Documents</button>
               <a href={`/cohost-portal?id=${c.id}`} target="_blank" rel="noreferrer" style={{ ...btn('ghost', true), textDecoration: 'none', display: 'inline-block' }}>View portal</a>
-              {!c.portal_user_id && <button style={btn('ghost', true)} onClick={() => { setForm({ id: c.id, email: c.email ?? '', password: '' }); setMsg(''); setModal('login') }}>Create login</button>}
+              {!c.portal_user_id && <button style={btn('ghost', true)} onClick={() => { setForm({ id: c.id, email: c.email ?? '', password: '' }); setMsg(''); setModal('login') }}>Invite to Portal</button>}
               <button style={btn('danger', true)} onClick={() => remove(c)}>Delete</button>
             </div>
           </div>))}
@@ -95,12 +96,13 @@ export default function CohostsPage() {
         {msg && <div style={{ color: '#B42318', fontSize: 13 }}>{msg}</div>}
         <button style={btn('gold')} disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save'}</button>
       </div></Modal>}
-      {modal === 'login' && <Modal title="Create portal login" onClose={() => setModal(null)}><div style={{ padding: 20, display: 'grid', gap: 10 }}>
+      {modal === 'login' && <Modal title="Invite to portal" onClose={() => setModal(null)}><div style={{ padding: 20, display: 'grid', gap: 10 }}>
         <div><label style={lbl}>Email</label><input style={inp} value={form.email ?? ''} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-        <div><label style={lbl}>Password (6 or more characters)</label><input style={inp} type="text" value={form.password ?? ''} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
+        <div><label style={lbl}>Password (only if you are not emailing an invite)</label><input style={inp} type="text" value={form.password ?? ''} onChange={e => setForm({ ...form, password: e.target.value })} /></div>
         {msg && <div style={{ color: '#B42318', fontSize: 13 }}>{msg}</div>}
-        <button style={btn('gold')} disabled={saving} onClick={makeLogin}>{saving ? 'Creating…' : 'Create login'}</button>
-        <div style={{ fontSize: 12, color: C.muted }}>Send them the email and password. They sign in at the normal login page and land in their co-host portal.</div>
+        <button style={btn('gold')} disabled={saving || !form.email} onClick={() => makeLogin(true)}>{saving ? 'Sending…' : 'Email invite'}</button>
+        <button style={btn('ghost')} disabled={saving || !form.email || !form.password} onClick={() => makeLogin(false)}>Create login with this password</button>
+        <div style={{ fontSize: 12, color: C.muted }}>Email invite sends a link to set their own password, or use a password and send it to them yourself. They sign in at the normal login page and land in their co-host portal.</div>
       </div></Modal>}
       {docs && <LeaseDocuments lease={docs} subject="cohost" onClose={() => setDocs(null)} onChanged={load} />}
       {link && <NewClientLink onClose={() => setLink(false)} />}
