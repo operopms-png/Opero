@@ -28,8 +28,7 @@ const SEED_PORTALS = [
   { module: 'partners', name: 'Agent Portal', url: '/agent-portal', live: true, sort_order: 5 },
   { module: 'partners', name: 'Partners Portal', url: '/partners', live: true, sort_order: 5 },
   { module: 'dev', name: 'Developments — Partners Portal', url: '/dev-investor-portal', live: false, sort_order: 7 },
-  { module: 'staff', name: 'Cleaners Portal', url: '/staff-dashboard?team=cleaning', live: true, sort_order: 6 },
-  { module: 'staff', name: 'Maintenance Portal', url: '/staff-dashboard?team=maintenance', live: true, sort_order: 8 },
+  { module: 'staff', name: 'Upkeep Portal', url: '/staff-dashboard?team=upkeep', live: true, sort_order: 6 },
 ]
 
 export default function PortalAccessPage() {
@@ -64,8 +63,8 @@ export default function PortalAccessPage() {
       const { error } = await supabase.from('client_portals').insert(add)
       if (!error) { const { data: again } = await supabase.from('client_portals').select('*').eq('user_id', uid).order('sort_order', { ascending: true }); rows = again }
     }
-    if (rows && rows.length && !rows.some((r: any) => String(r.url).includes('team=maintenance'))) {
-      const add = { module: 'staff', name: 'Maintenance Portal', url: '/staff-dashboard?team=maintenance', live: true, sort_order: 8, user_id: uid }
+    if (rows && rows.length && !rows.some((r: any) => String(r.url).includes('team=upkeep'))) {
+      const add = { module: 'staff', name: 'Upkeep Portal', url: '/staff-dashboard?team=upkeep', live: true, sort_order: 6, user_id: uid }
       const { error } = await supabase.from('client_portals').insert(add)
       if (!error) { const { data: again } = await supabase.from('client_portals').select('*').eq('user_id', uid).order('sort_order', { ascending: true }); rows = again }
     }

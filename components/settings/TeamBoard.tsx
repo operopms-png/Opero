@@ -14,8 +14,7 @@ export const ROLE_COLORS: Record<string, string> = {
   'Property Management Team': '#579BFC',
   'Finance Team': '#00A3A3',
   'Development Team': '#9D50DD',
-  'Cleaning Team': '#66CCFF',
-  'Maintenance Team': '#FF642E',
+  'Upkeep Team': '#FF642E',
   'Viewer': '#A1B4C6',
   'Partner': '#1D4E89',
 }
@@ -77,8 +76,8 @@ export default function TeamBoard({ me, myRole, team, roles, propertyCount, onIn
   const tiles = [
     { l: 'Team members', v: all.length, hl: true },
     { l: 'Admins', v: all.filter(m => m.role === 'Admin').length },
-    { l: 'Cleaning & maintenance', v: all.filter(m => m.role === 'Cleaning Team' || m.role === 'Maintenance Team').length },
-    { l: 'Other roles', v: all.filter(m => !['Admin', 'Cleaning Team', 'Maintenance Team'].includes(m.role)).length },
+    { l: 'Upkeep', v: all.filter(m => m.role === 'Upkeep Team').length },
+    { l: 'Other roles', v: all.filter(m => !['Admin', 'Upkeep Team'].includes(m.role)).length },
   ]
 
   return (

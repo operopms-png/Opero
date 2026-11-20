@@ -7,7 +7,7 @@ import { isPlatformOwnerEmail } from '@/lib/platform-owner'
 export { STAFF_CENTRE_TABS, TEAM_MODULES }
 export type { StaffCentreKey, ModuleKey } from '@/lib/accessRegistry'
 
-export type UserRole = 'Admin' | 'Co Founder' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Cleaning Team' | 'Maintenance Team' | 'Viewer' | 'Finance Team' | 'Partner'
+export type UserRole = 'Admin' | 'Co Founder' | 'HR Team' | 'Vacation Rental Team' | 'Property Management Team' | 'Development Team' | 'Upkeep Team' | 'Viewer' | 'Finance Team' | 'Partner'
 
 export const ROLE_MODULES: Record<string, string[]> = {
   'Admin':                       ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
@@ -17,8 +17,7 @@ export const ROLE_MODULES: Record<string, string[]> = {
   'Property Management Team':    ['pm'],
   'Development Team':            ['dev'],
   'Finance Team':                ['sc'],
-  'Cleaning Team':                ['str', 'pm', 'ea'],
-  'Maintenance Team':            ['str', 'pm', 'ea'],
+  'Upkeep Team':                  ['str', 'pm', 'ea'],
   'Viewer':                      ['str', 'pm', 'dev', 'ea', 'invest', 'aipm', 'sc'],
   // Investors / partners: Staff Centre → Partners only, unless an admin grants more
   'Partner':                     ['sc'],
@@ -31,8 +30,7 @@ export const ROLE_SETTINGS: Record<string, boolean> = {
   'Property Management Team':    false,
   'Development Team':            false,
   'Finance Team':                false,
-  'Cleaning Team':                false,
-  'Maintenance Team':            false,
+  'Upkeep Team':                  false,
   'Viewer':                      false,
   'Partner':                     false,
 }
@@ -42,8 +40,8 @@ export const ROLE_READONLY: Record<string, boolean> = {
 }
 
 export const RESTRICTED_TABS: Record<string, Record<string, string>> = {
-  'Maintenance Team': { str: 'Maintenance', pm: 'Maintenance', estate: 'Maintenance' },
-  'Cleaning Team':     { str: 'Cleaning', pm: 'Cleaning', estate: 'Cleaning' },
+  // Upkeep covers maintenance and cleaning; its jobs live in the Upkeep portal
+  'Upkeep Team': { str: 'Maintenance', pm: 'Maintenance', estate: 'Maintenance' },
 }
 
 export function getAllowedTab(role: string, moduleKey: string): string | null {
@@ -128,14 +126,17 @@ export async function resolveAccess(user: { id: string; email?: string | null })
   return { role: 'Admin', customModules: null, propertyIds: [], businessId: user.id, isPartner: false }
 }
 
-const KNOWN_ROLES: UserRole[] = ['Admin', 'Co Founder', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Cleaning Team', 'Maintenance Team', 'Viewer', 'Finance Team', 'Partner']
+const KNOWN_ROLES: UserRole[] = ['Admin', 'Co Founder', 'Vacation Rental Team', 'Property Management Team', 'Development Team', 'Upkeep Team', 'Viewer', 'Finance Team', 'Partner']
 
 const LEGACY_ROLE_ALIASES: Record<string, UserRole> = {
   'airbnb agent':     'Vacation Rental Team',
   'property manager': 'Property Management Team',
   'dev':              'Development Team',
-  'cleaner':          'Cleaning Team',
-  'maintenance':      'Maintenance Team',
+  'cleaner':          'Upkeep Team',
+  'maintenance':      'Upkeep Team',
+  'cleaning team':    'Upkeep Team',
+  'maintenance team': 'Upkeep Team',
+  'upkeep':           'Upkeep Team',
   'estate agent':     'Partner',
 }
 

@@ -1,7 +1,7 @@
 // Each kind of document or email shows its own department's address in the footer, and replies go there.
 // NOVOURQ has its own defaults below; every other company sets its own addresses in Invoice settings → Documents
 // (a department it leaves blank just keeps the company's normal contact details).
-export type Dept = 'career' | 'leasing' | 'clientrelations' | 'hello' | 'finance' | 'billing' | 'legal' | 'admin' | 'contact'
+export type Dept = 'career' | 'leasing' | 'clientrelations' | 'hello' | 'finance' | 'billing' | 'legal' | 'admin' | 'contact' | 'upkeep'
 
 export const DEPTS: { key: Dept; label: string; use: string }[] = [
   { key: 'career', label: 'Staff recruitment & onboarding', use: 'Offer letters, employment contracts, new employee onboarding' },
@@ -13,12 +13,13 @@ export const DEPTS: { key: Dept; label: string; use: string }[] = [
   { key: 'legal', label: 'Legal & Compliance', use: 'Legal notices, compliance and regulatory documents' },
   { key: 'admin', label: 'Administration', use: 'General admin and anything not listed above' },
   { key: 'contact', label: 'General enquiries', use: 'Public enquiries and first contact' },
+  { key: 'upkeep', label: 'Upkeep', use: 'Property maintenance, repairs, preventative maintenance, cleaning services, housekeeping, cleaning schedules and property upkeep' },
 ]
 
 const NOVOURQ_DEFAULTS: Record<Dept, string> = {
   career: 'career@thenovourq.com', leasing: 'leasing@thenovourq.com', clientrelations: 'clientrelations@thenovourq.com',
   hello: 'hello@thenovourq.com', finance: 'finance@thenovourq.com', billing: 'billing@thenovourq.com',
-  legal: 'legal@thenovourq.com', admin: 'admin@thenovourq.com', contact: 'contact.us@thenovourq.com',
+  legal: 'legal@thenovourq.com', admin: 'admin@thenovourq.com', contact: 'contact.us@thenovourq.com', upkeep: 'upkeep@thenovourq.com',
 }
 
 type S = { company_name?: string | null; dept_emails?: string | null; offer_letter_email?: string | null }
@@ -44,6 +45,7 @@ export function deptFor(title?: string | null): Dept {
   if (/^offer letter|employment|staff notice|work hours/i.test(t)) return 'career'
   if (/master lease|landlord|co-?host|shortlet|estate agency|management agreement|corporate (residential|accommodation)|owner/i.test(t)) return 'clientrelations'
   if (/tenan|move-in|deposit|occupan|right to rent|lease/i.test(t)) return 'leasing'
+  if (/maintenance|repair|cleaning|housekeeping|upkeep|turnover/i.test(t)) return 'upkeep'
   if (/invoice|payment|statement/i.test(t)) return 'billing'
   if (/legal|compliance|notice|nda|confidential/i.test(t)) return 'legal'
   return 'admin'

@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-20', title: 'Cleaning and Maintenance are now Upkeep', text: 'One Upkeep team and portal (upkeep@thenovourq.com) now handles repairs, maintenance and cleaning together, and the old two roles are replaced by Upkeep Team in Settings.' },
   { date: '2026-11-20', title: 'Detail sheets register everyone on them', text: 'The Landlord, Co-host and Client onboarding sheets now register people 2 to 4 as well as the first, and the Cohost detail sheet has a property page that creates the co-host\u2019s property.' },
   { date: '2026-11-20', title: 'Fillable co-host agreement', text: 'Marketing, Services Pack, Co-host tab now has the Corporate residential partnership agreement as a fillable document a co-host can complete on their link.' },
   { date: '2026-11-20', title: 'Invite co-hosts to their portal', text: 'Staff Centre, Co-hosts, Invite to Portal emails the co-host a link to set their own password, the same as landlords and tenants.' },

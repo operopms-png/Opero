@@ -22,16 +22,15 @@ function fmtDate(d?: string | null) {
   return isNaN(x.getTime()) ? d : x.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// Which team the admin picker lists: ?team=cleaning (default) or ?team=maintenance
+// One Upkeep team now covers repairs, maintenance and cleaning. Old ?team=cleaning / ?team=maintenance links land here too.
 const TEAMS: Record<string, { role: string; title: string; singular: string }> = {
-  cleaning: { role: 'Cleaning Team', title: 'Cleaners Portal', singular: 'cleaner' },
-  maintenance: { role: 'Maintenance Team', title: 'Maintenance Portal', singular: 'maintenance person' },
+  upkeep: { role: 'Upkeep Team', title: 'Upkeep Portal', singular: 'upkeep team member' },
 }
 
 function StaffDashboardInner() {
   const searchParams = useSearchParams()
   const viewingStaffId = searchParams.get('staff_id')
-  const teamKey = TEAMS[searchParams.get('team') ?? ''] ? (searchParams.get('team') as string) : 'cleaning'
+  const teamKey = 'upkeep'
   const [picker, setPicker] = useState<any[] | null>(null)
   const [weekOffset, setWeekOffset] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -41,6 +40,7 @@ function StaffDashboardInner() {
   const [job, setJob] = useState<any>(null)
   const [shifts, setShifts] = useState<any[]>([])
   const [myTasks, setMyTasks] = useState<any[]>([])
+  const [filter, setFilter] = useState<'all' | 'repair' | 'cleaning'>('all')
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -69,7 +69,7 @@ function StaffDashboardInner() {
           .limit(1)
         m = rows?.[0]
         const ownRole = normalizeRole(m?.role)
-        if (!m || (ownRole !== 'Cleaning Team' && ownRole !== 'Maintenance Team')) {
+        if (!m || (ownRole !== 'Upkeep Team')) {
           // Not a cleaner/maintenance login: this is staff looking at the
           // portal, so show the picker (tenants/landlords go to their own portal).
           const access = await resolveAccess(user)
@@ -91,8 +91,6 @@ function StaffDashboardInner() {
 
       const businessId = m.user_id
       const propertyIds: string[] = m.property_ids ?? []
-      const isMaintenance = m.role === 'Maintenance Team'
-      const isCleaner = m.role === 'Cleaning Team'
 
       // Figure out which properties (across STR/PM/Estate) this person
       // can see, then pull the matching tickets/tasks from each module's
@@ -110,29 +108,31 @@ function StaffDashboardInner() {
       const safe = (ids: string[]) => ids.length ? ids : ['00000000-0000-0000-0000-000000000000']
 
       const results: any[] = []
-      if (isMaintenance) {
+      {
         const [str, pm, ea] = await Promise.all([
           supabase.from('maintenance_tickets').select('*, properties(name)').in('property_id', safe(strIds)),
           supabase.from('pm_maintenance').select('*, pm_properties(name)').in('property_id', safe(pmIds)),
           supabase.from('estate_maintenance').select('*, estate_properties(name)').in('property_id', safe(eaIds)),
         ])
         results.push(
-          ...(str.data ?? []).map((t: any) => ({ id: t.id, table: 'maintenance_tickets', title: t.title ?? t.description ?? 'Maintenance issue', property: t.properties?.name, status: t.status, priority: t.priority })),
-          ...(pm.data ?? []).map((t: any) => ({ id: t.id, table: 'pm_maintenance', title: t.title ?? 'Maintenance issue', property: t.pm_properties?.name, status: t.status, priority: t.priority })),
-          ...(ea.data ?? []).map((t: any) => ({ id: t.id, table: 'estate_maintenance', title: t.title ?? 'Maintenance issue', property: t.estate_properties?.name, status: t.status, priority: t.priority })),
+          ...(str.data ?? []).map((t: any) => ({ id: t.id, table: 'maintenance_tickets', kind: 'repair', title: t.title ?? t.description ?? 'Maintenance issue', property: t.properties?.name, status: t.status, priority: t.priority })),
+          ...(pm.data ?? []).map((t: any) => ({ id: t.id, table: 'pm_maintenance', kind: 'repair', title: t.title ?? 'Maintenance issue', property: t.pm_properties?.name, status: t.status, priority: t.priority })),
+          ...(ea.data ?? []).map((t: any) => ({ id: t.id, table: 'estate_maintenance', kind: 'repair', title: t.title ?? 'Maintenance issue', property: t.estate_properties?.name, status: t.status, priority: t.priority })),
         )
-      } else if (isCleaner) {
+      }
+      {
         const [str, pm, ea] = await Promise.all([
           supabase.from('cleaning_tasks').select('*, properties(name)').in('property_id', safe(strIds)),
           supabase.from('pm_cleaning_tasks').select('*, pm_properties(name)').in('property_id', safe(pmIds)),
           supabase.from('estate_cleaning_tasks').select('*, estate_properties(name)').in('property_id', safe(eaIds)),
         ])
         results.push(
-          ...(str.data ?? []).map((t: any) => ({ id: t.id, table: 'cleaning_tasks', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.properties?.name, status: t.status, priority: null })),
-          ...(pm.data ?? []).map((t: any) => ({ id: t.id, table: 'pm_cleaning_tasks', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.pm_properties?.name, status: t.status, priority: null })),
-          ...(ea.data ?? []).map((t: any) => ({ id: t.id, table: 'estate_cleaning_tasks', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.estate_properties?.name, status: t.status, priority: null })),
+          ...(str.data ?? []).map((t: any) => ({ id: t.id, table: 'cleaning_tasks', kind: 'cleaning', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.properties?.name, status: t.status, priority: null })),
+          ...(pm.data ?? []).map((t: any) => ({ id: t.id, table: 'pm_cleaning_tasks', kind: 'cleaning', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.pm_properties?.name, status: t.status, priority: null })),
+          ...(ea.data ?? []).map((t: any) => ({ id: t.id, table: 'estate_cleaning_tasks', kind: 'cleaning', title: `Cleaning — ${fmtDate(t.scheduled_date)}`, property: t.estate_properties?.name, status: t.status, priority: null })),
         )
       }
+      results.sort((a, b) => (a.status === 'completed' || a.status === 'resolved' || a.status === 'closed' ? 1 : 0) - (b.status === 'completed' || b.status === 'resolved' || b.status === 'closed' ? 1 : 0))
       setItems(results)
 
       const { data: taskRows } = await supabase
@@ -195,8 +195,9 @@ function StaffDashboardInner() {
   }
 
   const weekStartShown = startOfWeek(new Date()); weekStartShown.setDate(weekStartShown.getDate() + weekOffset * 7)
-  const exitHref = '/staff-dashboard?team=' + (member.role === 'Maintenance Team' ? 'maintenance' : 'cleaning')
+  const exitHref = '/staff-dashboard?team=upkeep'
 
+  const shown = items.filter(i => filter === 'all' || i.kind === filter)
   const open = items.filter(i => i.status === 'open' || i.status === 'pending').length
   const inProgress = items.filter(i => i.status === 'in_progress').length
   const done = items.filter(i => i.status === 'completed' || i.status === 'resolved' || i.status === 'closed').length
@@ -289,21 +290,26 @@ function StaffDashboardInner() {
 
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid #E4E7EC', fontSize: 14, fontWeight: 600, color: '#323338' }}>Your Tasks</div>
-          {items.length === 0 ? (
+          <div style={{ display: 'flex', gap: 8, padding: '10px 20px', borderBottom: '1px solid #F2F4F7', flexWrap: 'wrap' as const }}>
+            {([['all', 'All'], ['repair', 'Repairs & maintenance'], ['cleaning', 'Cleaning']] as const).map(([k, l]) => (
+              <button key={k} onClick={() => setFilter(k)} style={{ padding: '5px 12px', borderRadius: 20, border: `1px solid ${filter === k ? ACCENT : '#D0D5DD'}`, background: filter === k ? '#EAF3FC' : '#fff', color: filter === k ? ACCENT : '#344054', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{l} ({items.filter(i => k === 'all' || i.kind === k).length})</button>
+            ))}
+          </div>
+          {shown.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{member.role === 'Cleaning Team' ? '🧹' : '🔧'}</div>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🧰</div>
               <div style={{ fontSize: 15, fontWeight: 600, color: '#323338', marginBottom: 6 }}>Nothing assigned yet</div>
               <div style={{ fontSize: 13 }}>Ask your manager to assign you properties or tasks.</div>
             </div>
-          ) : items.map((item, i) => (
+          ) : shown.map((item, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '14px 20px', borderBottom: '1px solid #F2F4F7' }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: '#323338' }}>{item.title}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#323338' }}>{item.title} <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: item.kind === 'cleaning' ? '#E0F2FE' : '#FFEDD5', color: item.kind === 'cleaning' ? '#0369A1' : '#C2410C', marginLeft: 6 }}>{item.kind === 'cleaning' ? 'Cleaning' : 'Repair'}</span></div>
                 <div style={{ fontSize: 12, color: '#667085', marginTop: 2 }}>{item.property ?? '—'}{item.priority ? ` · ${item.priority} priority` : ''}</div>
               </div>
-              {(member.role === 'Cleaning Team' || member.role === 'Maintenance Team') && <button onClick={() => setJob(item)} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{['completed', 'resolved', 'closed'].includes(item.status) ? 'View' : 'Open job'}</button>}
+              {<button onClick={() => setJob(item)} style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{['completed', 'resolved', 'closed'].includes(item.status) ? 'View' : 'Open job'}</button>}
               <select value={item.status} onChange={e => updateStatus(item, e.target.value)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #E4E7EC', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer' }}>
-                {member.role === 'Cleaning Team' ? (
+                {item.kind === 'cleaning' ? (
                   <><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="completed">Completed</option></>
                 ) : (
                   <><option value="open">Open</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option><option value="closed">Closed</option></>
@@ -313,8 +319,8 @@ function StaffDashboardInner() {
           ))}
         </div>
       </div>
-      {job && member.role === 'Maintenance Team' && <MaintJob item={job} onClose={() => setJob(null)} onChanged={st => setItems(prev => prev.map(i => i.id === job.id && i.table === job.table ? { ...i, status: st } : i))} />}
-      {job && member.role !== 'Maintenance Team' && <CleanJob item={job} onClose={() => setJob(null)} onChanged={st => setItems(prev => prev.map(i => i.id === job.id && i.table === job.table ? { ...i, status: st } : i))} />}
+      {job && job.kind === 'repair' && <MaintJob item={job} onClose={() => setJob(null)} onChanged={st => setItems(prev => prev.map(i => i.id === job.id && i.table === job.table ? { ...i, status: st } : i))} />}
+      {job && job.kind === 'cleaning' && <CleanJob item={job} onClose={() => setJob(null)} onChanged={st => setItems(prev => prev.map(i => i.id === job.id && i.table === job.table ? { ...i, status: st } : i))} />}
     </div>
   )
 }

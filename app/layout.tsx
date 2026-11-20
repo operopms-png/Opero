@@ -94,7 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       }
       const role = access.role
       const customModules = access.customModules
-      if (role === 'Cleaning Team' || role === 'Maintenance Team') {
+      if (role === 'Upkeep Team') {
         window.location.href = '/staff-dashboard'
         return
       }

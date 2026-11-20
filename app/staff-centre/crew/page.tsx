@@ -1,13 +1,15 @@
 'use client'
-// Staff Centre → Portals → Cleaners & Maintenance: how many people and jobs each crew has, and a link to every portal.
+// Staff Centre → Portals → Upkeep (maintenance and cleaning): how many people and jobs each crew has, and a link to every portal.
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '@/lib/supabase'
 import { normalizeRole } from '@/lib/useRole'
 
 const C = { ink: '#10234d', muted: '#6b7a9f', blue: '#2f5bd6', soft: '#eaf0fd', line: '#dfe6f4' }
 const TEAMS = [
-  { key: 'cleaning', role: 'Cleaning Team', title: 'Cleaners', tables: ['cleaning_tasks', 'pm_cleaning_tasks', 'estate_cleaning_tasks'], props: ['properties', 'pm_properties', 'estate_properties'] },
-  { key: 'maintenance', role: 'Maintenance Team', title: 'Maintenance', tables: ['maintenance_tickets', 'pm_maintenance', 'estate_maintenance'], props: ['properties', 'pm_properties', 'estate_properties'] },
+  { key: 'upkeep', role: 'Upkeep Team', title: 'Upkeep', sources: [
+    { table: 'maintenance_tickets', props: 'properties', kind: 'repair' }, { table: 'pm_maintenance', props: 'pm_properties', kind: 'repair' }, { table: 'estate_maintenance', props: 'estate_properties', kind: 'repair' },
+    { table: 'cleaning_tasks', props: 'properties', kind: 'cleaning' }, { table: 'pm_cleaning_tasks', props: 'pm_properties', kind: 'cleaning' }, { table: 'estate_cleaning_tasks', props: 'estate_properties', kind: 'cleaning' },
+  ] },
 ]
 const DONE = ['completed', 'resolved', 'closed']
 const ymd = (d: Date) => d.toISOString().slice(0, 10)
@@ -30,19 +32,19 @@ export default function CrewPage() {
         const people = (team ?? []).filter((m: any) => normalizeRole(m.role) === t.role)
         const { data: shifts } = people.length ? await supabase.from('staff_shifts').select('staff_id,type').in('staff_id', people.map((p: any) => p.id)).eq('date', today) : { data: [] as any[] }
         const jobs: any[] = []
-        for (let i = 0; i < 3; i++) {
-          const { data: props } = await supabase.from(t.props[i]).select('id,name').eq('user_id', biz).is('ended_at', null)
+        for (const src of t.sources) {
+          const { data: props } = await supabase.from(src.props).select('id,name').eq('user_id', biz).is('ended_at', null)
           const ids = (props ?? []).map((p: any) => p.id)
           if (!ids.length) continue
-          const { data: rows } = await supabase.from(t.tables[i]).select('*').in('property_id', ids)
+          const { data: rows } = await supabase.from(src.table).select('*').in('property_id', ids)
           const nm = new Map((props ?? []).map((p: any) => [p.id, p.name]))
-          ;(rows ?? []).forEach((r: any) => jobs.push({ ...r, _prop: nm.get(r.property_id) }))
+          ;(rows ?? []).forEach((r: any) => jobs.push({ ...r, _prop: nm.get(r.property_id), _kind: src.kind }))
         }
         const open = jobs.filter(j => !DONE.includes(j.status) && j.status !== 'in_progress' && j.status !== 'skipped')
         const prog = jobs.filter(j => j.status === 'in_progress')
         const done = jobs.filter(j => DONE.includes(j.status))
         const doneWeek = done.filter(j => (j.completed_at || j.resolved_at || '') >= weekAgo)
-        const cost = t.key === 'maintenance' ? jobs.filter(j => (j.resolved_at || '') >= monthStart.toISOString()).reduce((s, j) => s + (Number(j.cost) || 0), 0) : null
+        const cost = true ? jobs.filter(j => j._kind === 'repair' && (j.resolved_at || '') >= monthStart.toISOString()).reduce((s, j) => s + (Number(j.cost) || 0), 0) : null
         const per = people.map((p: any) => {
           const mine = jobs.filter(j => j.assigned_to === p.id)
           return { ...p, working: (shifts ?? []).some((s: any) => s.staff_id === p.id && s.type === 'Working'), open: mine.filter(j => !DONE.includes(j.status)).length, done: mine.filter(j => DONE.includes(j.status)).length }
@@ -59,8 +61,8 @@ export default function CrewPage() {
   if (loading) return <div style={{ padding: 40, color: C.muted }}>Loading…</div>
   return (
     <div style={{ padding: '28px 30px 40px', maxWidth: 1000 }}>
-      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: C.ink }}>Cleaners and Maintenance</h1>
-      <p style={{ margin: '6px 0 20px', fontSize: 14, color: C.muted }}>Who is on each team, what they have open and what is done. Open any person to see their portal exactly as they do.</p>
+      <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: C.ink }}>Upkeep</h1>
+      <p style={{ margin: '6px 0 20px', fontSize: 14, color: C.muted }}>Maintenance, repairs and cleaning in one team: who is on it, what they have open and what is done. Open any person to see their portal exactly as they do.</p>
       {data.map(t => (
         <div key={t.key} style={{ marginBottom: 30 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, gap: 10, flexWrap: 'wrap' }}>

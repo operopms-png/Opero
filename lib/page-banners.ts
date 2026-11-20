@@ -4,7 +4,7 @@ type B = { title: string; text: string }
 const PAGES: Record<string, B> = {
   '/partners': { title: 'Partners', text: 'Your investment, repayments, documents and maintenance in one place. Switch tabs along the top; amounts show in your own currency.' },
   '/staff-centre/training': { title: 'Staff Training', text: 'How to use every tab in the portal, with steps, pictures and video, plus what is new and your company training material. Search for a tab to find its guide.' },
-  '/staff-centre/crew': { title: 'Cleaners and Maintenance', text: 'Each team\'s headcount, who is on shift, open and finished jobs, and a link to open any person\'s portal as they see it.' },
+  '/staff-centre/crew': { title: 'Upkeep', text: 'The Upkeep team (maintenance, repairs and cleaning): headcount, who is on shift, open and finished jobs, and a link to open any person\'s portal as they see it.' },
   '/staff-centre/scale': { title: 'Scale', text: 'How big your master lease and co-host business is: doors under management, head rent against income, bookings on co-hosted properties, and which leases and agreements are ending or missing sublet consent. Read from your own Head Leases and Co-hosts. Press Preview example to see sample figures.' },
   '/staff-centre/onboarding-tracker': { title: 'Onboarding tracker', text: 'Every landlord, tenant, co-host and investor being onboarded on one board, with how far each has got and who has gone quiet for 7 days. Tick manual steps, email a client their link again, or extend an expired link. Clients who have not finished their link are reminded automatically.' },
   '/staff-centre/tenant-onboarding': { title: 'Tenant onboarding', text: 'The documents every new tenant gets in one tab: information sheet, lease with deposit scheme, guides, payment instructions and welcome letter. Send the pack and track who has signed.' },
@@ -31,7 +31,7 @@ const PAGES: Record<string, B> = {
   '/turnovers': { title: 'Turnovers', text: 'Changeovers between stays: cleaning, checks and restocking, with who is doing each one.' },
   '/maintenance': { title: 'Maintenance', text: 'Repair jobs across your properties, with priority, who is handling each and progress.' },
   '/properties': { title: 'Properties', text: 'Every property you manage, with address, owner and status. Open one to edit it.' },
-  '/staff-dashboard': { title: 'My Dashboard', text: 'Your jobs, shifts and messages. Cleaners: press Open job for the checklist, before and after photos, and to report anything the maintenance team must fix. Maintenance team: Open job to start, add photos, note the work and mark it solved.' },
+  '/staff-dashboard': { title: 'My Dashboard', text: 'Your jobs, shifts and messages. Repairs and cleans are in one list: use the filters, then press Open job. Cleans give a checklist and before and after photos; repairs let you start, add photos, note the work and mark it solved.' },
   '/cleaning': { title: 'Cleaning', text: 'Cleaning jobs: what is scheduled, who is doing it and when it is done.' },
   '/reports': { title: 'Reports', text: 'Summary reports across your properties, ready to review or export.' },
   '/staff-centre/documents': { title: 'Documents', text: 'Send contracts and letters for signing by link, track who has opened and signed, and approve or chase uploads. Press Send a document to start, or Templates to add and edit the wording.' },

@@ -106,7 +106,7 @@ function LoginForm() {
         if (estateTenantProfile) { window.location.href = '/estate-tenant-portal'; return }
         const { data: teamRows } = await supabase.from('team_members').select('role, custom_modules').eq('email', session.user.email).order('created_at', { ascending: false }).limit(1)
         const staffRole = normalizeRole(teamRows?.[0]?.role)
-        window.location.href = (staffRole === 'Cleaning Team' || staffRole === 'Maintenance Team') ? '/staff-dashboard' : resolveDestination(staffRole, teamRows?.[0]?.custom_modules)
+        window.location.href = staffRole === 'Upkeep Team' ? '/staff-dashboard' : resolveDestination(staffRole, teamRows?.[0]?.custom_modules)
       } else {
         setCheckingSession(false)
       }
@@ -171,7 +171,7 @@ function LoginForm() {
           .order('created_at', { ascending: false })
           .limit(1)
         const staffRole = normalizeRole(teamRows?.[0]?.role)
-        window.location.href = (staffRole === 'Cleaning Team' || staffRole === 'Maintenance Team') ? '/staff-dashboard' : resolveDestination(staffRole, teamRows?.[0]?.custom_modules)
+        window.location.href = staffRole === 'Upkeep Team' ? '/staff-dashboard' : resolveDestination(staffRole, teamRows?.[0]?.custom_modules)
       }
     } else if (mode === 'signup') {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}${redirect}` } })

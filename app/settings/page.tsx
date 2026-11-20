@@ -31,7 +31,7 @@ const NAV = [
   ]}
 ]
 
-const ROLES = ['Admin','Co Founder','HR Team','Vacation Rental Team','Property Management Team','Finance Team','Development Team','Cleaning Team','Maintenance Team','Viewer','Partner']
+const ROLES = ['Admin','Co Founder','HR Team','Vacation Rental Team','Property Management Team','Finance Team','Development Team','Upkeep Team','Viewer','Partner']
 
 function SettingsInner() {
   const searchParams = useSearchParams()
@@ -54,7 +54,7 @@ function SettingsInner() {
   const [showInvite, setShowInvite] = useState(false)
   const [inviteName, setInviteName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('Cleaning Team')
+  const [inviteRole, setInviteRole] = useState('Upkeep Team')
   const [invitePhone, setInvitePhone] = useState('')
   const [inviting, setInviting] = useState(false)
   const [addMode, setAddMode] = useState<'invite'|'create'>('invite')
