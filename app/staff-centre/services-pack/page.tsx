@@ -133,7 +133,7 @@ export default function ServicesPack() {
                 return (
                   <div key={l.id} style={{ ...card, marginBottom: 0, opacity: l.active ? 1 : .6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                      <div><b>{l.name}</b>{l.property_label && <span style={{ marginLeft: 8, fontSize: 12, color: '#667085' }}>{l.property_label}</span>}{l.subject && <span style={{ marginLeft: 8, fontSize: 12, color: '#182D5E' }}>{l.subject_name ? `for ${l.subject_name}` : `new ${l.subject === 'cohost' ? 'co-host' : 'landlord'}, registers on submit`}</span>}{!l.active && <span style={{ marginLeft: 8, fontSize: 11, color: '#B42318', fontWeight: 700 }}>PAUSED</span>}
+                      <div><b>{l.name}</b>{l.property_label && <span style={{ marginLeft: 8, fontSize: 12, color: '#667085' }}>{l.property_label}</span>}{l.subject && <span style={{ marginLeft: 8, fontSize: 12, color: '#182D5E' }}>{l.subject_name ? `for ${l.subject_name}` : `new ${l.subject === 'cohost' ? 'co-host' : l.subject === 'tenant' ? 'tenant' : 'landlord'}, registers on submit`}</span>}{!l.active && <span style={{ marginLeft: 8, fontSize: 11, color: '#B42318', fontWeight: 700 }}>PAUSED</span>}
                         <div style={{ fontSize: 12, color: '#667085', marginTop: 3, wordBreak: 'break-all' }}>{u}</div></div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'flex-start' }}>
                         <button style={btn('ghost', true)} onClick={() => copy(u, `Link copied: ${u}`)}>Copy link</button>
