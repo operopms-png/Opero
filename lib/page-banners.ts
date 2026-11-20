@@ -34,6 +34,8 @@ const PAGES: Record<string, B> = {
   '/staff-dashboard': { title: 'My Dashboard', text: 'Your jobs, shifts and messages. Cleaners: press Open job for the checklist, before and after photos, and to report anything the maintenance team must fix. Maintenance team: Open job to start, add photos, note the work and mark it solved.' },
   '/cleaning': { title: 'Cleaning', text: 'Cleaning jobs: what is scheduled, who is doing it and when it is done.' },
   '/reports': { title: 'Reports', text: 'Summary reports across your properties, ready to review or export.' },
+  '/staff-centre/documents': { title: 'Documents', text: 'Send contracts and letters for signing by link, track who has opened and signed, and approve or chase uploads. Press Send a document to start, or Templates to add and edit the wording.' },
+  '/staff-centre/documents/templates': { title: 'Templates', text: 'The wording of every contract and letter. Add landlord templates brings in the landlord agreements, and Email me test contracts sends you a copy of each to try the signing link.' },
   '/documents': { title: 'Documents', text: 'Contracts, certificates and other files, filed against the right property or person. Owner and tenant uploads wait here to approve, reject or chase. New client link sets up someone who is not in the system yet.' },
   '/analytics': { title: 'Analytics', text: 'Occupancy, average rate and revenue trends, so you can see what earns the most.' },
   '/staff-centre/data-hub': { title: 'Data Hub', text: 'Everything stored for your business, how complete it is, where it came from, and what tenants and landlords have asked for.' },

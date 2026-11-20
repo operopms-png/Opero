@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-20', title: 'Documents guide updated', text: 'The Guide, Staff Training and the AI now explain how to send a document for signing, the landlord templates, test contracts and the NOVOURQ look.' },
   { date: '2026-11-20', title: 'Warning before sending blank company details', text: 'Sending a document now warns you if Company address, Work location or the signer role are still empty, and name and address lines on letters no longer run together.' },
   { date: '2026-11-18', title: 'Ask the AI to send test contracts', text: 'Admins can tell Novourq Voice to send them the test contracts; they arrive in your own inbox, never anyone else’s.' },
   { date: '2026-11-17', title: 'Email me test contracts', text: 'Documents → Templates → Email me test contracts sends you a test copy of every agreement template so you can try the signing link.' },
