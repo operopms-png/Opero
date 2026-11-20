@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
         Agreement_Estate_Agency: { name: 'f0_4', phone: 'f0_7', address: 'f0_16' },
         Agreement_Master_Lease: { name: 'f0_1', phone: 'f0_5', address: 'f0_13', area: 'f0_14', beds: 'f0_17', baths: 'f0_18' },
         Agreement_Cohost_Corporate_Partnership: { name: 'full_legal_name', phone: 'contact_details' },
+        Cohost_Detail_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile', address: 'prop_address', area: 'prop_area', beds: 'prop_beds', baths: 'prop_baths' },
         Client_Onboarding_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile' },
         Landlord_Detail_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile', address: 'prop_address', area: 'prop_area', beds: 'prop_beds', baths: 'prop_baths' },
         Agreement_Shortlet_Landlord: { name: 'f3_16', phone: 'f3_19', address: 'f4_23', area: 'f4_24', beds: 'f4_33', baths: 'f4_34' },
@@ -83,6 +84,25 @@ export async function POST(req: NextRequest) {
             if (ptbl === 'pm_properties') { row.city = val('area') || null; row.country = 'Jamaica' }
             const pr = await db.from(ptbl).insert(row).select('id').single()
             if (!pr.error) propertyMade = `${addr} (${kind === 'ea_landlord' ? 'Estate Agency' : 'Property Management'})`
+          }
+        }
+        // A co-host's property is a short-stay property, linked on their record.
+        if (addr && kind === 'cohost') {
+          const { data: cur } = await db.from('cohosts').select('property_ids').eq('id', ex.id).maybeSingle()
+          const { data: dup } = await db.from('properties').select('id').eq('user_id', l.business_id).ilike('address', `%${addr.replace(/[%_]/g, '')}%`).limit(1)
+          if (!dup?.length) {
+            const pr = await db.from('properties').insert({ user_id: l.business_id, name: addr, address: [addr, val('area')].filter(Boolean).join(', '), city: val('area') || null, country: 'Jamaica', bedrooms: val('beds') || null, bathrooms: val('baths') || null }).select('id').single()
+            if (!pr.error && pr.data) { await db.from('cohosts').update({ property_ids: [...(cur?.property_ids ?? []), pr.data.id] }).eq('id', ex.id); propertyMade = `${addr} (Co-host)` }
+          }
+        }
+        // Sheets with room for up to four people: register people 2 to 4 as well (matched by email, so nobody is added twice).
+        if (/^(Landlord_Detail_Sheet|Cohost_Detail_Sheet|Client_Onboarding_Sheet)$/.test(file)) {
+          for (const i of [2, 3, 4]) {
+            const first = String(values[`${i} First Name`] ?? '').trim(), last = String(values[`${i} Last Name`] ?? '').trim(), em = String(values[`${i} Email`] ?? '').trim().toLowerCase().slice(0, 160)
+            if (!first || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) continue
+            const { data: have } = await db.from(tbl).select('id').eq('user_id', l.business_id).ilike('email', em).limit(1).maybeSingle()
+            if (have) continue
+            await db.from(tbl).insert({ user_id: l.business_id, name: `${first} ${last}`.trim().slice(0, 120), email: em, phone: String(values[`${i} Mobile`] ?? '').trim().slice(0, 40) || null, ...(tbl !== 'cohosts' && tbl !== 'pm_tenants' ? { notes: `Registered from the Services Pack link "${l.name}" (person ${i} on the sheet)` } : {}) })
           }
         }
       }
