@@ -1,13 +1,13 @@
-/* Sangsters — live property sections for sangstersgroup.com
+/* Sangsters — live property sections for www.thenovourq.com
  * Data comes from the portal (Estate Agency → property → "Show on website").
  * Usage (Elementor → HTML widget):
  *   <div data-sg-properties="search"></div>     full search page: list + map
  *   <div data-sg-properties="carousel"></div>   home page "Stays & tenancies" cards
  *   add data-sg-style="corporate" for the plain Novourq look (no tags, square cards)
- *   <script src="https://app.sangstersgroup.com/sg-properties.js" defer></script>
+ *   <script src="https://app.thenovourq.com/sg-properties.js" defer></script>
  */
 (function () {
-  var SRC = (document.currentScript && document.currentScript.src) || 'https://app.sangstersgroup.com/sg-properties.js'
+  var SRC = (document.currentScript && document.currentScript.src) || 'https://app.thenovourq.com/sg-properties.js'
   var APP = SRC.replace(/\/sg-properties\.js.*$/, '')
   var FEED = APP + '/api/public/portfolio'
   var BLUE = '#17306F', GOLD = BLUE, INK = '#1d1d1f', MUTED = '#6b6b6b', LINE = '#e6e2d8'

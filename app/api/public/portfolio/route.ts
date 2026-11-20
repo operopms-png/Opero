@@ -3,7 +3,7 @@ import { serviceClient } from '@/lib/admin-auth'
 import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 import { SITE_URL } from '@/lib/brand'
 
-// Public feed of the real portfolio for sangstersgroup.com (property search
+// Public feed of the real portfolio for www.thenovourq.com (property search
 // page, home page carousel). Estate Agency properties with "Show on website"
 // switched on. Only website-safe fields leave the server — no owners, no
 // rent for let properties, no addresses beyond the area.

@@ -4,7 +4,7 @@ import { SITE_URL } from '@/lib/brand'
 import { normalizePhone, nameForPhone, twilioSignatureOk } from '@/lib/sms'
 
 // Twilio "A message comes in" webhook for the texting number:
-//   https://app.sangstersgroup.com/api/sms/inbound   (HTTP POST)
+//   https://app.thenovourq.com/api/sms/inbound   (HTTP POST)
 // Saves the text to the Inbox (Texts channel) and rings the bell.
 const twiml = () => new NextResponse('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', { headers: { 'Content-Type': 'text/xml' } })
 

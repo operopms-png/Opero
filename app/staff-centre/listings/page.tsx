@@ -1,6 +1,6 @@
 'use client'
 // Staff Centre → Listings: everything about the public lettings link
-// (app.sangstersgroup.com/homes) in one place — which Estate Agency
+// (app.thenovourq.com/homes) in one place — which Estate Agency
 // properties are showing, their photos/currency/description (same editor as
 // Estate Agency → Properties), and the viewing requests tenants send.
 import { useEffect, useMemo, useState } from 'react'

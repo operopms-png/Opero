@@ -1,5 +1,5 @@
 'use client'
-// Public "book a meeting" form (app.sangstersgroup.com/meeting). Sends a
+// Public "book a meeting" form (app.thenovourq.com/meeting). Sends a
 // meeting request to /api/meeting-request; it shows up in Staff Centre →
 // Meetings as "New request" and the team contacts the client to book a time.
 import { useEffect, useState } from 'react'

@@ -5,7 +5,7 @@ the app opens the right home screen from the records linked to the person's emai
 (booking, tenancy, ownership, investment or staff account).
 
 - Screens: `src/app` (welcome, sign-in, email code, password, home) and `src/screens` (one file per role)
-- Data: the portal API at `https://app.sangstersgroup.com/api/app` (in this repo: `app/api/app`)
+- Data: the portal API at `https://app.thenovourq.com/api/app` (in this repo: `app/api/app`)
 - Bundle ID: `com.sangstersgroup.sangster`
 
 ## First release to the App Store (run on a Mac, inside this `mobile` folder)

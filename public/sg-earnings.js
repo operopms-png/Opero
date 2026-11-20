@@ -1,4 +1,4 @@
-/* Sangsters — "Let with us" landlord earnings calculator for sangstersgroup.com.
+/* Sangsters — "Let with us" landlord earnings calculator for www.thenovourq.com.
  * A bar on the page (area, bedrooms, email) opens a "Calculate your income"
  * pop-up: a few quick questions, contact details, then the estimated monthly
  * revenue from live listings. Every landlord lands in the portal
@@ -6,11 +6,11 @@
  * Usage (Elementor → HTML widget):
  *   <div data-sg-earnings></div>                 the "Let with us" bar
  *   <div data-sg-earnings="button"></div>        just a "Calculate your income" button
- *   <script src="https://app.sangstersgroup.com/sg-earnings.js" defer></script>
+ *   <script src="https://app.thenovourq.com/sg-earnings.js" defer></script>
  * Any link with href="#sg-earnings" also opens the pop-up.
  */
 (function () {
-  var SRC = (document.currentScript && document.currentScript.src) || 'https://app.sangstersgroup.com/sg-earnings.js'
+  var SRC = (document.currentScript && document.currentScript.src) || 'https://app.thenovourq.com/sg-earnings.js'
   var APP = SRC.replace(/\/sg-earnings\.js.*$/, '')
   var API = APP + '/api/public/earnings-estimate'
   // Each company has its own code: <script data-code="..."> on a website, or ?code=... on the /earnings page

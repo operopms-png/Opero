@@ -4,7 +4,7 @@
 import { schedule } from '@netlify/functions'
 
 export const handler = schedule('17 * * * *', async () => {
-  const site = (process.env.URL || 'https://app.sangstersgroup.com').replace(/\/$/, '')
+  const site = (process.env.URL || 'https://app.thenovourq.com').replace(/\/$/, '')
   const secret = process.env.CRON_SECRET
   if (!secret) { console.error('[doc-automation] CRON_SECRET not set'); return { statusCode: 500 } }
   const res = await fetch(`${site}/api/cron/documents?secret=${encodeURIComponent(secret)}`)

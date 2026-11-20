@@ -1,5 +1,5 @@
 // "What could your property earn?" — the AI estimate behind the landlord
-// earnings checker on sangstersgroup.com (public/sg-earnings.js) and the
+// earnings checker on www.thenovourq.com (public/sg-earnings.js) and the
 // Landlord Leads page in the portal.
 //
 // Two web searches run at the same time (holiday let and long let) so the

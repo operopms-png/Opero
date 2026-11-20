@@ -1,4 +1,4 @@
-// Public lettings listings (app.sangstersgroup.com/homes): Estate Agency
+// Public lettings listings (app.thenovourq.com/homes): Estate Agency
 // properties switched on with "Show on listings link", minus rented/archived
 // ones. Only listing-safe fields ever leave the server.
 import { serviceClient } from '@/lib/admin-auth'

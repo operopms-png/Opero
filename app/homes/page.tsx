@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import ListingsBrowser from '@/components/listings/ListingsBrowser'
 import { getListings } from '@/lib/listings'
 
-// Public lettings link: app.sangstersgroup.com/homes — every Estate Agency
+// Public lettings link: app.thenovourq.com/homes — every Estate Agency
 // property switched on with "Show on listings link".
 export const dynamic = 'force-dynamic'
 

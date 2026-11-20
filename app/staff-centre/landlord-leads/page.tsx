@@ -1,6 +1,6 @@
 'use client'
 // Staff Centre → Landlord Leads. Landlords who used the "What could your
-// property earn?" checker on sangstersgroup.com or app.sangstersgroup.com/earnings.
+// property earn?" checker on www.thenovourq.com or app.thenovourq.com/earnings.
 // Each lead shows their property, the market estimate they were sent and a
 // status the team moves along: New → Contacted → Valuation → Meeting → Signed / Lost.
 import { useEffect, useMemo, useState } from 'react'

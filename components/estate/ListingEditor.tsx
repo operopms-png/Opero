@@ -136,7 +136,7 @@ export default function ListingEditor({ value, onChange, rentLabel, propertyId }
   )
 }
 
-// ---------- Website (sangstersgroup.com property search + home page) ----------
+// ---------- Website (www.thenovourq.com property search + home page) ----------
 export type WebsiteFields = { show_on_website: boolean; web_title: string; web_area: string; country: string; guests: string; airbnb_url: string; web_badge: string; lat: string; lng: string; web_sort: string }
 export const EMPTY_WEBSITE: WebsiteFields = { show_on_website: false, web_title: '', web_area: '', country: 'Jamaica', guests: '', airbnb_url: '', web_badge: '', lat: '', lng: '', web_sort: '0' }
 

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { serviceClient } from '@/lib/admin-auth'
 
-// Public landlord earnings checker: app.sangstersgroup.com/earnings
+// Public landlord earnings checker: app.thenovourq.com/earnings
 // Same form as the website embed (public/sg-earnings.js) — use this link in
 // ads, letters and realtor referrals. Add ?src=facebook etc. to track where
 // a landlord came from (it shows on the lead in the portal).

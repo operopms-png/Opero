@@ -1,5 +1,5 @@
 'use client'
-// Public lettings page (app.sangstersgroup.com/homes): every listed property
+// Public lettings page (app.thenovourq.com/homes): every listed property
 // as a card with a swipeable photo slider, simple filters, and a
 // "Tell us what you need" form for tenants who don't see a match.
 import { useMemo, useState } from 'react'

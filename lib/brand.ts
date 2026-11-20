@@ -2,7 +2,7 @@
 // SITE_URL: set NEXT_PUBLIC_SITE_URL in Netlify to override.
 // EMAIL_DOMAIN: the domain transactional/marketing email is sent from and
 // replies are routed to. Stays on the currently verified Resend domain until
-// sangstersgroup.com is verified in Resend, then set EMAIL_DOMAIN in Netlify.
+// www.thenovourq.com is verified in Resend, then set EMAIL_DOMAIN in Netlify.
 export const BRAND_NAME = 'NOVOURQ'
 export const BRAND_LOGO = '/logo-512.png'
 // The old Opero address (helloopero.com) may still be set in Netlify; never use it.

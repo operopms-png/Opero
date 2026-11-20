@@ -6,7 +6,7 @@ import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 import { runEstimate, money, type Estimate } from '@/lib/earnings-estimate'
 
 // "What could your property earn?" — the landlord earnings checker on
-// sangstersgroup.com (public/sg-earnings.js) and app.sangstersgroup.com/earnings.
+// www.thenovourq.com (public/sg-earnings.js) and app.thenovourq.com/earnings.
 //   POST {name, email, phone, lives_in, location, country, property_type, bedrooms,
 //         bathrooms, furnished, goal, rent_type, start_when, marketing_opt_in,
 //         currency, consent, source, website(honeypot)}
