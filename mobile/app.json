@@ -44,7 +44,7 @@
         }
       ]
     ],
-    "scheme": "sangsters",
+    "scheme": "novourq",
     "experiments": {
       "typedRoutes": false
     },

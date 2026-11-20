@@ -1,4 +1,4 @@
-# Sangsters app (iOS / Android)
+# NOVOURQ app (iOS / Android)
 
 Expo app for guests, tenants, property owners, partners and staff. One sign-in for everyone;
 the app opens the right home screen from the records linked to the person's email

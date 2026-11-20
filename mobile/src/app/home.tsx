@@ -26,7 +26,7 @@ const TABS: Record<Role, Tab[]> = {
   partner: [{ key: 'home', label: 'Overview', icon: 'chart' }, { key: 'investments', label: 'Investments', icon: 'home' }, { key: 'updates', label: 'Updates', icon: 'mega' }, { key: 'messages', label: 'Messages', icon: 'msg' }, { key: 'account', label: 'Account', icon: 'user' }],
   staff: [{ key: 'home', label: 'Today', icon: 'grid' }, { key: 'tasks', label: 'Tasks', icon: 'check' }, { key: 'enquiries', label: 'Enquiries', icon: 'mail' }, { key: 'portal', label: 'Portal', icon: 'portal', link: PORTAL_URL + '/staff-centre' }, { key: 'account', label: 'Account', icon: 'user' }],
 }
-const ROLE_KEY = 'sangsters.role'
+const ROLE_KEY = 'novourq.role'
 
 export default function Home() {
   const { session, ready } = useAuth()
