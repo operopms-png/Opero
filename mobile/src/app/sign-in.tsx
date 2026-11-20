@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Pressable, StyleSheet, Platform, KeyboardAvoidingView, ScrollView } from 'react-native'
+import { View, Pressable, Platform, KeyboardAvoidingView, ScrollView } from 'react-native'
 import { Image } from 'expo-image'
 import { StatusBar } from 'expo-status-bar'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -51,10 +51,8 @@ export default function SignIn() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#000' }}>
+    <View style={{ flex: 1, backgroundColor: '#1B2F6E' }}>
       <StatusBar style="light" />
-      <Image source={require('../../assets/images/pool.jpg')} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(25,24,21,0.38)' }]} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 14, paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }} keyboardShouldPersistTaps="handled">
           <Pressable onPress={() => router.back()} style={{ position: 'absolute', top: insets.top + 8, left: 14, width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' }}>

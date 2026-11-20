@@ -37,7 +37,7 @@ async function who(req: NextRequest) {
     serviceClient.from('pm_landlords').select('*').or(`portal_user_id.eq.${user.id}${email ? `,email.ilike.${email}` : ''}`).limit(1),
     serviceClient.from('pm_tenants').select('*').or(`portal_user_id.eq.${user.id}${email ? `,email.ilike.${email}` : ''}`).order('created_at', { ascending: false }).limit(1),
     email ? serviceClient.from('bookings').select('id', { count: 'exact', head: true }).ilike('guest_email', email).neq('status', 'cancelled') : Promise.resolve({ count: 0 } as any),
-    serviceClient.from('cohosts').select('*').eq('portal_user_id', user.id).limit(1),
+    serviceClient.from('cohosts').select('*').or(`portal_user_id.eq.${user.id}${email ? `,email.ilike.${email}` : ''}`).limit(1),
     serviceClient.from('subscriptions').select('id').eq('user_id', user.id).limit(1),
   ])
   const team = tm.data?.[0]
