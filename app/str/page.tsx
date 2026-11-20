@@ -1796,7 +1796,7 @@ export default function STRPage() {
             <div><label style={lbl}>Full Name *</label><input style={inp} value={form.name??''} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Jane Smith"/></div>
             <div><label style={lbl}>Email</label><input type="email" style={inp} value={form.email??''} onChange={e=>setForm({...form,email:e.target.value})} placeholder="jane@example.com"/></div>
             <div><label style={lbl}>Phone</label><input style={inp} value={form.phone??''} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+44 7700 000000"/></div>
-            <div><label style={lbl}>Role</label><select style={{...inp,cursor:'pointer'}} value={form.role??'cleaner'} onChange={e=>setForm({...form,role:e.target.value})}><option value="cleaner">Cleaner</option><option value="maintenance">Maintenance</option><option value="manager">Manager</option><option value="inspector">Inspector</option></select></div>
+            <div><label style={lbl}>Role</label><select style={{...inp,cursor:'pointer'}} value={form.role??'Upkeep Team'} onChange={e=>setForm({...form,role:e.target.value})}><option value="Upkeep Team">Upkeep (maintenance &amp; cleaning)</option><option value="manager">Manager</option><option value="inspector">Inspector</option></select></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:24 }}>
             <button onClick={()=>{setModal(null);setEditId(null);setForm({})}} style={{ flex:1, padding:'10px', borderRadius:8, border:'1px solid #E5E7EB', background:'#fff', fontSize:14, cursor:'pointer', fontFamily:'inherit' }}>Cancel</button>

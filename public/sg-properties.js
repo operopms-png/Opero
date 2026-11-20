@@ -1,4 +1,4 @@
-/* Sangsters — live property sections for www.thenovourq.com
+/* NOVOURQ — live property sections for www.thenovourq.com
  * Data comes from the portal (Estate Agency → property → "Show on website").
  * Usage (Elementor → HTML widget):
  *   <div data-sg-properties="search"></div>     full search page: list + map

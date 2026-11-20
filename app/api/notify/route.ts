@@ -5,8 +5,8 @@ import { sendEmail } from '@/lib/send-email'
 import { BRAND_NAME, SITE_URL } from '@/lib/brand'
 
 const TYPE_TO_ROLE: Record<string, string> = {
-  maintenance: 'Maintenance',
-  cleaning: 'Cleaner',
+  maintenance: 'Upkeep Team',
+  cleaning: 'Upkeep Team',
   booking: 'Airbnb Agent',
   guest_message: 'Airbnb Agent',
 }

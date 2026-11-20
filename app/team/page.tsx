@@ -10,8 +10,8 @@ type TeamMember = {
   phone: string | null
 }
 
-const ROLES = ['cleaner', 'maintenance', 'manager', 'inspector', 'admin']
-const INITIAL_FORM = { name: '', email: '', role: 'cleaner', phone: '' }
+const ROLES = ['Upkeep Team', 'manager', 'inspector', 'admin']
+const INITIAL_FORM = { name: '', email: '', role: 'Upkeep Team', phone: '' }
 
 export default function TeamPage() {
     const [members, setMembers] = useState<TeamMember[]>([])
@@ -57,7 +57,7 @@ export default function TeamPage() {
   }
 
   const ROLE_COLOR: Record<string, string> = {
-    cleaner: '#10B981', maintenance: '#F59E0B', manager: '#89CFF0',
+    'Upkeep Team': '#F59E0B', cleaner: '#10B981', maintenance: '#F59E0B', manager: '#89CFF0',
     inspector: '#89CFF0', admin: '#EF4444',
   }
 
@@ -92,19 +92,19 @@ export default function TeamPage() {
               <div key={m.id} style={{ background: '#fff', borderRadius: 14, border: '1px solid #E8ECF4', padding: '20px 24px' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: ROLE_COLOR[m.role ?? 'cleaner'] + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                      {m.role === 'cleaner' ? 'C' : m.role === 'maintenance' ? 'M' : m.role === 'manager' ? 'Mg' : m.role === 'inspector' ? 'I' : 'A'}
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: ROLE_COLOR[m.role ?? 'Upkeep Team'] + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                      {m.role === 'Upkeep Team' || m.role === 'cleaner' || m.role === 'maintenance' ? 'U' : m.role === 'manager' ? 'Mg' : m.role === 'inspector' ? 'I' : 'A'}
                     </div>
                     <div>
                       <div style={{ fontSize: 15, fontWeight: 600, color: '#323338' }}>{m.name}</div>
-                      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: ROLE_COLOR[m.role ?? 'cleaner'], background: ROLE_COLOR[m.role ?? 'cleaner'] + '20', textTransform: 'capitalize' }}>{m.role}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, color: ROLE_COLOR[m.role ?? 'Upkeep Team'], background: ROLE_COLOR[m.role ?? 'Upkeep Team'] + '20', textTransform: 'capitalize' }}>{m.role}</span>
                     </div>
                   </div>
                 </div>
                 {m.email && <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 4 }}>✉️ {m.email}</div>}
                 {m.phone && <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 12 }}>📱 {m.phone}</div>}
                 <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid #F3F4F6' }}>
-                  <button onClick={() => { setEditId(m.id); setForm({ name: m.name, email: m.email ?? '', role: m.role ?? 'cleaner', phone: m.phone ?? '' }); setShowModal(true) }} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
+                  <button onClick={() => { setEditId(m.id); setForm({ name: m.name, email: m.email ?? '', role: m.role ?? 'Upkeep Team', phone: m.phone ?? '' }); setShowModal(true) }} style={{ flex: 1, padding: '7px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Edit</button>
                   <button onClick={() => deleteMember(m.id)} style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #FEE2E2', background: '#FFF5F5', color: '#EF4444', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit' }}>Remove</button>
                 </div>
               </div>

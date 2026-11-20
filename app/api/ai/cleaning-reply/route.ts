@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const [{ data: property }, { data: team }] = await Promise.all([
     supabase.from('properties').select('name, address, city, max_guests, house_rules').eq('id', property_id).eq('user_id', user_id).single(),
-    supabase.from('team_members').select('name, role').eq('user_id', user_id).ilike('role', '%clean%'),
+    supabase.from('team_members').select('name, role').eq('user_id', user_id).in('role', ['Upkeep Team', 'Cleaning Team']),
   ])
   if (!property) return NextResponse.json({ error: 'Property not found' }, { status: 404 })
 

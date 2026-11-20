@@ -1,4 +1,4 @@
-/* Sangsters — "Let with us" landlord earnings calculator for www.thenovourq.com.
+/* NOVOURQ — "Let with us" landlord earnings calculator for www.thenovourq.com.
  * A bar on the page (area, bedrooms, email) opens a "Calculate your income"
  * pop-up: a few quick questions, contact details, then the estimated monthly
  * revenue from live listings. Every landlord lands in the portal
