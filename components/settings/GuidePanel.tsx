@@ -111,7 +111,7 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Limits: staff direct messages in team chat are not included, only recent messages are read, and the AI reads and summarises but does not reply on its own.',
   ] },
   { id: 'phone-answering', title: 'AI phone answering and voicemail', steps: [
-    'Where: Human Intelligence Hub → AI Assistant → Channels → Phone calls (admins only). It needs a phone number first: buy a Twilio number, type it in The phone number callers reach, save, and in Twilio set the number's Voice webhook (A call comes in) to https://app.thenovourq.com/api/voice/twiml. Then forward your own or Wocom number to it.',
+    'Where: Human Intelligence Hub → AI Assistant → Channels → Phone calls (admins only). It needs a phone number first: buy a Twilio number, type it in The phone number callers reach, save, and in Twilio set the Voice webhook for that number (A call comes in) to https://app.thenovourq.com/api/voice/twiml. Then forward your own or Wocom number to it.',
     'Choose when it answers: Off, When nobody answers, Out of hours or Every call. Write the Welcome message every caller hears first and the Voicemail message played before the beep.',
     'Ring my phone first: plays the welcome, rings the number in Put callers through to, then hands the caller to the AI if you do not answer. Leave it off if your own phone already forwards unanswered calls to this number.',
     'The AI answers from your Knowledge text and takes messages and viewing requests. If the caller does not speak, or asks for it, they leave a voicemail. Calls, voicemails and transcripts show under Activity.',
