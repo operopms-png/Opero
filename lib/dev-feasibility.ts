@@ -38,16 +38,17 @@ export type Inputs = {
   loanPct: number              // share of each month's spending that is borrowed
   interestPct: number          // yearly
   contingencyPct: number       // on building and site works
+  cityFeesPerLot: number       // permits, impact fees, plan checks, per lot
 }
 
 export const DEFAULTS: Inputs = {
   acres: 24.3, lots: 45, landPrice: 730000, purchaseCostsPct: 3,
-  landAsIsPrice: 800000, landAsIsMonths: 12, holdCostPerMonth: 1500,
+  landAsIsPrice: 830000, landAsIsMonths: 12, holdCostPerMonth: 1500,
   approvalsCost: 120000, approvalsMonths: 6, paperLotPrice: 24000,
   sitework: 1350000, earthworks: 0, siteworkMonths: 8, padLotPrice: 88000,
   buildCostPerHome: 285000, buildMonths: 8, homePrice: 468000, salesMonths: 20,
   commissionPct: 2.5, closingPct: 2, marketingPct: 0.75, warrantyPct: 0.5, adminPct: 3, hoaPerLotMonth: 15,
-  loanPct: 70, interestPct: 8.5, contingencyPct: 8,
+  loanPct: 70, interestPct: 8.5, contingencyPct: 8, cityFeesPerLot: 9500,
 }
 
 /** How each case moves the figures. Downside: prices lower, costs higher, everything slower. */
@@ -70,6 +71,8 @@ export type Result = {
   perLot: number
   months: number
   timeline: { month: number; cumulative: number }[]   // cumulative net cash, for a chart
+  uses: { label: string; total: number; note: string }[]   // where the money goes, for the sources and uses table
+  phases: { approvals: number; works: number; buildStart: number; build: number; sellStart: number; sell: number }   // months, for the build timeline
 }
 
 type Flow = { spend: number[]; sales: number[] }
@@ -114,14 +117,18 @@ export function runWay(way: Way, i: Inputs, shift: CaseShift): Result {
   const spend: number[] = [], sales: number[] = []
   spend[0] = purchase
   let label = '', sub = '', end = 0, grossSales = 0, extra = 0
+  const parts = { soft: 0, hard: 0, city: 0, vertical: 0, hoaHold: 0 }
+  const ph = { approvals: 0, works: 0, buildStart: 0, build: 0, sellStart: 0, sell: 0 }
 
   if (way === 'land') {
     label = 'Land as is'; sub = 'sell the land untouched'
     const hold = M(i.landAsIsMonths)
     spread(spend, 1, hold, C(i.holdCostPerMonth) * hold)
+    parts.hoaHold = C(i.holdCostPerMonth) * hold
     grossSales = P(i.landAsIsPrice)
     sales[hold] = grossSales
     end = hold
+    ph.sellStart = hold; ph.sell = 1
   } else if (way === 'paper') {
     label = 'Paper lots'; sub = 'approvals, sell unbuilt lots'
     const appr = M(i.approvalsMonths), sell = M(i.salesMonths)
@@ -129,7 +136,9 @@ export function runWay(way: Way, i: Inputs, shift: CaseShift): Result {
     grossSales = P(i.paperLotPrice) * i.lots
     spread(sales, appr, sell, grossSales)
     spread(spend, appr, sell, C(i.holdCostPerMonth) * sell)
+    parts.soft = C(i.approvalsCost); parts.hoaHold = C(i.holdCostPerMonth) * sell
     end = appr + sell
+    ph.approvals = appr; ph.sellStart = appr; ph.sell = sell
   } else if (way === 'pads') {
     label = 'Pads finished'; sub = 'roads and services, sell lots'
     const appr = M(i.approvalsMonths), works = M(i.siteworkMonths), sell = M(i.salesMonths)
@@ -139,7 +148,11 @@ export function runWay(way: Way, i: Inputs, shift: CaseShift): Result {
     grossSales = P(i.padLotPrice) * i.lots
     spread(sales, appr + works, sell, grossSales)
     spread(spend, appr + works, sell, i.hoaPerLotMonth * i.lots * sell * 0.5)
+    const cityP = C(i.cityFeesPerLot) * i.lots
+    spread(spend, appr, works, cityP)
+    parts.soft = C(i.approvalsCost); parts.hard = siteTotal; parts.city = cityP; parts.hoaHold = i.hoaPerLotMonth * i.lots * sell * 0.5
     end = appr + works + sell
+    ph.approvals = appr; ph.works = works; ph.sellStart = appr + works; ph.sell = sell
   } else {
     label = 'Homes built'; sub = 'build and sell finished homes'
     const appr = M(i.approvalsMonths), works = M(i.siteworkMonths), build = M(i.buildMonths), sell = M(i.salesMonths)
@@ -153,7 +166,11 @@ export function runWay(way: Way, i: Inputs, shift: CaseShift): Result {
     spread(sales, buildStart + build, sell, grossSales)
     extra = grossSales * (i.warrantyPct / 100)
     spread(spend, buildStart + build, sell, i.hoaPerLotMonth * i.lots * sell * 0.5)
+    const cityH = C(i.cityFeesPerLot) * i.lots
+    spread(spend, appr, works, cityH)
+    parts.soft = C(i.approvalsCost); parts.hard = siteTotal; parts.city = cityH; parts.vertical = buildTotal; parts.hoaHold = i.hoaPerLotMonth * i.lots * sell * 0.5
     end = buildStart + build + sell
+    ph.approvals = appr; ph.works = works; ph.buildStart = buildStart; ph.build = build; ph.sellStart = buildStart + build; ph.sell = sell
   }
 
   // selling costs come out as the sales come in
@@ -172,7 +189,18 @@ export function runWay(way: Way, i: Inputs, shift: CaseShift): Result {
     returnPerYear: (profit / equity / years) * 100,
     equityMultiple: (equity + profit) / equity,
     perLot: i.lots > 0 ? profit / i.lots : 0,
-    months: Math.max(end, sim.months), timeline: sim.timeline,
+    months: Math.max(end, sim.months), timeline: sim.timeline, phases: ph,
+    uses: [
+      { label: 'Land + closing', total: purchase, note: `Land ${short(i.landPrice)} + ${i.purchaseCostsPct}%` },
+      { label: 'Approvals and soft costs', total: parts.soft, note: 'Engineering, survey, legal, approvals' },
+      { label: 'Site works + contingency', total: parts.hard, note: `Roads and services, ${i.contingencyPct}% contingency` },
+      { label: 'City fees + permits', total: parts.city, note: 'Per lot' },
+      { label: 'Vertical build', total: parts.vertical, note: `${short(C(i.buildCostPerHome))} a home + ${i.contingencyPct}% contingency` },
+      { label: 'Selling costs', total: grossSales * ((i.commissionPct + i.closingPct + i.marketingPct) / 100) + extra, note: 'Commission, closing, marketing, warranty' },
+      { label: 'G&A', total: grossSales * (i.adminPct / 100), note: `${i.adminPct}% of sales` },
+      { label: 'HOA + holding costs', total: parts.hoaHold, note: 'Subsidy and carrying costs while unsold' },
+      { label: 'Interest', total: sim.interestTotal, note: `${i.interestPct}% a year on the loan` },
+    ].filter(u => u.total > 0.5),
   }
 }
 
