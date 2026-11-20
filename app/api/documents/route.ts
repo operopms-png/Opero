@@ -7,7 +7,7 @@ import { documentPdf } from '@/lib/document-pdf'
 import { sanitizeHtml, settleBlanks, wordingText, changeSummary, esc, emptyBlanks } from '@/lib/doc-text'
 import { isHrFolder } from '@/lib/hr-docs'
 import { HR_LETTER_TEMPLATES } from '@/lib/hr-letter-templates'
-import { LANDLORD_TEMPLATES } from '@/lib/landlord-templates'
+import { LANDLORD_TEMPLATES, forCompany } from '@/lib/landlord-templates'
 import { searchPeople, sendTestDocuments, createFromTemplate, deliverDocument, docSettings, docEmailHtml, runDocAutomation, TRIGGERS } from '@/lib/documents'
 
 // Staff Centre → Documents.
@@ -118,7 +118,8 @@ export async function POST(req: NextRequest) {
     const no = adminOnly(); if (no) return no
     const { data: have } = await db.from('doc_templates').select('name').eq('business_id', biz)
     const names = new Set((have ?? []).map((t: any) => t.name))
-    const rows = LANDLORD_TEMPLATES.filter(t => !names.has(t.name)).map(t => ({ ...t, audience: 'owner', defaults: {}, remind_days: 0, email_message: null, active: true, business_id: biz, created_by: by, updated_at: now }))
+    const cn = (await docSettings(biz)).company_name
+    const rows = LANDLORD_TEMPLATES.filter(t => !names.has(t.name)).map(t => ({ ...forCompany(t, cn), audience: 'owner', defaults: {}, remind_days: 0, email_message: null, active: true, business_id: biz, created_by: by, updated_at: now }))
     if (rows.length) { const { error } = await db.from('doc_templates').insert(rows); if (error) return bad(error.message, 500) }
     return NextResponse.json({ added: rows.length })
   }
@@ -134,7 +135,8 @@ export async function POST(req: NextRequest) {
     const no = adminOnly(); if (no) return no
     const { data: have } = await db.from('doc_templates').select('name').eq('business_id', biz)
     const names = new Set((have ?? []).map((t: any) => t.name))
-    const rows = HR_LETTER_TEMPLATES.filter(t => !names.has(t.name)).map(t => ({ ...t, audience: 'any', defaults: {}, remind_days: 0, email_message: null, active: true, business_id: biz, created_by: by, updated_at: now }))
+    const cn = (await docSettings(biz)).company_name
+    const rows = HR_LETTER_TEMPLATES.filter(t => !names.has(t.name)).map(t => ({ ...forCompany(t as any, cn), audience: 'any', defaults: {}, remind_days: 0, email_message: null, active: true, business_id: biz, created_by: by, updated_at: now }))
     if (rows.length) { const { error } = await db.from('doc_templates').insert(rows); if (error) return bad(error.message, 500) }
     return NextResponse.json({ added: rows.length })
   }

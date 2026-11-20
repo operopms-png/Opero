@@ -187,3 +187,14 @@ ${row('<b>Name / email / address:</b> {complaints_contact}')}
 <p><b>Agent:</b> {staff_name}, {staff_role}</p>`,
   },
 ]
+
+/** Templates are written in NOVOURQ wording. A paying client who adds them gets the same templates with their own company name and blanks for the NOVOURQ-only details (address, website, portal). */
+export function forCompany<T extends { body: string; email_subject?: string | null; name: string }>(t: T, companyName: string): T {
+  if ((companyName || '').trim().toUpperCase() === 'NOVOURQ') return t
+  const sw = (x: string) => x
+    .replace(/Tallis House, 2 Tallis St, Blackfriars, London EC4Y 0AB/g, '{company_address}')
+    .replace(/www\.thenovourq\.com/g, '{company_website}')
+    .replace(/owners\.thenovourq\.com/g, '{company_portal}')
+    .replace(/NOVOURQ/g, '{company_name}')
+  return { ...t, body: sw(t.body), email_subject: t.email_subject ? sw(t.email_subject) : t.email_subject }
+}

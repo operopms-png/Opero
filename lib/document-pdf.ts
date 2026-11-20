@@ -22,7 +22,7 @@ export type DocForPdf = {
   signed_at?: string | null; signed_name?: string | null; signed_ip?: string | null; sent_at?: string | null; token?: string; signature_data?: string | null
 }
 
-export async function documentPdf(doc: DocForPdf, s: { company_name?: string | null; logo_url?: string | null; contact_lines?: string | null }, siteUrl: string): Promise<Uint8Array> {
+export async function documentPdf(doc: DocForPdf, s: { company_name?: string | null; logo_url?: string | null; contact_lines?: string | null; doc_background_url?: string | null }, siteUrl: string): Promise<Uint8Array> {
   const pdf = await PDFDocument.create()
   pdf.setTitle(safe(doc.title))
   const W = 595.28, H = 841.89, M = 46, TOP = 88, BOTTOM = 66, CW = W - 2 * M
@@ -34,7 +34,7 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   const ink = hex('#1F2937'), grey = hex('#4B5563'), navy = hex('#182D5E')
   // NOVOURQ form look: the NOVOURQ mark top-left on every page, navy uppercase headings, a ruled footer with page numbers
   const isNov = (s.company_name || '').trim().toUpperCase() === 'NOVOURQ'
-  const bgUrl = isNov ? docBackground(doc.title) : null
+  const bgUrl = (s.doc_background_url || '').trim() || (isNov ? docBackground(doc.title) : null)
   const bg = bgUrl ? await loadImage(pdf, bgUrl, siteUrl) : null
   const logo = !bg ? await loadImage(pdf, s.logo_url, siteUrl) : null
   const company = s.company_name || 'Property Management Team'

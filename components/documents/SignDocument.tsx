@@ -47,6 +47,8 @@ export default function SignDocument({ token, first }: { token: string; first: {
 
   const blanks: { key: string; options?: string[] }[] = doc.blanks ?? []
   const formMode = formLayout(doc.title)
+  // the company's own background if it set one; NOVOURQ keeps its artwork; others have none
+  const pageBg: string | null = company?.background || (company?.name === 'NOVOURQ' ? docBackground(doc.title) : null)
   const html = useMemo(() => {
     let h = String(doc.body || '').replace(/<span data-field="([a-z0-9_]+)" data-empty="1"[^>]*>[\s\S]*?<\/span>/g, '<span data-slot="$1"></span>')
     // form layout: each "Label: blank" line becomes a row, label on the left and the ruled line filling the rest
@@ -131,8 +133,8 @@ export default function SignDocument({ token, first }: { token: string; first: {
           <button onClick={goNext} style={{ fontSize: 12.5, fontWeight: 700, color: '#fff', background: BLUE, border: 'none', borderRadius: 9, padding: '8px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>Next</button>
         </div>}
         <style>{DOC_CSS}{FORM_CSS}</style>
-        {formMode && company?.name !== 'NOVOURQ' && <div style={{ padding: '22px 22px 0', background: '#fff' }}><img src={company?.name === 'NOVOURQ' ? '/novourq-form-logo.png' : (company?.logo_url || '/novourq-form-logo.png')} alt={company?.name || ''} style={{ height: 56, display: 'block' }} /></div>}
-        <div ref={box} className={formMode ? 'doc-form doc-read' : 'doc-sheet doc-read'} style={{ ...(docBackground(doc.title) && company?.name === 'NOVOURQ' ? { backgroundImage: `linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,.45)),url(${docBackground(doc.title)})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : {}), ...(formMode ? {} : { padding: '22px', fontFamily: 'Georgia, serif', fontSize: 15.5, lineHeight: 1.65 }) }} />
+        {formMode && !pageBg && <div style={{ padding: '22px 22px 0', background: '#fff' }}><img src={company?.name === 'NOVOURQ' ? '/novourq-form-logo.png' : (company?.logo_url || '/novourq-form-logo.png')} alt={company?.name || ''} style={{ height: 56, display: 'block' }} /></div>}
+        <div ref={box} className={formMode ? 'doc-form doc-read' : 'doc-sheet doc-read'} style={{ ...(pageBg ? { backgroundImage: `linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,.45)),url(${pageBg})`, backgroundSize: 'cover', backgroundPosition: 'center top' } : {}), ...(formMode ? {} : { padding: '22px', fontFamily: 'Georgia, serif', fontSize: 15.5, lineHeight: 1.65 }) }} />
         {formMode && <div style={{ margin: '0 22px', padding: '8px 0 14px', borderTop: `1px solid ${FORM_NAVY}`, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 11, color: '#4B5563' }}>{company?.contact || company?.name}</div>}
         {Object.entries(slots).map(([k, el]) => { const b = blanks.find(x => x.key === k); return b ? createPortal(fieldUI(b), el, k) : null })}
         {signed ? (

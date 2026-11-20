@@ -22,7 +22,7 @@ import { todayIn } from '@/lib/company-tz'
 export const maxDuration = 30
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
 const CURS = ['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD']
-const SETTING_FIELDS = ['prefix', 'company_name', 'logo_url', 'logo_line1', 'logo_line2', 'contact_lines', 'payment_instructions', 'signature_name', 'signature_url', 'terms_note', 'reply_to']
+const SETTING_FIELDS = ['prefix', 'company_name', 'logo_url', 'logo_line1', 'logo_line2', 'contact_lines', 'payment_instructions', 'signature_name', 'signature_url', 'terms_note', 'reply_to', 'offer_letter_email', 'doc_background_url']
 
 async function settingsFor(biz: string) {
   let { data } = await db.from('invoice_settings').select('*').eq('business_id', biz).maybeSingle()

@@ -242,6 +242,11 @@ function SettingsModal({ s, onClose, onSaved }: { s: any; onClose: () => void; o
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, alignItems: 'end' }}>{I('signature_name', 'Signature (typed)')}<div><label style={label}>Or signature image (PNG, clear background)</label><input type="file" accept="image/png" onChange={e => upload(e.target.files?.[0], 'signature_url')} />{f.signature_url && <button type="button" style={{ ...btn('ghost', true), marginTop: 6 }} onClick={() => set('signature_url', '')}>Use typed signature</button>}</div></div>
         {T('terms_note', 'Terms note (bottom of the invoice)', 3)}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.4fr', gap: 10 }}>{I('prefix', 'Number prefix')}{I('next_number', 'Next number')}{I('reply_to', 'Replies go to (email)')}</div>
+        {'offer_letter_email' in f && <div style={{ display: 'grid', gap: 10, borderTop: '1px solid #E8E4DA', paddingTop: 12 }}>
+          <div style={{ fontSize: 12.5, color: C.muted }}>Documents — how your contracts and letters look. Leave blank to use the standard look.</div>
+          {I('offer_letter_email', 'Offer letter email (shown in the footer, and replies go here)')}
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>{f.doc_background_url && <img src={f.doc_background_url} alt="" style={{ width: 56, height: 80, objectFit: 'cover', border: '1px solid #E8E4DA' }} />}<div><label style={label}>Contract page background (JPG or PNG, portrait)</label><input type="file" accept="image/png,image/jpeg" onChange={e => upload(e.target.files?.[0], 'doc_background_url')} />{f.doc_background_url && <button style={{ ...btn('ghost'), marginLeft: 8 }} onClick={() => set('doc_background_url', '')}>Remove</button>}</div></div>
+        </div>}
         {err && <div style={{ color: C.red, fontSize: 13 }}>{err}</div>}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}><button style={btn('ghost')} onClick={onClose}>Cancel</button><button style={btn('gold')} disabled={busy} onClick={async () => { setBusy(true); try { await staffApi('/api/invoices', { action: 'settings', ...f }); onSaved() } catch (e: any) { setErr(e.message); setBusy(false) } }}>{busy ? 'Saving…' : 'Save'}</button></div>
       </div>
