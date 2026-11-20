@@ -4,7 +4,7 @@ import { getCaller } from '@/lib/mailbox'
 import { SITE_URL, EMAIL_DOMAIN } from '@/lib/brand'
 import { sendEmail } from '@/lib/send-email'
 import { documentPdf } from '@/lib/document-pdf'
-import { sanitizeHtml, settleBlanks, wordingText, changeSummary, esc } from '@/lib/doc-text'
+import { sanitizeHtml, settleBlanks, wordingText, changeSummary, esc, emptyBlanks } from '@/lib/doc-text'
 import { isHrFolder } from '@/lib/hr-docs'
 import { HR_LETTER_TEMPLATES } from '@/lib/hr-letter-templates'
 import { LANDLORD_TEMPLATES } from '@/lib/landlord-templates'
@@ -284,6 +284,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ doc: data })
     }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(patch.recipient_email || '')) return bad('Add the email address to send it to.')
+    // company-side blanks left empty would be shown to the signer: ask staff to fill them (they can still send anyway)
+    if (!b.sendAnyway) {
+      const COMPANY = ['company_address', 'work_location', 'staff_role', 'company_contact', 'manager_email', 'manager_phone']
+      const miss = [...new Set(emptyBlanks(body).map(x => x.key).filter(k => COMPANY.includes(k)))]
+      if (miss.length) return bad('MISSING_COMPANY:' + miss.map(k => k.replace(/_/g, ' ')).join(', '), 409)
+    }
     const needsApproval = changed && tpl?.lock_mode === 'approval' && !c.isAdmin
     if (needsApproval) {
       const lines = changeSummary(doc.base_body, body)

@@ -50,7 +50,7 @@ export default function SignDocument({ token, first }: { token: string; first: {
   const html = useMemo(() => {
     let h = String(doc.body || '').replace(/<span data-field="([a-z0-9_]+)" data-empty="1"[^>]*>[\s\S]*?<\/span>/g, '<span data-slot="$1"></span>')
     // form layout: each "Label: blank" line becomes a row, label on the left and the ruled line filling the rest
-    if (formMode) h = h.replace(/<p>([\s\S]*?)<\/p>/g, (all, inner: string) => inner.startsWith('<b>') && inner.includes('data-slot') ? inner.split(/<br\s*\/?>/).map(l => l.includes('data-slot') ? `<div class="frow">${l}</div>` : `<div class="fline">${l}</div>`).join('') : all)
+    if (formMode) h = h.replace(/<p>([\s\S]*?)<\/p>/g, (all, inner: string) => (inner.startsWith('<b>') || /<br/i.test(inner)) && inner.includes('data-slot') ? inner.split(/<br\s*\/?>/).map(l => l.includes('data-slot') ? `<div class="frow">${l}</div>` : `<div class="fline">${l}</div>`).join('') : all)
     return h
   }, [doc.body, formMode])
   // The letter is written into the page by hand (not with dangerouslySetInnerHTML): React rewrote that HTML after the

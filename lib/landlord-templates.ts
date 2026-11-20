@@ -23,7 +23,7 @@ ${row(
 export const LANDLORD_TEMPLATES = [
   {
     name: 'Shortlet Landlord Agreement', category: 'Agreements', lock_mode: 'approval', needs_signature: true,
-    email_subject: 'Your property management agreement — {company_name}',
+    email_subject: 'Your shortlet landlord agreement — {company_name}',
     body: `<h1>Corporate Accommodation / Residential Occupancy Agreement</h1>
 ${row('<b>Agreement date:</b> {agreement_date}', '<b>Property address:</b> {property_address}')}
 <p>This Agreement is made between:</p>
@@ -116,7 +116,7 @@ ${row('<b>Where did you hear about us?:</b> {heard_about_us}', '<b>Special requi
   },
   {
     name: 'Estate Agency Property Management Agreement', category: 'Agreements', lock_mode: 'approval', needs_signature: true,
-    email_subject: 'Your property management agreement — {company_name}',
+    email_subject: 'Your estate agency management agreement — {company_name}',
     body: `<h1>Property Management Agreement</h1>
 <p>The Agent is authorised to provide the property management services described in this agreement.</p>
 <h2>Details of the property to which the tenancy relates</h2>

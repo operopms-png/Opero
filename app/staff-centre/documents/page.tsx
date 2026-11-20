@@ -150,7 +150,16 @@ function DocView({ id, back }: { id: string; back: () => void }) {
       else if (action === 'remind') setMsg('Reminder sent.')
       else if (action === 'save') setMsg('Saved.')
       await load()
-    } catch (e: any) { setErr(e.message) } finally { setBusy('') }
+    } catch (e: any) {
+      const m = String(e.message || '')
+      if (action === 'send' && m.startsWith('MISSING_COMPANY:')) {
+        setBusy('')
+        if (confirm('These company details are still empty and the person would see them blank: ' + m.slice(16) + '.\n\nPress Cancel to fill them in first, or OK to send anyway.')) return run(action, { ...extra, sendAnyway: true })
+        setErr('Fill in: ' + m.slice(16) + ' (the highlighted blanks above), then press send.')
+        return
+      }
+      setErr(m)
+    } finally { setBusy('') }
   }
   async function decide(status: 'approved' | 'rejected') {
     setErr(''); setBusy(status)
