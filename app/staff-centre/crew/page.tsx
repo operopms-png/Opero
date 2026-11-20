@@ -46,7 +46,7 @@ export default function CrewPage() {
         const doneWeek = done.filter(j => (j.completed_at || j.resolved_at || '') >= weekAgo)
         const cost = true ? jobs.filter(j => j._kind === 'repair' && (j.resolved_at || '') >= monthStart.toISOString()).reduce((s, j) => s + (Number(j.cost) || 0), 0) : null
         const per = people.map((p: any) => {
-          const mine = jobs.filter(j => j.assigned_to === p.id)
+          const mine = people.length === 1 ? jobs : jobs.filter(j => j.assigned_to === p.id)
           return { ...p, working: (shifts ?? []).some((s: any) => s.staff_id === p.id && s.type === 'Working'), open: mine.filter(j => !DONE.includes(j.status)).length, done: mine.filter(j => DONE.includes(j.status)).length }
         })
         const recent = jobs.filter(j => !DONE.includes(j.status)).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 6)

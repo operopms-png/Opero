@@ -148,7 +148,7 @@ export const TASKS_BOARD: MkBoard = {
 // Property Management and Estate Agency. Tickets are raised in each module
 // (or by tenants), so there's no "New" here — just triage.
 export const MAINTENANCE_BOARD: MkBoard = {
-  key: 'maintenance', table: '', title: 'Maintenance Board', item: 'job', nameField: 'title', groupBy: 'status', noCreate: true,
+  key: 'maintenance', table: '', title: 'Repairs & maintenance', item: 'job', nameField: 'title', groupBy: 'status', noCreate: true,
   dateField: 'created_at',
   defaults: {},
   cols: [

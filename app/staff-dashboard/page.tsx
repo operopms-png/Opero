@@ -24,7 +24,7 @@ function fmtDate(d?: string | null) {
 
 // One Upkeep team now covers repairs, maintenance and cleaning. Old ?team=cleaning / ?team=maintenance links land here too.
 const TEAMS: Record<string, { role: string; title: string; singular: string }> = {
-  upkeep: { role: 'Upkeep Team', title: 'Upkeep Portal', singular: 'upkeep team member' },
+  upkeep: { role: 'Upkeep Team', title: 'Upkeep Portal', singular: 'team member' },
 }
 
 function StaffDashboardInner() {

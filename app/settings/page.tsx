@@ -107,10 +107,10 @@ function SettingsInner() {
       const {data:teamData} = await supabase.from('team_members').select('*').eq('user_id',teamOwner).order('name')
       setTeam(teamData??[])
       const [strP, pmP, eaP, devP] = await Promise.all([
-        supabase.from('properties').select('id,name').eq('user_id',user.id).is('ended_at', null),
-        supabase.from('pm_properties').select('id,name').eq('user_id',user.id).is('ended_at', null),
-        supabase.from('estate_properties').select('id,name').eq('user_id',user.id).is('ended_at', null),
-        supabase.from('dev_projects').select('id,name').eq('user_id',user.id),
+        supabase.from('properties').select('id,name').eq('user_id',teamOwner).is('ended_at', null),
+        supabase.from('pm_properties').select('id,name').eq('user_id',teamOwner).is('ended_at', null),
+        supabase.from('estate_properties').select('id,name').eq('user_id',teamOwner).is('ended_at', null),
+        supabase.from('dev_projects').select('id,name').eq('user_id',teamOwner),
       ])
       setAllProperties([
         ...(strP.data??[]).map((p:any)=>({...p,module:'Vacation Rentals'})),

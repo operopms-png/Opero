@@ -118,8 +118,8 @@ export default function CleanJob({ item, onClose, onChanged }: { item: { id: str
 
           <div style={{ border: '1px solid #E4E7EC', borderRadius: 12, padding: 14, margin: '4px 0 16px', background: '#F9FAFB' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#323338' }}>Maintenance needed?</div>
-            <div style={{ fontSize: 12, color: '#667085', margin: '2px 0 10px' }}>Only use this if something needs the maintenance team. It goes straight to their list.</div>
-            {reported > 0 && <div style={{ fontSize: 12, color: '#047857', fontWeight: 600, marginBottom: 8 }}>{reported} issue{reported > 1 ? 's' : ''} sent to the maintenance team.</div>}
+            <div style={{ fontSize: 12, color: '#667085', margin: '2px 0 10px' }}>Only use this if something needs repairing. It goes straight to the upkeep team’s repairs list.</div>
+            {reported > 0 && <div style={{ fontSize: 12, color: '#047857', fontWeight: 600, marginBottom: 8 }}>{reported} issue{reported > 1 ? 's' : ''} sent to the repairs list.</div>}
             {!fix ? <button onClick={() => setFix(true)} style={{ padding: '9px 14px', borderRadius: 8, border: `1px solid ${ACCENT}`, background: '#fff', color: ACCENT, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Report an issue</button> : (
               <div style={{ display: 'grid', gap: 10 }}>
                 <input style={box} placeholder="What needs fixing? e.g. Leaking kitchen tap" value={fx.title} onChange={e => setFx({ ...fx, title: e.target.value })} />
