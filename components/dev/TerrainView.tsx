@@ -38,7 +38,7 @@ export default function TerrainView({ grid, pads, exaggeration = 2, height = 520
 }) {
   const host = useRef<HTMLDivElement>(null)
   const live = useRef({ month, months, phases })
-  live.current = { month, months, phases }
+  useEffect(() => { live.current = { month, months, phases } })
   const api = useRef<{ update: () => void } | null>(null)
 
   useEffect(() => {

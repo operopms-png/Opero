@@ -6,11 +6,12 @@ import WeatherWidget from '@/components/WeatherWidget'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
+import FeasibilityTab from '@/components/dev/FeasibilityTab'
 
-const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones']
+const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones','Feasibility']
 const DEV_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PROJECTS', items: ['Projects','Units','Checklist','Milestones'] },
+  { label: 'PROJECTS', items: ['Projects','Units','Checklist','Milestones','Feasibility'] },
   { label: 'OPERATIONS', items: ['Contractors','Service','Snagging'] },
   { label: 'COMPLIANCE', items: ['Compliance','Health & Safety'] },
   { label: 'FINANCE', items: ['Budget','Investors','Expenses','Banking'] },
@@ -999,6 +1000,8 @@ export default function DevPage() {
 
         {tab==='Company SOPs' && <CompanyDocsPanel category="sop" />}
         {tab==='Contract Templates' && <CompanyDocsPanel category="contract_template" />}
+
+        {tab==='Feasibility' && <FeasibilityTab />}
 
         {/* MILESTONES */}
         {tab==='Milestones' && (

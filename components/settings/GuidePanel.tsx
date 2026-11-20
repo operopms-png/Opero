@@ -97,6 +97,13 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Keys saved earlier are encrypted automatically within about 10 minutes, at the next Smoobu sync. Nothing changes in how you connect or use Smoobu.',
     'Other integration keys are not encrypted yet.',
   ] },
+  { id: 'feasibility', title: 'Developments: Feasibility', steps: [
+    'Where: Real Estate Intelligence → Developments → Feasibility (under Projects in the left list).',
+    'It tests a site before you buy: pick Land as is, Paper lots, Pads finished or Homes built, and Downside, Base or Upside, to see profit, cash needed, loan and return a year. Sources and uses lists every cost.',
+    'Move the cost sliders or edit the site, comparable sales, site facts and pads; profit and the soil to move update straight away. Press Play to watch the site build month by month; switch Natural or Slope view.',
+    'The first screen is an Example site with invented figures. Change it and press Save to keep it as your own; saved sites sit along the top and belong to your company.',
+    'Limits: it is arithmetic on your figures, not advice. The 3D houses and trees are illustrations, and ground levels from the free service are rough, so paste a survey for earthworks you rely on.',
+  ] },
   { id: 'project-image', title: 'Development project main image', steps: [
     'Where: Real Estate Intelligence → Developments → Projects. Press New Project, or Edit on an existing one, and use Main image to upload a JPG, PNG or WebP render or photo.',
     'The image shows at the top of the project card and in the side panel when you open the project on the Map. Press Remove image to take it off.',
