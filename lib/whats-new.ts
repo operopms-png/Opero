@@ -4,7 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
-  { date: '2026-11-20', title: 'Developments: deleting a project works', text: 'Deleting a development project now tells you if it has investors or documents attached and removes them with it once you confirm, and shows an error if anything still blocks it.' },
+  { date: '2026-11-20', title: 'Developments: deleting a project works', text: 'Deleting a development project now works: any investors or documents attached are kept in their own tabs, just no longer linked to the project, and an error shows if anything still blocks it.' },
   { date: '2026-11-20', title: 'Developments: Feasibility', text: 'Real Estate Intelligence, Developments, Feasibility tests a site before you buy: profit, cash needed and loan for hold, paper lots, finished pads and built homes, with Downside, Base and Upside cases, a 3D site view, comparable sales and your own saved sites.' },
   { date: '2026-11-20', title: 'Mobile app: co-host and Business views', text: 'The NOVOURQ mobile app now has a Co-host view (assigned properties, bookings, earnings, maintenance) and a Business view of Novourq Cloud AI (chats handled, AI actions, follow-ups and what is waiting in Approvals).' },
   { date: '2026-11-20', title: 'Tenancy agreement and Upkeep tidy-up', text: 'The Tenancy Agreement PDF no longer carries any old company text behind the page, and the Upkeep board, Team Management property counts and wording have been tidied.' },
