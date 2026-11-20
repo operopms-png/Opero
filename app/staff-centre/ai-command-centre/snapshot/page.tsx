@@ -282,8 +282,8 @@ export default function AICommandCentre() {
               </Link>
             ))}
             {([
-              ['Maintenance', '/staff-centre/maintenance', ops ? `${ops.open} open` : '—', ops ? `${ops.urgent} urgent` : ''],
-              ['Cleaning', '/cleaning', ops ? `${ops.pending} pending` : '—', ops ? `${ops.overdue} overdue` : ''],
+              ['Repairs', '/staff-centre/upkeep?view=repairs', ops ? `${ops.open} open` : '—', ops ? `${ops.urgent} urgent` : ''],
+              ['Cleaning', '/staff-centre/upkeep?view=cleaning', ops ? `${ops.pending} pending` : '—', ops ? `${ops.overdue} overdue` : ''],
               ['Turnovers', '/turnovers', ops ? `${ops.upcoming} in next 7 days` : '—', ''],
               ['Compliance', '/staff-centre/compliance', ops ? `${ops.expired} expired` : '—', ops ? `${ops.expiring} expiring in 30 days` : ''],
             ] as [string, string, string, string][]).map(([label, href, big, sub]) => (

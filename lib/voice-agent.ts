@@ -31,7 +31,7 @@ export const PAGES: Record<string, { path: string; label: string }> = {
   dashboard: { path: '/staff-centre/oversight', label: 'Dashboard' },
   tasks: { path: '/staff-centre/tasks', label: 'Tasks' },
   inbox: { path: '/staff-centre/inbox', label: 'Inbox' },
-  maintenance: { path: '/staff-centre/maintenance', label: 'Maintenance' },
+  maintenance: { path: '/staff-centre/upkeep?view=repairs', label: 'Maintenance' },
   finance: { path: '/staff-centre/finance', label: 'Finance' },
   calendar: { path: '/staff-centre/calendar', label: 'Calendar' },
   crm: { path: '/staff-centre/crm', label: 'CRM' },

@@ -29,7 +29,7 @@ const TASKS: { task: string; pages: string[] }[] = [
   { task: 'Chase rent', pages: ['/staff-centre/finance/arrears'] },
   { task: 'Pay an owner', pages: ['/staff-centre/finance/payouts'] },
   { task: 'Raise an invoice', pages: ['/staff-centre/invoices'] },
-  { task: 'Log a repair', pages: ['/staff-centre/maintenance'] },
+  { task: 'Log a repair', pages: ['/staff-centre/upkeep?view=repairs'] },
   { task: 'Check a certificate or compliance', pages: ['/staff-centre/compliance'] },
   { task: 'Plan the day', pages: ['/staff-centre/calendar', '/staff-centre/tasks'] },
   { task: 'Manage staff', pages: ['/staff-centre/hr', '/settings?section=Team+Management'] },

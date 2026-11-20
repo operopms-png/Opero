@@ -59,6 +59,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/website-chats': 'inbox',
   '/staff-centre/portals': 'portals',
   '/staff-centre/maintenance': 'maintenance',
+  '/staff-centre/upkeep': 'maintenance',
   '/staff-centre/crm': 'crm',
   '/staff-centre/marketing': 'marketing',
   '/staff-centre/applications': 'applications',

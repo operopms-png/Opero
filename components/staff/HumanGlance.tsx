@@ -22,7 +22,7 @@ const GROUPS: { title: string; tiles: Tile[] }[] = [
     { key: 'partners', label: 'Partner payments to confirm', note: 'Bank transfers marked as sent', none: 'Nothing to confirm', tone: 'warn', href: '/staff-centre/partners' },
   ] },
   { title: 'Operations', tiles: [
-    { key: 'maintenance', label: 'Open repairs', note: 'Not yet completed', none: 'None open', tone: 'plain', href: '/staff-centre/maintenance' },
+    { key: 'maintenance', label: 'Open repairs', note: 'Not yet completed', none: 'None open', tone: 'plain', href: '/staff-centre/upkeep?view=repairs' },
     { key: 'compliance', label: 'Certificates expiring', note: 'Within 30 days', none: 'None expiring', tone: 'warn', href: '/staff-centre/compliance' },
     { key: 'meetings', label: 'Meetings', note: 'Today, or requested', none: 'None today', tone: 'plain', href: '/staff-centre/meetings' },
     { key: 'tasks', label: 'Tasks due', note: 'Due today or earlier', none: 'None due', tone: 'warn', href: '/staff-centre/tasks' },

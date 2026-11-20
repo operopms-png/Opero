@@ -18,7 +18,7 @@ export const STAFF_CENTRE_TABS = [
   { k: 'inbox',       l: 'Conversations' },
   { k: 'portalaccess', l: 'Portal Access' },
   { k: 'portals',     l: 'Property Portals' },
-  { k: 'maintenance', l: 'Maintenance Board' },
+  { k: 'maintenance', l: 'Upkeep board' },
   { k: 'compliance',  l: 'Compliance' },
   { k: 'finance',     l: 'Finance (money, payouts, arrears)' },
   { k: 'crm',         l: 'CRM' },
