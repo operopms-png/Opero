@@ -16,6 +16,7 @@ type CleaningTask = {
   notes: string | null
   created_at: string
   properties?: { name: string }
+  _table?: string
 }
 
 const STATUS_CONFIG = {
@@ -48,16 +49,19 @@ export default function CleaningTasksPage() {
   async function fetchTasks() {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: props } = await supabase.from('properties').select('id').eq('user_id', user ? await getAccountId(user) : '')
-    const safeIds = (props ?? []).map((p: any) => p.id)
-    const idsToUse = safeIds.length ? safeIds : ['00000000-0000-0000-0000-000000000000']
-    const { data, error } = await supabase
-      .from('cleaning_tasks')
-      .select('*, properties(name)')
-      .in('property_id', idsToUse)
-      .order('scheduled_date', { ascending: true })
-
-    if (!error && data) setTasks(data as CleaningTask[])
+    const acc = user ? await getAccountId(user) : ''
+    // Cleaning across all three modules, like the Upkeep portal: Vacation Rentals, Property Management and Estate Agency.
+    const mods: [string, string, string][] = [['cleaning_tasks', 'properties', 'properties'], ['pm_cleaning_tasks', 'pm_properties', 'pm_properties'], ['estate_cleaning_tasks', 'estate_properties', 'estate_properties']]
+    const all: CleaningTask[] = []
+    for (const [table, propTable, rel] of mods) {
+      const { data: props } = await supabase.from(propTable).select('id').eq('user_id', acc)
+      const ids = (props ?? []).map((p: any) => p.id)
+      if (!ids.length) continue
+      const { data } = await supabase.from(table).select(`*, ${rel}(name)`).in('property_id', ids)
+      ;(data ?? []).forEach((t: any) => all.push({ ...t, properties: t[rel], _table: table }))
+    }
+    all.sort((a, b) => String(a.scheduled_date ?? '').localeCompare(String(b.scheduled_date ?? '')))
+    setTasks(all)
     setLoading(false)
   }
 
@@ -68,7 +72,7 @@ export default function CleaningTasksPage() {
   }
 
   async function updateStatus(id: string, status: CleaningTask['status']) {
-    await supabase.from('cleaning_tasks').update({ status }).eq('id', id)
+    await supabase.from(tasks.find(t => t.id === id)?._table ?? 'cleaning_tasks').update({ status }).eq('id', id)
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)))
   }
 
@@ -92,7 +96,7 @@ export default function CleaningTasksPage() {
   }
 
   async function deleteTask(id: string) {
-    await supabase.from('cleaning_tasks').delete().eq('id', id)
+    await supabase.from(tasks.find(t => t.id === id)?._table ?? 'cleaning_tasks').delete().eq('id', id)
     setTasks((prev) => prev.filter((t) => t.id !== id))
   }
 

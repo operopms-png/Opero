@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
+import { supabase, getAccountId } from '../../lib/supabase'
 import AIStaffSection from '../../components/settings/AIStaffSection'
 import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
 import { TEAM_MODULES } from '@/lib/accessRegistry'
@@ -103,7 +103,8 @@ function SettingsInner() {
       }
       const {data:msgs} = await supabase.from('system_messages').select('*').eq('published',true).order('created_at',{ascending:false})
       setMessages(msgs??[])
-      const {data:teamData} = await supabase.from('team_members').select('*').eq('user_id',user.id).order('name')
+      const teamOwner = await getAccountId(user)
+      const {data:teamData} = await supabase.from('team_members').select('*').eq('user_id',teamOwner).order('name')
       setTeam(teamData??[])
       const [strP, pmP, eaP, devP] = await Promise.all([
         supabase.from('properties').select('id,name').eq('user_id',user.id).is('ended_at', null),
