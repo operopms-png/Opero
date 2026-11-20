@@ -74,6 +74,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Budget', targets: [dev('Budget')] },
     { name: 'Investors', targets: [dev('Investors')] },
     { name: 'Milestones', targets: [dev('Milestones')] },
+    { name: 'Feasibility', targets: [dev('Feasibility')] },
   ] },
   { name: 'Compliance', note: 'Certificates, checks and deposits', items: [
     { name: 'Compliance', targets: [pm('Compliance'), ea('Compliance')] },
