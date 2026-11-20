@@ -14,7 +14,7 @@ const when = (d: string | null) => d ? new Date(d).toLocaleString('en-GB', { day
 // Each tab shows only the documents for that audience. "pick" are ticked for you when you open the tab; the rest are there to tick if needed.
 // Documents with no audience here (ones staff add) show on every tab.
 const TABS: { key: 'landlord' | 'cohost' | 'tenant' | 'all'; label: string; pick: string[]; more: string[]; reg: '' | 'landlord' | 'cohost'; hint: string }[] = [
-  { key: 'landlord', label: 'Landlord', reg: 'landlord', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Lease your property to us', 'Landlord portal guide', 'Shortlet landlord onboarding form'], more: ['Agreement: Master Lease (sublease)', 'Agreement: Estate agency'],
+  { key: 'landlord', label: 'Landlord', reg: 'landlord', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Lease your property to us', 'Landlord portal guide', 'Landlord detail sheet', 'Shortlet landlord onboarding form'], more: ['Agreement: Master Lease (sublease)', 'Agreement: Estate agency'],
     hint: 'The welcome documents and onboarding form are ticked. Tick the one Agreement that fits this landlord (Master Lease or Estate agency) before you send.' },
   { key: 'cohost', label: 'Co-host', reg: 'cohost', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Vacation rental landlord pack', 'Co-host portal guide', 'Cohost detail sheet', 'Agreement: Shortlet co-host'], more: [],
     hint: 'Everything a co-host needs is ticked, including the Shortlet co-host agreement and the Cohost detail sheet.' },

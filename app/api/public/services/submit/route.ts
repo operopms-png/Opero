@@ -59,13 +59,14 @@ export async function POST(req: NextRequest) {
       const FM: Record<string, Record<string, string>> = {
         Agreement_Estate_Agency: { name: 'f0_4', phone: 'f0_7', address: 'f0_16' },
         Agreement_Master_Lease: { name: 'f0_1', phone: 'f0_5', address: 'f0_13', area: 'f0_14', beds: 'f0_17', baths: 'f0_18' },
+        Landlord_Detail_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile' },
         Agreement_Shortlet_Landlord: { name: 'f3_16', phone: 'f3_19', address: 'f4_23', area: 'f4_24', beds: 'f4_33', baths: 'f4_34' },
       }
       const m = FM[file] || {}
       const val = (k: string) => { const v = m[k] ? values[m[k]] : ''; return typeof v === 'string' ? v.trim().slice(0, 300) : '' }
       const kind = l.subject === 'cohost' || file === 'Agreement_Shortlet_Landlord' ? 'cohost' : file === 'Agreement_Estate_Agency' ? 'ea_landlord' : 'landlord'
       const tbl = kind === 'cohost' ? 'cohosts' : kind === 'ea_landlord' ? 'estate_landlords' : 'pm_landlords'
-      const nm = (val('name') || String(b.name || '').trim()).slice(0, 120)
+      const nm = ([val('name'), val('last')].filter(Boolean).join(' ') || String(b.name || '').trim()).slice(0, 120)
       let ex: any = (await db.from(tbl).select('id,name').eq('user_id', l.business_id).ilike('email', email).limit(1).maybeSingle()).data
       if (!ex) ex = (await db.from(tbl).insert({ user_id: l.business_id, name: nm, email, phone: val('phone') || null, ...(tbl !== 'cohosts' ? { notes: `Registered from the Services Pack link "${l.name}"` } : {}) }).select('id,name').single()).data
       if (ex) {
