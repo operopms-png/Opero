@@ -77,6 +77,7 @@ export async function portalContext(c: Caller): Promise<string> {
   if (deals?.length) out.push('## CRM — latest deals (pipeline)\n' + deals.map(d => `- ${d.name} — ${d.stage}${d.value ? `, value ${money(d.value)}` : ''} (${d.module || ''}, ${day(d.created_at)})`).join('\n'))
   if (viewings?.length) out.push('## Viewing requests\n' + viewings.map(v => `- ${v.prospect_name} — ${estName.get(v.property_id) || 'property'}, ${v.status}${v.scheduled_at ? ', ' + day(v.scheduled_at) : ''}`).join('\n'))
   if (meetings?.length) out.push('## Meetings / meeting requests\n' + meetings.map(m => `- ${m.attendee_name || m.title} — ${m.topic || m.title || ''}, ${m.status}${m.scheduled_at ? ', ' + day(m.scheduled_at) : m.preferred_time ? ', prefers ' + m.preferred_time : ''}`).join('\n'))
+  try { const { recentMessagesContext } = await import('@/lib/ai-conversations'); const rm = await recentMessagesContext(biz); if (rm) out.push(rm) } catch { /* messages are an extra, never stop the chat */ }
   return out.join('\n\n').slice(0, 90000)
 }
 
