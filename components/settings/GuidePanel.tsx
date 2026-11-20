@@ -110,6 +110,13 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'It reads the latest messages (about 7 days) from email, WhatsApp, text messages, calls, short-stay guest messages and website chat.',
     'Limits: staff direct messages in team chat are not included, only recent messages are read, and the AI reads and summarises but does not reply on its own.',
   ] },
+  { id: 'phone-answering', title: 'AI phone answering and voicemail', steps: [
+    'Where: Human Intelligence Hub → AI Assistant → Channels → Phone calls (admins only). It needs a phone number connected first; until then the card shows Waiting for a phone number.',
+    'Choose when it answers: Off, When nobody answers, Out of hours or Every call. Write the Welcome message every caller hears first and the Voicemail message played before the beep.',
+    'Ring my phone first: plays the welcome, rings the number in Put callers through to, then hands the caller to the AI if you do not answer. Leave it off if your own phone already forwards unanswered calls to this number.',
+    'The AI answers from your Knowledge text and takes messages and viewing requests. If the caller does not speak, or asks for it, they leave a voicemail. Calls, voicemails and transcripts show under Activity.',
+    'Every caller who speaks or leaves a voicemail is added to the CRM as a contact, or a note is added if their number is already there.',
+  ] },
   { id: 'project-image', title: 'Development project main image', steps: [
     'Where: Real Estate Intelligence → Developments → Projects. Press New Project, or Edit on an existing one, and use Main image to upload a JPG, PNG or WebP render or photo.',
     'The image shows at the top of the project card and in the side panel when you open the project on the Map. Press Remove image to take it off.',

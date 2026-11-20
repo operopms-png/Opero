@@ -52,8 +52,8 @@ function Card({ title, color, status, children }: { title: string; color: string
   )
 }
 
-// Calling is built but hidden until a phone number is set up.
-const SHOW_PHONE = false
+// Phone answering: needs a phone number connected (shown as Waiting for a phone number until then).
+const SHOW_PHONE = true
 
 export default function ReceptionistPage() {
   const [loading, setLoading] = useState(true)
@@ -189,7 +189,9 @@ export default function ReceptionistPage() {
                 </div>
               ) : <div style={{ marginTop: 12, fontSize: 13, color: C.muted }}>Answering: {d.phones.map((p: any) => p.phone_number).join(', ')}</div>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
-                <div style={{ gridColumn: '1 / -1' }}><label style={label}>Greeting (leave blank for the standard one)</label><input disabled={!admin} value={s.phone_greeting ?? ''} onChange={e => set('phone_greeting', e.target.value)} placeholder={`Hello, thank you for calling ${s.company_name || 'us'}. I'm ${s.assistant_name}, the virtual receptionist. How can I help you today?`} style={input} /></div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={label}>Welcome message (every caller hears this first)</label><textarea disabled={!admin} rows={3} value={s.phone_greeting ?? ''} onChange={e => set('phone_greeting', e.target.value)} placeholder={`Thank you for calling ${s.company_name || 'us'}. Please hold while we connect your call.`} style={{ ...input, resize: 'vertical' }} /></div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={label}>Voicemail message (played before the beep)</label><textarea disabled={!admin} rows={2} value={s.phone_voicemail_message ?? ''} onChange={e => set('phone_voicemail_message', e.target.value)} placeholder={`You've reached ${s.company_name || 'us'}. Please leave your name and number after the tone, and we'll call you back shortly. Thank you.`} style={{ ...input, resize: 'vertical' }} /></div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={{ ...label, display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" disabled={!admin} checked={!!s.phone_ring_first} onChange={e => set('phone_ring_first', e.target.checked)} /> Ring my phone first, then the AI if I don’t answer, then voicemail</label><div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Needs a number in “Put callers through to”. Leave this off if your own phone already forwards unanswered calls to this number, or it would ring you twice.</div></div>
                 <div><label style={label}>Voice</label><select disabled={!admin} value={s.phone_voice} onChange={e => set('phone_voice', e.target.value)} style={{ ...input, cursor: 'pointer' }}>{VOICES.map(v => <option key={v.v} value={v.v}>{v.l}</option>)}</select></div>
                 <div><label style={label}>Put callers through to (a phone number)</label><input disabled={!admin} value={s.phone_transfer_number ?? ''} onChange={e => set('phone_transfer_number', e.target.value)} placeholder="+44 7…  (blank = take a message instead)" style={input} /></div>
                 <div><label style={label}>“When nobody answers”: ring staff for (seconds)</label><input disabled={!admin} type="number" value={s.phone_ring_seconds} onChange={e => set('phone_ring_seconds', e.target.value)} style={input} /></div>

@@ -13,7 +13,7 @@ import { companyTz } from '@/lib/company-currency-server'
 export const maxDuration = 30
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status })
 
-const EDITABLE = ['assistant_name', 'company_name', 'knowledge', 'sync_website_chat', 'timezone', 'hours', 'alert_email', 'portal_mode', 'portal_create_maintenance', 'phone_mode', 'phone_greeting', 'phone_voice', 'phone_transfer_number', 'phone_ring_seconds']
+const EDITABLE = ['assistant_name', 'company_name', 'knowledge', 'sync_website_chat', 'timezone', 'hours', 'alert_email', 'portal_mode', 'portal_create_maintenance', 'phone_mode', 'phone_greeting', 'phone_voice', 'phone_voicemail_message', 'phone_ring_first', 'phone_transfer_number', 'phone_ring_seconds']
 
 async function ensureSettings(biz: string) {
   let s = await getSettings(biz)

@@ -20,7 +20,7 @@ export type Settings = {
   timezone: string; hours: Record<string, [string, string] | null>; alert_email: string | null
   portal_mode: 'off' | 'always' | 'out_of_hours'; portal_create_maintenance: boolean
   phone_mode: 'off' | 'always' | 'no_answer' | 'out_of_hours'; phone_greeting: string | null; phone_voice: string
-  phone_transfer_number: string | null; phone_ring_seconds: number; sync_website_chat: boolean
+  phone_transfer_number: string | null; phone_ring_seconds: number; phone_voicemail_message: string | null; phone_ring_first: boolean; sync_website_chat: boolean
 }
 
 export async function getSettings(businessId: string): Promise<Settings | null> {

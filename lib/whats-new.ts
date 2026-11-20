@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-20', title: 'AI phone answering with welcome message and voicemail', text: 'AI Assistant, Channels, Phone calls now has a welcome message, a voicemail message, and Ring my phone first; callers who talk to the AI or leave a voicemail are added to the CRM.' },
   { date: '2026-11-20', title: 'Ask the AI what has happened', text: 'Admins can ask Novourq Cloud AI (Ask AI, Novourq Voice or the WhatsApp assistant) what came in and what people said across email, WhatsApp, texts, calls, guest messages and website chat.' },
   { date: '2026-11-20', title: 'Developments: deleting a project works', text: 'Deleting a development project now works: any investors or documents attached are kept in their own tabs, just no longer linked to the project, and an error shows if anything still blocks it.' },
   { date: '2026-11-20', title: 'Developments: Feasibility', text: 'Real Estate Intelligence, Developments, Feasibility tests a site before you buy: profit, cash needed and loan for hold, paper lots, finished pads and built homes, with Downside, Base and Upside cases, a 3D site view, comparable sales and your own saved sites.' },
