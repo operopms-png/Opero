@@ -1653,7 +1653,7 @@ function PMPageInner() {
                     <a href={`/pm-owner-portal?landlord_id=${l.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
                   </>
                 ):(
-                  <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>
+                  <button onClick={()=>{setPortalLandlord(l);setPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Invite to Portal</button>
                 )}
                 <button onClick={()=>setOnbLandlordId(onbLandlordId===l.id?null:l.id)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>{onbLandlordId===l.id?'Close':'Onboarding'}</button>
                 <button onClick={()=>setOwnerDocsFor(l)} style={{fontSize:12,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Documents {ownerDocCounts[l.id]??0}/5</button>
@@ -4619,12 +4619,23 @@ function PMPageInner() {
       {portalLandlord&&(
         <Modal title={`Give ${portalLandlord.name} portal access`} onClose={()=>setPortalLandlord(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
-            <div style={{fontSize:13,color:'#667085'}}>This creates a login for {portalLandlord.name} so they can see their own properties and payments (with receipts). Share the email/password with them yourself.</div>
+            <div style={{fontSize:13,color:'#667085'}}>This creates a login for {portalLandlord.name} so they can see their own properties and payments (with receipts). Press Email invite and they get a link to set their own password, or type a password yourself and share it with them.</div>
             <div><label style={lbl}>Email</label><input style={inp} value={portalLandlord.email??''} onChange={e=>setPortalLandlord({...portalLandlord,email:e.target.value})} placeholder="landlord@example.com"/></div>
-            <div><label style={lbl}>Password</label><input style={inp} value={portalPassword} onChange={e=>setPortalPassword(e.target.value)} placeholder="min. 6 characters"/></div>
+            <div><label style={lbl}>Password (only if you are not emailing an invite)</label><input style={inp} value={portalPassword} onChange={e=>setPortalPassword(e.target.value)} placeholder="min. 6 characters"/></div>
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setPortalLandlord(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={async ()=>{
+              if(!portalLandlord.email)return
+              setCreatingPortal(true)
+              const {data:{session}}=await supabase.auth.getSession()
+              const res=await fetch('/api/create-landlord-account',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify({landlord_id:portalLandlord.id,email:portalLandlord.email})})
+              const result=await res.json()
+              setCreatingPortal(false)
+              if(!res.ok){alert(result.error||'Could not send the invite');return}
+              alert(result.emailed===false?'Portal access created but the email could not be sent. Use a password and share it yourself.':`Invite sent to ${portalLandlord.email}. They set their own password from the link.`)
+              setPortalLandlord(null);await loadAll()
+            }} disabled={creatingPortal||!portalLandlord.email} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#182D5E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingPortal||!portalLandlord.email?0.6:1}}>{creatingPortal?'Sending…':'Email invite'}</button>
             <button onClick={async ()=>{
               if(!portalLandlord.email||!portalPassword)return
               setCreatingPortal(true)

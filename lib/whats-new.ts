@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-20', title: 'Invite landlords to their portal', text: 'Property Management, Landlords, Invite to Portal emails the landlord a link to set their own password, and the Landlord detail sheet now has a property page that creates the property when they submit.' },
   { date: '2026-11-20', title: 'Landlord detail sheet', text: 'Marketing, Services Pack now has a fillable Landlord detail sheet, ticked on the Landlord tab, and completed copies are filed on the landlord\u2019s record.' },
   { date: '2026-11-20', title: 'Marketing and enquiry emails use their own address', text: 'Marketing emails now go out from the marketing address, and booking confirmations reply to the general enquiries address, each company using its own.' },
   { date: '2026-11-20', title: 'Each department has its own email', text: 'Offer letters, tenancy agreements, landlord agreements, payslips and invoices now show and reply to their own department address, and each company sets its own in Invoice settings → Documents.' },

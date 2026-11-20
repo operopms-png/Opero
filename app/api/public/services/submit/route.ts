@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       const FM: Record<string, Record<string, string>> = {
         Agreement_Estate_Agency: { name: 'f0_4', phone: 'f0_7', address: 'f0_16' },
         Agreement_Master_Lease: { name: 'f0_1', phone: 'f0_5', address: 'f0_13', area: 'f0_14', beds: 'f0_17', baths: 'f0_18' },
-        Landlord_Detail_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile' },
+        Landlord_Detail_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile', address: 'prop_address', area: 'prop_area', beds: 'prop_beds', baths: 'prop_baths' },
         Agreement_Shortlet_Landlord: { name: 'f3_16', phone: 'f3_19', address: 'f4_23', area: 'f4_24', beds: 'f4_33', baths: 'f4_34' },
       }
       const m = FM[file] || {}
