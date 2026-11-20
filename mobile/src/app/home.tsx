@@ -14,6 +14,8 @@ import { GuestHome } from '@/screens/Guest'
 import { TenantHome, TenantPayments, TenantRepairs } from '@/screens/Tenant'
 import { OwnerHome, OwnerStatements, OwnerMaintenance } from '@/screens/Owner'
 import { PartnerHome, PartnerInvestments, PartnerUpdates } from '@/screens/Partner'
+import { CohostHome, CohostBookings, CohostMaintenance } from '@/screens/Cohost'
+import { BusinessHome, BusinessApprovals, BusinessActivity } from '@/screens/Business'
 import { StaffToday, StaffTasks, StaffEnquiries } from '@/screens/Staff'
 import { Messages } from '@/screens/Messages'
 import { Account } from '@/screens/Account'
@@ -24,6 +26,8 @@ const TABS: Record<Role, Tab[]> = {
   tenant: [{ key: 'home', label: 'My home', icon: 'home' }, { key: 'payments', label: 'Payments', icon: 'card' }, { key: 'repairs', label: 'Repairs', icon: 'tool' }, { key: 'messages', label: 'Messages', icon: 'msg' }, { key: 'account', label: 'Account', icon: 'user' }],
   owner: [{ key: 'home', label: 'Overview', icon: 'chart' }, { key: 'statements', label: 'Statements', icon: 'doc' }, { key: 'maintenance', label: 'Maintenance', icon: 'tool' }, { key: 'messages', label: 'Messages', icon: 'msg' }, { key: 'account', label: 'Account', icon: 'user' }],
   partner: [{ key: 'home', label: 'Overview', icon: 'chart' }, { key: 'investments', label: 'Investments', icon: 'home' }, { key: 'updates', label: 'Updates', icon: 'mega' }, { key: 'messages', label: 'Messages', icon: 'msg' }, { key: 'account', label: 'Account', icon: 'user' }],
+  cohost: [{ key: 'home', label: 'Overview', icon: 'chart' }, { key: 'bookings', label: 'Bookings', icon: 'cal' }, { key: 'maintenance', label: 'Maintenance', icon: 'tool' }, { key: 'messages', label: 'Messages', icon: 'msg' }, { key: 'account', label: 'Account', icon: 'user' }],
+  business: [{ key: 'home', label: 'Today', icon: 'grid' }, { key: 'approvals', label: 'Approvals', icon: 'check' }, { key: 'activity', label: 'Activity', icon: 'msg' }, { key: 'portal', label: 'Portal', icon: 'portal', link: PORTAL_URL + '/staff-centre' }, { key: 'account', label: 'Account', icon: 'user' }],
   staff: [{ key: 'home', label: 'Today', icon: 'grid' }, { key: 'tasks', label: 'Tasks', icon: 'check' }, { key: 'enquiries', label: 'Enquiries', icon: 'mail' }, { key: 'portal', label: 'Portal', icon: 'portal', link: PORTAL_URL + '/staff-centre' }, { key: 'account', label: 'Account', icon: 'user' }],
 }
 const ROLE_KEY = 'novourq.role'
@@ -70,6 +74,8 @@ export default function Home() {
       case 'tenant': return tab === 'payments' ? <TenantPayments {...props} /> : tab === 'repairs' ? <TenantRepairs {...props} /> : <TenantHome {...props} />
       case 'owner': return tab === 'statements' ? <OwnerStatements {...props} /> : tab === 'maintenance' ? <OwnerMaintenance {...props} /> : <OwnerHome {...props} />
       case 'partner': return tab === 'investments' ? <PartnerInvestments {...props} /> : tab === 'updates' ? <PartnerUpdates {...props} /> : <PartnerHome {...props} />
+      case 'cohost': return tab === 'bookings' ? <CohostBookings {...props} /> : tab === 'maintenance' ? <CohostMaintenance {...props} /> : <CohostHome {...props} />
+      case 'business': return tab === 'approvals' ? <BusinessApprovals {...props} /> : tab === 'activity' ? <BusinessActivity {...props} /> : <BusinessHome {...props} />
       case 'staff': return tab === 'tasks' ? <StaffTasks {...props} /> : tab === 'enquiries' ? <StaffEnquiries {...props} /> : <StaffToday {...props} />
     }
   })()

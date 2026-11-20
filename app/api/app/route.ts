@@ -5,7 +5,7 @@ import { alertTeam } from '@/lib/crm-lead'
 import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 
 // NOVOURQ mobile app API. Signed in with the app's Supabase session (Bearer token).
-//   GET  ?role=guest|tenant|owner|partner|staff   -> { roles, role, name, email, home }
+//   GET  ?role=guest|tenant|owner|partner|cohost|business|staff   -> { roles, role, name, email, home }
 //        (role omitted = the person's main role)
 //   POST {action:'message', role, text}          -> message to the team (tenant/owner chats, else team alert)
 //   POST {action:'repair', title, description}   -> tenant repair request
@@ -14,8 +14,8 @@ import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 // One sign-in for everyone: what you see comes from the records linked to your email.
 
 export const dynamic = 'force-dynamic'
-type Role = 'staff' | 'owner' | 'partner' | 'tenant' | 'guest'
-const ORDER: Role[] = ['staff', 'owner', 'partner', 'tenant', 'guest']
+type Role = 'business' | 'staff' | 'cohost' | 'owner' | 'partner' | 'tenant' | 'guest'
+const ORDER: Role[] = ['staff', 'business', 'cohost', 'owner', 'partner', 'tenant', 'guest']
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' }
 const json = (body: any, status = 200) => NextResponse.json(body, { status, headers: CORS })
 const bad = (error: string, status = 400) => json({ error }, status)
@@ -31,26 +31,34 @@ async function who(req: NextRequest) {
   const { data: { user } } = await asUser.auth.getUser(token)
   if (!user) return null
   const email = (user.email ?? '').toLowerCase()
-  const [tm, op, ll, tn, bk] = await Promise.all([
+  const [tm, op, ll, tn, bk, ch, sub] = await Promise.all([
     email ? serviceClient.from('team_members').select('user_id,role,name,status').ilike('email', email).order('created_at', { ascending: false }).limit(1) : Promise.resolve({ data: [] } as any),
     serviceClient.from('owner_profiles').select('*').or(`user_id.eq.${user.id}${email ? `,email.ilike.${email}` : ''}`).limit(1),
     serviceClient.from('pm_landlords').select('*').or(`portal_user_id.eq.${user.id}${email ? `,email.ilike.${email}` : ''}`).limit(1),
     serviceClient.from('pm_tenants').select('*').or(`portal_user_id.eq.${user.id}${email ? `,email.ilike.${email}` : ''}`).order('created_at', { ascending: false }).limit(1),
     email ? serviceClient.from('bookings').select('id', { count: 'exact', head: true }).ilike('guest_email', email).neq('status', 'cancelled') : Promise.resolve({ count: 0 } as any),
+    serviceClient.from('cohosts').select('*').eq('portal_user_id', user.id).limit(1),
+    serviceClient.from('subscriptions').select('id').eq('user_id', user.id).limit(1),
   ])
   const team = tm.data?.[0]
   const ownerProfile = op.data?.[0] ?? null
   const landlord = ll.data?.[0] ?? null
   const tenant = tn.data?.[0] ?? null
+  const cohost = ch.data?.[0] ?? null
+  const ownsAccount = !!sub.data?.[0] // a client company's own account (it is never a team_members row)
   const isBusinessOwner = user.id === LISTINGS_BUSINESS_ID
+  const activeTeam = !!(team && team.status !== 'inactive')
+  const isAdminTeam = activeTeam && /^(admin|co founder)$/i.test(String(team.role || '').trim())
   const roles: Role[] = []
-  if (isBusinessOwner || (team && team.status !== 'inactive')) roles.push('staff')
+  if (isBusinessOwner || ownsAccount || activeTeam) roles.push('staff')
+  if (isBusinessOwner || ownsAccount || isAdminTeam) roles.push('business')
+  if (cohost) roles.push('cohost')
   if ((ownerProfile && (ownerProfile.property_ids ?? []).length) || landlord) roles.push('owner')
   if (ownerProfile && (n(ownerProfile.invested) > 0 || ownerProfile.partner_paid_at)) roles.push('partner')
   if (tenant) roles.push('tenant')
   if ((bk.count ?? 0) > 0 || !roles.length) roles.push('guest')
-  const name = String(team?.name || ownerProfile?.name || landlord?.name || tenant?.name || (user.user_metadata as any)?.name || '').trim()
-  return { user, email, roles: ORDER.filter(r => roles.includes(r)), name, team, ownerProfile, landlord, tenant, businessId: team?.user_id || LISTINGS_BUSINESS_ID, isBusinessOwner }
+  const name = String(team?.name || cohost?.name || ownerProfile?.name || landlord?.name || tenant?.name || (user.user_metadata as any)?.name || '').trim()
+  return { user, email, roles: ORDER.filter(r => roles.includes(r)), name, team, ownerProfile, landlord, tenant, businessId: team?.user_id || (ownsAccount ? user.id : cohost?.user_id) || LISTINGS_BUSINESS_ID, isBusinessOwner, cohost }
 }
 type Who = NonNullable<Awaited<ReturnType<typeof who>>>
 
@@ -144,6 +152,50 @@ async function partnerHome(w: Who) {
   return { partner: { invested, returned, outstanding: Math.max(0, invested - returned), repaidPct: invested ? Math.round(returned / invested * 100) : 0, nextPayout: next, months, properties: props.data ?? [], broadcasts: bc.data ?? [], memberSince: op.partner_paid_at || op.created_at } }
 }
 
+// Co-host: only the properties on their own record (same rules as the web co-host portal).
+async function cohostHome(w: Who) {
+  const rec = w.cohost
+  if (!rec) return { cohost: null }
+  const ids: string[] = rec.property_ids ?? []
+  const [props, bookings, tickets, settings] = await Promise.all([
+    ids.length ? serviceClient.from('properties').select('id,name,address,city,image_url').in('id', ids) : Promise.resolve({ data: [] } as any),
+    ids.length ? serviceClient.from('bookings').select('id,property_id,guest_name,check_in,check_out,total_amount,status,platform').in('property_id', ids).order('check_in', { ascending: false }).limit(100) : Promise.resolve({ data: [] } as any),
+    ids.length ? serviceClient.from('maintenance_tickets').select('id,property_id,title,description,priority,status,created_at').in('property_id', ids).order('created_at', { ascending: false }).limit(50) : Promise.resolve({ data: [] } as any),
+    serviceClient.from('invoice_settings').select('company_name').eq('business_id', rec.user_id).maybeSingle(),
+  ])
+  const live = (bookings.data ?? []).filter((b: any) => !['cancelled', 'canceled'].includes(String(b.status || '').toLowerCase()))
+  const gross = live.reduce((s: number, b: any) => s + n(b.total_amount), 0)
+  const pct = rec.payment_model === 'commission' || rec.payment_model === 'percentage' ? n(rec.payment_value) : null
+  const upcoming = live.filter((b: any) => b.check_out >= today()).sort((a: any, b: any) => String(a.check_in).localeCompare(String(b.check_in)))
+  return {
+    cohost: { id: rec.id, name: rec.name, currency: rec.currency || 'JMD', company: settings.data?.company_name || null, agreement_end: rec.agreement_end },
+    properties: props.data ?? [], bookings: live.slice(0, 40), upcoming: upcoming.slice(0, 20), maintenance: tickets.data ?? [],
+    totals: { gross: Math.round(gross), bookings: live.length, your_share: pct != null ? Math.round(gross * (100 - pct)) / 100 : null },
+  }
+}
+
+// Business (Novourq Cloud AI): what the AI did for this company, and what is waiting for a person.
+async function businessHome(w: Who) {
+  const biz = w.businessId
+  const since = new Date(Date.now() - 7 * 864e5).toISOString()
+  const [acts, recs, pend, followN] = await Promise.all([
+    serviceClient.from('ai_activity_log').select('id,agent_key,action,property_name,notes,created_at').eq('user_id', biz).order('created_at', { ascending: false }).limit(12),
+    serviceClient.from('ai_receptionist_log').select('id,channel,contact_name,subject,summary,action,needs_staff,resolved,created_at').eq('business_id', biz).order('created_at', { ascending: false }).limit(12),
+    serviceClient.from('ai_pending_actions').select('id,agent_key,action_type,title,property_name,draft_body,status,created_at').eq('user_id', biz).in('status', ['pending', 'failed']).order('created_at', { ascending: false }).limit(15),
+    serviceClient.from('ai_receptionist_log').select('id', { count: 'exact', head: true }).eq('business_id', biz).eq('needs_staff', true).eq('resolved', false),
+  ])
+  const [actsN, recsN, pendN] = await Promise.all([
+    serviceClient.from('ai_activity_log').select('id', { count: 'exact', head: true }).eq('user_id', biz).gte('created_at', since),
+    serviceClient.from('ai_receptionist_log').select('id', { count: 'exact', head: true }).eq('business_id', biz).gte('created_at', since),
+    serviceClient.from('ai_pending_actions').select('id', { count: 'exact', head: true }).eq('user_id', biz).eq('status', 'pending'),
+  ])
+  const activity = [
+    ...(acts.data ?? []).map((a: any) => ({ id: 'a-' + a.id, title: String(a.action || 'Action'), sub: [a.property_name, a.notes].filter(Boolean).join(' · '), at: a.created_at, flag: false })),
+    ...(recs.data ?? []).map((r: any) => ({ id: 'r-' + r.id, title: r.needs_staff && !r.resolved ? `Needs follow-up · ${r.contact_name || 'Customer'}` : `Handled ${r.channel || 'chat'} · ${r.contact_name || 'Customer'}`, sub: r.summary || r.subject || '', at: r.created_at, flag: !!(r.needs_staff && !r.resolved) })),
+  ].sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 15)
+  return { counts: { actions7: actsN.count ?? 0, chats7: recsN.count ?? 0, waiting: pendN.count ?? 0, followUp: followN.count ?? 0 }, activity, pending: pend.data ?? [] }
+}
+
 async function staffHome(w: Who) {
   const biz = w.businessId
   const { data: props } = await serviceClient.from('properties').select('id,name').eq('user_id', biz).is('ended_at', null)
@@ -174,7 +226,7 @@ export async function GET(req: NextRequest) {
   if (!w) return bad('Not signed in', 401)
   const want = String(req.nextUrl.searchParams.get('role') || '') as Role
   const role: Role = w.roles.includes(want) ? want : w.roles[0]
-  const home = role === 'staff' ? await staffHome(w) : role === 'owner' ? await ownerHome(w) : role === 'partner' ? await partnerHome(w) : role === 'tenant' ? await tenantHome(w) : await guestHome(w)
+  const home = role === 'business' ? await businessHome(w) : role === 'cohost' ? await cohostHome(w) : role === 'staff' ? await staffHome(w) : role === 'owner' ? await ownerHome(w) : role === 'partner' ? await partnerHome(w) : role === 'tenant' ? await tenantHome(w) : await guestHome(w)
   return json({ roles: w.roles, role, name: w.name, email: w.email, home })
 }
 
@@ -203,7 +255,7 @@ export async function POST(req: NextRequest) {
     } else if ((b.role === 'owner' || b.role === 'partner') && w.ownerProfile) {
       await serviceClient.from('owner_messages').insert({ owner_id: w.ownerProfile.id, sender: 'owner', message: text, created_at: new Date().toISOString() })
     }
-    await alertTeam(w.businessId, `App message from ${w.name || w.email}`, `${w.name || ''} <${w.email}> (${b.role || 'guest'})\n${text}`, b.role === 'tenant' ? '/pm' : b.role === 'owner' || b.role === 'partner' ? '/owners' : '/staff-centre/crm', w.email).catch(() => {})
+    await alertTeam(w.businessId, `App message from ${w.name || w.email}`, `${w.name || ''} <${w.email}> (${b.role || 'guest'})\n${text}`, b.role === 'tenant' ? '/pm' : b.role === 'owner' || b.role === 'partner' ? '/owners' : b.role === 'cohost' ? '/staff-centre/cohosts' : '/staff-centre/crm', w.email).catch(() => {})
     return json({ ok: true })
   }
 
@@ -224,6 +276,7 @@ export async function POST(req: NextRequest) {
       serviceClient.from('pm_tenants').update({ portal_user_id: null }).eq('portal_user_id', w.user.id),
       serviceClient.from('pm_landlords').update({ portal_user_id: null }).eq('portal_user_id', w.user.id),
       serviceClient.from('owner_profiles').update({ user_id: null }).eq('user_id', w.user.id),
+      serviceClient.from('cohosts').update({ portal_user_id: null }).eq('portal_user_id', w.user.id),
     ])
     const { error } = await serviceClient.auth.admin.deleteUser(w.user.id)
     if (error) return bad('Could not delete your account. Please contact us.', 500)

@@ -124,6 +124,12 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'What needs attention lists head leases that have ended or end within 90 days, leases whose sublet consent is not Yes, and co-host agreements that have ended or end within 90 days. Press a row to open Head Leases or Co-hosts and fix it.',
     'Growth shows doors under management at the end of each of the last 12 months. Press Preview example to see sample figures (not your data) and Back to my data to return. It only reads your records and changes nothing. Everyone on your team who can open Scale sees the same company figures, and it refreshes when you come back to the page or press Refresh.',
   ] },
+  { id: 'mobile-app', title: 'The NOVOURQ mobile app', steps: [
+    'Where: the NOVOURQ app on iPhone and Android (coming to the App Store and Google Play). Everyone signs in with the email address you have on file for them, with a one-time code, Apple sign-in or a password.',
+    'What each person sees depends on their record: guests (stay, Wi-Fi, directions, house guide), tenants (rent, payments, documents, report a repair), landlords (payouts, statements, maintenance), partners (investment, returns, updates), co-hosts (their assigned properties, bookings, earnings and maintenance, read only) and staff (Today, Tasks, Enquiries).',
+    'Business view: the account owner, Admins and Co Founders also get a Business view of Novourq Cloud AI. It shows chats handled and AI actions in the last 7 days, customer chats that need a person to follow up, what is waiting in Approvals and the latest AI activity.',
+    'Limits: the app reads and reports. Approving AI actions, anything that sends money and legal contracts are done in the portal (Novourq Cloud AI, Approvals); the Business view has a button that opens it. A co-host only sees properties assigned to them in Staff Centre, Co-hosts. Someone with more than one role switches under Account.',
+  ] },
   { id: 'onboarding-tracker', title: 'Onboarding tracker', steps: [
     'Where: Human Intelligence Hub, Owners & Tenants, Onboarding tracker. Any staff member can use it. It lists every landlord, tenant, co-host and investor being onboarded, plus people you sent a new client link who have not opened it.',
     'Each row shows a progress bar, the next step and how many days nothing has moved. Stuck means not finished and nothing has moved for 7 days. Use the Stuck, In progress, Not started and Finished buttons, the Landlords, Tenants, Co-hosts and Investors buttons, or the search box.',

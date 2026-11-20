@@ -1,8 +1,8 @@
 import { supabase } from './supabase'
 import { API_URL } from './config'
 
-export type Role = 'guest' | 'tenant' | 'owner' | 'partner' | 'staff'
-export const ROLE_LABEL: Record<Role, string> = { guest: 'Guest', tenant: 'Tenant', owner: 'Property owner', partner: 'Partner', staff: 'Staff' }
+export type Role = 'guest' | 'tenant' | 'owner' | 'partner' | 'cohost' | 'business' | 'staff'
+export const ROLE_LABEL: Record<Role, string> = { guest: 'Guest', tenant: 'Tenant', owner: 'Property owner', partner: 'Partner', cohost: 'Co-host', business: 'Business (Cloud AI)', staff: 'Staff' }
 
 async function authHeader(): Promise<Record<string, string>> {
   const { data } = await supabase.auth.getSession()

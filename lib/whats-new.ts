@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-20', title: 'Mobile app: co-host and Business views', text: 'The NOVOURQ mobile app now has a Co-host view (assigned properties, bookings, earnings, maintenance) and a Business view of Novourq Cloud AI (chats handled, AI actions, follow-ups and what is waiting in Approvals).' },
   { date: '2026-11-20', title: 'Tenancy agreement and Upkeep tidy-up', text: 'The Tenancy Agreement PDF no longer carries any old company text behind the page, and the Upkeep board, Team Management property counts and wording have been tidied.' },
   { date: '2026-11-20', title: 'Upkeep board shows all cleaning', text: 'The Cleaning view on the Upkeep board now lists cleaning jobs from Vacation Rentals, Property Management and Estate Agency, and Team Management shows the whole team to every staff login.' },
   { date: '2026-11-20', title: 'Cleaning and Maintenance are now Upkeep', text: 'One Upkeep team and portal (upkeep@thenovourq.com) now handles repairs, maintenance and cleaning together, and the old two roles are replaced by Upkeep Team in Settings; the sidebar has one Upkeep board with Repairs and Cleaning.' },
