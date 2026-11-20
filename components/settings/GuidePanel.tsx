@@ -98,7 +98,7 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Other integration keys are not encrypted yet.',
   ] },
   { id: 'feasibility', title: 'Developments: Feasibility', steps: [
-    'Where: Real Estate Intelligence → Developments → Feasibility (under Projects in the left list).',
+    'Where: Real Estate Intelligence → Developments → Feasibility.',
     'It tests a site before you buy: pick Land as is, Paper lots, Pads finished or Homes built, and Downside, Base or Upside, to see profit, cash needed, loan and return a year. Sources and uses lists every cost.',
     'Move the cost sliders or edit the site, comparable sales, site facts and pads; profit and the soil to move update straight away. Press Play to watch the site build month by month; switch Natural or Slope view.',
     'The first screen is an Example site with invented figures. Change it and press Save to keep it as your own; saved sites sit along the top and belong to your company.',
