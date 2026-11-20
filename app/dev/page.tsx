@@ -390,8 +390,20 @@ export default function DevPage() {
   }
 
   async function del(table: string, id: string) {
-    if (!confirm('Delete?')) return
-    await supabase.from(table).delete().eq('id', id)
+    if (table === 'dev_projects') {
+      // Investors and documents block the delete at the database. Keep them: unlink them from the project so they stay in their own tabs.
+      const [inv, docs] = await Promise.all([
+        supabase.from('dev_investors').select('id', { count: 'exact', head: true }).eq('project_id', id),
+        supabase.from('dev_documents').select('id', { count: 'exact', head: true }).eq('project_id', id),
+      ])
+      const ni = inv.count || 0, nd = docs.count || 0
+      const extra = ni || nd ? ` Its ${ni} investor record${ni === 1 ? '' : 's'} and ${nd} document${nd === 1 ? '' : 's'} will be kept in the Investors and Documents tabs, no longer linked to a project.` : ''
+      if (!confirm(`Delete this project?${extra} This cannot be undone.`)) return
+      if (ni) { const r = await supabase.from('dev_investors').update({ project_id: null }).eq('project_id', id); if (r.error) { alert('Could not delete: ' + r.error.message); return } }
+      if (nd) { const r = await supabase.from('dev_documents').update({ project_id: null }).eq('project_id', id); if (r.error) { alert('Could not delete: ' + r.error.message); return } }
+    } else if (!confirm('Delete?')) return
+    const { error } = await supabase.from(table).delete().eq('id', id)
+    if (error) { alert('Could not delete: ' + error.message); return }
     await loadAll()
   }
 
