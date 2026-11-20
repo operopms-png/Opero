@@ -4,6 +4,7 @@ import { getCaller, canAccess, sendFromMailbox, friendlyError } from '@/lib/mail
 import { sendEmail } from '@/lib/send-email'
 import { getFormat, footerHtml, footerText } from '@/lib/email-format'
 import { EMAIL_DOMAIN } from '@/lib/brand'
+import { deptEmails } from '@/lib/dept-email'
 
 // Sends a marketing_emails row for real via Resend, using the same
 // plus-alias Reply-To pattern CRM's send route uses -- so a reply lands
@@ -41,9 +42,12 @@ export async function POST(req: NextRequest) {
   }
 
   const { data: settings } = await serviceClient.from('integrations').select('marketing_from_email,marketing_from_name').eq('user_id', userId).single()
+  // sent from the company's marketing address (hello@ for NOVOURQ, or the one it set in Invoice settings → Documents); replies still use the tracked address below
+  const { data: cs } = await serviceClient.from('invoice_settings').select('*').eq('business_id', userId).maybeSingle()
+  const hello = cs ? deptEmails(cs as any).hello : undefined
   const from = settings?.marketing_from_email
     ? `${settings.marketing_from_name || 'Property Management Team'} <${settings.marketing_from_email}>`
-    : undefined // falls back to sendEmail's default (notifications@EMAIL_DOMAIN) if nothing's configured
+    : hello ? `${(cs as any)?.company_name || 'Property Management Team'} <${hello}>` : undefined // falls back to sendEmail's default (notifications@EMAIL_DOMAIN) if nothing's configured
 
   const replyTo = `marketing+${email.reply_token}@${EMAIL_DOMAIN}`
   const result = await sendEmail(email.to_recipient, email.subject, `<p>${email.body.replace(/\n/g, '<br/>')}</p>`, replyTo, from)

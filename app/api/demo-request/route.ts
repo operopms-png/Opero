@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   // fails, the lead is still safely saved in demo_requests either way.
   try {
     await sendEmail(
-      'admin@sangstersgroup.com',
+      'contact.us@thenovourq.com',
       `New demo request: ${company_name}`,
       `<p><strong>${first_name} ${last_name}</strong> from <strong>${company_name}</strong> requested a demo.</p>
        <p>Email: ${email}<br/>Phone: ${phone || '—'}<br/>Portfolio: ${portfolio_type || '—'}</p>`
