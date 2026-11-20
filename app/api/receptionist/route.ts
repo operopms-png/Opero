@@ -13,7 +13,7 @@ import { companyTz } from '@/lib/company-currency-server'
 export const maxDuration = 30
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status })
 
-const EDITABLE = ['assistant_name', 'company_name', 'knowledge', 'sync_website_chat', 'timezone', 'hours', 'alert_email', 'portal_mode', 'portal_create_maintenance', 'phone_mode', 'phone_greeting', 'phone_voice', 'phone_transfer_number', 'phone_ring_seconds']
+const EDITABLE = ['assistant_name', 'company_name', 'knowledge', 'sync_website_chat', 'timezone', 'hours', 'alert_email', 'portal_mode', 'portal_create_maintenance', 'phone_mode', 'phone_greeting', 'phone_voice', 'phone_voicemail_message', 'phone_number', 'phone_ring_first', 'phone_transfer_number', 'phone_ring_seconds']
 
 async function ensureSettings(biz: string) {
   let s = await getSettings(biz)
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     for (const k of EDITABLE) if (b[k] !== undefined) patch[k] = b[k]
     if (patch.portal_mode && !['off', 'always', 'out_of_hours'].includes(patch.portal_mode)) return bad('Bad portal mode')
     if (patch.phone_mode && !['off', 'always', 'no_answer', 'out_of_hours'].includes(patch.phone_mode)) return bad('Bad phone mode')
+    if (patch.phone_number !== undefined) { const d = String(patch.phone_number || '').replace(/[^\d]/g, ''); patch.phone_number = d.length >= 8 ? '+' + d : null }
     if (patch.phone_ring_seconds !== undefined) patch.phone_ring_seconds = Math.min(60, Math.max(5, Number(patch.phone_ring_seconds) || 20))
     await ensureSettings(c.businessId)
     const { error } = await serviceClient.from('ai_receptionist_settings').update(patch).eq('business_id', c.businessId)

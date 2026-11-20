@@ -52,8 +52,8 @@ function Card({ title, color, status, children }: { title: string; color: string
   )
 }
 
-// Calling is built but hidden until a phone number is set up.
-const SHOW_PHONE = false
+// Phone answering: needs a phone number connected (shown as Waiting for a phone number until then).
+const SHOW_PHONE = true
 
 export default function ReceptionistPage() {
   const [loading, setLoading] = useState(true)
@@ -180,16 +180,20 @@ export default function ReceptionistPage() {
         {tab === 'channels' && (
           <div style={{ maxWidth: 980 }}>
             {!admin && <div style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>Only admins can change these settings.</div>}
-            {SHOW_PHONE && <Card title="Phone calls" color={CH.phone.c} status={<Pill width={0} color={!on(s.phone_mode) ? C.grey : d.phones.length ? C.green : C.orange}>{!on(s.phone_mode) ? 'Off' : d.phones.length ? 'On' : 'Waiting for a phone number'}</Pill>}>
+            {SHOW_PHONE && <Card title="Phone calls" color={CH.phone.c} status={<Pill width={0} color={!on(s.phone_mode) ? C.grey : (d.phones.length || s.phone_number) ? C.green : C.orange}>{!on(s.phone_mode) ? 'Off' : (d.phones.length || s.phone_number) ? 'On' : 'Waiting for a phone number'}</Pill>}>
               <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>Answers your business line, handles questions, takes messages, notes viewing requests and puts callers through to staff. Every call is written up with a transcript.</div>
               <ModePicker disabled={!admin} value={s.phone_mode} onChange={v => quick({ phone_mode: v })} options={[{ v: 'off', l: 'Off', c: C.grey }, { v: 'no_answer', l: 'When nobody answers', c: C.gold }, { v: 'out_of_hours', l: 'Out of hours', c: C.purple }, { v: 'always', l: 'Every call', c: C.green }]} />
-              {d.phones.length === 0 ? (
-                <div style={{ marginTop: 14, background: '#FFF4E0', border: '1px solid #89CFF0', borderRadius: 4, padding: '10px 14px', fontSize: 13, lineHeight: 1.55 }}>
-                  <b>No phone number connected yet.</b> Add a Twilio number to the portal, then either forward your business number to it from your phone provider, or move the number to Twilio. Until then the phone receptionist can’t take calls — you can still test it in “Try it”.
-                </div>
-              ) : <div style={{ marginTop: 12, fontSize: 13, color: C.muted }}>Answering: {d.phones.map((p: any) => p.phone_number).join(', ')}</div>}
+              <div style={{ marginTop: 14 }}>
+                <label style={label}>The phone number callers reach (your Twilio number, with the country code)</label>
+                <input disabled={!admin} value={s.phone_number ?? ''} onChange={e => set('phone_number', e.target.value)} placeholder="+1 876 …" style={input} />
+                {!s.phone_number && <div style={{ marginTop: 8, background: '#FFF4E0', border: '1px solid #89CFF0', borderRadius: 4, padding: '10px 14px', fontSize: 13, lineHeight: 1.55 }}>
+                  <b>No phone number connected yet.</b> Buy a number in Twilio, type it above and save. In Twilio, open the number → Voice, set “A call comes in” to <b style={{ wordBreak: 'break-all' }}>https://app.thenovourq.com/api/voice/twiml</b> (HTTP POST). Then forward your own number (or your Wocom number) to it. Until then you can still test the receptionist in “Try it”.
+                </div>}
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
-                <div style={{ gridColumn: '1 / -1' }}><label style={label}>Greeting (leave blank for the standard one)</label><input disabled={!admin} value={s.phone_greeting ?? ''} onChange={e => set('phone_greeting', e.target.value)} placeholder={`Hello, thank you for calling ${s.company_name || 'us'}. I'm ${s.assistant_name}, the virtual receptionist. How can I help you today?`} style={input} /></div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={label}>Welcome message (every caller hears this first)</label><textarea disabled={!admin} rows={3} value={s.phone_greeting ?? ''} onChange={e => set('phone_greeting', e.target.value)} placeholder={`Thank you for calling ${s.company_name || 'us'}. Please hold while we connect your call.`} style={{ ...input, resize: 'vertical' }} /></div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={label}>Voicemail message (played before the beep)</label><textarea disabled={!admin} rows={2} value={s.phone_voicemail_message ?? ''} onChange={e => set('phone_voicemail_message', e.target.value)} placeholder={`You've reached ${s.company_name || 'us'}. Please leave your name and number after the tone, and we'll call you back shortly. Thank you.`} style={{ ...input, resize: 'vertical' }} /></div>
+                <div style={{ gridColumn: '1 / -1' }}><label style={{ ...label, display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" disabled={!admin} checked={!!s.phone_ring_first} onChange={e => set('phone_ring_first', e.target.checked)} /> Ring my phone first, then the AI if I don’t answer, then voicemail</label><div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Needs a number in “Put callers through to”. Leave this off if your own phone already forwards unanswered calls to this number, or it would ring you twice.</div></div>
                 <div><label style={label}>Voice</label><select disabled={!admin} value={s.phone_voice} onChange={e => set('phone_voice', e.target.value)} style={{ ...input, cursor: 'pointer' }}>{VOICES.map(v => <option key={v.v} value={v.v}>{v.l}</option>)}</select></div>
                 <div><label style={label}>Put callers through to (a phone number)</label><input disabled={!admin} value={s.phone_transfer_number ?? ''} onChange={e => set('phone_transfer_number', e.target.value)} placeholder="+44 7…  (blank = take a message instead)" style={input} /></div>
                 <div><label style={label}>“When nobody answers”: ring staff for (seconds)</label><input disabled={!admin} type="number" value={s.phone_ring_seconds} onChange={e => set('phone_ring_seconds', e.target.value)} style={input} /></div>

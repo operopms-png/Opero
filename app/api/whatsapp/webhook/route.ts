@@ -3,6 +3,7 @@ import { serviceClient as db } from '@/lib/admin-auth'
 import { nameForPhone } from '@/lib/sms'
 import { signatureOk, markRead } from '@/lib/whatsapp-meta'
 import { maybeAiReply } from '@/lib/whatsapp-ai'
+import { ensureCrmContact } from '@/lib/crm-from-channel'
 
 // Meta webhook for WhatsApp Business. In the Meta app (WhatsApp → Configuration) set:
 //   Callback URL  https://app.thenovourq.com/api/whatsapp/webhook
@@ -54,8 +55,10 @@ export async function POST(req: NextRequest) {
       if (dup) continue
       const known = await nameForPhone(conn.user_id, from)
       const name = known.name || profile || null
+      // Someone we don't know yet (not a tenant, landlord, partner or CRM contact): add them to the CRM.
+      const contactId = known.contactId || (!known.name ? await ensureCrmContact(conn.user_id, from, profile || null, 'WhatsApp (company number)', text) : null)
       await db.from('whatsapp_messages').insert({
-        connection_id: conn.id, business_id: conn.user_id, contact_phone: from, contact_name: name, contact_id: known.contactId,
+        connection_id: conn.id, business_id: conn.user_id, contact_phone: from, contact_name: name, contact_id: contactId,
         sender: 'contact', body: text, wamid: m.id, status: 'received',
       })
       await db.from('notifications').insert({
