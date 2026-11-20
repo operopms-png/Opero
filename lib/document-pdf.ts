@@ -19,7 +19,7 @@ async function loadImage(pdf: PDFDocument, url?: string | null, base?: string) {
 
 export type DocForPdf = {
   title: string; body: string; recipient_name: string; needs_signature: boolean
-  signed_at?: string | null; signed_name?: string | null; signed_ip?: string | null; sent_at?: string | null; token?: string; signature_data?: string | null
+  fillable?: boolean; signed_at?: string | null; signed_name?: string | null; signed_ip?: string | null; sent_at?: string | null; token?: string; signature_data?: string | null
 }
 
 export async function documentPdf(doc: DocForPdf, s: { company_name?: string | null; logo_url?: string | null; contact_lines?: string | null; doc_background_url?: string | null }, siteUrl: string): Promise<Uint8Array> {
@@ -53,6 +53,11 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
   type Word = { text: string; font: PDFFont; u?: boolean; empty?: boolean; space: boolean; kind?: 'line' | 'opt'; w?: number }
   const wOf = (w: Word, size: number) => w.kind === 'line' ? 70 : w.kind === 'opt' ? 12 + w.font.widthOfTextAtSize(w.text, size) : w.font.widthOfTextAtSize(w.text, size)
   const BOX = 8
+  // fillable: every blank line and tick box also becomes a real form field (used for the PDFs on Services Pack links).
+  let fn = 0, lastLabel = 'field'; const seen: Record<string, number> = {}
+  const fname = () => { const b = (lastLabel.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'field').slice(0, 40); seen[b] = (seen[b] || 0) + 1; return seen[b] > 1 ? `${b}_${seen[b]}` : b }
+  const tfield = (page: PDFPage, x: number, yy: number, w: number) => { if (!doc.fillable || w < 8) return; const f = pdf.getForm().createTextField(fname()); f.addToPage(page, { x, y: yy, width: w, height: 12, borderWidth: 0, font: F.reg }); f.setFontSize(9) }
+  const cfield = (page: PDFPage, x: number, yy: number, label: string) => { if (!doc.fillable) return; const f = pdf.getForm().createCheckBox(fname() + '_' + label.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 24)); f.addToPage(page, { x, y: yy, width: BOX, height: BOX, borderWidth: 0 }) }
   const fontFor = (r: Run, base: 'serif' | 'head') => base === 'head' ? F.sansBold : r.b && r.i ? F.boldItal : r.b ? F.bold : r.i ? F.ital : F.reg
 
   function drawRuns(runs: Run[], opts: { size: number; lead: number; x: number; width: number; center?: boolean; base?: 'serif' | 'head'; color?: any; marker?: string }) {
@@ -92,8 +97,8 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
       if (li === 0 && opts.marker) page.drawText(safe(opts.marker), { x: opts.x - 14, y: H - y - opts.size, size: opts.size, font: F.reg, color: opts.color || ink })
       for (let k = 0; k < line.length; k++) {
         const w = line[k], ww = wOf(w, opts.size)
-        if (w.kind === 'line') { page.drawLine({ start: { x, y: H - y - opts.size - 1.5 }, end: { x: x + ww, y: H - y - opts.size - 1.5 }, thickness: 0.5, color: ink }) }
-        else if (w.kind === 'opt') { page.drawRectangle({ x, y: H - y - opts.size - 0.5, width: BOX, height: BOX, borderColor: ink, borderWidth: 0.7 }); page.drawText(w.text, { x: x + 12, y: H - y - opts.size, size: opts.size, font: w.font, color: ink }) }
+        if (w.kind === 'line') { page.drawLine({ start: { x, y: H - y - opts.size - 1.5 }, end: { x: x + ww, y: H - y - opts.size - 1.5 }, thickness: 0.5, color: ink }); tfield(page, x, H - y - opts.size - 1, ww) }
+        else if (w.kind === 'opt') { page.drawRectangle({ x, y: H - y - opts.size - 0.5, width: BOX, height: BOX, borderColor: ink, borderWidth: 0.7 }); cfield(page, x, H - y - opts.size - 0.5, w.text); page.drawText(w.text, { x: x + 12, y: H - y - opts.size, size: opts.size, font: w.font, color: ink }) }
         else page.drawText(w.text, { x, y: H - y - opts.size, size: opts.size, font: w.font, color: opts.color || ink })
         if (w.u) page.drawLine({ start: { x, y: H - y - opts.size - 1.5 }, end: { x: x + ww, y: H - y - opts.size - 1.5 }, thickness: 0.5, color: ink })
         x += ww + (w.space ? space(w.font) : 0)
@@ -119,10 +124,11 @@ export async function documentPdf(doc: DocForPdf, s: { company_name?: string | n
     ensure(20)
     let x = M; const base = H - y - size
     for (const t of toks) {
+      if (t.k === 'label') lastLabel = t.t!
       if (t.k === 'label') page.drawText(t.t!, { x, y: base, size, font: F.bold, color: navy })
       else if (t.k === 'text') page.drawText(t.t!, { x, y: base, size, font: F.reg, color: ink })
-      else if (t.k === 'line') { page.drawLine({ start: { x, y: base - 2 }, end: { x: x + share, y: base - 2 }, thickness: 0.5, color: ink }); x += share - t.w }
-      else { let ox = x; for (const o of t.o!) { page.drawRectangle({ x: ox, y: base - 0.5, width: BOX, height: BOX, borderColor: ink, borderWidth: 0.7 }); page.drawText(o, { x: ox + BOX + 4, y: base, size, font: F.reg, color: ink }); ox += BOX + 4 + F.reg.widthOfTextAtSize(o, size) + 12 } }
+      else if (t.k === 'line') { page.drawLine({ start: { x, y: base - 2 }, end: { x: x + share, y: base - 2 }, thickness: 0.5, color: ink }); tfield(page, x, base - 1, share); x += share - t.w }
+      else { let ox = x; for (const o of t.o!) { page.drawRectangle({ x: ox, y: base - 0.5, width: BOX, height: BOX, borderColor: ink, borderWidth: 0.7 }); cfield(page, ox, base - 0.5, o); page.drawText(o, { x: ox + BOX + 4, y: base, size, font: F.reg, color: ink }); ox += BOX + 4 + F.reg.widthOfTextAtSize(o, size) + 12 } }
       x += t.w + GAP
     }
     y += 20
