@@ -104,6 +104,12 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'The first screen is an Example site with invented figures. Change it and press Save to keep it as your own; saved sites sit along the top and belong to your company.',
     'Limits: it is arithmetic on your figures, not advice. The 3D houses and trees are illustrations, and ground levels from the free service are rough, so paste a survey for earthworks you rely on.',
   ] },
+  { id: 'ai-messages', title: 'Ask the AI what has happened', steps: [
+    'Where: Human Intelligence Hub → AI Assistant → Ask AI, or Novourq Voice, or the WhatsApp Phone Assistant. Admins only.',
+    'Ask in plain words, for example What came in today, Anything I need to reply to, or Summarise this week\u2019s calls.',
+    'It reads the latest messages (about 7 days) from email, WhatsApp, text messages, calls, short-stay guest messages and website chat.',
+    'Limits: staff direct messages in team chat are not included, only recent messages are read, and the AI reads and summarises but does not reply on its own.',
+  ] },
   { id: 'project-image', title: 'Development project main image', steps: [
     'Where: Real Estate Intelligence → Developments → Projects. Press New Project, or Edit on an existing one, and use Main image to upload a JPG, PNG or WebP render or photo.',
     'The image shows at the top of the project card and in the side panel when you open the project on the Map. Press Remove image to take it off.',
