@@ -29,6 +29,20 @@ export async function POST(req: NextRequest) {
     return new NextResponse(twiml, { headers: { 'Content-Type': 'text/xml' } })
   }
 
+  // A number registered in AI Assistant → Channels → Phone calls goes straight to the AI receptionist (welcome, ring my phone, AI, voicemail).
+  const toE164 = '+' + to.replace(/\D/g, '')
+  const { data: rs } = await serviceClient.from('ai_receptionist_settings').select('business_id').eq('phone_number', toE164).maybeSingle()
+  if (rs) {
+    const ai = await getSettings(rs.business_id)
+    if (ai && ai.phone_mode !== 'off' && (ai.phone_mode !== 'out_of_hours' || !isOpen(ai))) {
+      return new NextResponse(`<?xml version="1.0" encoding="UTF-8"?><Response><Redirect method="POST">${xmlEscape(`${origin}/api/receptionist/voice?biz=${rs.business_id}`)}</Redirect></Response>`, { headers: { 'Content-Type': 'text/xml' } })
+    }
+    if (ai && ai.phone_mode !== 'off' && ai.phone_transfer_number) {
+      return new NextResponse(`<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="${xmlEscape(to)}">${xmlEscape(ai.phone_transfer_number)}</Dial></Response>`, { headers: { 'Content-Type': 'text/xml' } })
+    }
+    return new NextResponse(`<?xml version="1.0" encoding="UTF-8"?><Response><Say>Sorry, no one is available right now. Please try again later.</Say><Hangup/></Response>`, { headers: { 'Content-Type': 'text/xml' } })
+  }
+
   const { data: conn } = await serviceClient.from('whatsapp_connections').select('id,connected_by_email,user_id').eq('phone_number', to).maybeSingle()
   if (!conn) {
     const twiml = `<?xml version="1.0" encoding="UTF-8"?><Response><Say>Sorry, this number is not set up to receive calls.</Say><Hangup/></Response>`
