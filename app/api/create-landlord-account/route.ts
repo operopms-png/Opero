@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStaff, serviceClient } from '@/lib/admin-auth'
-import { sendEmail } from '@/lib/send-email'
-import { SITE_URL } from '@/lib/brand'
-import { docSettings } from '@/lib/documents'
+import { sendPortalInvite } from '@/lib/portal-invite'
 
 export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
@@ -40,18 +38,9 @@ export async function POST(req: NextRequest) {
   }
 
   if (invite) {
-    try {
-      const { data: l } = await serviceClient.from('pm_landlords').select('name, user_id').eq('id', landlord_id).maybeSingle()
-      const co = await docSettings(l?.user_id || '')
-      const link = await serviceClient.auth.admin.generateLink({ type: 'recovery', email, options: { redirectTo: `${SITE_URL}/reset-password` } })
-      const url = link.data?.properties?.action_link
-      if (!url) throw new Error('no link')
-      const esc = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      await sendEmail(email, `Your ${co.company_name} landlord portal: set your password`, `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1D2433"><h2 style="margin:0 0 12px;color:#182D5E">Welcome to ${esc(co.company_name)}</h2><p>Hello ${esc(l?.name || '')},</p><p>Your landlord portal is ready. See your properties, payments, receipts and documents in one place. Set your password to sign in.</p><p style="margin:20px 0"><a href="${url}" style="background:#182D5E;color:#fff;text-decoration:none;padding:11px 20px;border-radius:6px;font-weight:600">Set my password</a></p><p style="color:#667085;font-size:13px">After that, sign in any time at ${SITE_URL.replace(/^https?:\/\//, '')}/login. If you did not expect this email, you can ignore it.</p></div>`, co.reply_to || undefined)
-    } catch {
-      return NextResponse.json({ success: true, emailed: false })
-    }
-    return NextResponse.json({ success: true, emailed: true })
+    const { data: l } = await serviceClient.from('pm_landlords').select('name, user_id').eq('id', landlord_id).maybeSingle()
+    const emailed = await sendPortalInvite({ email, name: l?.name, businessId: l?.user_id, who: 'landlord' })
+    return NextResponse.json({ success: true, emailed })
   }
   return NextResponse.json({ success: true })
 }

@@ -13,12 +13,12 @@ const when = (d: string | null) => d ? new Date(d).toLocaleString('en-GB', { day
 
 // Each tab shows only the documents for that audience. "pick" are ticked for you when you open the tab; the rest are there to tick if needed.
 // Documents with no audience here (ones staff add) show on every tab.
-const TABS: { key: 'landlord' | 'cohost' | 'tenant' | 'all'; label: string; pick: string[]; more: string[]; reg: '' | 'landlord' | 'cohost'; hint: string }[] = [
+const TABS: { key: 'landlord' | 'cohost' | 'tenant' | 'all'; label: string; pick: string[]; more: string[]; reg: '' | 'landlord' | 'cohost' | 'tenant'; hint: string }[] = [
   { key: 'landlord', label: 'Landlord', reg: 'landlord', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Lease your property to us', 'Landlord portal guide', 'Landlord detail sheet', 'Shortlet landlord onboarding form'], more: ['Agreement: Master Lease (sublease)', 'Agreement: Estate agency'],
     hint: 'The welcome documents and onboarding form are ticked. Tick the one Agreement that fits this landlord (Master Lease or Estate agency) before you send.' },
   { key: 'cohost', label: 'Co-host', reg: 'cohost', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Company brochure', 'Vacation rental landlord pack', 'Co-host portal guide', 'Cohost detail sheet', 'Agreement: Shortlet co-host'], more: [],
     hint: 'Everything a co-host needs is ticked, including the Shortlet co-host agreement and the Cohost detail sheet.' },
-  { key: 'tenant', label: 'Tenant', reg: '', pick: ['Welcome to NOVOURQ', 'Furnished apartments', 'Tenants portal guide', 'Tenant deposit guide'], more: [], hint: 'The tenant documents are ticked.' },
+  { key: 'tenant', label: 'Tenant', reg: 'tenant', pick: ['Welcome to NOVOURQ', 'Welcome letter', 'Furnished apartments', 'Tenants portal guide', 'Tenant deposit guide', 'How to rent in Jamaica', 'Client onboarding sheet'], more: ['Tenancy agreement (fillable)'], hint: 'The welcome documents, guides and the Client onboarding sheet are ticked. Tick the Tenancy agreement when you are ready to send it.' },
   { key: 'all', label: 'All documents', reg: '', pick: [], more: [], hint: 'Every document, for managing or building your own mix.' },
 ]
 const AUDIENCE_TITLES = new Set(TABS.flatMap(t => [...t.pick, ...t.more]))
@@ -29,7 +29,7 @@ export default function ServicesPack() {
   const [sel, setSel] = useState<string[]>([]), [name, setName] = useState('')
   const [prop, setProp] = useState('')
   const [tab, setTab] = useState<'landlord' | 'cohost' | 'tenant' | 'all'>('landlord'), [ready, setReady] = useState(false)
-  const [reg, setReg] = useState<'' | 'landlord' | 'cohost' | 'existing'>(''), [who, setWho] = useState<any>(null), [q, setQ] = useState(''), [found, setFound] = useState<any[]>([])
+  const [reg, setReg] = useState<'' | 'landlord' | 'cohost' | 'tenant' | 'existing'>(''), [who, setWho] = useState<any>(null), [q, setQ] = useState(''), [found, setFound] = useState<any[]>([])
   useEffect(() => { if (q.trim().length < 2) { setFound([]); return }; const t = setTimeout(() => staffApi('/api/documents?people=' + encodeURIComponent(q)).then((r: any) => setFound((r.people || []).filter((x: any) => ['pm_owner', 'ea_owner', 'cohost'].includes(x.kind)))).catch(() => {}), 250); return () => clearTimeout(t) }, [q])
   const [add, setAdd] = useState<any>(null), [edit, setEdit] = useState<any>(null)
   const load = () => staffApi('/api/services').then((r: any) => { setD(r); setSel(s => s.filter(i => r.docs.some((x: any) => x.id === i && x.active))) }).catch(e => setErr(e.message))
@@ -112,16 +112,17 @@ export default function ServicesPack() {
                 <option value="">No one in particular (copies stay in Submitted documents)</option>
                 <option value="landlord">A new landlord (registered when they submit)</option>
                 <option value="cohost">A new co-host (registered when they submit)</option>
+                <option value="tenant">A new tenant (registered when they submit)</option>
                 <option value="existing">An existing landlord or co-host</option>
               </select>
               {reg === 'existing' && (who ? <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13.5, marginTop: 6 }}><b>{who.name}</b><span style={{ color: '#667085' }}>{who.label}</span><button style={btn('ghost', true)} onClick={() => setWho(null)}>Change</button></div> : <>
                 <input style={{ ...input, marginTop: 6 }} value={q} placeholder="Search landlords and co-hosts by name" onChange={e => setQ(e.target.value)} />
                 {found.length > 0 && <div style={{ border: '1px solid #E4E7EC', borderRadius: 6, marginTop: 4, background: '#fff' }}>{found.map(x => <div key={x.kind + x.id} onClick={() => { setWho(x); setQ(''); setFound([]); setName(n => n || x.name) }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13.5, borderTop: '1px solid #F2F4F7' }}><b>{x.name}</b> <span style={{ color: '#667085' }}>{x.label}</span></div>)}</div>}
               </>)}
-              {(reg === 'landlord' || reg === 'cohost') && <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>When they press Submit, a {reg === 'landlord' ? 'landlord' : 'co-host'} record is created from the name and email they enter (or matched by email if they already exist) and the completed document is filed on it.</div>}
+              {(reg === 'landlord' || reg === 'cohost' || reg === 'tenant') && <div style={{ fontSize: 12, color: '#667085', marginTop: 4 }}>When they press Submit, a {reg === 'landlord' ? 'landlord' : reg === 'tenant' ? 'tenant' : 'co-host'} record is created from the name and email they enter (or matched by email if they already exist) and the completed document is filed on it.</div>}
             </div>
             <div style={{ fontSize: 13, color: '#475467' }}>{sel.length === 0 ? 'Tick the documents above.' : sel.length === 1 ? 'This link opens one document.' : `This link lets them choose from ${sel.length} documents.`}</div>
-            <div><button style={btn('gold')} disabled={busy || !sel.length} onClick={async () => { const r = await act({ action: 'link-create', name, property_label: prop, doc_ids: sel, ...(reg === 'existing' && who ? { subject: who.kind === 'pm_owner' ? 'landlord' : who.kind === 'ea_owner' ? 'ea_landlord' : 'cohost', subject_id: who.id } : reg === 'landlord' || reg === 'cohost' ? { register: reg } : {}) }); if (r?.link) { copy(url(r.link.token), `Link copied: ${url(r.link.token)}`); setName(''); setProp(''); setWho(null); setReg('') } }}>Create link</button></div>
+            <div><button style={btn('gold')} disabled={busy || !sel.length} onClick={async () => { const r = await act({ action: 'link-create', name, property_label: prop, doc_ids: sel, ...(reg === 'existing' && who ? { subject: who.kind === 'pm_owner' ? 'landlord' : who.kind === 'ea_owner' ? 'ea_landlord' : 'cohost', subject_id: who.id } : reg === 'landlord' || reg === 'cohost' || reg === 'tenant' ? { register: reg } : {}) }); if (r?.link) { copy(url(r.link.token), `Link copied: ${url(r.link.token)}`); setName(''); setProp(''); setWho(null); setReg('') } }}>Create link</button></div>
           </div>
 
           <div style={head}>3. Your links</div>

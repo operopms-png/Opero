@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireStaff, serviceClient } from '@/lib/admin-auth'
+import { sendPortalInvite } from '@/lib/portal-invite'
 
 export async function POST(req: NextRequest) {
   const staffId = await requireStaff(req)
   if (!staffId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { tenant_id, email, password } = await req.json()
-  if (!tenant_id || !email || !password) {
-    return NextResponse.json({ error: 'tenant_id, email, and password are required' }, { status: 400 })
+  const { tenant_id, email, password: given } = await req.json()
+  // No password given = invite: a random one nobody sees, and the tenant is emailed a link to set their own.
+  const invite = !given
+  const password: string = given || (crypto.randomUUID() + crypto.randomUUID())
+  if (!tenant_id || !email) {
+    return NextResponse.json({ error: 'tenant_id and email are required' }, { status: 400 })
   }
   if (password.length < 6) {
     return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
@@ -33,5 +37,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to link account: ' + linkError.message }, { status: 500 })
   }
 
+  if (invite) {
+    const { data: t } = await serviceClient.from('pm_tenants').select('name, user_id').eq('id', tenant_id).maybeSingle()
+    const emailed = await sendPortalInvite({ email, name: t?.name, businessId: t?.user_id, who: 'tenant' })
+    return NextResponse.json({ success: true, emailed })
+  }
   return NextResponse.json({ success: true })
 }

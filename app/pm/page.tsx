@@ -1681,7 +1681,7 @@ function PMPageInner() {
                 <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:t.status==='active'?'#D1FAE5':'#F3F4F6',color:t.status==='active'?'#059669':'#6B7280'}}>{t.status}</span>
                 {t.portal_user_id
                   ? <a href={`/pm-tenant-portal?tenant_id=${t.id}`} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer',textDecoration:'none'}}>View Portal</a>
-                  : <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Give Portal Access</button>}
+                  : <button onClick={()=>{setPortalTenant(t);setTenantPortalPassword('')}} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Invite to Portal</button>}
                 <button onClick={()=>setTenantChecklistFor(t)} style={{fontSize:12,color:'#fff',background:'#2F6DB5',border:'none',borderRadius:6,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>Documents {tenantDocCounts[t.id]??0}/5</button>
                 <button onClick={()=>setDocsTenant(t)} style={{fontSize:12,color:'#344054',background:'#fff',border:'1px solid #D0D5DD',borderRadius:6,padding:'4px 10px',cursor:'pointer',whiteSpace:'nowrap'}}>All files ({documents.filter((d:any)=>d.tenant_id===t.id).length})</button>
                 <button onClick={()=>openEdit('tenant',t)} style={{fontSize:12,color:'#2F6DB5',background:'none',border:'1px solid #2F6DB5',borderRadius:6,padding:'4px 10px',cursor:'pointer'}}>Edit</button>
@@ -4654,12 +4654,23 @@ function PMPageInner() {
       {portalTenant&&(
         <Modal title={`Give ${portalTenant.name} portal access`} onClose={()=>setPortalTenant(null)}>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
-            <div style={{fontSize:13,color:'#667085'}}>This creates a login for {portalTenant.name} so they can see their lease, payment history, and submit maintenance requests. Share the email/password with them yourself.</div>
+            <div style={{fontSize:13,color:'#667085'}}>This creates a login for {portalTenant.name} so they can see their lease, payment history, and submit maintenance requests. Press Email invite and they get a link to set their own password, or type a password yourself and share it with them.</div>
             <div><label style={lbl}>Email</label><input style={inp} value={portalTenant.email??''} onChange={e=>setPortalTenant({...portalTenant,email:e.target.value})} placeholder="tenant@example.com"/></div>
-            <div><label style={lbl}>Password</label><input style={inp} value={tenantPortalPassword} onChange={e=>setTenantPortalPassword(e.target.value)} placeholder="min. 6 characters"/></div>
+            <div><label style={lbl}>Password (only if you are not emailing an invite)</label><input style={inp} value={tenantPortalPassword} onChange={e=>setTenantPortalPassword(e.target.value)} placeholder="min. 6 characters"/></div>
           </div>
           <div style={{display:'flex',gap:10,marginTop:24}}>
             <button onClick={()=>setPortalTenant(null)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #E5E7EB',background:'#fff',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Cancel</button>
+            <button onClick={async ()=>{
+              if(!portalTenant.email)return
+              setCreatingTenantPortal(true)
+              const {data:{session}}=await supabase.auth.getSession()
+              const res=await fetch('/api/create-tenant-account',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session?.access_token??''}`},body:JSON.stringify({tenant_id:portalTenant.id,email:portalTenant.email})})
+              const result=await res.json()
+              setCreatingTenantPortal(false)
+              if(!res.ok){alert(result.error||'Could not send the invite');return}
+              alert(result.emailed===false?'Portal access created but the email could not be sent. Use a password and share it yourself.':`Invite sent to ${portalTenant.email}. They set their own password from the link.`)
+              setPortalTenant(null);await loadAll()
+            }} disabled={creatingTenantPortal||!portalTenant.email} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#182D5E',color:'#fff',fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'inherit',opacity:creatingTenantPortal||!portalTenant.email?0.6:1}}>{creatingTenantPortal?'Sending…':'Email invite'}</button>
             <button onClick={async ()=>{
               if(!portalTenant.email||!tenantPortalPassword)return
               setCreatingTenantPortal(true)

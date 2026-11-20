@@ -84,10 +84,10 @@ export async function POST(req: NextRequest) {
     const name = String(b.name || '').trim().slice(0, 150) || (ids.length > 1 ? 'Our services' : 'Document link')
     // Optional: tie the link to one landlord or co-host so their submissions file onto their record.
     let subj: any = {}
-    if (!b.subject_id && (b.register === 'landlord' || b.register === 'cohost')) subj = { subject: b.register }   // a new person: registered when they submit
+    if (!b.subject_id && (b.register === 'landlord' || b.register === 'cohost' || b.register === 'tenant')) subj = { subject: b.register }   // a new person: registered when they submit
     if (b.subject_id) {
       const sj = String(b.subject || '')
-      if (!isSubject(sj) || !['landlord', 'ea_landlord', 'cohost'].includes(sj)) return bad('Pick a landlord or co-host.')
+      if (!isSubject(sj) || !['landlord', 'ea_landlord', 'cohost', 'tenant'].includes(sj)) return bad('Pick a landlord or co-host.')
       const { data: who } = await db.from(DOC_SUBJECT_TABLE[sj]).select('id,name').eq('id', String(b.subject_id)).eq('user_id', biz).maybeSingle()
       if (!who) return bad('That person was not found.')
       subj = { subject: sj, subject_id: who.id, subject_name: who.name }

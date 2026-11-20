@@ -59,20 +59,21 @@ export async function POST(req: NextRequest) {
       const FM: Record<string, Record<string, string>> = {
         Agreement_Estate_Agency: { name: 'f0_4', phone: 'f0_7', address: 'f0_16' },
         Agreement_Master_Lease: { name: 'f0_1', phone: 'f0_5', address: 'f0_13', area: 'f0_14', beds: 'f0_17', baths: 'f0_18' },
+        Client_Onboarding_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile' },
         Landlord_Detail_Sheet: { name: '1 First Name', last: '1 Last Name', phone: '1 Mobile', address: 'prop_address', area: 'prop_area', beds: 'prop_beds', baths: 'prop_baths' },
         Agreement_Shortlet_Landlord: { name: 'f3_16', phone: 'f3_19', address: 'f4_23', area: 'f4_24', beds: 'f4_33', baths: 'f4_34' },
       }
       const m = FM[file] || {}
       const val = (k: string) => { const v = m[k] ? values[m[k]] : ''; return typeof v === 'string' ? v.trim().slice(0, 300) : '' }
-      const kind = l.subject === 'cohost' || file === 'Agreement_Shortlet_Landlord' ? 'cohost' : file === 'Agreement_Estate_Agency' ? 'ea_landlord' : 'landlord'
-      const tbl = kind === 'cohost' ? 'cohosts' : kind === 'ea_landlord' ? 'estate_landlords' : 'pm_landlords'
+      const kind = l.subject === 'tenant' ? 'tenant' : l.subject === 'cohost' || file === 'Agreement_Shortlet_Landlord' ? 'cohost' : file === 'Agreement_Estate_Agency' ? 'ea_landlord' : 'landlord'
+      const tbl = kind === 'tenant' ? 'pm_tenants' : kind === 'cohost' ? 'cohosts' : kind === 'ea_landlord' ? 'estate_landlords' : 'pm_landlords'
       const nm = ([val('name'), val('last')].filter(Boolean).join(' ') || String(b.name || '').trim()).slice(0, 120)
       let ex: any = (await db.from(tbl).select('id,name').eq('user_id', l.business_id).ilike('email', email).limit(1).maybeSingle()).data
-      if (!ex) ex = (await db.from(tbl).insert({ user_id: l.business_id, name: nm, email, phone: val('phone') || null, ...(tbl !== 'cohosts' ? { notes: `Registered from the Services Pack link "${l.name}"` } : {}) }).select('id,name').single()).data
+      if (!ex) ex = (await db.from(tbl).insert({ user_id: l.business_id, name: nm, email, phone: val('phone') || null, ...(tbl !== 'cohosts' && tbl !== 'pm_tenants' ? { notes: `Registered from the Services Pack link "${l.name}"` } : {}) }).select('id,name').single()).data
       if (ex) {
         l.subject = kind; l.subject_id = ex.id; l.subject_name = ex.name
         const addr = val('address')
-        if (addr && kind !== 'cohost') {
+        if (addr && kind !== 'cohost' && kind !== 'tenant') {
           const ptbl = kind === 'ea_landlord' ? 'estate_properties' : 'pm_properties'
           const { data: dup } = await db.from(ptbl).select('id').eq('user_id', l.business_id).eq('owner_id', ex.id).ilike('address', `%${addr.replace(/[%_]/g, '')}%`).limit(1)
           if (!dup?.length) {
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
       const lp = `${l.business_id}/${l.subject}/${l.subject_id}/${randomUUID()}.pdf`
       const u2 = await db.storage.from('lease-docs').upload(lp, out, { contentType: 'application/pdf' })
       if (!u2.error) {
-        const cat = /^agreement/i.test(doc.title) ? (l.subject === 'cohost' ? 'cohost_agreement' : 'mgmt_agreement') : 'other'
+        const cat = l.subject === 'tenant' ? (/tenancy agreement/i.test(doc.title) ? 'tenancy' : 'other') : /^agreement/i.test(doc.title) ? (l.subject === 'cohost' ? 'cohost_agreement' : 'mgmt_agreement') : 'other'
         const { data: ld } = await db.from('lease_documents').insert({ user_id: l.business_id, subject: l.subject, head_lease_id: l.subject_id, category: cat, name: `${doc.title} (completed).pdf`.slice(0, 120), path: lp, mime: 'application/pdf', size: out.length, uploaded_by: String(b.email || '').trim() || String(b.name || '').trim() || l.subject_name, uploaded_by_portal: true, status: 'pending', visible_to_portal: true }).select('id').single()
         leaseDocId = ld?.id ?? null
         await db.from('notifications').insert({ user_id: l.business_id, title: `Document to review: ${doc.title}`, message: `${l.subject_name || 'A landlord'} completed ${doc.title} on their link.${propertyMade ? ` Property created: ${propertyMade}.` : ''} Approve or reject it in Documents.`, type: 'document', module: 'staffcentre', link: '/staff-centre/documents' }).then(() => {}, () => {})
