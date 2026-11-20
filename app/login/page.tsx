@@ -7,7 +7,7 @@ import { normalizeRole, ROLE_MODULES } from '../../lib/useRole'
 import { BRAND_NAME } from '@/lib/brand'
 
 
-// Baby blue used for both plans -- Jordan asked for the plan cards to be
+// Baby blue used for both plans -- the owner asked for the plan cards to be
 // this colour rather than each module having its own accent (that made
 // sense back when plans were sold per-module; now there are just two
 // tiers of the same one-plan-every-module offer).
