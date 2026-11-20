@@ -4,6 +4,10 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { type Grid, type Pad, at, cellSize, heightAt } from '@/lib/dev-terrain'
 
 export type PadRow = Pad & { level: number; cut: number; fill: number }
@@ -22,6 +26,11 @@ const money = (n: number) => Math.round(n).toLocaleString()
 const hash = (x: number, y: number) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s) }
 const vnoise = (x: number, y: number) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf); return hash(xi, yi) * (1 - u) * (1 - v) + hash(xi + 1, yi) * u * (1 - v) + hash(xi, yi + 1) * (1 - u) * v + hash(xi + 1, yi + 1) * u * v }
 const fbm = (x: number, y: number) => vnoise(x, y) * 0.55 + vnoise(x * 2.3, y * 2.3) * 0.3 + vnoise(x * 5.1, y * 5.1) * 0.15
+const canvasTex = (size: number, draw: (g: CanvasRenderingContext2D, n: number) => void, rx = 1, ry = 1) => {
+  const c = document.createElement('canvas'); c.width = c.height = size; draw(c.getContext('2d')!, size)
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t
+}
+const rr = (a: number) => (hash(a, a * 1.7) - 0.5)
 const WALLS = [0xf0ebe0, 0xe4dccb, 0xd9d4c8, 0xf5f1ea, 0xcfd6d9], ROOFS = [0x4a4a4f, 0x6b4636, 0x55595e, 0x7a4a3a]
 
 export default function TerrainView({ grid, pads, exaggeration = 2, height = 520, preset = 'angle', month = 0, months = 1, phases, withHouses = true, trees = true, ground = 'natural' }: {
@@ -57,7 +66,7 @@ export default function TerrainView({ grid, pads, exaggeration = 2, height = 520
       const g2 = sky.getContext('2d')!, gr = g2.createLinearGradient(0, 0, 0, 256)
       gr.addColorStop(0, '#6fa3d8'); gr.addColorStop(0.55, '#cfe1ee'); gr.addColorStop(1, '#f1efe6'); g2.fillStyle = gr; g2.fillRect(0, 0, 2, 256)
       const tex = new THREE.CanvasTexture(sky); tex.colorSpace = THREE.SRGBColorSpace; scene.background = tex
-      scene.fog = new THREE.Fog(0xdfe8ee, S * 1.7, S * 4.5)
+      scene.fog = new THREE.Fog(0xe6e9e4, S * 1.3, S * 3.6)
     } else scene.background = new THREE.Color(0xe9eef0)
 
     // ground, finer than the data. Natural: grass, dry patches, rock on steep ground, mud by the creek. Slope: hard colour bands.
@@ -90,7 +99,11 @@ export default function TerrainView({ grid, pads, exaggeration = 2, height = 520
       col[idx * 3] = c.r; col[idx * 3 + 1] = c.g; col[idx * 3 + 2] = c.b
     }
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals()
-    const gm = natural ? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0, side: THREE.DoubleSide }) : new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })
+    const grassTex = natural ? canvasTex(256, (g, n) => {
+      g.fillStyle = '#d8d8d8'; g.fillRect(0, 0, n, n)
+      for (let i = 0; i < 9000; i++) { const x = hash(i, 1) * n, y = hash(i, 2) * n, l = 2 + hash(i, 3) * 5, v = 150 + Math.floor(hash(i, 4) * 105); g.strokeStyle = `rgba(${v},${v},${v},.55)`; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (hash(i, 5) - 0.5) * 3, y - l); g.stroke() }
+    }, S / 14, S / 14) : null
+    const gm = natural ? new THREE.MeshStandardMaterial({ vertexColors: true, map: grassTex, roughness: 1, metalness: 0, side: THREE.DoubleSide }) : new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })
     scene.add(shadow(new THREE.Mesh(geo, gm), false, true))
     const slab = new THREE.Mesh(new THREE.BoxGeometry(S, 2, S), new THREE.MeshLambertMaterial({ color: natural ? 0x8a6f4e : 0xcfd6dc })); slab.position.set(0, -1.2, 0); scene.add(slab)
     if (natural) {
@@ -134,14 +147,16 @@ export default function TerrainView({ grid, pads, exaggeration = 2, height = 520
     // pads and houses (grown by the build slider)
     const padMeshes: { slab: THREE.Mesh; house?: THREE.Group; row: PadRow }[] = []
     const std = (color: number, roughness = 0.9, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness })
+    const sidingTex = natural ? canvasTex(128, (g, n) => { g.fillStyle = '#fff'; g.fillRect(0, 0, n, n); for (let y = 0; y < n; y += 8) { g.fillStyle = 'rgba(0,0,0,.10)'; g.fillRect(0, y, n, 1.5); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(0, y + 1.5, n, 1) } for (let i = 0; i < 600; i++) { g.fillStyle = `rgba(0,0,0,${hash(i, 9) * 0.04})`; g.fillRect(hash(i, 6) * n, hash(i, 7) * n, 3, 2) } }, 1, 1) : null
+    const shingleTex = natural ? canvasTex(128, (g, n) => { g.fillStyle = '#e6e6e6'; g.fillRect(0, 0, n, n); for (let r = 0; r < 12; r++) { const y = (r * n) / 12; for (let x = -((r % 2) * 8); x < n; x += 16) { const v = 200 + Math.floor(hash(x + r * 31, r) * 55); g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(x + 0.5, y + 0.5, 15, n / 12 - 1) } g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, y + n / 12 - 1.5, n, 1.5) } }, 6, 6) : null
     const makeHouse = (hw: number, hd: number, hh: number, wall: number, roofC: number) => {
       const g = new THREE.Group()
       const add = (m: THREE.Mesh) => { shadow(m); g.add(m); return m }
-      add(new THREE.Mesh(new THREE.BoxGeometry(hw, hh, hd), std(wall))).position.y = hh / 2
+      add(new THREE.Mesh(new THREE.BoxGeometry(hw, hh, hd), Object.assign(std(wall, 0.85), { map: sidingTex }))).position.y = hh / 2
       const rh = hh * 0.6, ov = 1.1 * k + 0.6
       const sh = new THREE.Shape(); sh.moveTo(-hd / 2 - ov, 0); sh.lineTo(hd / 2 + ov, 0); sh.lineTo(0, rh); sh.closePath()
       const rg = new THREE.ExtrudeGeometry(sh, { depth: hw + ov * 2, bevelEnabled: false }); rg.translate(0, 0, -(hw + ov * 2) / 2); rg.rotateY(Math.PI / 2)
-      add(new THREE.Mesh(rg, std(roofC, 0.8))).position.y = hh
+      add(new THREE.Mesh(rg, Object.assign(std(roofC, 0.75), { map: shingleTex }))).position.y = hh
       add(new THREE.Mesh(new THREE.BoxGeometry(1.4, rh * 0.9, 1.4), std(0x9a5b46))).position.set(hw * 0.3, hh + rh * 0.55, -hd * 0.1)
       const glass = std(0x2a3a4a, 0.2, 0.3), nW = Math.max(2, Math.floor(hw / 6))
       for (let i = 0; i < nW; i++) { const x = -hw / 2 + ((i + 0.5) * (hw * 0.55)) / nW; add(new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.6, 0.3), glass)).position.set(x - hw * 0.05, hh * 0.58, hd / 2 + 0.05) }
@@ -218,7 +233,7 @@ export default function TerrainView({ grid, pads, exaggeration = 2, height = 520
     else if (preset === 'side') { cam.position.set(0, range * exaggeration * 0.7 + 14, S * 0.95); ctrl.target.set(0, range * exaggeration * 0.35, 0) }
     else if (preset === 'pads') { cam.position.set(padCenter.x + S * 0.28, S * 0.38, padCenter.z + S * 0.5); ctrl.target.copy(padCenter) }
     else if (preset === 'creek') { cam.position.set(lowPt.x + S * 0.3, S * 0.3, lowPt.z + S * 0.4); ctrl.target.copy(lowPt) }
-    else { cam.position.set(S * 0.72, S * 0.78, S * 1.12); ctrl.target.copy(mid) }
+    else { cam.position.set(S * 0.62, S * 0.52, S * 0.98); ctrl.target.copy(mid).add(new THREE.Vector3(0, 0, -S * 0.04)) }
     ctrl.update()
 
     const v3 = new THREE.Vector3()
@@ -235,9 +250,20 @@ export default function TerrainView({ grid, pads, exaggeration = 2, height = 520
     api.current = { update }
     update()
 
+    let composer: EffectComposer | null = null
+    if (natural) {
+      try {
+        composer = new EffectComposer(renderer); composer.setSize(w, h)
+        composer.addPass(new RenderPass(scene, cam))
+        const ao = new GTAOPass(scene, cam, w, h); ao.output = GTAOPass.OUTPUT.Default
+        ao.updateGtaoMaterial({ radius: 6 * k, distanceExponent: 1.4, thickness: 2, scale: 1.2, samples: 12, distanceFallOff: 1, screenSpaceRadius: false })
+        ao.blendIntensity = 0.9
+        composer.addPass(ao); composer.addPass(new OutputPass())
+      } catch { composer = null }
+    }
     let raf = 0
     const loop = () => {
-      ctrl.update(); renderer.render(scene, cam)
+      ctrl.update(); if (composer) composer.render(); else renderer.render(scene, cam)
       const cw = renderer.domElement.clientWidth, ch = renderer.domElement.clientHeight
       for (const l of labels) {
         v3.copy(l.p).project(cam)
@@ -248,9 +274,9 @@ export default function TerrainView({ grid, pads, exaggeration = 2, height = 520
       raf = requestAnimationFrame(loop)
     }
     loop()
-    const onResize = () => { const nw = el.clientWidth || w; renderer.setSize(nw, h); cam.aspect = nw / h; cam.updateProjectionMatrix() }
+    const onResize = () => { const nw = el.clientWidth || w; renderer.setSize(nw, h); composer?.setSize(nw, h); cam.aspect = nw / h; cam.updateProjectionMatrix() }
     window.addEventListener('resize', onResize)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); ctrl.dispose(); geo.dispose(); renderer.dispose(); el.innerHTML = ''; api.current = null }
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); ctrl.dispose(); geo.dispose(); composer?.dispose(); renderer.dispose(); el.innerHTML = ''; api.current = null }
   }, [grid, pads, exaggeration, height, preset, withHouses, trees, ground])
 
   useEffect(() => { api.current?.update() }, [month, months, phases])
