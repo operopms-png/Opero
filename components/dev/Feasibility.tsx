@@ -46,7 +46,7 @@ export default function Feasibility({ symbol = '£', initial, onSave, saving, is
   const [way, setWay] = useState<Way>('homes')
   const [grid, setGrid] = useState<Grid>(() => sampleGrid())
   const [ex, setEx] = useState(2)
-  const [preset, setPreset] = useState<Preset>('angle')
+  const [preset, setPreset] = useState<Preset>('angle'); const [look, setLook] = useState<'natural' | 'slope'>('natural')
   const [month, setMonth] = useState(9999); const [playing, setPlaying] = useState(false)
   const [surveyText, setSurveyText] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false)
   const set = (k: keyof Inputs, v: number) => setS(p => ({ ...p, inputs: { ...p.inputs, [k]: Number.isFinite(v) ? v : 0 } }))
@@ -167,15 +167,18 @@ export default function Feasibility({ symbol = '£', initial, onSave, saving, is
         {/* the site */}
         <div style={{ ...card, padding: 14, minWidth: 0 }}>
           <div style={{ position: 'relative' }}>
-            <TerrainView grid={grid} pads={earth} exaggeration={ex} preset={preset} month={monthNow} months={sel.months} phases={sel.phases} withHouses={way === 'homes'} height={560} />
-            <div style={{ position: 'absolute', left: 12, top: 12, background: 'rgba(255,254,251,.94)', border: `1px solid ${C.line}`, borderRadius: 9, padding: '7px 10px' }}>
+            <TerrainView grid={grid} pads={earth} exaggeration={ex} preset={preset} month={monthNow} months={sel.months} phases={sel.phases} withHouses={way === 'homes'} height={560} ground={look} />
+            {look === 'slope' && <div style={{ position: 'absolute', left: 12, top: 12, background: 'rgba(255,254,251,.94)', border: `1px solid ${C.line}`, borderRadius: 9, padding: '7px 10px' }}>
               <div style={{ ...cap, fontSize: 9.5, marginBottom: 4 }}>Slope</div>
               {SLOPE_BANDS.map(b => <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontFamily: MONO, lineHeight: 1.5 }}><i style={{ width: 11, height: 11, background: b.color, borderRadius: 2, display: 'inline-block' }} />{b.label}</div>)}
-            </div>
-            <div style={{ position: 'absolute', left: '50%', bottom: 12, transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 2, background: 'rgba(255,254,251,.96)', border: `1px solid ${C.line}`, borderRadius: 11, padding: 3, flexWrap: 'nowrap', whiteSpace: 'nowrap', justifyContent: 'center', maxWidth: '98%', overflowX: 'auto' }}>
-              {([['pads', 'Pads'], ['creek', 'Creek'], ['angle', 'Angle'], ['top', 'Top down'], ['side', 'Side cut']] as [Preset, string][]).map(([k, l]) => <button key={k} onClick={() => setPreset(k)} style={chip(preset === k)}>{l}</button>)}
-              <span style={{ ...cap, padding: '0 6px 0 10px', fontSize: 10 }}>Vert</span>
-              {([1, 2, 3] as const).map(x => <button key={x} onClick={() => setEx(x)} style={chip(ex === x)}>{x}x</button>)}
+            </div>}
+            <div style={{ position: 'absolute', left: '50%', bottom: 12, transform: 'translateX(-50%)', display: 'grid', gap: 2, background: 'rgba(255,254,251,.96)', border: `1px solid ${C.line}`, borderRadius: 11, padding: 3, maxWidth: '98%', whiteSpace: 'nowrap', justifyItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 1 }}>{([['pads', 'Pads'], ['creek', 'Creek'], ['angle', 'Angle'], ['top', 'Top down'], ['side', 'Side cut']] as [Preset, string][]).map(([k, l]) => <button key={k} onClick={() => setPreset(k)} style={chip(preset === k)}>{l}</button>)}</div>
+              <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {([['natural', 'Natural'], ['slope', 'Slope']] as const).map(([k, l]) => <button key={k} onClick={() => setLook(k)} style={chip(look === k)}>{l}</button>)}
+                <span style={{ width: 1, height: 16, background: C.line, margin: '0 6px' }} />
+                {([1, 2, 3] as const).map(x => <button key={x} onClick={() => setEx(x)} style={chip(ex === x)}>{x}x</button>)}
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 6px 2px', flexWrap: 'wrap' }}>
