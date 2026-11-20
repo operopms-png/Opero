@@ -76,6 +76,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'dev:Snagging': 'Defects found on site, who is fixing them and whether they are closed.',
   'dev:Health & Safety': 'Site safety records, risk assessments and incidents.',
   'dev:Milestones': 'Key dates for each project and whether you are on track.',
+  'dev:Feasibility': 'Test a site before you buy: profit, cash needed and soil to move for four ways out, with a 3D site view.',
   'str:Properties': 'Your short-stay properties with nightly rate, status and calendar. Open one to edit it.',
   'str:Maintenance': 'Repair jobs between stays, with priority, who it is assigned to and progress.',
   'str:Compliance': 'Safety certificates and licences for each short-stay property and your business, with expiry dates.',
