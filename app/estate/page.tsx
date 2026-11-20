@@ -6,7 +6,7 @@ import TabBanner from '@/components/TabBanner'
 import LeaseDocuments from '@/components/pm/LeaseDocuments'
 import { supabase, getAccountId } from '../../lib/supabase'
 import LandlordStatements from '@/components/reports/LandlordStatements'
-import { useRole, getAllowedTab } from '@/lib/useRole'
+import { useRole, getAllowedTab, getAllowedTabs } from '@/lib/useRole'
 import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
@@ -248,6 +248,7 @@ export default function Page() {
     })
   }, [])
   const allowedTab = getAllowedTab(role, 'estate')
+  const allowedTabs = getAllowedTabs(role, 'estate')
 
   useEffect(() => { window.scrollTo(0, 0) }, [section])
   useEffect(() => { if (allowedTab) setSection(allowedTab) }, [allowedTab])
@@ -791,7 +792,7 @@ export default function Page() {
             <div key={group.label}>
               <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
               {group.items.map(s=>{
-                const locked = !!(allowedTab && s !== allowedTab)
+                const locked = !!(allowedTabs && !allowedTabs.includes(s))
                 const badge = s==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length
                   : s==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length
                   : s==='Compliance' ? complianceRecords.filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid').length

@@ -41,11 +41,17 @@ export const ROLE_READONLY: Record<string, boolean> = {
 
 export const RESTRICTED_TABS: Record<string, Record<string, string>> = {
   // Upkeep covers maintenance and cleaning; its jobs live in the Upkeep portal
-  'Upkeep Team': { str: 'Maintenance', pm: 'Maintenance', estate: 'Maintenance' },
+  'Upkeep Team': { str: 'Maintenance,Cleaning', pm: 'Maintenance,Cleaning', estate: 'Maintenance,Cleaning' },
 }
 
+export function getAllowedTabs(role: string, moduleKey: string): string[] | null {
+  const v = RESTRICTED_TABS[role]?.[moduleKey]
+  return v ? v.split(',') : null
+}
+
+/** The first allowed tab (where a locked role lands). */
 export function getAllowedTab(role: string, moduleKey: string): string | null {
-  return RESTRICTED_TABS[role]?.[moduleKey] ?? null
+  return getAllowedTabs(role, moduleKey)?.[0] ?? null
 }
 
 export const SC_TABS: StaffCentreKey[] = STAFF_CENTRE_TABS.map(t => t.k)

@@ -85,9 +85,9 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/pm?tab=Accounting%20Export', label: 'Accounting Export', requiresModule: 'pm' },
   ] },
   { label: 'Operations', icon: 'wrench', tabs: [
-    { href: '/staff-centre/maintenance', label: 'Maintenance Board', scTab: 'maintenance', badge: 'maintenance' },
+    { href: '/staff-centre/maintenance', label: 'Upkeep: Repairs', scTab: 'maintenance', badge: 'maintenance' },
     { href: '/staff-centre/compliance', label: 'Compliance', scTab: 'compliance', badge: 'compliance' },
-    { href: '/cleaning', label: 'Cleaning', requiresModule: 'str' },
+    { href: '/cleaning', label: 'Upkeep: Cleaning', requiresModule: 'str' },
     { href: '/turnovers', label: 'Turnovers', requiresModule: 'str' },
   ] },
   { label: 'Smart Home', icon: 'shield', tabs: [{ href: '/staff-centre/smart-home', label: 'Smart Home', scTab: 'smarthome' }] },

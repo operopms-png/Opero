@@ -15,7 +15,7 @@ import TenantDocuments from '@/components/TenantDocuments'
 import { supabase, getAccountId } from '../../lib/supabase'
 import LandlordStatements from '@/components/reports/LandlordStatements'
 import { downloadCsv } from '@/lib/export-csv'
-import { useRole, getAllowedTab } from '@/lib/useRole'
+import { useRole, getAllowedTab, getAllowedTabs } from '@/lib/useRole'
 import { BedDouble, Bath } from 'lucide-react'
 import GuestCheckins from '@/components/pm/GuestCheckins'
 import LeaseDocuments from '@/components/pm/LeaseDocuments'
@@ -338,6 +338,7 @@ function PMPageInner() {
   const [pmOpen, setPmOpen] = useState(true)
   const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'pm')
+  const allowedTabs = getAllowedTabs(role, 'pm')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
 
@@ -1206,7 +1207,7 @@ function PMPageInner() {
         <div style={{padding:'8px 10px'}}>
           {(()=>{
             const renderNavItem = (t:string) => {
-              const locked = !!(allowedTab && t !== allowedTab)
+              const locked = !!(allowedTabs && !allowedTabs.includes(t))
               const badge = t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Compliance' ? [...complianceRecords,...strCompliance].filter((c:any)=>complianceStatus(c.expiry_date)!=='Valid'&&complianceStatus(c.expiry_date)!=='No Expiry').length : 0
               return <button key={t} onClick={()=>{ if(t==='Developments'){ window.location.assign('/dev'); return } if(t==='Vacation Rentals'){ window.location.assign('/str'); return } if(t==='Estate Agency'){ window.location.assign('/estate'); return } if(t==='Contractors'){ window.location.assign('/pm/vendors'); return } if(!locked) setTab(t) }} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent',color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054',fontSize:13,fontWeight:tab===t&&!locked?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
             }
@@ -1215,7 +1216,7 @@ function PMPageInner() {
                 <div style={{fontSize:10,fontWeight:700,color:'#98A2B3',textTransform:'uppercase',letterSpacing:'0.06em',padding:'10px 10px 4px',marginTop:8}}>{group.label}</div>
                 {group.items?.map(t=>{
                   if(t!=='Property Management') return renderNavItem(t)
-                  const locked = !!(allowedTab && allowedTab !== 'Dashboard')
+                  const locked = !!(allowedTabs && !allowedTabs.includes('Dashboard'))
                   const active = tab==='Dashboard'&&!locked
                   return <button key={t} disabled={locked} onClick={()=>setTab('Dashboard')} style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',borderRadius:6,border:active?'1px solid #2F6DB5':'1px solid transparent',background:active?'#B9D6F2':'transparent',color:locked?'#C1C9D2':active?'#1D4E89':'#344054',fontSize:13,fontWeight:active?600:400,cursor:locked?'not-allowed':'pointer',fontFamily:'inherit',textAlign:'left',marginBottom:2}}><span>{t}</span></button>
                 })}

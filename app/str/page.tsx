@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import TabBanner from '@/components/TabBanner'
 import { supabase, getAccountId } from '../../lib/supabase'
 import WeatherWidget from '@/components/WeatherWidget'
-import { useRole, getAllowedTab } from '@/lib/useRole'
+import { useRole, getAllowedTab, getAllowedTabs } from '@/lib/useRole'
 import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import GuestCheckins from '@/components/pm/GuestCheckins'
@@ -105,6 +105,7 @@ export default function STRPage() {
   useEffect(() => { const t = new URLSearchParams(window.location.search).get('tab'); if (t && TABS.includes(t)) setTab(t) }, [])
   const { role, propertyIds, loading: roleLoading } = useRole()
   const allowedTab = getAllowedTab(role, 'str')
+  const allowedTabs = getAllowedTabs(role, 'str')
 
   useEffect(() => { window.scrollTo(0, 0) }, [tab])
   useEffect(() => { if (allowedTab) setTab(allowedTab) }, [allowedTab])
@@ -596,7 +597,7 @@ export default function STRPage() {
             <div key={group.label}>
               <div style={{ fontSize:10, fontWeight:700, color:'#98A2B3', textTransform:'uppercase', letterSpacing:'0.06em', padding:'10px 10px 4px', marginTop:8 }}>{group.label}</div>
               {group.items.map(t=>{
-                const locked = !!(allowedTab && t !== allowedTab)
+                const locked = !!(allowedTabs && !allowedTabs.includes(t))
                 const badge = t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : 0
                 return <button key={t} onClick={()=>{if(locked)return; if(t==='Owners'){window.location.href='/owner-portal';return;} setTab(t)}} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent', color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
