@@ -6,7 +6,7 @@ the app opens the right home screen from the records linked to the person's emai
 
 - Screens: `src/app` (welcome, sign-in, email code, password, home) and `src/screens` (one file per role)
 - Data: the portal API at `https://app.thenovourq.com/api/app` (in this repo: `app/api/app`)
-- Bundle ID: `com.sangstersgroup.sangster`
+- Bundle ID: `com.thenovourq.app`
 
 ## First release to the App Store (run on a Mac, inside this `mobile` folder)
 
@@ -20,7 +20,7 @@ npx eas-cli@latest submit --platform ios --latest
 ```
 
 Before submitting:
-- Supabase → Authentication → Providers → Apple: enable it and add `com.sangstersgroup.sangster` as a client ID (for "Sign in with Apple").
+- Supabase → Authentication → Providers → Apple: enable it and add `com.thenovourq.app` as a client ID (for "Sign in with Apple").
 - App Store Connect → App Review: add a demo login for each account type.
 
 ## Updates after release

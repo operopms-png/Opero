@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.sangstersgroup.sangster",
+      "bundleIdentifier": "com.thenovourq.app",
       "usesAppleSignIn": true,
       "buildNumber": "1",
       "infoPlist": {
@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "package": "com.sangstersgroup.sangster",
+      "package": "com.thenovourq.app",
       "adaptiveIcon": {
         "backgroundColor": "#89CFF0",
         "foregroundImage": "./assets/android-icon-foreground.png"
