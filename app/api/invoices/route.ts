@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/send-email'
 import { invoicePdf, fmtMoney, fmtDate } from '@/lib/invoice-pdf'
 import { companyTz } from '@/lib/company-currency-server'
 import { todayIn } from '@/lib/company-tz'
+import { deptEmails, withDept } from '@/lib/dept-email'
 
 // Finance → Invoices, in the NOVOURQ invoice format.
 //   GET                       -> { invoices, settings, isAdmin }
@@ -22,7 +23,7 @@ import { todayIn } from '@/lib/company-tz'
 export const maxDuration = 30
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
 const CURS = ['GBP', 'JMD', 'USD', 'EUR', 'AED', 'CAD']
-const SETTING_FIELDS = ['prefix', 'company_name', 'logo_url', 'logo_line1', 'logo_line2', 'contact_lines', 'payment_instructions', 'signature_name', 'signature_url', 'terms_note', 'reply_to', 'offer_letter_email', 'doc_background_url']
+const SETTING_FIELDS = ['prefix', 'company_name', 'logo_url', 'logo_line1', 'logo_line2', 'contact_lines', 'payment_instructions', 'signature_name', 'signature_url', 'terms_note', 'reply_to', 'offer_letter_email', 'doc_background_url', 'dept_emails']
 
 async function settingsFor(biz: string) {
   let { data } = await db.from('invoice_settings').select('*').eq('business_id', biz).maybeSingle()
@@ -133,7 +134,9 @@ export async function POST(req: NextRequest) {
   if (b.action === 'send') {
     const to = String(b.to || inv.bill_to_email || '').trim()
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return bad('Add the email address to send it to.')
-    const s = await settingsFor(c.businessId)
+    const s0: any = await settingsFor(c.businessId)
+    // invoices show and reply to the billing address (NOVOURQ default, or the company's own setting)
+    const s = { ...s0, ...withDept(s0.contact_lines, s0.reply_to, deptEmails(s0).billing) }
     const bytes = await invoicePdf(inv, s, SITE_URL)
     const link = `${SITE_URL}/invoice/${inv.token}`
     const first = String(inv.bill_to_name).split(/\s+/)[0]

@@ -20,10 +20,12 @@ export const PERSON_KINDS: Record<string, string> = {
   cohost: 'Co-host', client: 'Client property owner', partner: 'Partner', guest: 'Guest', crm: 'CRM contact',
 }
 
+import { deptEmails, deptFor, withDept } from '@/lib/dept-email'
+
 export async function docSettings(biz: string) {
   let s = await one(db.from('invoice_settings').select('*').eq('business_id', biz).maybeSingle())
   if (!s) s = { company_name: 'Property Management Team', logo_url: '/novouq-logo.jpg', contact_lines: '', reply_to: null }
-  return s as { company_name: string; logo_url: string | null; contact_lines: string | null; reply_to: string | null; offer_letter_email?: string | null; doc_background_url?: string | null }
+  return s as { company_name: string; logo_url: string | null; contact_lines: string | null; reply_to: string | null; offer_letter_email?: string | null; dept_emails?: string | null; doc_background_url?: string | null }
 }
 
 async function bizPropertyIds(biz: string) {
@@ -131,16 +133,10 @@ export async function fieldsFor(biz: string, kind: string | null, id: string | n
   return { values: v, property_label }
 }
 
-/** Offer letters show the company's own careers address in the email footer and reply there. Each company sets it in Invoice settings → Documents; NOVOURQ defaults to career@thenovourq.com. Everything else keeps the company's normal contact details. */
+/** Every document shows its own department's address (see lib/dept-email.ts) in the footer and replies go there; a company that has not set one keeps its normal contact details. */
 export const isOfferLetter = (title?: string | null) => /^offer letter/i.test(String(title || '').trim())
-export const offerEmailFor = (s: { company_name?: string | null; offer_letter_email?: string | null }) => String(s.offer_letter_email || '').trim() || ((s.company_name || '').trim().toUpperCase() === 'NOVOURQ' ? 'career@thenovourq.com' : '')
-export function contactFor(doc: { title?: string | null }, s: { contact_lines: string | null; reply_to: string | null; company_name?: string | null; offer_letter_email?: string | null }) {
-  const em = offerEmailFor(s)
-  if (!isOfferLetter(doc.title) || !em) return { contact_lines: s.contact_lines, reply_to: s.reply_to }
-  const lines = String(s.contact_lines || '').split('\n').map(l => l.trim()).filter(Boolean)
-  const i = lines.findIndex(l => /^[^@\s]+@[^@\s]+$/.test(l))
-  if (i >= 0) lines[i] = em; else lines.splice(1, 0, em)
-  return { contact_lines: lines.join('\n'), reply_to: em }
+export function contactFor(doc: { title?: string | null }, s: { contact_lines: string | null; reply_to: string | null; company_name?: string | null; offer_letter_email?: string | null; dept_emails?: string | null }) {
+  return withDept(s.contact_lines, s.reply_to, deptEmails(s)[deptFor(doc.title)])
 }
 
 export function docEmailHtml(company: string, contact: string | null, first: string, message: string, link: string, button: string, foot: string) {

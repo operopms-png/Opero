@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-20', title: 'Each department has its own email', text: 'Offer letters, tenancy agreements, landlord agreements, payslips and invoices now show and reply to their own department address, and each company sets its own in Invoice settings → Documents.' },
   { date: '2026-11-20', title: 'Your own contract look', text: 'Each company sets its own offer letter email and contract page background in Invoice settings → Documents, and added templates use your own company name.' },
   { date: '2026-11-20', title: 'Documents guide updated', text: 'The Guide, Staff Training and the AI now explain how to send a document for signing, the landlord templates, test contracts and the NOVOURQ look.' },
   { date: '2026-11-20', title: 'Warning before sending blank company details', text: 'Sending a document now warns you if Company address, Work location or the signer role are still empty, and name and address lines on letters no longer run together.' },

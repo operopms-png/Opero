@@ -4,6 +4,7 @@
 // who to bill, add lines, choose currency and due date — the invoice on the
 // right updates as you type. The fixed parts (logo, contact details, bank
 // details, signature, terms) come from Invoice settings, which only admins edit.
+import { DEPTS } from '@/lib/dept-email'
 import { codeOf } from '@/lib/company-currency'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
@@ -242,9 +243,10 @@ function SettingsModal({ s, onClose, onSaved }: { s: any; onClose: () => void; o
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, alignItems: 'end' }}>{I('signature_name', 'Signature (typed)')}<div><label style={label}>Or signature image (PNG, clear background)</label><input type="file" accept="image/png" onChange={e => upload(e.target.files?.[0], 'signature_url')} />{f.signature_url && <button type="button" style={{ ...btn('ghost', true), marginTop: 6 }} onClick={() => set('signature_url', '')}>Use typed signature</button>}</div></div>
         {T('terms_note', 'Terms note (bottom of the invoice)', 3)}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.4fr', gap: 10 }}>{I('prefix', 'Number prefix')}{I('next_number', 'Next number')}{I('reply_to', 'Replies go to (email)')}</div>
-        {'offer_letter_email' in f && <div style={{ display: 'grid', gap: 10, borderTop: '1px solid #E8E4DA', paddingTop: 12 }}>
+        {'dept_emails' in f && <div style={{ display: 'grid', gap: 10, borderTop: '1px solid #E8E4DA', paddingTop: 12 }}>
           <div style={{ fontSize: 12.5, color: C.muted }}>Documents — how your contracts and letters look. Leave blank to use the standard look.</div>
-          {I('offer_letter_email', 'Offer letter email (shown in the footer, and replies go here)')}
+          <div style={{ fontSize: 12.5, color: C.muted }}>Email address for each kind of document. It shows in that document’s footer and replies go to it. Leave one blank to use your normal contact details.</div>
+          {DEPTS.map(d => { let cur: any = {}; try { cur = JSON.parse(f.dept_emails || '{}') || {} } catch {} return <div key={d.key}><label style={label}>{d.label} — {d.use}</label><input style={input} placeholder={d.key + '@yourcompany.com'} value={cur[d.key] ?? ''} onChange={e => set('dept_emails', JSON.stringify({ ...cur, [d.key]: e.target.value }))} /></div> })}
           <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>{f.doc_background_url && <img src={f.doc_background_url} alt="" style={{ width: 56, height: 80, objectFit: 'cover', border: '1px solid #E8E4DA' }} />}<div><label style={label}>Contract page background (JPG or PNG, portrait)</label><input type="file" accept="image/png,image/jpeg" onChange={e => upload(e.target.files?.[0], 'doc_background_url')} />{f.doc_background_url && <button style={{ ...btn('ghost'), marginLeft: 8 }} onClick={() => set('doc_background_url', '')}>Remove</button>}</div></div>
         </div>}
         {err && <div style={{ color: C.red, fontSize: 13 }}>{err}</div>}
