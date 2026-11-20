@@ -95,7 +95,7 @@ export default function WhatsAppPanel() {
             <button onClick={facebook} disabled={busy} style={{ ...btn, background: GREEN, opacity: busy ? .6 : 1 }}>Connect with Facebook</button>
             <div style={{ fontSize: 12.5, color: '#667085', margin: '8px 0 14px' }}>Sign in to Meta and pick or create your WhatsApp Business account. Or enter the details by hand:</div>
           </>}
-          <label style={label}>Name for this number</label><input value={f.label} onChange={e => setF({ ...f, label: e.target.value })} placeholder="Sangsters Group" style={input} />
+          <label style={label}>Name for this number</label><input value={f.label} onChange={e => setF({ ...f, label: e.target.value })} placeholder="NOVOURQ" style={input} />
           <label style={label}>Phone number ID</label><input value={f.phone_number_id} onChange={e => setF({ ...f, phone_number_id: e.target.value })} placeholder="From Meta → WhatsApp → API Setup" style={input} />
           <label style={label}>WhatsApp Business Account ID</label><input value={f.waba_id} onChange={e => setF({ ...f, waba_id: e.target.value })} style={input} />
           <label style={label}>Access token</label><input type="password" autoComplete="off" value={f.access_token} onChange={e => setF({ ...f, access_token: e.target.value })} placeholder="Permanent token from a Meta system user" style={input} />
