@@ -1,9 +1,8 @@
 // Lets Novourq Cloud AI (Ask AI and Novourq Voice) propose a change to how much a funding partner has put in.
-// It never saves anything itself: the change waits in AI Approvals (always, it cannot be switched to automatic)
-// and a person presses Approve. Approving only updates the amount invested and currency on the partner's card.
+// An admin asking directly saves at once: it only updates the amount invested and currency on the partner's card,
+// and the old amount is written to the AI activity log (Staff Centre → AI Command Centre → AI Activity) so it can be put back.
 // It does not move money and does not rebuild the repayment schedule.
 import { serviceClient as db } from '@/lib/admin-auth'
-import { queueAiAction } from '@/lib/ai-approvals'
 import { CURRENCIES, SYMBOL } from '@/lib/partner-schedule'
 
 type Who = { businessId: string; name: string; email: string; isAdmin: boolean }
@@ -23,13 +22,9 @@ export async function proposePartnerInvestment(c: Who, input: { partner: string;
   const fmt = (n: number) => n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const was = `${SYMBOL[p.currency || 'JMD'] ?? ''}${fmt(Number(p.invested) || 0)}`
   const draft = `Partner: ${p.name}\nAmount invested: was ${was}, change to ${sym}${fmt(invested)}\nCurrency: ${currency}\n\nThis only updates the amount invested on the partner's card. It does not move money and does not change the repayment schedule.`
-  const q: any = await queueAiAction({
-    userId: c.businessId, agentKey: input.agentKey, actionType: 'partner_investment',
-    title: `Update ${p.name}'s investment to ${sym}${fmt(invested)}`, draftBody: draft,
-    payload: { owner_id: p.id, invested, currency, previous_invested: Number(p.invested) || 0, previous_currency: p.currency || null },
-    context: { summary: `Asked for by ${c.name || c.email} ${input.via}` }, reason: `Requested by ${c.name || c.email} ${input.via}`,
-  })
-  if (q?.error) return { ok: false, error: q.error }
-  if (q?.skipped) return { ok: false, error: String(q.skipped) }
+  const { data: saved, error } = await db.from('owner_profiles').update({ invested, currency }).eq('id', p.id).eq('business_id', c.businessId).select('id')
+  if (error) return { ok: false, error: error.message }
+  if (!saved?.length) return { ok: false, error: 'Partner not found for this account.' }
+  await db.from('ai_activity_log').insert({ user_id: c.businessId, agent_key: input.agentKey, action: `Updated ${p.name}'s amount invested: ${was} to ${sym}${fmt(invested)}`, reason: `Was ${was} (${p.currency || 'JMD'}). Asked for by ${c.name || c.email} ${input.via}`.slice(0, 500), authorised_by: `${c.name || c.email} asked for this ${input.via}` }).then(() => {}, () => {})
   return { ok: true, summary: `${p.name}: ${was} to ${sym}${fmt(invested)}` }
 }

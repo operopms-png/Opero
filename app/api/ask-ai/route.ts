@@ -117,7 +117,7 @@ async function queueMarketingFromReply(c: NonNullable<Awaited<ReturnType<typeof 
   } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
 }
 
-// If the AI added the [[UPDATE_PARTNER …]] line, put the new amount invested in AI Approvals. A person approves it there; nothing is saved from the chat.
+// If the AI added the [[UPDATE_PARTNER …]] line, save the new amount invested (admins only, old amount logged).
 async function queuePartnerFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
   const m = text.match(/\[\[UPDATE_PARTNER([^\]]*)\]\]/)
   if (!m) return text
@@ -126,7 +126,7 @@ async function queuePartnerFromReply(c: NonNullable<Awaited<ReturnType<typeof ge
   try {
     const { proposePartnerInvestment } = await import('@/lib/ai-partner-investment')
     const r = await proposePartnerInvestment(c, { partner: arg('partner'), amount: arg('amount'), currency: arg('currency'), agentKey: 'ask_ai', via: 'in Ask AI' })
-    if (!r.ok) return clean + `\n\n(I could not queue it: ${r.error})`
-    return clean + `\n\nQueued for approval (${r.summary}). Open Staff Centre → AI Command Centre → AI Approvals, check it and press Approve & update partner.`
+    if (!r.ok) return clean + `\n\n(I could not update it: ${r.error})`
+    return clean + `\n\nSaved: ${r.summary}. Check it on the partner's card in Staff Centre → Partners & Investors → Partners.`
   } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
 }
