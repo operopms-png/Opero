@@ -252,7 +252,7 @@ export default function FlatViewer3D({ layout, title, building, onClose }: { lay
     const ro = new ResizeObserver(resize); ro.observe(el); resize()
     let raf = 0, last = performance.now()
     const loop = (t: number) => {
-      raf = requestAnimationFrame(loop); const dt = Math.min(0.05, (t - last) / 1000); last = t
+      raf = requestAnimationFrame(loop); const raw = (t - last) / 1000, dt = Math.min(0.05, raw), dtTour = Math.min(0.25, raw); last = t // the Tour follows a fixed path, so it can take bigger steps and keep real time on slow devices
       renderer.clear()
       if (walking) {
         const f = (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0) - joy.y, s = (keys['d'] ? 1 : 0) - (keys['a'] ? 1 : 0) + joy.x
@@ -261,7 +261,7 @@ export default function FlatViewer3D({ layout, title, building, onClose }: { lay
         if (!blocked(me.x + dx, me.z)) me.x += dx; if (!blocked(me.x, me.z + dz)) me.z += dz
         cam.position.set(me.x, EYE, me.z); cam.rotation.set(me.pitch, me.yaw, 0, 'YXZ')
       } else if (touring && inRoute) {
-        tourT += dt
+        tourT += dtTour
         const outside = tourT < T_OUT, inTotal = inRoute.total / IN_SPEED
         if (tourT > T_OUT + inTotal + 1.6) { if (wantRecord) { wantRecord = false; stopRec(); setMode('plan') } else { tourT = 0; curRoom = -2 } }
         const nowOut = tourT < T_OUT
@@ -269,7 +269,7 @@ export default function FlatViewer3D({ layout, title, building, onClose }: { lay
         let p: THREE.Vector2, dir: THREE.Vector2, speed: number
         if (nowOut) { const a = along(outRoute, Math.min(tourT * OUT_SPEED, outRoute.total)); p = a.p; dir = a.dir; speed = tourT * OUT_SPEED < outRoute.total ? OUT_SPEED : 0 }
         else { const ti = tourT - T_OUT; const a = along(inRoute, Math.min(ti * IN_SPEED, inRoute.total)); p = a.p; dir = a.dir; speed = ti * IN_SPEED < inRoute.total ? IN_SPEED : 0 }
-        if (dir.lengthSq() > 1e-8 && speed > 0) { const want = Math.atan2(dir.x, dir.y); let d = want - heroYaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; heroYaw += d * Math.min(1, dt * 8) }
+        if (dir.lengthSq() > 1e-8 && speed > 0) { const want = Math.atan2(dir.x, dir.y); let d = want - heroYaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; heroYaw += d * Math.min(1, dtTour * 8) }
         const ph = t / 1000 * 3.4 * speed, sw = speed > 0 ? 0.7 : 0, ox = nowOut ? EX : 0
         hero.group.position.set(p.x + ox, Math.abs(Math.sin(ph)) * sw * 0.03, p.y); hero.group.rotation.y = heroYaw; swing(hero, ph, sw)
         crowd.children.forEach((c, i) => { c.position.y = 0; c.rotation.z = Math.sin(t / 900 + i * 2) * 0.02 })
