@@ -3,6 +3,7 @@
 // ones. Only listing-safe fields ever leave the server.
 import { serviceClient } from '@/lib/admin-auth'
 import { CURRENCIES, parseVideos, type Listing } from '@/lib/listings-shared'
+import { sanitizeLayout } from '@/lib/flat-layout'
 export * from '@/lib/listings-shared'
 
 export const LISTINGS_BUSINESS_ID = process.env.LISTINGS_BUSINESS_ID || 'bd780fdd-15e3-4306-8c87-788b23647ee5'
@@ -27,7 +28,7 @@ export function toListing(row: any): Listing {
   }
 }
 
-const COLS = 'id,name,address,type,bedrooms,bathrooms,rent,currency,status,image_urls,photo_captions,description,features,available_from,listing_slug,listed,user_id,video_urls'
+const COLS = 'id,name,address,type,bedrooms,bathrooms,rent,currency,status,image_urls,photo_captions,description,features,available_from,listing_slug,listed,user_id,video_urls,show_3d'
 
 export async function getListings(): Promise<Listing[]> {
   const { data } = await serviceClient.from('estate_properties').select(COLS).eq('user_id', LISTINGS_BUSINESS_ID).is('ended_at', null).eq('listed', true).order('created_at', { ascending: false })
@@ -38,5 +39,12 @@ export async function getListing(idOrSlug: string): Promise<Listing | null> {
   const isUuid = /^[0-9a-f-]{36}$/i.test(idOrSlug)
   const { data } = await serviceClient.from('estate_properties').select(COLS).eq('user_id', LISTINGS_BUSINESS_ID).eq('listed', true).is('ended_at', null).eq(isUuid ? 'id' : 'listing_slug', idOrSlug).maybeSingle()
   if (!data || HIDDEN.includes(String(data.status || '').toLowerCase())) return null
-  return toListing(data)
+  const home = toListing(data)
+  if (data.show_3d !== false) {
+    // Flats of this property with saved rooms, for the read-only 3D walk-through on the public page.
+    const { data: us } = await serviceClient.from('estate_units').select('id,unit_number,layout').eq('property_id', data.id).eq('user_id', LISTINGS_BUSINESS_ID).not('layout', 'is', null).order('unit_number').limit(12)
+    const flats = (us ?? []).flatMap(u => { const layout = sanitizeLayout(u.layout); return layout ? [{ id: String(u.id), unit: String(u.unit_number || ''), layout }] : [] })
+    if (flats.length) home.flats = flats
+  }
+  return home
 }

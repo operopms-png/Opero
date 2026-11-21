@@ -3,14 +3,19 @@
 // thumbnails and full screen, key facts, description, features, and a
 // "Book a viewing" form that goes to Estate Agency → Viewings and the CRM.
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import PhotoSlider, { Lightbox, BRAND } from './PhotoSlider'
 import { TopBar, pageCss, areaOf, inp, lbl } from './ListingsBrowser'
 import { money, bedLabel, titleCase, videoEmbed, type Listing } from '@/lib/listings-shared'
+
+// three.js only loads when someone opens the 3D view
+const FlatViewer3D = dynamic(() => import('@/components/FlatViewer3D'), { ssr: false })
 
 export default function ListingDetail({ home }: { home: Listing }) {
   const [i, setI] = useState(0)
   const [full, setFull] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
+  const [view3d, setView3d] = useState<number | null>(null)
   const name = titleCase(home.name)
   const avail = home.status === 'now' ? 'Now' : home.available_from ? new Date(home.available_from + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) : 'Soon'
 
@@ -65,6 +70,13 @@ export default function ListingDetail({ home }: { home: Listing }) {
               <h3 style={{ color: BRAND.brown, fontSize: 16, margin: '22px 0 10px' }}>Features</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{home.features.map(f => <span key={f} style={{ border: `1px solid ${BRAND.line}`, borderRadius: 20, padding: '6px 12px', fontSize: 13.5 }}>✓ {f}</span>)}</div>
             </>}
+            {home.flats && home.flats.length > 0 && <>
+              <h3 style={{ color: BRAND.brown, fontSize: 16, margin: '22px 0 4px' }}>3D walk-through</h3>
+              <div style={{ color: BRAND.muted, fontSize: 14, marginBottom: 10 }}>See the layout and walk through it room by room. It is a simple 3D model built from the floor plan, not photographs.</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>{home.flats.map((f, k) => (
+                <button key={f.id} type="button" onClick={() => setView3d(k)} style={{ font: 'inherit', fontSize: 14.5, fontWeight: 700, padding: '10px 16px', borderRadius: 10, border: `1px solid ${BRAND.gd}`, background: '#fff', color: BRAND.gd, cursor: 'pointer' }}>{home.flats!.length > 1 && f.unit ? `View flat ${f.unit} in 3D` : 'View in 3D'}</button>
+              ))}</div>
+            </>}
             {home.videos.length > 0 && <>
               <h3 style={{ color: BRAND.brown, fontSize: 16, margin: '22px 0 4px' }}>Virtual viewing</h3>
               <div style={{ color: BRAND.muted, fontSize: 14, marginBottom: 10 }}>Cannot visit in person? Watch the walk-through, then request a viewing or a video call.</div>
@@ -77,6 +89,7 @@ export default function ListingDetail({ home }: { home: Listing }) {
         </div>
       </div>
       {full !== null && home.photos.length > 0 && <Lightbox photos={home.photos} start={full} onClose={() => setFull(null)} />}
+      {view3d !== null && home.flats?.[view3d] && <FlatViewer3D layout={home.flats[view3d].layout} building={name} title={home.flats.length > 1 && home.flats[view3d].unit ? `${name}, flat ${home.flats[view3d].unit}` : name} onClose={() => setView3d(null)} />}
     </div>
   )
 }

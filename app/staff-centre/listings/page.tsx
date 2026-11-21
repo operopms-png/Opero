@@ -61,7 +61,7 @@ export default function ListingsPage() {
   async function save() {
     if (!edit) return
     setSaving(true)
-    const patch = { listed: edit.listed, currency: edit.currency || 'JMD', available_from: edit.available_from || null, description: edit.description || null, features: edit.features ?? [], image_urls: edit.image_urls || null, video_urls: edit.video_urls || null, photo_captions: edit.photo_captions ?? {}, rent: edit.rent === '' || edit.rent == null ? null : edit.rent }
+    const patch = { listed: edit.listed, currency: edit.currency || 'JMD', available_from: edit.available_from || null, description: edit.description || null, features: edit.features ?? [], image_urls: edit.image_urls || null, video_urls: edit.video_urls || null, show_3d: edit.show_3d !== false, photo_captions: edit.photo_captions ?? {}, rent: edit.rent === '' || edit.rent == null ? null : edit.rent }
     const { error } = await supabase.from('estate_properties').update(patch).eq('id', edit.id)
     setSaving(false)
     if (error) { flash(error.message); return }
@@ -148,6 +148,10 @@ export default function ListingsPage() {
           </div>
           <ListingEditor value={edit as ListingFields} onChange={patch => setEdit((x: any) => ({ ...x, ...patch }))} rentLabel="the rent" propertyId={edit.id} />
           <VideoEditor value={edit.video_urls} onChange={v => setEdit((x: any) => ({ ...x, video_urls: v }))} />
+          <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13.5, margin: '4px 0 12px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={edit.show_3d !== false} onChange={e => setEdit((x: any) => ({ ...x, show_3d: e.target.checked }))} style={{ marginTop: 3 }} />
+            <span><b>Show the 3D walk-through on the public page</b><br /><span style={{ color: '#676879' }}>Only flats that have saved rooms appear (Real Estate Intelligence → Map → View floors → Add floor plan). Untick to hide it for this property.</span></span>
+          </label>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 6 }}>
             <button onClick={() => setEdit(null)} style={btn('ghost')}>Cancel</button>
             <button onClick={save} disabled={saving} style={{ ...btn('gold'), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>

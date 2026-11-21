@@ -2,6 +2,8 @@
 // public listing shape. Rent is stored per property with its own currency;
 // J$ (JMD) is the default.
 
+import type { Layout } from '@/lib/flat-layout'
+
 export const CURRENCIES: Record<string, { symbol: string; label: string }> = {
   JMD: { symbol: 'J$', label: 'Jamaican dollar (J$)' },
   USD: { symbol: 'US$', label: 'US dollar (US$)' },
@@ -20,6 +22,7 @@ export type Listing = {
   status: 'now' | 'soon'; available_from: string | null
   description: string; features: string[]; photos: { url: string; caption: string }[]
   videos: { url: string; title: string }[]
+  flats?: { id: string; unit: string; layout: Layout }[] // flats with saved rooms, for the public 3D walk-through (property page only)
 }
 
 export const bedLabel = (b: string) => !b ? '' : /studio/i.test(b) ? 'Studio' : `${b} bed`
