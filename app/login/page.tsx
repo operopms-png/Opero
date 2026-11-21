@@ -334,7 +334,7 @@ function LoginForm() {
           <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#667085', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mode === 'login' && (
               <>
-                <div>New to NOVOURQ? <button onClick={() => { setError(''); setSelectedPlan(initialPlan); setMode('signup') }} style={{ background: 'none', border: 'none', color: '#1B2F6E', cursor: 'pointer', fontWeight: 600, fontSize: 13, fontFamily: 'inherit' }}>Start your free trial</button>. Joining a team? Ask your manager for an invite.</div>
+                <div>New to NOVOURQ? <button onClick={() => { setError(''); setSelectedPlan(initialPlan); setMode('signup') }} style={{ background: 'none', border: 'none', color: '#1B2F6E', cursor: 'pointer', fontWeight: 600, fontSize: 13, fontFamily: 'inherit' }}>Sign up</button> and start your 14-day free trial. Joining a team? Ask your manager for an invite.</div>
                 <div><button onClick={() => setMode('reset')} style={{ background: 'none', border: 'none', color: '#98A2B3', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>Forgot password?</button></div>
               </>
             )}

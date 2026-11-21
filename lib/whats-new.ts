@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-21', title: 'Clearer Sign up link', text: 'The sign-in page now says Sign up, so new clients can find where to create an account.' },
   { date: '2026-11-21', title: 'Request a demo form', text: 'The Request a demo button on thenovourq.com now opens a form at app.thenovourq.com/request-demo, and every request lands in the CRM at Enquiry with a bell alert and a confirmation email to the person.' },
   { date: '2026-11-21', title: 'Add a 3D layout to any listed property', text: 'In Marketing, Listings, press a property and use Add 3D layout to give a house or any property with no flats its own floor plan and 3D walk-through, shown on its public page.' },
   { date: '2026-11-21', title: '3D walk-through on the public property page', text: 'A listed property whose flats have saved rooms now shows a View in 3D button on its public page; it can be switched off per property in Marketing, Listings.' },
