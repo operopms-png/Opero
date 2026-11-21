@@ -75,6 +75,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     const r = await askClaude(systemPrompt({ c, portal, web, deal: kind === 'deal' ? b.deal : undefined }), messages, web, c.businessId)
     if (!r.text) return { error: r.error || 'The AI couldn’t answer' }
     r.text = await queueMarketingFromReply(c, r.text)
+    r.text = await queuePartnerFromReply(c, r.text)
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
@@ -113,5 +114,19 @@ async function queueMarketingFromReply(c: NonNullable<Awaited<ReturnType<typeof 
     })
     if ('error' in q && q.error) return clean + `\n\n(I could not queue it: ${q.error})`
     return clean + `\n\nIt is waiting in Staff Centre → AI Command Centre → AI Approvals. Open it, check the wording and the ${people.length} people, then press Approve to send.`
+  } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
+}
+
+// If the AI added the [[UPDATE_PARTNER …]] line, put the new amount invested in AI Approvals. A person approves it there; nothing is saved from the chat.
+async function queuePartnerFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
+  const m = text.match(/\[\[UPDATE_PARTNER([^\]]*)\]\]/)
+  if (!m) return text
+  const clean = text.replace(/\s*\[\[UPDATE_PARTNER[^\]]*\]\]\s*/g, '\n').trim()
+  const arg = (k: string) => (m[1].match(new RegExp(k + '=(?:"([^"]*)"|([^\\s\\]]+))')) || []).slice(1).find(Boolean) || ''
+  try {
+    const { proposePartnerInvestment } = await import('@/lib/ai-partner-investment')
+    const r = await proposePartnerInvestment(c, { partner: arg('partner'), amount: arg('amount'), currency: arg('currency'), agentKey: 'ask_ai', via: 'in Ask AI' })
+    if (!r.ok) return clean + `\n\n(I could not queue it: ${r.error})`
+    return clean + `\n\nQueued for approval (${r.summary}). Open Staff Centre → AI Command Centre → AI Approvals, check it and press Approve & update partner.`
   } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
 }
