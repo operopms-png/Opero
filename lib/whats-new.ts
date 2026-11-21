@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-21', title: 'Repairs now show in every portal', text: 'A repair reported by a tenant now shows its stages and fix in the tenant, landlord and partner Maintenance tabs, everyone is emailed, and staff can upload invoices for partners to see.' },
   { date: '2026-11-21', title: 'Ask AI can update a partner\'s investment', text: 'Admins can ask Novourq Cloud AI to update how much a partner has put in; it saves straight away and keeps the old amount in the AI activity log.' },
   { date: '2026-11-21', title: 'Clearer Sign up link', text: 'The sign-in page now says Sign up, so new clients can find where to create an account.' },
   { date: '2026-11-21', title: 'Request a demo form', text: 'The Request a demo button on thenovourq.com now opens a form at app.thenovourq.com/request-demo, and every request lands in the CRM at Enquiry with a bell alert and a confirmation email to the person.' },

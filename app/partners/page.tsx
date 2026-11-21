@@ -13,6 +13,7 @@ import LongTermDashboard, { type LongTerm } from '../../components/partners/Long
 import AgentLinks from '../../components/partners/AgentLinks'
 import LongTermLink from '../../components/partners/LongTermLink'
 import PartnerDocuments from '../../components/partners/PartnerDocuments'
+import MaintenanceFeed from '@/components/maintenance/MaintenanceFeed'
 import { buckets, bucketSum, Kpi, Panel, StackedBars, TrendLine, Funnel, Legend, Seg, Badge, Avatar, agentTier, ST_COL, LT_COL, PERIOD_LABEL, type Period, type Bucket } from '../../components/partners/PartnerCharts'
 
 // Partners
@@ -1306,7 +1307,7 @@ export default function PartnersPage() {
         {inv && investorTab === 'Maintenance' && (() => {
           const done = (t: any) => ['resolved', 'completed', 'closed', 'done'].includes(String(t.status).toLowerCase())
           const started = (t: any) => !done(t) && ['in_progress', 'in progress', 'assigned', 'scheduled', 'ongoing'].includes(String(t.status).toLowerCase())
-          const all = [...tickets, ...(lt?.maintenance ?? [])].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+          const all = [...tickets].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
           const open = all.filter(t => !done(t)), solved = all.filter(done)
           const pname = (id: string) => properties.find(x => x.id === id)?.name ?? lt?.properties.find(x => x.id === id)?.name ?? 'Property'
           const when = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -1324,7 +1325,8 @@ export default function PartnersPage() {
               <div style={card}>
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Maintenance across your properties</div>
                 <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Each issue appears here as soon as it is reported by a guest, tenant or our team, and updates as we work on it.</div>
-                {all.length === 0 && <div style={{ fontSize: 13, color: '#98A2B3' }}>No issues reported on your properties.</div>}
+                {all.length === 0 && !lt?.properties?.length && <div style={{ fontSize: 13, color: '#98A2B3' }}>No issues reported on your properties.</div>}
+                {all.length === 0 && !!lt?.properties?.length && <div style={{ fontSize: 13, color: '#98A2B3' }}>No short-stay issues. Long-term property issues are below.</div>}
                 {all.map(t => (
                   <div key={t.id} style={{ borderTop: '1px solid #F2F4F7', padding: '12px 0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
@@ -1339,6 +1341,13 @@ export default function PartnersPage() {
                   </div>
                 ))}
               </div>
+              {!!lt?.properties?.length && (
+                <div style={card}>
+                  <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Long-term properties</div>
+                  <div style={{ fontSize: 12, color: '#667085', marginBottom: 12 }}>Issues reported by tenants after you were linked to the property, with every stage, the fix and any invoices.</div>
+                  <MaintenanceFeed role="partner" />
+                </div>
+              )}
             </div>
           )
         })()}

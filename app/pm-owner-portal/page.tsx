@@ -10,6 +10,7 @@ import { pingReceptionist } from '@/lib/receptionist-client'
 import FeedbackForm from '@/components/portal/FeedbackForm'
 import MyDataPanel from '@/components/portal/MyDataPanel'
 import PortalDocuments from '@/components/portal/PortalDocuments'
+import MaintenanceFeed from '@/components/maintenance/MaintenanceFeed'
 import VoiceDictation from '@/components/VoiceDictation'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
 
@@ -202,7 +203,7 @@ function PMOwnerPortalInner() {
     await loadAll(landlord)
   }
 
-  const TABS = ['Dashboard', 'My Manager', 'Agreement', 'Reports', 'Properties', 'Payments', 'Utilities', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
+  const TABS = ['Dashboard', 'My Manager', 'Agreement', 'Reports', 'Properties', 'Maintenance', 'Payments', 'Utilities', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -269,6 +270,8 @@ function PMOwnerPortalInner() {
             ))}
           </div>
         )}
+
+        {tab === 'Maintenance' && landlord && <MaintenanceFeed role="landlord" target={isStaffView ? landlord.id : undefined} />}
 
         {tab === 'Payments' && (
           <div>

@@ -6,6 +6,7 @@ import { MAINTENANCE_BOARD } from '@/lib/hr-boards'
 import type { BoardStore } from '@/lib/marketing-boards'
 import MkBoardView from '@/components/marketing/MkBoardView'
 import MkPanel from '@/components/marketing/MkPanel'
+import StaffMaintenanceExtras from '@/components/maintenance/StaffMaintenanceExtras'
 
 // Staff Centre → Maintenance Board: all maintenance jobs from the three modules on one CRM-style board.
 const TABLE: Record<string, string> = { str: 'maintenance_tickets', pm: 'pm_maintenance', estate: 'estate_maintenance' }
@@ -86,6 +87,7 @@ export default function MaintenanceBoardPage() {
                 <span style={{ background: urgent ? '#DF2F4A' : '#C4C4C4', color: '#fff', borderRadius: 3, padding: '3px 10px', fontSize: 12.5 }}>{urgent} urgent</span>
               </span>} />}
       </main>
+      {open && /^(pm|estate):/.test(open) && <StaffMaintenanceExtras key={'x' + open} source={open.split(':')[0] as 'pm' | 'estate'} id={open.split(':')[1]} />}
       {open && <MkPanel key={open} mk={store} board={MAINTENANCE_BOARD} id={open} onClose={() => setOpen(null)} onOpenOther={(_b, id) => setOpen(id)} />}
     </div>
   )

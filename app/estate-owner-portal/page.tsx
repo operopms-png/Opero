@@ -10,6 +10,7 @@ import FeedbackForm from '@/components/portal/FeedbackForm'
 import MyDataPanel from '@/components/portal/MyDataPanel'
 import VoiceDictation from '@/components/VoiceDictation'
 import { LandlordReportsInbox } from '@/components/reports/LandlordStatements'
+import MaintenanceFeed from '@/components/maintenance/MaintenanceFeed'
 
 // Mirrors app/pm-owner-portal closely -- same layout, same staff-preview
 // pattern via ?landlord_id=. Messages now use estate_landlord_messages
@@ -160,7 +161,7 @@ function EstateOwnerPortalInner() {
   const monthlyRentTotal = activeTenancies.reduce((s, t) => s + (parseFloat(t.rent) || 0), 0)
   const expiringDocs = documents.filter(d => d.expiry_date && d.expiry_date < today).length
 
-  const TABS = ['Dashboard', 'Reports', 'Properties', 'Tenancies', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
+  const TABS = ['Dashboard', 'Reports', 'Properties', 'Maintenance', 'Tenancies', 'Documents', 'Messages', 'Feedback', 'Contact & Payment', 'My Data']
 
   return (
     <div style={{ minHeight: '100vh', background: '#F7F8FA', fontFamily: "'Inter',sans-serif" }}>
@@ -209,6 +210,8 @@ function EstateOwnerPortalInner() {
         )}
 
         {tab === 'Reports' && <LandlordReportsInbox mode="ea" landlordId={landlord.id} />}
+
+        {tab === 'Maintenance' && landlord && <MaintenanceFeed role="landlord" target={isStaffView ? landlord.id : undefined} />}
 
         {tab === 'Properties' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

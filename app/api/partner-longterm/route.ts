@@ -7,7 +7,7 @@ import { getCaller } from '@/lib/mailbox'
 //   GET ?owner_id=…          partner sees their own; staff pass owner_id. Staff also get `options`, every long-term property they could link.
 //   PUT {owner_id, pm_property_ids}   staff: choose which long-term properties belong to this partner
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
-const COLS = 'id, name, business_id, pm_property_ids, split_percentage, currency'
+const COLS = 'id, name, business_id, pm_property_ids, pm_property_since, split_percentage, currency'
 
 async function who(req: NextRequest, ownerId: string) {
   if (ownerId) {
@@ -46,7 +46,9 @@ export async function GET(req: NextRequest) {
     m.set(k, e)
   }
   out.months = [...m.values()].sort((a, b) => a.month.localeCompare(b.month))
-  out.maintenance = mt.data ?? []
+  // A partner only sees repairs reported on or after the day they were linked to that property (staff see all).
+  const linkedOn: Record<string, string> = w.owner.pm_property_since ?? {}
+  out.maintenance = (mt.data ?? []).filter((m: any) => w.staff || !linkedOn[m.property_id] || String(m.created_at).slice(0, 10) >= linkedOn[m.property_id])
   return NextResponse.json(out)
 }
 
@@ -54,6 +56,13 @@ export async function PUT(req: NextRequest) {
   const b = await req.json().catch(() => null); if (!b?.owner_id || !Array.isArray(b.pm_property_ids)) return bad('Missing details')
   const w = await who(req, String(b.owner_id)); if (!w?.staff) return bad('Not found', 404)
   const { data: ok } = await db.from('pm_properties').select('id').eq('user_id', w.owner.business_id).in('id', b.pm_property_ids)
-  await db.from('owner_profiles').update({ pm_property_ids: (ok ?? []).map((p: any) => p.id) }).eq('id', w.owner.id)
+  const ids = (ok ?? []).map((p: any) => p.id)
+  // Newly linked homes get today's date: the partner sees repairs reported from now on, not the earlier history. Homes already linked keep their date
+  // (or none, for partners linked before this existed, who keep seeing everything).
+  const was: string[] = w.owner.pm_property_ids ?? [], since: Record<string, string> = { ...(w.owner.pm_property_since ?? {}) }
+  const today = new Date().toISOString().slice(0, 10)
+  for (const id of ids) if (!was.includes(id)) since[id] = today
+  for (const k of Object.keys(since)) if (!ids.includes(k)) delete since[k]
+  await db.from('owner_profiles').update({ pm_property_ids: ids, pm_property_since: since }).eq('id', w.owner.id)
   return NextResponse.json({ ok: true })
 }

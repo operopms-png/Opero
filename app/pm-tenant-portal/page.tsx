@@ -10,6 +10,7 @@ import { supabase, getAccountId } from '../../lib/supabase'
 import { pingReceptionist } from '@/lib/receptionist-client'
 import FeedbackForm from '@/components/portal/FeedbackForm'
 import MyDataPanel from '@/components/portal/MyDataPanel'
+import MaintenanceFeed from '@/components/maintenance/MaintenanceFeed'
 import VoiceDictation from '@/components/VoiceDictation'
 
 const ACCENT = '#89CFF0'
@@ -403,18 +404,7 @@ function PMTenantPortalInner() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {maintenance.length === 0 ? <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>No maintenance requests yet</div> :
-              maintenance.map(m => (
-                <div key={m.id} style={{ background: '#fff', borderRadius: 10, border: '1px solid #E4E7EC', padding: '14px 16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: '#323338' }}>{m.title}</div>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: m.status === 'open' ? '#DBEAFE' : m.status === 'resolved' ? '#D1FAE5' : '#FEF3C7', color: m.status === 'open' ? '#2563EB' : m.status === 'resolved' ? '#059669' : '#D97706', textTransform: 'capitalize' }}>{m.status}</span>
-                  </div>
-                  {m.description && <div style={{ fontSize: 12, color: '#667085' }}>{m.description}</div>}
-                </div>
-              ))}
-            </div>
+            <MaintenanceFeed role="tenant" target={viewingTenantId || undefined} refreshKey={maintenance.length} />
           </div>
         )}
 
