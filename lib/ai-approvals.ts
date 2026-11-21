@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -200,6 +200,18 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     if (Math.abs(Number(pay.amount) - Number(txn.amount)) >= 0.01) return { error: 'The amounts no longer match. Mark it by hand.' }
     const { error } = await db.from('pm_rent_payments').update({ status: 'paid', paid_date: txn.date }).eq('id', pay.id).eq('user_id', action.user_id)
     if (error) return { error: error.message }
+    return { success: true }
+  }
+
+  if (action.action_type === 'partner_investment') {
+    // Only the amount invested and currency. Re-checked here: the partner must still belong to this account.
+    const invested = Number(p.invested)
+    if (!p.owner_id || !(invested > 0)) return { error: 'Invalid amount.' }
+    const { CURRENCIES } = await import('./partner-schedule')
+    const currency = CURRENCIES[String(p.currency)] ? String(p.currency) : 'JMD'
+    const { data, error } = await getServiceClient().from('owner_profiles').update({ invested, currency }).eq('id', p.owner_id).eq('business_id', action.user_id).select('id')
+    if (error) return { error: error.message }
+    if (!data?.length) return { error: 'Partner not found for this account.' }
     return { success: true }
   }
 
