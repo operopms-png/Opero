@@ -3,6 +3,7 @@
 // (app.thenovourq.com/homes) in one place — which Estate Agency
 // properties are showing, their photos/currency/description (same editor as
 // Estate Agency → Properties), and the viewing requests tenants send.
+import FlatPlanEditor from '@/components/FlatPlanEditor'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
@@ -18,6 +19,7 @@ export default function ListingsPage() {
   const [tab, setTab] = useState<'homes' | 'requests'>('homes')
   const [props, setProps] = useState<any[]>([])
   const [views, setViews] = useState<any[]>([])
+  const [planOpen, setPlanOpen] = useState(false)
   const [edit, setEdit] = useState<any | null>(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
@@ -150,14 +152,22 @@ export default function ListingsPage() {
           <VideoEditor value={edit.video_urls} onChange={v => setEdit((x: any) => ({ ...x, video_urls: v }))} />
           <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13.5, margin: '4px 0 12px', cursor: 'pointer' }}>
             <input type="checkbox" checked={edit.show_3d !== false} onChange={e => setEdit((x: any) => ({ ...x, show_3d: e.target.checked }))} style={{ marginTop: 3 }} />
-            <span><b>Show the 3D walk-through on the public page</b><br /><span style={{ color: '#676879' }}>Only flats that have saved rooms appear (Real Estate Intelligence → Map → View floors → Add floor plan). Untick to hide it for this property.</span></span>
+            <span><b>Show the 3D walk-through on the public page</b><br /><span style={{ color: '#676879' }}>Shows this property's own 3D layout and any flats in it that have saved rooms (Real Estate Intelligence → Map → View floors → Add floor plan). Untick to hide it.</span></span>
           </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 12px', flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => setPlanOpen(true)} style={btn('ghost')}>{edit.layout?.rooms?.length ? 'Edit 3D layout' : 'Add 3D layout'}</button>
+            <span style={{ fontSize: 13, color: '#676879' }}>{edit.layout?.rooms?.length ? `${edit.layout.rooms.length} rooms saved` : 'For a house or a property with no flats: upload the plan, let the AI read the rooms, or draw them.'}</span>
+          </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 6 }}>
             <button onClick={() => setEdit(null)} style={btn('ghost')}>Cancel</button>
             <button onClick={save} disabled={saving} style={{ ...btn('gold'), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save'}</button>
           </div>
         </Modal>
       )}
+      {planOpen && edit && <FlatPlanEditor source="property" noun="" unit={{ id: edit.id, unit: edit.name, planUrl: edit.plan_url, layout: edit.layout }} onClose={() => setPlanOpen(false)} onSaved={p => {
+        const patch: any = { ...(p.planUrl !== undefined ? { plan_url: p.planUrl } : {}), ...(p.layout !== undefined ? { layout: p.layout } : {}) }
+        setEdit((x: any) => x && ({ ...x, ...patch })); setProps(ps => ps.map(x => x.id === edit.id ? { ...x, ...patch } : x))
+      }} />}
       {toast && <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: C.ink, color: '#fff', padding: '10px 18px', borderRadius: 6, fontSize: 13.5, zIndex: 80 }}>{toast}</div>}
     </CrmPage>
   )

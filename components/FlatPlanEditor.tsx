@@ -9,7 +9,7 @@ const LINE = '#D9E2F0', MUTED = '#667085', TXT = '#101828', NAVY = '#1B2F6E', BL
 const PAL: Record<RoomKind, string> = { bedroom: '#BFD7F2', living: '#F3D9A8', dining: '#F3D9A8', kitchen: '#D5E8D4', bath: '#CFE8EF', hall: '#E6E0D2', balcony: '#C9DDF0', study: '#E4D3EE', storage: '#E3E3E3', other: '#E3E3E3' }
 const snap = (n: number) => Math.round(n * 4) / 4
 
-export default function FlatPlanEditor({ source, unit, onSaved, onClose }: { source: 'pm' | 'estate' | 'dev'; unit: { id: string; unit: string; planUrl?: string | null; layout?: any }; onSaved: (p: { planUrl?: string | null; layout?: Layout | null }) => void; onClose: () => void }) {
+export default function FlatPlanEditor({ source, unit, onSaved, onClose, noun = 'flat' }: { source: 'pm' | 'estate' | 'dev' | 'property'; noun?: string; unit: { id: string; unit: string; planUrl?: string | null; layout?: any }; onSaved: (p: { planUrl?: string | null; layout?: Layout | null }) => void; onClose: () => void }) {
   const [rooms, setRooms] = useState<Room[]>(unit.layout?.rooms ?? [])
   const [planUrl, setPlanUrl] = useState<string | null>(unit.planUrl ?? null)
   const [W, setW] = useState<number>(Math.max(10, Math.ceil(unit.layout?.w ?? 12)))
@@ -81,15 +81,15 @@ export default function FlatPlanEditor({ source, unit, onSaved, onClose }: { sou
     if (!layout) { setMsg('Add at least one room first'); return }
     setBusy('save'); const r = await call('/api/property-map/unit', { source, unitId: unit.id, layout })
     setBusy(''); if (!r.ok) { setMsg(r.d.error || 'Could not save'); return }
-    onSaved({ layout }); setMsg('Saved. The 3D view and walk-through of this flat are now on the tower.')
+    onSaved({ layout }); setMsg(source === 'property' ? 'Saved. The 3D walk-through now shows on this property\'s public page.' : 'Saved. The 3D view and walk-through of this flat are now on the tower.')
   }
   const btn = (primary = false): React.CSSProperties => ({ font: 'inherit', fontSize: 13, fontWeight: 600, padding: '8px 14px', borderRadius: 9, border: `1px solid ${primary ? NAVY : LINE}`, background: primary ? NAVY : '#EAF3FC', color: primary ? '#fff' : BLUE, cursor: 'pointer' })
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1900, background: 'rgba(11,27,69,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} role="dialog" aria-label={`Floor plan for flat ${unit.unit}`}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1900, background: 'rgba(11,27,69,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} role="dialog" aria-label={`Floor plan for ${noun} ${unit.unit}`.replace('  ', ' ')}>
       <div style={{ background: '#fff', borderRadius: 14, width: 'min(1000px,100%)', maxHeight: '100%', overflow: 'auto' }}>
         <div style={{ background: '#2F6DB5', color: '#fff', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <div><div style={{ fontWeight: 700, fontSize: 14 }}>Floor plan, flat {unit.unit}</div><div style={{ fontSize: 12.5, opacity: .9 }}>Upload the plan, let the AI read it, then check the rooms.</div></div>
+          <div><div style={{ fontWeight: 700, fontSize: 14 }}>Floor plan, {noun ? noun + ' ' : ''}{unit.unit}</div><div style={{ fontSize: 12.5, opacity: .9 }}>Upload the plan, let the AI read it, then check the rooms.</div></div>
           <button type="button" onClick={onClose} style={{ font: 'inherit', fontSize: 13, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.7)', background: 'transparent', color: '#fff', cursor: 'pointer' }}>Close</button>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '12px 16px', borderBottom: `1px solid ${LINE}`, alignItems: 'center' }}>
@@ -129,7 +129,7 @@ export default function FlatPlanEditor({ source, unit, onSaved, onClose }: { sou
         </div>
         <style>{`@media (max-width:760px){.fpe-grid{grid-template-columns:minmax(0,1fr)!important}.fpe-side{border-left:0!important;border-top:1px solid ${LINE}}}`}</style>
       </div>
-      {view && layout && <FlatViewer3D layout={layout} title={`Flat ${unit.unit}`} onClose={() => setView(false)} />}
+      {view && layout && <FlatViewer3D layout={layout} title={noun ? `${noun[0].toUpperCase()}${noun.slice(1)} ${unit.unit}` : unit.unit} onClose={() => setView(false)} />}
     </div>
   )
 }

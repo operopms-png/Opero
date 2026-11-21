@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-21', title: 'Add a 3D layout to any listed property', text: 'In Marketing, Listings, press a property and use Add 3D layout to give a house or any property with no flats its own floor plan and 3D walk-through, shown on its public page.' },
   { date: '2026-11-21', title: '3D walk-through on the public property page', text: 'A listed property whose flats have saved rooms now shows a View in 3D button on its public page; it can be switched off per property in Marketing, Listings.' },
   { date: '2026-11-20', title: 'New WhatsApp contacts go into the CRM', text: 'Someone who messages the company WhatsApp number from a number the portal does not know is now added to the CRM as a contact with a note of their first message.' },
   { date: '2026-11-20', title: 'AI phone answering with welcome message and voicemail', text: 'AI Assistant, Channels, Phone calls now has a welcome message, a voicemail message, and Ring my phone first; callers who talk to the AI or leave a voicemail are added to the CRM.' },
