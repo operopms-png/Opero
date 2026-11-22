@@ -4,7 +4,8 @@ import { usePropertyAllowance, isPropertyLimitError } from '@/lib/property-allow
 import LandlordOnboarding from '../../components/landlords/LandlordOnboarding'
 import UtilityTracker from '../../components/pm/UtilityTracker'
 import RecordTab from '@/components/pm/RecordTab'
-import { RENT_REVIEWS, SERVICE_CHARGES, PLANNED_MAINTENANCE, EMERGENCY_CONTACTS } from '@/lib/pm-record-tabs'
+import { RENT_REVIEWS, SERVICE_CHARGES, PLANNED_MAINTENANCE, EMERGENCY_CONTACTS, APPLICATIONS, METER_READINGS, UPKEEP, BUDGETS, SUPPLIER_AGREEMENTS } from '@/lib/pm-record-tabs'
+import { ManagementAgreements, ManagementFees, TenantHistory, BreakClauses, RentReconciliation, PerformanceReports } from '@/components/pm/PmTools'
 import { Stars } from '@/components/portal/FeedbackForm'
 import { useEffect, useState, Suspense } from 'react'
 import TabBanner from '@/components/TabBanner'
@@ -25,7 +26,7 @@ import ModuleTabStrip from '@/components/ModuleTabStrip'
 
 // Tabs that already have their own top tab bar: the Property Operations column is hidden on these.
 const NO_INNER_MENU = ['Landlords','Tenants','Reports','Unit Profit','Landlord Reports','Accounting Export']
-const TABS = ['Dashboard','Short Stays Overview','Bookings','Guest Check-ins','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Rent Reviews','Service Charges','Planned Maintenance','Emergency Contacts','Landlord Feedback','Tenant Feedback','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Buildings','Inventories','Tenant Checks','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages']
+const TABS = ['Dashboard','Short Stays Overview','Bookings','Guest Check-ins','Reviews','Guest Comms','Analytics','Channels','Integrations','Head Leases','HMO Rooms','Keys','Audit Log','Unit Profit','Utilities','Exchange Rates','Deadlines','Insurance','Legal & Disputes','Referrals','Valuations','Rent Reviews','Service Charges','Planned Maintenance','Emergency Contacts','Landlord Feedback','Tenant Feedback','Furniture','Vacancies','Viewings','Loans & Mortgages','Finance','Deposits','Renewals & Notices','Accounting Export','Properties','Units','Buildings','Inventories','Tenant Checks','Landlords','Tenants','Leases','Rent','Maintenance','Cleaning','Inspections','Compliance','Documents','Company SOPs','Contract Templates','Expenses','Banking','Landlord Reports','Reports','Messages','Management Agreements','Tenant Applications','Tenant History','Break Clauses','Meter Readings','Cleaning & Upkeep','Supplier Agreements','Management Fees','Budgets','Rent Reconciliation','Performance Reports']
 const PROPERTY_COMPLIANCE_TYPES = ['Gas Safety Certificate','EICR','EPC','Fire Risk Assessment','PAT Testing','Legionella Assessment','HMO Licence','Planning Permission','Building Insurance','Other']
 const BUSINESS_COMPLIANCE_TYPES = ['Client Money Protection (CMP)','Redress Scheme Membership (PRS/TPO)','Professional Indemnity Insurance','ICO Data Protection Registration','Anti-Money Laundering (AML) Registration','Business/Trading Licence','Public Liability Insurance','Health & Safety Policy','Other']
 const STR_COMPLIANCE_TYPES = ['STL Licence / Registration','Fire Safety Certificate','Gas Safety Certificate','EPC','PAT Testing','Legionella Risk Assessment','Other']
@@ -96,6 +97,17 @@ const TAB_INTROS: Record<string,string> = {
   'Insurance': 'the insurance policies themselves: buildings, contents and public liability cover, with the insurer, policy number, premium and renewal date. Compliance tracks certificates; this tab tracks the policies that landlords and insurers ask to see. Renewals also appear on the Deadlines tab.',
   'Legal & Disputes': 'a record of legal matters: eviction notices, rent arrears claims, deposit disputes and complaints, with the status and the next deadline. This is a register only. It does not give legal advice or send anything to a court.',
   'Referrals': 'people who have referred a landlord, tenant or guest to you, who they referred, how far it got and any reward owed. Rewards are recorded here only. Nothing is paid from this tab.',
+  'Management Agreements': 'each landlord agreement: type (full management, let only, rent collection, master lease or guaranteed rent), start and end dates, management fee percentage and terms. Agreements ending within 90 days are flagged.',
+  'Tenant Applications': 'people applying to rent a property, with a referencing checklist (employer and landlord references, credit, affordability, right to rent) and an Approve or Reject button.',
+  'Tenant History': 'choose a tenant to see their tenancies, rent paid and overdue, and the repairs they reported.',
+  'Break Clauses': 'the break date and notice period on each active lease, with the date by which notice must be given.',
+  'Meter Readings': 'electricity, water, gas and other meter readings for each property, with the date and who took the reading.',
+  'Cleaning & Upkeep': 'cleaning teams, common-area cleaning, waste collection, groundskeeping and quality checks, each with how often, when it is next due and a quality score.',
+  'Supplier Agreements': 'contracts with suppliers and contractors: service, rate, end date, insurance expiry and onboarding status.',
+  'Management Fees': 'your management fee for a chosen month, worked out from rent collected and each landlord fee percentage, totalled per currency.',
+  'Budgets': 'a yearly budget for each property and category, with what has been spent and what is left.',
+  'Rent Reconciliation': 'for a chosen month, the rent expected from each active lease against the rent received, marked Matched, Short, Over or Unpaid, plus payments that match no lease.',
+  'Performance Reports': 'occupancy, rent arrears, tenant on-time payment, landlord performance and rental yield for the whole portfolio.',
   'Rent Reviews': 'each lease with its next rent review date, the current and proposed rent and where the notice has got to.',
   'Service Charges': 'service charge, ground rent and sinking fund you pay or collect on each property, with due dates and what is paid.',
   'Planned Maintenance': 'recurring jobs such as boiler services, gutters and legionella flushing, with the next due date and who does them.',
@@ -140,13 +152,13 @@ const PM_SHARED_TOOLS: Record<string,string> = {
 }
 const PM_NAV_GROUPS: PmNavGroup[] = [
   { label: 'PROPERTY MANAGEMENT', items: ['Property Management'], sub: [
-    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Rent Reviews','Referrals','Landlord Feedback','Tenant Feedback'] },
+    { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Management Agreements','Tenants','Tenant Applications','Tenant History','Break Clauses','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Rent Reviews','Referrals','Landlord Feedback','Tenant Feedback'] },
     { label: 'Compliance', items: ['Compliance','Tenant Checks','Deposits','HMO Rooms','Deadlines','Insurance','Legal & Disputes'] },
-    { label: 'Operations', items: ['Maintenance','Planned Maintenance','Contractors','Emergency Contacts','Cleaning','Inspections','Inventories','Keys','Utilities'] },
+    { label: 'Operations', items: ['Maintenance','Planned Maintenance','Contractors','Emergency Contacts','Cleaning','Cleaning & Upkeep','Inspections','Inventories','Keys','Utilities','Meter Readings','Supplier Agreements'] },
     { label: 'Documents', items: ['Documents'] },
     { label: 'Company', items: ['Company SOPs','Contract Templates','Audit Log'] },
-    { label: 'Finance', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Valuations','Service Charges','Exchange Rates'] },
-    { label: 'Reports', items: ['Landlord Reports','Reports','Accounting Export','Unit Profit'] },
+    { label: 'Finance', items: ['Finance','Rent','Expenses','Banking','Loans & Mortgages','Valuations','Service Charges','Exchange Rates','Management Fees','Budgets','Rent Reconciliation'] },
+    { label: 'Reports', items: ['Landlord Reports','Reports','Accounting Export','Unit Profit','Performance Reports'] },
     { label: 'Comms', items: ['Messages'] },
   ] },
   { label: 'DEVELOPMENTS', items: ['Developments'] },
@@ -1504,7 +1516,7 @@ function PMPageInner() {
         )}
 
         {tab==='Properties'&&(() => {
-          const longRows = (propFilter==='All'||propFilter==='Long let') ? properties : []
+          const longRows = (propFilter==='All'||propFilter==='Long let') ? properties : ['Managed','Master-leased','Third-party'].includes(propFilter) ? properties.filter((p:any)=>(p.management_type||'Managed')===propFilter) : []
           const shortRows = (propFilter==='All'||propFilter==='Short stay') ? strProperties : []
           const cols = '56px 1.3fr 1.3fr 100px 1.2fr 80px 260px'
           const typeBadge = (kind:'long'|'short') => kind==='long'
@@ -1513,7 +1525,7 @@ function PMPageInner() {
           return (
           <div>
             <div style={{display:'flex',gap:8,marginBottom:12}}>
-              {['All','Long let','Short stay','Former'].map(f=>(
+              {['All','Long let','Short stay','Managed','Master-leased','Third-party','Former'].map(f=>(
                 <button key={f} onClick={()=>setPropFilter(f)} style={{padding:'6px 14px',borderRadius:14,border:propFilter===f?'1px solid #2F6DB5':'1px solid #D0D5DD',background:propFilter===f?'#EAF3FC':'#fff',color:propFilter===f?'#1D4E89':'#344054',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{f}</button>
               ))}
             </div>
@@ -1550,7 +1562,7 @@ function PMPageInner() {
                         {photos.length > 1 && <span style={{position:'absolute',bottom:-2,right:-2,background:'rgba(0,0,0,0.7)',color:'#fff',fontSize:9,fontWeight:600,padding:'1px 4px',borderRadius:4}}>+{photos.length-1}</span>}
                       </div>
                     : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
-                  <span style={{fontWeight:500,color:'#323338'}}>{p.name}</span>
+                  <span style={{fontWeight:500,color:'#323338'}}>{p.name}{p.management_type&&p.management_type!=='Managed'?<span style={{marginLeft:8,fontSize:11,color:'#667085',fontWeight:500}}>{p.management_type}</span>:null}</span>
                   <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[p.address,p.city,p.country].filter(Boolean).join(', ')||'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:badge.bg,color:badge.fg,justifySelf:'start'}}>{badge.label}</span>
                   <span style={{display:'inline-flex',alignItems:'center',gap:10}}><span style={{display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms||'—'}</span><span style={{display:'inline-flex',alignItems:'center',gap:4}}><Bath size={13} color="#667085"/>{p.bathrooms||'—'}</span><span>{cur()}{(p.monthly_income??0).toLocaleString()}/mo</span></span>
@@ -2369,6 +2381,17 @@ function PMPageInner() {
           </div>
         )}
 
+        {tab==='Management Agreements'&&<ManagementAgreements userId={acctId}/>}
+        {tab==='Management Fees'&&<ManagementFees userId={acctId} properties={properties}/>}
+        {tab==='Tenant History'&&<TenantHistory userId={acctId} properties={properties}/>}
+        {tab==='Break Clauses'&&<BreakClauses userId={acctId} properties={properties}/>}
+        {tab==='Rent Reconciliation'&&<RentReconciliation userId={acctId} properties={properties}/>}
+        {tab==='Performance Reports'&&<PerformanceReports userId={acctId} properties={properties}/>}
+        {tab==='Tenant Applications'&&<RecordTab cfg={APPLICATIONS} userId={acctId} properties={properties}/>}
+        {tab==='Meter Readings'&&<RecordTab cfg={METER_READINGS} userId={acctId} properties={properties}/>}
+        {tab==='Cleaning & Upkeep'&&<RecordTab cfg={UPKEEP} userId={acctId} properties={properties}/>}
+        {tab==='Budgets'&&<RecordTab cfg={BUDGETS} userId={acctId} properties={properties}/>}
+        {tab==='Supplier Agreements'&&<RecordTab cfg={SUPPLIER_AGREEMENTS} userId={acctId} properties={properties}/>}
         {tab==='Rent Reviews'&&<RecordTab cfg={RENT_REVIEWS} userId={acctId} properties={properties}/>}
         {tab==='Service Charges'&&<RecordTab cfg={SERVICE_CHARGES} userId={acctId} properties={properties}/>}
         {tab==='Planned Maintenance'&&<RecordTab cfg={PLANNED_MAINTENANCE} userId={acctId} properties={properties}/>}
@@ -3791,6 +3814,7 @@ function PMPageInner() {
               <label style={lbl}>Photos</label>
               <PropertyImagePicker urls={parseAttachments(form.image_urls)} onChange={urls=>setForm({...form,image_urls:JSON.stringify(urls)})}/>
             </div>
+            <div><label style={lbl}>Property type</label><select style={{...inp,cursor:'pointer'}} value={form.management_type??'Managed'} onChange={e=>setForm({...form,management_type:e.target.value})}>{['Managed','Master-leased','Third-party'].map(o=><option key={o}>{o}</option>)}</select></div>
             <div><label style={lbl}>Landlord / Owner</label>
               <select style={{...inp,cursor:'pointer'}} value={form.owner_id??''} onChange={e=>setForm({...form,owner_id:e.target.value||null})}>
                 <option value="">Unassigned</option>
@@ -4592,7 +4616,7 @@ function PMPageInner() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div><label style={lbl}>Type</label>
                 <select style={{...inp,cursor:'pointer'}} value={form.type??'routine'} onChange={e=>setForm({...form,type:e.target.value})}>
-                  <option value="routine">Routine</option><option value="move_in">Move In</option><option value="move_out">Move Out</option>
+                  <option value="routine">Routine</option><option value="move_in">Move In</option><option value="move_out">Move Out</option><option value="compliance">Compliance</option>
                 </select>
               </div>
               <div><label style={lbl}>Date</label><input type="date" style={inp} value={form.scheduled_date??''} onChange={e=>setForm({...form,scheduled_date:e.target.value})}/></div>

@@ -152,3 +152,124 @@ export const EMERGENCY_CONTACTS: RecordTabConfig = {
     { label: 'Available', width: '1fr', render: r => r.availability ?? '—' },
   ],
 }
+
+const REF = ['Not started', 'Requested', 'Passed', 'Failed']
+
+export const APPLICATIONS: RecordTabConfig = {
+  table: 'pm_applications', noun: 'application', empty: 'No tenant applications yet', orderBy: 'created_at', ascending: false,
+  defaults: { stage: 'Applied', employer_ref: 'Not started', landlord_ref: 'Not started', credit_check: 'Not started', affordability: 'Not started', right_to_rent: 'Not started' },
+  fields: [
+    { key: 'applicant_name', label: 'Applicant', required: true },
+    { key: 'property_id', label: 'Property', type: 'property' },
+    { key: 'email', label: 'Email', half: true }, { key: 'phone', label: 'Phone', half: true },
+    { key: 'monthly_rent', label: 'Monthly rent', type: 'number', half: true }, { key: 'move_in_date', label: 'Move-in date', type: 'date', half: true },
+    { key: 'stage', label: 'Stage', type: 'select', options: ['Applied', 'Referencing', 'Approved', 'Rejected', 'Withdrawn', 'Tenancy created'], required: true },
+    { key: 'employer_ref', label: 'Employer reference', type: 'select', options: REF, half: true }, { key: 'landlord_ref', label: 'Previous landlord reference', type: 'select', options: REF, half: true },
+    { key: 'credit_check', label: 'Credit check', type: 'select', options: REF, half: true }, { key: 'affordability', label: 'Affordability', type: 'select', options: REF, half: true },
+    { key: 'right_to_rent', label: 'Right to rent', type: 'select', options: REF, half: true },
+    { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Applicant', width: '1.2fr', render: r => <span style={{ fontWeight: 500, color: '#323338' }}>{r.applicant_name}</span> },
+    { label: 'Property', width: '1.2fr', render: r => prop(r) },
+    { label: 'Rent', width: '100px', render: (r, c) => money(c.sym(r), r.monthly_rent) },
+    { label: 'Checks passed', width: '120px', render: r => `${['employer_ref', 'landlord_ref', 'credit_check', 'affordability', 'right_to_rent'].filter(k => r[k] === 'Passed').length} of 5` },
+    { label: 'Stage', width: '120px', render: r => r.stage },
+  ],
+  actions: [
+    { label: 'Approve', show: r => !['Approved', 'Tenancy created'].includes(r.stage), patch: () => ({ stage: 'Approved' }) },
+    { label: 'Reject', show: r => r.stage !== 'Rejected', patch: () => ({ stage: 'Rejected' }) },
+  ],
+  summary: rows => [{ label: 'Open applications', value: String(rows.filter(r => ['Applied', 'Referencing'].includes(r.stage)).length) }],
+}
+
+export const METER_READINGS: RecordTabConfig = {
+  table: 'pm_meter_readings', noun: 'meter reading', empty: 'No meter readings yet', orderBy: 'reading_date', ascending: false,
+  defaults: { meter_type: 'Electricity' },
+  fields: [
+    { key: 'property_id', label: 'Property', type: 'property', required: true },
+    { key: 'meter_type', label: 'Meter', type: 'select', options: ['Electricity', 'Water', 'Gas', 'Internet', 'Other'], required: true, half: true },
+    { key: 'meter_number', label: 'Meter number', half: true },
+    { key: 'reading', label: 'Reading', type: 'number', required: true, half: true }, { key: 'reading_date', label: 'Reading date', type: 'date', required: true, half: true },
+    { key: 'read_by', label: 'Read by' }, { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Property', width: '1.3fr', render: r => prop(r) },
+    { label: 'Meter', width: '110px', render: r => r.meter_type },
+    { label: 'Meter no.', width: '110px', render: r => r.meter_number ?? '—' },
+    { label: 'Reading', width: '110px', render: r => Number(r.reading).toLocaleString() },
+    { label: 'Date', width: '110px', render: r => r.reading_date },
+  ],
+  summary: rows => [{ label: 'Readings recorded', value: String(rows.length) }],
+}
+
+export const UPKEEP: RecordTabConfig = {
+  table: 'pm_upkeep', noun: 'upkeep item', empty: 'No cleaning or upkeep items yet', orderBy: 'next_date', ascending: true,
+  defaults: { kind: 'Cleaning team', status: 'Active' },
+  fields: [
+    { key: 'kind', label: 'Type', type: 'select', options: ['Cleaning team', 'Common-area cleaning', 'Waste management', 'Groundskeeping', 'Quality check'], required: true, half: true },
+    { key: 'property_id', label: 'Property', type: 'property', half: true },
+    { key: 'title', label: 'What', required: true }, { key: 'team', label: 'Team or person', half: true },
+    { key: 'frequency', label: 'How often', type: 'select', options: ['Daily', 'Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'One-off'], half: true },
+    { key: 'last_date', label: 'Last done', type: 'date', half: true }, { key: 'next_date', label: 'Next due', type: 'date', half: true },
+    { key: 'score', label: 'Quality score (1 to 5)', type: 'number', half: true },
+    { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Paused', 'Ended'], half: true },
+    { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Type', width: '150px', render: r => r.kind },
+    { label: 'What', width: '1.3fr', render: r => <span style={{ fontWeight: 500, color: '#323338' }}>{r.title}{r.team ? ` · ${r.team}` : ''}</span> },
+    { label: 'Property', width: '1.1fr', render: r => prop(r) },
+    { label: 'Next due', width: '150px', render: (r, c) => due(r.next_date, c.today, r.status !== 'Active') },
+    { label: 'Score', width: '70px', render: r => r.score ?? '—' },
+  ],
+  actions: [{ label: 'Done today', show: r => r.status === 'Active', patch: () => ({ last_date: new Date().toISOString().slice(0, 10) }) }],
+  summary: (rows, today) => [
+    { label: 'Active items', value: String(rows.filter(r => r.status === 'Active').length) },
+    { label: 'Overdue', value: String(rows.filter(r => r.status === 'Active' && r.next_date && r.next_date < today).length), tone: rows.some(r => r.status === 'Active' && r.next_date && r.next_date < today) ? 'warn' : 'ok' },
+  ],
+}
+
+export const BUDGETS: RecordTabConfig = {
+  table: 'pm_budgets', noun: 'budget line', empty: 'No budgets yet', orderBy: 'budget_year', ascending: false,
+  defaults: { budget_year: new Date().getFullYear(), category: 'Maintenance' },
+  fields: [
+    { key: 'property_id', label: 'Property', type: 'property' },
+    { key: 'budget_year', label: 'Year', type: 'number', required: true, half: true },
+    { key: 'category', label: 'Category', type: 'select', options: ['Maintenance', 'Cleaning', 'Utilities', 'Insurance', 'Management', 'Marketing', 'Other'], required: true, half: true },
+    { key: 'budget_amount', label: 'Budget', type: 'number', required: true, half: true }, { key: 'spent_amount', label: 'Spent so far', type: 'number', half: true },
+    { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Property', width: '1.3fr', render: r => prop(r) },
+    { label: 'Year', width: '80px', render: r => r.budget_year },
+    { label: 'Category', width: '130px', render: r => r.category },
+    { label: 'Budget', width: '110px', render: (r, c) => money(c.sym(r), r.budget_amount) },
+    { label: 'Spent', width: '110px', render: (r, c) => money(c.sym(r), r.spent_amount) },
+    { label: 'Left', width: '110px', render: (r, c) => { const left = Number(r.budget_amount || 0) - Number(r.spent_amount || 0); return <span style={{ color: left < 0 ? '#B42318' : '#344054', fontWeight: left < 0 ? 600 : 400 }}>{money(c.sym(r), left)}</span> } },
+  ],
+  summary: rows => [{ label: 'Over budget', value: String(rows.filter(r => Number(r.spent_amount || 0) > Number(r.budget_amount || 0)).length), tone: rows.some(r => Number(r.spent_amount || 0) > Number(r.budget_amount || 0)) ? 'warn' : 'ok' }],
+}
+
+export const SUPPLIER_AGREEMENTS: RecordTabConfig = {
+  table: 'pm_supplier_agreements', noun: 'supplier agreement', empty: 'No supplier agreements yet', orderBy: 'end_date', ascending: true,
+  defaults: { onboarding: 'Not started', status: 'Active' },
+  fields: [
+    { key: 'supplier_name', label: 'Supplier or contractor', required: true }, { key: 'service', label: 'Service', half: true },
+    { key: 'property_id', label: 'Property', type: 'property', half: true },
+    { key: 'start_date', label: 'Starts', type: 'date', half: true }, { key: 'end_date', label: 'Ends', type: 'date', half: true },
+    { key: 'rate', label: 'Rate or terms' }, { key: 'insurance_expiry', label: 'Insurance expires', type: 'date', half: true },
+    { key: 'onboarding', label: 'Onboarding', type: 'select', options: ['Not started', 'Documents requested', 'Approved'], half: true },
+    { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Ended'], half: true },
+    { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Supplier', width: '1.2fr', render: r => <span style={{ fontWeight: 500, color: '#323338' }}>{r.supplier_name}</span> },
+    { label: 'Service', width: '1fr', render: r => r.service ?? '—' },
+    { label: 'Ends', width: '150px', render: (r, c) => due(r.end_date, c.today, r.status !== 'Active') },
+    { label: 'Insurance', width: '150px', render: (r, c) => due(r.insurance_expiry, c.today) },
+    { label: 'Onboarding', width: '140px', render: r => r.onboarding },
+  ],
+  actions: [{ label: 'Approve', show: r => r.onboarding !== 'Approved', patch: () => ({ onboarding: 'Approved' }) }],
+  summary: (rows, today) => [{ label: 'Ending in 60 days', value: String(rows.filter(r => r.status === 'Active' && r.end_date && days(r.end_date, today) <= 60).length) }],
+}
