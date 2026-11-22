@@ -15,27 +15,30 @@ alter table module_links enable row level security;
 
 -- 1. Copy shared columns to the linked twin when one side changes.
 create or replace function sync_linked() returns trigger language plpgsql security definer set search_path = public as $$
-declare kind text := tg_argv[0]; side text := tg_argv[1]; twin text := tg_argv[2]; cols text[] := string_to_array(tg_argv[3], ',');
-        other uuid; payload jsonb;
+declare v_kind text := tg_argv[0]; v_side text := tg_argv[1]; v_twin text := tg_argv[2]; v_cols text[] := string_to_array(tg_argv[3], ',');
+        v_other uuid; v_payload jsonb;
 begin
   if pg_trigger_depth() > 1 then return new; end if;
-  select case when side = 'pm' then ea_id else pm_id end into other from module_links
-   where module_links.kind = sync_linked.kind and ((side = 'pm' and pm_id = new.id) or (side = 'ea' and ea_id = new.id));
-  if other is null then return new; end if;
-  select jsonb_object_agg(k, v) into payload from jsonb_each(to_jsonb(new)) as e(k, v) where k = any(cols);
-  execute format('update %I set (%s) = (select %s from jsonb_populate_record(null::%I, $1)) where id = $2', twin, array_to_string(cols, ','), array_to_string(cols, ','), twin) using payload, other;
+  if v_side = 'pm' then
+    select l.ea_id into v_other from module_links l where l.kind = v_kind and l.pm_id = new.id;
+  else
+    select l.pm_id into v_other from module_links l where l.kind = v_kind and l.ea_id = new.id;
+  end if;
+  if v_other is null then return new; end if;
+  select jsonb_object_agg(e.k, e.v) into v_payload from jsonb_each(to_jsonb(new)) as e(k, v) where e.k = any(v_cols);
+  execute format('update %I set (%s) = (select %s from jsonb_populate_record(null::%I, $1)) where id = $2', v_twin, array_to_string(v_cols, ','), array_to_string(v_cols, ','), v_twin) using v_payload, v_other;
   return new;
 end $$;
 
 -- 2. Link a new record to its twin when the same person or place already exists in the other module.
 create or replace function autolink_new() returns trigger language plpgsql security definer set search_path = public as $$
-declare kind text := tg_argv[0]; side text := tg_argv[1]; twin text := tg_argv[2]; matchcol text := tg_argv[3]; found uuid; val text;
+declare v_kind text := tg_argv[0]; v_side text := tg_argv[1]; v_twin text := tg_argv[2]; v_match text := tg_argv[3]; v_found uuid; v_val text;
 begin
-  val := lower(btrim(coalesce(to_jsonb(new)->>matchcol, '')));
-  if val = '' then return new; end if;
-  execute format('select t.id from %I t where t.user_id = $1 and lower(btrim(coalesce(t.%I::text, ''''))) = $2 and not exists (select 1 from module_links l where l.kind = $3 and (l.pm_id = t.id or l.ea_id = t.id)) limit 1', twin, matchcol) into found using new.user_id, val, kind;
-  if found is not null then
-    insert into module_links (kind, user_id, pm_id, ea_id) values (kind, new.user_id, case when side = 'pm' then new.id else found end, case when side = 'pm' then found else new.id end) on conflict do nothing;
+  v_val := lower(btrim(coalesce(to_jsonb(new)->>v_match, '')));
+  if v_val = '' then return new; end if;
+  execute format('select t.id from %I t where t.user_id = $1 and lower(btrim(coalesce(t.%I::text, ''''))) = $2 and not exists (select 1 from module_links l where l.kind = $3 and (l.pm_id = t.id or l.ea_id = t.id)) limit 1', v_twin, v_match) into v_found using new.user_id, v_val, v_kind;
+  if v_found is not null then
+    insert into module_links (kind, user_id, pm_id, ea_id) values (v_kind, new.user_id, case when v_side = 'pm' then new.id else v_found end, case when v_side = 'pm' then v_found else new.id end) on conflict do nothing;
   end if;
   return new;
 end $$;
