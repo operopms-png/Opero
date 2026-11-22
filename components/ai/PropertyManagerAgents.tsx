@@ -113,7 +113,7 @@ const AGENTS = [
     name: 'AI Marketing Agent',
     icon: ICON,
     desc: 'Drafts social posts each day for your lettings, short-stay properties and developments, using only the details on each record. Posts wait in AI Approvals and save to Marketing, Social posts once you approve.',
-    capabilities: ['Draft up to three posts a day for Instagram, Facebook and LinkedIn','Use only the facts on the property or project record','Nothing is saved or posted until you approve','Rotate through your listings so each is featured in turn'],
+    capabilities: ['Draft up to three posts a day for Instagram, Facebook and LinkedIn','Use only the facts on the property or project record','Nothing is saved or posted until you approve','Rotate through your listings so each is featured in turn','Write a daily video brief (script, video prompt, caption) for you to make in Snippo'],
   },
   {
     key: 'dev_investors',

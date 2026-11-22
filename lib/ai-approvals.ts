@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'social_post'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'social_post' | 'video_brief'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -146,6 +146,12 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     const { sendToList } = await import('./marketing-send')
     const r = await sendToList({ businessId: action.user_id, audience: p.audience, mode: p.mode, subject: String(p.subject || ''), body, docIds: Array.isArray(p.doc_ids) ? p.doc_ids : [] })
     return r.error ? { error: r.error } : { success: true }
+  }
+  if (action.action_type === 'video_brief') {
+    // Becomes a task: make the video in Snippo from this brief, then upload it to Marketing, Videos.
+    const due = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10)
+    const { error } = await getServiceClient().from('staff_tasks').insert({ user_id: action.user_id, title: `Make video in Snippo: ${p.label || 'brief'}`.slice(0, 140), status: 'On track', due_date: due, notes: `[AI] ${String(body).slice(0, 1800)}\n\nWhen finished, upload it in Marketing, Videos.` })
+    return error ? { error: error.message } : { success: true }
   }
   if (action.action_type === 'social_post') {
     // Saved to Marketing, Social posts. It is not posted to the platform from here; that needs the account connected.

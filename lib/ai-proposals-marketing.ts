@@ -59,6 +59,23 @@ export async function proposeSocialPosts() {
       })
       done(result, q)
     }
+    // One video brief a day: script, a prompt to paste into the video tool (Snippo) and a caption. Approving puts a task on the board.
+    const vpick = usable[(dayNo + 1) % usable.length]
+    {
+      const system = `You write a brief for a 20 to 30 second vertical social video for ${sign}. Use only the facts given. Do not invent features, prices, views, distances or promises. Return exactly three parts with these headings on their own lines: "Script" (a short voice-over of 50 to 70 words, plain and warm), "Video prompt" (a realistic scene-by-scene description of 4 to 6 shots to paste into an AI video tool: what the camera shows, no text on screen, no people's faces in close-up, no logos), "Caption" (one or two sentences and 3 to 5 hashtags). No emojis.`
+      const { text, error } = await callClaude(system, `Subject: ${vpick.label}\n\nFacts:\n${vpick.facts}`, 700)
+      if (error || !text) result.errors.push(`video ${vpick.label}: ${error ?? 'no text'}`)
+      else {
+        const q = await queueAiAction({
+          userId: businessId, agentKey: 'marketing_posts', actionType: 'video_brief',
+          title: `Video brief: ${vpick.label}`, propertyName: vpick.label, draftBody: text,
+          payload: { module: vpick.module, subject: 'video:' + vpick.key, label: vpick.label },
+          context: { summary: `A script, video prompt and caption written only from the details on the ${vpick.label} record. Approving puts a task on your Task board to make the video in Snippo and upload it to Marketing, Videos.` },
+          dedupe: { key: 'subject', value: 'video:' + vpick.key, sinceIso: dayStr(-14) + 'T00:00:00Z' },
+        })
+        done(result, q)
+      }
+    }
     void day
   }
   return result

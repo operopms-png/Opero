@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'AI video briefs', text: 'The AI Marketing Agent now writes a daily video brief with a script, a scene prompt for your video tool and a caption; approve it to get a task.' },
   { date: '2026-11-22', title: 'AI Sales Agent, Morning brief and Transaction Watch', text: 'Novourq Cloud AI can now draft follow-ups for every open enquiry, show everything that needs your yes on one Morning brief page, and flag unusual bank lines.' },
   { date: '2026-11-22', title: 'AI Marketing Agent', text: 'Novourq Cloud AI now drafts up to three social posts a day from your listings, properties and projects; approve them in AI Approvals and they appear in Marketing, Social posts.' },
   { date: '2026-11-22', title: 'Vacation Rentals gaps filled', text: 'New Guests, Direct Bookings, Guest Requests, Inventory, Linen & Laundry, Inspections, Pricing Rules and Owner Agreements tabs, a Shared tools group, booking filters and history, property amenities and onboarding, ADR, RevPAR and cancellation figures in Reports, and Needs attention tiles on Home.' },
