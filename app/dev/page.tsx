@@ -17,6 +17,7 @@ const DEV_SHARED_TOOLS: Record<string,string> = {
   'Tasks':'/staff-centre/tasks','Approvals':'/staff-centre/approvals','Calendar':'/staff-centre/calendar','CRM':'/staff-centre/crm',
   'Inbox':'/staff-centre/inbox','Email':'/staff-centre/email','Workflows':'/staff-centre/ai-command-centre/workflows','AI Assistant':'/staff-centre/ai-command-centre',
   'Portal Access':'/staff-centre/portal-access','Activity Log':'/staff-centre/activity-log','Signed Documents':'/staff-centre/documents',
+  'WhatsApp & SMS':'/staff-centre/inbox','Meetings':'/staff-centre/meetings','Team Management':'/settings','Integrations':'/integrations',
 }
 const DEV_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
@@ -1316,10 +1317,13 @@ export default function DevPage() {
             </div>
             <div><label style={lbl}>Status</label>
               <select style={{...inp,cursor:'pointer'}} value={form.status??'planning'} onChange={e=>setForm({...form,status:e.target.value})}>
+                <option value="proposed">Proposed</option>
                 <option value="planning">Planning</option>
+                <option value="approved">Approved</option>
                 <option value="active">Active</option>
                 <option value="on_hold">On Hold</option>
                 <option value="completed">Completed</option>
+                <option value="archived">Archived</option>
               </select>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
@@ -1350,6 +1354,7 @@ export default function DevPage() {
             </div>
             <div><label style={lbl}>Category</label>
               <select style={{...inp,cursor:'pointer'}} value={form.category??'other'} onChange={e=>setForm({...form,category:e.target.value})}>
+                <option value="land_acquisition">Land acquisition</option>
                 <option value="construction">Construction</option>
                 <option value="materials">Materials</option>
                 <option value="furniture">Furniture</option>
@@ -1360,6 +1365,8 @@ export default function DevPage() {
                 <option value="labour">Labour (other)</option>
                 <option value="professional_fees">Professional Fees</option>
                 <option value="permits">Permits</option>
+                <option value="contingency">Contingency</option>
+                <option value="cost_variation">Cost variation</option>
                 <option value="marketing">Marketing</option>
                 <option value="other">Other</option>
               </select>

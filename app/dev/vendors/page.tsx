@@ -5,7 +5,7 @@ import { cur } from '../../../lib/company-currency'
 const ACCENT = '#2F6DB5'
 const MODULE = 'dev'
 const LABEL = 'Developments'
-const VENDOR_TYPES = ['Cleaner','Maintenance','Plumber','Electrician','Handyman','Landscaper','Other']
+const VENDOR_TYPES = ['Cleaner','Maintenance','Plumber','Electrician','Handyman','Landscaper','Builder','Architect','Engineer','Supplier','Other']
 const STATUS_COLORS: any = {'Open':'#F59E0B','In Progress':'#2F6DB5','Completed':'#10B981','Approved':'#10B981','Rejected':'#EF4444','Pending':'#F59E0B'}
 const NAV = [
   {group:'VENDORS',items:[

@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Developments: more statuses, costs and shared tools', text: 'Projects can be Proposed, Approved or Archived, budget lines can be Land acquisition, Contingency or Cost variation, contractors can be Builder, Architect, Engineer or Supplier, and Shared tools adds WhatsApp & SMS, Meetings, Team Management and Integrations.' },
   { date: '2026-11-22', title: 'Developments dashboard attention tiles', text: 'The Developments Dashboard now starts with Needs attention tiles for pipeline, planning, delayed work, risks, procurement, funding, handover, tenders and build-to-rent, each opening its tab.' },
   { date: '2026-11-22', title: 'Developments gaps filled', text: 'Developments has Pipeline, Land & Sites, Planning & Approvals, Design, Project Team, Construction Schedule, Procurement, Handover, Build-to-Rent, Tenders & Agreements, Risk Register, Project Finance, Cash Flow & Profit and Development Reports, plus a Shared tools group.' },
   { date: '2026-11-22', title: 'Staff Dashboard runs the day', text: 'The Staff Dashboard now shows what needs attention, your day, the team, notices and a business pulse, and the hub At a glance starts with the same pulse, your day, the team and notices.' },
