@@ -8,17 +8,28 @@ import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import FeasibilityTab from '@/components/dev/FeasibilityTab'
 import ModuleTabStrip from '@/components/ModuleTabStrip'
+import RecordTab from '@/components/pm/RecordTab'
+import { DEV_PIPELINE, DEV_LAND, DEV_PLANNING, DEV_DESIGNS, DEV_WORK_PACKAGES, DEV_TENDERS, DEV_FUNDING, DEV_RISKS, DEV_PROCUREMENT, DEV_TEAM, DEV_HANDOVER } from '@/lib/dev-record-tabs'
+import { CashFlowProfit, BuildToRent, DevReports } from '@/components/dev/DevTools'
 
-const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones','Feasibility']
+const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones','Feasibility','Pipeline','Land & Sites','Planning & Approvals','Design','Project Team','Construction Schedule','Procurement','Handover','Build-to-Rent','Tenders & Agreements','Risk Register','Project Finance','Cash Flow & Profit','Development Reports']
+const DEV_SHARED_TOOLS: Record<string,string> = {
+  'Tasks':'/staff-centre/tasks','Approvals':'/staff-centre/approvals','Calendar':'/staff-centre/calendar','CRM':'/staff-centre/crm',
+  'Inbox':'/staff-centre/inbox','Email':'/staff-centre/email','Workflows':'/staff-centre/ai-command-centre/workflows','AI Assistant':'/staff-centre/ai-command-centre',
+  'Portal Access':'/staff-centre/portal-access','Activity Log':'/staff-centre/activity-log','Signed Documents':'/staff-centre/documents',
+}
 const DEV_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PROJECTS', items: ['Projects','Units','Checklist','Milestones','Feasibility'] },
-  { label: 'OPERATIONS', items: ['Contractors','Service','Snagging'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Health & Safety'] },
-  { label: 'FINANCE', items: ['Budget','Investors','Expenses','Banking'] },
+  { label: 'PIPELINE', items: ['Pipeline','Land & Sites'] },
+  { label: 'PROJECTS', items: ['Projects','Units','Checklist','Milestones','Feasibility','Planning & Approvals','Design','Project Team'] },
+  { label: 'CONSTRUCTION', items: ['Construction Schedule','Procurement','Handover','Build-to-Rent'] },
+  { label: 'OPERATIONS', items: ['Contractors','Service','Snagging','Tenders & Agreements'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Health & Safety','Risk Register'] },
+  { label: 'FINANCE', items: ['Budget','Investors','Expenses','Banking','Project Finance','Cash Flow & Profit'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
-  { label: 'REPORTS', items: ['Reports'] },
+  { label: 'REPORTS', items: ['Reports','Development Reports'] },
+  { label: 'SHARED TOOLS', items: Object.keys(DEV_SHARED_TOOLS) },
 ]
 
 const CHECKLIST_TEMPLATE = [
@@ -194,6 +205,7 @@ export default function DevPage() {
   const [editId, setEditId] = useState<string|null>(null)
   const [saving, setSaving] = useState(false)
   const [projects, setProjects] = useState<any[]>([])
+  const [acctId, setAcctId] = useState('')
   const [units, setUnits] = useState<any[]>([])
   const [compliance, setCompliance] = useState<any[]>([])
   const [snags, setSnags] = useState<any[]>([])
@@ -216,6 +228,7 @@ export default function DevPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { window.location.href = '/login'; return }
       const accountId = await getAccountId(user)
+      setAcctId(accountId)
       await loadAll(accountId)
       setLoading(false)
     }
@@ -453,7 +466,7 @@ export default function DevPage() {
       <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
         <div style={{padding:'10px 24px',background:'#F7F8FA',borderBottom:'1px solid #E4E7EC'}}><a href="/property" style={{fontSize:13,fontWeight:600,color:'#2F6DB5',textDecoration:'none'}}>&larr; Real Estate Intelligence</a></div>
         <ModuleTabStrip module="dev" current={tab} groups={DEV_NAV_GROUPS}
-          onSelect={t=>{ if(t==='Contractors'){ window.location.href='/dev/vendors'; return } if(t==='Service'){ window.location.href='/dev/service'; return } setTab(t) }} />
+          onSelect={t=>{ if(DEV_SHARED_TOOLS[t]){ window.location.assign(DEV_SHARED_TOOLS[t]); return } if(t==='Contractors'){ window.location.href='/dev/vendors'; return } if(t==='Service'){ window.location.href='/dev/service'; return } setTab(t) }} />
         <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:13, color:'#667085' }}>Dashboard</span>
@@ -643,6 +656,21 @@ export default function DevPage() {
 
           </div>
         )}
+
+        {tab==='Pipeline'&&<RecordTab cfg={DEV_PIPELINE} userId={acctId} properties={projects} />}
+        {tab==='Land & Sites'&&<RecordTab cfg={DEV_LAND} userId={acctId} properties={projects} />}
+        {tab==='Planning & Approvals'&&<RecordTab cfg={DEV_PLANNING} userId={acctId} properties={projects} />}
+        {tab==='Design'&&<RecordTab cfg={DEV_DESIGNS} userId={acctId} properties={projects} />}
+        {tab==='Project Team'&&<RecordTab cfg={DEV_TEAM} userId={acctId} properties={projects} />}
+        {tab==='Construction Schedule'&&<RecordTab cfg={DEV_WORK_PACKAGES} userId={acctId} properties={projects} />}
+        {tab==='Procurement'&&<RecordTab cfg={DEV_PROCUREMENT} userId={acctId} properties={projects} />}
+        {tab==='Handover'&&<RecordTab cfg={DEV_HANDOVER} userId={acctId} properties={projects} />}
+        {tab==='Tenders & Agreements'&&<RecordTab cfg={DEV_TENDERS} userId={acctId} properties={projects} />}
+        {tab==='Risk Register'&&<RecordTab cfg={DEV_RISKS} userId={acctId} properties={projects} />}
+        {tab==='Project Finance'&&<RecordTab cfg={DEV_FUNDING} userId={acctId} properties={projects} />}
+        {tab==='Cash Flow & Profit'&&<CashFlowProfit userId={acctId} />}
+        {tab==='Build-to-Rent'&&<BuildToRent userId={acctId} projects={projects} />}
+        {tab==='Development Reports'&&<DevReports userId={acctId} />}
 
         {tab==='Reports'&&(() => {
           // Developments has no per-month data to report against --

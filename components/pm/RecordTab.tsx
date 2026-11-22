@@ -15,6 +15,8 @@ export type RowAction = { label: string; show?: (r: any) => boolean; patch: (r: 
 export type RecordTabConfig = {
   table: string; noun: string; empty: string; orderBy: string; ascending?: boolean
   fields: Field[]; columns: Column[]; defaults?: Record<string, any>; actions?: RowAction[]
+  // Optional: use another parent table for the property field (for example dev_projects). Leave out for Property Management.
+  parent?: { table: string; cols: string; label: string; all?: string }
   summary?: (rows: any[], today: string) => { label: string; value: string; tone?: 'warn' | 'ok' }[]
 }
 
@@ -33,12 +35,12 @@ export default function RecordTab({ cfg, userId, properties }: { cfg: RecordTabC
 
   async function load() {
     if (!userId) return
-    const { data } = await supabase.from(cfg.table).select('*,pm_properties(name,currency)').eq('user_id', userId).order(cfg.orderBy, { ascending: cfg.ascending ?? true })
+    const { data } = await supabase.from(cfg.table).select(cfg.parent ? (cfg.parent.cols ? `*,${cfg.parent.table}(${cfg.parent.cols})` : '*') : '*,pm_properties(name,currency)').eq('user_id', userId).order(cfg.orderBy, { ascending: cfg.ascending ?? true })
     setRows(data ?? []); setLoading(false)
   }
   useEffect(() => { load() /* eslint-disable-next-line */ }, [userId, cfg.table])
 
-  const sym = (r: any) => CUR_SYM[r.pm_properties?.currency as string] ?? cur()
+  const sym = (r: any) => CUR_SYM[(cfg.parent ? r[cfg.parent.table]?.currency : r.pm_properties?.currency) as string] ?? cur()
   const summary = useMemo(() => cfg.summary?.(rows, today) ?? [], [rows, cfg, today])
 
   function openAdd() { setForm({ ...(cfg.defaults ?? {}) }); setEditId(null); setErr(''); setModal(true) }
@@ -123,7 +125,7 @@ export default function RecordTab({ cfg, userId, properties }: { cfg: RecordTabC
                   <label style={lbl}>{fd.label}{fd.required ? ' *' : ''}</label>
                   {fd.type === 'property' ? (
                     <select style={inp} value={form[fd.key] ?? ''} onChange={e => setForm({ ...form, [fd.key]: e.target.value })}>
-                      <option value="">{fd.required ? 'Select property' : 'All properties'}</option>
+                      <option value="">{fd.required ? `Select ${cfg.parent?.label ?? 'property'}` : (cfg.parent?.all ?? 'All properties')}</option>
                       {properties.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   ) : fd.type === 'select' ? (

@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Developments gaps filled', text: 'Developments has Pipeline, Land & Sites, Planning & Approvals, Design, Project Team, Construction Schedule, Procurement, Handover, Build-to-Rent, Tenders & Agreements, Risk Register, Project Finance, Cash Flow & Profit and Development Reports, plus a Shared tools group.' },
   { date: '2026-11-22', title: 'Staff Dashboard runs the day', text: 'The Staff Dashboard now shows what needs attention, your day, the team, notices and a business pulse, and the hub At a glance starts with the same pulse, your day, the team and notices.' },
   { date: '2026-11-22', title: 'Staff Dashboard and Clients & Relationships', text: 'The Human Intelligence Hub has an Overview with a Staff Dashboard, and Real Estate Intelligence has a Clients & Relationships area listing every new tab.' },
   { date: '2026-11-22', title: 'Property Management gaps filled', text: 'New tabs for agreements, applications, break clauses, meter readings, upkeep, supplier agreements, fees, budgets, reconciliation and performance reports, plus property type.' },
