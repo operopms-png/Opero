@@ -92,7 +92,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Guest Requests', targets: [str('Guest Requests')] },
     { name: 'Inventory', targets: [str('Inventory')] },
     { name: 'Linen & Laundry', targets: [str('Linen & Laundry')] },
-    { name: 'Inspections', targets: [str('Inspections')] },
+    { name: 'Vacation Rental Inspections', targets: [str('Inspections')] },
     { name: 'Pricing Rules', targets: [str('Pricing Rules')] },
     { name: 'Owner Agreements', targets: [str('Owner Agreements')] },
     { name: 'Integrations', targets: [str('Integrations')] },
