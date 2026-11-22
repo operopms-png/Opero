@@ -35,6 +35,7 @@ export const STAFF_CENTRE_TABS = [
   { k: 'training',    l: 'Staff Training' },
   { k: 'calendar',    l: 'Calendar' },
   { k: 'tasks',       l: 'Tasks' },
+  { k: 'companysetup', l: 'Company Setup (admins only unless ticked)' },
 ] as const
 
 export type StaffCentreKey = typeof STAFF_CENTRE_TABS[number]['k']

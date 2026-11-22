@@ -16,6 +16,7 @@ export const STAFF_HUBS: Hub[] = [
   { label: 'Scale', icon: 'chart', tabs: [{ href: '/staff-centre/scale', label: 'Scale', scTab: 'companydocs' }] },
   { label: 'Data Hub', icon: 'folder', tabs: [{ href: '/staff-centre/data-hub', label: 'Data Hub', scTab: 'datahub' }] },
   { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'companydocs' }] },
+  { label: 'Company Setup', icon: 'file', tabs: [{ href: '/staff-centre/company-setup', label: 'Company Setup', scTab: 'companysetup' }] },
   { label: 'Novourq Cloud AI', icon: 'sparkles', tabs: [
     { href: '/staff-centre/ai-command-centre', label: 'Novourq Cloud AI', scTab: 'ai', hidden: true },
     { href: '/staff-centre/ai-command-centre/agent-pool', label: 'Agent Pool', scTab: 'ai', hidden: true },

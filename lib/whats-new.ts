@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Company Setup', text: 'Staff Centre, Company Setup holds step-by-step plans such as registering a US company, with documents stored on each step, for admins only unless ticked.' },
   { date: '2026-11-22', title: 'Email folders', text: 'Email now shows Drafts, Archive, Spam and Trash as well as Inbox and Sent, so you can check Spam for real emails.' },
   { date: '2026-11-22', title: 'Post an alert by hand', text: 'In Novourq Cloud AI, Alerts, press Post an alert to flag something yourself and it shows in the bell.' },
   { date: '2026-11-22', title: 'Connect your own texting number', text: 'Admins can now connect their company\'s own Twilio number in Settings, Texts, so each company texts and gets replies in its own Inbox Texts channel.' },

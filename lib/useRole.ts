@@ -55,8 +55,8 @@ export function getAllowedTab(role: string, moduleKey: string): string | null {
 }
 
 export const SC_TABS: StaffCentreKey[] = STAFF_CENTRE_TABS.map(t => t.k)
-// Finance is admin-only unless an admin ticks it for someone in Team Management
-export const DEFAULT_SC_TABS: StaffCentreKey[] = SC_TABS.filter(t => t !== 'finance')
+// Finance and Company Setup are admin-only unless an admin ticks it for someone in Team Management
+export const DEFAULT_SC_TABS: StaffCentreKey[] = SC_TABS.filter(t => t !== 'finance' && t !== 'companysetup')
 
 export function getScTabs(role: string, modules: string[]): string[] {
   if (!modules.includes('sc')) return []
