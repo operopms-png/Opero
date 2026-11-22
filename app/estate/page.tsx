@@ -11,12 +11,13 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
+import ContactsSection from '@/components/estate/ContactsSection'
 import ListingEditor, { WebsiteEditor, EMPTY_WEBSITE } from '@/components/estate/ListingEditor'
 import { CURRENCIES } from '@/lib/listings-shared'
 import ModuleTabStrip from '@/components/ModuleTabStrip'
 const ACCENT = '#2F6DB5'
 // Blank property form (the listing fields feed the public /homes page)
-const EMPTY_PROP = {name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:'',listed:false,currency:'JMD',available_from:'',description:'',features:[] as string[],photo_captions:{} as Record<string,string>,...EMPTY_WEBSITE}
+const EMPTY_PROP = {name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:'',listed:false,for_sale:false,sale_price:'',currency:'JMD',available_from:'',description:'',features:[] as string[],photo_captions:{} as Record<string,string>,...EMPTY_WEBSITE}
 const curSym = (c?: string) => (CURRENCIES[c || 'JMD'] ?? CURRENCIES.JMD).symbol
 
 async function uploadPropertyImage(file: File): Promise<string | null> {
@@ -128,6 +129,7 @@ function Modal({ title, onClose, children }: any) {
 const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Landlords','Vacancies','Viewings'] },
+  { label: 'PEOPLE', items: ['Buyers','Sellers','Applicants'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Inventories','Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
@@ -994,6 +996,10 @@ export default function Page() {
                 <div><label style={labelStyle}>Status</label><select value={prop.status} onChange={e=>setProp({...prop,status:e.target.value})} style={inputStyle}>{['Available','Rented','Maintenance','Archived'].map(t=><option key={t}>{t}</option>)}</select></div>
                 <div><label style={labelStyle}>Owner</label><select value={prop.owner_id||''} onChange={e=>setProp({...prop,owner_id:e.target.value})} style={inputStyle}><option value="">No owner linked</option>{landlords.map((l:any)=><option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
               </div>
+              <div style={{display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',margin:'0 0 14px'}}>
+                <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:'#344054',cursor:'pointer'}}><input type="checkbox" checked={!!prop.for_sale} onChange={e=>setProp({...prop,for_sale:e.target.checked})}/> This property is for sale</label>
+                {prop.for_sale&&<div style={{display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:13,color:'#344054'}}>Asking price</span><input type="number" value={prop.sale_price} onChange={e=>setProp({...prop,sale_price:e.target.value})} style={{...inputStyle,width:160}}/></div>}
+              </div>
               <ListingEditor value={prop} onChange={patch=>setProp((cur:any)=>({...cur,...patch}))} rentLabel="the rent" propertyId={editItem?.id}/>
               <WebsiteEditor value={prop} onChange={patch=>setProp((cur:any)=>({...cur,...patch}))}/>
               <div style={{display:'flex',gap:8}}>
@@ -1031,7 +1037,7 @@ export default function Page() {
                         {photos.length > 1 && <span style={{position:'absolute',bottom:-2,right:-2,background:'rgba(0,0,0,0.7)',color:'#fff',fontSize:9,fontWeight:600,padding:'1px 4px',borderRadius:4}}>+{photos.length-1}</span>}
                       </div>
                     : <div style={{width:40,height:40,borderRadius:6,background:'#F2F4F7',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>🏠</div>}
-                  <div style={{fontSize:13,fontWeight:500,color:'#323338',display:'flex',alignItems:'center',gap:6,minWidth:0}}><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</span>{p.listed&&<a href={`/homes/${p.id}`} target="_blank" rel="noreferrer" title="Shown on the listings link — open" style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:'#EAF3FC',color:ACCENT,textDecoration:'none',flexShrink:0}}>Listed ↗</a>}</div>
+                  <div style={{fontSize:13,fontWeight:500,color:'#323338',display:'flex',alignItems:'center',gap:6,minWidth:0}}><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</span>{p.listed&&<a href={`/homes/${p.id}`} target="_blank" rel="noreferrer" title="Shown on the listings link — open" style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:'#EAF3FC',color:ACCENT,textDecoration:'none',flexShrink:0}}>Listed ↗</a>}{p.for_sale&&<span style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:'#FEF3C7',color:'#92400E',flexShrink:0}}>For sale{p.sale_price?` ${curSym(p.currency)}${Number(p.sale_price).toLocaleString()}`:''}</span>}</div>
                   <span style={{fontSize:12,color:'#344054'}}>{p.type}</span>
                   <span style={{fontSize:12,color:'#667085',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{p.address||'—'}</span>
                   <span style={{fontSize:12,color:'#344054',display:'inline-flex',alignItems:'center',gap:4}}><BedDouble size={13} color="#667085"/>{p.bedrooms}</span>
@@ -1039,7 +1045,7 @@ export default function Page() {
                   <span style={{fontSize:12,fontWeight:600,color:ACCENT}}>{p.rent?curSym(p.currency)+Number(p.rent).toLocaleString('en-GB'):'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'3px 8px',borderRadius:4,background:p.status==='Rented'?'#FEF3C7':p.status==='Available'?'#ECFDF5':'#F2F4F7',color:p.status==='Rented'?'#F59E0B':p.status==='Available'?'#10B981':'#667085',display:'inline-block'}}>{p.status}</span>
                   <div style={{display:'flex',gap:4}}>
-                    <button onClick={()=>{setEditItem(p);setProp({...EMPTY_PROP,name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||'',owner_id:p.owner_id||'',listed:!!p.listed,currency:p.currency||'JMD',available_from:p.available_from||'',description:p.description||'',features:p.features||[],photo_captions:p.photo_captions||{},show_on_website:!!p.show_on_website,web_title:p.web_title||'',web_area:p.web_area||'',country:p.country||'',guests:p.guests!=null?String(p.guests):'',airbnb_url:p.airbnb_url||'',web_badge:p.web_badge||'',lat:p.lat!=null?String(p.lat):'',lng:p.lng!=null?String(p.lng):'',web_sort:String(p.web_sort??0)});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
+                    <button onClick={()=>{setEditItem(p);setProp({...EMPTY_PROP,name:p.name,address:p.address,type:p.type,bedrooms:p.bedrooms,bathrooms:p.bathrooms||'1',rent:p.rent,status:p.status,image_urls:p.image_urls||'',owner_id:p.owner_id||'',listed:!!p.listed,for_sale:!!p.for_sale,sale_price:p.sale_price!=null?String(p.sale_price):'',currency:p.currency||'JMD',available_from:p.available_from||'',description:p.description||'',features:p.features||[],photo_captions:p.photo_captions||{},show_on_website:!!p.show_on_website,web_title:p.web_title||'',web_area:p.web_area||'',country:p.country||'',guests:p.guests!=null?String(p.guests):'',airbnb_url:p.airbnb_url||'',web_badge:p.web_badge||'',lat:p.lat!=null?String(p.lat):'',lng:p.lng!=null?String(p.lng):'',web_sort:String(p.web_sort??0)});setShowAddProperty(true)}} style={{padding:'4px 10px',borderRadius:6,border:'1px solid #D0D5DD',background:'#fff',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Edit</button>
                     <button onClick={()=>delRecord('estate_properties',p.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
                   </div>
                 </div>
@@ -1488,6 +1494,10 @@ export default function Page() {
               )})}
             </div>
           </div>)}
+
+          {section==='Buyers'&&<ContactsSection kind="buyer" properties={properties}/>}
+          {section==='Sellers'&&<ContactsSection kind="seller" properties={properties}/>}
+          {section==='Applicants'&&<ContactsSection kind="applicant" properties={properties}/>}
 
           {section==='Landlords'&&(<div>
             <div style={{display:'flex',flexDirection:'column',gap:8}}>

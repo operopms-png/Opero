@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Buyers, Sellers and Applicants', text: 'Estate Agency has a new People group for buyers, sellers and applicants, and a For sale setting with an asking price on each property.' },
   { date: '2026-11-22', title: 'Shared tools in Estate Agency', text: 'Estate Agency now has a Shared tools group on its tab strip that opens CRM, Listings, Inbox, Marketing, Calendar, Tasks, Approvals, Invoices and Valuations.' },
   { date: '2026-11-22', title: 'Module tabs back at the top', text: 'Property Management, Estate Agency, Vacation Rentals and Developments now show their own inner tabs along the top of the page, with buttons to switch module.' },
   { date: '2026-11-22', title: 'Property Management and Estate Agency in sync', text: 'Changing an owner, tenant, property, building or unit in one module now updates the same one in the other, and certificates and documents are mirrored too.' },
