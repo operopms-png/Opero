@@ -408,7 +408,7 @@ export default function Page() {
 
   return (
     <div style={{display:'flex',height: 'calc(100vh - var(--hub-h, 0px))',width:'100%',contain:'inline-size',fontFamily:'Figtree, Inter, -apple-system, sans-serif',color:INK,background:'#fff'}}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap'); .ib-nav:hover{background:#F5F6F8} .ib-row:hover{background:#F5F6F8} @media (max-width: 1100px){ .ib-details{display:none !important} } @media (max-width: 900px){ .ib-ws{display:none !important} }`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap'); .ib-nav:hover{background:#F5F6F8} .ib-row:hover{background:#F5F6F8} @media (max-width: 1100px){ .ib-details{display:none !important} } .ib-mnav{display:none} @media (max-width: 900px){ .ib-ws{display:none !important} .ib-mnav{display:flex !important} }`}</style>
 
       {/* workspace nav */}
       <aside className="ib-ws" style={{width:232,flexShrink:0,borderRight:`1px solid ${LINE}`,padding:'14px 10px',display:'flex',flexDirection:'column',gap:2,overflowY:'auto'}}>
@@ -452,6 +452,14 @@ export default function Page() {
             <span style={{fontSize:12.5,color:MUTED}}>{sorted.length}</span>
           </div>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="⌕  Search conversations" style={{marginTop:10,width:'100%',height:32,border:`1px solid ${BORDER}`,borderRadius:4,padding:'0 10px',fontSize:13.5,fontFamily:'inherit',boxSizing:'border-box',outline:'none'}}/>
+        </div>
+        {/* phones: the side menu is hidden, so channels (incl. Texts) go in a scrolling row */}
+        <div className="ib-mnav" style={{gap:6,overflowX:'auto',padding:'8px 12px',borderBottom:`1px solid ${LINE}`,whiteSpace:'nowrap'}}>
+          {[{key:'Unread',label:'Unread'},{key:'All',label:'All'},...navChannels].map(ch=>{
+            const active = ch.key==='Unread' ? tab==='Unread' : ch.key==='All' ? (tab==='All'&&filter==='All') : (tab==='All'&&filter===ch.key)
+            return <button key={ch.key} onClick={()=>{ if(ch.key==='Unread'){setTab('Unread');setFilter('All')} else {setTab('All');setFilter(ch.key==='All'?'All':ch.key)} }} style={{flexShrink:0,height:30,padding:'0 12px',borderRadius:15,border:active?`1px solid ${ACCENT}`:`1px solid ${BORDER}`,background:active?CREAM:'#fff',color:INK,fontSize:13,fontFamily:'inherit',cursor:'pointer'}}>{ch.label}</button>
+          })}
+          <button onClick={()=>setShowNewText(true)} style={{flexShrink:0,height:30,padding:'0 12px',borderRadius:15,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,fontFamily:'inherit',cursor:'pointer'}}>+ New text</button>
         </div>
         <div style={{flex:1,overflowY:'auto'}}>
           {filter==='sms' && smsConfigured===false ? (

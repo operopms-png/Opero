@@ -55,7 +55,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/ask-grok': { title: 'Novourq Cloud AI', text: 'Ask Novourq Cloud AI anything about your business. It answers from your own records.' },
   '/staff-centre/work-hours': { title: 'Work Hours', text: 'When each person signed in, how long they were on the portal and when they signed out, with the pages they used. Only the account owner sees it, plus any staff the owner picks. Staff press Clock in and Clock out at the top, and the owner sees late arrivals and who has not clocked in. Download the CSV for payroll.' },
   '/staff-centre/activity-log': { title: 'Activity Log', text: 'Who changed what, and when, across properties, people, money and operations. Admins see every change in the company. Everyone else sees their own.' },
-  '/staff-centre/inbox': { title: 'Inbox', text: 'Every message from guests, tenants, landlords and WhatsApp in one place. Replies are drafted for your approval, and WhatsApp can be answered by Novourq Cloud AI.' },
+  '/staff-centre/inbox': { title: 'Inbox', text: 'Every message from guests, tenants, landlords, texts and WhatsApp in one place. Replies are drafted for your approval, and WhatsApp can be answered by Novourq Cloud AI.' },
   '/staff-centre/email': { title: 'Email', text: 'Email templates and sent messages, with your branding applied.' },
   '/staff-centre/ai-command-centre/snapshot': { title: 'Business snapshot', text: 'A one-page picture of your business and what Novourq Cloud AI is doing for it.' },
   '/staff-centre/ai-command-centre/agent-pool': { title: 'Skills', text: 'Everything Novourq Cloud AI can do for you, and which skills are switched on.' },
