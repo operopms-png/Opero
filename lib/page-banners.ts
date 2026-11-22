@@ -57,6 +57,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/activity-log': { title: 'Activity Log', text: 'Who changed what, and when, across properties, people, money and operations. Admins see every change in the company. Everyone else sees their own.' },
   '/staff-centre/inbox': { title: 'Inbox', text: 'Every message from guests, tenants, landlords, texts and WhatsApp in one place. Replies are drafted for your approval, and WhatsApp can be answered by Novourq Cloud AI.' },
   '/staff-centre/company-setup': { title: 'Company Setup', text: 'Step-by-step plans for setting up the company, with the documents for each step stored with it. Admins only unless ticked in Team Management.' },
+  '/staff-centre/everyone': { title: 'Everyone', text: 'Owners and tenants from Property Management and Estate Agency in one list, one row per person, with a flag when their details differ.' },
   '/staff-centre/email': { title: 'Email', text: 'Every connected mailbox with Inbox, Drafts, Sent, Archive, Spam and Trash folders, plus email templates with your branding applied.' },
   '/staff-centre/ai-command-centre/snapshot': { title: 'Business snapshot', text: 'A one-page picture of your business and what Novourq Cloud AI is doing for it.' },
   '/staff-centre/ai-command-centre/agent-pool': { title: 'Skills', text: 'Everything Novourq Cloud AI can do for you, and which skills are switched on.' },
