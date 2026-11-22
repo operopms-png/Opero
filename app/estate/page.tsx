@@ -11,6 +11,7 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
+import SalesSection from '@/components/estate/SalesSection'
 import OffersSection from '@/components/estate/OffersSection'
 import ContactsSection from '@/components/estate/ContactsSection'
 import ListingEditor, { WebsiteEditor, EMPTY_WEBSITE } from '@/components/estate/ListingEditor'
@@ -131,7 +132,7 @@ const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Landlords','Vacancies','Viewings'] },
   { label: 'PEOPLE', items: ['Buyers','Sellers','Applicants'] },
-  { label: 'SALES', items: ['Offers'] },
+  { label: 'SALES', items: ['Offers','Sales Progression'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Inventories','Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
@@ -1497,6 +1498,7 @@ export default function Page() {
             </div>
           </div>)}
 
+          {section==='Sales Progression'&&<SalesSection properties={properties}/>}
           {section==='Offers'&&<OffersSection properties={properties}/>}
           {section==='Buyers'&&<ContactsSection kind="buyer" properties={properties}/>}
           {section==='Sellers'&&<ContactsSection kind="seller" properties={properties}/>}

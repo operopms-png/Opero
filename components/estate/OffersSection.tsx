@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../lib/supabase'
 import { CURRENCIES } from '@/lib/listings-shared'
+import { startSaleFromOffer } from '@/lib/estate-sales'
 
 const STATUSES = ['Received', 'Submitted', 'Counteroffer', 'Negotiating', 'Accepted', 'Rejected', 'Withdrawn']
 const FILTERS = ['All', 'Received', 'Submitted', 'Counteroffer', 'Negotiating', 'Accepted', 'Rejected']
@@ -59,6 +60,12 @@ export default function OffersSection({ properties }: { properties: any[] }) {
     setOpen(false); setEditId(null); setForm(blank()); load()
   }
   async function setField(id: string, patch: any) { await supabase.from('estate_offers').update(patch).eq('id', id); load() }
+  async function startSale(r: any) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const msg = await startSaleFromOffer(r, await getAccountId(user))
+    if (msg) alert(msg); else alert('Sale started. Open Sales Progression to follow its steps.')
+  }
   async function remove(id: string) { if (!confirm('Delete this offer?')) return; await supabase.from('estate_offers').delete().eq('id', id); load() }
 
   const shown = rows.filter(r => filter === 'All' || r.status === filter)
@@ -137,6 +144,7 @@ export default function OffersSection({ properties }: { properties: any[] }) {
                   <button onClick={() => setField(r.id, { status: 'Accepted' })} style={{ fontSize: 12, color: '#059669', background: 'none', border: 'none', cursor: 'pointer' }}>Accept</button>
                   <button onClick={() => setField(r.id, { status: 'Rejected' })} style={{ fontSize: 12, color: '#B42318', background: 'none', border: 'none', cursor: 'pointer' }}>Reject</button>
                 </>}
+                {r.status === 'Accepted' && <button onClick={() => startSale(r)} style={{ fontSize: 12, color: '#fff', background: '#059669', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>Start sale</button>}
                 <button onClick={() => { setEditId(r.id); setForm({ property_id: r.property_id || '', contact_id: r.contact_id || '', direction: r.direction, amount: r.amount ?? '', counter_amount: r.counter_amount ?? '', status: r.status, approval: r.approval, conditions: r.conditions || '', offer_date: r.offer_date || today(), valid_until: r.valid_until || '', notes: r.notes || '' }); setOpen(true) }}
                   style={{ fontSize: 12, color: '#344054', background: '#fff', border: '1px solid #D0D5DD', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>Edit</button>
                 <button onClick={() => remove(r.id)} style={{ fontSize: 12, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>Delete</button>
