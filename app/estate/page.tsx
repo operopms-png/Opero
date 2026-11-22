@@ -134,6 +134,13 @@ const NAV_GROUPS = [
   { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
   { label: 'REPORTS', items: ['Landlord Reports','Reports'] },
 ]
+// Company-wide tools that open their real page, so Estate Agency shows them without a second copy.
+const SHARED_TOOL_LINKS: Record<string,string> = {
+  'CRM':'/staff-centre/crm','Landlord Leads':'/staff-centre/landlord-leads','Listings':'/staff-centre/listings',
+  'Inbox':'/staff-centre/inbox','Email':'/staff-centre/email','Marketing':'/staff-centre/marketing',
+  'Calendar':'/staff-centre/calendar','Tasks':'/staff-centre/tasks','Approvals':'/staff-centre/approvals',
+  'Invoices':'/staff-centre/invoices','Valuations':'/pm?tab=Valuations',
+}
 const STUB_SECTIONS: string[] = []
 const DOCUMENT_CATEGORIES = [
   { value:'lease', label:'Lease / Tenancy Agreement' },
@@ -808,10 +815,10 @@ export default function Page() {
       {/* Main */}
       <div style={{flex:1,display:'flex',flexDirection:'column'}}>
         <div style={{padding:'10px 24px',background:'#F7F8FA',borderBottom:'1px solid #E4E7EC'}}><a href="/property" style={{fontSize:13,fontWeight:600,color:'#2F6DB5',textDecoration:'none'}}>&larr; Real Estate Intelligence</a></div>
-        <ModuleTabStrip module="estate" current={section} groups={NAV_GROUPS}
-          locked={t=>!!(allowedTabs && !allowedTabs.includes(t))}
+        <ModuleTabStrip module="estate" current={section} groups={[...NAV_GROUPS,{label:'SHARED TOOLS',items:Object.keys(SHARED_TOOL_LINKS)}]}
+          locked={t=>!SHARED_TOOL_LINKS[t] && !!(allowedTabs && !allowedTabs.includes(t))}
           badge={t=>t==='Maintenance'?maintenance.filter((m:any)=>m.status==='open').length:t==='Cleaning'?cleaning.filter((c:any)=>c.status==='pending').length:0}
-          onSelect={t=>setSection(t)} />
+          onSelect={t=>{ if(SHARED_TOOL_LINKS[t]){ window.location.assign(SHARED_TOOL_LINKS[t]); return } setSection(t) }} />
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
