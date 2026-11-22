@@ -100,6 +100,9 @@ const STATUS_COLORS: Record<string,{bg:string,color:string}> = {
   active: { bg:'#D1FAE5', color:'#059669' },
   on_hold: { bg:'#FEF3C7', color:'#D97706' },
   completed: { bg:'#F3F4F6', color:'#6B7280' },
+  proposed: { bg:'#EDE9FE', color:'#6D28D9' },
+  approved: { bg:'#CFFAFE', color:'#0E7490' },
+  archived: { bg:'#F3F4F6', color:'#98A2B3' },
   pending: { bg:'#FEF3C7', color:'#D97706' },
   paid: { bg:'#D1FAE5', color:'#059669' },
   over_budget: { bg:'#FEE2E2', color:'#DC2626' },
@@ -207,6 +210,7 @@ export default function DevPage() {
   const [saving, setSaving] = useState(false)
   const [projects, setProjects] = useState<any[]>([])
   const [acctId, setAcctId] = useState('')
+  const [projFilter, setProjFilter] = useState('all')
   const [units, setUnits] = useState<any[]>([])
   const [compliance, setCompliance] = useState<any[]>([])
   const [snags, setSnags] = useState<any[]>([])
@@ -794,10 +798,13 @@ export default function DevPage() {
                 <div style={{ fontSize:14, fontWeight:600, color:'#323338', marginBottom:4 }}>Project Status</div>
                 <div style={{ display:'flex', flexDirection:'column', gap:12, marginTop:8 }}>
                   {[
+                    { label:'Proposed', count:projects.filter((p:any)=>p.status==='proposed').length, color:'#6D28D9' },
                     { label:'Planning', count:projects.filter((p:any)=>p.status==='planning').length, color:'#2F6DB5' },
+                    { label:'Approved', count:projects.filter((p:any)=>p.status==='approved').length, color:'#0E7490' },
                     { label:'Active', count:projects.filter((p:any)=>p.status==='active').length, color:'#10B981' },
                     { label:'On Hold', count:projects.filter((p:any)=>p.status==='on_hold').length, color:'#F59E0B' },
                     { label:'Completed', count:projects.filter((p:any)=>p.status==='completed').length, color:'#667085' },
+                    { label:'Archived', count:projects.filter((p:any)=>p.status==='archived').length, color:'#98A2B3' },
                   ].map((s:any)=>(
                     <div key={s.label} style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <div style={{ fontSize:12, color:'#667085', width:72 }}>{s.label}</div>
@@ -898,8 +905,14 @@ export default function DevPage() {
         {tab==='Projects' && (
           <div>
             {projects.length===0 ? <div style={{ textAlign:'center', padding:80, color:'#98A2B3', fontSize:14 }}>No projects yet</div> :
+            <>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
+              {[['all','All projects'],['proposed','Proposed'],['planning','Planning'],['approved','Approved'],['active','Active construction'],['on_hold','On hold'],['completed','Completed'],['archived','Archived']].map(([k,l])=>(
+                <button key={k} onClick={()=>setProjFilter(k)} style={{ padding:'6px 12px', borderRadius:20, fontSize:13, fontFamily:'inherit', cursor:'pointer', border:projFilter===k?'1px solid #2F6DB5':'1px solid #D0D5DD', background:projFilter===k?'#DCE9F8':'#fff', color:projFilter===k?'#1D4E89':'#475467', fontWeight:projFilter===k?600:400 }}>{l} ({k==='all'?projects.length:projects.filter(p=>p.status===k).length})</button>
+              ))}
+            </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
-              {projects.map(p => {
+              {projects.filter(p=>projFilter==='all'||p.status===projFilter).map(p => {
                 const pBudget = projectBudget(p.id), pSpent = projectSpent(p.id)
                 const pct = pBudget > 0 ? Math.round((pSpent / pBudget) * 100) : 0
                 const sc = STATUS_COLORS[p.status] ?? STATUS_COLORS.planning
@@ -925,7 +938,7 @@ export default function DevPage() {
                   </div>
                 )
               })}
-            </div>}
+            </div></>}
           </div>
         )}
 
