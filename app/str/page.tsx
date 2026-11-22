@@ -11,19 +11,31 @@ import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import GuestCheckins from '@/components/pm/GuestCheckins'
 import DynamicDossier from '@/components/str/DynamicDossier'
 import ModuleTabStrip from '@/components/ModuleTabStrip'
+import RecordTab from '@/components/pm/RecordTab'
+import { STR_REQUESTS, STR_INVENTORY, STR_LAUNDRY, STR_INSPECTIONS, STR_PRICING_RULES, STR_OWNER_AGREEMENTS } from '@/lib/str-record-tabs'
+import { GuestsTab, DirectBookings, StrKpis, StrGlance, BookingHistory } from '@/components/str/StrTools'
 
-const TABS = ['Home','Bookings','Guest Check-ins','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms','Dynamic Dossier']
+const TABS = ['Home','Bookings','Guest Check-ins','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms','Dynamic Dossier','Guests','Direct Bookings','Guest Requests','Inventory','Linen & Laundry','Inspections','Pricing Rules','Owner Agreements']
+const STR_SHARED_TOOLS: Record<string,string> = {
+  'Tasks':'/staff-centre/tasks','Approvals':'/staff-centre/approvals','Calendar':'/staff-centre/calendar','CRM Contacts':'/staff-centre/crm',
+  'Inbox':'/staff-centre/inbox','Email':'/staff-centre/email','WhatsApp & SMS':'/staff-centre/inbox','Meetings':'/staff-centre/meetings',
+  'Workflows':'/staff-centre/ai-command-centre/workflows','AI Assistant':'/staff-centre/ai-command-centre','Team Management':'/settings','Portal Access':'/staff-centre/portal-access',
+  'Activity Log':'/staff-centre/activity-log','Signed Documents':'/staff-centre/documents',
+}
+const ONBOARDING_STEPS = ['Photos added','Description written','Amenities listed','Pricing set','Calendar connected','Cleaner assigned','Check-in instructions added','Listing live']
+const STR_PAGES: Record<string,string> = { 'Contractors':'/str/vendors','Service':'/str/service','CRM':'/str/crm' }
 const STR_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Home'] },
-  { label: 'PORTFOLIO', items: ['Properties','Bookings','Guest Check-ins'] },
-  { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms'] },
+  { label: 'PORTFOLIO', items: ['Properties','Bookings','Guest Check-ins','Guests','Direct Bookings'] },
+  { label: 'OPERATIONS', items: ['Cleaning','Maintenance','Guest Comms','Guest Requests','Inventory','Linen & Laundry','Inspections','Contractors','Service','CRM'] },
   { label: 'COMPLIANCE', items: ['Compliance'] },
   { label: 'REPUTATION', items: ['Reviews'] },
-  { label: 'INSIGHTS', items: ['Analytics','Dynamic Dossier','Channels','Integrations'] },
-  { label: 'TEAM', items: ['Team','Owners'] },
+  { label: 'INSIGHTS', items: ['Analytics','Dynamic Dossier','Channels','Integrations','Pricing Rules'] },
+  { label: 'TEAM', items: ['Team','Owners','Owner Agreements'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'FINANCE', items: ['Expenses','Banking'] },
   { label: 'REPORTS', items: ['Reports'] },
+  { label: 'SHARED TOOLS', items: Object.keys(STR_SHARED_TOOLS) },
 ]
 const lbl: React.CSSProperties = { display:'block', fontSize:13, fontWeight:500, color:'#344054', marginBottom:5 }
 const inp: React.CSSProperties = { width:'100%', padding:'10px 12px', borderRadius:8, border:'1px solid #D0D5DD', fontSize:14, fontFamily:'inherit', boxSizing:'border-box' }
@@ -164,6 +176,8 @@ export default function STRPage() {
     }
   }
   const [bookings, setBookings] = useState<any[]>([])
+  const [bookFilter, setBookFilter] = useState('all')
+  const [historyBooking, setHistoryBooking] = useState<any|null>(null)
   const [properties, setProperties] = useState<any[]>([])
   const [cleaning, setCleaning] = useState<any[]>([])
   const [maintenance, setMaintenance] = useState<any[]>([])
@@ -600,7 +614,7 @@ export default function STRPage() {
               {group.items.map(t=>{
                 const locked = !!(allowedTabs && !allowedTabs.includes(t))
                 const badge = t==='Cleaning' ? cleaning.filter((c:any)=>c.status==='pending').length : t==='Maintenance' ? maintenance.filter((m:any)=>m.status==='open').length : 0
-                return <button key={t} onClick={()=>{if(locked)return; if(t==='Owners'){window.location.href='/owner-portal';return;} setTab(t)}} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent', color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
+                return <button key={t} onClick={()=>{if(locked)return; if(STR_SHARED_TOOLS[t]){window.location.assign(STR_SHARED_TOOLS[t]);return;} if(STR_PAGES[t]){window.location.assign(STR_PAGES[t]);return;} if(t==='Owners'){window.location.href='/owner-portal';return;} setTab(t)}} disabled={locked} title={locked?`Your role only has access to ${allowedTab}`:undefined} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', borderRadius:6, border:tab===t&&!locked?'1px solid #2F6DB5':'1px solid transparent',background:tab===t&&!locked?'#B9D6F2':'transparent', color:locked?'#C1C9D2':tab===t?'#1D4E89':'#344054', fontSize:13, fontWeight:tab===t&&!locked?600:400, cursor:locked?'not-allowed':'pointer', fontFamily:'inherit', textAlign:'left', marginBottom:2 }}><span>{t}</span>{badge>0&&!locked&&<span style={{background:t==='Maintenance'?'#EF4444':'#F59E0B',color:'#fff',fontSize:10,fontWeight:700,borderRadius:10,padding:'1px 6px'}}>{badge}</span>}{locked&&<span style={{marginLeft:5}}>🔒</span>}</button>
               })}
             </div>
           ))}
@@ -611,9 +625,9 @@ export default function STRPage() {
       <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
         <div style={{padding:'10px 24px',background:'#F7F8FA',borderBottom:'1px solid #E4E7EC'}}><a href="/property" style={{fontSize:13,fontWeight:600,color:'#2F6DB5',textDecoration:'none'}}>&larr; Real Estate Intelligence</a></div>
         <ModuleTabStrip module="str" current={tab} groups={STR_NAV_GROUPS}
-          locked={t=>!!(allowedTabs && !allowedTabs.includes(t))}
+          locked={t=>!STR_SHARED_TOOLS[t] && !STR_PAGES[t] && !!(allowedTabs && !allowedTabs.includes(t))}
           badge={t=>t==='Cleaning'?cleaning.filter((c:any)=>c.status==='pending').length:t==='Maintenance'?maintenance.filter((m:any)=>m.status==='open').length:0}
-          onSelect={t=>{ if(t==='Owners'){ window.location.href='/owner-portal'; return } setTab(t) }} />
+          onSelect={t=>{ if(STR_SHARED_TOOLS[t]){ window.location.assign(STR_SHARED_TOOLS[t]); return } if(STR_PAGES[t]){ window.location.assign(STR_PAGES[t]); return } if(t==='Owners'){ window.location.href='/owner-portal'; return } setTab(t) }} />
         <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:13, color:'#667085' }}>Home</span>
@@ -639,6 +653,7 @@ export default function STRPage() {
 
         {tab==='Home' && (
           <div>
+            <StrGlance userId={currentUserId||''} bookings={bookings} maintenance={maintenance} reviews={reviews} go={setTab} />
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:16 }}>
               <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Properties</div><div style={{ fontSize:28, fontWeight:800, color:'#2F6DB5' }}>{stats.properties}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Total active</div></div>
               <div style={{ background:'#fff', border:'1px solid #E4E7EC', borderRadius:12, padding:'20px 24px' }}><div style={{ fontSize:11, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:6 }}>Cleaning Tasks</div><div style={{ fontSize:28, fontWeight:800, color:'#10B981' }}>{stats.cleaning}</div><div style={{ fontSize:12, color:'#98A2B3', marginTop:4 }}>Pending today</div></div>
@@ -695,14 +710,29 @@ export default function STRPage() {
         )}
 
         {tab==='Guest Check-ins' && <GuestCheckins />}
+        {tab==='Guests' && <GuestsTab userId={currentUserId||''} bookings={bookings} />}
+        {tab==='Direct Bookings' && <DirectBookings propertyIds={properties.map((p:any)=>p.id)} properties={properties} />}
+        {tab==='Guest Requests' && <RecordTab cfg={STR_REQUESTS} userId={currentUserId||''} properties={properties} />}
+        {tab==='Inventory' && <RecordTab cfg={STR_INVENTORY} userId={currentUserId||''} properties={properties} />}
+        {tab==='Linen & Laundry' && <RecordTab cfg={STR_LAUNDRY} userId={currentUserId||''} properties={properties} />}
+        {tab==='Inspections' && <RecordTab cfg={STR_INSPECTIONS} userId={currentUserId||''} properties={properties} />}
+        {tab==='Pricing Rules' && <RecordTab cfg={STR_PRICING_RULES} userId={currentUserId||''} properties={properties} />}
+        {tab==='Owner Agreements' && <RecordTab cfg={STR_OWNER_AGREEMENTS} userId={currentUserId||''} properties={properties} />}
 
         {tab==='Bookings' && (
+          <div>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
+            {[['all','All bookings'],['new','New reservations'],['confirmed','Confirmed'],['pending','Pending'],['cancelled','Cancelled']].map(([k,l])=>{
+              const f = (b:any) => k==='all' ? true : k==='new' ? (b.created_at && b.created_at >= new Date(Date.now()-7*864e5).toISOString()) : k==='cancelled' ? String(b.status).toLowerCase().startsWith('cancel') : String(b.status).toLowerCase()===k
+              return <button key={k} onClick={()=>setBookFilter(k)} style={{ padding:'6px 12px', borderRadius:20, fontSize:13, fontFamily:'inherit', cursor:'pointer', border:bookFilter===k?'1px solid #2F6DB5':'1px solid #D0D5DD', background:bookFilter===k?'#DCE9F8':'#fff', color:bookFilter===k?'#1D4E89':'#475467', fontWeight:bookFilter===k?600:400 }}>{l} ({bookings.filter(f).length})</button>
+            })}
+          </div>
           <div style={{ background:'#fff', borderRadius:12, border:'1px solid #E4E7EC', overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 80px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 130px', padding:'12px 20px', background:'#F9FAFB', borderBottom:'1px solid #E4E7EC', fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase' }}>
               <span>Guest</span><span>Property</span><span>Check In</span><span>Check Out</span><span>Status</span><span></span>
             </div>
             {bookings.length===0 ? <div style={{ textAlign:'center', padding:60, color:'#98A2B3', fontSize:14 }}>No bookings yet</div> :
-            bookings.map(b=>(<div key={b.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 80px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
+            bookings.filter((b:any)=>bookFilter==='all' ? true : bookFilter==='new' ? (b.created_at && b.created_at >= new Date(Date.now()-7*864e5).toISOString()) : bookFilter==='cancelled' ? String(b.status).toLowerCase().startsWith('cancel') : String(b.status).toLowerCase()===bookFilter).map(b=>(<div key={b.id} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr 100px 130px', padding:'14px 20px', borderBottom:'1px solid #F2F4F7', fontSize:13, color:'#344054', alignItems:'center' }}>
               <span style={{ fontWeight:500, color:'#323338' }}>{b.guest_name??'—'}</span>
               <span>{b.properties?.name??'—'}</span>
               <span>{b.check_in??'—'}</span>
@@ -710,9 +740,12 @@ export default function STRPage() {
               <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:b.status==='confirmed'?'#D1FAE5':'#F3F4F6', color:b.status==='confirmed'?'#059669':'#6B7280' }}>{b.status}</span>
               <div style={{ display:'flex', gap:6 }}>
                 <button onClick={()=>openEdit('booking',b)} style={{ fontSize:11, color:'#2F6DB5', background:'none', border:'1px solid #2F6DB5', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>Edit</button>
+                <button onClick={()=>setHistoryBooking(b)} style={{ fontSize:11, color:'#475467', background:'none', border:'1px solid #D0D5DD', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>History</button>
                 <button onClick={()=>del('bookings',b.id)} style={{ fontSize:11, color:'#EF4444', background:'none', border:'none', cursor:'pointer' }}>×</button>
               </div>
             </div>))}
+          </div>
+          {historyBooking && <BookingHistory userId={currentUserId||''} booking={historyBooking} onClose={()=>setHistoryBooking(null)} />}
           </div>
         )}
 
@@ -723,6 +756,8 @@ export default function STRPage() {
               <div style={{ fontWeight:600, fontSize:15, color:'#323338', marginBottom:4 }}>{p.name}</div>
               <div style={{ fontSize:13, color:'#667085', marginBottom:8 }}>{p.address}</div>
               <span style={{ fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:20, background:'#D1FAE5', color:'#059669' }}>active</span>
+              {p.amenities && <div style={{ fontSize:12, color:'#667085', marginTop:8 }}>{p.amenities}</div>}
+              <div style={{ fontSize:12, color:'#98A2B3', marginTop:6 }}>Onboarding: {Object.values(p.onboarding||{}).filter(Boolean).length} of {ONBOARDING_STEPS.length} done</div>
               <div style={{ display:'flex', gap:8, marginTop:12 }}>
                 <button onClick={()=>openEdit('property',p)} style={{ fontSize:12, color:'#2F6DB5', background:'none', border:'1px solid #2F6DB5', borderRadius:6, padding:'4px 10px', cursor:'pointer' }}>Edit</button>
                 <button onClick={()=>del('properties',p.id)} style={{ fontSize:12, color:'#EF4444', background:'none', border:'none', cursor:'pointer', padding:0 }}>Delete</button>
@@ -1054,6 +1089,7 @@ export default function STRPage() {
 
         {tab==='Reports' && (
           <div>
+            <StrKpis bookings={bookings} properties={properties} expenses={expenses} />
             {/* Net Profit Banner */}
             <div style={{background:'linear-gradient(135deg,#EAF3FC,#C9DEF3)',border:'1px solid #C9DEF3',borderRadius:12,padding:24,marginBottom:20,color:'#1D4E89'}}>
               <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',opacity:0.6,marginBottom:6}}>{new Date().toLocaleString('default',{month:'long',year:'numeric'}).toUpperCase()} · NET PROFIT</div>
@@ -1718,6 +1754,11 @@ export default function STRPage() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
               <div><label style={lbl}>Nightly Rate ({cur()})</label><input type="number" style={inp} value={form.nightly_rate??''} onChange={e=>setForm({...form,nightly_rate:parseFloat(e.target.value)})}/></div>
               <div><label style={lbl}>Max Guests</label><input type="number" style={inp} value={form.max_guests??''} onChange={e=>setForm({...form,max_guests:parseInt(e.target.value)})}/></div>
+            </div>
+            <div><label style={lbl}>Amenities (comma separated)</label><textarea style={{...inp,resize:'vertical'}} rows={2} value={form.amenities??''} onChange={e=>setForm({...form,amenities:e.target.value})} placeholder="Pool, WiFi, Air conditioning, Parking"/></div>
+            <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:8 }}>Onboarding checklist</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+              {ONBOARDING_STEPS.map(st=>(<label key={st} style={{display:'flex',gap:8,alignItems:'center',fontSize:13}}><input type="checkbox" checked={!!(form.onboarding||{})[st]} onChange={e=>setForm({...form,onboarding:{...(form.onboarding||{}),[st]:e.target.checked}})}/> {st}</label>))}
             </div>
             <div style={{ fontSize:12, fontWeight:600, color:'#667085', textTransform:'uppercase', letterSpacing:'0.05em', marginTop:8 }}>AI Guest Agent Knowledge Base</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>

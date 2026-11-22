@@ -174,16 +174,16 @@ export default function Page() {
               <div style={{display:'flex',gap:8}}><button onClick={addContractor} disabled={saving} style={{padding:'9px 20px',borderRadius:8,border:'none',background:ACCENT,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:saving?0.6:1}}>{saving?'Saving…':'Add contractor'}</button><button onClick={()=>setShowContractor(false)} style={{padding:'9px 20px',borderRadius:8,border:'1px solid #D0D5DD',background:'#fff',fontSize:13,cursor:'pointer',fontFamily:'inherit',color:'#344054'}}>Cancel</button></div>
             </div>)}
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 140px 140px 120px 80px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
-                <span>Name</span><span>Type</span><span>Company</span><span>Phone</span><span>Status</span><span></span>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 140px 140px 120px 150px 80px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase',gap:8}}>
+                <span>Name</span><span>Type</span><span>Company</span><span>Phone</span><span>Status and rating</span><span></span>
               </div>
               {contractors.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>👷</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No contractors yet</div><div style={{fontSize:13}}>Add your first contractor to start assigning work orders.</div></div>):contractors.map(c=>(
-                <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 140px 120px 80px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
+                <div key={c.id} style={{display:'grid',gridTemplateColumns:'1fr 140px 140px 120px 150px 80px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>
                   <div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:ACCENT+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:ACCENT}}>{c.name.charAt(0)}</div><div><div style={{fontSize:13,fontWeight:500,color:'#323338'}}>{c.name}</div><div style={{fontSize:11,color:'#667085'}}>{c.email}</div></div></div>
                   <span style={{fontSize:12,fontWeight:600,color:'#344054',background:'#F2F4F7',padding:'3px 8px',borderRadius:4,display:'inline-block'}}>{c.type}</span>
                   <span style={{fontSize:13,color:'#667085'}}>{c.company||'—'}</span>
                   <span style={{fontSize:13,color:'#344054'}}>{c.phone||'—'}</span>
-                  <span style={{fontSize:12,color:'#10B981',fontWeight:500}}>● Active</span>
+                  <span style={{fontSize:12,color:'#10B981',fontWeight:500}}>● Active <select value={c.rating??''} onChange={async e=>{const v=e.target.value===''?null:Number(e.target.value); await supabase.from('vendor_contractors').update({rating:v}).eq('id',c.id); setContractors((prev:any[])=>prev.map((x:any)=>x.id===c.id?{...x,rating:v}:x))}} title="Performance rating" style={{fontSize:11,border:'1px solid #D0D5DD',borderRadius:4,marginLeft:4}}><option value="">Rate</option>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n}★</option>)}</select></span>
                   <button onClick={()=>delRow('vendor_contractors',c.id,setContractors)} style={{background:'none',border:'none',color:'#98A2B3',cursor:'pointer',fontSize:18}}>×</button>
                 </div>
               ))}

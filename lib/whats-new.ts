@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Vacation Rentals gaps filled', text: 'New Guests, Direct Bookings, Guest Requests, Inventory, Linen & Laundry, Inspections, Pricing Rules and Owner Agreements tabs, a Shared tools group, booking filters and history, property amenities and onboarding, ADR, RevPAR and cancellation figures in Reports, and Needs attention tiles on Home.' },
   { date: '2026-11-22', title: 'Developments: filter projects by status', text: 'The Projects tab has filter buttons for All, Proposed, Planning, Approved, Active construction, On hold, Completed and Archived, and the Dashboard project status panel counts them all.' },
   { date: '2026-11-22', title: 'Developments: assessments, stock, schedule, insurance', text: 'New Site Assessments, Stock & Materials, Team Schedule and Insurance & Regulations tabs, an actual-rent and performance line in Build-to-Rent, and upcoming milestones on the Developments Dashboard.' },
   { date: '2026-11-22', title: 'Developments: more statuses, costs and shared tools', text: 'Projects can be Proposed, Approved or Archived, budget lines can be Land acquisition, Contingency or Cost variation, contractors can be Builder, Architect, Engineer or Supplier, and Shared tools adds WhatsApp & SMS, Meetings, Team Management and Integrations.' },
