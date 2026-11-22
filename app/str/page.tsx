@@ -10,6 +10,7 @@ import { downloadCsv } from '@/lib/export-csv'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import GuestCheckins from '@/components/pm/GuestCheckins'
 import DynamicDossier from '@/components/str/DynamicDossier'
+import ModuleTabStrip from '@/components/ModuleTabStrip'
 
 const TABS = ['Home','Bookings','Guest Check-ins','Properties','Cleaning','Maintenance','Analytics','Integrations','Team','Company SOPs','Contract Templates','Reports','Expenses','Banking','Guest Comms','Dynamic Dossier']
 const STR_NAV_GROUPS = [
@@ -609,6 +610,10 @@ export default function STRPage() {
       {/* Main */}
       <div style={{ flex:1, display:'flex', flexDirection:'column' }}>
         <div style={{padding:'10px 24px',background:'#F7F8FA',borderBottom:'1px solid #E4E7EC'}}><a href="/property" style={{fontSize:13,fontWeight:600,color:'#2F6DB5',textDecoration:'none'}}>&larr; Real Estate Intelligence</a></div>
+        <ModuleTabStrip module="str" current={tab} groups={STR_NAV_GROUPS}
+          locked={t=>!!(allowedTabs && !allowedTabs.includes(t))}
+          badge={t=>t==='Cleaning'?cleaning.filter((c:any)=>c.status==='pending').length:t==='Maintenance'?maintenance.filter((m:any)=>m.status==='open').length:0}
+          onSelect={t=>{ if(t==='Owners'){ window.location.href='/owner-portal'; return } setTab(t) }} />
         <div style={{ background:'#fff', borderBottom:'1px solid #E4E7EC', padding:'0 24px', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:13, color:'#667085' }}>Home</span>

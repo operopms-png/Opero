@@ -13,6 +13,7 @@ import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
 import ListingEditor, { WebsiteEditor, EMPTY_WEBSITE } from '@/components/estate/ListingEditor'
 import { CURRENCIES } from '@/lib/listings-shared'
+import ModuleTabStrip from '@/components/ModuleTabStrip'
 const ACCENT = '#2F6DB5'
 // Blank property form (the listing fields feed the public /homes page)
 const EMPTY_PROP = {name:'',address:'',type:'Apartment',bedrooms:'1',bathrooms:'1',rent:'',status:'Available',image_urls:'',owner_id:'',listed:false,currency:'JMD',available_from:'',description:'',features:[] as string[],photo_captions:{} as Record<string,string>,...EMPTY_WEBSITE}
@@ -807,6 +808,10 @@ export default function Page() {
       {/* Main */}
       <div style={{flex:1,display:'flex',flexDirection:'column'}}>
         <div style={{padding:'10px 24px',background:'#F7F8FA',borderBottom:'1px solid #E4E7EC'}}><a href="/property" style={{fontSize:13,fontWeight:600,color:'#2F6DB5',textDecoration:'none'}}>&larr; Real Estate Intelligence</a></div>
+        <ModuleTabStrip module="estate" current={section} groups={NAV_GROUPS}
+          locked={t=>!!(allowedTabs && !allowedTabs.includes(t))}
+          badge={t=>t==='Maintenance'?maintenance.filter((m:any)=>m.status==='open').length:t==='Cleaning'?cleaning.filter((c:any)=>c.status==='pending').length:0}
+          onSelect={t=>setSection(t)} />
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
