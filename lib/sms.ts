@@ -1,6 +1,8 @@
 // Texts (SMS) helpers shared by /api/sms/*.
 import crypto from 'crypto'
 import { serviceClient as db } from '@/lib/admin-auth'
+import { decrypt } from '@/lib/mailbox'
+import { LISTINGS_BUSINESS_ID } from '@/lib/listings'
 
 // Turn what staff type into an international number Twilio accepts.
 //   +44 7700 900123 / 07700900123  -> +447700900123 (UK mobile)
@@ -20,14 +22,24 @@ export function normalizePhone(raw: string): string | null {
 }
 const last9 = (p: string) => String(p || '').replace(/[^\d]/g, '').slice(-9)
 
-// The business's texting number. Created on first use from TWILIO_SMS_FROM.
+// The business's texting number: the one the company connected in Settings -> Texts. Only the platform's
+// own company falls back to the Netlify number (TWILIO_SMS_FROM); every other company must connect its own.
 export async function smsConnection(businessId: string) {
   const { data } = await db.from('sms_connections').select('*').eq('business_id', businessId).order('created_at').limit(1)
   if (data?.[0]) return data[0]
+  if (businessId !== LISTINGS_BUSINESS_ID) return null
   const from = normalizePhone(process.env.TWILIO_SMS_FROM || '')
   if (!from || !process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) return null
   const { data: made } = await db.from('sms_connections').upsert({ business_id: businessId, label: 'Texts', phone: from }, { onConflict: 'phone' }).select('*').single()
   return made
+}
+
+// The Twilio account to use for a connection: the company's own (token stored encrypted), else the platform's.
+export function smsCreds(conn: any): { sid: string; token: string } | undefined {
+  if (conn?.twilio_account_sid && conn?.twilio_auth_token_enc) {
+    try { return { sid: conn.twilio_account_sid, token: decrypt(conn.twilio_auth_token_enc) } } catch { return undefined }
+  }
+  return undefined
 }
 
 // Who is this number? Looks through CRM contacts, tenants, landlords, guests,
@@ -49,8 +61,8 @@ export async function nameForPhone(businessId: string, phone: string): Promise<{
 }
 
 // Twilio signs every webhook: HMAC-SHA1 of the full URL + sorted POST params.
-export function twilioSignatureOk(url: string, params: Record<string, string>, signature: string | null) {
-  const token = process.env.TWILIO_AUTH_TOKEN
+export function twilioSignatureOk(url: string, params: Record<string, string>, signature: string | null, authToken?: string) {
+  const token = authToken || process.env.TWILIO_AUTH_TOKEN
   if (!token || !signature) return false
   const data = url + Object.keys(params).sort().map(k => k + params[k]).join('')
   const expected = crypto.createHmac('sha1', token).update(Buffer.from(data, 'utf-8')).digest('base64')

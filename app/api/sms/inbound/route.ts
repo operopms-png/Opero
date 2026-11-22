@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { SITE_URL } from '@/lib/brand'
-import { normalizePhone, nameForPhone, twilioSignatureOk } from '@/lib/sms'
+import { normalizePhone, nameForPhone, twilioSignatureOk, smsCreds } from '@/lib/sms'
 
 // Twilio "A message comes in" webhook for the texting number:
 //   https://app.thenovourq.com/api/sms/inbound   (HTTP POST)
@@ -13,10 +13,10 @@ export async function POST(req: NextRequest) {
   const params: Record<string, string> = {}
   form.forEach((v, k) => { params[k] = String(v) })
   const url = `${SITE_URL}/api/sms/inbound`
-  if (!twilioSignatureOk(url, params, req.headers.get('x-twilio-signature'))) return new NextResponse('Forbidden', { status: 403 })
-
   const to = normalizePhone(params.To || ''), from = normalizePhone(params.From || '') || params.From
   const { data: conn } = await db.from('sms_connections').select('*').eq('phone', to || '').maybeSingle()
+  // Signed with the company's own Twilio token when it connected one, else the platform's.
+  if (!twilioSignatureOk(url, params, req.headers.get('x-twilio-signature'), smsCreds(conn)?.token)) return new NextResponse('Forbidden', { status: 403 })
   if (!conn || !from) return twiml()
   const body = (params.Body || '').slice(0, 5000) + (Number(params.NumMedia || 0) > 0 ? `\n[${params.NumMedia} picture${params.NumMedia === '1' ? '' : 's'} attached — open Twilio to view]` : '')
 

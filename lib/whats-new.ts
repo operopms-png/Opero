@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Connect your own texting number', text: 'Admins can now connect their company\'s own Twilio number in Settings, Texts, so each company texts and gets replies in its own Inbox Texts channel.' },
   { date: '2026-11-22', title: 'Texts now show in the Inbox on phones', text: 'On a phone, a row of channels including Texts and a + New text button now sits above the conversation list in Inbox, Conversations.' },
   { date: '2026-11-21', title: 'Repairs now show in every portal', text: 'A repair reported by a tenant now shows its stages and fix in the tenant, landlord and partner Maintenance tabs, everyone is emailed, and staff can upload invoices for partners to see.' },
   { date: '2026-11-21', title: 'Ask AI can update a partner\'s investment', text: 'Admins can ask Novourq Cloud AI to update how much a partner has put in; it saves straight away and keeps the old amount in the AI activity log.' },

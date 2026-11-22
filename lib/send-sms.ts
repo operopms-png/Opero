@@ -10,8 +10,10 @@ export function smsConfigured() {
   return !!(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_SMS_FROM)
 }
 
-export async function sendSms(to: string, body: string, from?: string): Promise<{ success?: boolean; sid?: string; status?: string; skipped?: boolean; error?: string }> {
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_SMS_FROM } = process.env
+// creds: a company's own Twilio account (Settings -> Texts). Without it the platform's Netlify values are used.
+export async function sendSms(to: string, body: string, from?: string, creds?: { sid: string; token: string }): Promise<{ success?: boolean; sid?: string; status?: string; skipped?: boolean; error?: string }> {
+  const { TWILIO_SMS_FROM } = process.env
+  const TWILIO_ACCOUNT_SID = creds?.sid || process.env.TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN = creds?.token || process.env.TWILIO_AUTH_TOKEN
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !(from || TWILIO_SMS_FROM)) {
     console.log('[sendSms] Twilio env vars not set — skipping SMS to', to)
     return { skipped: true }
