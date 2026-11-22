@@ -86,8 +86,15 @@ export function BuildToRent({ userId, projects }: { userId: string; projects: an
     await supabase.from('dev_btr').update({ handed_to_pm: true, pm_property_id: data?.id }).eq('id', r.id)
     setMsg(`${r.unit_label} is now in Property Management`); reload()
   }
+  async function setActual(r: any) {
+    const v = prompt('Actual monthly rent achieved for ' + r.unit_label, r.actual_rent_monthly ?? '')
+    if (v === null) return
+    await supabase.from('dev_btr').update({ actual_rent_monthly: v === '' ? null : Number(v) }).eq('id', r.id); reload()
+  }
   async function del(id: string) { if (!confirm('Delete this unit?')) return; await supabase.from('dev_btr').delete().eq('id', id); reload() }
   const net = rows.reduce((s, r) => s + num(r.target_rent) - num(r.operating_cost_monthly), 0)
+  const target = rows.filter(r => r.actual_rent_monthly != null).reduce((s, r) => s + num(r.target_rent), 0)
+  const actualRent = rows.reduce((s, r) => s + num(r.actual_rent_monthly), 0)
   return (
     <div>
       <div style={card}>
@@ -106,11 +113,13 @@ export function BuildToRent({ userId, projects }: { userId: string; projects: an
       </div>
       <div style={card}>
         <div style={h}>Units held for rent — net monthly {money(net)}</div>
+        {target > 0 && <div style={{ ...row, background: '#F9FAFB' }}><span>Asset performance: rent achieved against target (units with an actual rent)</span><b>{money(actualRent)} of {money(target)} ({Math.round((actualRent / target) * 100)}%)</b></div>}
         {rows.length === 0 ? <Empty t="No build-to-rent units yet" /> : rows.map(r => (
           <div key={r.id} style={row}>
             <span><b>{r.unit_label}</b> · {projects.find(p => p.id === r.project_id)?.name ?? ''}</span>
-            <span>{money(num(r.target_rent))} rent · {money(num(r.operating_cost_monthly))} costs</span>
+            <span>{money(num(r.target_rent))} target rent · {money(num(r.operating_cost_monthly))} costs{r.actual_rent_monthly != null ? ` · ${money(num(r.actual_rent_monthly))} actual` : ''}</span>
             <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button style={btn} onClick={() => setActual(r)}>Set actual rent</button>
               <button style={btn} onClick={() => toggle(r, 'rental_ready')}>{r.rental_ready ? 'Rental ready ✓' : 'Mark rental ready'}</button>
               {r.handed_to_pm ? <span style={{ color: '#067647', fontWeight: 600 }}>In Property Management</span> : <button style={btn} onClick={() => handOver(r)}>Hand over to Property Management</button>}
               <button style={{ ...btn, color: '#EF4444', borderColor: '#EF4444' }} onClick={() => del(r.id)}>Delete</button>
@@ -133,7 +142,7 @@ export function DevReports({ userId }: { userId: string }) {
   const progress = w.length ? w.reduce((s, x) => s + num(x.percent_complete), 0) / w.length : 0
   const m = miles.filter(x => x.project_id === p.id)
   const today = new Date().toISOString().slice(0, 10)
-  const late = m.filter(x => x.due_date && x.due_date < today && !['Complete', 'Completed', 'Done'].includes(x.status)).length
+  const late = m.filter(x => x.due_date && x.due_date < today && !['complete', 'completed', 'done'].includes(String(x.status).toLowerCase())).length
   const cats: Record<string, { b: number; a: number }> = {}
   items.filter(x => x.project_id === p.id).forEach(x => { const c = x.category || 'Other'; cats[c] = cats[c] ?? { b: 0, a: 0 }; cats[c].b += num(x.budgeted); cats[c].a += num(x.actual) })
   const openRisks = risks.filter(x => x.project_id === p.id && x.status !== 'Closed').length
@@ -158,9 +167,9 @@ export function DevReports({ userId }: { userId: string }) {
 
 // Tiles at the top of the Developments Dashboard: what needs attention across the new tabs. Each opens its tab.
 export function DevGlance({ userId, go }: { userId: string; go: (tab: string) => void }) {
-  const [d] = useRows(userId, ['dev_pipeline', 'dev_planning', 'dev_work_packages', 'dev_risks', 'dev_procurement', 'dev_funding', 'dev_handover', 'dev_tenders', 'dev_btr'])
+  const [d] = useRows(userId, ['dev_pipeline', 'dev_planning', 'dev_work_packages', 'dev_risks', 'dev_procurement', 'dev_funding', 'dev_handover', 'dev_tenders', 'dev_btr', 'dev_milestones', 'dev_projects'])
   if (!d) return null
-  const [pipe, plan, wps, risks, proc, fund, hand, tend, btr] = d
+  const [pipe, plan, wps, risks, proc, fund, hand, tend, btr, miles, projs] = d
   const today = new Date().toISOString().slice(0, 10)
   const in30 = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)
   const tiles: { label: string; value: string; sub: string; tab: string; warn?: boolean }[] = [
@@ -175,6 +184,7 @@ export function DevGlance({ userId, go }: { userId: string; go: (tab: string) =>
     { label: 'Tenders', value: String(tend.filter(x => ['Open', 'Evaluating'].includes(x.status)).length), sub: 'open tenders and quotes', tab: 'Tenders & Agreements' },
     { label: 'Build-to-Rent', value: String(btr.filter(x => x.rental_ready && !x.handed_to_pm).length), sub: 'ready to hand to Property Management', tab: 'Build-to-Rent' },
   ]
+  const upcoming = miles.filter(x => x.due_date && !['complete', 'completed', 'done'].includes(String(x.status).toLowerCase())).sort((a, b) => String(a.due_date).localeCompare(String(b.due_date))).slice(0, 5)
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Needs attention</div>
@@ -185,6 +195,11 @@ export function DevGlance({ userId, go }: { userId: string; go: (tab: string) =>
             <div style={{ fontSize: 22, fontWeight: 800, color: t.warn ? '#B42318' : '#1D4E89' }}>{t.value}</div>
             <div style={{ fontSize: 11, color: '#98A2B3' }}>{t.sub}</div>
           </button>))}
+      </div>
+      <div style={{ ...card, marginTop: 12, marginBottom: 0 }}>
+        <div style={h}>Upcoming milestones</div>
+        {upcoming.length === 0 ? <div style={{ fontSize: 13, color: '#98A2B3' }}>No open milestones with a due date. Add them under Projects → Milestones.</div>
+          : upcoming.map(x => <div key={x.id} style={{ ...row, color: x.due_date < today ? '#B42318' : undefined }}><span>{x.title ?? x.name ?? 'Milestone'} · {projs.find(p => p.id === x.project_id)?.name ?? ''}</span><b>{x.due_date}{x.due_date < today ? ' (late)' : ''}</b></div>)}
       </div>
     </div>
   )

@@ -110,6 +110,10 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Project Finance', targets: [dev('Project Finance')] },
     { name: 'Cash Flow & Profit', targets: [dev('Cash Flow & Profit')] },
     { name: 'Development Reports', targets: [dev('Development Reports')] },
+    { name: 'Site Assessments', targets: [dev('Site Assessments')] },
+    { name: 'Stock & Materials', targets: [dev('Stock & Materials')] },
+    { name: 'Team Schedule', targets: [dev('Team Schedule')] },
+    { name: 'Insurance & Regulations', targets: [dev('Insurance & Regulations')] },
   ] },
   { name: 'Compliance', note: 'Certificates, checks and deposits', items: [
     { name: 'Compliance', targets: [pm('Compliance'), ea('Compliance')] },

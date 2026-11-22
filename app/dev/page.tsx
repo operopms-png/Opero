@@ -9,10 +9,10 @@ import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import FeasibilityTab from '@/components/dev/FeasibilityTab'
 import ModuleTabStrip from '@/components/ModuleTabStrip'
 import RecordTab from '@/components/pm/RecordTab'
-import { DEV_PIPELINE, DEV_LAND, DEV_PLANNING, DEV_DESIGNS, DEV_WORK_PACKAGES, DEV_TENDERS, DEV_FUNDING, DEV_RISKS, DEV_PROCUREMENT, DEV_TEAM, DEV_HANDOVER } from '@/lib/dev-record-tabs'
+import { DEV_PIPELINE, DEV_LAND, DEV_PLANNING, DEV_DESIGNS, DEV_WORK_PACKAGES, DEV_TENDERS, DEV_FUNDING, DEV_RISKS, DEV_PROCUREMENT, DEV_TEAM, DEV_HANDOVER, DEV_SITE_ASSESSMENTS, DEV_STOCK, DEV_SCHEDULES, DEV_INSURANCE } from '@/lib/dev-record-tabs'
 import { CashFlowProfit, BuildToRent, DevReports, DevGlance } from '@/components/dev/DevTools'
 
-const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones','Feasibility','Pipeline','Land & Sites','Planning & Approvals','Design','Project Team','Construction Schedule','Procurement','Handover','Build-to-Rent','Tenders & Agreements','Risk Register','Project Finance','Cash Flow & Profit','Development Reports']
+const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones','Feasibility','Pipeline','Land & Sites','Planning & Approvals','Design','Project Team','Construction Schedule','Procurement','Handover','Build-to-Rent','Tenders & Agreements','Risk Register','Project Finance','Cash Flow & Profit','Development Reports','Site Assessments','Stock & Materials','Team Schedule','Insurance & Regulations']
 const DEV_SHARED_TOOLS: Record<string,string> = {
   'Tasks':'/staff-centre/tasks','Approvals':'/staff-centre/approvals','Calendar':'/staff-centre/calendar','CRM':'/staff-centre/crm',
   'Inbox':'/staff-centre/inbox','Email':'/staff-centre/email','Workflows':'/staff-centre/ai-command-centre/workflows','AI Assistant':'/staff-centre/ai-command-centre',
@@ -21,11 +21,11 @@ const DEV_SHARED_TOOLS: Record<string,string> = {
 }
 const DEV_NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'PIPELINE', items: ['Pipeline','Land & Sites'] },
-  { label: 'PROJECTS', items: ['Projects','Units','Checklist','Milestones','Feasibility','Planning & Approvals','Design','Project Team'] },
-  { label: 'CONSTRUCTION', items: ['Construction Schedule','Procurement','Handover','Build-to-Rent'] },
+  { label: 'PIPELINE', items: ['Pipeline','Land & Sites','Site Assessments'] },
+  { label: 'PROJECTS', items: ['Projects','Units','Checklist','Milestones','Feasibility','Planning & Approvals','Design','Project Team','Team Schedule'] },
+  { label: 'CONSTRUCTION', items: ['Construction Schedule','Procurement','Handover','Build-to-Rent','Stock & Materials'] },
   { label: 'OPERATIONS', items: ['Contractors','Service','Snagging','Tenders & Agreements'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Health & Safety','Risk Register'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Health & Safety','Risk Register','Insurance & Regulations'] },
   { label: 'FINANCE', items: ['Budget','Investors','Expenses','Banking','Project Finance','Cash Flow & Profit'] },
   { label: 'DOCUMENTS', items: ['Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
@@ -669,6 +669,10 @@ export default function DevPage() {
         {tab==='Tenders & Agreements'&&<RecordTab cfg={DEV_TENDERS} userId={acctId} properties={projects} />}
         {tab==='Risk Register'&&<RecordTab cfg={DEV_RISKS} userId={acctId} properties={projects} />}
         {tab==='Project Finance'&&<RecordTab cfg={DEV_FUNDING} userId={acctId} properties={projects} />}
+        {tab==='Site Assessments'&&<RecordTab cfg={DEV_SITE_ASSESSMENTS} userId={acctId} properties={projects} />}
+        {tab==='Stock & Materials'&&<RecordTab cfg={DEV_STOCK} userId={acctId} properties={projects} />}
+        {tab==='Team Schedule'&&<RecordTab cfg={DEV_SCHEDULES} userId={acctId} properties={projects} />}
+        {tab==='Insurance & Regulations'&&<RecordTab cfg={DEV_INSURANCE} userId={acctId} properties={projects} />}
         {tab==='Cash Flow & Profit'&&<CashFlowProfit userId={acctId} />}
         {tab==='Build-to-Rent'&&<BuildToRent userId={acctId} projects={projects} />}
         {tab==='Development Reports'&&<DevReports userId={acctId} />}

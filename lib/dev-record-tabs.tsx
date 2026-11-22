@@ -317,3 +317,99 @@ export const DEV_HANDOVER: RecordTabConfig = {
   ],
   actions: [{ label: 'Done', show: r => r.status !== 'Done', patch: () => ({ status: 'Done', done_date: new Date().toISOString().slice(0, 10) }) }],
 }
+
+export const DEV_SITE_ASSESSMENTS: RecordTabConfig = {
+  table: 'dev_site_assessments', noun: 'assessment', empty: 'No site assessments yet', orderBy: 'assessed_date', ascending: false, parent: PARENT,
+  defaults: { kind: 'Site visit', status: 'Planned' },
+  fields: [
+    { key: 'site', label: 'Site', required: true },
+    { key: 'project_id', label: 'Project (optional)', type: 'property' },
+    { key: 'kind', label: 'Type', type: 'select', options: ['Site visit', 'Soil and ground', 'Environmental', 'Access and utilities', 'Market check', 'Other'], required: true, half: true },
+    { key: 'status', label: 'Status', type: 'select', options: ['Planned', 'Done', 'Needs follow-up'], required: true, half: true },
+    { key: 'assessor', label: 'Assessor', half: true },
+    { key: 'assessed_date', label: 'Date', type: 'date', half: true },
+    { key: 'findings', label: 'Findings', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Site', width: '1.3fr', render: r => <b>{r.site}</b> },
+    { label: 'Project', width: '1fr', render: r => proj(r) },
+    { label: 'Type', width: '150px', render: r => r.kind },
+    { label: 'Date', width: '110px', render: r => r.assessed_date ?? '—' },
+    { label: 'Status', width: '120px', render: r => r.status },
+  ],
+}
+
+export const DEV_STOCK: RecordTabConfig = {
+  table: 'dev_stock', noun: 'stock item', empty: 'No stock or materials records yet', orderBy: 'created_at', ascending: false, parent: PARENT,
+  fields: [
+    projField,
+    { key: 'material', label: 'Material', required: true },
+    { key: 'location', label: 'Stored at', half: true },
+    { key: 'unit', label: 'Unit (bags, m, tonnes)', half: true },
+    { key: 'qty_in', label: 'Received', type: 'number', half: true },
+    { key: 'qty_used', label: 'Used', type: 'number', half: true },
+    { key: 'reorder_level', label: 'Reorder at', type: 'number', half: true },
+    { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Material', width: '1.3fr', render: r => <b>{r.material}</b> },
+    { label: 'Project', width: '1fr', render: r => proj(r) },
+    { label: 'Stored at', width: '1fr', render: r => r.location ?? '—' },
+    { label: 'In / used', width: '110px', render: r => `${Number(r.qty_in || 0)} / ${Number(r.qty_used || 0)}` },
+    { label: 'On hand', width: '110px', render: r => {
+      const n = Number(r.qty_in || 0) - Number(r.qty_used || 0)
+      const low = r.reorder_level != null && n <= Number(r.reorder_level)
+      return <span style={{ color: low ? '#B42318' : '#344054', fontWeight: low ? 600 : 400 }}>{n} {r.unit ?? ''}{low ? ' (reorder)' : ''}</span>
+    } },
+  ],
+  summary: rows => {
+    const low = rows.filter(r => r.reorder_level != null && Number(r.qty_in || 0) - Number(r.qty_used || 0) <= Number(r.reorder_level)).length
+    return [{ label: 'Items', value: String(rows.length) }, { label: 'To reorder', value: String(low), tone: low ? 'warn' : undefined }]
+  },
+}
+
+export const DEV_SCHEDULES: RecordTabConfig = {
+  table: 'dev_schedules', noun: 'shift', empty: 'No team schedule yet', orderBy: 'work_date', ascending: true, parent: PARENT,
+  fields: [
+    projField,
+    { key: 'person_name', label: 'Person', required: true, half: true },
+    { key: 'role', label: 'Role', half: true },
+    { key: 'work_date', label: 'Date', type: 'date', required: true, half: true },
+    { key: 'task', label: 'Task', half: true },
+    { key: 'start_time', label: 'Start (e.g. 08:00)', half: true },
+    { key: 'end_time', label: 'End (e.g. 16:00)', half: true },
+    { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Date', width: '120px', render: r => r.work_date ?? '—' },
+    { label: 'Person', width: '1fr', render: r => <b>{r.person_name}</b> },
+    { label: 'Project', width: '1fr', render: r => proj(r) },
+    { label: 'Task', width: '1fr', render: r => r.task ?? '—' },
+    { label: 'Hours', width: '120px', render: r => r.start_time ? `${r.start_time}-${r.end_time ?? ''}` : '—' },
+  ],
+}
+
+export const DEV_INSURANCE: RecordTabConfig = {
+  table: 'dev_insurance', noun: 'policy or regulation', empty: 'No insurance or building regulations records yet', orderBy: 'expiry_date', ascending: true, parent: PARENT,
+  defaults: { kind: 'Construction insurance', status: 'Active' },
+  fields: [
+    projField,
+    { key: 'title', label: 'Title', required: true },
+    { key: 'kind', label: 'Type', type: 'select', options: ['Construction insurance', 'Public liability', 'Employers liability', 'Building regulations', 'Quality assurance', 'Environmental compliance', 'Other'], required: true, half: true },
+    { key: 'status', label: 'Status', type: 'select', options: ['Active', 'Pending', 'Expired', 'Cancelled'], required: true, half: true },
+    { key: 'provider', label: 'Provider / authority', half: true },
+    { key: 'reference', label: 'Policy / reference', half: true },
+    { key: 'cover_amount', label: 'Cover amount', type: 'number', half: true },
+    { key: 'start_date', label: 'Starts', type: 'date', half: true },
+    { key: 'expiry_date', label: 'Expires', type: 'date', half: true },
+    { key: 'notes', label: 'Notes', type: 'textarea' },
+  ],
+  columns: [
+    { label: 'Title', width: '1.3fr', render: r => <b>{r.title}</b> },
+    { label: 'Project', width: '1fr', render: r => proj(r) },
+    { label: 'Type', width: '170px', render: r => r.kind },
+    { label: 'Cover', width: '110px', render: (r, c) => money(c.sym(r), r.cover_amount) },
+    { label: 'Expires', width: '150px', render: (r, c) => due(r.expiry_date, c.today, r.status !== 'Active') },
+    { label: 'Status', width: '90px', render: r => r.status },
+  ],
+}
