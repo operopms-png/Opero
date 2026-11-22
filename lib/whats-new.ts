@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Shared tools in Property Management', text: 'Property Management now has a Shared tools group that opens Tasks, Approvals, Inbox, Arrears, Workflows, the AI Assistant and other company-wide pages.' },
   { date: '2026-11-22', title: 'New reports and CRM follow-ups', text: 'Estate Agency has Marketing Analytics, Lettings Reports and Property Performance, and the CRM dashboard shows overdue follow-ups and unassigned contacts.' },
   { date: '2026-11-22', title: 'Rental applications and viewing feedback', text: 'Estate Agency has Rental Applications with a referencing checklist, and each viewing can now be confirmed and given feedback.' },
   { date: '2026-11-22', title: 'Contact History and Corporate Clients', text: 'Estate Agency can now log calls, emails and meetings per person on a timeline, keep corporate clients, and open Investors and Partners from Shared tools.' },

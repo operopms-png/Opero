@@ -130,6 +130,14 @@ const TAB_INTROS: Record<string,string> = {
 // Agency) is one heading. Property Management holds every property management page,
 // grouped under sub-headings; the other three are a single link to their own area.
 type PmNavGroup = { label: string; items?: string[]; sub?: { label: string; items: string[] }[] }
+// Company-wide pages that Property Management opens instead of keeping a second copy
+const PM_SHARED_TOOLS: Record<string,string> = {
+  'Tasks':'/staff-centre/tasks','Approvals':'/staff-centre/approvals','Calendar':'/staff-centre/calendar','CRM':'/staff-centre/crm',
+  'Landlord Leads':'/staff-centre/landlord-leads','Listings':'/staff-centre/listings','Marketing':'/staff-centre/marketing','Invoices':'/staff-centre/invoices',
+  'Inbox':'/staff-centre/inbox','Email':'/staff-centre/email','Arrears':'/staff-centre/finance/arrears','Payment Reminders':'/staff-centre/finance/reminders',
+  'Tenant Onboarding':'/staff-centre/tenant-onboarding','Owner Onboarding':'/staff-centre/customer-onboarding','Workflows':'/staff-centre/ai-command-centre/workflows','AI Assistant':'/staff-centre/ai-command-centre',
+  'Owners & Tenants':'/staff-centre/everyone','Portal Access':'/staff-centre/portal-access','Activity Log':'/staff-centre/activity-log','Signed Documents':'/staff-centre/documents',
+}
 const PM_NAV_GROUPS: PmNavGroup[] = [
   { label: 'PROPERTY MANAGEMENT', items: ['Property Management'], sub: [
     { label: 'Portfolio', items: ['Properties','Units','Buildings','Landlords','Tenants','Leases','Head Leases','Furniture','Vacancies','Viewings','Renewals & Notices','Rent Reviews','Referrals','Landlord Feedback','Tenant Feedback'] },
@@ -1237,10 +1245,10 @@ function PMPageInner() {
       <div style={{flex:1,display:'flex',flexDirection:'column'}}>
         <div style={{padding:'10px 24px',background:'#F7F8FA',borderBottom:'1px solid #E4E7EC'}}><a href="/property" style={{fontSize:13,fontWeight:600,color:'#2F6DB5',textDecoration:'none'}}>&larr; Real Estate Intelligence</a></div>
         <ModuleTabStrip module="pm" current={tab}
-          groups={[{label:'DASHBOARD',items:['Dashboard']},...(PM_NAV_GROUPS[0].sub||[]).map(s=>({label:s.label,items:s.items}))]}
-          locked={t=>!!(allowedTabs && !allowedTabs.includes(t))}
+          groups={[{label:'DASHBOARD',items:['Dashboard']},...(PM_NAV_GROUPS[0].sub||[]).map(s=>({label:s.label,items:s.items})),{label:'SHARED TOOLS',items:Object.keys(PM_SHARED_TOOLS)}]}
+          locked={t=>!PM_SHARED_TOOLS[t] && !!(allowedTabs && !allowedTabs.includes(t))}
           badge={t=>t==='Maintenance'?maintenance.filter((m:any)=>m.status==='open').length:t==='Cleaning'?cleaning.filter((c:any)=>c.status==='pending').length:0}
-          onSelect={t=>{ if(t==='Contractors'){ window.location.assign('/pm/vendors'); return } setTab(t) }} />
+          onSelect={t=>{ if(PM_SHARED_TOOLS[t]){ window.location.assign(PM_SHARED_TOOLS[t]); return } if(t==='Contractors'){ window.location.assign('/pm/vendors'); return } setTab(t) }} />
         <div style={{background:'#fff',borderBottom:'1px solid #E4E7EC',padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{fontSize:13,color:'#667085'}}>Dashboard</span>
