@@ -42,6 +42,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Properties': 'Every property you manage, with address, owner and status. Open one to edit it. When you stop managing one, use No longer managed: it moves to Former with its history kept.',
   'Buildings': 'Buildings that contain several units, with address and number of units.',
   'Units': 'Individual flats, rooms and units, with rent, status and current tenant.',
+  'Offers': 'Offers on properties for sale: received from buyers or submitted for them, with counteroffers, approval and whether each was accepted or rejected.',
   'Buyers': 'People looking to buy, with their budget and where they are in the process.',
   'Sellers': 'People selling a property through you, linked to the property.',
   'Applicants': 'People applying to rent, with their budget and where they are in the process.',
