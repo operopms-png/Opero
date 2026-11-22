@@ -44,20 +44,41 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Units', targets: [pm('Units'), ea('Units')] },
     { name: 'Buildings', targets: [pm('Buildings'), ea('Buildings')] },
     { name: 'Landlords', targets: [pm('Landlords'), ea('Landlords')] },
+    { name: 'Management agreements', targets: [pm('Management Agreements')] },
     { name: 'Tenants', targets: [pm('Tenants'), ea('Tenants')] },
     { name: 'Leases and tenancies', targets: [pm('Leases'), ea('Tenancies')] },
+    { name: 'Tenant applications', targets: [pm('Tenant Applications'), ea('Rental Applications')] },
+    { name: 'Tenant history', targets: [pm('Tenant History')] },
+    { name: 'Break clauses', targets: [pm('Break Clauses')] },
     { name: 'Head leases', targets: [pm('Head Leases')] },
     { name: 'HMO rooms', targets: [pm('HMO Rooms')] },
   ] },
   { name: 'Lettings and sales', note: 'Marketing and moving people in', items: [
     { name: 'Vacancies', targets: [pm('Vacancies'), ea('Vacancies')] },
     { name: 'Viewings', targets: [pm('Viewings'), ea('Viewings')] },
+    { name: 'Offers', targets: [ea('Offers')] },
+    { name: 'Sales progression', targets: [ea('Sales Progression')] },
     { name: 'Renewals and notices', targets: [pm('Renewals & Notices')] },
     { name: 'Rent reviews', targets: [pm('Rent Reviews')] },
     { name: 'Referrals', targets: [pm('Referrals')] },
     { name: 'Landlord feedback', targets: [pm('Landlord Feedback')] },
     { name: 'Tenant feedback', targets: [pm('Tenant Feedback')] },
     { name: 'Furniture', targets: [pm('Furniture')] },
+  ] },
+  { name: 'Clients & Relationships', note: 'Everyone you deal with', items: [
+    { name: 'Buyers', targets: [ea('Buyers')] },
+    { name: 'Sellers', targets: [ea('Sellers')] },
+    { name: 'Applicants', targets: [ea('Applicants')] },
+    { name: 'Corporate clients', targets: [ea('Corporate Clients')] },
+    { name: 'Contact history', targets: [ea('Contact History')] },
+    { name: 'CRM', targets: [], href: '/staff-centre/crm', shared: true },
+    { name: 'Landlord leads', targets: [], href: '/staff-centre/landlord-leads', shared: true },
+    { name: 'Owners and tenants', targets: [], href: '/staff-centre/everyone', shared: true },
+    { name: 'Onboarding tracker', targets: [], href: '/staff-centre/onboarding-tracker', shared: true },
+    { name: 'Tenant onboarding', targets: [], href: '/staff-centre/tenant-onboarding', shared: true },
+    { name: 'Partners', targets: [], href: '/staff-centre/partners', shared: true },
+    { name: 'Investors', targets: [], href: '/staff-centre/investors', shared: true },
+    { name: 'Client properties', targets: [], href: '/staff-centre/client-properties', shared: true },
   ] },
   { name: 'Vacation Rentals', note: 'Guests and bookings', items: [
     { name: 'Bookings', targets: [str('Bookings')] },
@@ -79,6 +100,7 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
   { name: 'Compliance', note: 'Certificates, checks and deposits', items: [
     { name: 'Compliance', targets: [pm('Compliance'), ea('Compliance')] },
     { name: 'Tenant checks', targets: [pm('Tenant Checks'), ea('Tenant Checks')] },
+    { name: 'Client checks', targets: [ea('Client Checks')] },
     { name: 'Deposits', targets: [pm('Deposits')] },
     { name: 'Insurance', targets: [pm('Insurance')] },
     { name: 'Legal and disputes', targets: [pm('Legal & Disputes')] },
@@ -91,6 +113,9 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Contractors', targets: [pm('Maintenance')], href: '/pm/vendors' },
     { name: 'Emergency contacts', targets: [pm('Emergency Contacts')] },
     { name: 'Cleaning', targets: [pm('Cleaning'), str('Cleaning'), ea('Cleaning')] },
+    { name: 'Cleaning and upkeep', targets: [pm('Cleaning & Upkeep')] },
+    { name: 'Meter readings', targets: [pm('Meter Readings')] },
+    { name: 'Supplier agreements', targets: [pm('Supplier Agreements')] },
     { name: 'Inspections', targets: [pm('Inspections')] },
     { name: 'Keys', targets: [pm('Keys')] },
     { name: 'Utilities', targets: [pm('Utilities')] },
@@ -99,6 +124,10 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
   { name: 'Finance', note: 'Money in and out', items: [
     { name: 'Finance', targets: [pm('Finance'), ea('Finance')] },
     { name: 'Rent', targets: [pm('Rent'), ea('Rent Collection')] },
+    { name: 'Rent reconciliation', targets: [pm('Rent Reconciliation')] },
+    { name: 'Management fees', targets: [pm('Management Fees')] },
+    { name: 'Budgets', targets: [pm('Budgets')] },
+    { name: 'Commissions', targets: [ea('Commissions')] },
     { name: 'Expenses', targets: [pm('Expenses'), str('Expenses'), dev('Expenses'), ea('Expenses')] },
     { name: 'Banking', targets: [pm('Banking'), str('Banking'), dev('Banking'), ea('Banking')] },
     { name: 'Loans and mortgages', targets: [pm('Loans & Mortgages'), ea('Loans & Mortgages')] },
@@ -111,6 +140,11 @@ const GROUPS: { name: string; note: string; items: Item[] }[] = [
     { name: 'Reports', targets: [pm('Reports'), str('Reports'), dev('Reports'), ea('Reports')] },
     { name: 'Accounting export', targets: [pm('Accounting Export')] },
     { name: 'Unit profit', targets: [pm('Unit Profit')] },
+    { name: 'Performance reports', targets: [pm('Performance Reports')] },
+    { name: 'Sales reports', targets: [ea('Sales Reports')] },
+    { name: 'Marketing analytics', targets: [ea('Marketing Analytics')] },
+    { name: 'Lettings reports', targets: [ea('Lettings Reports')] },
+    { name: 'Property performance', targets: [ea('Property Performance')] },
   ] },
   { name: 'Documents', note: 'Records and company files', items: [
     { name: 'Documents', targets: [pm('Documents'), dev('Documents'), ea('Documents')] },
@@ -150,7 +184,7 @@ export default function PropertyHub() {
   // Only show the areas this person can open; hide a page with none left.
   const groups = useMemo(() => GROUPS.map(g => ({
     ...g,
-    items: g.items.map(i => ({ ...i, targets: i.targets.filter(t => has(t.mod)) })).filter(i => i.targets.length),
+    items: g.items.map(i => ({ ...i, targets: i.targets.filter(t => has(t.mod)), open: !i.targets.length && !!i.href })).filter(i => i.targets.length || i.open),
   })).filter(g => g.items.length), [roleModules.join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const found = term ? groups.flatMap(g => g.items).filter(i => i.name.toLowerCase().includes(term)) : []
@@ -161,7 +195,7 @@ export default function PropertyHub() {
       <b style={{ color: C.ink, fontSize: 15, fontWeight: 600 }}>{i.name}</b>
       <div style={{ display: 'flex', gap: '6px 22px', flexWrap: 'wrap' }}>
         {i.href
-          ? <Link href={i.href} style={link}>Open map</Link>
+          ? <Link href={i.href} style={link}>{i.name === 'Map' ? 'Open map' : 'Open'}</Link>
           : i.shared
           ? <Link href={HREF(i.targets[0])} style={link}>All areas</Link>
           : i.targets.map(t => <Link key={t.mod} href={HREF(t)} title={MEANS[t.mod]} style={link}>{AREA[t.mod]}</Link>)}

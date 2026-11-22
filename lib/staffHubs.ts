@@ -93,6 +93,7 @@ export const STAFF_HUBS: Hub[] = [
   ] },
   { label: 'Smart Home', icon: 'shield', tabs: [{ href: '/staff-centre/smart-home', label: 'Smart Home', scTab: 'smarthome' }] },
   { label: 'Team', icon: 'team', tabs: [
+    { href: '/staff-centre/staff', label: 'Staff Dashboard' },
     { href: '/settings?section=Team+Management', label: 'Team Management' },
     { href: '/staff-centre/announcements', label: 'Announcements', scTab: 'announcements', badge: 'announcements' },
     { href: '/staff-centre/activity-log', label: 'Activity Log', scTab: 'activitylog' },

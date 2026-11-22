@@ -9,6 +9,7 @@ import { STAFF_HUBS, type HubTab, type Hub } from '@/lib/staffHubs'
 import HumanGlance from '@/components/staff/HumanGlance'
 
 const GROUPS: { name: string; note: string; hubs: string[] }[] = [
+  { name: 'Overview', note: 'Dashboards for the company and your team', hubs: ['Dashboard', 'Staff Dashboard'] },
   { name: 'Clients and sales', note: 'Everyone you deal with', hubs: ['Inbox', 'CRM', 'Client Properties', 'Owners & Tenants', 'Partners & Investors', 'Marketing'] },
   { name: 'Money', note: 'Income, tax and reporting', hubs: ['Finance', 'Tax Compliance', 'Reports'] },
   { name: 'Operations', note: 'Running the properties', hubs: ['Operations', 'Schedule', 'Smart Home', 'Portals'] },
@@ -32,6 +33,7 @@ const TASKS: { task: string; pages: string[] }[] = [
   { task: 'Log a repair', pages: ['/staff-centre/upkeep?view=repairs'] },
   { task: 'Check a certificate or compliance', pages: ['/staff-centre/compliance'] },
   { task: 'Plan the day', pages: ['/staff-centre/calendar', '/staff-centre/tasks'] },
+  { task: 'See how the team is doing', pages: ['/staff-centre/staff'] },
   { task: 'Manage staff', pages: ['/staff-centre/hr', '/settings?section=Team+Management'] },
 ]
 
@@ -52,6 +54,8 @@ export default function HumanIntelligenceHub() {
 
   const groups = useMemo(() => {
     const byName = new Map<string, Hub>(STAFF_HUBS.map(h => [h.label, h]))
+    const teamHub = byName.get('Team')
+    if (teamHub) byName.set('Staff Dashboard', { label: 'Staff Dashboard', icon: 'team', tabs: teamHub.tabs.filter(t => t.href === '/staff-centre/staff') })
     return GROUPS.map(g => ({
       ...g,
       areas: g.hubs.map(n => byName.get(n)).filter((h): h is Hub => !!h).map(h => {
