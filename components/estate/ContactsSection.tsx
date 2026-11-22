@@ -5,13 +5,14 @@
 import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../lib/supabase'
 
-export type ContactKind = 'buyer' | 'seller' | 'applicant'
+export type ContactKind = 'buyer' | 'seller' | 'applicant' | 'corporate'
 const STATUSES = ['New', 'Active', 'Viewing', 'Offer made', 'On hold', 'Closed']
-const LABEL: Record<ContactKind, string> = { buyer: 'Buyers', seller: 'Sellers', applicant: 'Applicants' }
+const LABEL: Record<ContactKind, string> = { buyer: 'Buyers', seller: 'Sellers', applicant: 'Applicants', corporate: 'Corporate clients' }
 const HELP: Record<ContactKind, string> = {
   buyer: 'People looking to buy, with their budget and where they are in the process.',
   seller: 'People selling a property through you, linked to the property.',
   applicant: 'People applying to rent, with their budget and where they are in the process.',
+  corporate: 'Companies you deal with, such as employers renting for staff or investors buying in a company name.',
 }
 const ACCENT = '#2F6DB5'
 const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #D0D5DD', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }
@@ -75,7 +76,7 @@ export default function ContactsSection({ kind, properties }: { kind: ContactKin
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid ' + ACCENT, padding: 20, marginBottom: 16 }}>
           <h3 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 14px' }}>{editId ? 'Edit' : 'Add'} {kind}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 }}>
-            <div><label style={lbl}>Name *</label><input style={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
+            <div><label style={lbl}>{kind === 'corporate' ? 'Company name *' : 'Name *'}</label><input style={inp} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
             <div><label style={lbl}>Email</label><input style={inp} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
             <div><label style={lbl}>Phone</label><input style={inp} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
             {kind !== 'seller' && <div><label style={lbl}>Budget from</label><input type="number" style={inp} value={form.budget_min} onChange={e => setForm({ ...form, budget_min: e.target.value })} /></div>}

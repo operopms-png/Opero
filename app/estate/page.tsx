@@ -11,6 +11,7 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
+import ContactHistorySection from '@/components/estate/ContactHistorySection'
 import SalesReportsSection from '@/components/estate/SalesReportsSection'
 import ClientChecksSection from '@/components/estate/ClientChecksSection'
 import CommissionsSection from '@/components/estate/CommissionsSection'
@@ -134,7 +135,7 @@ function Modal({ title, onClose, children }: any) {
 const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
   { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Landlords','Vacancies','Viewings'] },
-  { label: 'PEOPLE', items: ['Buyers','Sellers','Applicants'] },
+  { label: 'PEOPLE', items: ['Buyers','Sellers','Applicants','Corporate Clients','Contact History'] },
   { label: 'SALES', items: ['Offers','Sales Progression'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Client Checks','Inventories','Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
@@ -147,7 +148,7 @@ const SHARED_TOOL_LINKS: Record<string,string> = {
   'CRM':'/staff-centre/crm','Landlord Leads':'/staff-centre/landlord-leads','Listings':'/staff-centre/listings',
   'Inbox':'/staff-centre/inbox','Email':'/staff-centre/email','Marketing':'/staff-centre/marketing',
   'Calendar':'/staff-centre/calendar','Tasks':'/staff-centre/tasks','Approvals':'/staff-centre/approvals',
-  'Invoices':'/staff-centre/invoices','Valuations':'/pm?tab=Valuations',
+  'Invoices':'/staff-centre/invoices','Valuations':'/pm?tab=Valuations','Investors':'/staff-centre/investors','Partners':'/staff-centre/partners',
 }
 const STUB_SECTIONS: string[] = []
 const DOCUMENT_CATEGORIES = [
@@ -1505,6 +1506,8 @@ export default function Page() {
             </div>
           </div>)}
 
+          {section==='Corporate Clients'&&<ContactsSection kind="corporate" properties={properties}/>}
+          {section==='Contact History'&&<ContactHistorySection/>}
           {section==='Sales Reports'&&<SalesReportsSection properties={properties}/>}
           {section==='Client Checks'&&<ClientChecksSection/>}
           {section==='Commissions'&&<CommissionsSection properties={properties}/>}

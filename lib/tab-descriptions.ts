@@ -47,6 +47,8 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Client Checks': 'AML, proof of funds and ID checks on buyers, sellers and applicants, with the result, who it covers and when it expires.',
   'Commissions': 'Sales commission, lettings fees, agency fees and staff commission: what is due, invoiced and paid, worked out from a base amount and a rate.',
   'Sales Reports': 'How sales are going: sales in progress and completed, lead conversion from buyer to completed sale, commission paid and agent performance, for the period you choose.',
+  'Corporate Clients': 'Companies you deal with, such as employers renting for staff or investors buying in a company name, with their contact details and status.',
+  'Contact History': 'One timeline per person: the calls, emails and meetings you log, plus their offers, checks and sales, so everything about them is in one place.',
   'Buyers': 'People looking to buy, with their budget and where they are in the process.',
   'Sellers': 'People selling a property through you, linked to the property.',
   'Applicants': 'People applying to rent, with their budget and where they are in the process.',

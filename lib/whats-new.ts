@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Contact History and Corporate Clients', text: 'Estate Agency can now log calls, emails and meetings per person on a timeline, keep corporate clients, and open Investors and Partners from Shared tools.' },
   { date: '2026-11-22', title: 'For-sale properties online', text: 'Properties for sale now show on the public listings page with their asking price, and the Properties tab has filters for To let, For sale, Published, Draft and Archived.' },
   { date: '2026-11-22', title: 'Sales Reports', text: 'Estate Agency has a new Sales Reports tab showing sales results, lead conversion, commission paid and agent performance.' },
   { date: '2026-11-22', title: 'Client Checks and Commissions', text: 'Estate Agency now records AML, proof of funds and ID checks, and tracks sales commission, lettings fees and staff commission.' },
