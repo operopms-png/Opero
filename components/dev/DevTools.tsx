@@ -155,3 +155,37 @@ export function DevReports({ userId }: { userId: string }) {
     </div>
   )
 }
+
+// Tiles at the top of the Developments Dashboard: what needs attention across the new tabs. Each opens its tab.
+export function DevGlance({ userId, go }: { userId: string; go: (tab: string) => void }) {
+  const [d] = useRows(userId, ['dev_pipeline', 'dev_planning', 'dev_work_packages', 'dev_risks', 'dev_procurement', 'dev_funding', 'dev_handover', 'dev_tenders', 'dev_btr'])
+  if (!d) return null
+  const [pipe, plan, wps, risks, proc, fund, hand, tend, btr] = d
+  const today = new Date().toISOString().slice(0, 10)
+  const in30 = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)
+  const tiles: { label: string; value: string; sub: string; tab: string; warn?: boolean }[] = [
+    { label: 'Pipeline', value: String(pipe.filter(x => !['Won', 'Lost'].includes(x.stage)).length), sub: 'open opportunities', tab: 'Pipeline' },
+    { label: 'Planning', value: String(plan.filter(x => x.status === 'Submitted').length), sub: 'awaiting a decision', tab: 'Planning & Approvals' },
+    { label: 'Construction', value: String(wps.filter(x => x.status === 'Delayed').length), sub: 'delayed work packages', tab: 'Construction Schedule', warn: wps.some(x => x.status === 'Delayed') },
+    { label: 'Risks', value: String(risks.filter(x => x.status !== 'Closed' && x.likelihood === 'High' && x.impact === 'High').length), sub: 'high likelihood and impact', tab: 'Risk Register', warn: risks.some(x => x.status !== 'Closed' && x.likelihood === 'High' && x.impact === 'High') },
+    { label: 'Procurement', value: String(proc.filter(x => x.approval === 'Pending').length), sub: 'awaiting approval', tab: 'Procurement' },
+    { label: 'Deliveries', value: String(proc.filter(x => x.delivery_date && x.delivery_date <= in30 && !['Delivered', 'Cancelled'].includes(x.status)).length), sub: 'due within 30 days or late', tab: 'Procurement', warn: proc.some(x => x.delivery_date && x.delivery_date < today && !['Delivered', 'Cancelled'].includes(x.status)) },
+    { label: 'Funding', value: `${money(fund.reduce((s, x) => s + num(x.drawn), 0))}`, sub: `drawn of ${money(fund.reduce((s, x) => s + num(x.amount), 0))}`, tab: 'Project Finance' },
+    { label: 'Handover', value: String(hand.filter(x => x.status !== 'Done').length), sub: 'items still to do', tab: 'Handover' },
+    { label: 'Tenders', value: String(tend.filter(x => ['Open', 'Evaluating'].includes(x.status)).length), sub: 'open tenders and quotes', tab: 'Tenders & Agreements' },
+    { label: 'Build-to-Rent', value: String(btr.filter(x => x.rental_ready && !x.handed_to_pm).length), sub: 'ready to hand to Property Management', tab: 'Build-to-Rent' },
+  ]
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#667085', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Needs attention</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(170px,1fr))', gap: 10 }}>
+        {tiles.map(t => (
+          <button key={t.label} onClick={() => go(t.tab)} style={{ textAlign: 'left', background: '#fff', border: `1px solid ${t.warn ? '#FDA29B' : '#E4E7EC'}`, borderRadius: 10, padding: '12px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', fontWeight: 600 }}>{t.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: t.warn ? '#B42318' : '#1D4E89' }}>{t.value}</div>
+            <div style={{ fontSize: 11, color: '#98A2B3' }}>{t.sub}</div>
+          </button>))}
+      </div>
+    </div>
+  )
+}

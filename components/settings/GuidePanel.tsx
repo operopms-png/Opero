@@ -114,6 +114,7 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Project Finance: Loans, equity, grants and pre-sales funding for each project: facility amount, drawn so far, rate and repayment date. Add funding line.',
     'Cash Flow & Profit: Worked out for each project from units, budget lines and funding: projected sales value, cost, cash position and projected profit and margin. Nothing to enter here. Fill in Units, Budget and Project Finance and it updates.',
     'Development Reports: One project at a time: performance, budget variance, construction progress, timelines, forecast returns, funding and cost analysis. Worked out from your records. Pick a project at the top.',
+    'The Developments Dashboard starts with Needs attention tiles for the new tabs; click a tile to open it. Red means something is late, delayed or high risk.',
     'Limits: Design links to files rather than uploading them. Build-to-Rent hand-over creates the property in Property Management with its name only. Cash Flow & Profit and Development Reports are worked out from your records and are not advice.',
   ] },
   { id: 'feasibility', title: 'Developments: Feasibility', steps: [

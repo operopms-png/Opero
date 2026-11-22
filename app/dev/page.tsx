@@ -10,7 +10,7 @@ import FeasibilityTab from '@/components/dev/FeasibilityTab'
 import ModuleTabStrip from '@/components/ModuleTabStrip'
 import RecordTab from '@/components/pm/RecordTab'
 import { DEV_PIPELINE, DEV_LAND, DEV_PLANNING, DEV_DESIGNS, DEV_WORK_PACKAGES, DEV_TENDERS, DEV_FUNDING, DEV_RISKS, DEV_PROCUREMENT, DEV_TEAM, DEV_HANDOVER } from '@/lib/dev-record-tabs'
-import { CashFlowProfit, BuildToRent, DevReports } from '@/components/dev/DevTools'
+import { CashFlowProfit, BuildToRent, DevReports, DevGlance } from '@/components/dev/DevTools'
 
 const TABS = ['Dashboard','Projects','Checklist','Budget','Investors','Documents','Company SOPs','Contract Templates','Expenses','Banking','Reports','Milestones','Feasibility','Pipeline','Land & Sites','Planning & Approvals','Design','Project Team','Construction Schedule','Procurement','Handover','Build-to-Rent','Tenders & Agreements','Risk Register','Project Finance','Cash Flow & Profit','Development Reports']
 const DEV_SHARED_TOOLS: Record<string,string> = {
@@ -739,6 +739,7 @@ export default function DevPage() {
         {/* DASHBOARD */}
         {tab==='Dashboard' && (
           <div>
+            <DevGlance userId={acctId} go={setTab} />
             <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
               {[
                 { label:'Total Projects', value:projects.length, sub:`${activeProjects} active` },
