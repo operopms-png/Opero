@@ -24,6 +24,7 @@ import { proposeMaintenancePredictions, proposeMarketForecast } from './ai-forec
 import { proposeDealScreening, proposeDealFinder, proposeGoalPlanner } from './ai-deals'
 import { proposeWatchers, proposeInvoiceChase, proposeReviewReplies, proposeTeamWeekly } from './ai-watchers'
 import { proposeSocialPosts } from './ai-proposals-marketing'
+import { proposeSalesFollowups } from './ai-proposals-sales'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
 import { proposeCompliance, proposeRenewals, proposeArrears, proposeDeposits, proposeInsurance, proposeInspections, proposeStatementReminders } from './ai-proposals-modules'
 
@@ -374,6 +375,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.rentMatches = await proposeRentMatches()
       out.listings = await proposeListings()
       out.socialPosts = await proposeSocialPosts()
+      out.salesFollowups = await proposeSalesFollowups()
       out.leaseDocs = await proposeLeaseDocs()
       out.deposits = await proposeDeposits()
       out.insurance = await proposeInsurance()
@@ -396,7 +398,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       const { data: fresh } = await svcClient().from('ai_pending_actions').select('user_id').eq('status', 'pending').gte('created_at', startedAt)
       const per = new Map<string, number>()
       for (const r of fresh ?? []) per.set(r.user_id, (per.get(r.user_id) ?? 0) + 1)
-      for (const [biz, n] of per) await sendPush(biz, { title: `${n} new AI draft${n === 1 ? '' : 's'} to approve`, body: 'Open AI Approvals to review them.', url: '/staff-centre/ai-command-centre/approvals' }).catch(() => {})
+      for (const [biz, n] of per) await sendPush(biz, { title: `${n} new AI draft${n === 1 ? '' : 's'} to approve`, body: 'Open your Morning brief to approve them.', url: '/staff-centre/ai-command-centre/morning' }).catch(() => {})
       return { ok: true, ...out }
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e)

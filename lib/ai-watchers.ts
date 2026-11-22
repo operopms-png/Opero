@@ -310,6 +310,31 @@ const WATCHERS: Watcher[] = [
     if (!lines.length) return null
     return { title: `Tenant watch: ${lines.length} to look at`, lines: cap(lines, 14), dueInDays: 1 }
   } },
+  // Money: bank lines that look wrong. Unusually large payments and possible double charges, last 3 days.
+  { agent: 'unusual_transactions', resultKey: 'unusualTransactions', async find(db, biz) {
+    const { data } = await db.from('pm_transactions').select('id, description, amount, type, date').eq('user_id', biz).gte('date', dayStr(-90)).order('date', { ascending: false }).limit(1000)
+    const all = (data ?? []).filter((t: any) => Number(t.amount) !== 0)
+    if (all.length < 15) return null
+    const recent = all.filter((t: any) => t.date >= dayStr(-3))
+    const older = all.filter((t: any) => t.date < dayStr(-3)).map((t: any) => Math.abs(Number(t.amount))).sort((a: number, b: number) => a - b)
+    if (!recent.length || older.length < 10) return null
+    const median = older[Math.floor(older.length / 2)], p95 = older[Math.floor(older.length * 0.95)]
+    const lines: string[] = []
+    for (const t of recent) {
+      const a = Math.abs(Number(t.amount))
+      if (a > p95 * 2 && a > median * 5) lines.push(`Unusually large: ${String(t.description ?? 'transaction').slice(0, 60)} on ${t.date} for ${money(a)}. Typical lines are around ${money(median)}. Check it is expected.`)
+    }
+    const seen = new Map<string, any>()
+    for (const t of all.filter((x: any) => x.date >= dayStr(-6))) {
+      const k = `${String(t.description ?? '').trim().toLowerCase()}|${Number(t.amount)}`
+      const prev = seen.get(k)
+      if (prev && prev.date !== t.date && t.date >= dayStr(-3) && String(t.description ?? '').trim()) lines.push(`Possible double charge: ${String(t.description).slice(0, 60)} for ${money(Math.abs(Number(t.amount)))} appears on ${prev.date} and ${t.date}.`)
+      else if (prev && prev.date === t.date && prev.id !== t.id && t.date >= dayStr(-3) && String(t.description ?? '').trim()) lines.push(`Possible duplicate: ${String(t.description).slice(0, 60)} for ${money(Math.abs(Number(t.amount)))} appears twice on ${t.date}.`)
+      seen.set(k, t)
+    }
+    if (!lines.length) return null
+    return { title: `Unusual transactions: ${lines.length} to check`, lines: cap(lines, 10), dueInDays: 1 }
+  } },
   // Money: 12-month outlook of income, mortgage and running costs (first three days of the month)
   { agent: 'cashflow_forecast', resultKey: 'cashflowForecast', async find(db, biz) {
     const now = new Date()

@@ -9,6 +9,7 @@ const BASE = '/staff-centre/ai-command-centre'
 const NAV: { heading: string; items: { href: string; label: string; badge?: 'approvals' | 'alerts' }[] }[] = [
   { heading: 'Control', items: [
     { href: BASE, label: 'Overview' },
+    { href: BASE + '/morning', label: 'Morning brief' },
     { href: BASE + '/approvals', label: 'Approvals', badge: 'approvals' },
     { href: BASE + '/alerts', label: 'Alerts', badge: 'alerts' },
   ] },
