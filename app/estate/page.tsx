@@ -11,6 +11,8 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
+import ViewingExtras from '@/components/estate/ViewingExtras'
+import ApplicationsSection from '@/components/estate/ApplicationsSection'
 import ContactHistorySection from '@/components/estate/ContactHistorySection'
 import SalesReportsSection from '@/components/estate/SalesReportsSection'
 import ClientChecksSection from '@/components/estate/ClientChecksSection'
@@ -134,7 +136,7 @@ function Modal({ title, onClose, children }: any) {
 }
 const NAV_GROUPS = [
   { label: 'OVERVIEW', items: ['Dashboard'] },
-  { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Landlords','Vacancies','Viewings'] },
+  { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Rental Applications','Landlords','Vacancies','Viewings'] },
   { label: 'PEOPLE', items: ['Buyers','Sellers','Applicants','Corporate Clients','Contact History'] },
   { label: 'SALES', items: ['Offers','Sales Progression'] },
   { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Client Checks','Inventories','Documents'] },
@@ -1316,6 +1318,7 @@ export default function Page() {
                   <span style={{fontSize:13,color:'#344054'}}>{bk.scheduled_at?new Date(bk.scheduled_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'}</span>
                   <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:20,background:bk.status==='Requested'?'#FEF3C7':bk.status==='Completed'?'#D1FAE5':bk.status==='Cancelled'||bk.status==='No Show'?'#FEE2E2':'#DBEAFE',color:bk.status==='Requested'?'#B45309':bk.status==='Completed'?'#059669':bk.status==='Cancelled'||bk.status==='No Show'?'#DC2626':'#2563EB'}}>{bk.status}</span>
                   <button onClick={()=>delRecord('estate_viewings',bk.id)} style={{padding:'4px 8px',borderRadius:6,border:'none',background:'#FEE2E2',fontSize:11,cursor:'pointer',fontFamily:'inherit',color:'#EF4444'}}>×</button>
+                  <ViewingExtras bk={bk} onChanged={()=>loadAll()}/>
                 </div>
               ))}
             </div>
@@ -1506,6 +1509,7 @@ export default function Page() {
             </div>
           </div>)}
 
+          {section==='Rental Applications'&&<ApplicationsSection properties={properties}/>}
           {section==='Corporate Clients'&&<ContactsSection kind="corporate" properties={properties}/>}
           {section==='Contact History'&&<ContactHistorySection/>}
           {section==='Sales Reports'&&<SalesReportsSection properties={properties}/>}
