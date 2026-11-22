@@ -39,6 +39,13 @@ const TONE: Record<Tone, string> = { good: '#067647', warn: '#B54708', plain: '#
 
 export default function HumanGlance({ canOpen }: { canOpen: (href: string) => boolean }) {
   const [counts, setCounts] = useState<Record<string, number> | null>(null)
+  const [d, setD] = useState<any>(null)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      fetch('/api/staff-dashboard?range=today', { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.ok ? r.json() : null).then(setD).catch(() => {})
+    })
+  }, [])
   useEffect(() => {
     supabase.rpc('sidebar_counts').then(({ data }) => setCounts((data as Record<string, number>) ?? {}), () => setCounts({}))
   }, [])
@@ -49,6 +56,21 @@ export default function HumanGlance({ canOpen }: { canOpen: (href: string) => bo
     <div style={{ marginTop: 28 }}>
       <h2 style={{ margin: 0, fontSize: 21, color: C.ink }}>At a glance</h2>
       <p style={{ margin: '3px 0 4px', fontSize: 14, color: C.muted }}>What needs you today. Open any tile for the detail.</p>
+      {d && canOpen('/pm') && (() => {
+        const pm = (d.modules ?? []).find((m: any) => m.key === 'pm'), ea = (d.modules ?? []).find((m: any) => m.key === 'ea')
+        const jobs = (d.modules ?? []).reduce((a: number, m: any) => a + (Number((m.stats ?? []).find((x: any) => x.l === 'Open jobs')?.v) || 0), 0)
+        const certs = (d.attention ?? []).filter((a: any) => /certificate/i.test(a.title)).length
+        const tiles: [string, string | number, string][] = [['Rent paid', pm?.stats?.find((x: any) => x.l === 'Rent paid')?.v ?? '—', '/pm'], ['Property Management let', pm ? `${pm.occ}%` : '—', '/pm'], ['Estate Agency let', ea ? `${ea.occ}%` : '—', '/estate'], ['Open jobs', jobs, '/staff-centre/upkeep?view=repairs'], ['Certificates to renew', certs, '/staff-centre/compliance']]
+        return (
+          <div>
+            <h3 style={{ margin: '18px 0 8px', fontSize: 15, color: '#1D4E89' }}>Business pulse</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 12 }}>
+              {tiles.map(([l, v, h]) => <Link key={l} href={h} style={{ textDecoration: 'none', background: '#fff', border: `1px solid ${C.line}`, borderRadius: 12, padding: '12px 14px', display: 'block' }}>
+                <div style={{ fontSize: 11, color: '#667085', textTransform: 'uppercase', letterSpacing: '.04em' }}>{l}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: C.blue, margin: '3px 0 1px' }}>{v}</div></Link>)}
+            </div>
+          </div>)
+      })()}
       {groups.map(g => (
         <div key={g.title}>
           <h3 style={{ margin: '18px 0 8px', fontSize: 15, color: '#1D4E89' }}>{g.title}</h3>
