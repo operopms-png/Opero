@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Sales Reports', text: 'Estate Agency has a new Sales Reports tab showing sales results, lead conversion, commission paid and agent performance.' },
   { date: '2026-11-22', title: 'Client Checks and Commissions', text: 'Estate Agency now records AML, proof of funds and ID checks, and tracks sales commission, lettings fees and staff commission.' },
   { date: '2026-11-22', title: 'Sales Progression', text: 'Accept an offer, press Start sale, and Estate Agency tracks the sale through conveyancing, due diligence, contracts and completion.' },
   { date: '2026-11-22', title: 'Offers in Estate Agency', text: 'Estate Agency has a new Sales group with an Offers tab to track offers, counteroffers, approval and whether each was accepted or rejected.' },

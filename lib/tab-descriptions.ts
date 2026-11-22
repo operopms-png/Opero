@@ -46,6 +46,7 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Sales Progression': 'Each agreed sale with its checklist: conveyancing, due diligence, contracts and completion, with progress, solicitors and the target completion date.',
   'Client Checks': 'AML, proof of funds and ID checks on buyers, sellers and applicants, with the result, who it covers and when it expires.',
   'Commissions': 'Sales commission, lettings fees, agency fees and staff commission: what is due, invoiced and paid, worked out from a base amount and a rate.',
+  'Sales Reports': 'How sales are going: sales in progress and completed, lead conversion from buyer to completed sale, commission paid and agent performance, for the period you choose.',
   'Buyers': 'People looking to buy, with their budget and where they are in the process.',
   'Sellers': 'People selling a property through you, linked to the property.',
   'Applicants': 'People applying to rent, with their budget and where they are in the process.',

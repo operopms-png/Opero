@@ -11,6 +11,7 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
+import SalesReportsSection from '@/components/estate/SalesReportsSection'
 import ClientChecksSection from '@/components/estate/ClientChecksSection'
 import CommissionsSection from '@/components/estate/CommissionsSection'
 import SalesSection from '@/components/estate/SalesSection'
@@ -139,7 +140,7 @@ const NAV_GROUPS = [
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
   { label: 'FINANCE', items: ['Finance','Rent Collection','Commissions','Loans & Mortgages','Expenses','Banking'] },
-  { label: 'REPORTS', items: ['Landlord Reports','Reports'] },
+  { label: 'REPORTS', items: ['Landlord Reports','Reports','Sales Reports'] },
 ]
 // Company-wide tools that open their real page, so Estate Agency shows them without a second copy.
 const SHARED_TOOL_LINKS: Record<string,string> = {
@@ -1500,6 +1501,7 @@ export default function Page() {
             </div>
           </div>)}
 
+          {section==='Sales Reports'&&<SalesReportsSection properties={properties}/>}
           {section==='Client Checks'&&<ClientChecksSection/>}
           {section==='Commissions'&&<CommissionsSection properties={properties}/>}
           {section==='Sales Progression'&&<SalesSection properties={properties}/>}
