@@ -19,6 +19,15 @@ export async function POST(req: NextRequest) {
   const c = await getCaller(req)
   if (!c) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const b = await req.json().catch(() => ({}))
+  if (b.action === 'create') {
+    const title = String(b.title ?? '').trim().slice(0, 140)
+    if (!title) return NextResponse.json({ error: 'Add a title for the alert' }, { status: 400 })
+    const message = String(b.message ?? '').trim().slice(0, 500)
+    const link = typeof b.link === 'string' && b.link.startsWith('/') ? b.link.slice(0, 300) : null
+    const { error: e } = await db.from('notifications').insert({ user_id: c.businessId, title, message: message || null, type: 'ai_alert', module: 'staffcentre', link, read: false })
+    if (e) return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
   let q = db.from('notifications').update({ read: true }).eq('user_id', c.businessId).in('type', TYPES)
   if (b.action === 'read' && b.id) q = q.eq('id', b.id)
   else if (b.action !== 'read_all') return NextResponse.json({ error: 'Unknown action' }, { status: 400 })

@@ -59,6 +59,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/email': { title: 'Email', text: 'Email templates and sent messages, with your branding applied.' },
   '/staff-centre/ai-command-centre/snapshot': { title: 'Business snapshot', text: 'A one-page picture of your business and what Novourq Cloud AI is doing for it.' },
   '/staff-centre/ai-command-centre/agent-pool': { title: 'Skills', text: 'Everything Novourq Cloud AI can do for you, and which skills are switched on.' },
+  '/staff-centre/ai-command-centre/alerts': { title: 'Alerts', text: 'Everything Novourq Cloud AI needs a person to know about. Use Post an alert to flag something yourself and it shows in the bell.' },
   '/staff-centre/ai-command-centre/approvals': { title: 'Approvals', text: 'Anything Novourq Cloud AI has drafted that is waiting for you, plus what it has already sent automatically.' },
   '/invest': { title: 'Deal Analyser', text: 'Work out whether a deal stacks up. For a purchase in Jamaica a charges card shows the purchaser and vendor costs, with every rate editable.' },
   '/staff-centre/ai-command-centre/deal-analyser': { title: 'Deal Analyser', text: 'Work out whether a deal stacks up, or tell the AI what you are looking for in Find Deals and it searches for real listings and learns your taste.' },
