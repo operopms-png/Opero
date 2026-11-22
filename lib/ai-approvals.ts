@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'social_post'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -146,6 +146,12 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     const { sendToList } = await import('./marketing-send')
     const r = await sendToList({ businessId: action.user_id, audience: p.audience, mode: p.mode, subject: String(p.subject || ''), body, docIds: Array.isArray(p.doc_ids) ? p.doc_ids : [] })
     return r.error ? { error: r.error } : { success: true }
+  }
+  if (action.action_type === 'social_post') {
+    // Saved to Marketing, Social posts. It is not posted to the platform from here; that needs the account connected.
+    const mod = ['pm', 'str', 'estate', 'dev'].includes(p.module) ? p.module : 'estate'
+    const { error } = await getServiceClient().from('marketing_socials').insert({ user_id: action.user_id, module: mod, caption: String(body).slice(0, 2000), platform: p.platform || 'Instagram', status: 'Scheduled', scheduled_at: p.scheduled_at || null, owner: 'Novourq Cloud AI' })
+    return error ? { error: error.message } : { success: true }
   }
   if (action.action_type === 'owner_report') return emailOut(p.to, p.subject || 'Your monthly property report', body, action.user_id)
   if (action.action_type === 'cleaning_instruction') return emailOut(p.to, p.subject || 'Cleaning instructions', body, action.user_id)

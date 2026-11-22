@@ -23,6 +23,7 @@ import { proposeRentMatches } from './ai-proposals-finance'
 import { proposeMaintenancePredictions, proposeMarketForecast } from './ai-forecasting'
 import { proposeDealScreening, proposeDealFinder, proposeGoalPlanner } from './ai-deals'
 import { proposeWatchers, proposeInvoiceChase, proposeReviewReplies, proposeTeamWeekly } from './ai-watchers'
+import { proposeSocialPosts } from './ai-proposals-marketing'
 import { proposeViewings, proposeListings, proposeInvestorUpdates } from './ai-proposals-estate-dev'
 import { proposeCompliance, proposeRenewals, proposeArrears, proposeDeposits, proposeInsurance, proposeInspections, proposeStatementReminders } from './ai-proposals-modules'
 
@@ -372,6 +373,7 @@ export async function runAiProposals(force = false, businessId?: string) {
       out.viewings = await proposeViewings()
       out.rentMatches = await proposeRentMatches()
       out.listings = await proposeListings()
+      out.socialPosts = await proposeSocialPosts()
       out.leaseDocs = await proposeLeaseDocs()
       out.deposits = await proposeDeposits()
       out.insurance = await proposeInsurance()

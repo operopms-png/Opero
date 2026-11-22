@@ -18,7 +18,7 @@ export const LOCKED_AGENTS: Record<string, string> = {
   partner_payouts: 'Payouts move money',
 }
 // Wait for a person unless an admin chooses otherwise.
-export const DEFAULT_APPROVAL: Record<string, string> = { pm_arrears: 'Arrears messages are sensitive to tenants' }
+export const DEFAULT_APPROVAL: Record<string, string> = { pm_arrears: 'Arrears messages are sensitive to tenants', marketing_posts: 'Public posts go out under your name, so you approve each one' }
 
 // Words that always send a draft to a person, as a safety net on top of the rules above.
 export const MONEY_OR_CONTRACT = /contract|tenancy agreement|assured shorthold|sign(ing)?\b|e-?sign|payout|pay out|refund|transfer|send(ing)? (money|funds)|wire/i
@@ -35,6 +35,7 @@ export const ADJUSTABLE: { key: string; label: string; help: string; kind: 'type
   { key: 'mark_rent_paid', label: 'Marking rent as paid', help: 'Only exact matches to bank receipts.', kind: 'type', default: 'auto' },
   { key: 'listing_description', label: 'Listing descriptions', help: 'First drafts of website descriptions.', kind: 'type', default: 'auto' },
   { key: 'import_records', label: 'Importing records', help: 'Bulk imports from uploaded files.', kind: 'type', default: 'auto' },
+  { key: 'marketing_posts', label: 'Social media posts', help: 'Posts drafted for Instagram, Facebook and LinkedIn.', kind: 'agent', default: 'approval' },
   { key: 'pm_arrears', label: 'Rent arrears messages', help: 'Messages to tenants who are behind on rent.', kind: 'agent', default: 'approval' },
 ]
 export const LOCKED_LIST = [...Object.values(LOCKED_TYPES), ...Object.values(LOCKED_AGENTS)]
