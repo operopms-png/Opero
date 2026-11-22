@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-22', title: 'Email folders', text: 'Email now shows Drafts, Archive, Spam and Trash as well as Inbox and Sent, so you can check Spam for real emails.' },
   { date: '2026-11-22', title: 'Post an alert by hand', text: 'In Novourq Cloud AI, Alerts, press Post an alert to flag something yourself and it shows in the bell.' },
   { date: '2026-11-22', title: 'Connect your own texting number', text: 'Admins can now connect their company\'s own Twilio number in Settings, Texts, so each company texts and gets replies in its own Inbox Texts channel.' },
   { date: '2026-11-22', title: 'Texts now show in the Inbox on phones', text: 'On a phone, a row of channels including Texts and a + New text button now sits above the conversation list in Inbox, Conversations.' },

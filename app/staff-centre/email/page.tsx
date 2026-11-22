@@ -67,12 +67,13 @@ type Draft = { from: string; to: string; cc: string; subject: string; body: stri
 
 export default function EmailPage() {
   const [loading, setLoading] = useState(true)
+  const FOLDER_LABEL: Record<string, string> = { INBOX: 'Inbox', Drafts: 'Drafts', Sent: 'Sent', Archive: 'Archive', Spam: 'Spam', Trash: 'Trash' }
   const [boxes, setBoxes] = useState<any[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [team, setTeam] = useState<any[]>([])
   const [view, setView] = useState<'mail' | 'settings' | 'templates'>('mail')
   const [box, setBox] = useState<string>('all')
-  const [folder, setFolder] = useState<'INBOX' | 'Sent'>('INBOX')
+  const [folder, setFolder] = useState<string>('INBOX')
   const [unreadOnly, setUnreadOnly] = useState(false)
   const [q, setQ] = useState('')
   const [list, setList] = useState<any[]>([])
@@ -270,7 +271,7 @@ export default function EmailPage() {
               Folders
             </button>
             <span style={{ flex: 1, minWidth: 0, fontSize: 14, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {view === 'templates' ? 'Email templates' : view === 'settings' ? 'Mailbox settings' : (folder === 'Sent' ? 'Sent' : 'Inbox') + ' · ' + (current ? current.email.split('@')[0] : 'all')}
+              {view === 'templates' ? 'Email templates' : view === 'settings' ? 'Mailbox settings' : (FOLDER_LABEL[folder] ?? 'Inbox') + ' · ' + (current ? current.email.split('@')[0] : 'all')}
             </span>
             <button onClick={() => compose('new')} style={btn('gold', true)}>+ New</button>
           </div>
@@ -290,7 +291,11 @@ export default function EmailPage() {
           <button onClick={() => compose('new')} style={{ ...btn('gold'), justifyContent: 'center', marginBottom: 14 }}>+ New email</button>
           <div style={{ fontSize: 12, color: C.muted, padding: '0 6px 4px' }}>Folders</div>
           <NavItem on={view === 'mail' && folder === 'INBOX'} onClick={() => { setView('mail'); setFolder('INBOX'); setOpenId(null); setMsg(null) }} count={box === 'all' ? totalUnread : (current?.unread ?? 0)}>Inbox</NavItem>
+          <NavItem on={view === 'mail' && folder === 'Drafts'} onClick={() => { setView('mail'); setFolder('Drafts'); setOpenId(null); setMsg(null) }}>Drafts</NavItem>
           <NavItem on={view === 'mail' && folder === 'Sent'} onClick={() => { setView('mail'); setFolder('Sent'); setOpenId(null); setMsg(null) }}>Sent</NavItem>
+          <NavItem on={view === 'mail' && folder === 'Archive'} onClick={() => { setView('mail'); setFolder('Archive'); setOpenId(null); setMsg(null) }}>Archive</NavItem>
+          <NavItem on={view === 'mail' && folder === 'Spam'} onClick={() => { setView('mail'); setFolder('Spam'); setOpenId(null); setMsg(null) }}>Spam</NavItem>
+          <NavItem on={view === 'mail' && folder === 'Trash'} onClick={() => { setView('mail'); setFolder('Trash'); setOpenId(null); setMsg(null) }}>Trash</NavItem>
           <div style={{ fontSize: 12, color: C.muted, padding: '12px 6px 4px' }}>Mailboxes</div>
           <NavItem on={view === 'mail' && box === 'all'} onClick={() => { setView('mail'); setBox('all'); setOpenId(null); setMsg(null) }} count={totalUnread}>All mailboxes</NavItem>
           {boxes.filter(b => b.kind !== 'staff' && b.kind !== 'private').map(b => (
@@ -335,7 +340,7 @@ export default function EmailPage() {
             <div style={{ width: isMobile ? '100%' : 380, flex: isMobile ? 1 : undefined, flexShrink: 0, borderRight: isMobile ? 'none' : '1px solid ' + C.row, display: isMobile && openId ? 'none' : 'flex', flexDirection: 'column', minHeight: 0, background: '#fff' }}>
               <div style={{ padding: '16px 16px 10px', borderBottom: '1px solid ' + C.row }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder === 'Sent' ? 'Sent' : 'Inbox'} <span style={{ fontSize: 14, color: C.faint }}>{current ? current.email.split('@')[0] : 'all'}</span></h1>
+                  <h1 style={{ fontSize: 22, fontWeight: 500, margin: 0, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{FOLDER_LABEL[folder] ?? 'Inbox'} <span style={{ fontSize: 14, color: C.faint }}>{current ? current.email.split('@')[0] : 'all'}</span></h1>
                   <button onClick={() => sync(true, current?.id)} title="Check for new mail" style={{ ...btn('ghost', true), padding: '5px 9px' }}>{syncing ? '…' : '↻'}</button>
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
@@ -353,7 +358,7 @@ export default function EmailPage() {
                 ) : list.length === 0 ? (
                   <div style={{ padding: 40, textAlign: 'center', color: C.faint, fontSize: 14 }}>{listLoading ? 'Loading…' : connected.length === 0 ? (isAdmin ? 'No mailboxes connected yet. Open Mailbox settings to connect one.' : 'No mailboxes connected yet.') : q ? 'Nothing matches your search.' : 'No emails here.'}</div>
                 ) : list.map(m => {
-                  const who = folder === 'Sent' ? ('To: ' + (m.to_list || '—')) : (m.from_name || m.from_email || 'Unknown')
+                  const who = (folder === 'Sent' || folder === 'Drafts') ? ('To: ' + (m.to_list || '—')) : (m.from_name || m.from_email || 'Unknown')
                   const by = folder === 'Sent' && m.sent_by ? m.sent_by : null
                   const on = m.id === openId
                   const mbx = byId(m.mailbox_id)
@@ -394,7 +399,7 @@ export default function EmailPage() {
                     {isMobile && (
                       <button onClick={() => { setOpenId(null); setMsg(null) }} style={{ border: 'none', background: 'none', padding: '0 0 10px', color: C.goldDark, fontSize: 14, fontFamily: 'inherit', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-                        Back to {folder === 'Sent' ? 'Sent' : 'Inbox'}
+                        Back to {FOLDER_LABEL[folder] ?? 'Inbox'}
                       </button>
                     )}
                     <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', gap: 10 }}>

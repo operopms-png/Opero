@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { processNewEmails } from '@/lib/receptionist'
 import { getFormat, formatEmail, listTemplates, saveTemplate, setDefaultTemplate, deleteTemplate } from '@/lib/email-format'
-import { getCaller, canAccess, PUBLIC_COLS, encrypt, testConnection, syncMailbox, sendFromMailbox, setSeen, fetchAttachment, friendlyError } from '@/lib/mailbox'
+import { getCaller, canAccess, PUBLIC_COLS, encrypt, testConnection, syncMailbox, sendFromMailbox, setSeen, fetchAttachment, friendlyError, folderPath } from '@/lib/mailbox'
 
 // Everything about connected mailboxes goes through here so access is
 // checked server-side and passwords never reach the browser.
 //   GET  ?                       -> mailboxes I can use (+ unread counts, team list for admins)
-//   GET  ?messages=<id|all>&folder=INBOX|Sent&q=&before=  -> message list
+//   GET  ?messages=<id|all>&folder=INBOX|Sent|Drafts|Archive|Spam|Trash&q=&before=  -> message list
 //   GET  ?message=<id>           -> one message (marks it read)
 //   GET  ?attachment=<id>&index= -> attachment file
 //   POST {action: connect|update|sync|send|seen|add|remove|save_template|default_template|delete_template}
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const mb = await loadMailbox(m.mailbox_id)
     if (!mb || !canAccess(mb, c)) return bad('Not allowed', 403)
     if (!m.uid) return bad('This attachment is not available', 404)
-    const path = m.folder === 'Sent' ? (mb.sent_path || 'Sent') : 'INBOX'
+    const path = folderPath(mb, m.folder)
     const a = await fetchAttachment(mb, path, Number(m.uid), Number(sp.get('index') || 0)).catch(() => null)
     if (!a) return bad('Attachment not found', 404)
     return new NextResponse(new Uint8Array(a.content), { headers: { 'Content-Type': a.contentType || 'application/octet-stream', 'Content-Disposition': `attachment; filename="${(a.filename || 'attachment').replace(/"/g, '')}"` } })

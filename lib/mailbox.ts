@@ -106,6 +106,20 @@ async function findSentPath(client: ImapFlow): Promise<string | null> {
   return byName?.path ?? null
 }
 
+// Standard folders beyond Inbox and Sent: found by the server's own labels, or by their usual names.
+export const EXTRA_FOLDERS: { name: 'Drafts' | 'Archive' | 'Spam' | 'Trash'; special: string; re: RegExp }[] = [
+  { name: 'Drafts', special: '\\Drafts', re: /^(inbox[./])?drafts?( items| messages)?$/i },
+  { name: 'Archive', special: '\\Archive', re: /^(inbox[./])?(archive|archives|all mail)$/i },
+  { name: 'Spam', special: '\\Junk', re: /^(inbox[./])?(spam|junk|junk e-?mail|bulk mail)$/i },
+  { name: 'Trash', special: '\\Trash', re: /^(inbox[./])?(trash|deleted items|deleted messages|bin)$/i },
+]
+// Where a stored message's folder lives on the server.
+export function folderPath(mb: any, folder: string): string {
+  if (folder === 'Sent') return mb.sent_path || 'Sent'
+  if (folder === 'INBOX') return 'INBOX'
+  return mb.folder_state?.[folder]?.path || folder
+}
+
 // ---------- sync ----------
 const addr = (a: any) => (a?.value ?? []).map((v: any) => v.name ? `${v.name} <${v.address}>` : v.address).join(', ')
 
@@ -132,7 +146,7 @@ function toRow(mb: any, folder: string, uid: number, parsed: ParsedMail, flags: 
   }
 }
 
-async function syncFolder(client: ImapFlow, mb: any, folder: 'INBOX' | 'Sent', path: string, state: { validity: number | null; last: number }) {
+async function syncFolder(client: ImapFlow, mb: any, folder: string, path: string, state: { validity: number | null; last: number }) {
   const lock = await client.getMailboxLock(path)
   try {
     const box: any = client.mailbox
@@ -193,6 +207,21 @@ export async function syncMailbox(mb: any): Promise<{ added: number; error?: str
       Object.assign(patch, { sent_path: sentPath, sent_uidvalidity: sent.validity, sent_last_uid: sent.last })
       added += sent.added
     }
+    // Drafts, Archive, Spam and Trash: each one is best effort, so a missing folder never breaks the sync.
+    try {
+      const list = await client.list()
+      const fs: Record<string, any> = { ...(mb.folder_state ?? {}) }
+      for (const f of EXTRA_FOLDERS) {
+        const path = fs[f.name]?.path || (list.find((m: any) => m.specialUse === f.special) ?? list.find((m: any) => f.re.test(m.path)))?.path
+        if (!path) continue
+        try {
+          const r = await syncFolder(client, mb, f.name, path, { validity: fs[f.name]?.validity ?? null, last: Number(fs[f.name]?.last) || 0 })
+          fs[f.name] = { path, validity: r.validity, last: r.last }
+          added += r.added
+        } catch (e) { console.error('[mailbox] folder sync failed', mb.email, f.name, e) }
+      }
+      patch.folder_state = fs
+    } catch (e) { console.error('[mailbox] folder list failed', mb.email, e) }
     await serviceClient.from('mailboxes').update(patch).eq('id', mb.id)
     return { added }
   } catch (e: any) {
