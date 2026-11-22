@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react'
 
 export type StripGroup = { label: string; items: string[] }
-export type StripModule = 'pm' | 'estate' | 'str' | 'dev'
+export type StripModule = 'pm' | 'estate' | 'str' | 'dev' | 'fleet'
 
 const MODULES: { k: StripModule; n: string; href: string; c: string }[] = [
   { k: 'pm', n: 'Property Management', href: '/pm', c: '#2F6DB5' },
@@ -51,7 +51,7 @@ export default function ModuleTabStrip({ module, groups, current, onSelect, lock
           })}
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', maxWidth: '100%' }}>
-          {MODULES.filter(m => m.k !== module).map(m => (
+          {(module === 'fleet' ? [] : MODULES.filter(m => m.k !== module)).map(m => (
             <a key={m.k} href={m.href} style={{ flex: '0 0 auto', padding: '5px 10px', borderRadius: 8, fontSize: 12, textDecoration: 'none', color: m.c, border: `1px solid ${m.c}`, background: '#fff' }}>{m.n}</a>
           ))}
         </div>

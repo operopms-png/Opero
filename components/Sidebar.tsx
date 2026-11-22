@@ -8,6 +8,7 @@ import { useRole, ROLE_MODULES, getScTabs, resolveAccess } from '@/lib/useRole'
 import NotificationBell from '@/components/NotificationBell'
 import { useSidebarCollapse, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/lib/sidebar-context'
 import { BRAND_NAME } from '@/lib/brand'
+import { useFleetAccess } from '@/lib/fleet-access'
 import { staffApi } from '@/lib/staff-api'
 import { cur, setCur } from '@/lib/company-currency'
 import { STAFF_HUBS, NON_HUMAN_HUBS, HUMAN_HUB_HREF, OWNER_TABS, humanHubTabs, tabMatches } from '@/lib/staffHubs'
@@ -42,6 +43,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
 function Icon({ name, size = 16, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
   const s = { width: size, height: size, display: 'block', flexShrink: 0 }
   const icons: Record<string, React.ReactElement> = {
+    car:      <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 17h14M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg>,
     help:     <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
     mail:     <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>,
     home:     <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
@@ -110,6 +112,7 @@ export default function Sidebar() {
     return () => { window.removeEventListener('popstate', read); window.removeEventListener('opero:nav', read) }
   }, [pathname])
   const { role, hasSettings, modules: teamModules, isPlatformOwner } = useRole()
+  const fleetAccess = useFleetAccess()
 
   // Red counts on menu items: things waiting for attention in each area
   // (one database call, see sidebar_counts() in Supabase). Partners get none.
@@ -233,6 +236,16 @@ export default function Sidebar() {
             </div>
           )
         })}
+        {(fleetAccess === 'view' || fleetAccess === 'full') && (() => {
+          const on = pathname === '/fleet' || pathname.startsWith('/fleet/')
+          return (
+            <Link href="/fleet" data-active={on ? '1' : undefined} title={isCollapsed ? 'Fleet and Rides' : undefined} onClick={() => setOpen(false)}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, padding: isCollapsed ? '9px 0' : '7px 10px', justifyContent: isCollapsed ? 'center' : 'flex-start', borderRadius: 7, marginBottom: 1, textDecoration: 'none', fontSize: 13.5, fontWeight: on ? 600 : 400, background: on ? '#B9D6F2' : 'transparent', color: on ? '#1D4E89' : '#1B2F4B' }}>
+              <Icon name="car" size={16} color={on ? '#1D4E89' : '#2F6DB5'} />
+              {!isCollapsed && <span style={{ flex: 1, lineHeight: 1 }}>Fleet and Rides</span>}
+            </Link>
+          )
+        })()}
         {role !== 'Partner' && (() => {
           const on = pathname === '/help' || pathname.startsWith('/help/')
           return (

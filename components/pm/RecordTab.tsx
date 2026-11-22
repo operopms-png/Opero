@@ -23,7 +23,7 @@ export type RecordTabConfig = {
 const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: '#344054', marginBottom: 4 }
 const inp: React.CSSProperties = { width: '100%', padding: '9px 11px', border: '1px solid #D0D5DD', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', background: '#fff' }
 
-export default function RecordTab({ cfg, userId, properties }: { cfg: RecordTabConfig; userId: string; properties: any[] }) {
+export default function RecordTab({ cfg, userId, properties, readOnly }: { cfg: RecordTabConfig; userId: string; properties: any[]; readOnly?: boolean }) {
   const [rows, setRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(false)
@@ -77,7 +77,7 @@ export default function RecordTab({ cfg, userId, properties }: { cfg: RecordTabC
     await supabase.from(cfg.table).update(a.patch(r)).eq('id', r.id); load()
   }
 
-  const grid = cfg.columns.map(c => c.width ?? '1fr').join(' ') + ' 170px'
+  const grid = cfg.columns.map(c => c.width ?? '1fr').join(' ') + (readOnly ? ' 10px' : ' 170px')
 
   return (
     <div>
@@ -90,7 +90,7 @@ export default function RecordTab({ cfg, userId, properties }: { cfg: RecordTabC
             </div>
           ))}
         </div>
-        <button onClick={openAdd} style={{ background: '#2F6DB5', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>+ Add {cfg.noun}</button>
+        {!readOnly && <button onClick={openAdd} style={{ background: '#2F6DB5', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>+ Add {cfg.noun}</button>}
       </div>
 
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E4E7EC', overflowX: 'auto' }}>
@@ -103,13 +103,13 @@ export default function RecordTab({ cfg, userId, properties }: { cfg: RecordTabC
             : rows.map(r => (
               <div key={r.id} style={{ display: 'grid', gridTemplateColumns: grid, padding: '13px 20px', borderBottom: '1px solid #F2F4F7', fontSize: 13, color: '#344054', alignItems: 'center' }}>
                 {cfg.columns.map(c => <span key={c.label}>{c.render(r, { sym, today })}</span>)}
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {readOnly ? <span /> : <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {(cfg.actions ?? []).filter(a => !a.show || a.show(r)).map(a => (
                     <button key={a.label} onClick={() => act(r, a)} style={{ fontSize: 12, color: '#067647', background: 'none', border: '1px solid #067647', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>{a.label}</button>
                   ))}
                   <button onClick={() => openEdit(r)} style={{ fontSize: 12, color: '#2F6DB5', background: 'none', border: '1px solid #2F6DB5', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>Edit</button>
                   <button onClick={() => remove(r.id)} style={{ fontSize: 12, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Delete</button>
-                </div>
+                </div>}
               </div>
             ))}
         </div>

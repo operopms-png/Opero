@@ -1,0 +1,5 @@
+-- Fleet and Rides (NOVOURQ own company only; applied via Supabase migration fleet_module_build)
+-- team_members.fleet_access ('none' | 'view' | 'full'; empty = view for staff, full for Admin and Co Founder, none for Partner)
+-- fleet_owner_id(): the platform owner account (admin@thenovourq.com). fleet_access(): this person's level, used by every fleet table policy.
+-- Tables: fleet_vehicles (generated name), fleet_drivers, fleet_trips, fleet_earnings, fleet_expenses, fleet_service, fleet_payments, fleet_documents.
+-- Policies: select for view or full; insert, update, delete for full only, rows must belong to fleet_owner_id().

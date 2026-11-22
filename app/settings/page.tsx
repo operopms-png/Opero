@@ -6,6 +6,7 @@ import AIStaffSection from '../../components/settings/AIStaffSection'
 import { useRole, STAFF_CENTRE_TABS, DEFAULT_SC_TABS } from '@/lib/useRole'
 import { TEAM_MODULES } from '@/lib/accessRegistry'
 import { BRAND_NAME, SITE_URL, SITE_HOST } from '@/lib/brand'
+import { useFleetAccess } from '@/lib/fleet-access'
 import TeamBoard from '@/components/settings/TeamBoard'
 import SubmissionsPanel from '@/components/settings/SubmissionsPanel'
 import PrivacyPanel from '@/components/settings/PrivacyPanel'
@@ -51,6 +52,8 @@ function SettingsInner() {
   const [assignedPropertyIds, setAssignedPropertyIds] = useState<string[]>([])
   const [customModules, setCustomModules] = useState<string[]>([])
   const [viewOnly, setViewOnly] = useState(false)
+  const [fleetSel, setFleetSel] = useState('')
+  const myFleetAccess = useFleetAccess()
   const [showPropertyPicker, setShowPropertyPicker] = useState(false)
   const [editingMemberId, setEditingMemberId] = useState<string|null>(null)
   const [showInvite, setShowInvite] = useState(false)
@@ -339,7 +342,7 @@ function SettingsInner() {
               onInvite={()=>{setEditingMemberId(null);setViewOnly(false);setInviteName('');setInviteEmail('');setInvitePhone('');setInviteRole(ROLES[0]);setAssignedPropertyIds([]);setCustomModules([]);setAddMode('invite');setShowInvite(true)}}
               onEdit={(m:any)=>{
                 setEditingMemberId(m.id);setInviteName(m.name??'');setInviteEmail(m.email??'');setInvitePhone(m.phone??'')
-                setInviteRole(m.role??ROLES[0]);setAssignedPropertyIds(m.property_ids??[]);setCustomModules(m.custom_modules??[]);setViewOnly(m.view_only===true);setAddMode('invite');setShowInvite(true)
+                setInviteRole(m.role??ROLES[0]);setAssignedPropertyIds(m.property_ids??[]);setCustomModules(m.custom_modules??[]);setViewOnly(m.view_only===true);setFleetSel(m.fleet_access??'');setAddMode('invite');setShowInvite(true)
               }}
               onDelete={async (m:any)=>{
                 if(!confirm(`Remove ${m.name||m.email} from the team? They won't be able to sign in to the staff side any more.`))return
@@ -396,6 +399,18 @@ function SettingsInner() {
                 <label style={{display:'flex',alignItems:'center',gap:8,fontSize:13,fontWeight:600,color:'#344054',cursor:'pointer'}}><input type="checkbox" checked={viewOnly} onChange={e=>setViewOnly(e.target.checked)} />View only</label>
                 <div style={{fontSize:11,color:'#667085',marginTop:4}}>They can open every tab you give them but cannot add, edit, delete, upload or mark anything. Messages and replies still work.</div>
               </div>
+              {myFleetAccess==='full'&&editingMemberId&&(
+                <div style={{marginBottom:16}}>
+                  <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Fleet and Rides</div>
+                  <div style={{fontSize:11,color:'#98A2B3',marginBottom:6}}>Your own taxi and ride business. Only your company can see it. View only can look but not change anything; Full access can add and edit; No access hides it.</div>
+                  <select value={fleetSel} onChange={e=>setFleetSel(e.target.value)} style={{padding:'8px 10px',border:'1px solid #D0D5DD',borderRadius:8,fontSize:13,background:'#fff'}}>
+                    <option value="">Default (view only; Admin and Co Founder full)</option>
+                    <option value="view">View only</option>
+                    <option value="full">Full access (can edit)</option>
+                    <option value="none">No access</option>
+                  </select>
+                </div>
+              )}
               <div style={{marginBottom:16}}>
                 <div style={{fontSize:12,fontWeight:600,color:'#344054',marginBottom:4}}>Custom module access (optional)</div>
                 <div style={{fontSize:11,color:'#98A2B3',marginBottom:6}}>Leave none checked to use whatever their role normally grants. Check specific modules to override it for just this person — e.g. a Property Manager who also needs Vacation Rentals and the Deal Analyser.</div>
@@ -479,7 +494,7 @@ function SettingsInner() {
                   <button onClick={async ()=>{
                     if(!inviteName)return
                     setInviting(true)
-                    const {error} = await supabase.from('team_members').update({name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null,view_only:viewOnly}).eq('id',editingMemberId)
+                    const {error} = await supabase.from('team_members').update({name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null,view_only:viewOnly,...(myFleetAccess==='full'?{fleet_access:fleetSel||null}:{})}).eq('id',editingMemberId)
                     setInviting(false)
                     if(error){alert(error.message);return}
                     setTeam(team.map(t=>t.id===editingMemberId?{...t,name:inviteName,phone:invitePhone,role:inviteRole,property_ids:assignedPropertyIds,custom_modules:customModules.length?customModules:null}:t))
