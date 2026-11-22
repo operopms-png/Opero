@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
 import { sendSms } from '@/lib/send-sms'
-import { normalizePhone, smsConnection, nameForPhone } from '@/lib/sms'
+import { normalizePhone, smsConnection, smsCreds, nameForPhone } from '@/lib/sms'
 
 // POST { to, body, contact_name? } -> { message, contact_phone }
 // Sends a text from the business's Twilio number and saves it to the thread.
@@ -17,10 +17,10 @@ export async function POST(req: NextRequest) {
   if (!to) return NextResponse.json({ error: 'Check the number — start with + and the country code, e.g. +1 876… or +44 7…' }, { status: 400 })
 
   const conn = await smsConnection(c.businessId)
-  if (!conn) return NextResponse.json({ error: 'Texts aren’t switched on yet. Add the Twilio details in Netlify (see Inbox → Texts).' }, { status: 503 })
+  if (!conn) return NextResponse.json({ error: 'Texts aren’t switched on yet. An admin can connect a Twilio number in Settings → Texts.' }, { status: 503 })
 
-  const r = await sendSms(to, body, conn.phone)
-  if (r.skipped) return NextResponse.json({ error: 'Texts aren’t switched on yet. Add the Twilio details in Netlify.' }, { status: 503 })
+  const r = await sendSms(to, body, conn.phone, smsCreds(conn))
+  if (r.skipped) return NextResponse.json({ error: 'Texts aren’t switched on yet. An admin can connect a Twilio number in Settings → Texts.' }, { status: 503 })
   if (r.error) return NextResponse.json({ error: `Twilio couldn’t send it: ${r.error}` }, { status: 502 })
 
   const known = b.contact_name ? { name: String(b.contact_name).slice(0, 120), contactId: null } : await nameForPhone(c.businessId, to)
