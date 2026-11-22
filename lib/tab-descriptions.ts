@@ -44,6 +44,8 @@ export const TAB_DESCRIPTIONS: Record<string, string> = {
   'Units': 'Individual flats, rooms and units, with rent, status and current tenant.',
   'Offers': 'Offers on properties for sale: received from buyers or submitted for them, with counteroffers, approval and whether each was accepted or rejected.',
   'Sales Progression': 'Each agreed sale with its checklist: conveyancing, due diligence, contracts and completion, with progress, solicitors and the target completion date.',
+  'Client Checks': 'AML, proof of funds and ID checks on buyers, sellers and applicants, with the result, who it covers and when it expires.',
+  'Commissions': 'Sales commission, lettings fees, agency fees and staff commission: what is due, invoiced and paid, worked out from a base amount and a rate.',
   'Buyers': 'People looking to buy, with their budget and where they are in the process.',
   'Sellers': 'People selling a property through you, linked to the property.',
   'Applicants': 'People applying to rent, with their budget and where they are in the process.',

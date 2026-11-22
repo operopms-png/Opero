@@ -11,6 +11,8 @@ import { downloadCsv } from '@/lib/export-csv'
 import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
+import ClientChecksSection from '@/components/estate/ClientChecksSection'
+import CommissionsSection from '@/components/estate/CommissionsSection'
 import SalesSection from '@/components/estate/SalesSection'
 import OffersSection from '@/components/estate/OffersSection'
 import ContactsSection from '@/components/estate/ContactsSection'
@@ -133,10 +135,10 @@ const NAV_GROUPS = [
   { label: 'LETTINGS', items: ['Properties','Units','Buildings','Tenants','Tenancies','Landlords','Vacancies','Viewings'] },
   { label: 'PEOPLE', items: ['Buyers','Sellers','Applicants'] },
   { label: 'SALES', items: ['Offers','Sales Progression'] },
-  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Inventories','Documents'] },
+  { label: 'COMPLIANCE', items: ['Compliance','Tenant Checks','Client Checks','Inventories','Documents'] },
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
-  { label: 'FINANCE', items: ['Finance','Rent Collection','Loans & Mortgages','Expenses','Banking'] },
+  { label: 'FINANCE', items: ['Finance','Rent Collection','Commissions','Loans & Mortgages','Expenses','Banking'] },
   { label: 'REPORTS', items: ['Landlord Reports','Reports'] },
 ]
 // Company-wide tools that open their real page, so Estate Agency shows them without a second copy.
@@ -1498,6 +1500,8 @@ export default function Page() {
             </div>
           </div>)}
 
+          {section==='Client Checks'&&<ClientChecksSection/>}
+          {section==='Commissions'&&<CommissionsSection properties={properties}/>}
           {section==='Sales Progression'&&<SalesSection properties={properties}/>}
           {section==='Offers'&&<OffersSection properties={properties}/>}
           {section==='Buyers'&&<ContactsSection kind="buyer" properties={properties}/>}
