@@ -21,5 +21,6 @@ export async function startSaleFromOffer(offer: any, userId: string): Promise<st
   let sort = 0
   const rows = SALE_STEPS.flatMap(g => g.steps.map(name => ({ user_id: userId, sale_id: sale.id, category: g.category, name, sort: sort++ })))
   const { error: e2 } = await supabase.from('estate_sale_steps').insert(rows)
+  if (offer.property_id) await supabase.from('estate_properties').update({ status: 'Sale agreed' }).eq('id', offer.property_id) // hides it from the public listings
   return e2?.message ?? null
 }

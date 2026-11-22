@@ -37,8 +37,8 @@ export default function ListingsBrowser({ homes }: { homes: Listing[] }) {
   const areas = useMemo(() => Array.from(new Set(homes.map(h => areaOf(h.address)).filter(Boolean))).sort(), [homes])
   const shown = useMemo(() => {
     let list = homes.filter(h => (!area || areaOf(h.address) === area) && (!beds || (beds === 'studio' ? bedsNum(h.bedrooms) === 0 : bedsNum(h.bedrooms) >= Number(beds))) && (!when || h.status === 'now'))
-    if (sort === 'low') list = [...list].sort((a, b) => (a.rent ?? 9e12) - (b.rent ?? 9e12))
-    if (sort === 'high') list = [...list].sort((a, b) => (b.rent ?? -1) - (a.rent ?? -1))
+    if (sort === 'low') list = [...list].sort((a, b) => ((a.for_sale ? a.sale_price : a.rent) ?? 9e12) - ((b.for_sale ? b.sale_price : b.rent) ?? 9e12))
+    if (sort === 'high') list = [...list].sort((a, b) => ((b.for_sale ? b.sale_price : b.rent) ?? -1) - ((a.for_sale ? a.sale_price : a.rent) ?? -1))
     return list
   }, [homes, area, beds, when, sort])
 
@@ -49,7 +49,7 @@ export default function ListingsBrowser({ homes }: { homes: Listing[] }) {
       <TopBar />
       <div style={{ background: `linear-gradient(160deg, ${BRAND.cream}, #fff 70%)`, padding: '36px 20px 24px' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-          <h1 style={{ fontSize: 'clamp(27px, 4vw, 36px)', margin: '0 0 6px', color: BRAND.brown, letterSpacing: -0.5 }}>Homes to rent</h1>
+          <h1 style={{ fontSize: 'clamp(27px, 4vw, 36px)', margin: '0 0 6px', color: BRAND.brown, letterSpacing: -0.5 }}>{homes.some(h => h.for_sale) ? (homes.every(h => h.for_sale) ? 'Homes for sale' : 'Homes to rent and for sale') : 'Homes to rent'}</h1>
           <p style={{ margin: 0, color: BRAND.muted, fontSize: 16, maxWidth: 640, lineHeight: 1.5 }}>Quality homes managed by our lettings team. Pick a property to see the photos and details, and book a viewing.</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 20, maxWidth: 860 }}>
             <select className="lst-in" style={sel} value={area} onChange={e => setArea(e.target.value)} aria-label="Location"><option value="">All locations</option>{areas.map(a => <option key={a}>{a}</option>)}</select>
@@ -74,7 +74,7 @@ export default function ListingsBrowser({ homes }: { homes: Listing[] }) {
                   <span style={{ position: 'absolute', top: 12, left: 12, background: '#fff', borderRadius: 20, padding: '5px 11px', fontSize: 12.5, fontWeight: 600, color: h.status === 'now' ? '#00864E' : '#B7791F', zIndex: 3 }}>● {h.status === 'now' ? 'Available now' : h.available_from ? `Available ${new Date(h.available_from + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Available soon'}</span>
                 </PhotoSlider>
                 <div style={{ padding: '14px 16px 16px' }}>
-                  <div style={{ fontSize: 21, fontWeight: 700, color: BRAND.brown }}>{h.rent ? <>{money(h.rent, h.currency)} <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.muted }}>/ month</span></> : <span style={{ fontSize: 16 }}>Price on request</span>}</div>
+                  <div style={{ fontSize: 21, fontWeight: 700, color: BRAND.brown }}>{h.for_sale ? (h.sale_price ? <>{money(h.sale_price, h.currency)} <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.muted }}>for sale</span></> : <span style={{ fontSize: 16 }}>For sale · price on request</span>) : h.rent ? <>{money(h.rent, h.currency)} <span style={{ fontSize: 13, fontWeight: 500, color: BRAND.muted }}>/ month</span></> : <span style={{ fontSize: 16 }}>Price on request</span>}</div>
                   <div style={{ fontWeight: 600, margin: '4px 0 2px', fontSize: 16 }}>{titleCase(h.name)}</div>
                   <div style={{ color: BRAND.muted, fontSize: 13.5 }}>{areaOf(h.address)}</div>
                   <div style={{ display: 'flex', gap: 14, marginTop: 10, fontSize: 13.5 }}>

@@ -10,8 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const homes = await getListings()
   const cover = homes.find(h => h.photos.length)?.photos[0]?.url
   return {
-    title: 'Homes to rent · NOVOURQ Group',
-    description: `${homes.length} ${homes.length === 1 ? 'home' : 'homes'} to rent — see photos and book a viewing.`,
+    title: homes.some(h => h.for_sale) ? 'Homes to rent and for sale · NOVOURQ Group' : 'Homes to rent · NOVOURQ Group',
+    description: `${homes.length} ${homes.length === 1 ? 'home' : 'homes'} available — see photos and book a viewing.`,
     openGraph: { title: 'Homes to rent · NOVOURQ Group', description: 'See photos and book a viewing.', images: cover ? [cover] : ['/logo-512.png'] },
   }
 }

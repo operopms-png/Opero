@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const h = await getListing(id)
   if (!h) return { title: 'Home to rent · NOVOURQ Group' }
-  const title = `${titleCase(h.name)}${h.rent ? ` — ${money(h.rent, h.currency)} / month` : ''}`
+  const title = `${titleCase(h.name)}${h.for_sale ? (h.sale_price ? ` — ${money(h.sale_price, h.currency)} for sale` : ' — for sale') : h.rent ? ` — ${money(h.rent, h.currency)} / month` : ''}`
   const description = [bedLabel(h.bedrooms), h.type, h.address].filter(Boolean).join(' · ')
   return { title: `${title} · NOVOURQ Group`, description, openGraph: { title, description, images: h.photos[0] ? [h.photos[0].url] : ['/logo-512.png'] } }
 }

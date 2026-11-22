@@ -7,7 +7,7 @@ import { sanitizeLayout } from '@/lib/flat-layout'
 export * from '@/lib/listings-shared'
 
 export const LISTINGS_BUSINESS_ID = process.env.LISTINGS_BUSINESS_ID || 'bd780fdd-15e3-4306-8c87-788b23647ee5'
-const HIDDEN = ['rented', 'archived', 'let agreed']
+const HIDDEN = ['rented', 'archived', 'let agreed', 'sold', 'sale agreed']
 
 function photosOf(row: any): { url: string; caption: string }[] {
   let urls: string[] = []
@@ -22,13 +22,13 @@ export function toListing(row: any): Listing {
   return {
     id: row.id, slug: row.listing_slug || row.id, name: String(row.name || '').trim(), address: String(row.address || '').trim(),
     type: row.type || 'Property', bedrooms: row.bedrooms ? String(row.bedrooms) : '', bathrooms: row.bathrooms ? String(row.bathrooms) : '',
-    rent: row.rent != null && row.rent !== '' && Number(row.rent) > 0 ? Number(row.rent) : null, currency: cur,
+    rent: row.rent != null && row.rent !== '' && Number(row.rent) > 0 ? Number(row.rent) : null, for_sale: !!row.for_sale, sale_price: row.sale_price != null && Number(row.sale_price) > 0 ? Number(row.sale_price) : null, currency: cur,
     status: String(row.status || '').toLowerCase() === 'maintenance' ? 'soon' : available ? 'soon' : 'now', available_from: available,
     description: row.description || '', features: Array.isArray(row.features) ? row.features.filter(Boolean) : [], photos: photosOf(row), videos: parseVideos(row.video_urls),
   }
 }
 
-const COLS = 'id,name,address,type,bedrooms,bathrooms,rent,currency,status,image_urls,photo_captions,description,features,available_from,listing_slug,listed,user_id,video_urls,show_3d'
+const COLS = 'id,name,address,type,bedrooms,bathrooms,rent,for_sale,sale_price,currency,status,image_urls,photo_captions,description,features,available_from,listing_slug,listed,user_id,video_urls,show_3d'
 
 export async function getListings(): Promise<Listing[]> {
   const { data } = await serviceClient.from('estate_properties').select(COLS).eq('user_id', LISTINGS_BUSINESS_ID).is('ended_at', null).eq('listed', true).order('created_at', { ascending: false })

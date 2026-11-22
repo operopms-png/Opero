@@ -21,7 +21,7 @@ export default function ListingDetail({ home }: { home: Listing }) {
 
   async function share() {
     const url = window.location.href
-    if (navigator.share) { try { await navigator.share({ title: name, text: `${name} — ${home.rent ? money(home.rent, home.currency) + ' / month' : 'to rent'}`, url }); return } catch {} }
+    if (navigator.share) { try { await navigator.share({ title: name, text: `${name} — ${home.for_sale ? (home.sale_price ? money(home.sale_price, home.currency) + ' for sale' : 'for sale') : home.rent ? money(home.rent, home.currency) + ' / month' : 'to rent'}`, url }); return } catch {} }
     await navigator.clipboard?.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1600)
   }
 
@@ -57,7 +57,7 @@ export default function ListingDetail({ home }: { home: Listing }) {
             <h1 style={{ margin: 0, fontSize: 'clamp(24px, 3.4vw, 30px)', color: BRAND.brown }}>{name}</h1>
             <div style={{ color: BRAND.muted, fontSize: 15.5, marginTop: 3 }}>{areaOf(home.address)}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, margin: '18px 0' }}>
-              {key('Rent', home.rent ? `${money(home.rent, home.currency)} / month` : 'On request')}
+              {home.for_sale ? key('Price', home.sale_price ? money(home.sale_price, home.currency) : 'On request') : key('Rent', home.rent ? `${money(home.rent, home.currency)} / month` : 'On request')}
               {key('Bedrooms', bedLabel(home.bedrooms).replace(' bed', ''))}
               {key('Bathrooms', home.bathrooms)}
               {key('Available', avail)}
@@ -113,7 +113,7 @@ function ViewingForm({ home }: { home: Listing }) {
   }
   return (
     <div style={{ border: `1px solid ${BRAND.line}`, borderRadius: 14, padding: 20, alignSelf: 'start', boxShadow: '0 6px 20px rgba(98,73,32,.07)', position: 'sticky', top: 84, background: '#fff', minWidth: 0 }}>
-      <div style={{ fontSize: 24, fontWeight: 700, color: BRAND.brown }}>{home.rent ? <>{money(home.rent, home.currency)} <span style={{ fontSize: 14, color: BRAND.muted, fontWeight: 500 }}>/ month</span></> : 'Price on request'}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: BRAND.brown }}>{home.for_sale ? (home.sale_price ? <>{money(home.sale_price, home.currency)} <span style={{ fontSize: 14, color: BRAND.muted, fontWeight: 500 }}>for sale</span></> : 'For sale · price on request') : home.rent ? <>{money(home.rent, home.currency)} <span style={{ fontSize: 14, color: BRAND.muted, fontWeight: 500 }}>/ month</span></> : 'Price on request'}</div>
       {done ? (
         <div style={{ textAlign: 'center', padding: '20px 0 6px' }}>
           <div style={{ fontSize: 30, color: BRAND.gd }}>✓</div>

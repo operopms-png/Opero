@@ -18,7 +18,7 @@ export const money = (amount: number | null | undefined, currency = 'JMD') =>
 
 export type Listing = {
   id: string; slug: string; name: string; address: string; type: string
-  bedrooms: string; bathrooms: string; rent: number | null; currency: string
+  bedrooms: string; bathrooms: string; rent: number | null; for_sale: boolean; sale_price: number | null; currency: string
   status: 'now' | 'soon'; available_from: string | null
   description: string; features: string[]; photos: { url: string; caption: string }[]
   videos: { url: string; title: string }[]

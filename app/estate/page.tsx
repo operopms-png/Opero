@@ -280,6 +280,7 @@ export default function Page() {
   const [tenants, setTenants] = useState<any[]>([])
   const [tenancies, setTenancies] = useState<any[]>([])
   const [showAddProperty, setShowAddProperty] = useState(false)
+  const [propFilter, setPropFilter] = useState('All')
   const [viewingPhotos, setViewingPhotos] = useState<string[]|null>(null)
   const [showAddTenant, setShowAddTenant] = useState(false)
   const [showAddTenancy, setShowAddTenancy] = useState(false)
@@ -1029,11 +1030,14 @@ export default function Page() {
                 </div>
               ))}
             </div>
+            <div style={{display:'flex',gap:6,overflowX:'auto',marginBottom:12}}>
+              {['All','To let','For sale','Published','Draft','Archived'].map(f=><button key={f} onClick={()=>setPropFilter(f)} style={{flex:'0 0 auto',padding:'5px 12px',borderRadius:999,fontSize:13,cursor:'pointer',fontFamily:'inherit',border:propFilter===f?'1px solid '+ACCENT:'1px solid #E4E7EC',background:propFilter===f?'#DCE9F8':'#F7F8FA',color:propFilter===f?'#1D4E89':'#344054'}}>{f}{f!=='All'?` (${properties.filter((p:any)=>{ const st=String(p.status||'').toLowerCase(); return (f==='For sale'&&p.for_sale)||(f==='To let'&&!p.for_sale)||(f==='Published'&&p.listed&&st!=='archived')||(f==='Draft'&&!p.listed&&st!=='archived')||(f==='Archived'&&st==='archived') }).length})`:''}</button>)}
+            </div>
             <div style={{background:'#fff',borderRadius:12,border:'1px solid #E4E7EC',overflow:'hidden'}}>
               <div style={{display:'grid',gridTemplateColumns:'56px 1fr 100px 100px 60px 60px 100px 80px 100px',padding:'10px 20px',background:'#F9FAFB',borderBottom:'1px solid #E4E7EC',fontSize:11,fontWeight:600,color:'#667085',textTransform:'uppercase' as const,gap:8}}>
                 <span></span><span>Name</span><span>Type</span><span>Address</span><span>Beds</span><span>Baths</span><span>Rent/mo</span><span>Status</span><span></span>
               </div>
-              {properties.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏠</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No properties yet</div><div style={{fontSize:13}}>Add your first property to get started.</div></div>):properties.map(p=>{
+              {properties.length===0?(<div style={{textAlign:'center',padding:60,color:'#98A2B3'}}><div style={{fontSize:40,marginBottom:12}}>🏠</div><div style={{fontSize:15,fontWeight:600,color:'#323338',marginBottom:6}}>No properties yet</div><div style={{fontSize:13}}>Add your first property to get started.</div></div>):properties.filter((p:any)=>{ const st=String(p.status||'').toLowerCase(); return propFilter==='All'||(propFilter==='For sale'&&p.for_sale)||(propFilter==='To let'&&!p.for_sale)||(propFilter==='Published'&&p.listed&&st!=='archived')||(propFilter==='Draft'&&!p.listed&&st!=='archived')||(propFilter==='Archived'&&st==='archived') }).map(p=>{
                 const photos = parsePropertyImages(p.image_urls)
                 return (
                 <div key={p.id} style={{display:'grid',gridTemplateColumns:'56px 1fr 100px 100px 60px 60px 100px 80px 100px',padding:'14px 20px',borderBottom:'1px solid #F2F4F7',alignItems:'center',gap:8}}>

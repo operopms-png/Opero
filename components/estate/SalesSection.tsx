@@ -33,7 +33,16 @@ export default function SalesSection({ properties }: { properties: any[] }) {
 
   const prop = (id: string) => properties.find(p => p.id === id)
   const money = (n: any, pid: string) => (n == null ? '' : (CURRENCIES[prop(pid)?.currency || 'JMD'] ?? CURRENCIES.JMD).symbol + Number(n).toLocaleString())
-  const patchSale = async (id: string, patch: any) => { await supabase.from('estate_sales').update(patch).eq('id', id); load() }
+  const patchSale = async (id: string, patch: any) => {
+    await supabase.from('estate_sales').update(patch).eq('id', id)
+    // the property follows the sale: Sold when completed, back on the market if it fell through
+    const pid = sales.find(x => x.id === id)?.property_id
+    if (pid && patch.status) {
+      const next = patch.status === 'Completed' ? 'Sold' : patch.status === 'Fell through' ? 'Available' : 'Sale agreed'
+      await supabase.from('estate_properties').update({ status: next }).eq('id', pid)
+    }
+    load()
+  }
   async function toggle(st: any) {
     await supabase.from('estate_sale_steps').update({ done: !st.done, done_date: !st.done ? today() : null }).eq('id', st.id)
     load()
