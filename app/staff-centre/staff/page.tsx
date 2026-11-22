@@ -5,9 +5,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { staffApi } from '@/lib/staff-api'
-import ClockCard from '@/components/work/ClockCard'
-import DashboardWorkHours from '@/components/work/DashboardWorkHours'
+import StaffDayTeamNotices from '@/components/staff/StaffDayTeamNotices'
 import { useRole, ROLE_MODULES, getScTabs } from '@/lib/useRole'
 import { STAFF_HUBS, type HubTab } from '@/lib/staffHubs'
 
@@ -35,7 +33,6 @@ const ATTN: { badge: string; label: string; href: string }[] = [
   { badge: 'hr', label: 'HR', href: '/staff-centre/hr' }, { badge: 'announcements', label: 'Announcements', href: '/staff-centre/announcements' },
 ]
 const TONE: Record<string, string> = { red: '#EF4444', amber: '#F59E0B', blue: '#2F6DB5' }
-const gbp = (n: number) => '£' + Math.round(n || 0).toLocaleString('en-GB')
 const all = new Map<string, HubTab>(STAFF_HUBS.flatMap(h => h.tabs).map(t => [t.href, t]))
 
 export default function StaffDashboard() {
@@ -45,23 +42,14 @@ export default function StaffDashboard() {
   const scTabs = getScTabs(role, roleModules)
   const allowed = (t: HubTab) => t.requiresModule ? roleModules.includes(t.requiresModule) : t.scTab ? scTabs.includes(t.scTab) : role !== 'Partner'
   const [d, setD] = useState<any>(null)
-  const [notices, setNotices] = useState<any[]>([])
-  const [lb, setLb] = useState<any[] | null>(null)
   useEffect(() => {
     ;(async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
       const H = { Authorization: `Bearer ${session.access_token}` }
       fetch('/api/staff-dashboard?range=today', { headers: H }).then(r => r.ok ? r.json() : null).then(setD).catch(() => {})
-      fetch('/api/announcements', { headers: H }).then(r => r.ok ? r.json() : null).then(j => setNotices(j?.unread ?? [])).catch(() => {})
     })()
-    staffApi('/api/agent-leaderboard').then((x: any) => setLb(x.agents ?? [])).catch(() => setLb([]))
   }, [])
-  async function gotIt(id: string) {
-    setNotices(n => n.filter(x => x.id !== id))
-    const { data: { session } } = await supabase.auth.getSession()
-    fetch('/api/announcements', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` }, body: JSON.stringify({ action: 'read', id }) })
-  }
   useEffect(() => { supabase.rpc('sidebar_counts').then(({ data }) => { if (data) setCounts(data as Record<string, number>) }) }, [])
   const team = (STAFF_HUBS.find(h => h.label === 'Team')?.tabs ?? []).filter(t => t.href !== '/staff-centre/staff' && allowed(t))
   const shared = SHARED.map(h => all.get(h)).filter((t): t is HubTab => !!t && allowed(t))
@@ -90,36 +78,7 @@ export default function StaffDashboard() {
           <span style={{ fontSize: 12, fontWeight: 600, color: '#2f5bd6' }}>{a.action}</span></Link>)}
       </div>}
 
-      <h2 style={sec}>My day</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 12 }}>
-        <div><ClockCard compact /></div>
-        <div style={box}>
-          <b style={{ color: C.ink, fontSize: 14 }}>Today</b>
-          {!d ? <div style={{ fontSize: 13, color: C.muted, marginTop: 8 }}>Loading…</div> : (d.schedule ?? []).length === 0 ? <div style={{ fontSize: 13, color: C.muted, marginTop: 8 }}>Nothing booked today.</div>
-            : d.schedule.slice(0, 6).map((e: any, i: number) => <Link key={i} href={e.href ?? '/staff-centre/calendar'} style={{ display: 'flex', gap: 10, padding: '7px 0', borderTop: i ? `1px solid ${C.line}` : 'none', fontSize: 13, color: C.text, textDecoration: 'none' }}>
-              <span style={{ width: 44, color: C.muted }}>{e.time ?? ''}</span><span style={{ flex: 1 }}>{e.title}</span></Link>)}
-          <Link href="/staff-centre/tasks" style={{ display: 'inline-block', marginTop: 8, fontSize: 12.5, fontWeight: 600, color: '#2f5bd6', textDecoration: 'none' }}>{d?.hero?.tasks?.n ?? 0} tasks due · Open Tasks →</Link>
-        </div>
-      </div>
-
-      <h2 style={sec}>Team</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 12 }}>
-        <div><DashboardWorkHours /></div>
-        <div style={box}>
-          <b style={{ color: C.ink, fontSize: 14 }}>Agent leaderboard</b>
-          {lb === null ? <div style={{ fontSize: 13, color: C.muted, marginTop: 8 }}>Loading…</div> : lb.length === 0 ? <div style={{ fontSize: 13, color: C.muted, marginTop: 8 }}>No active agents yet.</div>
-            : lb.slice(0, 5).map((x: any, i: number) => <div key={x.id} style={{ display: 'flex', gap: 10, padding: '7px 0', borderTop: i ? `1px solid ${C.line}` : 'none', fontSize: 13 }}><b style={{ width: 20, color: C.muted }}>{i + 1}</b><span style={{ flex: 1 }}>{x.name}</span><b style={{ color: C.ink }}>{gbp(x.total)}</b></div>)}
-          <Link href="/staff-centre/performance" style={{ display: 'inline-block', marginTop: 8, fontSize: 12.5, fontWeight: 600, color: '#2f5bd6', textDecoration: 'none' }}>Staff Performance →</Link>
-        </div>
-      </div>
-
-      <h2 style={sec}>Notices</h2>
-      <div style={box}>
-        {notices.length === 0 ? <span style={{ fontSize: 13, color: C.muted }}>No unread announcements.</span> : notices.slice(0, 3).map((n: any, i: number) => <div key={n.id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '7px 0', borderTop: i ? `1px solid ${C.line}` : 'none' }}>
-          <span style={{ flex: 1, fontSize: 13.5, color: C.ink }}>{n.title ?? n.body}</span>
-          <button onClick={() => gotIt(n.id)} style={{ fontSize: 12, color: '#2f5bd6', background: '#fff', border: '1px solid #2f5bd6', borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Got it</button></div>)}
-        <Link href="/staff-centre/training" style={{ display: 'inline-block', marginTop: 8, fontSize: 12.5, fontWeight: 600, color: '#2f5bd6', textDecoration: 'none' }}>What is new in Staff Training →</Link>
-      </div>
+      <StaffDayTeamNotices />
 
       <h2 style={sec}>Business pulse</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10 }}>

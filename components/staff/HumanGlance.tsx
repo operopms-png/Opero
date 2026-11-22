@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import StaffDayTeamNotices from './StaffDayTeamNotices'
 
 type Tone = 'good' | 'warn' | 'plain'
 type Tile = { key: string; label: string; none: string; note: string; tone: Tone; href: string }
@@ -71,6 +72,7 @@ export default function HumanGlance({ canOpen }: { canOpen: (href: string) => bo
             </div>
           </div>)
       })()}
+      <StaffDayTeamNotices headStyle={{ margin: '18px 0 8px', fontSize: 15, color: '#1D4E89' }} />
       {groups.map(g => (
         <div key={g.title}>
           <h3 style={{ margin: '18px 0 8px', fontSize: 15, color: '#1D4E89' }}>{g.title}</h3>
