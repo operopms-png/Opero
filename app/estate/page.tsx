@@ -12,6 +12,7 @@ import { BedDouble, Bath } from 'lucide-react'
 import CompanyDocsPanel from '@/components/CompanyDocsPanel'
 import { SITE_HOST } from '@/lib/brand'
 import ViewingExtras from '@/components/estate/ViewingExtras'
+import InsightsSection from '@/components/estate/InsightsSection'
 import ApplicationsSection from '@/components/estate/ApplicationsSection'
 import ContactHistorySection from '@/components/estate/ContactHistorySection'
 import SalesReportsSection from '@/components/estate/SalesReportsSection'
@@ -143,7 +144,7 @@ const NAV_GROUPS = [
   { label: 'COMPANY', items: ['Company SOPs','Contract Templates'] },
   { label: 'OPERATIONS', items: ['Maintenance','Cleaning'] },
   { label: 'FINANCE', items: ['Finance','Rent Collection','Commissions','Loans & Mortgages','Expenses','Banking'] },
-  { label: 'REPORTS', items: ['Landlord Reports','Reports','Sales Reports'] },
+  { label: 'REPORTS', items: ['Landlord Reports','Reports','Sales Reports','Marketing Analytics','Lettings Reports','Property Performance'] },
 ]
 // Company-wide tools that open their real page, so Estate Agency shows them without a second copy.
 const SHARED_TOOL_LINKS: Record<string,string> = {
@@ -1509,6 +1510,9 @@ export default function Page() {
             </div>
           </div>)}
 
+          {section==='Marketing Analytics'&&<InsightsSection kind="marketing" properties={properties}/>}
+          {section==='Lettings Reports'&&<InsightsSection kind="lettings" properties={properties}/>}
+          {section==='Property Performance'&&<InsightsSection kind="performance" properties={properties}/>}
           {section==='Rental Applications'&&<ApplicationsSection properties={properties}/>}
           {section==='Corporate Clients'&&<ContactsSection kind="corporate" properties={properties}/>}
           {section==='Contact History'&&<ContactHistorySection/>}

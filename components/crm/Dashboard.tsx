@@ -79,6 +79,15 @@ export default function Dashboard({ crm, onOpenItem, onOpenBoard }: { crm: Crm; 
     return out
   }, [crm.columns, crm.items, crm.boards])
   const [fq, setFq] = useState('')
+  // Follow-ups: contacts with a Next interaction date, and contacts nobody is assigned to
+  const cNext = colByKey(crm.columns, contacts?.id, 'next_interaction'), cAgent = colByKey(crm.columns, contacts?.id, 'agent')
+  const today = new Date().toISOString().slice(0, 10)
+  const weekEnd = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10)
+  const dated = cNext ? contactItems.filter(i => i.values?.[cNext.id]).sort((x, y) => String(x.values[cNext.id]).localeCompare(String(y.values[cNext.id]))) : []
+  const overdue = dated.filter(i => String(i.values[cNext!.id]) < today)
+  const dueWeek = dated.filter(i => { const d = String(i.values[cNext!.id]); return d >= today && d <= weekEnd })
+  const unassigned = cAgent ? contactItems.filter(i => !((i.values?.[cAgent.id] ?? []) as any[]).length) : []
+  const noDate = cNext ? contactItems.filter(i => !i.values?.[cNext.id]) : []
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -86,6 +95,21 @@ export default function Dashboard({ crm, onOpenItem, onOpenBoard }: { crm: Crm; 
         <input value={q} onChange={e => setQ(e.target.value)} placeholder="Type to filter" style={{ height: 32, width: 220, border: `1px solid ${BRAND.border}`, borderRadius: 4, padding: '0 10px', fontFamily: 'inherit', fontSize: 13 }} />
         <span style={{ fontSize: 12.5, color: BRAND.muted }}>{[props, tx, contacts].filter(Boolean).length} connected boards</span>
       </div>
+
+      {contacts && (cNext || cAgent) && <div style={card}>
+        <div style={cardHead}>Follow-ups and lead assignment<button onClick={() => onOpenBoard(contacts.id)} style={linkBtn}>Open contacts →</button></div>
+        <div className="crm-dash-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 0 }}>
+          {([['Overdue follow-ups', overdue, '#B42318', true], ['Due in the next 7 days', dueWeek, BRAND.ink, true], ['Not assigned to anyone', unassigned, BRAND.ink, false]] as [string, Item[], string, boolean][]).map(([t, list, colr, showDate]) => (
+            <div key={t} style={{ padding: '14px 20px', borderRight: `1px solid ${BRAND.rowBorder}` }}>
+              <div style={{ fontSize: 13, color: BRAND.muted }}>{t}</div>
+              <div style={{ fontSize: 32, color: colr, margin: '4px 0 8px' }}>{list.length}</div>
+              {list.slice(0, 5).map(i => <div key={i.id} onClick={() => onOpenItem(i.id)} style={{ fontSize: 13, cursor: 'pointer', marginTop: 4, display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.name}</span>{showDate && cNext && <span style={{ color: BRAND.muted, flexShrink: 0 }}>{fmtDate(i.values?.[cNext.id])}</span>}</div>)}
+              {list.length > 5 && <div style={{ fontSize: 12, color: BRAND.muted, marginTop: 6 }}>and {list.length - 5} more</div>}
+            </div>
+          ))}
+        </div>
+        {cNext && noDate.length > 0 && <div style={{ padding: '10px 20px', fontSize: 12.5, color: BRAND.muted, borderTop: `1px solid ${BRAND.rowBorder}` }}>{noDate.length} contacts have no Next interaction date yet.</div>}
+      </div>}
 
       {props && <div style={card}>
         <div style={cardHead}>Property portfolio map<span style={{ fontSize: 12, color: BRAND.muted, fontWeight: 400 }}>{pAddr ? 'Pins come from each property’s Address' : 'Add a Location column called Address to Properties'}</span></div>
