@@ -1,14 +1,13 @@
 'use client'
-// Gated Communities: NOVOURQ's own community management area, opened from Real Estate Intelligence next to Hotels.
+// Gated Communities: community management for every company, opened from Real Estate Intelligence next to Hotels.
 // Dashboard, units, residents, visitors, repairs and complaints are working tabs; every other section of the plan shows its
-// feature list as "planned" until it is built (lib/community-sections.ts). Only the owner company and its staff can open it
-// (the same database check as Fleet and Rides and Hotels, and the database enforces it too); client companies do not see it.
+// feature list as "planned" until it is built (lib/community-sections.ts). Each company sees only its own rows (database policies).
 import { useEffect, useState } from 'react'
 import ModuleTabStrip from '@/components/ModuleTabStrip'
 import RecordTab from '@/components/pm/RecordTab'
 import CommunityDashboard from '@/components/community/CommunityDashboard'
 import { supabase, getAccountId } from '@/lib/supabase'
-import { useFleetAccess } from '@/lib/fleet-access'
+import { useRealEstateAccess } from '@/lib/real-estate-access'
 import { COMMUNITY_GROUPS, BUILT } from '@/lib/community-sections'
 import { COMMUNITY_UNITS, COMMUNITY_RESIDENTS, COMMUNITY_VISITORS, COMMUNITY_MAINTENANCE, COMMUNITY_COMPLAINTS } from '@/lib/community-record-tabs'
 
@@ -20,7 +19,7 @@ const CFG: Record<string, any> = {
 }
 
 export default function CommunityPage() {
-  const access = useFleetAccess()
+  const access = useRealEstateAccess()
   const [tab, setTab] = useState('Dashboard')
   const [acct, setAcct] = useState('')
   const [units, setUnits] = useState<any[]>([])

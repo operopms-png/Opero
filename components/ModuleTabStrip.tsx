@@ -3,7 +3,6 @@
 // group's tabs, and buttons to jump to the other modules. Replaces the old left sidebar,
 // which is switched off in the hub layout. Only tabs this person can open are clickable.
 import { useEffect, useState } from 'react'
-import { useFleetAccess } from '@/lib/fleet-access'
 
 export type StripGroup = { label: string; items: string[] }
 export type StripModule = 'pm' | 'estate' | 'str' | 'dev' | 'fleet' | 'hotel' | 'community'
@@ -27,8 +26,6 @@ export default function ModuleTabStrip({ module, groups, current, onSelect, lock
   locked?: (t: string) => boolean
   badge?: (t: string) => number
 }) {
-  // Hotels is NOVOURQ's own area, so its jump button only shows to people who may open it.
-  const hotelAccess = useFleetAccess()
   const owner = groups.find(g => g.items.includes(current))?.label ?? groups[0]?.label
   const [picked, setPicked] = useState<string>(owner)
   useEffect(() => { if (owner) setPicked(owner) }, [owner])
@@ -56,7 +53,7 @@ export default function ModuleTabStrip({ module, groups, current, onSelect, lock
           })}
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', maxWidth: '100%' }}>
-          {(module === 'fleet' ? [] : MODULES.filter(m => m.k !== module && ((m.k !== 'hotel' && m.k !== 'community') || hotelAccess === 'view' || hotelAccess === 'full'))).map(m => (
+          {(module === 'fleet' ? [] : MODULES.filter(m => m.k !== module)).map(m => (
             <a key={m.k} href={m.href} style={{ flex: '0 0 auto', padding: '5px 10px', borderRadius: 8, fontSize: 12, textDecoration: 'none', color: m.c, border: `1px solid ${m.c}`, background: '#fff' }}>{m.n}</a>
           ))}
         </div>
