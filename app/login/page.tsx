@@ -36,7 +36,7 @@ const PLANS = [
     color: BABY_BLUE,
     popular: true,
     features: [
-      'All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager',
+      'All 8 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Hotels, Gated Communities, Invest, AI Property Manager',
       '6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification',
       'Staff Centre included free — conversations, property portals, CRM & more',
       '3 properties included, then £12 a month for each extra property',
@@ -50,7 +50,7 @@ const PLANS = [
     period: '/year',
     color: BABY_BLUE,
     features: [
-      'All 6 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Invest, AI Property Manager',
+      'All 8 modules: Vacation Rentals, Property Management, Estate Agency, Developments, Hotels, Gated Communities, Invest, AI Property Manager',
       '6 AI agents included — guest, maintenance, cleaning, revenue, owner relations, lead qualification',
       'Staff Centre included free — conversations, property portals, CRM & more',
       '3 properties included, then £12 a month for each extra property',
