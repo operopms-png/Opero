@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useFleetAccess } from '@/lib/fleet-access'
 
 export type StripGroup = { label: string; items: string[] }
-export type StripModule = 'pm' | 'estate' | 'str' | 'dev' | 'fleet' | 'hotel'
+export type StripModule = 'pm' | 'estate' | 'str' | 'dev' | 'fleet' | 'hotel' | 'community'
 
 const MODULES: { k: StripModule; n: string; href: string; c: string }[] = [
   { k: 'pm', n: 'Property Management', href: '/pm', c: '#2F6DB5' },
@@ -14,6 +14,7 @@ const MODULES: { k: StripModule; n: string; href: string; c: string }[] = [
   { k: 'str', n: 'Vacation Rentals', href: '/str', c: '#B7791F' },
   { k: 'dev', n: 'Developments', href: '/dev', c: '#6B46C1' },
   { k: 'hotel', n: 'Hotels', href: '/hotel', c: '#0E7490' },
+  { k: 'community', n: 'Gated Communities', href: '/community', c: '#C2410C' },
 ]
 
 const title = (s: string) => s.charAt(0) + s.slice(1).toLowerCase()
@@ -55,7 +56,7 @@ export default function ModuleTabStrip({ module, groups, current, onSelect, lock
           })}
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', maxWidth: '100%' }}>
-          {(module === 'fleet' ? [] : MODULES.filter(m => m.k !== module && (m.k !== 'hotel' || hotelAccess === 'view' || hotelAccess === 'full'))).map(m => (
+          {(module === 'fleet' ? [] : MODULES.filter(m => m.k !== module && ((m.k !== 'hotel' && m.k !== 'community') || hotelAccess === 'view' || hotelAccess === 'full'))).map(m => (
             <a key={m.k} href={m.href} style={{ flex: '0 0 auto', padding: '5px 10px', borderRadius: 8, fontSize: 12, textDecoration: 'none', color: m.c, border: `1px solid ${m.c}`, background: '#fff' }}>{m.n}</a>
           ))}
         </div>
