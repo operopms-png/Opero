@@ -45,6 +45,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/hr-documents': 'hr',
   '/staff-centre/services-pack': 'marketing',
   '/staff-centre/packs': 'marketing',
+  '/staff-centre/whatsapp': 'marketing',
   '/staff-centre/ai-command-centre': 'ai',
   '/staff-centre/ai-approvals': 'ai',
   '/staff-centre/invoices': 'invoices',

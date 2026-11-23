@@ -81,6 +81,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     r.text = await queueNoticeFromReply(c, r.text)
     r.text = await queuePackFromReply(c, r.text)
     r.text = await addPackPhotosFromReply(c, r.text)
+    r.text = await queueWhatsAppFromReply(c, r.text)
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
@@ -163,6 +164,20 @@ async function addPackPhotosFromReply(c: NonNullable<Awaited<ReturnType<typeof g
     if (!r.ok) return clean + `\n\n(I could not add the photos: ${r.error})`
     return clean + `\n\nAdded ${r.summary}. Check them in Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder, where you can remove any photo with the cross.`
   } catch (e: any) { return clean + `\n\n(I could not add the photos: ${e?.message || 'something went wrong'})` }
+}
+
+// If the AI added the [[WHATSAPP_SEND …]] line, queue the WhatsApp message for approval (nothing is sent until a person approves it in AI Approvals).
+async function queueWhatsAppFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
+  const m = text.match(/\[\[WHATSAPP_SEND((?:"[^"]*"|[^\]"])*)\]\]/)
+  if (!m) return text
+  const clean = text.replace(/\s*\[\[WHATSAPP_SEND(?:"[^"]*"|[^\]"])*\]\]\s*/g, '\n').trim()
+  const arg = (k: string) => (m[1].match(new RegExp('(?:^|\\s)' + k + '=(?:"([^"]*)"|([^\\s\\]]+))')) || []).slice(1).find(Boolean) || ''
+  try {
+    const { proposeWhatsApp } = await import('@/lib/ai-whatsapp')
+    const r = await proposeWhatsApp(c, { to: arg('to'), text: arg('text'), agentKey: 'ask_ai', via: 'in Ask AI' })
+    if (!r.ok) return clean + `\n\n(I could not queue the WhatsApp message: ${r.error})`
+    return clean + `\n\nQueued: ${r.summary}. It is waiting in Staff Centre → AI Approvals, where you can edit the wording. It is only sent when you press Approve & send.`
+  } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
 }
 
 // If the AI added the [[POST_NOTICE …]] line, queue the building notice for approval (nothing is posted or emailed until a person approves it).

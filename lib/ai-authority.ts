@@ -10,7 +10,7 @@ const db = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 export type Mode = 'auto' | 'approval' | 'never'
 
 // Always wait for a person. Cannot be switched to automatic.
-export const LOCKED_TYPES: Record<string, string> = { lease_update: 'Changes to a lease or tenancy are a legal commitment', marketing_list: 'Emailing your whole mailing list always waits for a person to approve it', partner_investment: 'A partner\'s amount invested is a money record, so a person always approves it', building_notice: 'A building notice goes out to tenants and owners, so a person always approves it', investor_pack: 'An investor pack shows figures an investor relies on, so a person always checks and approves it' }
+export const LOCKED_TYPES: Record<string, string> = { lease_update: 'Changes to a lease or tenancy are a legal commitment', marketing_list: 'Emailing your whole mailing list always waits for a person to approve it', partner_investment: 'A partner\'s amount invested is a money record, so a person always approves it', building_notice: 'A building notice goes out to tenants and owners, so a person always approves it', investor_pack: 'An investor pack shows figures an investor relies on, so a person always checks and approves it', whatsapp_send: 'A WhatsApp message goes out from your own number, so a person always reads and approves it' }
 export const LOCKED_AGENTS: Record<string, string> = {
   pm_renewals: 'Renewal offers are a legal commitment',
   doc_reader: 'Changes to records from documents are checked by a person',

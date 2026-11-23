@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-23', title: 'WhatsApp mirror', text: 'Marketing has a new WhatsApp tab that mirrors a linked spare WhatsApp number so admins and co-founders can read and send, and Ava can prepare messages that wait in AI Approvals until you approve them.' },
   { date: '2026-11-23', title: 'Attach photos in Ask AI and add them to investor packs', text: 'Admins and co-founders can press Attach in Ask AI, choose photos and ask Novourq Cloud AI to add them to the car or property section of one or more investor packs; they go in straight away and can be removed in Pack Builder.' },
   { date: '2026-11-23', title: 'Ask Ava to create an investor pack link', text: 'Admins and co-founders can ask Novourq Cloud AI or Novourq Voice to find an investor pack and create its link; it waits in AI Approvals and goes live only when you approve it.' },
   { date: '2026-11-23', title: 'Pack Builder and Investment Packs', text: 'Marketing has a new Pack Builder tab to build an investment pack with photos, send the investor one private link and move it through stages, and the Dashboard has an Investment Packs box showing where each pack has got to.' },

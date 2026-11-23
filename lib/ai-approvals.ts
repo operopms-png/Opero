@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'building_notice' | 'social_post' | 'video_brief' | 'investor_pack'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'building_notice' | 'social_post' | 'video_brief' | 'investor_pack' | 'whatsapp_send'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -225,6 +225,15 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Partner not found for this account.' }
     return { success: true }
+  }
+
+  if (action.action_type === 'whatsapp_send') {
+    // Sends the approved (and possibly edited) text through the company's own linked WhatsApp number.
+    const to = String(p.jid || p.phone || '')
+    if (!to) return { error: 'The recipient is missing.' }
+    const { sendWhatsApp } = await import('./whatsapp')
+    const r = await sendWhatsApp(action.user_id, { to, text: body, by: 'Novourq Cloud AI (approved)' })
+    return r.ok ? { success: true } : { error: r.error }
   }
 
   if (action.action_type === 'investor_pack') {
