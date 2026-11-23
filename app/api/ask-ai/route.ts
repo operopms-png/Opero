@@ -76,6 +76,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     if (!r.text) return { error: r.error || 'The AI couldn’t answer' }
     r.text = await queueMarketingFromReply(c, r.text)
     r.text = await queuePartnerFromReply(c, r.text)
+    r.text = await queueNoticeFromReply(c, r.text)
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
@@ -128,5 +129,19 @@ async function queuePartnerFromReply(c: NonNullable<Awaited<ReturnType<typeof ge
     const r = await proposePartnerInvestment(c, { partner: arg('partner'), amount: arg('amount'), currency: arg('currency'), agentKey: 'ask_ai', via: 'in Ask AI' })
     if (!r.ok) return clean + `\n\n(I could not update it: ${r.error})`
     return clean + `\n\nSaved: ${r.summary}. Check it on the partner's card in Staff Centre → Partners & Investors → Partners.`
+  } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
+}
+
+// If the AI added the [[POST_NOTICE …]] line, queue the building notice for approval (nothing is posted or emailed until a person approves it).
+async function queueNoticeFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
+  const m = text.match(/\[\[POST_NOTICE((?:"[^"]*"|[^\]"])*)\]\]/)
+  if (!m) return text
+  const clean = text.replace(/\s*\[\[POST_NOTICE(?:"[^"]*"|[^\]"])*\]\]\s*/g, '\n').trim()
+  const arg = (k: string) => (m[1].match(new RegExp('(?:^|\\s)' + k + '=(?:"([^"]*)"|([^\\s\\]]+))')) || []).slice(1).find(Boolean) || ''
+  try {
+    const { proposeBuildingNotice } = await import('@/lib/ai-building-notice')
+    const r = await proposeBuildingNotice(c, { title: arg('title'), body: arg('body'), homes: arg('homes'), building: arg('building'), who: arg('who'), email: arg('email') || 'yes', agentKey: 'ask_ai', via: 'in Ask AI' })
+    if (!r.ok) return clean + `\n\n(I could not queue the notice: ${r.error})`
+    return clean + `\n\nQueued: ${r.summary}. It is waiting in Staff Centre → AI Approvals and goes out when you approve it.`
   } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
 }
