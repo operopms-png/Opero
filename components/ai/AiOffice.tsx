@@ -10,15 +10,15 @@ const BASE = '/staff-centre/ai-command-centre'
 type Item = { at: string; agent: string; text: string }
 type Data = { items: Item[]; waiting: Item[]; done30: number; agentsOn: number; agentsTotal: number }
 
-type Desk = { k: string; n: string; r: string; sk: number; hair: number; x: number; z: number; match: (a: string) => boolean }
+type Desk = { f?: boolean; k: string; n: string; r: string; sk: number; hair: number; x: number; z: number; match: (a: string) => boolean }
 const DESKS: Desk[] = [
-  { k: 'ava', n: 'Ava', r: 'Chief assistant', sk: 0xb98568, hair: 0x1b1512, x: -3.6, z: -1.6, match: a => /^(chief|onboarding|ops_intel|goal|meetings|templates|building)/.test(a) },
-  { k: 'pm', n: 'Property management', r: 'Tenancies, repairs, compliance', sk: 0x8a5a40, hair: 0x120d0a, x: -1.2, z: -1.6, match: a => /^(pm_|rent_match|doc_|maint|weekly|tenant)/.test(a) },
-  { k: 'vr', n: 'Vacation rentals', r: 'Guests, cleaning, pricing', sk: 0x5e3b2c, hair: 0x0c0907, x: 1.2, z: -1.6, match: a => /^(guest|cleaning|maintenance|revenue|owner|leads)/.test(a) },
-  { k: 'ea', n: 'Estate agency and sales', r: 'Viewings, listings, follow-ups', sk: 0xd7a98a, hair: 0x3a2417, x: 3.6, z: -1.6, match: a => /^(ea_|sales)/.test(a) },
+  { f: true, k: 'ava', n: 'Ava', r: 'Chief assistant', sk: 0xb98568, hair: 0x1b1512, x: -3.6, z: -1.6, match: a => /^(chief|onboarding|ops_intel|goal|meetings|templates|building)/.test(a) },
+  { f: true, k: 'pm', n: 'Property management', r: 'Tenancies, repairs, compliance', sk: 0x8a5a40, hair: 0x120d0a, x: -1.2, z: -1.6, match: a => /^(pm_|rent_match|doc_|maint|weekly|tenant)/.test(a) },
+  { f: true, k: 'vr', n: 'Vacation rentals', r: 'Guests, cleaning, pricing', sk: 0x5e3b2c, hair: 0x0c0907, x: 1.2, z: -1.6, match: a => /^(guest|cleaning|maintenance|revenue|owner|leads)/.test(a) },
+  { f: true, k: 'ea', n: 'Estate agency and sales', r: 'Viewings, listings, follow-ups', sk: 0xd7a98a, hair: 0x3a2417, x: 3.6, z: -1.6, match: a => /^(ea_|sales)/.test(a) },
   { k: 'inv', n: 'Investments', r: 'Deals, portfolio, forecasts', sk: 0xe0b894, hair: 0x15110e, x: -3.6, z: 2.4, match: a => /^(market|portfolio|deal)/.test(a) },
   { k: 'fin', n: 'Finance', r: 'Cash flow, month-end, checks', sk: 0x7a4b33, hair: 0x0d0a08, x: -1.2, z: 2.4, match: a => /^(accounting|unusual|cashflow)/.test(a) },
-  { k: 'mkt', n: 'Marketing', r: 'Social posts', sk: 0x8f5d44, hair: 0x120d0a, x: 1.2, z: 2.4, match: a => /^marketing/.test(a) },
+  { f: true, k: 'mkt', n: 'Marketing', r: 'Social posts', sk: 0x8f5d44, hair: 0x120d0a, x: 1.2, z: 2.4, match: a => /^marketing/.test(a) },
   { k: 'dev', n: 'Developments', r: 'Feasibility, investor updates', sk: 0xc79574, hair: 0x1b1512, x: 3.6, z: 2.4, match: a => /^dev_/.test(a) },
 ]
 const SHORT: Record<string, string> = { pm: 'Property', vr: 'Rentals', ea: 'Agency' }
@@ -80,16 +80,26 @@ export default function AiOffice() {
       ;[-.9, .9].forEach(lx2 => { const l = add(new THREE.Mesh(new THREE.BoxGeometry(.08, .76, .9), M(0x2a3a6b)), g); l.position.set(lx2, .38, 1); l.castShadow = true })
       const mon = add(new THREE.Mesh(new THREE.BoxGeometry(.95, .58, .05), M(0x0a1228)), g); mon.position.set(0, 1.3, 1.18); mon.castShadow = true
       const sm = new THREE.MeshBasicMaterial({ map: screenTex(i + 1) }); disposables.push(sm)
-      const scr = add(new THREE.Mesh(new THREE.PlaneGeometry(.88, .52), sm), g); scr.position.set(0, 1.3, 1.21)
+      const scr = add(new THREE.Mesh(new THREE.PlaneGeometry(.88, .52), sm), g); scr.position.set(0, 1.3, 1.15); scr.rotation.y = P
       const st = add(new THREE.Mesh(new THREE.BoxGeometry(.08, .3, .06), M(0x2a3a6b)), g); st.position.set(0, .97, 1.17)
       const ch = add(new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .08, 24), M(0x2a3a6b)), g); ch.position.set(0, .5, -.1); ch.castShadow = true
       const cb = add(new THREE.Mesh(new THREE.BoxGeometry(.6, .7, .08), M(0x2a3a6b)), g); cb.position.set(0, .9, -.45); cb.castShadow = true
-      const body = add(new THREE.Mesh(new THREE.CylinderGeometry(.27, .31, .7, 24), M(0x14234a, { roughness: .8 })), g); body.position.set(0, 1.02, .05); body.castShadow = true
-      const arms = [-1, 1].map(s => { const m = add(new THREE.Mesh(new THREE.CylinderGeometry(.075, .075, .62, 12), M(0x14234a)), g); m.position.set(s * .36, .98, .28); m.rotation.x = 1.15; m.castShadow = true; return m })
+      const top = d.f ? 0x2F6DB5 : 0x14234a
+      const body = add(new THREE.Mesh(new THREE.CylinderGeometry(d.f ? .24 : .27, d.f ? .29 : .31, .7, 24), M(top, { roughness: .8 })), g); body.position.set(0, 1.02, .05); body.castShadow = true
+      const arms = [-1, 1].map(s => { const m = add(new THREE.Mesh(new THREE.CylinderGeometry(d.f ? .06 : .075, d.f ? .06 : .075, .62, 12), M(top)), g); m.position.set(s * (d.f ? .32 : .36), .98, .28); m.rotation.x = 1.15; m.castShadow = true; return m })
       const neck = add(new THREE.Mesh(new THREE.CylinderGeometry(.09, .1, .12, 12), M(d.sk)), g); neck.position.set(0, 1.42, .05)
       const head = add(new THREE.Mesh(new THREE.SphereGeometry(.24, 32, 24), M(d.sk, { roughness: .55 })), g); head.position.set(0, 1.62, .06); head.castShadow = true
       const hair = add(new THREE.Mesh(new THREE.SphereGeometry(.255, 32, 24, 0, P * 2, 0, P * .52), M(d.hair, { roughness: .9 })), g); hair.position.set(0, 1.64, .04); hair.rotation.x = -.25
       ;[-1, 1].forEach(s => { const e = add(new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), M(0x111111)), g); e.position.set(s * .085, 1.64, .28) })
+      if (d.f) {
+        const back = add(new THREE.Mesh(new THREE.SphereGeometry(.27, 24, 18), M(d.hair, { roughness: .9 })), g); back.scale.set(1, 1.75, .8); back.position.set(0, 1.4, -.07)
+        ;[-1, 1].forEach(s => {
+          const lock = add(new THREE.Mesh(new THREE.CylinderGeometry(.055, .045, .5, 12), M(d.hair, { roughness: .9 })), g); lock.position.set(s * .225, 1.42, .08)
+          const lash = add(new THREE.Mesh(new THREE.BoxGeometry(.075, .012, .012), M(0x0a0a0a)), g); lash.position.set(s * .085, 1.675, .272)
+          const ear = add(new THREE.Mesh(new THREE.SphereGeometry(.022, 10, 8), M(0xe8c15a, { metalness: .6, roughness: .3 })), g); ear.position.set(s * .235, 1.55, .06)
+        })
+        const lips = add(new THREE.Mesh(new THREE.SphereGeometry(.04, 12, 8), M(0xc2415a, { roughness: .4 })), g); lips.scale.set(1.5, .5, .5); lips.position.set(0, 1.545, .228)
+      }
       figs.push({ g, head, arms, i, d, mon: sm })
     })
     box(2.6, .03, 2.6, M(0xB7C6E6, { roughness: .95 }), 7, .02, -1.5, false)
