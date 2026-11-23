@@ -14,6 +14,7 @@ const card: React.CSSProperties = { background: '#fff', border: '1px solid #D9E2
 // Pages grouped like the other hubs. Each has a plain description.
 const GROUPS: { name: string; note: string; pages: { href: string; label: string; text: string; badge?: 'approvals' | 'alerts' }[] }[] = [
   { name: 'Control', note: 'Decide and keep watch', pages: [
+    { href: BASE + '/office', label: 'AI Office', text: 'See your AI team at their desks and what each is waiting on.' },
     { href: BASE + '/approvals', label: 'Approvals', text: 'Everything the AI drafted that waits for your yes.', badge: 'approvals' },
     { href: BASE + '/alerts', label: 'Alerts', text: 'Things that need a look, such as risks and failures.', badge: 'alerts' },
   ] },

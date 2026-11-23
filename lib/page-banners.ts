@@ -63,6 +63,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/ai-command-centre/snapshot': { title: 'Business snapshot', text: 'A one-page picture of your business and what Novourq Cloud AI is doing for it.' },
   '/staff-centre/ai-command-centre/agent-pool': { title: 'Skills', text: 'Everything Novourq Cloud AI can do for you, and which skills are switched on.' },
   '/staff-centre/ai-command-centre/alerts': { title: 'Alerts', text: 'Everything Novourq Cloud AI needs a person to know about. Use Post an alert to flag something yourself and it shows in the bell.' },
+  '/staff-centre/ai-command-centre/office': { title: 'AI Office', text: 'A 3D office where each desk is one part of your AI team. The bubble shows what it last did and the orange badge is what waits for your yes. Drag to look around, tap a desk for details.' },
   '/staff-centre/ai-command-centre/morning': { title: 'Morning brief', text: 'One page for your morning: what needs your yes (approve here), what went out in the last 24 hours, what came in and what else needs attention.' },
   '/staff-centre/ai-command-centre/approvals': { title: 'Approvals', text: 'Anything Novourq Cloud AI has drafted that is waiting for you, plus what it has already sent automatically.' },
   '/invest': { title: 'Deal Analyser', text: 'Work out whether a deal stacks up. For a purchase in Jamaica a charges card shows the purchaser and vendor costs, with every rate editable.' },
