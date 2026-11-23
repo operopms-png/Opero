@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-23', title: 'New guides and videos', text: 'Staff Training and the Help Centre now have pictures and steps for Hotels, Gated Communities, the AI Office and building notices, plus four new videos including Notices and texts.' },
   { date: '2026-11-23', title: 'Hotels and Gated Communities', text: 'Real Estate Intelligence now has Hotels and Gated Communities buttons, each with its own dashboard for rooms, reservations, guests, units, residents, visitors, repairs and complaints.' },
   { date: '2026-11-23', title: 'Ask Ava to write a building notice', text: 'Ava and Novourq Voice can now draft a building notice when you ask; it waits in AI Approvals and is posted and emailed when you approve it.' },
   { date: '2026-11-23', title: 'Building notices', text: 'Staff can post a notice for chosen homes from Maintenance Board, Building notices, and tenants, landlords and partners see it at the top of their Maintenance tab and get an email.' },
