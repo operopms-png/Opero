@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-23', title: 'Ask Ava to write a building notice', text: 'Ava and Novourq Voice can now draft a building notice when you ask; it waits in AI Approvals and is posted and emailed when you approve it.' },
   { date: '2026-11-23', title: 'Building notices', text: 'Staff can post a notice for chosen homes from Maintenance Board, Building notices, and tenants, landlords and partners see it at the top of their Maintenance tab and get an email.' },
   { date: '2026-11-22', title: 'AI video briefs', text: 'The AI Marketing Agent now writes a daily video brief with a script, a scene prompt for your video tool and a caption; approve it to get a task.' },
   { date: '2026-11-22', title: 'AI Sales Agent, Morning brief and Transaction Watch', text: 'Novourq Cloud AI can now draft follow-ups for every open enquiry, show everything that needs your yes on one Morning brief page, and flag unusual bank lines.' },

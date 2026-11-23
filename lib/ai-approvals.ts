@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'social_post' | 'video_brief'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'building_notice' | 'social_post' | 'video_brief'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -224,6 +224,21 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     const { data, error } = await getServiceClient().from('owner_profiles').update({ invested, currency }).eq('id', p.owner_id).eq('business_id', action.user_id).select('id')
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Partner not found for this account.' }
+    return { success: true }
+  }
+
+  if (action.action_type === 'building_notice') {
+    // Posts the notice for the chosen homes (re-checked against this account) and emails the people it is for.
+    const ids: string[] = Array.isArray(p.property_ids) ? p.property_ids : []
+    const { data: ok } = ids.length ? await getServiceClient().from('pm_properties').select('id').in('id', ids).eq('user_id', action.user_id) : { data: [] as any[] }
+    const valid = (ok ?? []).map((x: any) => x.id)
+    if (!valid.length || !p.title || !p.body) return { error: 'The homes or the notice text are missing.' }
+    const { data: n, error } = await getServiceClient().from('building_notices').insert({
+      business_id: action.user_id, title: String(p.title).slice(0, 140), body: String(p.body).slice(0, 4000), building_name: p.building_name ?? null, property_ids: valid,
+      for_tenants: p.for_tenants !== false, for_landlords: p.for_landlords !== false, for_partners: p.for_partners !== false, created_by_name: p.created_by_name ?? 'Novourq Cloud AI',
+    }).select('*').single()
+    if (error) return { error: error.message }
+    if (p.send_email !== false) { const { emailNotice } = await import('./building-notices'); await emailNotice(n).catch(() => 0) }
     return { success: true }
   }
 
