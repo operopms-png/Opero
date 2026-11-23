@@ -28,11 +28,13 @@ const TASKS: { task: string; targets: Target[]; href?: string }[] = [
   { task: 'Add a tenant', targets: [pm('Tenants'), ea('Tenants'), community('Homeowner & Resident Management')] },
   { task: 'Check a tenant’s ID and income', targets: [pm('Tenant Checks'), ea('Tenant Checks')] },
   { task: 'Add a landlord', targets: [pm('Landlords'), ea('Landlords')] },
-  { task: 'Add a property', targets: [pm('Properties'), ea('Properties'), str('Properties'), hotel('Room Inventory'), community('Property & Unit Management')] },
+  { task: 'Add a property', targets: [pm('Properties'), ea('Properties'), str('Properties'), dev('Projects'), hotel('Room Inventory'), community('Property & Unit Management')] },
   { task: 'Add a guest booking', targets: [str('Bookings'), hotel('Reservations & Bookings')] },
   { task: 'Chase rent', targets: [pm('Rent'), ea('Rent Collection')] },
   { task: 'Log a repair', targets: [pm('Maintenance'), ea('Maintenance'), str('Maintenance'), community('Maintenance & Repairs')] },
   { task: 'Book a viewing', targets: [pm('Viewings'), ea('Viewings')] },
+  { task: 'Start a development project', targets: [dev('Projects')] },
+  { task: 'Track a project budget', targets: [dev('Budget')] },
   { task: 'Check a guest in or out', targets: [hotel('Reservations & Bookings')] },
   { task: 'Log a gate visitor', targets: [community('Visitor Management')] },
   { task: 'Send a landlord or tenant their link', targets: [], href: '/staff-centre/documents' },
@@ -266,7 +268,7 @@ export default function PropertyHub() {
         })()}
         <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '16px 20px', marginBottom: 18, boxShadow: shadow }}>
           <b style={{ display: 'block', color: C.ink, fontSize: 16, fontWeight: 700 }}>Where do I go?</b>
-          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick a job, then the area it is for: {(['pm', 'ea', 'str', 'hotel', 'community'] as Mod[]).filter(has).map(m => AREA[m]).join(', ')}. Hover over an area to see what it means.</p>
+          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick a job, then the area it is for: {(['pm', 'ea', 'str', 'dev', 'hotel', 'community'] as Mod[]).filter(has).map(m => AREA[m]).join(', ')}. Hover over an area to see what it means.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 10 }}>
             {TASKS.map(t => {
               const ts = t.targets.filter(x => has(x.mod))
