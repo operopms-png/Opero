@@ -48,7 +48,7 @@ export default function AiOffice() {
     try { ren = new THREE.WebGLRenderer({ antialias: true }) } catch { queueMicrotask(() => setNoGl(true)); return }
     const P = Math.PI
     const disposables: { dispose: () => void }[] = []
-    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b1430); scene.fog = new THREE.Fog(0x0b1430, 16, 34)
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0xEEF3FB); scene.fog = new THREE.Fog(0xEEF3FB, 16, 34)
     const cam = new THREE.PerspectiveCamera(42, 1, .1, 100)
     ren.setPixelRatio(Math.min(window.devicePixelRatio, 2)); ren.outputColorSpace = THREE.SRGBColorSpace; ren.shadowMap.enabled = true; ren.shadowMap.type = THREE.PCFSoftShadowMap
     stage.insertBefore(ren.domElement, stage.firstChild)
@@ -60,13 +60,13 @@ export default function AiOffice() {
     const box = (w: number, h: number, d: number, m: THREE.Material, x: number, y: number, z: number, cast = true) => { const b = add(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m)); b.position.set(x, y, z); b.castShadow = cast; b.receiveShadow = true; return b }
     const tex = (c: HTMLCanvasElement) => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; disposables.push(t); return t }
 
-    const floor = add(new THREE.Mesh(new THREE.PlaneGeometry(30, 24), M(0x101b3c, { roughness: .9 }))); floor.rotation.x = -P / 2; floor.receiveShadow = true
-    box(12.4, .04, 9.2, M(0x17264f, { roughness: .95 }), 0, .02, .4, false)
-    const grid = new THREE.GridHelper(30, 30, 0x1b2a56, 0x16234a); grid.position.y = .01; scene.add(grid)
-    box(14, 4.2, .3, M(0x0d1736), 0, 2.1, -5.4, false)
+    const floor = add(new THREE.Mesh(new THREE.PlaneGeometry(30, 24), M(0xE3EAF6, { roughness: .9 }))); floor.rotation.x = -P / 2; floor.receiveShadow = true
+    box(12.4, .04, 9.2, M(0xC9D6EE, { roughness: .95 }), 0, .02, .4, false)
+    const grid = new THREE.GridHelper(30, 30, 0xD3DDEE, 0xDCE5F3); grid.position.y = .01; scene.add(grid)
+    box(14, 4.2, .3, M(0xD5DFF1), 0, 2.1, -5.4, false)
     const lc = document.createElement('canvas'); lc.width = 1024; lc.height = 256; const lx = lc.getContext('2d')!
-    lx.fillStyle = '#0d1736'; lx.fillRect(0, 0, 1024, 256); lx.fillStyle = '#eaf0ff'; lx.font = '700 96px Inter,Arial,sans-serif'; lx.textAlign = 'center'; lx.textBaseline = 'middle'
-    lx.fillText('N O V O U R Q', 512, 112); lx.fillStyle = '#5b9bff'; lx.font = '500 34px Inter,Arial,sans-serif'; lx.fillText('AI OFFICE', 512, 196)
+    lx.fillStyle = '#D5DFF1'; lx.fillRect(0, 0, 1024, 256); lx.fillStyle = '#1B2F6E'; lx.font = '700 96px Inter,Arial,sans-serif'; lx.textAlign = 'center'; lx.textBaseline = 'middle'
+    lx.fillText('N O V O U R Q', 512, 112); lx.fillStyle = '#2F6DB5'; lx.font = '500 34px Inter,Arial,sans-serif'; lx.fillText('AI OFFICE', 512, 196)
     const lm = new THREE.MeshBasicMaterial({ map: tex(lc) }); disposables.push(lm)
     const logo = add(new THREE.Mesh(new THREE.PlaneGeometry(8, 2), lm)); logo.position.set(0, 2.5, -5.22)
     const screenTex = (seed: number) => { const c = document.createElement('canvas'); c.width = 256; c.height = 160; const x = c.getContext('2d')!; x.fillStyle = '#0a1a3d'; x.fillRect(0, 0, 256, 160)
@@ -92,7 +92,7 @@ export default function AiOffice() {
       ;[-1, 1].forEach(s => { const e = add(new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), M(0x111111)), g); e.position.set(s * .085, 1.64, .28) })
       figs.push({ g, head, arms, i, d, mon: sm })
     })
-    box(2.6, .03, 2.6, M(0x3a2c78, { roughness: .95 }), 7, .02, -1.5, false)
+    box(2.6, .03, 2.6, M(0xB7C6E6, { roughness: .95 }), 7, .02, -1.5, false)
     const tb = add(new THREE.Mesh(new THREE.CylinderGeometry(.9, .9, .08, 32), M(0xe9eef9, { roughness: .5 }))); tb.position.set(7, .78, -1.5); tb.castShadow = tb.receiveShadow = true
     const tl = add(new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, .76, 16), M(0x2a3a6b))); tl.position.set(7, .38, -1.5)
     ;[[-6.2, -4.4], [6.4, -4.4], [6.4, 4.2]].forEach(([x, z]) => { const p = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .18, .4, 16), M(0x2a3a6b))); p.position.set(x, .2, z); const l = add(new THREE.Mesh(new THREE.IcosahedronGeometry(.42, 1), M(0x2f8f6b, { roughness: .9 }))); l.position.set(x, .8, z); l.castShadow = true })
@@ -137,39 +137,39 @@ export default function AiOffice() {
   return (
     <div className="aio">
       <style>{`
-        .aio{--bg:#070d1f;--panel:#0f1a38;--line:#22305c;--fg:#eaf0ff;--mut:#93a3cc;--acc:#5b9bff;--ok:#43d6a0;--warn:#ffb454;background:var(--bg);color:var(--fg);min-height:calc(100vh - var(--hub-h,0px));padding:18px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));box-sizing:border-box}
+        .aio{--bg:#F5F7FB;--panel:#fff;--line:#D9E2F0;--fg:#1B2F6E;--mut:#667085;--acc:#2F6DB5;--ok:#12B76A;--warn:#F79009;--soft:#EEF3FB;background:var(--bg);color:var(--fg);min-height:calc(100vh - var(--hub-h,0px));padding:18px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));box-sizing:border-box}
         .aio *{box-sizing:border-box}
         .aio-wrap{max-width:1180px;margin:0 auto}
         .aio h1{font-size:22px;margin:0 0 4px;font-weight:700}
         .aio .sub{font-size:13.5px;color:var(--mut);margin:0 0 14px;max-width:70ch}
         .aio-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:14px}
         @media(max-width:900px){.aio-grid{grid-template-columns:minmax(0,1fr)}}
-        .aio-stage{position:relative;height:min(64vh,560px);min-height:360px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0b1430;touch-action:none;cursor:grab}
+        .aio-stage{position:relative;height:min(64vh,560px);min-height:360px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--soft);touch-action:none;cursor:grab}
         .aio-stage canvas{display:block;width:100%;height:100%}
         .aio-hud{position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none;z-index:2000}
-        .aio-chip{background:rgba(10,18,40,.82);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px}
+        .aio-chip{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px}
         .aio-chip b{color:var(--warn)}
         .aio-hint{position:absolute;left:12px;bottom:10px;font-size:11.5px;color:var(--mut);pointer-events:none;z-index:2000}
         .aio-nt{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:0;background:none;padding:0;font-family:inherit;color:var(--fg)}
-        .aio-av{position:relative;width:34px;height:34px;border-radius:50%;border:2px solid var(--acc);background:#14234a;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+        .aio-av{position:relative;width:34px;height:34px;border-radius:50%;border:2px solid var(--acc);background:#fff;color:var(--fg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
         .aio-nt[data-on="1"] .aio-av,.aio-nt.sel .aio-av{border-color:var(--ok);box-shadow:0 0 0 4px rgba(67,214,160,.25)}
         .aio-badge{position:absolute;top:-6px;right:-8px;min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:#2a1a00;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
-        .aio-nm{font-size:11px;font-weight:600;background:rgba(10,18,40,.85);border-radius:999px;padding:1px 8px;white-space:nowrap}
-        .aio-bub{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:max-content;max-width:170px;background:#fff;color:#0b1430;border-radius:10px;padding:6px 9px;font-size:11.5px;line-height:1.35;text-align:left;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none}
+        .aio-nm{font-size:11px;font-weight:600;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:999px;padding:1px 8px;white-space:nowrap}
+        .aio-bub{position:absolute;bottom:62px;left:50%;transform:translateX(-50%);width:max-content;max-width:170px;background:var(--fg);color:#fff;border-radius:10px;padding:6px 9px;font-size:11.5px;line-height:1.35;text-align:left;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none}
         .aio-nt[data-on="1"] .aio-bub,.aio-nt.sel .aio-bub{opacity:1}
         .aio-side{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
         .aio-side h2{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:0 0 10px;font-weight:600}
         .aio-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .aio-st{background:#0b1430;border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+        .aio-st{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
         .aio-st b{display:block;font-size:20px}.aio-st span{font-size:11.5px;color:var(--mut)}
         .aio-who{display:flex;gap:10px;align-items:center;margin-bottom:8px}
         .aio-who .aio-av{width:44px;height:44px;font-size:14px;flex:none}
         .aio-who b{display:block;font-size:15px}.aio-who span{font-size:12.5px;color:var(--mut)}
         .aio-feed{list-style:none;margin:8px 0 12px;padding:0;display:flex;flex-direction:column;gap:7px}
-        .aio-feed li{font-size:13px;line-height:1.4;background:#0b1430;border:1px solid var(--line);border-radius:9px;padding:8px 10px;overflow-wrap:anywhere}
-        .aio-feed li.w{border-color:#5b4720}
+        .aio-feed li{font-size:13px;line-height:1.4;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;overflow-wrap:anywhere}
+        .aio-feed li.w{border-color:#F5C77E}
         .aio-feed time{display:block;font-size:11px;color:var(--mut);margin-top:2px}
-        .aio-act{display:block;text-align:center;background:var(--acc);color:#04122e;border-radius:9px;padding:10px;font-weight:700;font-size:13.5px;text-decoration:none;margin-top:6px}
+        .aio-act{display:block;text-align:center;background:var(--acc);color:#fff;border-radius:9px;padding:10px;font-weight:700;font-size:13.5px;text-decoration:none;margin-top:6px}
         .aio-empty{font-size:13px;color:var(--mut);padding:6px 0 12px}
         .aio-note{font-size:12px;color:var(--mut);margin-top:12px;line-height:1.5}
       `}</style>
@@ -207,7 +207,7 @@ export default function AiOffice() {
               <Link className="aio-act" href={dd.waiting.length ? BASE + '/approvals' : BASE + '/activity'}>{dd.waiting.length ? 'Open approvals' : 'Open activity log'}</Link>
             </>}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-              {DESKS.map(x => <button key={x.k} onClick={() => setSel(x.k)} style={{ background: sel === x.k ? '#1d2f63' : '#0b1430', color: 'inherit', border: '1px solid var(--line)', borderRadius: 999, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{x.n}{byDesk[x.k].waiting.length ? ` (${byDesk[x.k].waiting.length})` : ''}</button>)}
+              {DESKS.map(x => <button key={x.k} onClick={() => setSel(x.k)} style={{ background: sel === x.k ? '#E8EDF8' : '#fff', color: 'inherit', border: '1px solid var(--line)', borderRadius: 999, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{x.n}{byDesk[x.k].waiting.length ? ` (${byDesk[x.k].waiting.length})` : ''}</button>)}
             </div>
             <p className="aio-note">Refreshes every minute from your own AI activity log and approvals. Desks only show work your own company AI has actually done.</p>
           </aside>
