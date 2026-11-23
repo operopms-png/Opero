@@ -317,7 +317,7 @@ export default function PropertyHub() {
         </div>
         <GlanceTiles show={{ str: has('str'), pm: has('pm'), ea: has('ea'), dev: has('dev') }} />
       </div>
-      <style>{`@media (max-width: 760px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; overflow-x: auto; -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); padding-right: 36px !important } .prop-hint{ display: block !important } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
+      <style>{`@media (max-width: 760px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; flex-wrap: wrap !important; gap: 6px !important } .prop-cats button{ flex: 1 1 calc(50% - 6px); min-width: 0 } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
     </div>
   )
 }
