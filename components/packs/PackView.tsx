@@ -1,7 +1,7 @@
 'use client'
 // The pack as an investor sees it. Used for the live preview in Pack Builder and on the public page (/p/…).
 import React, { useState } from 'react'
-import { calcPack, gbp, jmd, type PackData } from '@/lib/pack-calc'
+import { calcExample, calcPack, gbp, jmd, type PackData } from '@/lib/pack-calc'
 
 const NAVY = '#14264A'
 const INK = '#101828', MUTED = '#667085', LINE = '#E4E7EC'
@@ -45,9 +45,48 @@ function Gallery({ photos, credit }: { photos: string[]; credit?: string }) {
   </div>
 }
 
+const RATING: Record<string, { bg: string; fg: string }> = { Strong: { bg: '#E3F5EC', fg: '#067647' }, Tight: { bg: '#FFF4DE', fg: '#93560B' }, 'Walk away': { bg: '#FDECEC', fg: '#B42318' } }
+
+// The worked landlord-offer example: how we decide what rent to offer a landlord, with one set of illustrative figures.
+function Example({ d, n }: { d: PackData; n: number }) {
+  const e = d.example, x = calcExample(e)
+  const tile = (label: string, value: string, sub: string, hi?: boolean) => <div style={{ flex: '1 1 130px', border: `1px solid ${hi ? NAVY : LINE}`, background: hi ? '#F0F4FB' : '#fff', borderRadius: 10, padding: '10px 12px' }}>
+    <div style={{ fontSize: 12, color: MUTED }}>{label}</div><div style={{ fontSize: 20, fontWeight: 600 }}>{value}</div><div style={{ fontSize: 11.5, color: MUTED }}>{sub}</div>
+  </div>
+  // The recommended level replaces its own row, as in the Deal Analyser.
+  const rows = [...x.rows.map(r => x.recRow && r.pct === x.recRow.pct ? x.recRow : r), ...(x.ask ? [x.ask] : [])]
+  return <div style={sec}>
+    <Heading n={n}>{e.title}</Heading>
+    <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.6, marginBottom: 12 }}>{e.intro}</div>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+      {tile('Market rent', gbp(e.market_gbp), 'What the home could let for')}
+      {tile('What the landlord really keeps', gbp(e.keeps_gbp), 'After empty months and repairs')}
+      {x.rec ? tile('Our offer', gbp(x.rec.pay), `${x.rec.l}% below market, ${e.term_years} years`, true) : tile('Our offer', 'Walk away', 'No level works', true)}
+      {tile('Most we can pay', gbp(x.maxPay), `Keeps our ${gbp(x.target)} a month profit`)}
+    </div>
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <thead><tr>{['Offer', 'Below market', 'We pay', 'Profit a month'].map((h, i) => <th key={h} style={{ textAlign: i ? 'right' : 'left', fontSize: 12, color: MUTED, fontWeight: 400, padding: '6px 0', borderBottom: `1px solid ${LINE}` }}>{h}</th>)}</tr></thead>
+      <tbody>{rows.map(r => <tr key={r.label}>
+        <td style={{ ...td, fontWeight: r.label === 'Recommended' ? 600 : 400 }}>{r.label}</td>
+        <td style={{ ...td, textAlign: 'right' }}>{r.pct}%</td>
+        <td style={{ ...td, textAlign: 'right', fontWeight: r.label === 'Recommended' ? 600 : 400 }}>{gbp(r.pay)}</td>
+        <td style={{ ...td, textAlign: 'right' }}>{gbp(r.profit)} <span style={{ display: 'inline-block', marginLeft: 6, fontSize: 11.5, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: RATING[r.rating].bg, color: RATING[r.rating].fg }}>{r.rating}</span></td>
+      </tr>)}</tbody>
+    </table>
+    <div style={{ fontSize: 12.5, color: MUTED, marginTop: 6 }}>Income {gbp(e.income_gbp)} a month, other costs {gbp(e.costs_gbp)} a month, target profit {e.target_pct}% of income. Strong means profit at least 25% above target; Tight means it meets the target by less than 25%.</div>
+    {x.rec && <div style={{ background: NAVY, color: '#fff', borderRadius: 10, padding: '14px 16px', marginTop: 14, fontSize: 14, lineHeight: 1.6 }}>
+      Chasing {gbp(e.market_gbp)}, most landlords lose a month or two a year to empty periods and repairs, so they really keep about {gbp(e.keeps_gbp)}. We pay you {gbp(x.rec.pay)} every month, guaranteed, for {e.term_years} {e.term_years === 1 ? 'year' : 'years'}, even when it is empty, and you never deal with a tenant.
+    </div>}
+    <div style={{ fontSize: 14, fontWeight: 600, margin: '14px 0 4px' }}>What the landlord gets</div>
+    <div style={{ fontSize: 14, color: MUTED, lineHeight: 1.7 }}>Same rent every month, even when it is empty<br />Fixed {e.term_years}-year term<br />No tenant-finding or chasing rent<br />Day-to-day repairs handled<br />Property returned in good condition</div>
+  </div>
+}
+
 export default function PackView({ data: d, name, company }: { data: PackData; name: string; company: string }) {
   const c = calcPack(d)
   const g = (j: number) => gbp(c.toGbp(j))
+  const full = d.kind !== 'property'
+  let n = 0 // section numbers follow what is shown
   return (
     <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 14, overflow: 'hidden', fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif", color: INK }}>
       <div style={{ background: NAVY, color: '#fff', padding: '22px' }}>
@@ -57,14 +96,19 @@ export default function PackView({ data: d, name, company }: { data: PackData; n
         <div style={{ fontSize: 13, color: '#C5CFE6', marginTop: 12 }}>{c.inv === 1 ? 'One investor' : `${c.inv} investors, equal shares`}. Rate used: J${Math.round(c.rate * 100) / 100} = £1.</div>
       </div>
 
+      {d.about && <div style={sec}>
+        <div style={{ fontSize: 12.5, color: MUTED, marginBottom: 4 }}>About us</div>
+        <div style={{ fontSize: 15, lineHeight: 1.6 }}>{d.about}</div>
+      </div>}
+
       <div style={{ ...sec, background: '#F6F8FB' }}>
         <div style={{ fontSize: 12.5, color: MUTED }}>{c.inv === 1 ? 'You put in' : 'Each investor puts in'}</div>
         <div style={{ fontSize: 34, fontWeight: 600, lineHeight: 1.2 }}>{gbp(c.eachGbp)}</div>
-        <div style={{ fontSize: 14, color: MUTED, marginTop: 6, lineHeight: 1.7 }}>Car deposit share: {jmd(c.depositEach)} ({g(c.depositEach)})<br />Property share: {gbp(c.homeEach)} ({jmd(c.homeEach * c.rate)})</div>
+        <div style={{ fontSize: 14, color: MUTED, marginTop: 6, lineHeight: 1.7 }}>{!full ? 'Upfront for the property' : <>Car deposit share: {jmd(c.depositEach)} ({g(c.depositEach)})<br />Property share</>}: {gbp(c.homeEach)} ({jmd(c.homeEach * c.rate)})</div>
       </div>
 
-      <div style={sec}>
-        <Heading n={1}>The car: {d.car.title}</Heading>
+      {full && <div style={sec}>
+        <Heading n={++n}>The car: {d.car.title}</Heading>
         <Price label="Purchase price" value={jmd(d.car.price_jmd)} sub={g(d.car.price_jmd)} side="" />
         {d.car.note && <div style={{ fontSize: 13, color: MUTED, margin: '-4px 0 12px' }}>{d.car.note}</div>}
         <Gallery photos={d.car.photos} credit={d.car.credit} />
@@ -75,10 +119,10 @@ export default function PackView({ data: d, name, company }: { data: PackData; n
           {c.inv > 1 && <Row bold k="Each investor's part" v={jmd(c.weeklyEach)} sub={g(c.weeklyEach)} />}
         </tbody></table>
         {c.depositWeeks > 0 && <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>The deposit is earned back in about {Math.round(c.depositWeeks)} weeks of car earnings, before costs.</div>}
-      </div>
+      </div>}
 
       <div style={sec}>
-        <Heading n={2}>The property: {d.home.title}</Heading>
+        <Heading n={++n}>The property: {d.home.title}</Heading>
         <Price label="Listed price" value={`${gbp(d.home.rent_gbp)} a month`} sub={jmd(c.homeJmd)} side="Rent" />
         <Gallery photos={d.home.photos} />
         {d.home.details && <div style={{ fontSize: 13.5, color: MUTED, lineHeight: 1.6, margin: '0 0 8px' }}>{d.home.details}</div>}
@@ -98,8 +142,8 @@ export default function PackView({ data: d, name, company }: { data: PackData; n
         {d.home.deposit_months > 0 && <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>The security deposit is refundable under the lease.</div>}
       </div>
 
-      {c.cover.length > 0 && <div style={sec}>
-        <Heading n={3}>Can the car pay for the property?</Heading>
+      {full && c.cover.length > 0 && <div style={sec}>
+        <Heading n={++n}>Can the car pay for the property?</Heading>
         <div style={{ fontSize: 14, color: MUTED, marginBottom: 10 }}>If the property is empty, the car income pays the rent and the car finance.</div>
         <div style={{ background: '#F6F8FB', borderRadius: 10, padding: '12px 14px', marginBottom: 8, fontSize: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ color: MUTED }}>Property rent</span><span style={{ fontWeight: 600 }}>{jmd(d.cover.rent_jmd)} a month <span style={{ color: MUTED, fontWeight: 400 }}>({g(d.cover.rent_jmd)})</span></span></div>
@@ -119,6 +163,8 @@ export default function PackView({ data: d, name, company }: { data: PackData; n
           <div style={{ fontSize: 14, color: MUTED, marginTop: 4 }}>to cover the rent and the finance.{c.inv > 1 ? ' Anything above is shared equally between the investors.' : ''}</div>
         </div>
       </div>}
+
+      {d.example.on && <Example d={d} n={++n} />}
 
       {d.footer && <div style={{ padding: '14px 22px', background: '#F6F8FB', fontSize: 12.5, color: MUTED, lineHeight: 1.6 }}>{d.footer}</div>}
     </div>

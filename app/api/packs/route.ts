@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
-import { DEFAULT_PACK, STAGES, cleanPack } from '@/lib/pack-calc'
+import { DEFAULT_PACK, DEFAULT_PROPERTY_PACK, STAGES, cleanPack } from '@/lib/pack-calc'
 
 // Staff Centre → Marketing → Pack Builder: saved investment packs, each with a stage and a private link (/p/<token>).
 //   GET                       -> { packs: [{ id, name, prepared_for, stage, active, token, opens, last_opened_at, sent_at, updated_at }], isAdmin }
 //   GET ?id=<id>              -> { pack: { …, data } }
-//   POST {action:'create', name?, from?: <pack id>}                 -> { pack }   (from copies another pack)
+//   POST {action:'create', name?, from?: <pack id>, kind?: 'property'} -> { pack }   (from copies another pack; kind property = no car)
 //   POST {action:'update', id, name?, data?}                        -> { pack }
 //   POST {action:'stage', id, stage}                                -> { pack }   (draft | sent | opened | interested | committed | funded | closed)
 //   POST {action:'active', id, active}                              -> { pack }   (pause or resume the link)
 //   POST {action:'delete', id}                                      admin only
 // Every pack belongs to one company; nobody sees another company's packs.
 const bad = (e: string, s = 400) => NextResponse.json({ error: e }, { status: s })
-const LIST = 'id,name,prepared_for,stage,active,token,opens,last_opened_at,sent_at,updated_at'
+const LIST = 'id,name,prepared_for,stage,active,token,opens,last_opened_at,sent_at,updated_at,kind:data->>kind'
 const STAGE_KEYS: string[] = STAGES.map(s => s.k)
 
 export async function GET(req: NextRequest) {
@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
   const mine = (id: any) => db.from('invest_packs').select('*').eq('id', String(id || '')).eq('business_id', biz).maybeSingle()
 
   if (b.action === 'create') {
-    let data = DEFAULT_PACK, name = String(b.name || '').trim().slice(0, 150) || 'Untitled pack'
+    // kind 'property' starts a property-only pack (no car) with the worked landlord-offer example switched on.
+    let data = b.kind === 'property' ? DEFAULT_PROPERTY_PACK : DEFAULT_PACK, name = String(b.name || '').trim().slice(0, 150) || (b.kind === 'property' ? 'Property breakdown' : 'Untitled pack')
     if (b.from) {
       const { data: src } = await mine(b.from)
       if (!src) return bad('Pack not found', 404)

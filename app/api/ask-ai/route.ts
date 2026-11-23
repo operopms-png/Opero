@@ -145,7 +145,7 @@ async function queuePackFromReply(c: NonNullable<Awaited<ReturnType<typeof getCa
   const arg = (k: string) => (m[1].match(new RegExp('(?:^|\\s)' + k + '=(?:"([^"]*)"|([^\\s\\]]+))')) || []).slice(1).find(Boolean) || ''
   try {
     const { proposeInvestorPack } = await import('@/lib/ai-investor-pack')
-    const r = await proposeInvestorPack(c, { investor: arg('investor'), investors: arg('investors'), agentKey: 'ask_ai', via: 'in Ask AI' })
+    const r = await proposeInvestorPack(c, { investor: arg('investor'), investors: arg('investors'), kind: arg('kind'), agentKey: 'ask_ai', via: 'in Ask AI' })
     if (!r.ok) return clean + `\n\n(I could not queue the pack: ${r.error})`
     if (r.already) return clean + `\n\n${r.summary}: Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder.`
     return clean + `\n\nQueued: ${r.summary}. It is waiting in Staff Centre → AI Approvals. When you approve it the link goes live in Pack Builder (Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder), where you copy the link or the WhatsApp message and send it yourself.`

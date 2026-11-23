@@ -250,9 +250,10 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     }
     const investor = String(p.investor || '').trim().slice(0, 80)
     if (!investor) return { error: 'The investor name is missing.' }
-    const { cleanPack, DEFAULT_PACK } = await import('./pack-calc')
-    const data = cleanPack({ ...DEFAULT_PACK, prepared_for: investor, investors: Number(p.investors) || 2 })
-    const { error } = await db.from('invest_packs').insert({ business_id: action.user_id, name: `Investment pack: ${investor}`.slice(0, 150), prepared_for: investor, stage: 'sent', sent_at: now, data, created_by: 'Novourq Cloud AI' })
+    const { cleanPack, DEFAULT_PACK, DEFAULT_PROPERTY_PACK } = await import('./pack-calc')
+    const prop = p.kind === 'property'
+    const data = cleanPack({ ...(prop ? DEFAULT_PROPERTY_PACK : DEFAULT_PACK), prepared_for: investor, investors: Number(p.investors) || 2 })
+    const { error } = await db.from('invest_packs').insert({ business_id: action.user_id, name: `${prop ? 'Property pack' : 'Investment pack'}: ${investor}`.slice(0, 150), prepared_for: investor, stage: 'sent', sent_at: now, data, created_by: 'Novourq Cloud AI' })
     if (error) return { error: error.message }
     return { success: true }
   }

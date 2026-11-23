@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { staffApi } from '@/lib/staff-api'
 import PackView from '@/components/packs/PackView'
 import { CrmPage, CrmHeader, Body, Empty, Loading, btn, input, label } from '@/components/crm/Page'
-import { STAGES, STAGE_COLOR, cleanPack, stageLabel, type PackData } from '@/lib/pack-calc'
+import { STAGES, STAGE_COLOR, cleanPack, stageLabel, type Example, type PackData } from '@/lib/pack-calc'
 
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #D9E2F0', borderRadius: 8, padding: 16, marginBottom: 16 }
 const head: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#667085', margin: '22px 0 10px' }
@@ -60,7 +60,7 @@ export default function PackBuilder() {
   }
   useEffect(() => { const id = new URLSearchParams(window.location.search).get('id'); if (id) open(id) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const act = async (body: any, ok?: string) => { setBusy(true); setErr(''); setNote(''); try { const r: any = await staffApi('/api/packs', body); if (ok) setNote(ok); await load(); return r } catch (e: any) { setErr(e.message) } finally { setBusy(false) } }
-  const newPack = async (from?: string) => { const r = await act({ action: 'create', from }); if (r?.pack) open(r.pack.id) }
+  const newPack = async (from?: string, kind?: 'property') => { const r = await act({ action: 'create', from, kind }); if (r?.pack) open(r.pack.id) }
 
   // Save as you type: the name and every figure
   useEffect(() => {
@@ -86,11 +86,12 @@ export default function PackBuilder() {
       edit(d => ({ ...d, [section]: { ...d[section], photos: [...d[section].photos, ...urls].slice(0, 24) } }) as PackData)
     } catch (e: any) { setErr(e.message) } finally { setUp('') }
   }
+  const setEx = (patch: Partial<Example>) => edit(d => ({ ...d, example: { ...d.example, ...patch } }))
   const dropPhoto = (section: 'car' | 'home', i: number) => edit(d => ({ ...d, [section]: { ...d[section], photos: d[section].photos.filter((_, k) => k !== i) } }) as PackData)
 
   const url = (t: string) => `${window.location.origin}/p/${t}`
   const copy = async (text: string, msg: string) => { try { await navigator.clipboard.writeText(text); setNote(msg) } catch { setNote(text) } }
-  const message = (p: any, u: string) => `Hi${p.prepared_for ? ' ' + p.prepared_for : ''}, here is your investment pack. It shows what you put in, the car, the property and how the car covers the rent. This link is private to you.\n\n${u}`
+  const message = (p: any, u: string) => `Hi${p.prepared_for ? ' ' + p.prepared_for : ''}, here is your investment pack. It shows what you put in, ${p.kind === 'property' ? 'the property and how we price a guaranteed rent' : 'the car, the property and how the car covers the rent'}. This link is private to you.\n\n${u}`
 
   const flush = async () => { if (cur && data && dirty.current) { await staffApi('/api/packs', { action: 'update', id: cur.id, name: name.trim() || undefined, data }); dirty.current = false } }
   const setStage = async (stage: string, ok?: string) => { try { await flush() } catch (e: any) { return setErr(e.message) } const r = await act({ action: 'stage', id: cur.id, stage }, ok); if (r?.pack) setCur({ ...cur, ...r.pack }) }
@@ -137,7 +138,13 @@ export default function PackBuilder() {
             </>}
           </div>
 
-          <div style={head}>1. The car</div>
+          <div style={head}>About us</div>
+          <div style={card}>
+            <span style={label}>What the business does. The investor sees this at the top.</span>
+            <textarea style={{ ...input, minHeight: 70 }} value={c.about} onChange={e => edit(d => ({ ...d, about: e.target.value }))} />
+          </div>
+
+          {c.kind !== 'property' && <><div style={head}>1. The car</div>
           <div style={{ ...card, ...grid }}>
             <Txt wide l="Car" v={c.car.title} on={s => edit(d => ({ ...d, car: { ...d.car, title: s } }))} />
             <Num l="Purchase price (J$)" v={c.car.price_jmd} on={n => edit(d => ({ ...d, car: { ...d.car, price_jmd: n } }))} />
@@ -146,9 +153,9 @@ export default function PackBuilder() {
             <Txt wide l="Note under the price" v={c.car.note} on={s => edit(d => ({ ...d, car: { ...d.car, note: s } }))} />
             <Txt wide l="Photo credit" v={c.car.credit} on={s => edit(d => ({ ...d, car: { ...d.car, credit: s } }))} />
             <Photos urls={c.car.photos} busy={up === 'car'} onAdd={f => upload(f, 'car')} onRemove={i => dropPhoto('car', i)} />
-          </div>
+          </div></>}
 
-          <div style={head}>2. The property</div>
+          <div style={head}>{c.kind === 'property' ? '1. The property' : '2. The property'}</div>
           <div style={{ ...card, ...grid }}>
             <Txt wide l="Property" v={c.home.title} on={s => edit(d => ({ ...d, home: { ...d.home, title: s } }))} />
             <Txt wide l="Details" v={c.home.details} on={s => edit(d => ({ ...d, home: { ...d.home, details: s } }))} />
@@ -159,11 +166,32 @@ export default function PackBuilder() {
             <Photos urls={c.home.photos} busy={up === 'home'} onAdd={f => upload(f, 'home')} onRemove={i => dropPhoto('home', i)} />
           </div>
 
-          <div style={head}>3. Can the car pay for the property?</div>
+          {c.kind !== 'property' && <><div style={head}>3. Can the car pay for the property?</div>
           <div style={{ ...card, ...grid }}>
             <Num l="Property rent a month if empty (J$)" v={c.cover.rent_jmd} on={n => edit(d => ({ ...d, cover: { ...d.cover, rent_jmd: n } }))} />
             <Num l="Car finance a month (J$)" v={c.cover.finance_jmd} on={n => edit(d => ({ ...d, cover: { ...d.cover, finance_jmd: n } }))} />
             <List l="Weekly car earnings to test in J$, separated by commas" v={c.cover.weekly_jmd} on={n => edit(d => ({ ...d, cover: { ...d.cover, weekly_jmd: n } }))} />
+          </div></>}
+
+          <div style={head}>Example: how we price a guaranteed rent offer</div>
+          <div style={{ ...card, ...grid }}>
+            <div style={{ gridColumn: '1 / -1' }}><label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, cursor: 'pointer' }}><input type="checkbox" checked={c.example.on} onChange={e => setEx({ on: e.target.checked })} />Show this worked example in the pack (all figures in pounds)</label></div>
+            {c.example.on && <>
+              <Txt wide l="Heading" v={c.example.title} on={s => setEx({ title: s })} />
+              <Txt wide l="Intro" v={c.example.intro} on={s => setEx({ intro: s })} />
+              <Num l="Market rent a month (£)" v={c.example.market_gbp} on={n => setEx({ market_gbp: n })} />
+              <Num l="What the landlord really keeps (£)" v={c.example.keeps_gbp} on={n => setEx({ keeps_gbp: n })} />
+              <Num l="Our income a month (£)" v={c.example.income_gbp} on={n => setEx({ income_gbp: n })} />
+              <Num l="Our other costs a month (£)" v={c.example.costs_gbp} on={n => setEx({ costs_gbp: n })} />
+              <Num l="Target profit (% of income)" v={c.example.target_pct} on={n => setEx({ target_pct: n })} />
+              <Num l="Landlord is asking (£)" v={c.example.ask_gbp} on={n => setEx({ ask_gbp: n })} />
+              <Num l="Term (years)" v={c.example.term_years} on={n => setEx({ term_years: Math.max(1, n) })} />
+              <List l="Levels, percent below market, separated by commas (Light, Medium, Firm)" v={c.example.levels} on={n => setEx({ levels: n })} />
+            </>}
+          </div>
+
+          <div style={head}>Small print</div>
+          <div style={{ ...card, ...grid }}>
             <Txt wide l="Small print at the bottom" v={c.footer} on={s => edit(d => ({ ...d, footer: s }))} />
           </div>
 
@@ -177,11 +205,11 @@ export default function PackBuilder() {
   // ---------------- all packs ----------------
   return (
     <CrmPage>
-      <CrmHeader title="Pack Builder" subtitle="Build an investment pack, send the investor one private link and track where it has got to. Every pack is saved." actions={<button style={btn('gold')} disabled={busy} onClick={() => newPack()}>+ New pack</button>} />
+      <CrmHeader title="Pack Builder" subtitle="Build an investment pack, send the investor one private link and track where it has got to. Every pack is saved." actions={<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button style={btn('gold')} disabled={busy} onClick={() => newPack()}>+ New pack</button><button style={btn('ghost')} disabled={busy} onClick={() => newPack(undefined, 'property')}>+ New property pack</button></div>} />
       <Body>
         {err && <div style={{ color: '#B42318', marginBottom: 12 }}>{err}</div>}
         {note && <div style={{ color: '#067647', marginBottom: 12 }}>{note}</div>}
-        {packs.length === 0 ? <Empty>No packs yet. Press New pack to build your first one.</Empty> : (
+        {packs.length === 0 ? <Empty>No packs yet. Press New pack for the car and property pack, or New property pack for the property breakdown only.</Empty> : (
           <div style={{ display: 'grid', gap: 8 }}>
             {packs.map(p => { const rn = rename?.id === p.id ? rename : null; return (
               <div key={p.id} style={{ background: '#fff', border: '1px solid #E4E7EC', borderRadius: 8, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -197,7 +225,7 @@ export default function PackBuilder() {
                       <a onClick={() => open(p.id)} style={{ fontWeight: 700, color: '#1B2F6E', cursor: 'pointer' }}>{p.name}</a>
                       <button type="button" aria-label={`Rename ${p.name}`} title="Rename" onClick={() => setRename({ id: p.id, name: p.name })} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#667085', fontSize: 13, padding: 0 }}>Rename</button>
                     </div>
-                    <div style={{ fontSize: 12, color: '#667085', marginTop: 3 }}>{p.prepared_for ? `For ${p.prepared_for} · ` : ''}{p.stage === 'draft' ? 'Link not live yet' : p.opens ? `Opened ${p.opens} ${p.opens === 1 ? 'time' : 'times'}, last ${when(p.last_opened_at)}` : `Sent ${when(p.sent_at)}, not opened yet`}{p.stage !== 'draft' && !p.active ? ' · Link paused' : ''}</div>
+                    <div style={{ fontSize: 12, color: '#667085', marginTop: 3 }}>{p.kind === 'property' ? 'Property only · ' : ''}{p.prepared_for ? `For ${p.prepared_for} · ` : ''}{p.stage === 'draft' ? 'Link not live yet' : p.opens ? `Opened ${p.opens} ${p.opens === 1 ? 'time' : 'times'}, last ${when(p.last_opened_at)}` : `Sent ${when(p.sent_at)}, not opened yet`}{p.stage !== 'draft' && !p.active ? ' · Link paused' : ''}</div>
                   </>}
                 </div>
                 <Stage k={p.stage} />
