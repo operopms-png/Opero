@@ -9,17 +9,19 @@ import GlanceTiles from '@/components/property/GlanceTiles'
 import Link from 'next/link'
 import { useRole, ROLE_MODULES } from '@/lib/useRole'
 
-type Mod = 'pm' | 'ea' | 'str' | 'dev'
+type Mod = 'pm' | 'ea' | 'str' | 'dev' | 'hotel' | 'community'
 type Target = { mod: Mod; tab: string }
 type Item = { name: string; targets: Target[]; shared?: boolean; href?: string }
-const AREA: Record<Mod, string> = { pm: 'Property Management', ea: 'Estate Agency', str: 'Vacation Rentals', dev: 'Developments' }
+const AREA: Record<Mod, string> = { pm: 'Property Management', ea: 'Estate Agency', str: 'Vacation Rentals', dev: 'Developments', hotel: 'Hotels', community: 'Gated Communities' }
 // What each area means, shown on the chips so nobody has to guess which one to open.
-const MEANS: Record<Mod, string> = { pm: 'We manage the property for the landlord', ea: 'We let or sell the property for the landlord', str: 'Guest bookings and short stays', dev: 'Building and selling new projects' }
-const HREF = (t: Target) => t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
+const MEANS: Record<Mod, string> = { pm: 'We manage the property for the landlord', ea: 'We let or sell the property for the landlord', str: 'Guest bookings and short stays', dev: 'Building and selling new projects', hotel: 'Rooms, reservations and guests', community: 'Homes, residents, visitors and repairs' }
+const HREF = (t: Target) => t.mod === 'hotel' ? '/hotel' : t.mod === 'community' ? '/community' : t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
 const pm = (tab: string): Target => ({ mod: 'pm', tab })
 const ea = (tab: string): Target => ({ mod: 'ea', tab })
 const str = (tab: string): Target => ({ mod: 'str', tab })
 const dev = (tab: string): Target => ({ mod: 'dev', tab })
+const hotel = (tab: string): Target => ({ mod: 'hotel', tab })
+const community = (tab: string): Target => ({ mod: 'community', tab })
 
 // Where do I go? Plain tasks that open the right page. Where the answer depends on the type of property, each area is offered.
 const TASKS: { task: string; targets: Target[]; href?: string }[] = [
@@ -36,7 +38,7 @@ const TASKS: { task: string; targets: Target[]; href?: string }[] = [
 
 const GROUPS: { name: string; note: string; items: Item[] }[] = [
   { name: 'Overview', note: 'Dashboards for each area', items: [
-    { name: 'Dashboard', targets: [pm('Dashboard'), ea('Dashboard'), str('Home'), dev('Dashboard')] },
+    { name: 'Dashboard', targets: [pm('Dashboard'), ea('Dashboard'), str('Home'), dev('Dashboard'), hotel('Executive Dashboard'), community('Dashboard')] },
     { name: 'Map', targets: [pm('Properties')], href: '/property/map' },
   ] },
   { name: 'Portfolio', note: 'Properties, people and tenancies', items: [
@@ -205,7 +207,8 @@ export default function PropertyHub() {
     })
   }, [])
   const term = q.trim().toLowerCase()
-  const has = (m: Mod) => roleModules.includes(m)
+  // Hotels and Gated Communities open for anyone with Real Estate Intelligence access, on their own company data.
+  const has = (m: Mod) => m === 'hotel' || m === 'community' ? roleModules.some(x => ['str', 'pm', 'dev', 'ea'].includes(x)) : roleModules.includes(m)
 
   // Only show the areas this person can open; hide a page with none left.
   const groups = useMemo(() => GROUPS.map(g => ({
