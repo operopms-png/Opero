@@ -95,7 +95,7 @@ export default function AiApprovals() {
                   {r.context?.incoming && <div style={{ fontSize: 13, color: C.muted, background: C.hover, borderRadius: 4, padding: '8px 10px', marginBottom: 10, whiteSpace: 'pre-wrap' }}><b>{r.context.incoming_from || 'They'} wrote:</b> {r.context.incoming}</div>}
                   {open ? (
                     <>
-                      {r.action_type === 'lease_update' || r.action_type === 'import_records' || r.action_type === 'partner_investment' || r.action_type === 'building_notice' ? (
+                      {r.action_type === 'lease_update' || r.action_type === 'import_records' || r.action_type === 'partner_investment' || r.action_type === 'building_notice' || r.action_type === 'investor_pack' ? (
                         <div style={{ whiteSpace: 'pre-wrap', fontSize: 14, background: C.hover, borderRadius: 4, padding: '10px 12px' }}>{r.draft_body}{r.payload?.doc_url && <div style={{ marginTop: 8 }}><a href={r.payload.doc_url} target="_blank" rel="noreferrer" style={{ color: '#1B2F6E', fontWeight: 600 }}>Open the document</a></div>}</div>
                       ) : isRate ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -107,7 +107,7 @@ export default function AiApprovals() {
                       )}
                       {r.status === 'failed' && <div style={{ color: C.red, fontSize: 12.5, marginTop: 6 }}>Last attempt failed: {r.error}</div>}
                       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                        <button style={btn('gold')} disabled={busy === r.id} onClick={() => decide(r, 'approve')}>{busy === r.id ? 'Working…' : isRate ? 'Approve & change rate' : r.action_type === 'building_notice' ? 'Approve & post notice' : r.action_type === 'mark_rent_paid' ? 'Approve & mark paid' : r.action_type === 'listing_description' ? 'Approve & save' : r.action_type === 'import_records' ? 'Approve & import' : r.action_type === 'lease_update' ? 'Approve & update record' : r.action_type === 'partner_investment' ? 'Approve & update partner' : 'Approve & send'}</button>
+                        <button style={btn('gold')} disabled={busy === r.id} onClick={() => decide(r, 'approve')}>{busy === r.id ? 'Working…' : isRate ? 'Approve & change rate' : r.action_type === 'building_notice' ? 'Approve & post notice' : r.action_type === 'investor_pack' ? 'Approve & create link' : r.action_type === 'mark_rent_paid' ? 'Approve & mark paid' : r.action_type === 'listing_description' ? 'Approve & save' : r.action_type === 'import_records' ? 'Approve & import' : r.action_type === 'lease_update' ? 'Approve & update record' : r.action_type === 'partner_investment' ? 'Approve & update partner' : 'Approve & send'}</button>
                         <button style={btn('danger')} disabled={busy === r.id} onClick={() => decide(r, 'reject')}>Reject</button>
                       </div>
                     </>

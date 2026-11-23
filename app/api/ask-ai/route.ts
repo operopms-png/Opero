@@ -77,6 +77,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     r.text = await queueMarketingFromReply(c, r.text)
     r.text = await queuePartnerFromReply(c, r.text)
     r.text = await queueNoticeFromReply(c, r.text)
+    r.text = await queuePackFromReply(c, r.text)
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
@@ -129,6 +130,21 @@ async function queuePartnerFromReply(c: NonNullable<Awaited<ReturnType<typeof ge
     const r = await proposePartnerInvestment(c, { partner: arg('partner'), amount: arg('amount'), currency: arg('currency'), agentKey: 'ask_ai', via: 'in Ask AI' })
     if (!r.ok) return clean + `\n\n(I could not update it: ${r.error})`
     return clean + `\n\nSaved: ${r.summary}. Check it on the partner's card in Staff Centre → Partners & Investors → Partners.`
+  } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
+}
+
+// If the AI added the [[CREATE_PACK …]] line, queue the investor pack link for approval (nothing goes live until a person approves it, and it is never sent to the investor).
+async function queuePackFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
+  const m = text.match(/\[\[CREATE_PACK([^\]]*)\]\]/)
+  if (!m) return text
+  const clean = text.replace(/\s*\[\[CREATE_PACK[^\]]*\]\]\s*/g, '\n').trim()
+  const arg = (k: string) => (m[1].match(new RegExp('(?:^|\\s)' + k + '=(?:"([^"]*)"|([^\\s\\]]+))')) || []).slice(1).find(Boolean) || ''
+  try {
+    const { proposeInvestorPack } = await import('@/lib/ai-investor-pack')
+    const r = await proposeInvestorPack(c, { investor: arg('investor'), investors: arg('investors'), agentKey: 'ask_ai', via: 'in Ask AI' })
+    if (!r.ok) return clean + `\n\n(I could not queue the pack: ${r.error})`
+    if (r.already) return clean + `\n\n${r.summary}: Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder.`
+    return clean + `\n\nQueued: ${r.summary}. It is waiting in Staff Centre → AI Approvals. When you approve it the link goes live in Pack Builder (Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder), where you copy the link or the WhatsApp message and send it yourself.`
   } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
 }
 

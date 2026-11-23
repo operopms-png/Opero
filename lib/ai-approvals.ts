@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'building_notice' | 'social_post' | 'video_brief'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'building_notice' | 'social_post' | 'video_brief' | 'investor_pack'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -224,6 +224,27 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     const { data, error } = await getServiceClient().from('owner_profiles').update({ invested, currency }).eq('id', p.owner_id).eq('business_id', action.user_id).select('id')
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Partner not found for this account.' }
+    return { success: true }
+  }
+
+  if (action.action_type === 'investor_pack') {
+    // Makes an investor pack's link live (stage Sent). Re-checked here: an existing pack must still be this account's and still a draft.
+    // The link is never sent to the investor from here; a person copies it from Pack Builder.
+    const db = getServiceClient(), now = new Date().toISOString()
+    if (p.pack_id) {
+      const { data: cur } = await db.from('invest_packs').select('id,stage').eq('id', String(p.pack_id)).eq('business_id', action.user_id).maybeSingle()
+      if (!cur) return { error: 'That pack no longer exists.' }
+      if (cur.stage !== 'draft') return { success: true }
+      const { error } = await db.from('invest_packs').update({ stage: 'sent', sent_at: now, updated_at: now }).eq('id', cur.id).eq('business_id', action.user_id)
+      if (error) return { error: error.message }
+      return { success: true }
+    }
+    const investor = String(p.investor || '').trim().slice(0, 80)
+    if (!investor) return { error: 'The investor name is missing.' }
+    const { cleanPack, DEFAULT_PACK } = await import('./pack-calc')
+    const data = cleanPack({ ...DEFAULT_PACK, prepared_for: investor, investors: Number(p.investors) || 2 })
+    const { error } = await db.from('invest_packs').insert({ business_id: action.user_id, name: `Investment pack: ${investor}`.slice(0, 150), prepared_for: investor, stage: 'sent', sent_at: now, data, created_by: 'Novourq Cloud AI' })
+    if (error) return { error: error.message }
     return { success: true }
   }
 

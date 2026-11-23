@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-23', title: 'Ask Ava to create an investor pack link', text: 'Admins and co-founders can ask Novourq Cloud AI or Novourq Voice to find an investor pack and create its link; it waits in AI Approvals and goes live only when you approve it.' },
   { date: '2026-11-23', title: 'Pack Builder and Investment Packs', text: 'Marketing has a new Pack Builder tab to build an investment pack with photos, send the investor one private link and move it through stages, and the Dashboard has an Investment Packs box showing where each pack has got to.' },
   { date: '2026-11-23', title: 'Plan page lists Hotels and Gated Communities', text: 'The Choose your plan page now says all 8 modules, including Hotels and Gated Communities, are included in the monthly and annual plans.' },
   { date: '2026-11-23', title: 'Where do I go? covers every area', text: 'Where do I go? on the Real Estate Intelligence page now offers Developments, Hotels and Gated Communities beside Property Management, Estate Agency and Vacation Rentals, including new Start a development project and Track a project budget tasks, Check a guest in or out and Log a gate visitor tasks, and phone tabs wrap so every area shows.' },
