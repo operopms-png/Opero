@@ -7,6 +7,7 @@ import type { BoardStore } from '@/lib/marketing-boards'
 import MkBoardView from '@/components/marketing/MkBoardView'
 import MkPanel from '@/components/marketing/MkPanel'
 import StaffMaintenanceExtras from '@/components/maintenance/StaffMaintenanceExtras'
+import StaffBuildingNotices from '@/components/maintenance/StaffBuildingNotices'
 
 // Staff Centre → Maintenance Board: all maintenance jobs from the three modules on one CRM-style board.
 const TABLE: Record<string, string> = { str: 'maintenance_tickets', pm: 'pm_maintenance', estate: 'estate_maintenance' }
@@ -66,6 +67,7 @@ function useMaintenance(): BoardStore & { loading: boolean; error: string | null
 export default function MaintenanceBoardPage() {
   const store = useMaintenance()
   const [open, setOpen] = useState<string | null>(null)
+  const [showNotices, setShowNotices] = useState(false)
   const openJobs = store.rows.maintenance.filter(r => r.status !== 'resolved' && r.status !== 'closed')
   const urgent = openJobs.filter(r => r.priority === 'urgent').length
   return (
@@ -83,10 +85,12 @@ export default function MaintenanceBoardPage() {
           : store.error ? <div style={{ padding: 60, color: '#DF2F4A' }}>Couldn’t load maintenance: {store.error}</div>
           : <MkBoardView mk={store} board={MAINTENANCE_BOARD} onOpen={setOpen}
               headerRight={<span style={{ display: 'inline-flex', gap: 8, marginRight: 8 }}>
+                <button onClick={() => setShowNotices(true)} style={{ background: '#1B2F6E', color: '#fff', border: 0, borderRadius: 3, padding: '3px 10px', fontSize: 12.5, cursor: 'pointer', fontFamily: 'inherit' }}>Building notices</button>
                 <span style={{ background: '#579BFC', color: '#fff', borderRadius: 3, padding: '3px 10px', fontSize: 12.5 }}>{openJobs.length} open</span>
                 <span style={{ background: urgent ? '#DF2F4A' : '#C4C4C4', color: '#fff', borderRadius: 3, padding: '3px 10px', fontSize: 12.5 }}>{urgent} urgent</span>
               </span>} />}
       </main>
+      {showNotices && <StaffBuildingNotices onClose={() => setShowNotices(false)} />}
       {open && /^(pm|estate):/.test(open) && <StaffMaintenanceExtras key={'x' + open} source={open.split(':')[0] as 'pm' | 'estate'} id={open.split(':')[1]} />}
       {open && <MkPanel key={open} mk={store} board={MAINTENANCE_BOARD} id={open} onClose={() => setOpen(null)} onOpenOther={(_b, id) => setOpen(id)} />}
     </div>
