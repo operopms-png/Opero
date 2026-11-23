@@ -6,9 +6,9 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CrmPage, CrmHeader, Body, Empty, Loading, btn, input, label } from '@/components/crm/Page'
 import { staffApi } from '@/lib/staff-api'
-import { HR_FOLDERS, HR_STARTERS } from '@/lib/hr-docs'
+import { HR_FOLDERS, HR_STARTERS, COMPANY_STARTERS } from '@/lib/hr-docs'
 
-const COMPANY_FOLDERS = ['Company Incorporation', 'ADO1 Forms', 'Certificates', 'Insurance']
+const COMPANY_FOLDERS = ['Company Incorporation', 'ADO1 Forms', 'Certificates', 'Insurance', 'Deal Rules']
 const when = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 const size = (n: number | null) => !n ? '' : n > 1e6 ? (n / 1e6).toFixed(1) + ' MB' : Math.round(n / 1e3) + ' KB'
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #D9E2F0', borderRadius: 8, padding: 16, marginBottom: 16, display: 'grid', gap: 10, maxWidth: 560 }
@@ -59,12 +59,12 @@ export default function FileLibrary({ hr = false }: { hr?: boolean }) {
     try {
       const have = new Set((files || []).map(f => f.name))
       let n = 0
-      for (const s of HR_STARTERS) {
+      for (const s of (hr ? HR_STARTERS : COMPANY_STARTERS)) {
         if (have.has(s.name)) continue
         await staffApi('/api/documents', { action: 'file-add', url: window.location.origin + s.path, name: s.name, folder: s.folder, mime: s.mime })
         n++
       }
-      setNote(n ? `Added ${n} NOVOURQ template${n > 1 ? 's' : ''}.` : 'The NOVOURQ templates are already here.')
+      setNote(n ? `Added ${n} NOVOURQ ${hr ? 'template' : 'document'}${n > 1 ? 's' : ''}.` : `The NOVOURQ ${hr ? 'templates are' : 'documents are'} already here.`)
       await load()
     } catch (e: any) { setErr(e.message) } finally { setBusy(false) }
   }
@@ -102,7 +102,7 @@ export default function FileLibrary({ hr = false }: { hr?: boolean }) {
   return (
     <CrmPage>
       <CrmHeader title={title} subtitle={subtitle} actions={<>
-        {hr && <button style={btn('ghost')} disabled={busy} onClick={addStarters}>Add NOVOURQ templates</button>}
+        <button style={btn('ghost')} disabled={busy} onClick={addStarters}>{hr ? 'Add NOVOURQ templates' : 'Add NOVOURQ documents'}</button>
         <button style={btn('gold')} onClick={() => setAdding(a => !a)}>+ Add document</button>
       </>} />
       <Body>

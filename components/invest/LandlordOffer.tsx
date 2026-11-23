@@ -97,6 +97,18 @@ export default function LandlordOffer({ form, setForm, result, market, onUseOffe
           ))}
         </div>
 
+        {/* the rules, always to hand */}
+        <details style={{ margin: '14px 0 0', border: '1px solid ' + C.line, borderRadius: 10, padding: '10px 14px', background: '#fff' }}>
+          <summary style={{ cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.ink }}>Deal rules: how this offer works</summary>
+          <ul style={{ margin: '10px 0 2px', paddingLeft: 18, fontSize: 12.5, color: C.ink2, lineHeight: 1.55 }}>
+            <li>We offer below market rent in return for certainty. The default levels are Light 10%, Medium 20% and Firm 25% below market, and you can change them by pressing Adjust.</li>
+            <li>The recommended offer is the highest level that still gives your target profit and stays below what the landlord really keeps. It is never more than the most you can pay.</li>
+            <li>If even the Firm level does not work, the answer is Walk away: raise income, cut costs, or only go ahead if the landlord accepts less.</li>
+            <li>Strong means profit at least 25% above your target. Tight means it meets the target by less than 25%.</li>
+            <li>Get the landlord&apos;s written permission to sublet and put it in the lease. A printable copy is in Human Intelligence Hub, Company, Company Documents, Add NOVOURQ documents.</li>
+          </ul>
+        </details>
+
         {/* where each figure sits */}
         <div style={{ position: 'relative', height: 70, margin: '22px 8px 8px' }}>
           <div style={{ position: 'absolute', left: 0, right: 0, top: 30, height: 6, borderRadius: 3, background: '#F6D4D0' }} />

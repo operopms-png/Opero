@@ -4,6 +4,11 @@ export const HR_FOLDERS = ['Payslips', 'HR Forms', 'HR Contracts', 'Employee Rec
 export const isHrFolder = (f: any) => HR_FOLDERS.includes(String(f || ''))
 
 // Ready-made NOVOURQ templates, shipped with the portal, that "Add NOVOURQ templates" puts in the library.
+// Ready-made NOVOURQ documents for Company Documents (the "Add NOVOURQ documents" button).
+export const COMPANY_STARTERS = [
+  { name: 'Deal rules: guaranteed rent offers', folder: 'Deal Rules', path: '/company-templates/NOVOURQ_Deal_Rules.pdf', mime: 'application/pdf' },
+]
+
 export const HR_STARTERS = [
   { name: 'Payslip template (fillable)', folder: 'Payslips', path: '/hr-templates/Payslip_Template_NOVOURQ.pdf', mime: 'application/pdf' },
   { name: 'Proof of employment letter (fillable)', folder: 'HR Forms', path: '/hr-templates/Proof_of_Employment_NOVOURQ_Template.pdf', mime: 'application/pdf' },
