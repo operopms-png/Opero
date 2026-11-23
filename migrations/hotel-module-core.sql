@@ -1,0 +1,3 @@
+-- Hotels (NOVOURQ own company only; applied via Supabase migration hotel_module_core)
+-- Same access rules as Fleet and Rides: fleet_access() decides who may read (view or full) or write (full); rows must belong to fleet_owner_id().
+-- Tables: hotel_rooms (generated name 'Room <number>'), hotel_guests, hotel_reservations (room_id -> hotel_rooms).
