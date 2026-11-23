@@ -18,6 +18,7 @@ const BADGE = { open: { t: 'Reported', bg: '#DBEAFE', c: '#2563EB' }, in_progres
 export default function MaintenanceFeed({ role, target, refreshKey }: { role: 'tenant' | 'landlord' | 'partner'; target?: string; refreshKey?: number }) {
   const [issues, setIssues] = useState<Issue[] | null>(null)
   const [err, setErr] = useState('')
+  const [notices, setNotices] = useState<{ id: string; title: string; body: string; building_name: string | null; created_at: string }[]>([])
   useEffect(() => {
     let live = true
     ;(async () => {
@@ -28,6 +29,8 @@ export default function MaintenanceFeed({ role, target, refreshKey }: { role: 't
       if (!live) return
       if (!r.ok) { setErr(j.error || 'Could not load maintenance'); return }
       setIssues(j.issues ?? [])
+      // Building notices from staff (gate works, lift out of order…) for these homes.
+      fetch('/api/building-notices-portal?' + q, { headers: { Authorization: `Bearer ${session?.access_token ?? ''}` } }).then(x => x.json()).then(x => { if (live) setNotices(x.notices ?? []) }).catch(() => {})
     })()
     return () => { live = false }
   }, [role, target, refreshKey])
@@ -45,6 +48,13 @@ export default function MaintenanceFeed({ role, target, refreshKey }: { role: 't
 
   return (
     <div>
+      {notices.map(n => (
+        <div key={n.id} style={{ background: '#FFF8E6', border: '1px solid #F5DFA0', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#92600A', letterSpacing: 0.4, textTransform: 'uppercase' }}>Notice{n.building_name ? ` · ${n.building_name}` : ''} · {day(n.created_at)}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#323338', marginTop: 4 }}>{n.title}</div>
+          <div style={{ fontSize: 13, color: '#475467', marginTop: 4, lineHeight: 1.55, whiteSpace: 'pre-line' }}>{n.body}</div>
+        </div>
+      ))}
       {fresh && <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#EAF1FB', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 13, color: '#1B2F6E' }}><span style={{ width: 8, height: 8, borderRadius: 4, background: '#2563EB', marginTop: 5, flex: '0 0 8px' }} /><div><b>{role === 'tenant' ? 'Update on your repair' : 'Latest maintenance update'}</b>: {notice}</div></div>}
       {!issues.length && <div style={{ textAlign: 'center', padding: 60, color: '#98A2B3', fontSize: 13 }}>{role === 'partner' ? 'No maintenance issues reported since you were linked to your properties.' : 'No maintenance requests yet'}</div>}
       {Object.entries(byProp).map(([prop, list]) => (
