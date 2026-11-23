@@ -14,4 +14,8 @@ export const HELP_VIDEOS: HelpVideo[] = [
   { id: 'website-links-careers', title: 'Website links and careers', blurb: 'Which link to send, the careers page with CV upload, the enquiry form and website pricing.', length: '0:45' },
   { id: 'plan-and-currency', title: 'Your plan and currency', blurb: 'Your plan and free trial, properties included, and your own currency and time zone.', length: '0:37' },
   { id: 'cohosts-crew-hr', title: 'Co-hosts, crew and HR', blurb: 'Co-hosts, cleaner and maintenance portals, HR documents and bank accounts for documents.', length: '0:40' },
+  { id: 'hotels', title: 'Hotels', blurb: 'The hotel dashboard, rooms, reservations with check in and out, and your guest list.', length: '0:33' },
+  { id: 'gated-communities', title: 'Gated Communities', blurb: 'Homes, residents, visitors at the gate, repairs and complaints for a gated community.', length: '0:34' },
+  { id: 'ai-office', title: 'AI Office', blurb: 'A 3D office showing what each part of your AI team is doing and what waits for your approval.', length: '0:22' },
+  { id: 'notices-and-texts', title: 'Notices and texts', blurb: 'Post building notices, let Ava draft them, and text customers from your own company number.', length: '0:28' },
 ]

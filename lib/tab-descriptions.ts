@@ -2,6 +2,16 @@
 // Shown in the blue banner at the top of each tab (components/TabBanner.tsx).
 // A module-specific entry ("dev:Units") wins over the shared one ("Units").
 export const TAB_DESCRIPTIONS: Record<string, string> = {
+  'hotel:Executive Dashboard': 'The whole hotel today: rooms, occupancy, who is in house, arrivals and departures, rooms to clean and balances to collect.',
+  'hotel:Room Inventory': 'Every room with its type, floor, rate, status and housekeeping state. Press Mark clean when a room is ready.',
+  'hotel:Reservations & Bookings': 'Every reservation with its guest, room, dates, status and balance. Press Check in and Check out as guests arrive and leave.',
+  'hotel:Guest Relationship Management': 'Your guest database: contact details, VIP and repeat guests, and their preferences.',
+  'community:Dashboard': 'The whole community today: units, occupancy, residents, visitors on site, open repairs and open complaints.',
+  'community:Property & Unit Management': 'Every home in the community with its block, type, status and owner.',
+  'community:Homeowner & Resident Management': 'Homeowners, tenants and family members: who lives where, contact details, vehicles and move-in dates.',
+  'community:Visitor Management': 'Expected visitors, deliveries and contractors, with Check in, Check out and Deny entry at the gate.',
+  'community:Maintenance & Repairs': 'Repair requests for homes and common areas, with priority, who is fixing them and when they are due.',
+  'community:Complaints & Resident Relations': 'Complaints, disputes and rule breaches, tracked to an outcome with a reply-by date.',
   'Dashboard': 'Your day at a glance: rents due, open jobs, upcoming checks and anything waiting for your approval.',
   'Home': 'Your day at a glance: bookings, check-ins, cleaning and anything waiting for your approval.',
   'Short Stays Overview': 'Occupancy, income and upcoming stays across all your short-stay properties.',
