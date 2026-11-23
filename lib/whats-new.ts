@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-23', title: 'Pack Builder and Investment Packs', text: 'Marketing has a new Pack Builder tab to build an investment pack with photos, send the investor one private link and move it through stages, and the Dashboard has an Investment Packs box showing where each pack has got to.' },
   { date: '2026-11-23', title: 'Plan page lists Hotels and Gated Communities', text: 'The Choose your plan page now says all 8 modules, including Hotels and Gated Communities, are included in the monthly and annual plans.' },
   { date: '2026-11-23', title: 'Where do I go? covers every area', text: 'Where do I go? on the Real Estate Intelligence page now offers Developments, Hotels and Gated Communities beside Property Management, Estate Agency and Vacation Rentals, including new Start a development project and Track a project budget tasks, Check a guest in or out and Log a gate visitor tasks, and phone tabs wrap so every area shows.' },
   { date: '2026-11-23', title: 'Hotels and Gated Communities on the main page', text: 'The Real Estate Intelligence page now lists Hotels and Gated Communities beside Property Management, Estate Agency, Vacation Rentals and Developments, under Overview, Dashboard.' },
