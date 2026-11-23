@@ -70,7 +70,9 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     }
     const history: ChatMsg[] = Array.isArray(chat?.messages) ? chat.messages : []
     const web = !!b.use_web
-    const messages: ChatMsg[] = [...history, { role: 'user', content: message, at: new Date().toISOString() }]
+    const photos = (Array.isArray(b.images) ? b.images : []).map((u: any) => String(u)).filter((u: string) => u.startsWith(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/pm-files/ask-ai/`) && u.length < 400).slice(0, 12)
+    const content = photos.length ? `${message}\n\n[[PHOTOS ${photos.join(' ')}]]` : message
+    const messages: ChatMsg[] = [...history, { role: 'user', content, at: new Date().toISOString() }]
     const portal = b.use_portal === false ? null : await portalContext(c).catch(() => null)
     const r = await askClaude(systemPrompt({ c, portal, web, deal: kind === 'deal' ? b.deal : undefined }), messages, web, c.businessId)
     if (!r.text) return { error: r.error || 'The AI couldn’t answer' }
@@ -78,6 +80,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     r.text = await queuePartnerFromReply(c, r.text)
     r.text = await queueNoticeFromReply(c, r.text)
     r.text = await queuePackFromReply(c, r.text)
+    r.text = await addPackPhotosFromReply(c, r.text)
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
@@ -146,6 +149,20 @@ async function queuePackFromReply(c: NonNullable<Awaited<ReturnType<typeof getCa
     if (r.already) return clean + `\n\n${r.summary}: Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder.`
     return clean + `\n\nQueued: ${r.summary}. It is waiting in Staff Centre → AI Approvals. When you approve it the link goes live in Pack Builder (Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder), where you copy the link or the WhatsApp message and send it yourself.`
   } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
+}
+
+// If the AI added the [[ADD_PACK_PHOTOS …]] line, add the attached photos to the investor pack(s) straight away (photos only, easy to remove).
+async function addPackPhotosFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
+  const m = text.match(/\[\[ADD_PACK_PHOTOS((?:"[^"]*"|[^\]"])*)\]\]/)
+  if (!m) return text
+  const clean = text.replace(/\s*\[\[ADD_PACK_PHOTOS(?:"[^"]*"|[^\]"])*\]\]\s*/g, '\n').trim()
+  const arg = (k: string) => (m[1].match(new RegExp('(?:^|\\s)' + k + '=(?:"([^"]*)"|([^\\s\\]]+))')) || []).slice(1).find(Boolean) || ''
+  try {
+    const { addPackPhotos } = await import('@/lib/ai-pack-photos')
+    const r = await addPackPhotos(c, { investors: arg('investors'), section: arg('section'), urls: arg('urls') })
+    if (!r.ok) return clean + `\n\n(I could not add the photos: ${r.error})`
+    return clean + `\n\nAdded ${r.summary}. Check them in Staff Centre → Human Intelligence Hub → Clients and sales → Marketing → Pack Builder, where you can remove any photo with the cross.`
+  } catch (e: any) { return clean + `\n\n(I could not add the photos: ${e?.message || 'something went wrong'})` }
 }
 
 // If the AI added the [[POST_NOTICE …]] line, queue the building notice for approval (nothing is posted or emailed until a person approves it).

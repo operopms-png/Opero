@@ -65,6 +65,9 @@ export default function AskChat({ kind = 'general', refId, deal, compact, sugges
   const [usePortal, setUsePortal] = useState(true)
   const [useWeb, setUseWeb] = useState(kind === 'deal')
   const [copied, setCopied] = useState(-1)
+  const [pics, setPics] = useState<string[]>([])
+  const [upping, setUpping] = useState(false)
+  const fileIn = useRef<HTMLInputElement>(null)
   const end = useRef<HTMLDivElement>(null)
   const ta = useRef<HTMLTextAreaElement>(null)
 
@@ -76,15 +79,30 @@ export default function AskChat({ kind = 'general', refId, deal, compact, sugges
   const fresh = () => { setChatId(null); setMsgs([]); setErr(''); setText(''); setTimeout(() => ta.current?.focus(), 0) }
   const remove = async (id: string) => { if (!confirm('Delete this chat?')) return; await api({ action: 'delete', id }).catch(() => {}); if (id === chatId) fresh(); loadChats() }
 
+  const attach = async (files: File[]) => {
+    setUpping(true); setErr('')
+    try {
+      const urls: string[] = []
+      for (const f of files.filter(f => f.type.startsWith('image/')).slice(0, 12)) {
+        const path = `ask-ai/${Date.now()}-${Math.random().toString(36).slice(2)}.${(f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')}`
+        const { error } = await supabase.storage.from('pm-files').upload(path, f, { contentType: f.type })
+        if (error) throw new Error(error.message)
+        urls.push(supabase.storage.from('pm-files').getPublicUrl(path).data.publicUrl)
+      }
+      setPics(p => [...p, ...urls].slice(0, 12))
+    } catch (e: any) { setErr(e.message) } finally { setUpping(false); if (fileIn.current) fileIn.current.value = '' }
+  }
+
   async function send(q?: string) {
     const message = (q ?? text).trim()
-    if (!message || busy) return
-    setErr(''); setText(''); setBusy(true)
-    setMsgs(m => [...m, { role: 'user', content: message }])
+    if (!message || busy || upping) return
+    const images = pics
+    setErr(''); setText(''); setPics([]); setBusy(true)
+    setMsgs(m => [...m, { role: 'user', content: images.length ? `${message}\n\n[[PHOTOS ${images.join(' ')}]]` : message }])
     try {
-      const d = await api({ action: 'send', id: chatId, kind, ref: refId, message, use_portal: usePortal, use_web: useWeb, deal })
+      const d = await api({ action: 'send', id: chatId, kind, ref: refId, message, images, use_portal: usePortal, use_web: useWeb, deal })
       setChatId(d.chat.id); setMsgs(d.chat.messages); loadChats()
-    } catch (e: any) { setErr(e.message); setMsgs(m => m.slice(0, -1)); setText(message) }
+    } catch (e: any) { setErr(e.message); setMsgs(m => m.slice(0, -1)); setText(message); setPics(images) }
     finally { setBusy(false) }
   }
   const asked = useRef(false)
@@ -111,7 +129,10 @@ export default function AskChat({ kind = 'general', refId, deal, compact, sugges
           </div>
         )}
         {msgs.map((m, i) => m.role === 'user'
-          ? <div key={i} style={{ alignSelf: 'flex-end', maxWidth: '80%', background: C.gd, color: '#fff', padding: '10px 14px', borderRadius: '14px 14px 4px 14px', fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.content}</div>
+          ? <div key={i} style={{ alignSelf: 'flex-end', maxWidth: '80%', background: C.gd, color: '#fff', padding: '10px 14px', borderRadius: '14px 14px 4px 14px', fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+              {m.content.replace(/\s*\[\[PHOTOS [^\]]*\]\]\s*$/, '')}
+              {(() => { const pm = m.content.match(/\[\[PHOTOS ([^\]]*)\]\]\s*$/); const us = pm ? pm[1].split(/\s+/).filter(Boolean) : []; return us.length ? <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>{us.map(u => <img key={u} src={u} alt="" style={{ width: 54, height: 54, objectFit: 'cover', borderRadius: 6 }} />)}</div> : null })()}
+            </div>
           : <div key={i} style={{ alignSelf: 'flex-start', maxWidth: compact ? '100%' : '86%', display: 'flex', gap: 10, minWidth: 0 }}>
               <span style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg,${C.gold},${C.gd})`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>✦</span>
               <div style={{ background: '#fff', border: '1px solid ' + C.row, padding: '10px 15px', borderRadius: '4px 14px 14px 14px', minWidth: 0 }}>
@@ -131,7 +152,15 @@ export default function AskChat({ kind = 'general', refId, deal, compact, sugges
         </div>
       )}
       {err && <div style={{ color: '#DF2F4A', fontSize: 13, padding: '6px 22px', background: '#fff' }}>{err}</div>}
+      {(pics.length > 0 || upping) && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', padding: compact ? '8px 14px 0' : '8px 22px 0', background: '#fff' }}>
+          {pics.map(u => <span key={u} style={{ position: 'relative' }}><img src={u} alt="" style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 6, border: '1px solid ' + C.border }} /><button type="button" onClick={() => setPics(p => p.filter(x => x !== u))} title="Remove photo" style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', border: 'none', background: C.ink, color: '#fff', fontSize: 11, cursor: 'pointer', lineHeight: '18px', padding: 0 }}>✕</button></span>)}
+          {upping && <span style={{ fontSize: 12.5, color: C.muted }}>Uploading photos…</span>}
+        </div>
+      )}
       <div style={{ padding: compact ? '10px 14px' : '12px 22px 16px', borderTop: '1px solid ' + C.row, display: 'flex', gap: 10, alignItems: 'flex-end', background: '#fff' }}>
+        <input ref={fileIn} type="file" accept="image/*" multiple hidden onChange={e => attach(Array.from(e.target.files ?? []))} />
+        <button type="button" onClick={() => fileIn.current?.click()} disabled={busy || upping} title="Attach photos (for example to add to an investor pack)" style={{ border: '1px solid ' + C.border, background: '#fff', color: C.muted, borderRadius: 10, padding: '12px 13px', fontFamily: 'inherit', fontSize: 13, cursor: busy || upping ? 'default' : 'pointer' }}>Attach</button>
         <textarea ref={ta} value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} rows={compact ? 2 : 2}
           placeholder={kind === 'deal' ? 'Ask about this deal — risks, what to negotiate, how to improve it…' : 'Ask anything about your business, properties or Jamaica / UK property…'}
           style={{ flex: 1, border: '1px solid ' + C.border, borderRadius: 10, padding: '11px 14px', fontSize: 14, fontFamily: 'inherit', resize: 'vertical', minHeight: 48, outline: 'none', color: C.ink, lineHeight: 1.5 }} />
