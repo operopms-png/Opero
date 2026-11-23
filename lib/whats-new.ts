@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-23', title: 'Where do I go? covers every area', text: 'Where do I go? on the Real Estate Intelligence page now offers Developments, Hotels and Gated Communities beside Property Management, Estate Agency and Vacation Rentals, including new Start a development project and Track a project budget tasks, Check a guest in or out and Log a gate visitor tasks, and phone tabs wrap so every area shows.' },
   { date: '2026-11-23', title: 'Hotels and Gated Communities on the main page', text: 'The Real Estate Intelligence page now lists Hotels and Gated Communities beside Property Management, Estate Agency, Vacation Rentals and Developments, under Overview, Dashboard.' },
   { date: '2026-11-23', title: 'New guides and videos', text: 'Staff Training and the Help Centre now have pictures and steps for Hotels, Gated Communities, the AI Office and building notices, plus four new videos including Notices and texts.' },
   { date: '2026-11-23', title: 'Hotels and Gated Communities', text: 'Real Estate Intelligence now has Hotels and Gated Communities buttons, each with its own dashboard for rooms, reservations, guests, units, residents, visitors, repairs and complaints.' },

@@ -13,9 +13,10 @@ type Mod = 'pm' | 'ea' | 'str' | 'dev' | 'hotel' | 'community'
 type Target = { mod: Mod; tab: string }
 type Item = { name: string; targets: Target[]; shared?: boolean; href?: string }
 const AREA: Record<Mod, string> = { pm: 'Property Management', ea: 'Estate Agency', str: 'Vacation Rentals', dev: 'Developments', hotel: 'Hotels', community: 'Gated Communities' }
+const SHORT: Record<Mod, string> = { pm: 'Property Mgmt', ea: 'Estate Agency', str: 'Vacation', dev: 'Developments', hotel: 'Hotels', community: 'Gated Comm.' }
 // What each area means, shown on the chips so nobody has to guess which one to open.
 const MEANS: Record<Mod, string> = { pm: 'We manage the property for the landlord', ea: 'We let or sell the property for the landlord', str: 'Guest bookings and short stays', dev: 'Building and selling new projects', hotel: 'Rooms, reservations and guests', community: 'Homes, residents, visitors and repairs' }
-const HREF = (t: Target) => t.mod === 'hotel' ? '/hotel' : t.mod === 'community' ? '/community' : t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
+const HREF = (t: Target) => t.mod === 'hotel' ? `/hotel?tab=${encodeURIComponent(t.tab)}` : t.mod === 'community' ? `/community?tab=${encodeURIComponent(t.tab)}` : t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
 const pm = (tab: string): Target => ({ mod: 'pm', tab })
 const ea = (tab: string): Target => ({ mod: 'ea', tab })
 const str = (tab: string): Target => ({ mod: 'str', tab })
@@ -25,14 +26,18 @@ const community = (tab: string): Target => ({ mod: 'community', tab })
 
 // Where do I go? Plain tasks that open the right page. Where the answer depends on the type of property, each area is offered.
 const TASKS: { task: string; targets: Target[]; href?: string }[] = [
-  { task: 'Add a tenant', targets: [pm('Tenants'), ea('Tenants')] },
+  { task: 'Add a tenant', targets: [pm('Tenants'), ea('Tenants'), community('Homeowner & Resident Management')] },
   { task: 'Check a tenant’s ID and income', targets: [pm('Tenant Checks'), ea('Tenant Checks')] },
   { task: 'Add a landlord', targets: [pm('Landlords'), ea('Landlords')] },
-  { task: 'Add a property', targets: [pm('Properties'), ea('Properties'), str('Properties')] },
-  { task: 'Add a guest booking', targets: [str('Bookings')] },
+  { task: 'Add a property', targets: [pm('Properties'), ea('Properties'), str('Properties'), dev('Projects'), hotel('Room Inventory'), community('Property & Unit Management')] },
+  { task: 'Add a guest booking', targets: [str('Bookings'), hotel('Reservations & Bookings')] },
   { task: 'Chase rent', targets: [pm('Rent'), ea('Rent Collection')] },
-  { task: 'Log a repair', targets: [pm('Maintenance'), ea('Maintenance'), str('Maintenance')] },
+  { task: 'Log a repair', targets: [pm('Maintenance'), ea('Maintenance'), str('Maintenance'), community('Maintenance & Repairs')] },
   { task: 'Book a viewing', targets: [pm('Viewings'), ea('Viewings')] },
+  { task: 'Start a development project', targets: [dev('Projects')] },
+  { task: 'Track a project budget', targets: [dev('Budget')] },
+  { task: 'Check a guest in or out', targets: [hotel('Reservations & Bookings')] },
+  { task: 'Log a gate visitor', targets: [community('Visitor Management')] },
   { task: 'Send a landlord or tenant their link', targets: [], href: '/staff-centre/documents' },
 ]
 
@@ -264,16 +269,16 @@ export default function PropertyHub() {
         })()}
         <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '16px 20px', marginBottom: 18, boxShadow: shadow }}>
           <b style={{ display: 'block', color: C.ink, fontSize: 16, fontWeight: 700 }}>Where do I go?</b>
-          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick what you want to do and we open the right page. {(['pm', 'ea', 'str'] as Mod[]).filter(has).map(m => `${AREA[m]}: ${MEANS[m].toLowerCase()}`).join('. ')}.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 10 }}>
+          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick a job, then the area it is for: {(['pm', 'ea', 'str', 'dev', 'hotel', 'community'] as Mod[]).filter(has).map(m => AREA[m]).join(', ')}. Hover over an area to see what it means.</p>
+          <div className="prop-tasks" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 10 }}>
             {TASKS.map(t => {
               const ts = t.targets.filter(x => has(x.mod))
               if (!t.href && !ts.length) return null
               return (
-                <div key={t.task} style={{ border: `1px solid ${C.line}`, borderRadius: 10, padding: '10px 12px' }}>
+                <div key={t.task} className="prop-task" style={{ border: `1px solid ${C.line}`, borderRadius: 10, padding: '10px 12px' }}>
                   <b style={{ display: 'block', color: C.ink, fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{t.task}</b>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {t.href ? <Link href={t.href} style={chip}>Open</Link> : ts.map(x => <Link key={x.mod + x.tab} href={HREF(x)} title={MEANS[x.mod]} style={chip}>{ts.length > 1 ? AREA[x.mod] : 'Open'}</Link>)}
+                    {t.href ? <Link href={t.href} style={chip}>Open</Link> : ts.map(x => <Link key={x.mod + x.tab} href={HREF(x)} title={MEANS[x.mod]} style={chip}>{ts.length > 1 ? <><span className="lg">{AREA[x.mod]}</span><span className="sm">{SHORT[x.mod]}</span></> : 'Open'}</Link>)}
                   </div>
                 </div>
               )
@@ -317,7 +322,7 @@ export default function PropertyHub() {
         </div>
         <GlanceTiles show={{ str: has('str'), pm: has('pm'), ea: has('ea'), dev: has('dev') }} />
       </div>
-      <style>{`@media (max-width: 760px){ .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; overflow-x: auto; -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); padding-right: 36px !important } .prop-hint{ display: block !important } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
+      <style>{`.prop-task .sm{ display: none } @media (max-width: 760px){ .prop-tasks{ grid-template-columns: 1fr 1fr !important; gap: 8px !important } .prop-task{ padding: 9px 10px !important } .prop-task b{ font-size: 13px !important } .prop-task a{ font-size: 11.5px !important; padding: 4px 7px !important } .prop-task .lg{ display: none } .prop-task .sm{ display: inline } .prop-grid{ grid-template-columns: 1fr !important } .prop-cats{ flex-direction: row !important; flex-wrap: wrap !important; gap: 6px !important } .prop-cats button{ flex: 1 1 calc(50% - 6px); min-width: 0 } .prop-row{ grid-template-columns: 1fr !important; gap: 6px !important } }`}</style>
     </div>
   )
 }
