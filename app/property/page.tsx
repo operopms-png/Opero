@@ -15,7 +15,7 @@ type Item = { name: string; targets: Target[]; shared?: boolean; href?: string }
 const AREA: Record<Mod, string> = { pm: 'Property Management', ea: 'Estate Agency', str: 'Vacation Rentals', dev: 'Developments', hotel: 'Hotels', community: 'Gated Communities' }
 // What each area means, shown on the chips so nobody has to guess which one to open.
 const MEANS: Record<Mod, string> = { pm: 'We manage the property for the landlord', ea: 'We let or sell the property for the landlord', str: 'Guest bookings and short stays', dev: 'Building and selling new projects', hotel: 'Rooms, reservations and guests', community: 'Homes, residents, visitors and repairs' }
-const HREF = (t: Target) => t.mod === 'hotel' ? '/hotel' : t.mod === 'community' ? '/community' : t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
+const HREF = (t: Target) => t.mod === 'hotel' ? `/hotel?tab=${encodeURIComponent(t.tab)}` : t.mod === 'community' ? `/community?tab=${encodeURIComponent(t.tab)}` : t.mod === 'pm' ? `/pm?tab=${encodeURIComponent(t.tab)}` : t.mod === 'ea' ? `/estate?section=${encodeURIComponent(t.tab)}` : t.mod === 'str' ? `/str?tab=${encodeURIComponent(t.tab)}` : `/dev?tab=${encodeURIComponent(t.tab)}`
 const pm = (tab: string): Target => ({ mod: 'pm', tab })
 const ea = (tab: string): Target => ({ mod: 'ea', tab })
 const str = (tab: string): Target => ({ mod: 'str', tab })
@@ -25,14 +25,16 @@ const community = (tab: string): Target => ({ mod: 'community', tab })
 
 // Where do I go? Plain tasks that open the right page. Where the answer depends on the type of property, each area is offered.
 const TASKS: { task: string; targets: Target[]; href?: string }[] = [
-  { task: 'Add a tenant', targets: [pm('Tenants'), ea('Tenants')] },
+  { task: 'Add a tenant', targets: [pm('Tenants'), ea('Tenants'), community('Homeowner & Resident Management')] },
   { task: 'Check a tenant’s ID and income', targets: [pm('Tenant Checks'), ea('Tenant Checks')] },
   { task: 'Add a landlord', targets: [pm('Landlords'), ea('Landlords')] },
-  { task: 'Add a property', targets: [pm('Properties'), ea('Properties'), str('Properties')] },
-  { task: 'Add a guest booking', targets: [str('Bookings')] },
+  { task: 'Add a property', targets: [pm('Properties'), ea('Properties'), str('Properties'), hotel('Room Inventory'), community('Property & Unit Management')] },
+  { task: 'Add a guest booking', targets: [str('Bookings'), hotel('Reservations & Bookings')] },
   { task: 'Chase rent', targets: [pm('Rent'), ea('Rent Collection')] },
-  { task: 'Log a repair', targets: [pm('Maintenance'), ea('Maintenance'), str('Maintenance')] },
+  { task: 'Log a repair', targets: [pm('Maintenance'), ea('Maintenance'), str('Maintenance'), community('Maintenance & Repairs')] },
   { task: 'Book a viewing', targets: [pm('Viewings'), ea('Viewings')] },
+  { task: 'Check a guest in or out', targets: [hotel('Reservations & Bookings')] },
+  { task: 'Log a gate visitor', targets: [community('Visitor Management')] },
   { task: 'Send a landlord or tenant their link', targets: [], href: '/staff-centre/documents' },
 ]
 
@@ -264,7 +266,7 @@ export default function PropertyHub() {
         })()}
         <div style={{ background: '#fff', border: `1px solid ${C.line}`, borderRadius: 14, padding: '16px 20px', marginBottom: 18, boxShadow: shadow }}>
           <b style={{ display: 'block', color: C.ink, fontSize: 16, fontWeight: 700 }}>Where do I go?</b>
-          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick what you want to do and we open the right page. {(['pm', 'ea', 'str'] as Mod[]).filter(has).map(m => `${AREA[m]}: ${MEANS[m].toLowerCase()}`).join('. ')}.</p>
+          <p style={{ margin: '2px 0 12px', fontSize: 13.5, color: C.muted }}>Pick a job, then the area it is for: {(['pm', 'ea', 'str', 'hotel', 'community'] as Mod[]).filter(has).map(m => AREA[m]).join(', ')}. Hover over an area to see what it means.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(250px,1fr))', gap: 10 }}>
             {TASKS.map(t => {
               const ts = t.targets.filter(x => has(x.mod))

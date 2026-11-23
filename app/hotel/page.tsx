@@ -17,6 +17,8 @@ const SECTIONS = HOTEL_GROUPS.flatMap(g => g.sections)
 export default function HotelPage() {
   const access = useRealEstateAccess()
   const [tab, setTab] = useState('Executive Dashboard')
+  // Opened from the Real Estate Intelligence page with ?tab=<name>.
+  useEffect(() => { queueMicrotask(() => { try { const t = new URLSearchParams(window.location.search).get('tab'); if (t && SECTIONS.some(x => x.name === t)) setTab(t) } catch {} }) }, [])
   const [acct, setAcct] = useState('')
   const [rooms, setRooms] = useState<any[]>([])
   useEffect(() => {
