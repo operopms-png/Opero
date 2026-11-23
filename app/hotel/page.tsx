@@ -1,14 +1,13 @@
 'use client'
-// Hotels: NOVOURQ's own hotel management area, opened from Real Estate Intelligence next to Vacation Rentals and Developments.
+// Hotels: hotel management for every company, opened from Real Estate Intelligence next to Vacation Rentals and Developments.
 // Executive Dashboard, Room Inventory, Reservations and Guests are working tabs; every other section of the plan shows its
-// feature list as "planned" until it is built (lib/hotel-sections.ts). Only the owner company and its staff can open it (the
-// same database check as Fleet and Rides, and the database enforces it too); client companies do not see it.
+// feature list as "planned" until it is built (lib/hotel-sections.ts). Each company sees only its own rows (database policies).
 import { useEffect, useState } from 'react'
 import ModuleTabStrip from '@/components/ModuleTabStrip'
 import RecordTab from '@/components/pm/RecordTab'
 import HotelDashboard from '@/components/hotel/HotelDashboard'
 import { supabase, getAccountId } from '@/lib/supabase'
-import { useFleetAccess } from '@/lib/fleet-access'
+import { useRealEstateAccess } from '@/lib/real-estate-access'
 import { HOTEL_GROUPS, BUILT } from '@/lib/hotel-sections'
 import { HOTEL_ROOMS, HOTEL_RESERVATIONS, HOTEL_GUESTS } from '@/lib/hotel-record-tabs'
 
@@ -16,7 +15,7 @@ const GROUPS = HOTEL_GROUPS.map(g => ({ label: g.label, items: g.sections.map(s 
 const SECTIONS = HOTEL_GROUPS.flatMap(g => g.sections)
 
 export default function HotelPage() {
-  const access = useFleetAccess()
+  const access = useRealEstateAccess()
   const [tab, setTab] = useState('Executive Dashboard')
   const [acct, setAcct] = useState('')
   const [rooms, setRooms] = useState<any[]>([])

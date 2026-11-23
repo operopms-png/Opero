@@ -1,3 +1,3 @@
 -- Gated Communities (NOVOURQ own company only; applied via Supabase migration community_module_core)
--- Same access rules as Fleet and Rides and Hotels: fleet_access() decides who may read (view or full) or write (full); rows must belong to fleet_owner_id().
+-- Replaced by per-company rules in migration hotel_community_per_company_rls: each company sees only its own rows (owner_only policy like dev_projects) and view-only staff cannot write.
 -- Tables: community_units (generated name), community_residents, community_visitors, community_maintenance, community_complaints (unit_id -> community_units).
