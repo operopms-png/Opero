@@ -5,6 +5,7 @@ export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
   { date: '2026-11-24', title: 'Website chat describes stays by your own wording', text: 'The website chat box no longer forces 6 to 12 month stays; it describes stay lengths the way your company information in Website Chats says.' },
+  { date: '2026-11-23', title: 'Deal rules', text: 'The Landlord offer in the Deal Analyser now has a Deal rules box, and Company Documents has an Add NOVOURQ documents button that adds a one-page Deal rules PDF.' },
   { date: '2026-11-23', title: 'Property-only packs, About us and the landlord offer example', text: 'Pack Builder has a New property pack button for the property breakdown with no car, every pack has an editable About us box saying we do flexible living in fully furnished apartments, and packs can show a worked example of how we price a guaranteed rent offer.' },
   { date: '2026-11-23', title: 'WhatsApp mirror', text: 'Marketing has a new WhatsApp tab that mirrors a linked spare WhatsApp number so admins and co-founders can read and send, and Ava can prepare messages that wait in AI Approvals until you approve them.' },
   { date: '2026-11-23', title: 'Attach photos in Ask AI and add them to investor packs', text: 'Admins and co-founders can press Attach in Ask AI, choose photos and ask Novourq Cloud AI to add them to the car or property section of one or more investor packs; they go in straight away and can be removed in Pack Builder.' },
