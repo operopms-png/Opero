@@ -180,7 +180,18 @@ export async function POST(req: NextRequest) {
   }
 
   const out = await callClaude(`${role.instructions}\n\nIf the question is about how the platform works or where to find something, answer from the PORTAL GUIDE below with the exact click path, and never invent a page or setting.\n\n${portalGuide()}`, input, 1500)
-  if (out.error) return NextResponse.json({ error: 'The assistant could not answer.' }, { status: 502 })
+  if (out.error) {
+    // Say why, in plain words, for the causes the owner can fix; the full error goes to the server log.
+    console.error('[grok]', out.error.slice(0, 500))
+    const e = out.error.toLowerCase()
+    const why = e.includes('credit balance') ? 'The AI account has run out of credit. Add credit in the Anthropic console (Plans and Billing).'
+      : e.includes('invalid x-api-key') || e.includes('authentication_error') ? 'The AI key was rejected. Check ANTHROPIC_API_KEY in the site settings.'
+      : e.includes('rate_limit') || e.includes('429') ? 'The AI is busy right now. Try again in a minute.'
+      : e.includes('overloaded') || e.includes('529') ? 'The AI service is overloaded. Try again in a minute.'
+      : e.includes('prompt is too long') || e.includes('too many tokens') ? 'The question plus the portal guide was too long for the AI. Ask a shorter question.'
+      : 'The assistant could not answer.'
+    return NextResponse.json({ error: why }, { status: 502 })
+  }
   const reply = out.text ?? ''
   // Record when this agent was last asked something (shown on the Agent Pool).
   if (agentId) await serviceClient.from('ai_staff').update({ last_used_at: new Date().toISOString() }).eq('id', agentId)
