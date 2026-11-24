@@ -7,6 +7,7 @@ export const isHrFolder = (f: any) => HR_FOLDERS.includes(String(f || ''))
 // Ready-made NOVOURQ documents for Company Documents (the "Add NOVOURQ documents" button).
 export const COMPANY_STARTERS = [
   { name: 'Deal rules: guaranteed rent offers', folder: 'Deal Rules', path: '/company-templates/NOVOURQ_Deal_Rules.pdf', mime: 'application/pdf' },
+  { name: 'What NOVOURQ is and how to say it', folder: 'About NOVOURQ', path: '/company-templates/NOVOURQ_What_NOVOURQ_Is.pdf', mime: 'application/pdf' },
 ]
 
 export const HR_STARTERS = [
