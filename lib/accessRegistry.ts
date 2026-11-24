@@ -16,6 +16,7 @@ export const STAFF_CENTRE_TABS = [
   { k: 'listings',    l: 'Listings' },
   { k: 'smarthome',   l: 'Smart Home' },
   { k: 'inbox',       l: 'Conversations' },
+  { k: 'calls',       l: 'AI Call Line' },
   { k: 'portalaccess', l: 'Portal Access' },
   { k: 'portals',     l: 'Property Portals' },
   { k: 'maintenance', l: 'Upkeep board' },

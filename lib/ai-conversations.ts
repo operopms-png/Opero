@@ -8,11 +8,12 @@ const when = (d: any) => { try { return new Date(d).toISOString().slice(0, 16).r
 export async function recentMessagesContext(biz: string, days = 7): Promise<string> {
   const since = new Date(Date.now() - days * 864e5).toISOString()
   const q = (p: PromiseLike<any>) => Promise.resolve(p).then(r => r.data ?? []).catch(() => [])
-  const [mail, wa, sms, calls, guest, chats] = await Promise.all([
+  const [mail, wa, sms, calls, nova, guest, chats] = await Promise.all([
     q(serviceClient.from('mailbox_messages').select('folder,from_name,from_email,to_list,subject,snippet,date').eq('user_id', biz).gte('date', since).order('date', { ascending: false }).limit(60)),
     q(serviceClient.from('whatsapp_messages').select('contact_name,contact_phone,sender,body,created_at').eq('business_id', biz).gte('created_at', since).order('created_at', { ascending: false }).limit(60)),
     q(serviceClient.from('sms_messages').select('contact_name,contact_phone,sender,body,created_at').eq('business_id', biz).gte('created_at', since).order('created_at', { ascending: false }).limit(40)),
     q(serviceClient.from('call_logs').select('direction,contact_name,contact_phone,staff_name,status,duration_seconds,summary,created_at').eq('user_id', biz).gte('created_at', since).order('created_at', { ascending: false }).limit(30)),
+    q(serviceClient.from('phone_calls').select('call_id,direction,caller_name,callback_number,from_number,reason,caller_type,summary,status,duration_seconds,created_at').eq('business_id', biz).gte('created_at', since).order('created_at', { ascending: false }).limit(30)),
     q(serviceClient.from('str_guest_messages').select('sender,subject,message,created_at,booking_id').eq('user_id', biz).gte('created_at', since).order('created_at', { ascending: false }).limit(60)),
     q(serviceClient.from('website_chats').select('id,name,email,interest,summary,message_count,last_message_at').eq('business_id', biz).gte('last_message_at', since).order('last_message_at', { ascending: false }).limit(20)),
   ])
@@ -22,6 +23,7 @@ export async function recentMessagesContext(biz: string, days = 7): Promise<stri
   if (wa.length) out.push(`### WhatsApp (${wa.length} latest)\n` + wa.map((m: any) => line([when(m.created_at), `${m.sender === 'staff' || m.sender === 'us' ? 'We sent to' : 'From'} ${m.contact_name || m.contact_phone || '?'}`, cut(m.body, 160)])).join('\n'))
   if (sms.length) out.push(`### Text messages (${sms.length} latest)\n` + sms.map((m: any) => line([when(m.created_at), `${m.sender || ''} ${m.contact_name || m.contact_phone || '?'}`, cut(m.body, 160)])).join('\n'))
   if (calls.length) out.push(`### Calls (${calls.length} latest)\n` + calls.map((c: any) => line([when(c.created_at), c.direction, c.contact_name || c.contact_phone, c.staff_name ? `with ${c.staff_name}` : '', c.status, c.duration_seconds ? `${Math.round(c.duration_seconds / 60)} min` : '', cut(c.summary, 160)])).join('\n'))
+  if (nova.length) out.push(`### AI Call Line, the Nova voice agent (${nova.length} latest; call_id is each call's id for a follow-up)\n` + nova.map((c: any) => line([when(c.created_at), c.call_id, c.direction, c.caller_name || c.callback_number || c.from_number || '?', c.reason, c.caller_type, c.status, c.duration_seconds ? `${Math.round(c.duration_seconds / 60)} min` : '', cut(c.summary, 160)])).join('\n'))
   if (guest.length) out.push(`### Guest messages, short stays (${guest.length} latest)\n` + guest.map((m: any) => line([when(m.created_at), m.sender, cut(m.subject, 60), cut(m.message, 160)])).join('\n'))
   if (chats.length) {
     const ids = chats.map((c: any) => c.id)

@@ -41,6 +41,7 @@ const PAGES: Record<string, B> = {
   '/staff-centre/data-hub': { title: 'Data Hub', text: 'Everything stored for your business, how complete it is, where it came from, and what tenants and landlords have asked for.' },
   '/staff-centre/tasks': { title: 'Tasks', text: 'Assign tasks to the team and track them to done. Each person sees their own on their dashboard.' },
   '/staff-centre/receptionist': { title: 'AI Assistant', text: 'Your AI receptionist answers emails, tenant and landlord messages and website chat from your own company knowledge, and passes anything it can\'t handle to your team.' },
+  '/staff-centre/calls': { title: 'AI Call Line', text: 'Every call your Nova voice agent answers, newest first: caller, reason, a short AI summary, duration and status. Open one for the transcript, recording and every extracted field, and move its status along as you action it.' },
   '/staff-centre/meetings': { title: 'Meetings', text: 'Your booking links and scheduled meetings. Share a link and people pick a time that suits you.' },
   '/staff-centre/upkeep': { title: 'Upkeep', text: 'Repairs, maintenance and cleaning on one board: switch between Repairs & maintenance and Cleaning at the top to see who is handling each job and its progress.' },
   '/staff-centre/maintenance': { title: 'Maintenance', text: 'Repair jobs across all properties, with who is handling each one and its progress.' },

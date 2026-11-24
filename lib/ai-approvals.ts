@@ -10,7 +10,7 @@ function getServiceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
-export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'building_notice' | 'social_post' | 'video_brief' | 'investor_pack' | 'whatsapp_send'
+export type AiActionType = 'guest_reply' | 'owner_report' | 'cleaning_instruction' | 'maintenance_instruction' | 'rate_change' | 'portal_reply' | 'email_out' | 'listing_description' | 'mark_rent_paid' | 'lease_update' | 'import_records' | 'marketing_list' | 'partner_investment' | 'building_notice' | 'social_post' | 'video_brief' | 'investor_pack' | 'whatsapp_send' | 'call_followup'
 
 // Portal chat tables an approved portal reply may be written to.
 const PORTAL_TABLES: Record<string, string> = {
@@ -278,6 +278,20 @@ export async function executeAiAction(action: { user_id: string; action_type: st
     const { data, error } = await getServiceClient().from('estate_properties').update({ description: body }).eq('id', p.property_id).eq('user_id', action.user_id).select('id')
     if (error) return { error: error.message }
     if (!data?.length) return { error: 'Property not found for this account.' }
+    return { success: true }
+  }
+
+  if (action.action_type === 'call_followup') {
+    // A follow-up text back to a caller from AI Call Line. Note and task follow-ups are
+    // not outward, so they are written straight to call_followups (lib/ai-call-followups.ts)
+    // without going through here; only the message kind reaches the queue, and only here.
+    const to = String(p.to || '')
+    if (!to) return { error: 'The caller’s number is missing.' }
+    const { sendSms } = await import('./send-sms')
+    const r = await sendSms(to, body)
+    if (r.skipped) return { error: 'Texting is not set up yet (Twilio), so this could not be sent.' }
+    if (r.error) return { error: r.error }
+    if (p.followup_id) await getServiceClient().from('call_followups').update({ status: 'sent' }).eq('id', p.followup_id)
     return { success: true }
   }
 

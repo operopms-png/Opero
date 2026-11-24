@@ -32,6 +32,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/airbnb', label: 'Airbnb Inbox', scTab: 'inbox' },
     { href: '/staff-centre/website-chats', label: 'Website Chats', scTab: 'inbox', badge: 'webchat' },
     { href: '/staff-centre/receptionist', label: 'AI Assistant', scTab: 'inbox' },
+    { href: '/staff-centre/calls', label: 'AI Call Line', scTab: 'calls' },
   ] },
   { label: 'CRM', icon: 'contacts', tabs: [
     { href: '/staff-centre/crm', label: 'CRM', scTab: 'crm', badge: 'crm' },

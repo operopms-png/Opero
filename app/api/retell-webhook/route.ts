@@ -14,6 +14,7 @@ type CustomAnalysisData = {
 
 type RetellCall = {
   call_id: string
+  agent_id?: string
   direction?: 'inbound' | 'outbound'
   from_number?: string
   to_number?: string
@@ -55,8 +56,23 @@ export async function POST(request: NextRequest) {
   const customAnalysisData = call.call_analysis?.custom_analysis_data
 
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+  // Which company this call belongs to: looked up by the Retell agent that took it, falling
+  // back to the number it came in on. Not found (not connected to a company yet) leaves
+  // business_id untouched rather than nulling out a value an earlier event already set.
+  let businessId: string | null = null
+  if (call.agent_id) {
+    const { data } = await supabase.from('retell_agent_map').select('business_id').eq('agent_id', call.agent_id).maybeSingle()
+    businessId = data?.business_id ?? null
+  }
+  if (!businessId && call.to_number) {
+    const { data } = await supabase.from('retell_agent_map').select('business_id').eq('to_number', call.to_number).maybeSingle()
+    businessId = data?.business_id ?? null
+  }
+
   const { error } = await supabase.from('phone_calls').upsert({
     call_id: call.call_id,
+    ...(businessId ? { business_id: businessId } : {}),
     direction: call.direction ?? null,
     from_number: call.from_number ?? null,
     to_number: call.to_number ?? null,
