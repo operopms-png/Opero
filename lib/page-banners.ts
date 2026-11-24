@@ -3,7 +3,7 @@
 type B = { title: string; text: string }
 const PAGES: Record<string, B> = {
   '/partners': { title: 'Partners', text: 'Your investment, repayments, documents and maintenance in one place. Switch tabs along the top; amounts show in your own currency.' },
-  '/staff-centre/training': { title: 'Staff Training', text: 'How to use every tab in the portal, with steps, pictures and video, plus what is new and your company training material. Search for a tab to find its guide.' },
+  '/staff-centre/training': { title: 'Staff Training', text: 'How to use every tab in the portal, with steps, pictures and video, plus what is new and your company training material. NOVOURQ’s own team also sees Who we are, the official wording on what NOVOURQ is. Search for a tab to find its guide.' },
   '/staff-centre/crew': { title: 'Upkeep', text: 'The Upkeep team (maintenance, repairs and cleaning): headcount, who is on shift, open and finished jobs, and a link to open any person\'s portal as they see it.' },
   '/staff-centre/scale': { title: 'Scale', text: 'How big your master lease and co-host business is: doors under management, head rent against income, bookings on co-hosted properties, and which leases and agreements are ending or missing sublet consent. Read from your own Head Leases and Co-hosts. Press Preview example to see sample figures.' },
   '/staff-centre/onboarding-tracker': { title: 'Onboarding tracker', text: 'Every landlord, tenant, co-host and investor being onboarded on one board, with how far each has got and who has gone quiet for 7 days. Tick manual steps, email a client their link again, or extend an expired link. Clients who have not finished their link are reminded automatically.' },

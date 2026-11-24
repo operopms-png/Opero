@@ -8,7 +8,7 @@ import { CrmPage, CrmHeader, Body, Empty, Loading, btn, input, label } from '@/c
 import { staffApi } from '@/lib/staff-api'
 import { HR_FOLDERS, HR_STARTERS, COMPANY_STARTERS } from '@/lib/hr-docs'
 
-const COMPANY_FOLDERS = ['Company Incorporation', 'ADO1 Forms', 'Certificates', 'Insurance', 'Deal Rules']
+const COMPANY_FOLDERS = ['Company Incorporation', 'ADO1 Forms', 'Certificates', 'Insurance', 'Deal Rules', 'About NOVOURQ']
 const when = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 const size = (n: number | null) => !n ? '' : n > 1e6 ? (n / 1e6).toFixed(1) + ' MB' : Math.round(n / 1e3) + ' KB'
 const card: React.CSSProperties = { background: '#fff', border: '1px solid #D9E2F0', borderRadius: 8, padding: 16, marginBottom: 16, display: 'grid', gap: 10, maxWidth: 560 }

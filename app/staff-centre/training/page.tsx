@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { supabase, getAccountId } from '../../../lib/supabase'
 import { useRole } from '../../../lib/useRole'
 import PortalGuides from '../../../components/training/PortalGuides'
+import WhoWeAre from '../../../components/training/WhoWeAre'
+import { useFleetAccess } from '../../../lib/fleet-access'
 import { C, CrmPage, CrmHeader, Body, Stat, Pill, Group, Row, Empty, Modal, Loading, btn, input as inp, label as lbl } from '../../../components/crm/Page'
 
 const TYPES = [
@@ -35,11 +37,15 @@ async function uploadFile(file: File, folder: string): Promise<string | null> {
 export default function TrainingPage() {
   const { role, loading: roleLoading } = useRole()
   const isAdmin = role === 'Admin'
+  // Who we are is NOVOURQ's own wording, so it shows for NOVOURQ's own company only (client companies get no Fleet access).
+  const ownCo = useFleetAccess()
+  const showWho = ownCo === 'view' || ownCo === 'full'
+  useEffect(() => { if (showWho) setView('who') }, [showWho])
 
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState('')
   const [accountId, setAccountId] = useState('')
-  const [view, setView] = useState<'guides' | 'materials'>('guides')
+  const [view, setView] = useState<'who' | 'guides' | 'materials'>('guides')
   const [materials, setMaterials] = useState<any[]>([])
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
   const [showAdd, setShowAdd] = useState(false)
@@ -142,8 +148,9 @@ export default function TrainingPage() {
       />
       <Body>
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-          {([['guides', 'Portal guides'], ['materials', 'Company training']] as const).map(([k, l]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} style={{ border: '1px solid #D0D5DD', background: view === k ? '#2F6DB5' : '#fff', color: view === k ? '#fff' : '#475467', borderRadius: 6, padding: '7px 16px', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>)}
+          {([...(showWho ? [['who', 'Who we are'] as const] : []), ['guides', 'Portal guides'] as const, ['materials', 'Company training'] as const]).map(([k, l]) => <button key={k} onClick={() => setView(k)} aria-pressed={view === k} style={{ border: '1px solid #D0D5DD', background: view === k ? '#2F6DB5' : '#fff', color: view === k ? '#fff' : '#475467', borderRadius: 6, padding: '7px 16px', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}>{l}</button>)}
         </div>
+        {view === 'who' && showWho && <WhoWeAre />}
         {view === 'guides' && accountId && <PortalGuides accountId={accountId} isAdmin={isAdmin} userEmail={userEmail} />}
         {view === 'materials' && <>
         {materials.length > 0 && (
