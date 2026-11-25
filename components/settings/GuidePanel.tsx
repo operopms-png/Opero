@@ -184,6 +184,12 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Listings: one row per property with its base, floor, ceiling, average suggested price, occupancy and whether rules are saved. Market: how full your next 60 nights are, which weekdays fill and your typical stay, from your own bookings.',
     'Limits: prices are suggestions only and nothing is sent to Airbnb or any other channel yet, so copy them into your channel manager. There is no competitor data. Press Preview example to see sample figures that are not your data.',
   ] },
+  { id: 'kpi-tracker', title: 'KPI Tracker', steps: [
+    'Where: KPI Tracker in the left menu, or Human Intelligence Hub → Company → KPI Tracker. The Dashboard also has a KPI Tracker box with the same numbers (view only). You need the Company Documents tab.',
+    'Each tile is one number for this month against its target: green is on target, amber is within 15% of it, red is further behind. The line underneath shows the last six months.',
+    'New enquiries, Viewings booked, Deals won, Rent collected on time and Repairs fixed are worked out from your portal records. Homes secured, Occupancy, Monthly revenue and Margin kept are typed in once a month.',
+    'Click a tile to type in this month\'s number (it replaces a worked-out one) or change the target. + Add a KPI adds your own; Remove KPI hides one. Each company only sees its own KPIs. The AI cannot change them yet.',
+  ] },
   { id: 'scale', title: 'Scale (master leases and co-hosting)', steps: [
     'Where: Scale in the left menu, between Real Estate Intelligence and Novourq Cloud AI. It shows how big your master lease and co-host business is, from your own Head Leases and Co-hosts only.',
     'The top cards show doors under management (head leases plus properties assigned to co-hosts), master leases, co-hosts, margin after head rent and co-host bookings for the last 90 days.',
