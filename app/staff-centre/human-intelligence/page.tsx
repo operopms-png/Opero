@@ -13,7 +13,7 @@ const GROUPS: { name: string; note: string; hubs: string[] }[] = [
   { name: 'Clients and sales', note: 'Everyone you deal with', hubs: ['Inbox', 'CRM', 'Client Properties', 'Owners & Tenants', 'Partners & Investors', 'Marketing'] },
   { name: 'Money', note: 'Income, tax and reporting', hubs: ['Finance', 'Tax Compliance', 'Reports'] },
   { name: 'Operations', note: 'Running the properties', hubs: ['Operations', 'Schedule', 'Smart Home', 'Portals'] },
-  { name: 'Company', note: 'Your team and records', hubs: ['Company Documents', 'Team'] },
+  { name: 'Company', note: 'Your team and records', hubs: ['Company Documents', 'KPI Tracker', 'Team'] },
 ]
 
 // Where do I go? Plain tasks that open the right page. Each page is looked up in STAFF_HUBS,

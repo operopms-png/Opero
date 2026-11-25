@@ -4,6 +4,7 @@
 export type News = { date: string; title: string; text: string }
 
 export const WHATS_NEW: News[] = [
+  { date: '2026-11-25', title: 'KPI Tracker', text: 'A new KPI Tracker page and Dashboard box show your key numbers for the month against target in green, amber or red, with some worked out from the portal and the rest typed in once a month.' },
   { date: '2026-11-24', title: 'AI Call Line', text: 'Inbox has a new AI Call Line tab showing every call the Nova voice agent answers, with caller, reason, an AI summary, the transcript, the recording and a status you move from New to Followed up to Closed; each company only sees its own calls once an admin connects its Retell agent or number.' },
   { date: '2026-11-24', title: 'Who we are, for staff', text: 'Staff Training has a new Who we are tab with our official wording on what we do and how we earn, Company Documents has an Add NOVOURQ documents button that adds a one-page PDF with our official wording on what we do and how we earn, and the AI now answers with the same wording.' },
   { date: '2026-11-24', title: 'Website chat describes stays by your own wording', text: 'The website chat box no longer forces 6 to 12 month stays; it describes stay lengths the way your company information in Website Chats says.' },

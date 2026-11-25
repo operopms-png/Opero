@@ -42,6 +42,7 @@ const STAFF_CENTRE_PATH_TAB: Record<string, string> = {
   '/staff-centre/company-documents': 'companydocs',
   '/staff-centre/onboarding-tracker': 'companydocs',
   '/staff-centre/scale': 'companydocs',
+  '/staff-centre/kpis': 'companydocs',
   '/staff-centre/hr-documents': 'hr',
   '/staff-centre/services-pack': 'marketing',
   '/staff-centre/packs': 'marketing',

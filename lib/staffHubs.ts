@@ -14,6 +14,7 @@ export const STAFF_HUBS: Hub[] = [
     { href: '/staff-centre/oversight', label: 'Dashboard', scTab: 'oversight' },
   ] },
   { label: 'Scale', icon: 'chart', tabs: [{ href: '/staff-centre/scale', label: 'Scale', scTab: 'companydocs' }] },
+  { label: 'KPI Tracker', icon: 'chart', tabs: [{ href: '/staff-centre/kpis', label: 'KPI Tracker', scTab: 'companydocs' }] },
   { label: 'Data Hub', icon: 'folder', tabs: [{ href: '/staff-centre/data-hub', label: 'Data Hub', scTab: 'datahub' }] },
   { label: 'Company Documents', icon: 'file', tabs: [{ href: '/staff-centre/company-documents', label: 'Company Documents', scTab: 'companydocs' }] },
   { label: 'Company Setup', icon: 'file', tabs: [{ href: '/staff-centre/company-setup', label: 'Company Setup', scTab: 'companysetup' }] },
