@@ -38,7 +38,7 @@ export default function DashboardRoad() {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'end', margin: '12px 0', background: '#F6F8FB', borderRadius: 10, padding: 10 }}>
           <label style={{ fontSize: 11.5, color: '#667085' }}>Target<br /><input style={{ ...inp, width: 90 }} inputMode="numeric" value={f.target} onChange={e => setF({ ...f, target: e.target.value })} /></label>
           <label style={{ fontSize: 11.5, color: '#667085' }}>By<br /><input style={inp} type="date" value={f.deadline} onChange={e => setF({ ...f, deadline: e.target.value })} /></label>
-          <label style={{ fontSize: 11.5, color: '#667085' }}>Already managing at the start<br /><input style={{ ...inp, width: 90 }} inputMode="numeric" value={f.baseline} onChange={e => setF({ ...f, baseline: e.target.value })} /></label>
+          <label style={{ fontSize: 11.5, color: '#667085' }}>Extra homes outside the portal<br /><input style={{ ...inp, width: 90 }} inputMode="numeric" value={f.baseline} onChange={e => setF({ ...f, baseline: e.target.value })} /></label>
           <button onClick={save} style={{ background: '#1B2F6E', color: '#fff', border: 0, borderRadius: 8, padding: '8px 14px', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Save</button>
           {err && <span style={{ color: '#B42318', fontSize: 12.5 }}>{err}</span>}
         </div>
@@ -63,7 +63,7 @@ export default function DashboardRoad() {
             <b style={{ color: '#16233F', textAlign: 'right' }}>{r.funnel[k]}</b>
           </div>
         ))}
-        <div style={{ fontSize: 11.5, color: '#98A2B3' }}>{r.funnel.lost} marked lost. {r.pipeline} properties are open in Client Properties. Progress is the starting number plus leads marked Signed in Landlord Leads and properties with a signed date in Client Properties.</div>
+        <div style={{ fontSize: 11.5, color: '#98A2B3' }}>{r.funnel.lost} marked lost. {r.managed} homes are in Property Management and Estate Agency, {r.pipeline} properties are open in Client Properties. Progress adds those homes, any extra homes you enter, leads marked Signed in Landlord Leads and Client Properties in the Signed stage.</div>
       </div>
     </div>
   )

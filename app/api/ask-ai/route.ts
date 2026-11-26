@@ -82,6 +82,7 @@ async function send(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, b: an
     r.text = await queuePackFromReply(c, r.text)
     r.text = await addPackPhotosFromReply(c, r.text)
     r.text = await queueWhatsAppFromReply(c, r.text)
+    r.text = await roadFromReply(c, r.text)
     messages.push({ role: 'assistant', content: r.text, at: new Date().toISOString(), web })
     const title = chat?.title && chat.title !== 'New chat' ? chat.title : message.replace(/\s+/g, ' ').slice(0, 70)
     if (chat) {
@@ -192,4 +193,29 @@ async function queueNoticeFromReply(c: NonNullable<Awaited<ReturnType<typeof get
     if (!r.ok) return clean + `\n\n(I could not queue the notice: ${r.error})`
     return clean + `\n\nQueued: ${r.summary}. It is waiting in Staff Centre → AI Approvals and goes out when you approve it.`
   } catch (e: any) { return clean + `\n\n(I could not queue it: ${e?.message || 'something went wrong'})` }
+}
+
+// If the AI added the [[ROAD_GOAL …]] or [[MARK_SIGNED …]] line, save it straight away (admins and co-founders only). Both are easy to undo.
+async function roadFromReply(c: NonNullable<Awaited<ReturnType<typeof getCaller>>>, text: string): Promise<string> {
+  let out = text
+  const arg = (m: RegExpMatchArray, k: string) => (m[1].match(new RegExp('(?:^|\\s)' + k + '=(?:"([^"]*)"|([^\\s\\]]+))')) || []).slice(1).find(Boolean) || ''
+  const goal = out.match(/\[\[ROAD_GOAL((?:"[^"]*"|[^\]"])*)\]\]/)
+  if (goal) {
+    out = out.replace(/\s*\[\[ROAD_GOAL(?:"[^"]*"|[^\]"])*\]\]\s*/g, '\n').trim()
+    try {
+      const { updateRoadGoal } = await import('@/lib/ai-road')
+      const r = await updateRoadGoal(c, { target: arg(goal, 'target'), deadline: arg(goal, 'deadline'), extra: arg(goal, 'extra') })
+      out += r.ok ? `\n\nSaved: ${r.summary}. Check it in Staff Centre → Dashboard → Road to 100.` : `\n\n(I could not change the goal: ${r.error})`
+    } catch (e: any) { out += `\n\n(I could not change the goal: ${e?.message || 'something went wrong'})` }
+  }
+  const sign = out.match(/\[\[MARK_SIGNED((?:"[^"]*"|[^\]"])*)\]\]/)
+  if (sign) {
+    out = out.replace(/\s*\[\[MARK_SIGNED(?:"[^"]*"|[^\]"])*\]\]\s*/g, '\n').trim()
+    try {
+      const { markPropertySigned } = await import('@/lib/ai-road')
+      const r = await markPropertySigned(c, arg(sign, 'property'))
+      out += r.ok ? `\n\nSaved: ${r.summary}. Check it in Staff Centre → Client Properties; it counts towards the Road to 100.` : `\n\n(I could not mark it signed: ${r.error})`
+    } catch (e: any) { out += `\n\n(I could not mark it signed: ${e?.message || 'something went wrong'})` }
+  }
+  return out
 }

@@ -11,8 +11,8 @@ import { STARTERS, monthStart, addMonths, statusOf } from '@/lib/kpi'
 const MONTHS = 6
 
 async function auto(biz: string, source: string, from: string, to: string): Promise<number | null> {
-  const count = async (t: string, col: string, extra?: (q: any) => any) => {
-    let q: any = db.from(t).select('id', { count: 'exact', head: true }).eq('user_id', biz).gte(col, from).lt(col, to)
+  const count = async (t: string, col: string, extra?: (q: any) => any, key = 'user_id') => {
+    let q: any = db.from(t).select('id', { count: 'exact', head: true }).eq(key, biz).gte(col, from).lt(col, to)
     if (extra) q = extra(q)
     const { count: c, error } = await q
     return error ? null : (c ?? 0)
@@ -23,6 +23,11 @@ async function auto(biz: string, source: string, from: string, to: string): Prom
       const a = error ? 0 : (c ?? 0)
       const b = (await count('crm_contacts', 'created_at')) ?? 0
       return a + b
+    }
+    if (source === 'auto:homes_secured') {
+      const a = await count('client_properties', 'signed_at', q => q.eq('stage', 'signed'), 'business_id')
+      const { count: b } = await db.from('landlord_estimates').select('id', { count: 'exact', head: true }).eq('business_id', biz).eq('status', 'signed').gte('updated_at', from).lt('updated_at', to)
+      return (a ?? 0) + (b ?? 0)
     }
     if (source === 'auto:viewings') return await count('estate_viewings', 'created_at')
     if (source === 'auto:deals_won') return await count('crm_deals', 'created_at', q => q.ilike('stage', '%won%'))

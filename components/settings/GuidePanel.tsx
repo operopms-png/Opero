@@ -186,15 +186,15 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
   ] },
   { id: 'road-to-100', title: 'Road to 100 (property goal)', steps: [
     'Where: Staff Centre → Dashboard, the Road to 100 box above the KPI Tracker box. It shows how many properties you have against your goal (100 by 1 June 2027 to start with).',
-    'The number is the starting number (homes you already manage) plus Landlord Leads you move to Signed plus Client Properties that have a signed date. Press Landlord Leads → to move leads along.',
+    'The number is the homes already in Property Management and Estate Agency (each counted once), plus any Extra homes you enter, plus Landlord Leads you move to Signed, plus Client Properties in the Signed stage. Press Landlord Leads → to move leads along.',
     'It shows how many are still to sign, how many you need to sign each month to hit the date, how many you signed and how many new owner leads came in over the last 30 days, and the funnel from New to Signed. Ahead, On or Behind pace compares the last 30 days with what is needed.',
-    'Press Edit goal to change the target, the date or the starting number. Each company has its own goal. The AI cannot change it yet.',
+    'Press Edit goal to change the target, the date or the extra homes. Each company has its own goal. Ask AI can answer questions about it and, for admins and co-founders, change the goal or mark a Client Properties property Signed. The Homes secured KPI in KPI Tracker fills itself from the same signed counts.',
   ] },
   { id: 'kpi-tracker', title: 'KPI Tracker', steps: [
     'Where: KPI Tracker in the left menu, or Human Intelligence Hub → Company → KPI Tracker. The Dashboard also has a KPI Tracker box with the same numbers (view only). You need the Company Documents tab.',
     'Each tile is one number for this month against its target: green is on target, amber is within 15% of it, red is further behind. The line underneath shows the last six months.',
     'New enquiries, Viewings booked, Deals won, Rent collected on time and Repairs fixed are worked out from your portal records. Homes secured, Occupancy, Monthly revenue and Margin kept are typed in once a month.',
-    'Click a tile to type in this month\'s number (it replaces a worked-out one) or change the target. + Add a KPI adds your own; Remove KPI hides one. Each company only sees its own KPIs. The AI cannot change them yet.',
+    'Click a tile to type in this month\'s number (it replaces a worked-out one) or change the target. + Add a KPI adds your own; Remove KPI hides one. Each company only sees its own KPIs. The Homes secured KPI fills itself from properties signed that month. The AI cannot change KPIs yet.',
   ] },
   { id: 'scale', title: 'Scale (master leases and co-hosting)', steps: [
     'Where: Scale in the left menu, between Real Estate Intelligence and Novourq Cloud AI. It shows how big your master lease and co-host business is, from your own Head Leases and Co-hosts only.',
