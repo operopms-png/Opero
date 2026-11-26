@@ -2,7 +2,7 @@
 // Same result as Staff Centre → Dashboard → Road to 100 → Edit goal, and Staff Centre → Client Properties → open the property → Signed.
 import { serviceClient as db } from '@/lib/admin-auth'
 import { buildRoad, DEFAULT_DEADLINE } from '@/lib/road-to-100'
-import { managedHomes, signedProps } from '@/lib/road-data'
+import { linkLeads, managedHomes, signedProps } from '@/lib/road-data'
 
 type Who = { businessId: string; name: string; email: string; isAdmin: boolean; role?: string }
 const can = (c: Who) => c.isAdmin || /co founder/i.test(c.role || '')
@@ -10,10 +10,10 @@ const can = (c: Who) => c.isAdmin || /co founder/i.test(c.role || '')
 export async function roadSummary(biz: string): Promise<string> {
   const [{ data: g }, { data: leads }, sp, managed] = await Promise.all([
     db.from('growth_goal').select('*').eq('business_id', biz).maybeSingle(),
-    db.from('landlord_estimates').select('status,created_at,updated_at').eq('business_id', biz).limit(5000),
+    db.from('landlord_estimates').select('id,status,created_at,updated_at').eq('business_id', biz).limit(5000),
     signedProps(biz), managedHomes(biz),
   ])
-  const r = buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? DEFAULT_DEADLINE, baseline: g?.baseline ?? 0 }, leads || [], { ...sp, managed })
+  const r = buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? DEFAULT_DEADLINE, baseline: g?.baseline ?? 0 }, await linkLeads(biz, leads || []), { ...sp, managed })
   return `## Road to 100 (Staff Centre → Dashboard → Road to 100)\nGoal ${r.goal.target} properties by ${r.goal.deadline}. Now ${r.current} (${r.managed} managed in Property Management/Estate Agency + ${r.goal.baseline} extra + ${r.signed} signed). Still to sign ${r.remaining}; needed per month ${r.neededPerMonth ?? 'n/a'}; signed last 30 days ${r.signedLast30}; new owner leads last 30 days ${r.leadsLast30}; ${r.pipeline} open in Client Properties. Pace: ${r.state}.`
 }
 

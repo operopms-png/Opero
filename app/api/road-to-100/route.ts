@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
 import { hasScTab } from '@/lib/staff-access'
-import { managedHomes, signedProps } from '@/lib/road-data'
+import { linkLeads, managedHomes, signedProps } from '@/lib/road-data'
 import { buildRoad, DEFAULT_DEADLINE } from '@/lib/road-to-100'
 
 // Road to 100 properties. The goal (target, deadline, homes already managed) lives in growth_goal, one row per company.
@@ -21,10 +21,10 @@ async function load(biz: string) {
     const ins = await db.from('growth_goal').insert({ business_id: biz, deadline: DEFAULT_DEADLINE }).select('*').single()
     g = ins.data
   }
-  const { data: leads } = await db.from('landlord_estimates').select('status,created_at,updated_at').eq('business_id', biz).limit(5000)
+  const { data: leads } = await db.from('landlord_estimates').select('id,status,created_at,updated_at').eq('business_id', biz).limit(5000)
   const [sp, managed] = await Promise.all([signedProps(biz), managedHomes(biz)])
   const props = { ...sp, managed }
-  return buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? null, baseline: g?.baseline ?? 0 }, leads || [], props)
+  return buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? null, baseline: g?.baseline ?? 0 }, await linkLeads(biz, leads || []), props)
 }
 
 export async function GET(req: NextRequest) {

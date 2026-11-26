@@ -15,6 +15,7 @@ export function buildRoad(goal: Goal, leads: { status: string; created_at: strin
   const funnel: Funnel = { new: 0, contacted: 0, valuation: 0, meeting: 0, signed: 0, lost: 0 }
   let signedLast30 = 0, leadsLast30 = 0
   for (const l of leads) {
+    if (l.status === 'linked') { if (now - new Date(l.created_at).getTime() <= 30 * DAY) leadsLast30++; continue } // signed lead already counted as a Client Properties row
     const s = (l.status in funnel ? l.status : 'new') as keyof Funnel
     funnel[s]++
     if (s === 'signed' && now - new Date(l.updated_at || l.created_at).getTime() <= 30 * DAY) signedLast30++

@@ -186,7 +186,7 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
   ] },
   { id: 'road-to-100', title: 'Road to 100 (property goal)', steps: [
     'Where: Staff Centre → Dashboard, the Road to 100 box above the KPI Tracker box. It shows how many properties you have against your goal (100 by 1 June 2027 to start with).',
-    'The number is the homes already in Property Management and Estate Agency (each counted once), plus any Extra homes you enter, plus Landlord Leads you move to Signed, plus Client Properties in the Signed stage. Press Landlord Leads → to move leads along.',
+    'The number is the homes already in Property Management and Estate Agency (each counted once), plus any Extra homes you enter, plus Landlord Leads you move to Signed, plus Client Properties in the Signed stage. Marking a Landlord Lead Signed also adds it to Client Properties as Signed, and each property is counted once. A Signed Client Property whose address matches a home in Property Management or Estate Agency counts as already managed. Press Landlord Leads → to move leads along.',
     'It shows how many are still to sign, how many you need to sign each month to hit the date, how many you signed and how many new owner leads came in over the last 30 days, and the funnel from New to Signed. Ahead, On or Behind pace compares the last 30 days with what is needed.',
     'Press Edit goal to change the target, the date or the extra homes. Each company has its own goal. Ask AI can answer questions about it and, for admins and co-founders, change the goal or mark a Client Properties property Signed. The Homes secured KPI in KPI Tracker fills itself from the same signed counts.',
   ] },

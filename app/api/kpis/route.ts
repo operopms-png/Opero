@@ -26,8 +26,11 @@ async function auto(biz: string, source: string, from: string, to: string): Prom
     }
     if (source === 'auto:homes_secured') {
       const a = await count('client_properties', 'signed_at', q => q.eq('stage', 'signed'), 'business_id')
-      const { count: b } = await db.from('landlord_estimates').select('id', { count: 'exact', head: true }).eq('business_id', biz).eq('status', 'signed').gte('updated_at', from).lt('updated_at', to)
-      return (a ?? 0) + (b ?? 0)
+      const { data: ls } = await db.from('landlord_estimates').select('id').eq('business_id', biz).eq('status', 'signed').gte('updated_at', from).lt('updated_at', to).limit(5000)
+      const ids = (ls || []).map((l: any) => l.id)
+      let linked = 0
+      if (ids.length) { const { count: lc } = await db.from('client_properties').select('id', { count: 'exact', head: true }).eq('business_id', biz).in('lead_id', ids); linked = lc ?? 0 }
+      return (a ?? 0) + ids.length - linked
     }
     if (source === 'auto:viewings') return await count('estate_viewings', 'created_at')
     if (source === 'auto:deals_won') return await count('crm_deals', 'created_at', q => q.ilike('stage', '%won%'))
