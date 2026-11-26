@@ -63,7 +63,7 @@ export default function DashboardRoad() {
             <b style={{ color: '#16233F', textAlign: 'right' }}>{r.funnel[k]}</b>
           </div>
         ))}
-        <div style={{ fontSize: 11.5, color: '#98A2B3' }}>{r.funnel.lost} marked lost. Progress counts leads you move to Signed in Landlord Leads, plus the starting number.</div>
+        <div style={{ fontSize: 11.5, color: '#98A2B3' }}>{r.funnel.lost} marked lost. {r.pipeline} properties are open in Client Properties. Progress is the starting number plus leads marked Signed in Landlord Leads and properties with a signed date in Client Properties.</div>
       </div>
     </div>
   )

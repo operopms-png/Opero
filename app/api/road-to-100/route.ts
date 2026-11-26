@@ -5,7 +5,7 @@ import { hasScTab } from '@/lib/staff-access'
 import { buildRoad, DEFAULT_DEADLINE } from '@/lib/road-to-100'
 
 // Road to 100 properties. The goal (target, deadline, homes already managed) lives in growth_goal, one row per company.
-// Progress is the starting number plus Landlord Leads marked Signed.
+// Progress is the starting number plus Landlord Leads marked Signed plus Client Properties with a signed date.
 //   GET -> Road        POST { target?, deadline?, baseline? } -> Road
 async function gate(req: NextRequest, write = false) {
   const c = await getCaller(req)
@@ -21,7 +21,11 @@ async function load(biz: string) {
     g = ins.data
   }
   const { data: leads } = await db.from('landlord_estimates').select('status,created_at,updated_at').eq('business_id', biz).limit(5000)
-  return buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? null, baseline: g?.baseline ?? 0 }, leads || [])
+  const { data: cp } = await db.from('client_properties').select('stage,signed_at').eq('business_id', biz).limit(5000)
+  const since = Date.now() - 30 * 864e5
+  const rows = cp || []
+  const props = { signed: rows.filter((r: any) => r.signed_at).length, signedLast30: rows.filter((r: any) => r.signed_at && new Date(r.signed_at).getTime() >= since).length, open: rows.filter((r: any) => !r.signed_at && r.stage !== 'passed').length }
+  return buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? null, baseline: g?.baseline ?? 0 }, leads || [], props)
 }
 
 export async function GET(req: NextRequest) {

@@ -186,7 +186,7 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
   ] },
   { id: 'road-to-100', title: 'Road to 100 (property goal)', steps: [
     'Where: Staff Centre → Dashboard, the Road to 100 box above the KPI Tracker box. It shows how many properties you have against your goal (100 by 1 June 2027 to start with).',
-    'The number is the starting number (homes you already manage) plus Landlord Leads you move to Signed. Press Landlord Leads → to move leads along.',
+    'The number is the starting number (homes you already manage) plus Landlord Leads you move to Signed plus Client Properties that have a signed date. Press Landlord Leads → to move leads along.',
     'It shows how many are still to sign, how many you need to sign each month to hit the date, how many you signed and how many new owner leads came in over the last 30 days, and the funnel from New to Signed. Ahead, On or Behind pace compares the last 30 days with what is needed.',
     'Press Edit goal to change the target, the date or the starting number. Each company has its own goal. The AI cannot change it yet.',
   ] },
