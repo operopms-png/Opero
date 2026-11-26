@@ -17,7 +17,14 @@ export default function DashboardRoad() {
   const [edit, setEdit] = useState(false)
   const [f, setF] = useState({ target: '', deadline: '', baseline: '' })
   const [err, setErr] = useState('')
-  useEffect(() => { staffApi('/api/road-to-100').then((x: any) => setR(x)).catch(() => setFail(true)) }, [])
+  useEffect(() => {
+    const load = () => staffApi('/api/road-to-100').then((x: any) => setR(x)).catch(() => setFail(true))
+    load()
+    const t = setInterval(load, 60000) // stays in step without a reload
+    const vis = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', vis)
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', vis) }
+  }, [])
   if (fail) return null
   if (!r) return <div style={{ margin: '0 30px 16px', color: '#98A2B3', fontSize: 13 }}>Loading…</div>
   const [word, col] = STATE[r.state]
@@ -52,7 +59,7 @@ export default function DashboardRoad() {
           ['Still to sign', String(r.remaining)],
           ['Needed each month', r.neededPerMonth == null ? '—' : String(r.neededPerMonth)],
           ['Signed, last 30 days', String(r.signedLast30)],
-          ['New owner leads, last 30 days', String(r.leadsLast30)],
+          ['Owner enquiries, last 30 days', String(r.enquiries30)],
         ].map(([k, v]) => <div key={k} style={{ background: '#F6F8FB', borderRadius: 8, padding: '9px 11px' }}><div style={{ fontSize: 19, fontWeight: 700, color: '#16233F' }}>{v}</div><div style={{ fontSize: 11.5, color: '#667085' }}>{k}</div></div>)}
       </div>
       <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>

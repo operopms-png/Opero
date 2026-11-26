@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient as db } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
 import { hasScTab } from '@/lib/staff-access'
-import { linkLeads, managedHomes, signedProps } from '@/lib/road-data'
+import { linkLeads, managedHomes, ownerEnquiries30, signedProps } from '@/lib/road-data'
 import { buildRoad, DEFAULT_DEADLINE } from '@/lib/road-to-100'
 
 // Road to 100 properties. The goal (target, deadline, homes already managed) lives in growth_goal, one row per company.
@@ -22,8 +22,8 @@ async function load(biz: string) {
     g = ins.data
   }
   const { data: leads } = await db.from('landlord_estimates').select('id,status,created_at,updated_at').eq('business_id', biz).limit(5000)
-  const [sp, managed] = await Promise.all([signedProps(biz), managedHomes(biz)])
-  const props = { ...sp, managed }
+  const [sp, managed, enquiries30] = await Promise.all([signedProps(biz), managedHomes(biz), ownerEnquiries30(biz)])
+  const props = { ...sp, managed, enquiries30 }
   return buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? null, baseline: g?.baseline ?? 0 }, await linkLeads(biz, leads || []), props)
 }
 

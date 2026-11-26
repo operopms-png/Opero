@@ -2,19 +2,19 @@
 // Same result as Staff Centre → Dashboard → Road to 100 → Edit goal, and Staff Centre → Client Properties → open the property → Signed.
 import { serviceClient as db } from '@/lib/admin-auth'
 import { buildRoad, DEFAULT_DEADLINE } from '@/lib/road-to-100'
-import { linkLeads, managedHomes, signedProps } from '@/lib/road-data'
+import { linkLeads, managedHomes, ownerEnquiries30, signedProps } from '@/lib/road-data'
 
 type Who = { businessId: string; name: string; email: string; isAdmin: boolean; role?: string }
 const can = (c: Who) => c.isAdmin || /co founder/i.test(c.role || '')
 
 export async function roadSummary(biz: string): Promise<string> {
-  const [{ data: g }, { data: leads }, sp, managed] = await Promise.all([
+  const [{ data: g }, { data: leads }, sp, managed, enquiries30] = await Promise.all([
     db.from('growth_goal').select('*').eq('business_id', biz).maybeSingle(),
     db.from('landlord_estimates').select('id,status,created_at,updated_at').eq('business_id', biz).limit(5000),
-    signedProps(biz), managedHomes(biz),
+    signedProps(biz), managedHomes(biz), ownerEnquiries30(biz),
   ])
-  const r = buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? DEFAULT_DEADLINE, baseline: g?.baseline ?? 0 }, await linkLeads(biz, leads || []), { ...sp, managed })
-  return `## Road to 100 (Staff Centre → Dashboard → Road to 100)\nGoal ${r.goal.target} properties by ${r.goal.deadline}. Now ${r.current} (${r.managed} managed in Property Management/Estate Agency + ${r.goal.baseline} extra + ${r.signed} signed). Still to sign ${r.remaining}; needed per month ${r.neededPerMonth ?? 'n/a'}; signed last 30 days ${r.signedLast30}; new owner leads last 30 days ${r.leadsLast30}; ${r.pipeline} open in Client Properties. Pace: ${r.state}.`
+  const r = buildRoad({ title: g?.title || 'Road to 100 properties', target: g?.target ?? 100, deadline: g?.deadline ?? DEFAULT_DEADLINE, baseline: g?.baseline ?? 0 }, await linkLeads(biz, leads || []), { ...sp, managed, enquiries30 })
+  return `## Road to 100 (Staff Centre → Dashboard → Road to 100)\nGoal ${r.goal.target} properties by ${r.goal.deadline}. Now ${r.current} (${r.managed} managed in Property Management/Estate Agency + ${r.goal.baseline} extra + ${r.signed} signed). Still to sign ${r.remaining}; needed per month ${r.neededPerMonth ?? 'n/a'}; signed last 30 days ${r.signedLast30}; owner enquiries last 30 days from all channels (earnings checker, enquiry forms, website chat) ${r.enquiries30}; ${r.pipeline} open in Client Properties. Pace: ${r.state}.`
 }
 
 export async function updateRoadGoal(c: Who, i: { target?: unknown; deadline?: unknown; extra?: unknown }): Promise<{ ok: true; summary: string } | { ok: false; error: string }> {
@@ -40,7 +40,11 @@ export async function markPropertySigned(c: Who, property: unknown): Promise<{ o
   if (rows.length > 1) return { ok: false, error: `More than one property matches "${q}" (${rows.map(r => r.address).join('; ')}). Which one?` }
   const p = rows[0]
   if (p.stage === 'signed') return { ok: true, summary: `${p.address} was already Signed` }
-  const { error } = await db.from('client_properties').update({ stage: 'signed', signed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', p.id)
+  const now = new Date().toISOString()
+  const { data: upd, error } = await db.from('client_properties').update({ stage: 'signed', signed_at: now, updated_at: now }).eq('id', p.id).select('*').single()
   if (error) return { ok: false, error: error.message }
+  const { syncCrm } = await import('@/lib/client-property-crm')
+  if (upd) await syncCrm(upd).catch(() => {})
+  if (upd?.lead_id) await db.from('landlord_estimates').update({ status: 'signed', updated_at: now }).eq('id', upd.lead_id).eq('business_id', c.businessId)
   return { ok: true, summary: `${p.address} is now Signed (it was ${p.stage})` }
 }

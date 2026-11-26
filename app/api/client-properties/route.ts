@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { serviceClient } from '@/lib/admin-auth'
 import { getCaller } from '@/lib/mailbox'
+import { syncCrm, SERVICE_LABEL } from '@/lib/client-property-crm'
 
 // Staff Centre → Client Properties. Every property a client brings to us,
 // before it is signed.
@@ -19,10 +20,6 @@ const bad = (error: string, status = 400) => NextResponse.json({ error }, { stat
 const STAGES = ['new', 'viewing', 'numbers', 'offer', 'signed', 'passed']
 const STAGE_LABEL: Record<string, string> = { new: 'New', viewing: 'Viewing', numbers: 'Numbers done', offer: 'Offer made', signed: 'Signed', passed: 'Passed' }
 const SERVICES = ['sell', 'guaranteed_rent', 'partnership', 'airbnb', 'long_let', 'unsure']
-const SERVICE_LABEL: Record<string, string> = { sell: 'Sell', guaranteed_rent: 'Guaranteed rent', partnership: 'Partnership management', airbnb: 'Airbnb management', long_let: 'Long let', unsure: 'Not sure yet' }
-// crm_deals.stage → CRM board status (see crm_deal_status_label in the DB)
-const CRM_STAGE: Record<string, string> = { new: '', viewing: '', numbers: '', offer: 'offer', signed: 'won', passed: 'lost' }
-const CRM_MODULE: Record<string, string> = { sell: 'estate', airbnb: 'str' }
 
 const TEXT = ['address', 'area', 'subarea', 'country', 'price_text', 'currency', 'style', 'amenities', 'description', 'mls', 'source_url', 'owner_name', 'owner_phone', 'owner_email', 'referred_by', 'agent']
 const NUM = ['price', 'bedrooms', 'bathrooms', 'sqft', 'lot_sqft', 'lot_acres']
@@ -41,30 +38,6 @@ function clean(b: any) {
 }
 
 const entry = (by: string, kind: string, text: string) => ({ at: new Date().toISOString(), by, kind, text: text.slice(0, 2000) })
-
-async function syncCrm(p: any) {
-  const name = `${p.address}${p.subarea ? ', ' + p.subarea : ''}${p.service ? ' · ' + SERVICE_LABEL[p.service] : ''}`.slice(0, 200)
-  let contactId = p.crm_contact_id
-  if (!contactId) {
-    if (p.owner_email) {
-      const { data: ex } = await serviceClient.from('crm_contacts').select('id').eq('user_id', p.business_id).ilike('email', p.owner_email).limit(1)
-      contactId = ex?.[0]?.id ?? null
-    }
-    if (!contactId) {
-      const { data } = await serviceClient.from('crm_contacts').insert({ user_id: p.business_id, name: p.owner_name, email: p.owner_email || null, phone: p.owner_phone || null, source: p.referred_by ? `Client property · ${p.referred_by}` : 'Client property', module: CRM_MODULE[p.service] || 'pm', type: 'Owner', status: 'prospect', notes: `Owner of ${p.address}` }).select('id').single()
-      contactId = data?.id ?? null
-    }
-  }
-  let dealId = p.crm_deal_id
-  const deal = { name, contact_id: contactId, stage: CRM_STAGE[p.stage] ?? '', value: p.price ?? null, module: CRM_MODULE[p.service] || 'pm' }
-  if (dealId) await serviceClient.from('crm_deals').update(deal).eq('id', dealId)
-  else { const { data } = await serviceClient.from('crm_deals').insert({ user_id: p.business_id, ...deal }).select('id').single(); dealId = data?.id ?? null }
-  if (contactId !== p.crm_contact_id || dealId !== p.crm_deal_id) {
-    const { data } = await serviceClient.from('client_properties').update({ crm_contact_id: contactId, crm_deal_id: dealId }).eq('id', p.id).select('*').single()
-    return data ?? p
-  }
-  return p
-}
 
 export async function GET(req: NextRequest) {
   const c = await getCaller(req)
@@ -129,6 +102,11 @@ export async function POST(req: NextRequest) {
       if (f.documents && f.documents.length > (p.documents || []).length) log.push(entry(by, 'document', `Uploaded ${f.documents.slice((p.documents || []).length).map((d: any) => d.name).join(', ')}`))
       let property = await save({ ...f, activity: [...log, ...(p.activity || [])].slice(0, 300) })
       property = await syncCrm(property).catch(() => property)
+      // A property that came from a Landlord Lead keeps that lead's status in step.
+      if (p.lead_id && f.stage && f.stage !== p.stage) {
+        const leadStatus = f.stage === 'signed' ? 'signed' : f.stage === 'passed' ? 'lost' : p.stage === 'signed' ? 'meeting' : null
+        if (leadStatus) await serviceClient.from('landlord_estimates').update({ status: leadStatus, updated_at: new Date().toISOString() }).eq('id', p.lead_id).eq('business_id', c.businessId)
+      }
       return NextResponse.json({ property })
     }
 

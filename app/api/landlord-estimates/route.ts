@@ -34,7 +34,8 @@ export async function POST(req: NextRequest) {
     if (b.assigned_to !== undefined) patch.assigned_to = String(b.assigned_to).slice(0, 120) || null
     const { data, error } = await serviceClient.from('landlord_estimates').update(patch).eq('id', lead.id).select('*').single()
     if (error) return bad(error.message, 500)
-    if (patch.status === 'signed') await (await import('@/lib/lead-to-property')).ensureClientProperty(c.businessId, data, c.name || c.email).catch(() => {})
+    if (patch.status === 'signed' && lead.status !== 'signed') await (await import('@/lib/lead-to-property')).ensureClientProperty(c.businessId, data, c.name || c.email).catch(() => {})
+    if (patch.status && patch.status !== 'signed' && lead.status === 'signed') await (await import('@/lib/lead-to-property')).revertClientProperty(c.businessId, data, c.name || c.email).catch(() => {})
     return NextResponse.json({ lead: data })
   }
 

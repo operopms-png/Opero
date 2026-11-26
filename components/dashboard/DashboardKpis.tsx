@@ -8,7 +8,14 @@ import { KpiTile, KPI_COL } from '../kpis/KpiBits'
 
 export default function DashboardKpis() {
   const [ks, setKs] = useState<Kpi[] | null>(null)
-  useEffect(() => { staffApi('/api/kpis').then((r: any) => setKs(r.kpis || [])).catch(() => setKs([])) }, [])
+  useEffect(() => {
+    const load = () => staffApi('/api/kpis').then((r: any) => setKs(r.kpis || [])).catch(() => setKs([]))
+    load()
+    const t = setInterval(load, 60000) // stays in step without a reload
+    const vis = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', vis)
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', vis) }
+  }, [])
   if (ks && ks.length === 0) return null
   const n = (s: string) => (ks || []).filter(k => k.status === s).length
   return (
