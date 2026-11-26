@@ -184,6 +184,12 @@ const SECTIONS: { id: string; title: string; steps: string[]; pic?: { src: strin
     'Listings: one row per property with its base, floor, ceiling, average suggested price, occupancy and whether rules are saved. Market: how full your next 60 nights are, which weekdays fill and your typical stay, from your own bookings.',
     'Limits: prices are suggestions only and nothing is sent to Airbnb or any other channel yet, so copy them into your channel manager. There is no competitor data. Press Preview example to see sample figures that are not your data.',
   ] },
+  { id: 'road-to-100', title: 'Road to 100 (property goal)', steps: [
+    'Where: Staff Centre → Dashboard, the Road to 100 box above the KPI Tracker box. It shows how many properties you have against your goal (100 by 1 June 2027 to start with).',
+    'The number is the starting number (homes you already manage) plus Landlord Leads you move to Signed. Press Landlord Leads → to move leads along.',
+    'It shows how many are still to sign, how many you need to sign each month to hit the date, how many you signed and how many new owner leads came in over the last 30 days, and the funnel from New to Signed. Ahead, On or Behind pace compares the last 30 days with what is needed.',
+    'Press Edit goal to change the target, the date or the starting number. Each company has its own goal. The AI cannot change it yet.',
+  ] },
   { id: 'kpi-tracker', title: 'KPI Tracker', steps: [
     'Where: KPI Tracker in the left menu, or Human Intelligence Hub → Company → KPI Tracker. The Dashboard also has a KPI Tracker box with the same numbers (view only). You need the Company Documents tab.',
     'Each tile is one number for this month against its target: green is on target, amber is within 15% of it, red is further behind. The line underneath shows the last six months.',

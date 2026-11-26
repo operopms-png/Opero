@@ -17,6 +17,7 @@ import PropertyMap from '../../../components/PropertyMap'
 import MarketIntelPanels from '../../../components/dashboard/MarketIntelPanels'
 import DashboardPacks from '../../../components/dashboard/DashboardPacks'
 import DashboardKpis from '../../../components/dashboard/DashboardKpis'
+import DashboardRoad from '../../../components/dashboard/DashboardRoad'
 
 const C = { ink: '#0f2150', brown: '#0f2150', gold: '#2f5bd6', goldT: '#5470a8', gold2: '#89CFF0', cream: '#EAF3FC', line: '#dfe6f4', muted: '#6b7fae', text: '#2b3f6e', bg: '#eaf3ff' }
 const MOD: Record<string, string> = { vr: '#89CFF0', pm: '#2F6DB5', ea: '#138a62', dev: '#7A4FB0', staff: '#8A877F' } // validated categorical set
@@ -196,6 +197,7 @@ export default function Dashboard() {
         </div>
         <MarketIntelPanels />
       </div>
+      <DashboardRoad />
       <DashboardKpis />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(380px,1fr))', gap: 16, margin: '0 30px 24px', alignItems: 'start' }}>
         <DashboardPacks />
