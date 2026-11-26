@@ -13,7 +13,7 @@ export const STARTERS: { name: string; unit: Unit; target: number; direction: Di
   { name: 'Deals won', unit: 'number', target: 5, direction: 'higher', source: 'auto:deals_won' },
   { name: 'Rent collected on time', unit: 'percent', target: 95, direction: 'higher', source: 'auto:rent_collected' },
   { name: 'Repairs fixed', unit: 'number', target: 10, direction: 'higher', source: 'auto:repairs_fixed' },
-  { name: 'Homes secured', unit: 'number', target: 3, direction: 'higher', source: 'manual' },
+  { name: 'Homes secured', unit: 'number', target: 3, direction: 'higher', source: 'auto:homes_secured' },
   { name: 'Occupancy', unit: 'percent', target: 90, direction: 'higher', source: 'manual' },
   { name: 'Monthly revenue', unit: 'money', target: 50000, direction: 'higher', source: 'manual' },
   { name: 'Margin kept', unit: 'percent', target: 25, direction: 'higher', source: 'manual' },

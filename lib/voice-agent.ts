@@ -56,6 +56,8 @@ const TOOLS = [
   { name: 'post_building_notice', description: 'Staff only. Draft a Building notice for tenants, landlords and partners of chosen homes (gate works, lift out of order, water off). It does NOT go out yet: it waits in AI Approvals and is posted and emailed when a person approves it. Never say it has been posted.', input_schema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string', description: 'The full notice text' }, homes: { type: 'string', description: 'Property names from Property Management separated by semicolons, or all' }, building: { type: 'string' }, who: { type: 'string', description: 'all, tenants, landlords or partners' }, email: { type: 'boolean', description: 'Also email them. Default true' } }, required: ['title', 'body', 'homes'] } },
   { name: 'create_investor_pack', description: 'Admins and co-founders only. Find an investor\'s pack in Pack Builder and get its link ready, or start a new pack for them. It does NOT go live yet: it waits in AI Approvals and the link goes live (stage Sent) when a person approves it. You cannot send the link to the investor; they copy the link or WhatsApp message from Pack Builder. Never say the link has been sent.', input_schema: { type: 'object', properties: { investor: { type: 'string', description: 'The investor\'s first name or full name' }, investors: { type: 'number', description: 'How many investors share the costs. Default 2' } }, required: ['investor'] } },
   { name: 'update_partner_investment', description: 'Admins only. Propose a new total amount a funding partner has invested (Staff Centre, Partners). It saves straight away and logs the old amount. It only changes the amount invested and currency, never moves money or the repayment schedule.', input_schema: { type: 'object', properties: { partner: { type: 'string', description: 'Partner first name or full name' }, amount: { type: 'number', description: 'The new TOTAL invested, not the extra amount' }, currency: { type: 'string', enum: ['JMD', 'GBP', 'USD', 'EUR', 'CAD', 'AED'] } }, required: ['partner', 'amount'] } },
+  { name: 'update_road_goal', description: 'Admins and co-founders only. Change the Road to 100 property goal shown on the Dashboard: the target number, the date (YYYY-MM-DD) or extra homes managed outside the portal. Saves straight away. Leave out anything they did not ask to change.', input_schema: { type: 'object', properties: { target: { type: 'number' }, deadline: { type: 'string', description: 'Date as YYYY-MM-DD' }, extra: { type: 'number', description: 'Extra homes outside the portal' } } } },
+  { name: 'mark_property_signed', description: 'Admins and co-founders only. Mark a property in Client Properties as Signed so it counts towards the Road to 100. Needs part of its address.', input_schema: { type: 'object', properties: { property: { type: 'string', description: 'Part of the address' } }, required: ['property'] } },
   { name: 'send_test_contracts', description: 'Admins only. Emails a [TEST] copy of the company\'s contract templates (Agreements, such as Master Lease, Landlord Onboarding, Shortlet Landlord Agreement, Estate Agency agreement) to the account holder\'s OWN email so they can open the signing link and try signing. It can only ever send to the account holder, never anyone else. Optionally give part of a template name to send just that one.', input_schema: { type: 'object', properties: { template: { type: 'string', description: 'Part of a template name, for example master lease. Leave out to send all of them.' } } } },
   { name: 'find_deals', description: 'Start a search for investment property deals from what the person wants (area, budget, bedrooms, yield). The results are read to them when the search finishes. Say you are searching, then stop.', input_schema: { type: 'object', properties: { request: { type: 'string', description: 'The deal they want, in their own words' } }, required: ['request'] } },
   { name: 'deal_feedback', description: 'Record that the person likes or passes on a deal that was read out. Use the match id from the deal results.', input_schema: { type: 'object', properties: { match_id: { type: 'string' }, verdict: { type: 'string', enum: ['like', 'pass'] }, note: { type: 'string' } }, required: ['match_id', 'verdict'] } },
@@ -148,6 +150,22 @@ async function runTool(ctx: Ctx, name: string, i: any): Promise<string> {
       ctx.jobs++
       await log(c, `Updated partner investment: ${r.summary}`, 'Asked for by an admin by voice')
       return `Saved. ${r.summary}. The old amount is in the AI activity log.`
+    }
+    if (name === 'update_road_goal') {
+      const { updateRoadGoal } = await import('@/lib/ai-road')
+      const r = await updateRoadGoal(c, { target: i.target, deadline: i.deadline, extra: i.extra })
+      if (!r.ok) return r.error
+      ctx.jobs++
+      await log(c, `Changed the Road to 100 goal: ${r.summary}`, 'Asked for by staff by voice')
+      return `Saved: ${r.summary}. It shows on the Dashboard in Road to 100.`
+    }
+    if (name === 'mark_property_signed') {
+      const { markPropertySigned } = await import('@/lib/ai-road')
+      const r = await markPropertySigned(c, i.property)
+      if (!r.ok) return r.error
+      ctx.jobs++
+      await log(c, `Marked signed: ${r.summary}`, 'Asked for by staff by voice')
+      return `Saved: ${r.summary}. It counts towards the Road to 100.`
     }
     if (name === 'send_test_contracts') {
       if (!c.isAdmin) return 'Only an admin can send test contracts.'
